@@ -29753,6 +29753,11 @@ impl View for TerminalView {
             ctx.notify();
         }
         self.update_focused_terminal_info(ctx);
+        self.current_prompt.update(ctx, |prompt_type, ctx| {
+            if let PromptType::Dynamic { prompt } = prompt_type {
+                prompt.update(ctx, |prompt, ctx| prompt.resume_paused_refreshes(ctx));
+            }
+        });
     }
 
     fn on_blur(&mut self, blur_ctx: &BlurContext, ctx: &mut ViewContext<Self>) {

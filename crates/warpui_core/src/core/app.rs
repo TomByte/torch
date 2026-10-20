@@ -726,6 +726,10 @@ pub struct AppContext {
     /// dropped or transferred out of the window, and when the window closes.
     view_parents: HashMap<WindowId, EntityIdMap<EntityId>>,
 
+    /// The child views embedded in each window's most recently laid-out frame, i.e. the views
+    /// that are currently on screen.
+    last_frame_views: HashMap<WindowId, EntityIdSet>,
+
     /// When set, all focus changes to this window are suppressed.
     /// Used during tab drag to prevent the new window from stealing focus.
     suppress_focus_for_window: Option<WindowId>,
@@ -830,6 +834,7 @@ impl AppContext {
             structural_child_to_parent: Default::default(),
             structural_parent_to_children: Default::default(),
             view_parents: Default::default(),
+            last_frame_views: Default::default(),
             suppress_focus_for_window: None,
             fallback_font_source_provider: None,
         };
@@ -1488,10 +1493,23 @@ impl AppContext {
         window_id: WindowId,
         embeddings: EntityIdMap<EntityId>,
     ) {
+        self.last_frame_views
+            .insert(window_id, embeddings.keys().copied().collect());
         self.view_parents
             .entry(window_id)
             .or_default()
             .extend(embeddings);
+    }
+
+    /// Whether `view_id` was embedded in its window's most recently laid-out frame. Views in
+    /// windows that have not reported a frame yet are assumed to be on screen.
+    pub fn is_view_in_last_frame(&self, view_id: EntityId) -> bool {
+        let Some(window_id) = self.view_to_window.get(&view_id) else {
+            return false;
+        };
+        self.last_frame_views
+            .get(window_id)
+            .is_none_or(|views| views.contains(&view_id))
     }
 
     /// Returns the ancestor chain of `view_id` in `window_id`, ordered from the
@@ -2756,6 +2774,7 @@ impl AppContext {
         self.last_observed_active_cursor_positions
             .remove(&window_id);
         self.view_parents.remove(&window_id);
+        self.last_frame_views.remove(&window_id);
         autotracking::close_window(window_id);
 
         let mut subscriptions = EntityIdMap::default();

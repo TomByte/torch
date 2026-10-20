@@ -708,6 +708,42 @@ fn recurses_into_registered_child_view_and_reports_embeddings() {
 }
 
 #[test]
+fn tracks_which_child_views_were_in_the_last_frame() {
+    App::test((), |mut app| async move {
+        let (window_id, _root) =
+            app.update(|ctx| ctx.add_tui_window(window_options(), |_| RootStub));
+
+        let child = app.update(|ctx| ctx.add_tui_view(window_id, |_| LeafView));
+        let child_view_id = child.id();
+        let parent = app.update(|ctx| {
+            ctx.add_tui_view(window_id, move |_| ParentView {
+                child,
+                descendent_focus_events: 0,
+            })
+        });
+        let other = app.update(|ctx| ctx.add_tui_view(window_id, |_| LeafView));
+
+        // Before any frame is reported the window's views are assumed to be on screen.
+        assert!(app.read(|ctx| ctx.is_view_in_last_frame(child_view_id)));
+
+        let mut presenter = TuiPresenter::new();
+        app.update(|ctx| {
+            let invalidation = ctx.take_all_invalidations_for_window(window_id);
+            presenter.invalidate(&invalidation, ctx, window_id);
+            presenter.present(ctx, &parent, TuiRect::new(0, 0, 8, 3));
+        });
+        assert!(app.read(|ctx| ctx.is_view_in_last_frame(child_view_id)));
+
+        app.update(|ctx| {
+            let invalidation = ctx.take_all_invalidations_for_window(window_id);
+            presenter.invalidate(&invalidation, ctx, window_id);
+            presenter.present(ctx, &other, TuiRect::new(0, 0, 8, 3));
+        });
+        assert!(!app.read(|ctx| ctx.is_view_in_last_frame(child_view_id)));
+    });
+}
+
+#[test]
 fn focusing_embedded_child_fires_descendent_focus_on_parent() {
     App::test((), |mut app| async move {
         let (window_id, _root) =

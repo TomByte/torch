@@ -78,6 +78,9 @@ pub struct ChipState {
     update_status: ChipUpdateStatus,
     /// Future handle for periodically-refreshing chips.
     refresh_handle: Option<SpawnedFutureHandle>,
+    /// Set when a periodic refresh came due while the session was off screen. The refresh loop
+    /// stops until [`CurrentPrompt::resume_paused_refreshes`] restarts it.
+    refresh_paused: bool,
     /// Future handle for asynchronous generators.
     generator_handle: Option<SpawnedFutureHandle>,
     /// Future handle for asynchronous on-click generators.
@@ -115,6 +118,7 @@ impl ChipState {
             availability: ChipAvailability::Enabled,
             update_status: ChipUpdateStatus::Idle,
             refresh_handle: None,
+            refresh_paused: false,
             generator_handle: None,
             on_click_generator_handle: None,
             should_render: kind.should_render("", &Default::default()),
@@ -126,6 +130,7 @@ impl ChipState {
         if let Some(refresh_handle) = self.refresh_handle.take() {
             refresh_handle.abort();
         }
+        self.refresh_paused = false;
         if let Some(generator_handle) = self.generator_handle.take() {
             generator_handle.abort();
         }
@@ -1007,15 +1012,49 @@ impl CurrentPrompt {
                     Timer::after(interval).await;
                     chip_kind_clone
                 },
-                |me, chip_kind, ctx| {
-                    me.fetch_chip_value_at_interval(&chip_kind, None, None, true, ctx);
-                },
+                |me, chip_kind, ctx| me.handle_refresh_interval_elapsed(&chip_kind, ctx),
             );
 
             match self.states.get_mut(chip_kind) {
                 Some(state) => state.refresh_handle = Some(future),
                 None => log::warn!("Missing state for {chip_kind:?}"),
             }
+        }
+    }
+
+    /// Refreshes a periodic chip, unless its session is off screen (e.g. in a background tab), in
+    /// which case the refresh loop pauses so hidden sessions don't keep running chip commands.
+    fn handle_refresh_interval_elapsed(
+        &mut self,
+        chip_kind: &ContextChipKind,
+        ctx: &mut ModelContext<Self>,
+    ) {
+        let is_off_screen = self
+            .terminal_view_id
+            .is_some_and(|view_id| !ctx.is_view_in_last_frame(view_id));
+        if !is_off_screen {
+            self.fetch_chip_value_at_interval(chip_kind, None, None, true, ctx);
+            return;
+        }
+        if let Some(state) = self.states.get_mut(chip_kind) {
+            state.refresh_paused = true;
+        }
+    }
+
+    /// Immediately refreshes, and restarts the refresh loop of, every chip whose periodic refresh
+    /// paused while its session was off screen.
+    pub fn resume_paused_refreshes(&mut self, ctx: &mut ModelContext<Self>) {
+        let paused_chips = self
+            .states
+            .iter_mut()
+            .filter(|(_, state)| state.refresh_paused)
+            .map(|(chip_kind, state)| {
+                state.refresh_paused = false;
+                chip_kind.clone()
+            })
+            .collect_vec();
+        for chip_kind in paused_chips {
+            self.fetch_chip_value_at_interval(&chip_kind, None, None, true, ctx);
         }
     }
 
