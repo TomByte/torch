@@ -606,7 +606,7 @@ pub fn init(app: &mut AppContext) {
         .with_key_binding("cmdorctrl-8"),
         EditableBinding::new(
             "workspace:activate_last_tab",
-            "Switch to last tab",
+            session_label("Switch to last tab", "Switch to last session"),
             WorkspaceAction::ActivateLastTab,
         )
         .with_context_predicate(id!("Workspace"))
@@ -614,7 +614,7 @@ pub fn init(app: &mut AppContext) {
         .with_key_binding("cmdorctrl-9"),
         EditableBinding::new(
             "workspace:activate_prev_tab",
-            "Activate previous tab",
+            session_label("Activate previous tab", "Previous session"),
             WorkspaceAction::ActivatePrevTab,
         )
         .with_context_predicate(
@@ -634,7 +634,7 @@ pub fn init(app: &mut AppContext) {
         .with_linux_or_windows_key_binding("ctrl-shift-J"),
         EditableBinding::new(
             "workspace:activate_next_tab",
-            "Activate next tab",
+            session_label("Activate next tab", "Next session"),
             WorkspaceAction::ActivateNextTab,
         )
         .with_context_predicate(
@@ -728,7 +728,7 @@ pub fn init(app: &mut AppContext) {
         .with_context_predicate(id!("Workspace") & id!(flags::ENABLE_WARP_DRIVE) & id!("IsOnline")),
         EditableBinding::new(
             NEW_TAB_BINDING_NAME,
-            BindingDescription::new("Create new tab"),
+            BindingDescription::new(session_label("Create new tab", "New session")),
             WorkspaceAction::AddDefaultTab,
         )
         .with_context_predicate(id!("Workspace") & !id!("Workspace_PaneDragging"))
@@ -786,14 +786,21 @@ pub fn init(app: &mut AppContext) {
         .with_linux_or_windows_key_binding("ctrl-shift-+"),
         EditableBinding::new(
             TOGGLE_VERTICAL_TABS_PANEL_BINDING_NAME,
-            BindingDescription::new("Toggle vertical tabs panel")
-                .with_custom_description(bindings::MAC_MENUS_CONTEXT, "Toggle Vertical Tabs Panel"),
+            if ChannelState::is_local_only() {
+                BindingDescription::new("Toggle sidebar")
+                    .with_custom_description(bindings::MAC_MENUS_CONTEXT, "Toggle Sidebar")
+            } else {
+                BindingDescription::new("Toggle vertical tabs panel").with_custom_description(
+                    bindings::MAC_MENUS_CONTEXT,
+                    "Toggle Vertical Tabs Panel",
+                )
+            },
             WorkspaceAction::ToggleVerticalTabsPanel,
         )
         .with_context_predicate(id!("Workspace") & id!(flags::USE_VERTICAL_TABS_FLAG))
         .with_group(bindings::BindingGroup::Navigation.as_str())
         .with_enabled(|| FeatureFlag::VerticalTabs.is_enabled())
-        .with_key_binding(cmd_or_ctrl_shift("b")),
+        .with_custom_action(CustomAction::ToggleSidebar),
         EditableBinding::new(
             LEFT_PANEL_PROJECT_EXPLORER_BINDING_NAME,
             BindingDescription::new("Left Panel: Project explorer"),
@@ -901,8 +908,11 @@ pub fn init(app: &mut AppContext) {
         .with_custom_action(CustomAction::CommandPalette),
         EditableBinding::new(
             "workspace:move_tab_left",
-            BindingDescription::new("Move tab left")
-                .with_dynamic_override(|ctx| uses_vertical_tabs(ctx).then(|| "move tab up".into())),
+            BindingDescription::new(session_label("Move tab left", "Move session up"))
+                .with_dynamic_override(|ctx| {
+                    uses_vertical_tabs(ctx)
+                        .then(|| session_label("move tab up", "move session up").into())
+                }),
             WorkspaceAction::MoveActiveTabLeft,
         )
         .with_group(bindings::BindingGroup::Navigation.as_str())
@@ -915,9 +925,11 @@ pub fn init(app: &mut AppContext) {
         .with_custom_action(CustomAction::MoveTabLeft),
         EditableBinding::new(
             "workspace:move_tab_right",
-            BindingDescription::new("Move tab right").with_dynamic_override(|ctx| {
-                uses_vertical_tabs(ctx).then(|| "move tab down".into())
-            }),
+            BindingDescription::new(session_label("Move tab right", "Move session down"))
+                .with_dynamic_override(|ctx| {
+                    uses_vertical_tabs(ctx)
+                        .then(|| session_label("move tab down", "move session down").into())
+                }),
             WorkspaceAction::MoveActiveTabRight,
         )
         .with_group(bindings::BindingGroup::Navigation.as_str())
@@ -977,7 +989,7 @@ pub fn init(app: &mut AppContext) {
 
     app.register_editable_bindings([EditableBinding::new(
         "workspace:rename_active_tab",
-        "Rename the current tab",
+        session_label("Rename the current tab", "Rename session"),
         WorkspaceAction::RenameActiveTab,
     )
     .with_group(bindings::BindingGroup::Settings.as_str())
@@ -1120,7 +1132,7 @@ pub fn init(app: &mut AppContext) {
         .with_enabled(|| ContextFlag::CloseWindow.is_enabled()),
         EditableBinding::new(
             "workspace:close_active_tab",
-            "Close the current tab",
+            session_label("Close the current tab", "Close session"),
             WorkspaceAction::CloseActiveTab,
         )
         .with_custom_action(CustomAction::CloseTab)
@@ -1130,7 +1142,7 @@ pub fn init(app: &mut AppContext) {
         ),
         EditableBinding::new(
             "workspace:close_other_tabs",
-            "Close other tabs",
+            session_label("Close other tabs", "Close other sessions"),
             WorkspaceAction::CloseNonActiveTabs,
         )
         .with_custom_action(CustomAction::CloseOtherTabs)
@@ -1138,8 +1150,13 @@ pub fn init(app: &mut AppContext) {
         .with_context_predicate(id!("Workspace")),
         EditableBinding::new(
             "workspace:close_tabs_right_active_tab",
-            BindingDescription::new("Close tabs to the right").with_dynamic_override(|ctx| {
-                uses_vertical_tabs(ctx).then(|| "close tabs below".into())
+            BindingDescription::new(session_label(
+                "Close tabs to the right",
+                "Close sessions below",
+            ))
+            .with_dynamic_override(|ctx| {
+                uses_vertical_tabs(ctx)
+                    .then(|| session_label("close tabs below", "close sessions below").into())
             }),
             WorkspaceAction::CloseTabsRightActiveTab,
         )
@@ -1250,7 +1267,7 @@ pub fn init(app: &mut AppContext) {
         .with_context_predicate(id!("Workspace") & !id!("IsAnonymousUser"))]);
     }
 
-    if !FeatureFlag::AvatarInTabBar.is_enabled() {
+    if !FeatureFlag::AvatarInTabBar.is_enabled() && !ChannelState::is_local_only() {
         app.register_editable_bindings([EditableBinding::new(
             "workspace:toggle_resource_center",
             "Toggle resource center",
@@ -1274,22 +1291,24 @@ pub fn init(app: &mut AppContext) {
     // Oz and Warp Control CLI install/uninstall actions (macOS only)
     #[cfg(target_os = "macos")]
     {
-        app.register_editable_bindings([
-            EditableBinding::new(
-                "workspace:install_cli",
-                "Install Oz CLI globally for use outside of Torch",
-                WorkspaceAction::InstallOz,
-            )
-            .with_group(bindings::BindingGroup::Settings.as_str())
-            .with_context_predicate(id!("Workspace")),
-            EditableBinding::new(
-                "workspace:uninstall_cli",
-                "Undo global Oz CLI installation (oz will still work within Torch)",
-                WorkspaceAction::UninstallOz,
-            )
-            .with_group(bindings::BindingGroup::Settings.as_str())
-            .with_context_predicate(id!("Workspace")),
-        ]);
+        if !ChannelState::is_local_only() {
+            app.register_editable_bindings([
+                EditableBinding::new(
+                    "workspace:install_cli",
+                    "Install Oz CLI globally for use outside of Torch",
+                    WorkspaceAction::InstallOz,
+                )
+                .with_group(bindings::BindingGroup::Settings.as_str())
+                .with_context_predicate(id!("Workspace")),
+                EditableBinding::new(
+                    "workspace:uninstall_cli",
+                    "Undo global Oz CLI installation (oz will still work within Torch)",
+                    WorkspaceAction::UninstallOz,
+                )
+                .with_group(bindings::BindingGroup::Settings.as_str())
+                .with_context_predicate(id!("Workspace")),
+            ]);
+        }
         if FeatureFlag::WarpControlCli.is_enabled() {
             app.register_editable_bindings([
                 EditableBinding::new(
@@ -1480,8 +1499,13 @@ pub fn init(app: &mut AppContext) {
         .with_context_predicate(id!("Workspace")),
         EditableBinding::new(
             "workspace:open_repository",
-            BindingDescription::new("Open repository")
-                .with_custom_description(bindings::MAC_MENUS_CONTEXT, "Open Repository"),
+            if ChannelState::is_local_only() {
+                BindingDescription::new("New session in folder…")
+                    .with_custom_description(bindings::MAC_MENUS_CONTEXT, "New Session in Folder…")
+            } else {
+                BindingDescription::new("Open repository")
+                    .with_custom_description(bindings::MAC_MENUS_CONTEXT, "Open Repository")
+            },
             WorkspaceAction::OpenRepository { path: None },
         )
         .with_context_predicate(id!("Workspace"))
@@ -1568,6 +1592,7 @@ fn add_open_setting_pages_as_editable_binding(app: &mut AppContext) {
             "Open Settings: Account",
             WorkspaceAction::ShowSettingsPage(SettingsSection::Account),
         )
+        .with_enabled(has_cloud_surfaces)
         .with_context_predicate(id!("Workspace"))
         .with_group(bindings::BindingGroup::Settings.as_str())
         .with_custom_action(CustomAction::ShowAccount),
@@ -1593,6 +1618,7 @@ fn add_open_setting_pages_as_editable_binding(app: &mut AppContext) {
                 .with_custom_description(bindings::MAC_MENUS_CONTEXT, "View Shared Blocks..."),
             WorkspaceAction::ShowSettingsPage(SettingsSection::SharedBlocks),
         )
+        .with_enabled(has_cloud_surfaces)
         .with_group(bindings::BindingGroup::Settings.as_str())
         .with_context_predicate(id!("Workspace"))
         .with_custom_action(CustomAction::ViewSharedBlocks),
@@ -1622,12 +1648,13 @@ fn add_open_setting_pages_as_editable_binding(app: &mut AppContext) {
                 .with_custom_description(bindings::MAC_MENUS_CONTEXT, "Open Team Settings"),
             WorkspaceAction::ShowSettingsPage(SettingsSection::Teams),
         )
+        .with_enabled(has_cloud_surfaces)
         .with_group(bindings::BindingGroup::Settings.as_str())
         .with_custom_action(CustomAction::OpenTeamSettings)
         .with_context_predicate(id!("Workspace")),
         EditableBinding::new(
             "workspace:show_settings_privacy_page",
-            BindingDescription::new("Open Settings: Privacy"),
+            BindingDescription::new(format!("Open Settings: {}", SettingsSection::Privacy)),
             WorkspaceAction::ShowSettingsPage(SettingsSection::Privacy),
         )
         .with_group(bindings::BindingGroup::Settings.as_str())
@@ -1638,6 +1665,7 @@ fn add_open_setting_pages_as_editable_binding(app: &mut AppContext) {
                 .with_custom_description(bindings::MAC_MENUS_CONTEXT, "Configure Warpify..."),
             WorkspaceAction::ShowSettingsPage(SettingsSection::Warpify),
         )
+        .with_enabled(has_cloud_surfaces)
         .with_group(bindings::BindingGroup::Settings.as_str())
         .with_context_predicate(id!("Workspace")),
         EditableBinding::new(
@@ -1653,6 +1681,7 @@ fn add_open_setting_pages_as_editable_binding(app: &mut AppContext) {
             BindingDescription::new("Open Settings: Billing and usage"),
             WorkspaceAction::ShowSettingsPage(SettingsSection::BillingAndUsage),
         )
+        .with_enabled(has_cloud_surfaces)
         .with_group(bindings::BindingGroup::Settings.as_str())
         .with_context_predicate(id!("Workspace")),
         EditableBinding::new(
@@ -1668,6 +1697,7 @@ fn add_open_setting_pages_as_editable_binding(app: &mut AppContext) {
             BindingDescription::new("Open Settings: Referrals"),
             WorkspaceAction::ShowSettingsPage(SettingsSection::Referrals),
         )
+        .with_enabled(has_cloud_surfaces)
         .with_group(bindings::BindingGroup::Settings.as_str())
         .with_context_predicate(id!("Workspace")),
         EditableBinding::new(
@@ -1675,6 +1705,7 @@ fn add_open_setting_pages_as_editable_binding(app: &mut AppContext) {
             BindingDescription::new("Open Settings: Environments"),
             WorkspaceAction::ShowSettingsPage(SettingsSection::CloudEnvironments),
         )
+        .with_enabled(has_cloud_surfaces)
         .with_group(bindings::BindingGroup::Settings.as_str())
         .with_context_predicate(id!("Workspace")),
         EditableBinding::new(
@@ -1682,6 +1713,7 @@ fn add_open_setting_pages_as_editable_binding(app: &mut AppContext) {
             BindingDescription::new("Open Settings: MCP Servers"),
             WorkspaceAction::ShowSettingsPage(SettingsSection::AgentMCPServers),
         )
+        .with_enabled(has_cloud_surfaces)
         .with_group(bindings::BindingGroup::Settings.as_str())
         .with_context_predicate(id!("Workspace")),
         EditableBinding::new(
@@ -1695,6 +1727,20 @@ fn add_open_setting_pages_as_editable_binding(app: &mut AppContext) {
     ]);
 }
 
+/// Torch's sidebar presents tabs as sessions.
+fn session_label(tab_label: &'static str, session_label: &'static str) -> &'static str {
+    if ChannelState::is_local_only() {
+        session_label
+    } else {
+        tab_label
+    }
+}
+
+/// Whether the build includes Warp account and cloud surfaces, which local-only builds omit.
+fn has_cloud_surfaces() -> bool {
+    !ChannelState::is_local_only()
+}
+
 fn add_overflow_menu_items_as_editable_binding(app: &mut AppContext) {
     use warpui::keymap::macros::*;
 
@@ -1705,11 +1751,16 @@ fn add_overflow_menu_items_as_editable_binding(app: &mut AppContext) {
             "Invite People...",
             WorkspaceAction::ShowReferralSettingsPage,
         )
+        .with_enabled(has_cloud_surfaces)
         .with_context_predicate(id!("Workspace"))
         .with_custom_action(CustomAction::ReferAFriend),
         EditableBinding::new(
             "workspace:link_to_slack",
-            "Join our Slack community (opens external link)",
+            if ChannelState::is_local_only() {
+                "Torch on GitHub (opens external link)"
+            } else {
+                "Join our Slack community (opens external link)"
+            },
             WorkspaceAction::JoinSlack,
         )
         .with_context_predicate(id!("Workspace")),
@@ -1737,6 +1788,7 @@ fn add_overflow_menu_items_as_editable_binding(app: &mut AppContext) {
             "View privacy policy (opens external link)",
             WorkspaceAction::ViewPrivacyPolicy,
         )
+        .with_enabled(has_cloud_surfaces)
         .with_context_predicate(id!("Workspace")),
     ]);
 }

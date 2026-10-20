@@ -855,6 +855,19 @@ const NOTIFICATION_EDITOR_MARGIN: f32 = 5.;
 
 const NOTIFICATIONS_DOCS_URL: &str = "https://docs.warp.dev/terminal/more-features/notifications";
 
+/// A help icon linking to Warp's hosted docs, which do not describe Torch's local-only build.
+fn docs_link_info(
+    mouse_state: &MouseStateHandle,
+    url: &str,
+) -> Option<AdditionalInfo<FeaturesPageAction>> {
+    (!ChannelState::is_local_only()).then(|| AdditionalInfo {
+        mouse_state: mouse_state.clone(),
+        on_click_action: Some(FeaturesPageAction::OpenUrl(url.into())),
+        secondary_text: None,
+        tooltip_override_text: None,
+    })
+}
+
 /// WARNING: this constant was computed manually by determining the pixel width
 /// of the quake mode dropdowns based on the number of expanded items in the flex row.
 /// This should be adjusted if the flex row is changed in any way!
@@ -2776,8 +2789,10 @@ impl FeaturesPageView {
     }
 
     fn build_page(ctx: &mut ViewContext<Self>) -> PageType<Self> {
-        let mut general_widgets: Vec<Box<dyn SettingsWidget<View = Self>>> =
-            vec![Box::new(DefaultSessionModeWidget::default())];
+        let mut general_widgets: Vec<Box<dyn SettingsWidget<View = Self>>> = vec![];
+        if !ChannelState::is_local_only() {
+            general_widgets.push(Box::new(DefaultSessionModeWidget::default()));
+        }
 
         let native_preference_settings = NativePreferenceSettings::as_ref(ctx);
         if native_preference_settings
@@ -2823,6 +2838,7 @@ impl FeaturesPageView {
         if changelog_settings
             .show_changelog_after_update
             .is_supported_on_current_platform()
+            && !ChannelState::is_local_only()
         {
             general_widgets.push(Box::new(ShowChangelogWidget::default()));
         }
@@ -2983,6 +2999,7 @@ impl FeaturesPageView {
         if input_settings
             .at_context_menu_in_terminal_mode
             .is_supported_on_current_platform()
+            && !ChannelState::is_local_only()
         {
             editor_widgets.push(Box::new(AtContextMenuInTerminalModeWidget::default()));
         }
@@ -2999,6 +3016,7 @@ impl FeaturesPageView {
             .outline_codebase_symbols_for_at_context_menu
             .is_supported_on_current_platform()
             && FeatureFlag::AIContextMenuCode.is_enabled()
+            && !ChannelState::is_local_only()
         {
             editor_widgets.push(Box::new(
                 OutlineCodebaseSymbolsForAtContextMenuWidget::default(),
@@ -3090,7 +3108,7 @@ impl FeaturesPageView {
             }
         }
 
-        let categories = vec![
+        let mut categories = vec![
             Category::new("General", general_widgets),
             Category::new("Session", session_widgets),
             Category::new("Keys", keys_widgets),
@@ -3098,12 +3116,14 @@ impl FeaturesPageView {
             Category::new("Terminal Input", editor_widgets),
             Category::new("Terminal", terminal_widgets),
             Category::new("Notifications", notifications_widgets),
-            Category::new(
+        ];
+        if !ChannelState::is_local_only() {
+            categories.push(Category::new(
                 "Workflows",
                 vec![Box::new(WorkflowsInCommandSearch::default())],
-            ),
-            Category::new("System", system_widgets),
-        ];
+            ));
+        }
+        categories.push(Category::new("System", system_widgets));
 
         PageType::new_categorized(categories, None)
     }
@@ -4668,14 +4688,10 @@ impl SettingsWidget for SessionRestorationWidget {
 
         let labeled_switch = render_body_item::<FeaturesPageAction>(
             "Restore windows, tabs, and panes on startup".into(),
-            Some(AdditionalInfo {
-                mouse_state: self.additional_info_link.clone(),
-                on_click_action: Some(FeaturesPageAction::OpenUrl(
-                    "https://docs.warp.dev/terminal/sessions/session-restoration".into(),
-                )),
-                secondary_text: None,
-                tooltip_override_text: None,
-            }),
+            docs_link_info(
+                &self.additional_info_link,
+                "https://docs.warp.dev/terminal/sessions/session-restoration",
+            ),
             LocalOnlyIconState::for_setting(
                 RestoreSession::storage_key(),
                 RestoreSession::sync_to_cloud(),
@@ -4753,14 +4769,10 @@ impl SettingsWidget for SnackbarHeaderWidget {
         let ui_builder = appearance.ui_builder();
         render_body_item::<FeaturesPageAction>(
             "Show sticky command header".into(),
-            Some(AdditionalInfo {
-                mouse_state: self.additional_info_link.clone(),
-                on_click_action: Some(FeaturesPageAction::OpenUrl(
-                    "https://docs.warp.dev/terminal/blocks/sticky-command-header".into(),
-                )),
-                secondary_text: None,
-                tooltip_override_text: None,
-            }),
+            docs_link_info(
+                &self.additional_info_link,
+                "https://docs.warp.dev/terminal/blocks/sticky-command-header",
+            ),
             LocalOnlyIconState::for_setting(
                 SnackbarEnabled::storage_key(),
                 SnackbarEnabled::sync_to_cloud(),
@@ -5238,12 +5250,7 @@ impl SettingsWidget for DesktopNotificationsWidget {
         let mut column = Flex::column();
         column.add_child(render_body_item::<FeaturesPageAction>(
             "Receive desktop notifications from Torch".into(),
-            Some(AdditionalInfo {
-                mouse_state: self.additional_info_link.clone(),
-                on_click_action: Some(FeaturesPageAction::OpenUrl(NOTIFICATIONS_DOCS_URL.into())),
-                secondary_text: None,
-                tooltip_override_text: None,
-            }),
+            docs_link_info(&self.additional_info_link, NOTIFICATIONS_DOCS_URL),
             LocalOnlyIconState::for_setting(
                 Notifications::storage_key(),
                 Notifications::sync_to_cloud(),
@@ -6963,15 +6970,10 @@ impl SettingsWidget for MouseReportingWidget {
         let ui_builder = appearance.ui_builder();
         render_body_item::<FeaturesPageAction>(
             "Enable Mouse Reporting".into(),
-            Some(AdditionalInfo {
-                mouse_state: self.additional_info_link.clone(),
-                on_click_action: Some(FeaturesPageAction::OpenUrl(
-                    "https://docs.warp.dev/terminal/more-features/full-screen-apps#mouse-and-scroll-reporting"
-                        .into(),
-                )),
-                secondary_text: None,
-                tooltip_override_text: None,
-            }),
+            docs_link_info(
+                &self.additional_info_link,
+                "https://docs.warp.dev/terminal/more-features/full-screen-apps#mouse-and-scroll-reporting",
+            ),
             LocalOnlyIconState::for_setting(
                 MouseReportingEnabled::storage_key(),
                 MouseReportingEnabled::sync_to_cloud(),
@@ -7228,14 +7230,10 @@ impl SettingsWidget for SmartSelectWidget {
         let mut column = Flex::column();
         column.add_child(render_body_item::<FeaturesPageAction>(
             "Double-click smart selection".into(),
-            Some(AdditionalInfo {
-                mouse_state: self.additional_info_link.clone(),
-                on_click_action: Some(FeaturesPageAction::OpenUrl(
-                    "https://docs.warp.dev/terminal/more-features/text-selection".into(),
-                )),
-                secondary_text: None,
-                tooltip_override_text: None,
-            }),
+            docs_link_info(
+                &self.additional_info_link,
+                "https://docs.warp.dev/terminal/more-features/text-selection",
+            ),
             LocalOnlyIconState::for_setting(
                 SmartSelectEnabled::storage_key(),
                 SmartSelectEnabled::sync_to_cloud(),
@@ -7517,14 +7515,10 @@ impl SettingsWidget for WorkflowsInCommandSearch {
         let workflow_settings = CommandSearchSettings::as_ref(app);
         render_body_item::<FeaturesPageAction>(
             "Show Global Workflows in Command Search (ctrl-r)".into(),
-            Some(AdditionalInfo {
-                mouse_state: self.additional_info_link.clone(),
-                on_click_action: Some(FeaturesPageAction::OpenUrl(
-                    "https://docs.warp.dev/terminal/entry/yaml-workflows".into(),
-                )),
-                secondary_text: None,
-                tooltip_override_text: None,
-            }),
+            docs_link_info(
+                &self.additional_info_link,
+                "https://docs.warp.dev/terminal/entry/yaml-workflows",
+            ),
             LocalOnlyIconState::for_setting(
                 ShowGlobalWorkflowsInUniversalSearch::storage_key(),
                 ShowGlobalWorkflowsInUniversalSearch::sync_to_cloud(),

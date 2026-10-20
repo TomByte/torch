@@ -131,7 +131,7 @@ spacing:
   row-horizontal: "12px"
   group-tail: "15px"
   header-right: "24px"
-  header-left: "32px"
+  header-left: "16px"
   window-controls-reserve: "80px"
 components:
   command-palette:
@@ -181,13 +181,13 @@ components:
   terminal-header:
     typography: "{typography.title}"
     height: "40px"
-    padding: "0px 24px 0px 32px"
+    padding: "0px 24px 0px 16px"
   terminal-header-dark:
     backgroundColor: "{colors.dark-terminal-background}"
     textColor: "{colors.dark-text}"
     typography: "{typography.title}"
     height: "40px"
-    padding: "0px 24px 0px 32px"
+    padding: "0px 24px 0px 16px"
   terminal-pane:
     backgroundColor: "{colors.light-terminal-background}"
     textColor: "{colors.light-terminal-foreground}"
@@ -349,8 +349,9 @@ Do not reconstruct their output as product cards or embed a built-in assistant t
 
 The native window is a horizontal sidebar and flexible terminal area. The sidebar's initial width
 is the `sidebar` component token. It can resize from 220 logical pixels to the greater of 220 or 45%
-of the available width. It can be hidden using the sidebar control; the same control then appears
-in the terminal header. There is no web breakpoint or mobile layout.
+of the available width, and each window restores its last width. It can be hidden using the
+sidebar control, View › Toggle Sidebar, or Cmd+B; the same control then appears in the terminal
+header. There is no web breakpoint or mobile layout.
 
 The sidebar header is 56 logical pixels high and reserves space for native window controls. The
 session list has the `sidebar-list-inset` on both sides, vertical scrolling, and an overlay scrollbar
@@ -360,12 +361,13 @@ and `group-tail` spacing. Long session names ellipsize rather than increasing ro
 The terminal pane uses `pane-inset` on its top, right, and bottom edges, and on all four edges when
 the sidebar is hidden. No left inset is added while the sidebar is open. Its header uses the
 `terminal-header` tokens, a title capped at 280 logical pixels, and a flexible working-directory
-label. Both clip with ellipsis. With the sidebar hidden, header left padding becomes
+label. Both clip with ellipsis. Terminal text starts `header-left` from the pane's left edge, and
+the header title aligns with it. With the sidebar hidden, header left padding becomes
 `window-controls-reserve`. Existing configured side panels remain part of the workspace layout.
 
 Full-screen terminal programs default to `AltScreenPaddingMode::MatchBlocklist` in local-only
-builds. Keep their padding aligned with the terminal block list rather than inventing a second
-terminal inset. Narrow-window captures confirm the layout and long-title clipping; they do not
+builds, so vim, htop, and CLI agent interfaces share the same tight 16-logical-pixel inset. Keep
+their padding aligned with the terminal block list rather than inventing a second terminal inset. Narrow-window captures confirm the layout and long-title clipping; they do not
 establish an untested minimum window size.
 
 ## Elevation & Depth
@@ -407,6 +409,11 @@ outside their hover and selection fills, keeping adjacent states distinct. The m
 `compact-sidebar-light.png` and `compact-sidebar-dark.png` in `.impeccable/review/` verify this spacing;
 keyboard switching, inline rename, and group collapse were also checked in the native app.
 
+Keyboard session navigation follows the displayed rows: next and previous session, Cmd+1–9, and
+last session walk the grouped order and skip collapsed groups, wrapping at the ends. Move session
+up and down reorder within the session's group without changing the order of groups. Cmd+Shift+I
+renames the active session.
+
 A row places the title first, then age, then status, with the `row-gap` between them. A normal click
 activates; Shift-click selects a range in displayed grouped order; Command-click toggles membership
 in the multi-selection. Double-click renames, middle-click closes, and right-click opens the tab or
@@ -427,10 +434,13 @@ session inside a configured project groups under that project's root, including 
 symlink aliases. If registered roots are nested, the deepest matching root wins. Canonical paths
 keep aliases together while distinct roots with the same short name remain separate projects.
 
-Sessions outside configured projects retain working-directory grouping: keys use the full directory
-string with trailing separators removed, and labels use its last component. Empty and home-only
-fallback paths use Other. Groups appear in first-occurrence order in the workspace tab sequence,
-and members retain their order within that sequence. Status never sorts sessions.
+A session keeps the group it first joined. Sessions outside configured projects group by the first
+directory they report, normally their launch directory: keys use the full directory string with
+trailing separators removed, and labels use its last component. Changing directory updates the
+row's directory text but never moves the row. A session that enters a configured project joins that
+project once and stays there; a project removed from Settings releases its sessions. Empty and
+home-only fallback paths use Other. Groups appear in first-occurrence order in the workspace tab
+sequence, and members retain their order within that sequence. Status never sorts sessions.
 
 All group headings are clickable disclosures with a 12-logical-pixel chevron: down when expanded,
 right when collapsed. The existing heading padding belongs to the hit target. Long labels ellipsize
@@ -457,11 +467,13 @@ groups have no project-root creation control.
 
 Title precedence is a user-defined tab title, a locally tracked CLI session title, then the pane's
 display title; empty or directory-only fallbacks become Terminal. Age comes from terminal session
-activity: now, minutes, hours, or days. It is not a claim about task duration.
+activity: now, minutes, hours, or days, refreshed each minute while the sidebar is open. It is not
+a claim about task duration.
 
 Status first comes from the terminal's conversation summary. A running shell command without that
 summary supplies InProgress, except for detected CLI agents without structured status: an open
-agent is not evidence of active work. Running uses a broken ring, blocked uses an amber ring and
+agent is not evidence of active work. A session with split panes shows its most urgent pane:
+blocked, then running, then unread completion, then error; otherwise the focused pane's status. Running uses a broken ring, blocked uses an amber ring and
 dot, unread completion uses a filled check, and read completion uses a muted check. Errors use an
 amber exclamation ring. Idle, cancelled, waiting, and unknown agent states use a small muted dot.
 Status assets share a 24-unit drawing grid rendered at 16 logical pixels. When both status and
@@ -538,8 +550,9 @@ a maximum height of 464 logical pixels. Preview browser focus outlines are illus
 
 Use the existing native Settings → Appearance controls. Current theme opens the native picker
 with exactly four entries, ordered Light, Dark, Kanagawa, and Ayu. Kanagawa is the Wave variant;
-Ayu is Mirage. Light remains the local-only default. Sync with OS uses the configured light and
-dark appearance choices, with the same four-theme catalog.
+Ayu is Mirage. A new local-only profile syncs with the OS using Light and Dark; a profile that
+already chose a theme keeps it. Sync with OS uses the configured light and dark appearance choices,
+with the same four-theme catalog.
 
 Retired built-in preferences resolve to Light or Dark through the compatibility mapping, including
 preferences stored for OS appearance modes. Existing custom theme files and references are retained,

@@ -365,6 +365,10 @@ impl Display for SettingsSection {
             SettingsSection::EditorAndCodeReview => write!(f, "Editor and Code Review"),
             SettingsSection::CloudEnvironments => write!(f, "Environments"),
             SettingsSection::WarpCloudAgentAPIKeys => write!(f, "API keys"),
+            // Secret redaction is the only privacy control in local-only builds.
+            SettingsSection::Privacy if ChannelState::is_local_only() => {
+                write!(f, "Secret redaction")
+            }
             _ => write!(f, "{self:?}"),
         }
     }

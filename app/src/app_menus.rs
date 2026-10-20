@@ -266,20 +266,37 @@ fn make_new_file_menu(ctx: &AppContext) -> Menu {
     file_menu_options.extend([
         MenuItem::Separator,
         updateable_custom_item_without_checkmark(CustomAction::OpenRepository, ctx),
-        MenuItem::Custom(CustomMenuItem::new_with_submenu(
-            "Open Recent",
-            |_| (),
-            |_props, ctx| {
-                let recent_repos = generate_recent_repos_for_menu(ctx);
-                MenuItemPropertyChanges {
-                    submenu: Some(Some(make_recent_repos_menu_items(ctx))),
-                    disabled: Some(recent_repos.is_empty()),
-                    ..Default::default()
-                }
-            },
-            None,
-            vec![],
-        )),
+        if ChannelState::is_local_only() {
+            MenuItem::Custom(CustomMenuItem::new_with_submenu(
+                "Projects",
+                |_| (),
+                |_props, ctx| {
+                    let projects = make_projects_menu_items(ctx);
+                    MenuItemPropertyChanges {
+                        disabled: Some(projects.is_empty()),
+                        submenu: Some(Some(projects)),
+                        ..Default::default()
+                    }
+                },
+                None,
+                vec![],
+            ))
+        } else {
+            MenuItem::Custom(CustomMenuItem::new_with_submenu(
+                "Open Recent",
+                |_| (),
+                |_props, ctx| {
+                    let recent_repos = generate_recent_repos_for_menu(ctx);
+                    MenuItemPropertyChanges {
+                        submenu: Some(Some(make_recent_repos_menu_items(ctx))),
+                        disabled: Some(recent_repos.is_empty()),
+                        ..Default::default()
+                    }
+                },
+                None,
+                vec![],
+            ))
+        },
         MenuItem::Separator,
         updateable_custom_item_without_checkmark(CustomAction::CloseCurrentSession, ctx),
         updateable_custom_item_without_checkmark(CustomAction::CloseWindow, ctx),
@@ -520,6 +537,16 @@ fn make_new_view_menu(ctx: &AppContext) -> Menu {
         ]);
     }
 
+    if ChannelState::is_local_only() {
+        items.splice(
+            0..0,
+            [
+                updateable_custom_item_without_checkmark(CustomAction::ToggleSidebar, ctx),
+                MenuItem::Separator,
+            ],
+        );
+    }
+
     Menu::new("View", items)
 }
 
@@ -547,7 +574,14 @@ fn make_new_tab_menu(ctx: &AppContext) -> Menu {
         updateable_custom_item_without_checkmark(CustomAction::CloseOtherTabs, ctx),
         updateable_custom_item_without_checkmark(CustomAction::CloseTabsRight, ctx),
     ];
-    Menu::new("Tab", items)
+    Menu::new(
+        if ChannelState::is_local_only() {
+            "Session"
+        } else {
+            "Tab"
+        },
+        items,
+    )
 }
 
 fn make_new_ai_menu(ctx: &AppContext) -> Menu {
@@ -1173,6 +1207,23 @@ fn open_new_window(ctx: &mut AppContext) {
 /// No-op updater function for custom menu items that never change.
 fn no_updates(_: &MenuItemProperties, _: &mut AppContext) -> MenuItemPropertyChanges {
     Default::default()
+}
+
+/// One item per configured Torch project, each starting a new session at the project root.
+fn make_projects_menu_items(ctx: &AppContext) -> Vec<MenuItem> {
+    crate::settings::ProjectCatalog::as_ref(ctx)
+        .projects
+        .iter()
+        .map(|project| {
+            let path = project.path.display().to_string();
+            MenuItem::Custom(CustomMenuItem::new(
+                &project.name,
+                move |ctx| ctx.dispatch_global_action("workspace:open_repository", &path),
+                no_updates,
+                None,
+            ))
+        })
+        .collect()
 }
 
 fn make_recent_repos_menu_items(ctx: &AppContext) -> Vec<MenuItem> {

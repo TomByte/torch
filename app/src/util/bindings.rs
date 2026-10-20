@@ -8,6 +8,7 @@ use fuzzy_match::match_indices_case_insensitive;
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use regex::Regex;
+use warp_core::channel::ChannelState;
 use warpui::actions::StandardAction;
 use warpui::keymap::{
     BindingDescription, BindingId, BindingLens, CustomTag, DescriptionContext, EditableBindingLens,
@@ -132,6 +133,7 @@ pub enum CustomAction {
     GoToLine,
     ToggleGlobalSearch,
     ToggleConversationListView,
+    ToggleSidebar,
 }
 
 lazy_static! {
@@ -287,7 +289,17 @@ pub fn custom_tag_to_keystroke(custom: CustomTag) -> Option<Keystroke> {
         CustomAction::Find => Keystroke::parse(cmd_or_ctrl_shift("f")).ok(),
         CustomAction::SelectAll => Keystroke::parse("cmdorctrl-a").ok(),
         CustomAction::CommandSearch => Keystroke::parse("ctrl-r").ok(),
+        CustomAction::Workflows if ChannelState::is_local_only() => None,
         CustomAction::Workflows => Keystroke::parse("ctrl-shift-R").ok(),
+        // Torch's sidebar toggle uses this keystroke.
+        CustomAction::ToggleBookmarkBlock if ChannelState::is_local_only() => None,
+        CustomAction::RenameTab if ChannelState::is_local_only() => {
+            if OperatingSystem::get().is_mac() {
+                Keystroke::parse("cmd-shift-I").ok()
+            } else {
+                Keystroke::parse("ctrl-shift-I").ok()
+            }
+        }
         CustomAction::History => Keystroke::parse("up").ok(),
         CustomAction::IncreaseFontSize => Keystroke::parse("shift-cmdorctrl-+").ok(),
         CustomAction::DecreaseFontSize => Keystroke::parse("shift-cmdorctrl-_").ok(),
@@ -419,6 +431,7 @@ pub fn custom_tag_to_keystroke(custom: CustomTag) -> Option<Keystroke> {
             }
         }
         CustomAction::GoToLine => Keystroke::parse("ctrl-g").ok(),
+        CustomAction::ToggleSidebar => Keystroke::parse(cmd_or_ctrl_shift("b")).ok(),
         CustomAction::ToggleGlobalSearch => {
             if OperatingSystem::get().is_mac() {
                 Keystroke::parse("ctrl-3").ok()

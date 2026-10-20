@@ -1468,11 +1468,12 @@ impl AppearanceSettingsPageView {
         categories.push(Category::new("Blocks", block_settings_widgets));
 
         let font_settings = FontSettings::as_ref(ctx);
-        let mut text_settings_widgets: Vec<Box<dyn SettingsWidget<View = Self>>> = vec![
-            Box::new(TerminalFontWidget::default()),
-            Box::new(AIFontWidget::default()),
-            Box::new(NotebookFontSizeWidget::default()),
-        ];
+        let mut text_settings_widgets: Vec<Box<dyn SettingsWidget<View = Self>>> =
+            vec![Box::new(TerminalFontWidget::default())];
+        if !ChannelState::is_local_only() {
+            text_settings_widgets.push(Box::new(AIFontWidget::default()));
+            text_settings_widgets.push(Box::new(NotebookFontSizeWidget::default()));
+        }
         if font_settings
             .use_thin_strokes
             .is_supported_on_current_platform()
@@ -1526,12 +1527,14 @@ impl AppearanceSettingsPageView {
             tab_settings_widgets.push(Box::new(
                 ShowVerticalTabPanelInRestoredWindowsWidget::default(),
             ));
-            tab_settings_widgets.push(Box::new(
-                HideTitleBarSearchBarInVerticalTabsWidget::default(),
-            ));
-            tab_settings_widgets.push(Box::new(
-                UseLatestUserPromptAsConversationTitleInTabNamesWidget::default(),
-            ));
+            if !ChannelState::is_local_only() {
+                tab_settings_widgets.push(Box::new(
+                    HideTitleBarSearchBarInVerticalTabsWidget::default(),
+                ));
+                tab_settings_widgets.push(Box::new(
+                    UseLatestUserPromptAsConversationTitleInTabNamesWidget::default(),
+                ));
+            }
             if FeatureFlag::ConfigurableToolbar.is_enabled() {
                 tab_settings_widgets.push(Box::new(EditToolbarWidget));
             }

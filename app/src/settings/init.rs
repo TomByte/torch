@@ -384,7 +384,11 @@ fn apply_torch_defaults_for_new_profile(ctx: &mut AppContext) {
             .is_value_explicitly_set();
     if !input_type_chosen {
         InputSettings::handle(ctx).update(ctx, |settings, ctx| {
-            report_if_error!(settings.input_box_type.set_value(InputBoxType::Classic, ctx));
+            report_if_error!(
+                settings
+                    .input_box_type
+                    .set_value(InputBoxType::Classic, ctx)
+            );
         });
         SessionSettings::handle(ctx).update(ctx, |settings, ctx| {
             report_if_error!(settings.honor_ps1.set_value(true, ctx));

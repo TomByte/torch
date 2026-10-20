@@ -451,6 +451,7 @@ pub fn init(app: &mut AppContext) {
             "Toggle team workflows modal",
             TerminalAction::OpenWorkflowModal,
         )
+        .with_enabled(|| !ChannelState::is_local_only())
         .with_key_binding(cmd_or_ctrl_shift("s"))
         .with_context_predicate(
             id!("Terminal")
@@ -571,6 +572,7 @@ pub fn init(app: &mut AppContext) {
             "Share selected block",
             TerminalAction::OpenShareModal,
         )
+        .with_enabled(|| !ChannelState::is_local_only())
         .with_custom_action(CustomAction::CreateBlockPermalink)
         .with_context_predicate(
             id!("Terminal") & eq!("TerminalView_BlockSelectionCardinality", "One"),

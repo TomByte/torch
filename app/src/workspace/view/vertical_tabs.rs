@@ -794,6 +794,17 @@ impl Default for VerticalTabsPanelState {
 }
 
 impl VerticalTabsPanelState {
+    pub(super) fn width(&self) -> f32 {
+        self.resizable_state
+            .lock()
+            .map(|state| state.size())
+            .unwrap_or(torch::SIDEBAR_WIDTH)
+    }
+
+    pub(super) fn set_width(&mut self, width: f32) {
+        self.resizable_state = resizable_state_handle(width);
+    }
+
     /// Returns a lightweight handle bundle for workspace-level visibility reconciliation while the
     /// detail sidecar is active.
     pub(super) fn detail_hover_state(&self, window_id: WindowId) -> VerticalTabsDetailHoverState {

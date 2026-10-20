@@ -44,6 +44,7 @@ pub struct Window {
     pub left_panel_open: Option<bool>,
     pub vertical_tabs_panel_open: Option<bool>,
     pub team_uid: Option<String>,
+    pub vertical_tabs_panel_width: Option<f32>,
 }
 
 #[derive(Identifiable, Insertable, Queryable)]
@@ -348,6 +349,7 @@ pub struct NewWindow {
     pub left_panel_open: Option<bool>,
     pub vertical_tabs_panel_open: Option<bool>,
     pub team_uid: Option<String>,
+    pub vertical_tabs_panel_width: Option<f32>,
 }
 
 #[derive(Identifiable, Queryable, Associations)]

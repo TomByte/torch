@@ -2264,7 +2264,9 @@ pub fn init(app: &mut AppContext) {
         .with_key_binding("alt-c"),
     ]);
 
-    if let Some(custom_action) = workflows::CategoriesView::custom_action() {
+    if let Some(custom_action) = workflows::CategoriesView::custom_action()
+        && !ChannelState::is_local_only()
+    {
         app.register_editable_bindings([EditableBinding::new(
             "input:toggle_workflows",
             "Workflows",

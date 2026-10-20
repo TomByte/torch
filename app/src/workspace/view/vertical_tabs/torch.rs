@@ -846,14 +846,21 @@ fn session(workspace: &Workspace, index: usize, app: &AppContext) -> Session {
     });
     let mut project = None;
     let (group_key, group_label) = manual_group.unwrap_or_else(|| {
-        let projects = &crate::settings::ProjectCatalog::as_ref(app).projects;
+        let id = tab.pane_group.id();
+        let mut anchors = cache.anchors.borrow_mut();
+        // Sessions with no directory and no project have nothing to look up in the catalog.
+        let needs_catalog = snapshot.project_lookup.is_some()
+            || matches!(anchors.get(&id), Some(GroupAnchor::Project(_)));
+        let projects: &[crate::settings::LocalProject] = if needs_catalog {
+            &crate::settings::ProjectCatalog::as_ref(app).projects
+        } else {
+            &[]
+        };
         let find_project = |path: &Path| projects.iter().find(|project| project.path == path);
         let matched = snapshot
             .project_lookup
             .as_deref()
             .and_then(|path| crate::settings::project_for_directory(projects, path));
-        let id = tab.pane_group.id();
-        let mut anchors = cache.anchors.borrow_mut();
         let anchor = next_anchor(
             anchors.get(&id),
             matched.map(|project| project.path.as_path()),
@@ -1631,7 +1638,7 @@ fn sidebar(
     let panel = Resizable::new(state.resizable_state.clone(), content)
         .with_dragbar_side(DragBarSide::Right)
         .with_bounds_callback(Box::new(|size| (220., (size.x() * 0.45).max(220.))))
-        .on_resize(|ctx, _| ctx.notify())
+        .on_resize(|ctx, _| ctx.dispatch_typed_action(WorkspaceAction::SidebarResized))
         .finish();
     SavePosition::new(panel, super::super::VERTICAL_TABS_PANEL_POSITION_ID).finish()
 }

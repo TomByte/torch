@@ -1154,6 +1154,9 @@ impl FeatureFlag {
                     | Self::GitOperationsInCodeReview
                     | Self::RemoteCodeReview
                     | Self::JupyterNotebookRendering
+                    | Self::OzLaunchModal
+                    | Self::OrchestrationLaunchModal
+                    | Self::ChatGPTSubscription
             ) {
                 return false;
             }

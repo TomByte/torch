@@ -4108,6 +4108,13 @@ impl Workspace {
     ) {
         self.vertical_tabs_panel_open =
             Self::initial_vertical_tabs_panel_open(&workspace_setting, ctx);
+        if let NewWorkspaceSource::Restored {
+            window_snapshot, ..
+        } = &workspace_setting
+            && let Some(width) = window_snapshot.vertical_tabs_panel_width
+        {
+            self.vertical_tabs_panel.set_width(width);
+        }
         match workspace_setting {
             NewWorkspaceSource::Empty {
                 previous_active_window,
@@ -12261,6 +12268,7 @@ impl Workspace {
             warp_drive_index_width,
             left_panel_open: self.left_panel_open,
             vertical_tabs_panel_open: self.vertical_tabs_panel_open,
+            vertical_tabs_panel_width: Some(self.vertical_tabs_panel.width()),
             left_panel_width,
             right_panel_width,
             agent_management_filters,
@@ -13727,6 +13735,11 @@ impl Workspace {
 
     fn handle_open_repository(&mut self, path: &str, ctx: &mut ViewContext<Self>) {
         let path_buf = PathBuf::from(path);
+        // Torch opens a plain terminal there; repository setup belongs to the user's CLI tools.
+        if ChannelState::is_local_only() {
+            self.new_local_session(Some(path_buf), ctx);
+            return;
+        }
         ProjectManagementModel::handle(ctx).update(ctx, |projects, ctx| {
             projects.upsert_project(path_buf.clone(), ctx);
         });
@@ -24642,6 +24655,7 @@ impl TypedActionView for Workspace {
             CloseTabGroup(group_id) => self.close_tab_group(*group_id, ctx),
             ToggleTabGroupCollapsed(group_id) => self.toggle_tab_group_collapsed(*group_id, ctx),
             ToggleSidebarGroupCollapsed(key) => self.toggle_sidebar_group_collapsed(key, ctx),
+            SidebarResized => ctx.notify(),
             RenameTabGroup(group_id) => self.rename_tab_group(*group_id, ctx),
             CancelActiveRename => {
                 self.cancel_tab_rename(ctx);

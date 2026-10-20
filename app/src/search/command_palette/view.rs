@@ -51,13 +51,17 @@ use crate::{ToastStack, send_telemetry_from_ctx};
 
 lazy_static! {
     /// Set of hardcoded action names that we want to show in the command palette zero state.
-    static ref SUGGESTED_ACTIONS: HashSet<&'static str> = HashSet::from_iter(
-        [
-            if FeatureFlag::AgentMode.is_enabled() { "input:toggle_input_type" } else { "workspace:toggle_ai_assistant" },
-            "workspace:show_theme_chooser",
-            "workspace:create_personal_workflow",
-        ]
-    );
+    static ref SUGGESTED_ACTIONS: HashSet<&'static str> = if warp_core::channel::ChannelState::is_local_only() {
+        HashSet::from(["workspace:show_theme_chooser"])
+    } else {
+        HashSet::from_iter(
+            [
+                if FeatureFlag::AgentMode.is_enabled() { "input:toggle_input_type" } else { "workspace:toggle_ai_assistant" },
+                "workspace:show_theme_chooser",
+                "workspace:create_personal_workflow",
+            ]
+        )
+    };
 }
 
 /// Position ID for the command palette list.
