@@ -134,7 +134,7 @@ fn submodules_and_unrelated_folders_stay_outside_projects() {
 
 #[test]
 fn real_linked_worktrees_resolve_to_the_main_repository() {
-    use std::process::Command;
+    use command::blocking::Command;
     let root = tempfile::tempdir().unwrap();
     let repo = root.path().join("repo");
     std::fs::create_dir(&repo).unwrap();

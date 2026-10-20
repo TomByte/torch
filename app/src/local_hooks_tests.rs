@@ -344,7 +344,9 @@ fn codex_configuration_writes_hooks_json_only() {
 #[test]
 fn codex_hook_command_is_shell_agnostic_and_quiet_elsewhere() {
     use std::os::unix::fs::PermissionsExt;
-    use std::process::{Command, Stdio};
+    use std::process::Stdio;
+
+    use command::blocking::Command;
     let dir = tempfile::tempdir().unwrap();
     let binary = dir.path().join("Torch ' $(bad) 🦀");
     fs::write(

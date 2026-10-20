@@ -9059,8 +9059,10 @@ impl Workspace {
         let branch = warp_util::worktree_names::generate_worktree_branch_name(&branch_refs);
         let worktree =
             crate::tab_configs::tab_config::generated_worktree_path_string(&directory, &branch);
+        // Single quotes with `'\''` escapes mean the same in POSIX shells and fish.
+        let worktree = format!("'{}'", worktree.replace('\'', r"'\''"));
         let command = format!(
-            "git worktree add -b {branch} \"{worktree}\" && cd \"{worktree}\" && {}",
+            "git worktree add -b {branch} {worktree} && cd {worktree} && {}",
             agent.command_prefix()
         );
         self.new_session_running(directory, command, ctx);
