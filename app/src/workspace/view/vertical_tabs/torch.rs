@@ -1041,22 +1041,43 @@ fn group_collapsed(workspace: &Workspace, session: &Session) -> bool {
         )
 }
 
+/// Whether the title opens with the status glyph Claude Code writes into the terminal title: ✳
+/// at rest, and a cycling sparkle or braille spinner while it works.
+fn starts_with_agent_glyph(title: &str) -> bool {
+    let mut chars = title.chars();
+    matches!(
+        (chars.next(), chars.next()),
+        (
+            Some('✳' | '✢' | '✶' | '✻' | '✽' | '·' | '\u{2800}'..='\u{28FF}'),
+            Some(' ')
+        )
+    )
+}
+
 fn session_title(
     session: &Session,
     palette: &Palette,
     appearance: &Appearance,
 ) -> Box<dyn Element> {
-    label(
-        &session.title,
-        13.,
-        palette.text,
-        if session.unread {
-            Weight::Semibold
-        } else {
-            Weight::Normal
-        },
-        appearance,
-    )
+    let weight = if session.unread {
+        Weight::Semibold
+    } else {
+        Weight::Normal
+    };
+    if !starts_with_agent_glyph(&session.title) {
+        return label(&session.title, 13., palette.text, weight, appearance);
+    }
+    Text::new_inline(session.title.clone(), appearance.ui_font_family(), 13.)
+        .with_color(palette.text)
+        .with_style(Properties::default().weight(weight))
+        .with_clip(ClipConfig::ellipsis())
+        .with_single_highlight(
+            Highlight::new()
+                .with_properties(Properties::default().weight(weight))
+                .with_foreground_color(palette.working),
+            vec![0],
+        )
+        .finish()
 }
 
 fn session_age(session: &Session, palette: &Palette, appearance: &Appearance) -> Box<dyn Element> {

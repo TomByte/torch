@@ -382,6 +382,16 @@ fn reduced_arrival_fades_without_moving() {
 }
 
 #[test]
+fn only_a_leading_agent_glyph_is_coloured() {
+    assert!(starts_with_agent_glyph("✳ Echo test output"));
+    assert!(starts_with_agent_glyph("⠂ Echo test output"));
+    assert!(!starts_with_agent_glyph("✳Echo"));
+    assert!(!starts_with_agent_glyph("Echo ✳ test"));
+    assert!(!starts_with_agent_glyph("* notes"));
+    assert!(!starts_with_agent_glyph(""));
+}
+
+#[test]
 fn working_pulse_closes_in_on_the_dot_and_fades_out() {
     let (start_radius, start_opacity) = motion::pulse_ring(0.);
     let (end_radius, end_opacity) = motion::pulse_ring(1.);
