@@ -42,6 +42,45 @@ fn make_pr_artifact(url: &str, branch: &str) -> Artifact {
     }
 }
 
+#[cfg(feature = "local_only")]
+#[test]
+fn local_cli_completion_can_be_read_without_warp_notifications_enabled() {
+    use crate::terminal::CLIAgent;
+    use crate::terminal::cli_agent_sessions::{
+        CLIAgentSessionContext, CLIAgentSessionStatus, CLIAgentSessionsModelEvent,
+    };
+
+    App::test((), |mut app| async move {
+        let _guard = FeatureFlag::HOANotifications.override_enabled(false);
+        let (_history, notifications) = setup_app(&mut app);
+        app.add_singleton_model(|_| crate::workspace::WorkspaceRegistry::new());
+        let terminal_view_id = EntityId::new();
+        notifications.update(&mut app, |model, ctx| {
+            model.handle_cli_agent_session_event(
+                &CLIAgentSessionsModelEvent::StatusChanged {
+                    terminal_view_id,
+                    agent: CLIAgent::Claude,
+                    status: CLIAgentSessionStatus::Success,
+                    is_prompt_submit: false,
+                    session_context: Box::new(CLIAgentSessionContext::default()),
+                },
+                ctx,
+            );
+            assert!(
+                model
+                    .notifications()
+                    .has_unread_for_terminal_view(terminal_view_id)
+            );
+            model.mark_items_from_terminal_view_read(terminal_view_id, ctx);
+            assert!(
+                !model
+                    .notifications()
+                    .has_unread_for_terminal_view(terminal_view_id)
+            );
+        });
+    });
+}
+
 fn make_plan_artifact(doc_uid: &str, title: &str) -> Artifact {
     Artifact::Plan {
         document_uid: doc_uid.to_string(),

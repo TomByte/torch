@@ -4,6 +4,49 @@ use warp_core::ui::theme::{Details, Fill};
 use warpui::TypedActionView;
 
 #[test]
+fn completed_sessions_only_have_a_filled_check_until_read() {
+    assert_eq!(
+        session_indicator(Some(&ConversationStatus::Success), true, false),
+        SessionIndicator::UnreadComplete,
+    );
+    assert_eq!(
+        session_indicator(Some(&ConversationStatus::Success), false, false),
+        SessionIndicator::Complete,
+    );
+}
+
+#[test]
+fn idle_and_untracked_sessions_do_not_claim_completed_work() {
+    assert_eq!(
+        session_indicator(None, false, true),
+        SessionIndicator::Unknown
+    );
+    assert_eq!(
+        session_indicator(None, false, false),
+        SessionIndicator::Idle
+    );
+    assert_eq!(
+        session_indicator(Some(&ConversationStatus::Cancelled), true, false),
+        SessionIndicator::Idle,
+    );
+}
+
+#[test]
+fn permission_requests_keep_attention_even_after_being_read() {
+    let status = ConversationStatus::Blocked {
+        blocked_action: "Permission required".into(),
+    };
+    assert_eq!(
+        session_indicator(Some(&status), false, false),
+        SessionIndicator::NeedsInput
+    );
+    assert_eq!(
+        session_indicator(Some(&status), true, false),
+        SessionIndicator::NeedsInput
+    );
+}
+
+#[test]
 fn unavailable_project_does_not_create_a_session_or_expand_its_group() {
     use crate::workspace::view::tests::{initialize_app, mock_workspace};
     warpui::App::test((), |mut app| async move {

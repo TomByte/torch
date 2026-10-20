@@ -382,7 +382,7 @@ spinning animation from a static running glyph.
 Controls, session rows, and the terminal pane use their distinct frontmatter radii. The active
 session and main pane use a one-logical-pixel rule; multi-selected inactive rows receive selection
 fill without the active border. The terminal surface clips its contents to its rounded boundary.
-Icons stay small and optically quiet: controls use 16-logical-pixel glyphs and status glyphs use 14.
+Icons stay small and optically quiet: controls and status glyphs use 16 logical pixels.
 
 ## Components
 
@@ -406,8 +406,9 @@ multi-selection context menu. Inline rename uses the existing native editor. Ver
 uses neighboring sessions from the same effective group; it must not silently move a tab into an
 unrelated folder group.
 
-Hovering a session swaps its trailing status indicator for a small close button in a fixed
-20-logical-pixel slot, so the title and age do not move. The button uses the shared icon-button
+Hovering a session swaps its timestamp for a small close button in a fixed 28-logical-pixel slot.
+The status stays visible in its own 20-logical-pixel slot and the title does not move.
+The button uses the shared icon-button
 styling and “Close session” tooltip. Its click takes precedence over row selection and dispatches
 the normal tab-close action, including existing running-process confirmation and undo behavior.
 
@@ -447,10 +448,19 @@ display title; empty or directory-only fallbacks become Terminal. Age comes from
 activity: now, minutes, hours, or days. It is not a claim about task duration.
 
 Status first comes from the terminal's conversation summary. A running shell command without that
-summary supplies InProgress. Running uses a broken ring, blocked uses an amber ring and dot, success
-uses a filled check, and errors use an amber alert. Cancelled, waiting, or absent status can use a
-muted check; this quiet check must not be interpreted as proof of successful execution. When both
-status and activity age are absent, the status slot is empty. Unread activity makes the title bold.
+summary supplies InProgress, except for detected CLI agents without structured status: an open
+agent is not evidence of active work. Running uses a broken ring, blocked uses an amber ring and
+dot, unread completion uses a filled check, and read completion uses a muted check. Errors use an
+amber exclamation ring. Idle, cancelled, waiting, and unknown agent states use a small muted dot.
+Status assets share a 24-unit drawing grid rendered at 16 logical pixels. When both status and
+activity age are absent and no agent is detected, the slot is empty. Unread activity makes the
+title bold. Blocked sessions contribute to the project heading's “needs you” count even while
+collapsed.
+
+The local Claude integration in `integrations/claude` forwards lifecycle events through terminal
+notifications. It neither reads transcripts nor sends prompt/response content. Hooks are gated by
+Torch's `TORCH_TERMINAL` environment marker; the installer preserves unrelated Claude settings.
+Idle reminder notifications and subagent events cannot override the parent's state.
 
 ### Projects settings
 

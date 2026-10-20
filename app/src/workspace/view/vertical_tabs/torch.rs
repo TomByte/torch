@@ -91,6 +91,7 @@ struct Session {
     group_label: String,
     project_directory: Option<PathBuf>,
     status: Option<ConversationStatus>,
+    agent_status_unavailable: bool,
     age: String,
     unread: bool,
 }
@@ -253,7 +254,9 @@ fn sessions(workspace: &Workspace, app: &AppContext) -> Vec<Session> {
                 });
             let mut status =
                 terminal.and_then(|view| summary_conversation_status_for_terminal(view, app));
+            let agent_status_unavailable = cli_session.is_some() && status.is_none();
             if status.is_none()
+                && !agent_status_unavailable
                 && terminal.is_some_and(|view| {
                     matches!(
                         view.session_command_context(app),
@@ -304,6 +307,7 @@ fn sessions(workspace: &Workspace, app: &AppContext) -> Vec<Session> {
                 group_label,
                 project_directory: project.map(|project| project.path.clone()),
                 status,
+                agent_status_unavailable,
                 age,
                 unread,
             }
@@ -361,40 +365,61 @@ fn control(
     .finish()
 }
 
-fn status_icon(status: Option<&ConversationStatus>, palette: &Palette) -> Box<dyn Element> {
-    if matches!(status, Some(ConversationStatus::InProgress)) {
-        return ConstrainedBox::new(
-            warpui::elements::Icon::new("bundled/svg/torch-session-running.svg", palette.text)
-                .finish(),
-        )
-        .with_width(14.)
-        .with_height(14.)
-        .finish();
-    }
-    if matches!(status, Some(ConversationStatus::Blocked { .. })) {
-        return Stack::new()
-            .with_child(icon(WarpIcon::Circle, 14., palette.attention))
-            .with_child(Align::new(icon(WarpIcon::CircleFilled, 5., palette.attention)).finish())
-            .finish();
-    }
-    if matches!(status, Some(ConversationStatus::Success)) {
-        return Stack::new()
-            .with_child(icon(WarpIcon::CircleFilled, 14., palette.text))
-            .with_child(Align::new(icon(WarpIcon::Check, 9., palette.selection)).finish())
-            .finish();
-    }
-    let (glyph, color) = match status {
-        Some(ConversationStatus::InProgress) => (WarpIcon::Loading, palette.text),
-        Some(ConversationStatus::Blocked { .. }) => (WarpIcon::Circle, palette.attention),
-        Some(ConversationStatus::Success) => (WarpIcon::CheckCircleBroken, palette.text),
+#[derive(Debug, PartialEq, Eq)]
+enum SessionIndicator {
+    Working,
+    NeedsInput,
+    UnreadComplete,
+    Complete,
+    Failed,
+    Idle,
+    Unknown,
+}
+
+fn session_indicator(
+    status: Option<&ConversationStatus>,
+    unread: bool,
+    agent_status_unavailable: bool,
+) -> SessionIndicator {
+    match status {
+        Some(ConversationStatus::InProgress) => SessionIndicator::Working,
+        Some(ConversationStatus::Blocked { .. }) => SessionIndicator::NeedsInput,
+        Some(ConversationStatus::Success) if unread => SessionIndicator::UnreadComplete,
+        Some(ConversationStatus::Success) => SessionIndicator::Complete,
         Some(ConversationStatus::Error | ConversationStatus::TransientError) => {
-            (WarpIcon::AlertCircle, palette.attention)
+            SessionIndicator::Failed
         }
-        Some(ConversationStatus::Cancelled | ConversationStatus::WaitingForEvents) | None => {
-            (WarpIcon::Check, palette.muted)
+        Some(ConversationStatus::Cancelled | ConversationStatus::WaitingForEvents) => {
+            SessionIndicator::Idle
+        }
+        None if agent_status_unavailable => SessionIndicator::Unknown,
+        None => SessionIndicator::Idle,
+    }
+}
+
+fn status_icon(session: &Session, palette: &Palette) -> Box<dyn Element> {
+    let (asset, color) = match session_indicator(
+        session.status.as_ref(),
+        session.unread,
+        session.agent_status_unavailable,
+    ) {
+        SessionIndicator::Working => ("bundled/svg/torch-session-running.svg", palette.text),
+        SessionIndicator::NeedsInput => {
+            ("bundled/svg/torch-session-attention.svg", palette.attention)
+        }
+        SessionIndicator::UnreadComplete => {
+            ("bundled/svg/torch-session-complete.svg", palette.text)
+        }
+        SessionIndicator::Complete => ("bundled/svg/torch-session-check.svg", palette.muted),
+        SessionIndicator::Failed => ("bundled/svg/torch-session-error.svg", palette.attention),
+        SessionIndicator::Idle | SessionIndicator::Unknown => {
+            ("bundled/svg/torch-session-idle.svg", palette.muted)
         }
     };
-    icon(glyph, 14., color)
+    ConstrainedBox::new(warpui::elements::Icon::new(asset, color).finish())
+        .with_width(16.)
+        .with_height(16.)
+        .finish()
 }
 
 fn row(
@@ -433,18 +458,21 @@ fn row(
     let contents = Flex::row()
         .with_cross_axis_alignment(CrossAxisAlignment::Center)
         .with_spacing(10.)
-        .with_child(Expanded::new(1., title).finish())
-        .with_child(label(
-            &session.age,
-            12.,
-            palette.secondary,
-            Weight::Normal,
-            appearance,
-        ));
-    let status = if session.status.is_none() && session.age.is_empty() {
+        .with_child(Expanded::new(1., title).finish());
+    let age = label(
+        &session.age,
+        12.,
+        palette.secondary,
+        Weight::Normal,
+        appearance,
+    );
+    let status = if session.status.is_none()
+        && session.age.is_empty()
+        && !session.agent_status_unavailable
+    {
         Empty::new().finish()
     } else {
-        status_icon(session.status.as_ref(), palette)
+        status_icon(session, palette)
     };
     let tooltip = appearance
         .ui_builder()
@@ -465,14 +493,27 @@ fn row(
     let row = Hoverable::new(
         workspace.tabs[index].tab_mouse_state.clone(),
         move |state| {
-            let trailing = if state.is_hovered() {
+            let age_or_close = if state.is_hovered() {
                 close_button
             } else {
-                ConstrainedBox::new(Align::new(status).finish())
-                    .with_width(20.)
-                    .with_height(20.)
-                    .finish()
+                age
             };
+            let trailing = Flex::row()
+                .with_cross_axis_alignment(CrossAxisAlignment::Center)
+                .with_spacing(10.)
+                .with_child(
+                    ConstrainedBox::new(Align::new(age_or_close).finish())
+                        .with_width(28.)
+                        .with_height(20.)
+                        .finish(),
+                )
+                .with_child(
+                    ConstrainedBox::new(Align::new(status).finish())
+                        .with_width(20.)
+                        .with_height(20.)
+                        .finish(),
+                )
+                .finish();
             ConstrainedBox::new(
                 Container::new(contents.with_child(trailing).finish())
                     .with_padding(Padding::uniform(3.).with_horizontal(12.))

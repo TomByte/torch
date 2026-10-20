@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use warp_core::channel::ChannelState;
 use warp_core::features::FeatureFlag;
 use warpui::{AppContext, Entity, EntityId, ModelContext, SingletonEntity, ViewHandle, WindowId};
 
@@ -81,7 +82,7 @@ impl AgentNotificationsModel {
         terminal_view_id: EntityId,
         ctx: &mut ModelContext<Self>,
     ) {
-        if !FeatureFlag::HOANotifications.is_enabled() {
+        if !ChannelState::is_local_only() && !FeatureFlag::HOANotifications.is_enabled() {
             return;
         }
         if self
@@ -124,7 +125,7 @@ impl AgentNotificationsModel {
         event: &CLIAgentSessionsModelEvent,
         ctx: &mut ModelContext<Self>,
     ) {
-        if !FeatureFlag::HOANotifications.is_enabled() {
+        if !ChannelState::is_local_only() && !FeatureFlag::HOANotifications.is_enabled() {
             return;
         }
 
