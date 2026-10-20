@@ -774,3 +774,101 @@ fn agents_needing_the_user_sort_before_busy_and_idle_ones() {
         "running"
     );
 }
+
+#[test]
+fn time_in_state_stays_compact() {
+    for (seconds, label) in [
+        (0, "now"),
+        (59, "now"),
+        (60, "1m"),
+        (59 * 60, "59m"),
+        (60 * 60, "1h"),
+        (25 * 60 * 60, "1d"),
+    ] {
+        assert_eq!(elapsed_label(Duration::from_secs(seconds)), label);
+    }
+}
+
+fn agent_pane(
+    status: Option<ConversationStatus>,
+    requested_tool: Option<&str>,
+    branch: Option<&str>,
+) -> AgentPane {
+    AgentPane {
+        window_id: WindowId::from_usize(1),
+        locator: PaneViewLocator {
+            pane_group_id: EntityId::new(),
+            pane_id: crate::pane_group::PaneId::dummy_pane_id(),
+        },
+        terminal_view_id: EntityId::new(),
+        agent: "Claude Code",
+        task: Some("Fix login redirect".to_owned()),
+        project: "blipp-ai".to_owned(),
+        branch: branch.map(str::to_owned),
+        requested_tool: requested_tool.map(str::to_owned),
+        status_since: None,
+        session: Session {
+            index: 0,
+            title: String::new(),
+            directory: String::new(),
+            group_key: String::new(),
+            group_label: String::new(),
+            project_directory: None,
+            status,
+            agent_status_unavailable: false,
+            age: String::new(),
+            unread: false,
+        },
+    }
+}
+
+#[test]
+fn agent_rows_say_what_a_blocked_agent_wants_otherwise_where_it_runs() {
+    let blocked = Some(ConversationStatus::Blocked {
+        blocked_action: String::new(),
+    });
+    assert_eq!(
+        agent_context(&agent_pane(blocked, Some("Bash"), Some("main"))),
+        "Claude Code wants to use Bash"
+    );
+    assert_eq!(
+        agent_context(&agent_pane(
+            Some(ConversationStatus::InProgress),
+            None,
+            Some("fix/login")
+        )),
+        "Claude Code · blipp-ai · fix/login"
+    );
+    assert_eq!(
+        agent_context(&agent_pane(None, None, None)),
+        "Claude Code · blipp-ai"
+    );
+}
+
+#[test]
+fn agents_header_leads_with_agents_waiting_on_the_user() {
+    let blocked = || {
+        agent_pane(
+            Some(ConversationStatus::Blocked {
+                blocked_action: String::new(),
+            }),
+            None,
+            None,
+        )
+    };
+    let working = || agent_pane(Some(ConversationStatus::InProgress), None, None);
+    let idle = || agent_pane(None, None, None);
+    assert_eq!(
+        agents_summary(&[working(), blocked()]),
+        ("1 needs you".to_owned(), true)
+    );
+    assert_eq!(
+        agents_summary(&[blocked(), blocked()]),
+        ("2 need you".to_owned(), true)
+    );
+    assert_eq!(
+        agents_summary(&[working(), working(), idle()]),
+        ("2 working".to_owned(), false)
+    );
+    assert_eq!(agents_summary(&[idle()]), ("1".to_owned(), false));
+}

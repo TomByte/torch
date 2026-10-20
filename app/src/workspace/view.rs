@@ -3826,13 +3826,15 @@ impl Workspace {
         if ChannelState::is_local_only() {
             vertical_tabs::torch::update_attention_badge(event, ctx);
         }
+        // Torch's Agents panel lists the agents of every window.
         if matches!(
             event,
             CLIAgentSessionsModelEvent::Started { .. }
                 | CLIAgentSessionsModelEvent::StatusChanged { .. }
                 | CLIAgentSessionsModelEvent::Ended { .. }
                 | CLIAgentSessionsModelEvent::SessionUpdated { .. }
-        ) && self.workspace_contains_terminal_view(event.terminal_view_id(), ctx)
+        ) && (ChannelState::is_local_only()
+            || self.workspace_contains_terminal_view(event.terminal_view_id(), ctx))
         {
             ctx.notify();
         }
@@ -24688,6 +24690,11 @@ impl TypedActionView for Workspace {
             CloseTabGroup(group_id) => self.close_tab_group(*group_id, ctx),
             ToggleTabGroupCollapsed(group_id) => self.toggle_tab_group_collapsed(*group_id, ctx),
             ToggleSidebarGroupCollapsed(key) => self.toggle_sidebar_group_collapsed(key, ctx),
+            ToggleSidebarAgentsCollapsed => {
+                let agents = &mut self.vertical_tabs_panel.torch_agents;
+                agents.collapsed = !agents.collapsed;
+                ctx.notify();
+            }
             SidebarResized => ctx.notify(),
             RenameTabGroup(group_id) => self.rename_tab_group(*group_id, ctx),
             CancelActiveRename => {

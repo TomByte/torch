@@ -508,6 +508,13 @@ While Torch is in front, the same notification appears as an in-app toast below 
 that session is already on screen; clicking it opens the session. Settings → Features → Notifications
 turns toasts off and sets how long they stay. Resuming or cancelling an agent removes its toast.
 
+While any coding agent is running, an Agents panel sits below the sessions, divided by the header
+rule. Its heading shows how many agents need you, otherwise how many are working, and collapses the
+panel. It lists every window's agents in the Show Agents order, at most five, each on two lines:
+status icon, task and time in state, then agent · project · branch, or “Claude Code wants to use
+Bash” in the attention color while a permission request waits. A final “N more…” row opens Show
+Agents. Clicking a row focuses that pane, in whichever window it is.
+
 Show Agents (Cmd+Shift+J on macOS, also in View and the command palette) opens the palette on every
 pane running a coding agent across all windows, ordered needs you, finished, failed, working, idle,
 then agents that report no status; ties keep sidebar order. Each row shows the sidebar's status

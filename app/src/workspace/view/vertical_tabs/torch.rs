@@ -11,9 +11,13 @@ use warpui::ViewContext;
 
 use super::*;
 use crate::menu::{MenuItem, MenuItemFields};
+use crate::palette::PaletteMode;
+use crate::server::telemetry::PaletteSource;
 use crate::tab::{ColorPickerTarget, color_picker_menu_items};
 use crate::terminal::CLIAgent;
-use crate::terminal::cli_agent_sessions::CLIAgentSessionsModelEvent;
+use crate::terminal::cli_agent_sessions::{
+    BlockedSource, CLIAgentSessionStatus, CLIAgentSessionsModelEvent,
+};
 use crate::themes::theme::AnsiColorIdentifier;
 use crate::ui_components::buttons::icon_button;
 use crate::workspace::TabMovement;
@@ -839,6 +843,8 @@ struct TerminalSnapshot {
 pub(in crate::workspace::view) struct SessionCache {
     snapshots: RefCell<HashMap<EntityId, TerminalSnapshot>>,
     anchors: RefCell<HashMap<EntityId, GroupAnchor>>,
+    /// Agent panes across every window, for the sidebar's Agents panel.
+    agents: RefCell<Option<(Instant, Vec<AgentPane>)>>,
 }
 
 impl SessionCache {
@@ -848,6 +854,7 @@ impl SessionCache {
 
     pub(in crate::workspace::view) fn invalidate_all(&mut self) {
         self.snapshots.get_mut().clear();
+        *self.agents.get_mut() = None;
     }
 
     fn snapshot(&self, tab: &TabData, app: &AppContext) -> TerminalSnapshot {
@@ -1027,12 +1034,16 @@ fn session(workspace: &Workspace, index: usize, app: &AppContext) -> Session {
 pub(crate) struct AgentPane {
     pub(crate) window_id: WindowId,
     pub(crate) locator: PaneViewLocator,
+    terminal_view_id: EntityId,
     pub(crate) agent: &'static str,
     /// What the agent is working on, when it has said.
     pub(crate) task: Option<String>,
     /// The sidebar group the pane's session belongs to.
     pub(crate) project: String,
-    pub(crate) status_since: Option<Instant>,
+    branch: Option<String>,
+    /// The tool a permission request is for.
+    requested_tool: Option<String>,
+    status_since: Option<Instant>,
     session: Session,
 }
 
@@ -1075,6 +1086,12 @@ impl AgentPane {
         status_icon(&self.session, &Palette::new(appearance.theme()))
     }
 
+    /// How long the pane has been in its state, e.g. "4m".
+    pub(crate) fn time_in_state(&self, now: Instant) -> Option<String> {
+        self.status_since
+            .map(|since| elapsed_label(now.duration_since(since)))
+    }
+
     /// The color the sidebar uses for text about this pane's state.
     pub(crate) fn state_color(&self, appearance: &Appearance) -> ColorU {
         let palette = Palette::new(appearance.theme());
@@ -1085,6 +1102,43 @@ impl AgentPane {
             }
         }
     }
+}
+
+fn elapsed_label(elapsed: Duration) -> String {
+    let minutes = elapsed.as_secs() / 60;
+    match minutes {
+        0 => "now".to_owned(),
+        1..60 => format!("{minutes}m"),
+        60..1440 => format!("{}h", minutes / 60),
+        _ => format!("{}d", minutes / 1440),
+    }
+}
+
+/// Agent panes in every window, this window's first, most in need of the user first.
+fn all_agent_panes(workspace: &Workspace, app: &AppContext) -> Vec<AgentPane> {
+    let cache = &workspace.vertical_tabs_panel.torch_sessions.agents;
+    if let Some((captured, panes)) = &*cache.borrow()
+        && captured.elapsed() < SNAPSHOT_LIFETIME
+    {
+        return panes.clone();
+    }
+    let mut panes = agent_panes(workspace, workspace.window_id, app);
+    for window_id in app.window_ids() {
+        // The workspace being rendered cannot be read through its handle.
+        if window_id == workspace.window_id {
+            continue;
+        }
+        for other in app
+            .views_of_type::<Workspace>(window_id)
+            .unwrap_or_default()
+        {
+            panes.extend(agent_panes(other.as_ref(app), window_id, app));
+        }
+    }
+    // Stable, so panes in the same state keep sidebar order.
+    panes.sort_by_key(AgentPane::state);
+    *cache.borrow_mut() = Some((Instant::now(), panes.clone()));
+    panes
 }
 
 /// A finished agent stays "finished" until its session is seen, then it is idle.
@@ -1128,9 +1182,21 @@ pub(in crate::workspace::view) fn agent_panes(
                     pane_group_id: tab.pane_group.id(),
                     pane_id,
                 },
+                terminal_view_id: view.id(),
                 agent: agent.agent.display_name(),
                 task: view.agent_task_title(&agent.session_context),
                 project: tab_session.group_label.clone(),
+                branch: view.current_git_branch(app),
+                requested_tool: matches!(
+                    agent.status,
+                    CLIAgentSessionStatus::Blocked {
+                        source: BlockedSource::PermissionRequest,
+                        ..
+                    }
+                )
+                .then(|| agent.session_context.tool_name.clone())
+                .flatten()
+                .filter(|tool| !tool.trim().is_empty()),
                 status_since: agents.status_since(view.id()),
                 session: Session {
                     status: status.status,
@@ -1869,6 +1935,245 @@ fn vanished_group(
     SessionMotion::new(content, Motion::Departure, started).finish()
 }
 
+/// Rows the Agents panel shows before pointing to the full list.
+const AGENTS_PANEL_ROWS: usize = 5;
+const AGENT_ROW_HEIGHT: f32 = 42.;
+
+/// The sidebar's Agents panel, showing every window's agents.
+#[derive(Default)]
+pub(in crate::workspace::view) struct AgentsPanelState {
+    pub(in crate::workspace::view) collapsed: bool,
+    header_mouse_state: MouseStateHandle,
+    more_mouse_state: MouseStateHandle,
+    row_mouse_states: RefCell<HashMap<EntityId, MouseStateHandle>>,
+}
+
+/// What a pane's agent is doing beyond its task: the tool it is asking for, or where it runs.
+fn agent_context(pane: &AgentPane) -> String {
+    if let Some(tool) = &pane.requested_tool {
+        return format!("{} wants to use {tool}", pane.agent);
+    }
+    let mut context = format!("{} · {}", pane.agent, pane.project);
+    if let Some(branch) = &pane.branch {
+        context.push_str(&format!(" · {branch}"));
+    }
+    context
+}
+
+/// The header's summary of agents waiting on the user, otherwise of busy ones.
+fn agents_summary(panes: &[AgentPane]) -> (String, bool) {
+    let count = |state| panes.iter().filter(|pane| pane.state() == state).count();
+    match (count(AgentState::NeedsYou), count(AgentState::Working)) {
+        (0, 0) => (panes.len().to_string(), false),
+        (0, working) => (format!("{working} working"), false),
+        (needs, _) => (
+            format!("{needs} need{} you", if needs == 1 { "s" } else { "" }),
+            true,
+        ),
+    }
+}
+
+fn agent_row(
+    pane: &AgentPane,
+    mouse_state: MouseStateHandle,
+    now: Instant,
+    palette: &Palette,
+    appearance: &Appearance,
+) -> Box<dyn Element> {
+    let title = label(
+        pane.task
+            .clone()
+            .unwrap_or_else(|| format!("{} session", pane.agent)),
+        13.,
+        palette.text,
+        Weight::Normal,
+        appearance,
+    );
+    let time = label(
+        pane.time_in_state(now).unwrap_or_default(),
+        12.,
+        palette.secondary,
+        Weight::Normal,
+        appearance,
+    );
+    let context_color = if pane.requested_tool.is_some() {
+        pane.state_color(appearance)
+    } else {
+        palette.secondary
+    };
+    let context = label(
+        agent_context(pane),
+        12.,
+        context_color,
+        Weight::Normal,
+        appearance,
+    );
+    let status = ConstrainedBox::new(pane.render_status_icon(appearance))
+        .with_width(16.)
+        .with_height(16.)
+        .finish();
+    let contents = Flex::row()
+        .with_cross_axis_alignment(CrossAxisAlignment::Center)
+        .with_spacing(10.)
+        .with_child(status)
+        .with_child(
+            Expanded::new(
+                1.,
+                Flex::column()
+                    .with_cross_axis_alignment(CrossAxisAlignment::Stretch)
+                    .with_spacing(2.)
+                    .with_child(
+                        Flex::row()
+                            .with_cross_axis_alignment(CrossAxisAlignment::Center)
+                            .with_spacing(8.)
+                            .with_child(Expanded::new(1., title).finish())
+                            .with_child(time)
+                            .finish(),
+                    )
+                    .with_child(context)
+                    .finish(),
+            )
+            .finish(),
+        )
+        .finish();
+    let hover = palette.hover;
+    let terminal_view_id = pane.terminal_view_id;
+    Hoverable::new(mouse_state, move |state| {
+        ConstrainedBox::new(
+            Container::new(contents)
+                .with_padding(Padding::uniform(4.).with_horizontal(12.))
+                .with_corner_radius(CornerRadius::with_all(Radius::Pixels(8.)))
+                .with_background(if state.is_hovered() {
+                    ElementFill::Solid(hover)
+                } else {
+                    ElementFill::None
+                })
+                .finish(),
+        )
+        .with_height(AGENT_ROW_HEIGHT)
+        .finish()
+    })
+    .with_cursor(Cursor::PointingHand)
+    .on_click(move |ctx, _, _| {
+        ctx.dispatch_typed_action(WorkspaceAction::FocusTerminalViewInWorkspace {
+            terminal_view_id,
+        })
+    })
+    .finish()
+}
+
+/// Every window's agents, most in need of the user first, pinned below the sessions. `None`
+/// when no agent is running.
+fn agents_panel(
+    workspace: &Workspace,
+    palette: &Palette,
+    app: &AppContext,
+) -> Option<Box<dyn Element>> {
+    let panes = all_agent_panes(workspace, app);
+    if panes.is_empty() {
+        return None;
+    }
+    let appearance = Appearance::as_ref(app);
+    let state = &workspace.vertical_tabs_panel.torch_agents;
+    let (summary, needs_user) = agents_summary(&panes);
+    let heading = Flex::row()
+        .with_cross_axis_alignment(CrossAxisAlignment::Center)
+        .with_spacing(6.)
+        .with_child(icon(
+            if state.collapsed {
+                WarpIcon::ChevronRight
+            } else {
+                WarpIcon::ChevronDown
+            },
+            12.,
+            palette.secondary,
+        ))
+        .with_child(
+            Expanded::new(
+                1.,
+                label("Agents", 12., palette.text, Weight::Semibold, appearance),
+            )
+            .finish(),
+        )
+        .with_child(label(
+            summary,
+            12.,
+            if needs_user {
+                palette.attention
+            } else {
+                palette.muted
+            },
+            Weight::Normal,
+            appearance,
+        ))
+        .finish();
+    let header = Hoverable::new(state.header_mouse_state.clone(), move |_| {
+        padded_heading(heading)
+    })
+    .with_cursor(Cursor::PointingHand)
+    .on_click(|ctx, _, _| ctx.dispatch_typed_action(WorkspaceAction::ToggleSidebarAgentsCollapsed))
+    .finish();
+    let mut panel = Flex::column()
+        .with_cross_axis_alignment(CrossAxisAlignment::Stretch)
+        .with_child(header);
+    if !state.collapsed {
+        let now = Instant::now();
+        let mut row_mouse_states = state.row_mouse_states.borrow_mut();
+        row_mouse_states.retain(|id, _| panes.iter().any(|pane| pane.terminal_view_id == *id));
+        for pane in panes.iter().take(AGENTS_PANEL_ROWS) {
+            let mouse_state = row_mouse_states
+                .entry(pane.terminal_view_id)
+                .or_default()
+                .clone();
+            panel.add_child(agent_row(pane, mouse_state, now, palette, appearance));
+        }
+        if let Some(hidden) = panes
+            .len()
+            .checked_sub(AGENTS_PANEL_ROWS)
+            .filter(|n| *n > 0)
+        {
+            let secondary = palette.secondary;
+            let hover = palette.hover;
+            let more = label(
+                format!("{hidden} more…"),
+                12.,
+                secondary,
+                Weight::Normal,
+                appearance,
+            );
+            panel.add_child(
+                Hoverable::new(state.more_mouse_state.clone(), move |state| {
+                    Container::new(more)
+                        .with_padding(Padding::uniform(6.).with_horizontal(12.))
+                        .with_corner_radius(CornerRadius::with_all(Radius::Pixels(8.)))
+                        .with_background(if state.is_hovered() {
+                            ElementFill::Solid(hover)
+                        } else {
+                            ElementFill::None
+                        })
+                        .finish()
+                })
+                .with_cursor(Cursor::PointingHand)
+                .on_click(|ctx, _, _| {
+                    ctx.dispatch_typed_action(WorkspaceAction::TogglePalette {
+                        mode: PaletteMode::Agents,
+                        source: PaletteSource::Keybinding,
+                    })
+                })
+                .finish(),
+            );
+        }
+    }
+    Some(
+        Container::new(panel.finish())
+            .with_padding_left(9.)
+            .with_padding_right(9.)
+            .with_padding_bottom(8.)
+            .with_border(Border::top(1.).with_border_fill(palette.header_rule))
+            .finish(),
+    )
+}
+
 fn sidebar(
     workspace: &Workspace,
     sessions: &[Session],
@@ -1950,7 +2255,7 @@ fn sidebar(
     )
     .with_overlayed_scrollbar()
     .finish();
-    let content = Flex::column()
+    let mut content = Flex::column()
         .with_cross_axis_alignment(CrossAxisAlignment::Stretch)
         .with_child(header)
         .with_child(
@@ -1962,8 +2267,11 @@ fn sidebar(
                     .finish(),
             )
             .finish(),
-        )
-        .finish();
+        );
+    if let Some(agents) = agents_panel(workspace, palette, app) {
+        content.add_child(agents);
+    }
+    let content = content.finish();
     let panel = Resizable::new(state.resizable_state.clone(), content)
         .with_dragbar_side(DragBarSide::Right)
         .with_bounds_callback(Box::new(|size| (220., (size.x() * 0.45).max(220.))))

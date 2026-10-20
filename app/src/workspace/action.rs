@@ -177,6 +177,7 @@ pub enum WorkspaceAction {
     /// Toggle collapsed state for the given tab group.
     ToggleTabGroupCollapsed(TabGroupId),
     ToggleSidebarGroupCollapsed(String),
+    ToggleSidebarAgentsCollapsed,
     /// The Torch sidebar was resized; its width is saved with the window.
     SidebarResized,
     /// Opens an inline editor over the given group's header for renaming.
@@ -999,6 +1000,7 @@ impl WorkspaceAction {
             | CloseTabGroup(_)
             | ToggleTabGroupCollapsed(_)
             | ToggleSidebarGroupCollapsed(_)
+            | ToggleSidebarAgentsCollapsed
             | SidebarResized
             | RenameTabGroup(_)
             | NewTabGroupFromTab(_)

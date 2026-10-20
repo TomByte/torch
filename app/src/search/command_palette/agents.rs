@@ -1,6 +1,4 @@
 //! Torch's Agents palette: every pane running a coding agent, most in need of the user first.
-use std::time::Duration;
-
 use fuzzy_match::match_indices_case_insensitive;
 use instant::Instant;
 use ordered_float::OrderedFloat;
@@ -74,8 +72,8 @@ impl Item {
     fn new(pane: &AgentPane, now: Instant) -> Self {
         let state = pane.state();
         let mut detail = format!("{} · {} · {}", pane.agent, pane.project, state.label());
-        if let Some(since) = pane.status_since {
-            detail.push_str(&format!(" {}", elapsed_label(now.duration_since(since))));
+        if let Some(time) = pane.time_in_state(now) {
+            detail.push_str(&format!(" {time}"));
         }
         Self {
             pane: pane.clone(),
@@ -90,16 +88,6 @@ impl Item {
 
     fn searchable_text(&self) -> String {
         format!("{} {}", self.title, self.detail)
-    }
-}
-
-fn elapsed_label(elapsed: Duration) -> String {
-    let minutes = elapsed.as_secs() / 60;
-    match minutes {
-        0 => "just now".to_owned(),
-        1..60 => format!("{minutes}m"),
-        60..1440 => format!("{}h", minutes / 60),
-        _ => format!("{}d", minutes / 1440),
     }
 }
 
@@ -174,7 +162,3 @@ impl SearchItem for Item {
         format!("{}. {}", self.title, self.detail)
     }
 }
-
-#[cfg(test)]
-#[path = "agents_tests.rs"]
-mod tests;
