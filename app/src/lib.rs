@@ -1829,11 +1829,6 @@ pub(crate) fn initialize_app(
         )
     });
 
-    #[cfg(target_os = "macos")]
-    if launch_mode.is_gui() {
-        AppearanceManager::as_ref(ctx).set_app_icon(ctx);
-    }
-
     #[cfg(feature = "local_tty")]
     terminal::available_shells::register(ctx);
 

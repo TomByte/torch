@@ -4,12 +4,6 @@ use warpui::{AddSingletonModel, AppContext, AssetProvider, Entity, ModelContext,
 
 #[cfg(target_os = "macos")]
 mod macos_app_icon {
-    pub use objc2::rc::autoreleasepool;
-    pub use objc2::{AnyThread, MainThreadMarker};
-    pub use objc2_app_kit::{NSApplication, NSImage, NSWorkspace, NSWorkspaceIconCreationOptions};
-    pub use objc2_foundation::{NSBundle, NSString, ns_string};
-    pub use warp_core::channel::{Channel, ChannelState};
-
     pub use crate::settings::app_icon::{AppIcon, AppIconSettings, AppIconSettingsChangedEvent};
 }
 use anyhow::anyhow;
@@ -47,9 +41,7 @@ impl AppearanceManager {
         {
             ctx.subscribe_to_model(&AppIconSettings::handle(ctx), move |me, _, event, ctx| {
                 match event {
-                    AppIconSettingsChangedEvent::AppIconState { .. } => {
-                        me.set_app_icon(ctx);
-                    }
+                    AppIconSettingsChangedEvent::AppIconState { .. } => {}
                     AppIconSettingsChangedEvent::ShowDockIconState { .. } => {
                         me.apply_dock_icon_visibility(ctx);
                     }
@@ -165,114 +157,6 @@ impl AppearanceManager {
     pub fn clear_transient_theme(&mut self, ctx: &mut ModelContext<Self>) {
         self.transient_theme = None;
         self.refresh_theme_state(ctx);
-    }
-
-    /// Updates the state of the app icon, i.e. "dock tile", in-memory.  Note that this is in
-    /// addition to the update that happens in the docktile plugin.
-    ///
-    /// You can read Apple's limited documentation of the dock tile plugin API here:
-    /// https://developer.apple.com/documentation/appkit/nsdocktileplugin?language=objc
-    ///
-    /// Also see the README.md file in app/DockTilePlugin for more information on how best to test
-    /// changes to the dock tile plugin.
-    #[cfg(target_os = "macos")]
-    pub fn set_app_icon(&self, app: &AppContext) {
-        if ChannelState::is_local_only() {
-            return;
-        }
-        let icon = *AppIconSettings::as_ref(app).app_icon.value();
-
-        // This function is invoked from multiple call sites, including app
-        // startup (before the AppKit event loop drains its ambient pool) and
-        // settings/autoupdate callbacks whose thread of origin varies. Wrap
-        // the body in a local pool so the autoreleased NSStrings (and any
-        // other temporaries Cocoa hands back) are released when this returns.
-        // `autoreleasepool` drains when the closure returns, covering every
-        // exit path (including early returns and panics).
-        autoreleasepool(|_| {
-            // SAFETY: `set_app_icon` only runs on the main thread, since it
-            // requires a `&AppContext`, which is only accessible there.
-            let mtm = unsafe { MainThreadMarker::new_unchecked() };
-            let ns_app = NSApplication::sharedApplication(mtm);
-            let bundle = NSBundle::mainBundle();
-            let bundle_path = bundle.bundlePath();
-            let workspace = NSWorkspace::sharedWorkspace();
-
-            // If the user has selected the default icon, reset to the icon that is statically
-            // bundled in the app bundle. The bundled icon gets automatically "filtered" according
-            // to the user's "Icon & Widget style" setting in the MacOS appearance settings (added
-            // in MacOS Tahoe). We implement custom icons by overriding this at runtime. Those
-            // icons do not adapt to the preferred style.
-            //
-            // Local channel is not bundled, so don't attempt this for that case. This method only
-            // works if the dock tile plugin hasn't overridden the default icon already, so skip
-            // this method if the app started up with a non-default icon, as setting to "nil" would
-            // revert to the icon we started up with. We therefore need to use an in-memory
-            // override to display the default icon. This has the drawback of _not_ inheriting the
-            // preferred icon style, but that icon style _will_ apply on next app restart.
-            if icon == AppIcon::Default
-                && ChannelState::channel() != Channel::Local
-                && self.app_icon_at_startup == AppIcon::Default
-            {
-                log::debug!("User has default icon selected, resetting to bundle default");
-                // Reset to nil to use the bundle's default icon.
-                // SAFETY: `setApplicationIconImage:` accepts `nil` to restore the bundled icon.
-                unsafe { ns_app.setApplicationIconImage(None) };
-                workspace.setIcon_forFile_options(
-                    None,
-                    &bundle_path,
-                    NSWorkspaceIconCreationOptions::empty(),
-                );
-                workspace.noteFileSystemChanged_(&bundle_path);
-                return;
-            }
-
-            let icon_name = AppIconSettings::get_base_icon_file_name(icon);
-
-            log::debug!("Setting app icon in memory to: {icon_name}");
-            // Locate the plugin bundle.
-            let Some(plugins_path) = bundle.builtInPlugInsPath() else {
-                log::warn!("Failed to get dock tile plugin bundle");
-                return;
-            };
-            let plugin_name = ns_string!("WarpDockTilePlugin.docktileplugin");
-            let plugin_path = plugins_path.stringByAppendingPathComponent(plugin_name);
-            let Some(plugin_bundle) = NSBundle::bundleWithPath(&plugin_path) else {
-                log::warn!("Failed to get dock tile plugin bundle");
-                return;
-            };
-
-            // Read the images from the plugin bundle.
-            let image_name = NSString::from_str(icon_name);
-            let extension = ns_string!("png");
-            let Some(image_path) =
-                plugin_bundle.pathForResource_ofType(Some(&image_name), Some(extension))
-            else {
-                log::warn!("Failed to get image path for icon: {icon_name}");
-                return;
-            };
-
-            // Create the image from the file.
-            let Some(image) = NSImage::initWithContentsOfFile(NSImage::alloc(), &image_path) else {
-                log::warn!("Failed to create image for icon: {icon_name}");
-                return;
-            };
-
-            // Override the bundled icon with this new image.
-            // SAFETY: `setApplicationIconImage:` accepts a non-nil image.
-            unsafe { ns_app.setApplicationIconImage(Some(&image)) };
-            workspace.setIcon_forFile_options(
-                Some(&image),
-                &bundle_path,
-                NSWorkspaceIconCreationOptions::empty(),
-            );
-            workspace.noteFileSystemChanged_(&bundle_path);
-
-            // `image` is a `Retained<NSImage>` that releases the `+1` retain from
-            // `[NSImage alloc]` when it drops at the end of this scope.
-            // `setApplicationIconImage:` and `setIcon:forFile:options:` both retain the
-            // image, so it remains alive as the active app/dock icon.
-        });
     }
 }
 
