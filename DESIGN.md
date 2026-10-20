@@ -408,9 +408,16 @@ string with trailing separators removed, and labels use its last component. Empt
 fallback paths use Other. Groups appear in first-occurrence order in the workspace tab sequence,
 and members retain their order within that sequence. Status never sorts sessions.
 
-Manual headings support collapse, rename, and a group context menu. Automatically derived headings
-are labels, not invented collapsible controls. Counts include the group's sessions, and the amber
-“needs you” count includes blocked sessions only.
+All group headings are clickable disclosures with a 12-logical-pixel chevron: down when expanded,
+right when collapsed. The existing heading padding belongs to the hit target. Long labels ellipsize
+while the session count and amber “needs you” count remain visible; attention counts include blocked
+sessions only, even while rows are hidden.
+
+Automatic project, folder, and Other groups keep collapse state in the current window's runtime;
+that state is not saved across restarts. Manual groups retain their existing saved collapse state,
+double-click rename, and context menu. Collapsing a group hides its rows without closing or stopping
+its terminals. Explicitly activating a tab reveals its group. Rows in collapsed automatic groups
+are excluded from Shift-selection ranges.
 
 ### Session identity and activity
 

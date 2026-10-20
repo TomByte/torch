@@ -699,6 +699,8 @@ pub(super) struct VerticalTabsPanelState {
     group_mouse_states: RefCell<HashMap<EntityId, PaneGroupStateHandles>>,
     /// Hover states per tab group, keyed by `TabGroupId`.
     tab_group_mouse_states: RefCell<HashMap<TabGroupId, TabGroupMouseStates>>,
+    torch_group_mouse_states: RefCell<HashMap<String, MouseStateHandle>>,
+    collapsed_torch_groups: HashSet<String>,
     pane_row_mouse_states: RefCell<HashMap<PaneId, MouseStateHandle>>,
     pane_title_mouse_states: RefCell<HashMap<PaneId, MouseStateHandle>>,
     pane_badge_mouse_states: RefCell<HashMap<PaneId, PaneRowBadgeMouseStates>>,
@@ -746,6 +748,8 @@ impl Default for VerticalTabsPanelState {
             ),
             group_mouse_states: RefCell::default(),
             tab_group_mouse_states: RefCell::default(),
+            torch_group_mouse_states: RefCell::default(),
+            collapsed_torch_groups: HashSet::new(),
             pane_row_mouse_states: RefCell::default(),
             pane_title_mouse_states: RefCell::default(),
             pane_badge_mouse_states: RefCell::default(),

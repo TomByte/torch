@@ -3,6 +3,7 @@ use crate::session_management::CommandContext;
 use crate::workspace::header_toolbar_item::HeaderToolbarItemKind;
 use crate::workspace::view::PanelPosition;
 use warp_core::ui::theme::ColorScheme;
+use warpui::ViewContext;
 
 pub(super) const SIDEBAR_WIDTH: f32 = 272.;
 const HEADER_HEIGHT: f32 = 48.;
@@ -140,7 +141,47 @@ pub(in crate::workspace::view) fn session_order(
         .into_iter()
         .map(|session| session.group_key)
         .collect::<Vec<_>>();
-    grouped_indices(&keys).into_iter().flatten().collect()
+    grouped_indices(&keys)
+        .into_iter()
+        .flatten()
+        .filter(|index| {
+            !workspace
+                .vertical_tabs_panel
+                .collapsed_torch_groups
+                .contains(&keys[*index])
+        })
+        .collect()
+}
+
+impl Workspace {
+    pub(in crate::workspace::view) fn toggle_sidebar_group_collapsed(
+        &mut self,
+        key: &str,
+        ctx: &mut ViewContext<Self>,
+    ) {
+        let collapsed = &mut self.vertical_tabs_panel.collapsed_torch_groups;
+        if !collapsed.remove(key) {
+            collapsed.insert(key.to_owned());
+        }
+        ctx.notify();
+    }
+
+    pub(in crate::workspace::view) fn reveal_sidebar_session(
+        &mut self,
+        index: usize,
+        ctx: &mut ViewContext<Self>,
+    ) {
+        if !self.vertical_tabs_panel.collapsed_torch_groups.is_empty()
+            && let Some(session) = sessions(self, ctx).get(index)
+        {
+            self.vertical_tabs_panel
+                .collapsed_torch_groups
+                .remove(&session.group_key);
+        }
+        if let Some(group_id) = self.tabs.get(index).and_then(|tab| tab.group_id) {
+            self.expand_tab_group(group_id, ctx);
+        }
+    }
 }
 
 pub(in crate::workspace::view) fn range_in_order(
@@ -520,16 +561,39 @@ fn sidebar(
             .iter()
             .filter(|session| matches!(session.status, Some(ConversationStatus::Blocked { .. })))
             .count();
-        let mut heading = Flex::row()
+        let group = workspace.tabs[members[0].index]
+            .group_id
+            .and_then(|id| workspace.tab_groups.get(&id));
+        let collapsed = group.map_or_else(
+            || state.collapsed_torch_groups.contains(&members[0].group_key),
+            |group| group.collapsed,
+        );
+        let title = Flex::row()
+            .with_main_axis_size(MainAxisSize::Min)
             .with_cross_axis_alignment(CrossAxisAlignment::Center)
             .with_spacing(6.)
-            .with_child(label(
-                &members[0].group_label,
+            .with_child(icon(
+                if collapsed {
+                    WarpIcon::ChevronRight
+                } else {
+                    WarpIcon::ChevronDown
+                },
                 12.,
-                palette.muted,
-                Weight::Semibold,
-                appearance,
+                palette.secondary,
             ))
+            .with_child(
+                Shrinkable::new(
+                    1.,
+                    label(
+                        &members[0].group_label,
+                        12.,
+                        palette.muted,
+                        Weight::Semibold,
+                        appearance,
+                    ),
+                )
+                .finish(),
+            )
             .with_child(label(
                 members.len().to_string(),
                 12.,
@@ -537,7 +601,13 @@ fn sidebar(
                 Weight::Normal,
                 appearance,
             ))
-            .with_child(Expanded::new(1., Empty::new().finish()).finish());
+            .finish();
+        let mut heading = Flex::row()
+            .with_main_axis_size(MainAxisSize::Max)
+            .with_main_axis_alignment(MainAxisAlignment::SpaceBetween)
+            .with_cross_axis_alignment(CrossAxisAlignment::Center)
+            .with_spacing(6.)
+            .with_child(Shrinkable::new(1., title).finish());
         if needs > 0 {
             heading.add_child(label(
                 format!("{needs} needs you"),
@@ -547,9 +617,17 @@ fn sidebar(
                 appearance,
             ));
         }
-        let group = workspace.tabs[members[0].index]
-            .group_id
-            .and_then(|id| workspace.tab_groups.get(&id));
+        let padded_heading = |content| {
+            Container::new(content)
+                .with_padding(
+                    Padding::uniform(0.)
+                        .with_left(12.)
+                        .with_right(10.)
+                        .with_top(12.)
+                        .with_bottom(7.),
+                )
+                .finish()
+        };
         let heading = if let Some(group) = group {
             let group_id = group.id;
             let mouse = state
@@ -567,7 +645,8 @@ fn sidebar(
             } else {
                 heading.finish()
             };
-            Hoverable::new(mouse, |_| content)
+            Hoverable::new(mouse, |_| padded_heading(content))
+                .with_cursor(Cursor::PointingHand)
                 .on_click(move |ctx, _, _| {
                     ctx.dispatch_typed_action(WorkspaceAction::ToggleTabGroupCollapsed(group_id))
                 })
@@ -582,20 +661,24 @@ fn sidebar(
                 })
                 .finish()
         } else {
-            heading.finish()
+            let key = members[0].group_key.clone();
+            let mouse = state
+                .torch_group_mouse_states
+                .borrow_mut()
+                .entry(key.clone())
+                .or_default()
+                .clone();
+            Hoverable::new(mouse, |_| padded_heading(heading.finish()))
+                .with_cursor(Cursor::PointingHand)
+                .on_click(move |ctx, _, _| {
+                    ctx.dispatch_typed_action(WorkspaceAction::ToggleSidebarGroupCollapsed(
+                        key.clone(),
+                    ))
+                })
+                .finish()
         };
-        group_content.add_child(
-            Container::new(heading)
-                .with_padding(
-                    Padding::uniform(0.)
-                        .with_left(12.)
-                        .with_right(10.)
-                        .with_top(12.)
-                        .with_bottom(7.),
-                )
-                .finish(),
-        );
-        if !group.is_some_and(|group| group.collapsed) {
+        group_content.add_child(heading);
+        if !collapsed {
             for session in members {
                 group_content.add_child(row(session, workspace, palette, app));
             }

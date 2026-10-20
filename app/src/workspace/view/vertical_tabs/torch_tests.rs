@@ -1,6 +1,46 @@
 use super::*;
 use warp_core::ui::color::contrast::{MinimumAllowedContrast, high_enough_contrast};
 use warp_core::ui::theme::{Details, Fill};
+use warpui::TypedActionView;
+
+#[test]
+fn collapsing_sidebar_group_keeps_sessions_alive_and_activation_reveals_them() {
+    use crate::workspace::view::tests::{initialize_app, mock_workspace};
+    warpui::App::test((), |mut app| async move {
+        initialize_app(&mut app);
+        app.add_singleton_model(|_| crate::settings::ProjectsSettings {
+            directories: crate::settings::ProjectDirectories::new(None),
+            parent_directories: crate::settings::ProjectParentDirectories::new(None),
+        });
+        app.add_singleton_model(|_| crate::settings::ProjectCatalog::default());
+        let workspace = mock_workspace(&mut app);
+        workspace.update(&mut app, |workspace, ctx| {
+            let key = sessions(workspace, ctx)[0].group_key.clone();
+            let pane_group_id = workspace.tabs[0].pane_group.id();
+            let tab_count = workspace.tabs.len();
+            let original_order = session_order(workspace, ctx);
+
+            workspace.handle_action(
+                &WorkspaceAction::ToggleSidebarGroupCollapsed(key.clone()),
+                ctx,
+            );
+            assert!(session_order(workspace, ctx).is_empty());
+            assert_eq!(workspace.tabs.len(), tab_count);
+            assert_eq!(workspace.tabs[0].pane_group.id(), pane_group_id);
+
+            workspace.handle_action(
+                &WorkspaceAction::ToggleSidebarGroupCollapsed(key.clone()),
+                ctx,
+            );
+            assert_eq!(session_order(workspace, ctx), original_order);
+
+            workspace.handle_action(&WorkspaceAction::ToggleSidebarGroupCollapsed(key), ctx);
+            workspace.activate_tab(0, ctx);
+            assert_eq!(session_order(workspace, ctx), original_order);
+            assert_eq!(workspace.tabs[0].pane_group.id(), pane_group_id);
+        });
+    });
+}
 
 #[test]
 fn dark_sidebar_text_remains_readable_in_selected_and_idle_rows() {

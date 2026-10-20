@@ -5620,6 +5620,9 @@ impl Workspace {
         };
 
         self.active_tab_index = index;
+        if ChannelState::is_local_only() {
+            self.reveal_sidebar_session(index, ctx);
+        }
 
         // The range selection's anchor is the active tab, so any change to
         // the active tab makes the existing selection stale; clear it.
@@ -24413,6 +24416,7 @@ impl TypedActionView for Workspace {
             }
             CloseTabGroup(group_id) => self.close_tab_group(*group_id, ctx),
             ToggleTabGroupCollapsed(group_id) => self.toggle_tab_group_collapsed(*group_id, ctx),
+            ToggleSidebarGroupCollapsed(key) => self.toggle_sidebar_group_collapsed(key, ctx),
             RenameTabGroup(group_id) => self.rename_tab_group(*group_id, ctx),
             CancelActiveRename => {
                 self.cancel_tab_rename(ctx);

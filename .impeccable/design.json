@@ -1305,9 +1305,9 @@
       "name": "Automatic folder heading",
       "kind": "custom",
       "refersTo": "group-heading",
-      "description": "Noninteractive folder label and count; attention text is included only as a preview example.",
-      "html": "<div class=\"ds-group\"><span class=\"ds-group-title\">project</span><span>3</span><span class=\"ds-group-attention\">1 needs you</span></div>",
-      "css": ".ds-group{display:flex;align-items:center;gap:6px;width:232px;padding:12px 10px 7px 12px;color:#85868B;font:400 12px Roboto,sans-serif}.ds-group-title{font-weight:600}.ds-group-attention{margin-left:auto;font-weight:500;color:#98651F}"
+      "description": "Clickable automatic group heading with expanded/collapsed chevron. This native HTML disclosure illustrates the heading interaction; sample counts are not live session state.",
+      "html": "<details class=\"ds-group-preview\" open><summary class=\"ds-group\"><svg class=\"ds-group-chevron\" width=\"12\" height=\"12\" viewBox=\"0 0 12 12\" aria-hidden=\"true\"><path d=\"m4 2 4 4-4 4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"/></svg><span class=\"ds-group-title\">project</span><span class=\"ds-group-count\">3</span><span class=\"ds-group-attention\">1 needs you</span></summary></details>",
+      "css": ".ds-group{display:flex;align-items:center;gap:6px;width:232px;padding:12px 10px 7px 12px;color:#85868B;font:400 12px Roboto,sans-serif;cursor:pointer;list-style:none}.ds-group::-webkit-details-marker{display:none}.ds-group-chevron{flex-shrink:0;color:#616268}.ds-group-preview[open] .ds-group-chevron{transform:rotate(90deg)}.ds-group-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}.ds-group-count,.ds-group-attention{flex-shrink:0}.ds-group-attention{margin-left:auto;font-weight:500;color:#98651F}.ds-group:focus-visible{outline:1px solid #616268;outline-offset:1px}"
     },
     {
       "name": "Terminal context header",
