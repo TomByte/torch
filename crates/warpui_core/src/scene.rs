@@ -593,7 +593,6 @@ impl Scene {
     }
 
     fn validate_rect(rect: &RectF, location: Option<&'static std::panic::Location<'static>>) {
-        #[cfg(debug_assertions)]
         let location_info = location
             .map(|loc| {
                 format!(
@@ -604,8 +603,6 @@ impl Scene {
                 )
             })
             .unwrap_or_default();
-        #[cfg(not(debug_assertions))]
-        let location_info = "";
         debug_assert!(
             !rect.origin().y().is_infinite(),
             "!rect.origin().y().is_infinite(){location_info}"

@@ -40,8 +40,7 @@ pub enum SingleAxisConfig {
 impl SingleAxisConfig {
     /// At run-time, validate if the passed-in axis config is valid.
     pub(super) fn validate(&self, axis: Axis) {
-        #[cfg(debug_assertions)]
-        {
+        if cfg!(debug_assertions) {
             if let SingleAxisConfig::Manual { child, .. } = self {
                 if matches!(axis, Axis::Horizontal)
                     && matches!(child.axis(), ScrollableAxis::Vertical)

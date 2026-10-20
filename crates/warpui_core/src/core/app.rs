@@ -1758,7 +1758,6 @@ impl AppContext {
     /// After the app is initialized, the provided `binding_validator` function is called for every
     /// binding that matches the View's default context. If the binding is invalid (indicated by
     /// [`IsBindingValid::No`]), the app will panic if `debug_assertions` are enabled.
-    #[cfg(debug_assertions)]
     pub fn register_binding_validator<T: View>(
         &mut self,
         binding_validator: impl Fn(BindingLens) -> IsBindingValid + 'static,
@@ -1768,17 +1767,9 @@ impl AppContext {
             .register_binding_validator(context, binding_validator)
     }
 
-    #[cfg(not(debug_assertions))]
-    pub fn register_binding_validator<T: View>(
-        &mut self,
-        binding_validator: impl Fn(BindingLens) -> IsBindingValid + 'static,
-    ) {
-    }
-
     /// Sets a default binding validator that runs on _every_ binding that is registered by the
     /// application.
     /// Noops if `debug_assertions` are disabled.
-    #[cfg(debug_assertions)]
     pub fn set_default_binding_validator(
         &mut self,
         binding_validator: impl Fn(BindingLens) -> IsBindingValid + 'static,
@@ -1787,27 +1778,13 @@ impl AppContext {
             .set_default_binding_validator(binding_validator)
     }
 
-    /// Sets a default binding validator that runs on _every_ binding that is registered by the
-    /// application.
-    /// Noops if `debug_assertions` are disabled.
-    #[cfg(not(debug_assertions))]
-    pub fn set_default_binding_validator(
-        &mut self,
-        binding_validator: impl Fn(BindingLens) -> IsBindingValid + 'static,
-    ) {
-    }
-
     /// Runs through each registered binding validator, asserting that each matching binding is
     /// valid. Noop if debug assertions are not enabled.
-    #[cfg(debug_assertions)]
     pub(crate) fn validate_bindings(&mut self) {
-        self.keystroke_matcher.validate_bindings();
+        if cfg!(debug_assertions) {
+            self.keystroke_matcher.validate_bindings();
+        }
     }
-
-    /// Runs through each registered binding validator, asserting that each matching binding is
-    /// valid. Noop if debug assertions are not enabled.
-    #[cfg(not(debug_assertions))]
-    pub(crate) fn validate_bindings(&mut self) {}
 
     /// Add new fixed (immutable) key bindings to the app
     pub fn register_fixed_bindings<T: IntoIterator<Item = FixedBinding>>(&mut self, bindings: T) {

@@ -17,7 +17,6 @@ impl AppContext {
     /// initialized, the validator runs for every binding matching the view's
     /// default context, and the app panics on invalid bindings when
     /// `debug_assertions` are enabled.
-    #[cfg(debug_assertions)]
     pub fn register_tui_binding_validator<V: crate::TuiView>(
         &mut self,
         binding_validator: impl Fn(BindingLens) -> IsBindingValid + 'static,
@@ -25,16 +24,6 @@ impl AppContext {
         let context = V::default_keymap_context();
         self.keystroke_matcher
             .register_binding_validator(context, binding_validator)
-    }
-
-    /// Registers a validator that validates every binding that matches the
-    /// given TUI view's default [`Context`](crate::keymap::Context). Noops if
-    /// `debug_assertions` are disabled.
-    #[cfg(not(debug_assertions))]
-    pub fn register_tui_binding_validator<V: crate::TuiView>(
-        &mut self,
-        binding_validator: impl Fn(BindingLens) -> IsBindingValid + 'static,
-    ) {
     }
 
     /// Adds a TUI view to the given window.

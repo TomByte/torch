@@ -155,7 +155,6 @@ impl Matcher {
     /// After the app is initialized, the provided `binding_validator` function is called for every
     /// binding that matches the View's default context. If the binding is invalid (indicated by
     /// [`IsBindingValid::No`]), the app will panic if `debug_assertions` are enabled.
-    #[cfg(debug_assertions)]
     pub(crate) fn register_binding_validator<F: Fn(BindingLens) -> IsBindingValid + 'static>(
         &mut self,
         context: Context,
@@ -167,7 +166,6 @@ impl Matcher {
 
     /// Sets a default binding validator that runs on _every_ binding that is registered by the
     /// application.
-    #[cfg(debug_assertions)]
     pub(crate) fn set_default_binding_validator<F: Fn(BindingLens) -> IsBindingValid + 'static>(
         &mut self,
         binding_validator: F,
@@ -177,7 +175,6 @@ impl Matcher {
 
     /// Runs through each registered binding validator, asserting that each matching binding is
     /// valid.
-    #[cfg(debug_assertions)]
     pub(crate) fn validate_bindings(&mut self) {
         let mut all_failed_bindings = vec![];
         for (context, validator) in &self.binding_validators {

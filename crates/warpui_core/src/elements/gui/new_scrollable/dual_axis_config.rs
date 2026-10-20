@@ -219,8 +219,7 @@ pub enum DualAxisConfig {
 impl DualAxisConfig {
     /// At run-time, validate if the passed-in axis config is valid.
     pub(super) fn validate(&self) {
-        #[cfg(debug_assertions)]
-        {
+        if cfg!(debug_assertions) {
             if let DualAxisConfig::Manual {
                 horizontal,
                 vertical,

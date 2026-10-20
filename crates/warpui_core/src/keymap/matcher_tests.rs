@@ -256,10 +256,8 @@ impl AsAction for Arc<dyn Action> {
 // `validate_bindings`, and scoping it out of TUI contexts must make validation
 // pass. This is the exact failure mode that panicked the debug TUI at startup
 // with `app:reopen_closed_session` (see `app/src/undo_close/mod.rs`). These run
-// in the standard `cargo nextest` suite on Linux/macOS/Windows. Gated on
-// `debug_assertions` because `validate_bindings` is a no-op in release.
+// in the standard `cargo nextest` suite on Linux/macOS/Windows.
 
-#[cfg(debug_assertions)]
 #[derive(Debug, PartialEq)]
 enum ValidationTestAction {
     ReopenClosedSession,
@@ -268,7 +266,6 @@ enum ValidationTestAction {
 /// Mirrors `warp_tui::keybindings::is_tui_owned_binding`: a keystroke binding
 /// that matches a TUI view context must be TUI-owned (a `tui:`-prefixed name or
 /// the `tui` group). Non-keystroke triggers are exempt.
-#[cfg(debug_assertions)]
 fn require_tui_owned(binding: BindingLens) -> IsBindingValid {
     if !matches!(binding.trigger, Trigger::Keystrokes(_)) {
         return IsBindingValid::Yes;
@@ -280,7 +277,6 @@ fn require_tui_owned(binding: BindingLens) -> IsBindingValid {
     }
 }
 
-#[cfg(debug_assertions)]
 fn matcher_with_reopen_binding(context_predicate: Option<ContextPredicate>) -> Matcher {
     let mut binding = EditableBinding::new(
         "app:reopen_closed_session",
@@ -306,7 +302,6 @@ fn matcher_with_reopen_binding(context_predicate: Option<ContextPredicate>) -> M
 /// Without a context predicate the binding defaults to `Just(true)`, so its
 /// keystroke matches the TUI view context and, not being TUI-owned, fails
 /// validation — reproducing the debug-TUI startup panic.
-#[cfg(debug_assertions)]
 #[test]
 #[should_panic(expected = "Bindings failed validation")]
 fn unscoped_gui_keystroke_binding_fails_tui_validation() {
@@ -316,7 +311,6 @@ fn unscoped_gui_keystroke_binding_fails_tui_validation() {
 
 /// Scoping the binding to the GUI `Workspace` context (the fix) keeps it out of
 /// TUI keymap contexts, so validation passes.
-#[cfg(debug_assertions)]
 #[test]
 fn workspace_scoped_binding_passes_tui_validation() {
     let mut matcher = matcher_with_reopen_binding(Some(id!("Workspace")));
