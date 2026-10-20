@@ -306,6 +306,12 @@ struct TabGroupMouseStates {
     close: MouseStateHandle,
 }
 
+#[derive(Clone, Default)]
+struct TorchGroupMouseStates {
+    header: MouseStateHandle,
+    new_session: MouseStateHandle,
+}
+
 /// Describes how a pane row sits in its tab's row layout. Carried as state
 /// on `PaneProps`; the actual corner radius is derived at render time.
 #[derive(Clone, Copy)]
@@ -699,7 +705,7 @@ pub(super) struct VerticalTabsPanelState {
     group_mouse_states: RefCell<HashMap<EntityId, PaneGroupStateHandles>>,
     /// Hover states per tab group, keyed by `TabGroupId`.
     tab_group_mouse_states: RefCell<HashMap<TabGroupId, TabGroupMouseStates>>,
-    torch_group_mouse_states: RefCell<HashMap<String, MouseStateHandle>>,
+    torch_group_mouse_states: RefCell<HashMap<String, TorchGroupMouseStates>>,
     collapsed_torch_groups: HashSet<String>,
     pane_row_mouse_states: RefCell<HashMap<PaneId, MouseStateHandle>>,
     pane_title_mouse_states: RefCell<HashMap<PaneId, MouseStateHandle>>,

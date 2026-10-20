@@ -250,6 +250,7 @@ pub enum WorkspaceAction {
     AddTerminalTab {
         hide_homepage: bool,
     },
+    NewSessionInDirectory(PathBuf),
     AddTabWithShell {
         shell: AvailableShell,
         source: AddTabWithShellSource,
@@ -992,6 +993,7 @@ impl WorkspaceAction {
             | ToggleTabGroupColor { .. }
             | AddDefaultTab
             | AddTerminalTab { .. }
+            | NewSessionInDirectory(_)
             | AddTabWithShell { .. }
             | AddGetStartedTab
             | AddAgentTab

@@ -4,6 +4,42 @@ use warp_core::ui::theme::{Details, Fill};
 use warpui::TypedActionView;
 
 #[test]
+fn unavailable_project_does_not_create_a_session_or_expand_its_group() {
+    use crate::workspace::view::tests::{initialize_app, mock_workspace};
+    warpui::App::test((), |mut app| async move {
+        initialize_app(&mut app);
+        app.add_singleton_model(|_| crate::settings::ProjectsSettings {
+            directories: crate::settings::ProjectDirectories::new(None),
+            parent_directories: crate::settings::ProjectParentDirectories::new(None),
+        });
+        app.add_singleton_model(|_| crate::settings::ProjectCatalog::default());
+        let workspace = mock_workspace(&mut app);
+        let temporary = tempfile::tempdir().unwrap();
+        let missing = temporary.path().join("removed project");
+        let key = format!("project:{}", missing.display());
+        workspace.update(&mut app, |workspace, ctx| {
+            let original_tabs = workspace.tabs.len();
+            let original_active = workspace.active_tab_index;
+            workspace
+                .vertical_tabs_panel
+                .collapsed_torch_groups
+                .insert(key.clone());
+
+            workspace.handle_action(&WorkspaceAction::NewSessionInDirectory(missing), ctx);
+
+            assert_eq!(workspace.tabs.len(), original_tabs);
+            assert_eq!(workspace.active_tab_index, original_active);
+            assert!(
+                workspace
+                    .vertical_tabs_panel
+                    .collapsed_torch_groups
+                    .contains(&key)
+            );
+        });
+    });
+}
+
+#[test]
 fn collapsing_sidebar_group_keeps_sessions_alive_and_activation_reveals_them() {
     use crate::workspace::view::tests::{initialize_app, mock_workspace};
     warpui::App::test((), |mut app| async move {

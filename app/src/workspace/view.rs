@@ -8974,6 +8974,43 @@ impl Workspace {
         });
     }
 
+    fn new_local_session(&mut self, directory: Option<PathBuf>, ctx: &mut ViewContext<Self>) {
+        let path = directory
+            .clone()
+            .or_else(|| {
+                self.active_tab_pane_group()
+                    .as_ref(ctx)
+                    .active_session_path(ctx)
+            })
+            .or_else(dirs::home_dir);
+        if let Some(path) = path {
+            if !path.is_dir() {
+                self.toast_stack.update(ctx, |stack, ctx| {
+                    stack.add_ephemeral_toast(
+                        DismissibleToast::error(format!(
+                            "Folder is unavailable: {}",
+                            path.display()
+                        )),
+                        ctx,
+                    );
+                });
+                return;
+            }
+            let is_project = directory.is_some()
+                && crate::settings::ProjectCatalog::as_ref(ctx)
+                    .projects
+                    .iter()
+                    .any(|project| project.path == path);
+            if is_project {
+                self.reveal_sidebar_project(&path);
+            }
+            self.open_directory_in_new_tab(path, ctx);
+            if is_project {
+                self.remove_tab_from_group(self.active_tab_index, ctx);
+            }
+        }
+    }
+
     fn open_directory_in_new_tab(&mut self, path: PathBuf, ctx: &mut ViewContext<Self>) {
         let options = NewTerminalOptions::default().with_initial_directory(path);
         self.add_tab_with_pane_layout(
@@ -15242,37 +15279,7 @@ impl Workspace {
                 }
             }
             CommandPaletteEvent::NewLocalSession { directory } => {
-                let path = directory
-                    .clone()
-                    .or_else(|| {
-                        self.active_tab_pane_group()
-                            .as_ref(ctx)
-                            .active_session_path(ctx)
-                    })
-                    .or_else(dirs::home_dir);
-                if let Some(path) = path {
-                    if !path.is_dir() {
-                        self.toast_stack.update(ctx, |stack, ctx| {
-                            stack.add_ephemeral_toast(
-                                DismissibleToast::error(format!(
-                                    "Folder is unavailable: {}",
-                                    path.display()
-                                )),
-                                ctx,
-                            );
-                        });
-                        return;
-                    }
-                    let is_project = directory.is_some()
-                        && crate::settings::ProjectCatalog::as_ref(ctx)
-                            .projects
-                            .iter()
-                            .any(|project| project.path == path);
-                    self.open_directory_in_new_tab(path, ctx);
-                    if is_project {
-                        self.remove_tab_from_group(self.active_tab_index, ctx);
-                    }
-                }
+                self.new_local_session(directory.clone(), ctx);
             }
             CommandPaletteEvent::ManageLocalProjects => {
                 self.show_settings_with_section(Some(SettingsSection::Projects), ctx)
@@ -24476,6 +24483,9 @@ impl TypedActionView for Workspace {
                 {
                     self.unpin_tab_group(group_id, ctx);
                 }
+            }
+            NewSessionInDirectory(directory) => {
+                self.new_local_session(Some(directory.clone()), ctx);
             }
             AddDefaultTab => {
                 let effective_mode = AISettings::as_ref(ctx).default_session_mode(ctx);

@@ -89,6 +89,7 @@ struct Session {
     directory: String,
     group_key: String,
     group_label: String,
+    project_directory: Option<PathBuf>,
     status: Option<ConversationStatus>,
     age: String,
     unread: bool,
@@ -155,6 +156,12 @@ pub(in crate::workspace::view) fn session_order(
 }
 
 impl Workspace {
+    pub(in crate::workspace::view) fn reveal_sidebar_project(&mut self, directory: &Path) {
+        self.vertical_tabs_panel
+            .collapsed_torch_groups
+            .remove(&format!("project:{}", directory.display()));
+    }
+
     pub(in crate::workspace::view) fn toggle_sidebar_group_collapsed(
         &mut self,
         key: &str,
@@ -260,6 +267,15 @@ fn sessions(workspace: &Workspace, app: &AppContext) -> Vec<Session> {
                 .and_then(TerminalView::session_activity_age_minutes)
                 .map(age_label)
                 .unwrap_or_default();
+            let project = terminal
+                .filter(|_| tab.group_id.is_none())
+                .and_then(|view| view.canonical_session_pwd_if_local(app))
+                .and_then(|path| {
+                    crate::settings::project_for_directory(
+                        &crate::settings::ProjectCatalog::as_ref(app).projects,
+                        path.as_path(),
+                    )
+                });
             let (group_key, group_label) = tab
                 .group_id
                 .and_then(|id| {
@@ -269,14 +285,7 @@ fn sessions(workspace: &Workspace, app: &AppContext) -> Vec<Session> {
                         .map(|group| (format!("manual:{id:?}"), group_display_name(group)))
                 })
                 .unwrap_or_else(|| {
-                    terminal
-                        .and_then(|view| view.canonical_session_pwd_if_local(app))
-                        .and_then(|path| {
-                            crate::settings::project_for_directory(
-                                &crate::settings::ProjectCatalog::as_ref(app).projects,
-                                path.as_path(),
-                            )
-                        })
+                    project
                         .map(|project| {
                             (
                                 format!("project:{}", project.path.display()),
@@ -293,6 +302,7 @@ fn sessions(workspace: &Workspace, app: &AppContext) -> Vec<Session> {
                 directory,
                 group_key,
                 group_label,
+                project_directory: project.map(|project| project.path.clone()),
                 status,
                 age,
                 unread,
@@ -685,20 +695,54 @@ fn sidebar(
                 .finish()
         } else {
             let key = members[0].group_key.clone();
-            let mouse = state
+            let mouse_states = state
                 .torch_group_mouse_states
                 .borrow_mut()
                 .entry(key.clone())
                 .or_default()
                 .clone();
-            Hoverable::new(mouse, |_| padded_heading(heading.finish()))
-                .with_cursor(Cursor::PointingHand)
+            let new_session = members[0].project_directory.as_ref().map(|directory| {
+                let directory = directory.clone();
+                let tooltip = appearance
+                    .ui_builder()
+                    .tool_tip(format!("New session in {}", members[0].group_label))
+                    .build()
+                    .finish();
+                icon_button(
+                    appearance,
+                    UiIcon::Plus,
+                    false,
+                    mouse_states.new_session.clone(),
+                )
+                .with_style(UiComponentStyles::default().set_width(20.).set_height(20.))
+                .with_tooltip(move || tooltip)
+                .build()
                 .on_click(move |ctx, _, _| {
-                    ctx.dispatch_typed_action(WorkspaceAction::ToggleSidebarGroupCollapsed(
-                        key.clone(),
+                    ctx.dispatch_typed_action(WorkspaceAction::NewSessionInDirectory(
+                        directory.clone(),
                     ))
                 })
                 .finish()
+            });
+            Hoverable::new(mouse_states.header, move |mouse| {
+                if let Some(button) = new_session {
+                    heading.add_child(if mouse.is_hovered() {
+                        button
+                    } else {
+                        ConstrainedBox::new(Empty::new().finish())
+                            .with_width(20.)
+                            .with_height(20.)
+                            .finish()
+                    });
+                }
+                padded_heading(heading.finish())
+            })
+            .with_defer_events_to_children()
+            .with_cursor(Cursor::PointingHand)
+            .on_click(move |ctx, _, _| {
+                ctx.dispatch_typed_action(WorkspaceAction::ToggleSidebarGroupCollapsed(key.clone()))
+            })
+            .finish()
         };
         group_content.add_child(heading);
         if !collapsed {

@@ -434,6 +434,12 @@ double-click rename, and context menu. Collapsing a group hides its rows without
 its terminals. Explicitly activating a tab reveals its group. Rows in collapsed automatic groups
 are excluded from Shift-selection ranges.
 
+Configured project headings show a small + button on hover, with a fixed slot to prevent text
+movement. It creates a fresh terminal at the configured project root even when existing sessions
+are in subdirectories, and reveals the new session if the project was collapsed. The button click
+does not trigger the heading's collapse action. Missing directories use the same error handling
+as Cmd+P. Manual groups and unconfigured folder groups have no project-root creation control.
+
 ### Session identity and activity
 
 Title precedence is a user-defined tab title, a locally tracked CLI session title, then the pane's
