@@ -26,7 +26,7 @@ pub struct Scene {
     panic_location: Option<&'static std::panic::Location<'static>>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct Layer {
     hit_map: RTree<Rectangle<[OrderedFloat<f32>; 2]>>,
     pub clip_bounds: Option<RectF>,
@@ -35,6 +35,24 @@ pub struct Layer {
     pub glyphs: Vec<Glyph>,
     pub icons: Vec<Icon>,
     pub click_through: bool,
+    /// Multiplies the alpha of everything drawn in this layer, including the opacity inherited
+    /// from the layer it was started in. Applied when the layer is stopped.
+    opacity: f32,
+}
+
+impl Default for Layer {
+    fn default() -> Self {
+        Self {
+            hit_map: RTree::default(),
+            clip_bounds: None,
+            rects: Vec::new(),
+            images: Vec::new(),
+            glyphs: Vec::new(),
+            icons: Vec::new(),
+            click_through: false,
+            opacity: 1.,
+        }
+    }
 }
 
 /// Clip bounds to use for a layer.
@@ -64,6 +82,54 @@ impl Layer {
                 [intersected.max_x().into(), intersected.max_y().into()],
             ));
         }
+    }
+
+    fn apply_opacity(&mut self) {
+        let opacity = self.opacity;
+        if opacity >= 1. {
+            return;
+        }
+        for rect in &mut self.rects {
+            rect.background = fade_fill(rect.background, opacity);
+            rect.border.color = fade_fill(rect.border.color, opacity);
+            if let Some(shadow) = &mut rect.drop_shadow {
+                shadow.color = fade_color(shadow.color, opacity);
+            }
+        }
+        for glyph in &mut self.glyphs {
+            glyph.color = fade_color(glyph.color, opacity);
+        }
+        for image in &mut self.images {
+            image.opacity *= opacity;
+        }
+        for icon in &mut self.icons {
+            icon.opacity *= opacity;
+        }
+    }
+}
+
+fn fade_color(color: ColorU, opacity: f32) -> ColorU {
+    ColorU {
+        a: (f32::from(color.a) * opacity).round() as u8,
+        ..color
+    }
+}
+
+fn fade_fill(fill: Fill, opacity: f32) -> Fill {
+    match fill {
+        Fill::None => Fill::None,
+        Fill::Solid(color) => Fill::Solid(fade_color(color, opacity)),
+        Fill::Gradient {
+            start,
+            end,
+            start_color,
+            end_color,
+        } => Fill::Gradient {
+            start,
+            end,
+            start_color: fade_color(start_color, opacity),
+            end_color: fade_color(end_color, opacity),
+        },
     }
 }
 
@@ -456,7 +522,14 @@ impl Scene {
     }
 
     pub fn start_layer(&mut self, bounds: ClipBounds) {
-        let layer = self.create_layer(bounds);
+        self.start_layer_with_opacity(bounds, 1.);
+    }
+
+    /// Starts a layer whose contents, including nested layers, are drawn at `opacity` (0 to 1)
+    /// relative to the active layer.
+    pub fn start_layer_with_opacity(&mut self, bounds: ClipBounds, opacity: f32) {
+        let mut layer = self.create_layer(bounds);
+        layer.opacity *= opacity.clamp(0., 1.);
 
         match *self.active_layer_index_stack.last() {
             ZIndex::Normal(_) => self.push_normal_layer(layer),
@@ -491,6 +564,7 @@ impl Scene {
 
         Layer {
             clip_bounds,
+            opacity: self.active_layer().opacity,
             ..Default::default()
         }
     }
@@ -512,6 +586,7 @@ impl Scene {
     }
 
     pub fn stop_layer(&mut self) {
+        self.active_layer().apply_opacity();
         if self.active_layer_index_stack.pop().is_err() {
             panic!("popped the last layer from active_layer_index_stack");
         }

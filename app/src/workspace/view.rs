@@ -12465,6 +12465,9 @@ impl Workspace {
             });
         }
 
+        if detach_panes_for_close {
+            self.capture_sidebar_departure(index, ctx);
+        }
         let tab_data = self.tabs.remove(index);
 
         let removed_pane_group_id = tab_data.pane_group.id();
@@ -12840,6 +12843,7 @@ impl Workspace {
         }
 
         self.activate_tab(insert_index, ctx);
+        self.animate_sidebar_arrival(insert_index, ctx);
 
         ctx.notify();
     }

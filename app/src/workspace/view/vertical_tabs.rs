@@ -707,6 +707,8 @@ pub(super) struct VerticalTabsPanelState {
     tab_group_mouse_states: RefCell<HashMap<TabGroupId, TabGroupMouseStates>>,
     torch_group_mouse_states: RefCell<HashMap<String, TorchGroupMouseStates>>,
     collapsed_torch_groups: HashSet<String>,
+    /// Closed sessions still animating out of the sidebar, in the order they closed.
+    departing_sessions: Vec<torch::DepartingSession>,
     pane_row_mouse_states: RefCell<HashMap<PaneId, MouseStateHandle>>,
     pane_title_mouse_states: RefCell<HashMap<PaneId, MouseStateHandle>>,
     pane_badge_mouse_states: RefCell<HashMap<PaneId, PaneRowBadgeMouseStates>>,
@@ -756,6 +758,7 @@ impl Default for VerticalTabsPanelState {
             tab_group_mouse_states: RefCell::default(),
             torch_group_mouse_states: RefCell::default(),
             collapsed_torch_groups: HashSet::new(),
+            departing_sessions: Vec::new(),
             pane_row_mouse_states: RefCell::default(),
             pane_title_mouse_states: RefCell::default(),
             pane_badge_mouse_states: RefCell::default(),

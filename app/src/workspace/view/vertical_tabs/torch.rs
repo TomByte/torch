@@ -1,42 +1,59 @@
-#[path = "torch_arrival.rs"]
-mod arrival;
+#[path = "torch_motion.rs"]
+mod motion;
+
+use std::time::Duration;
+
+use futures::StreamExt;
+use instant::Instant;
+use motion::{Motion, SessionMotion};
+use warp_core::ui::theme::ColorScheme;
+use warpui::ViewContext;
 
 use super::*;
 use crate::session_management::CommandContext;
 use crate::ui_components::buttons::icon_button;
 use crate::workspace::header_toolbar_item::HeaderToolbarItemKind;
 use crate::workspace::view::PanelPosition;
-use arrival::SessionArrival;
-use futures::StreamExt;
-use instant::Instant;
-use std::time::Duration;
-use warp_core::ui::theme::ColorScheme;
-use warpui::ViewContext;
 
 pub(super) const SIDEBAR_WIDTH: f32 = 272.;
 const HEADER_HEIGHT: f32 = 48.;
 const ROW_HEIGHT: f32 = 28.;
-const ARRIVAL_DURATION: Duration = Duration::from_millis(180);
+const SCROLL_FOLLOW_INTERVAL: Duration = Duration::from_millis(16);
 
-fn arrival_progress(elapsed: Duration) -> f32 {
-    let t = (elapsed.as_secs_f32() / ARRIVAL_DURATION.as_secs_f32()).clamp(0., 1.);
-    if t >= 1. {
-        1.
-    } else {
-        1. - 2_f32.powf(-10. * t)
-    }
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum MotionPreference {
+    Full,
+    Reduced,
 }
 
-fn sidebar_motion_enabled() -> bool {
+/// The system motion preference, or `None` where the sidebar places rows immediately.
+fn motion_preference() -> Option<MotionPreference> {
     #[cfg(target_os = "macos")]
     {
-        !objc2_app_kit::NSWorkspace::sharedWorkspace().accessibilityDisplayShouldReduceMotion()
+        Some(
+            if objc2_app_kit::NSWorkspace::sharedWorkspace()
+                .accessibilityDisplayShouldReduceMotion()
+            {
+                MotionPreference::Reduced
+            } else {
+                MotionPreference::Full
+            },
+        )
     }
     // Keep placement immediate until the other backends expose their system motion preference.
     #[cfg(not(target_os = "macos"))]
     {
-        false
+        None
     }
+}
+
+fn arrival_motion(started: Option<Instant>) -> Option<(Motion, Instant)> {
+    let started = started?;
+    let motion = match motion_preference()? {
+        MotionPreference::Full => Motion::Arrival,
+        MotionPreference::Reduced => Motion::ReducedArrival,
+    };
+    (started.elapsed() < motion.duration()).then_some((motion, started))
 }
 
 struct Palette {
@@ -112,6 +129,7 @@ impl Palette {
     }
 }
 
+#[derive(Clone)]
 struct Session {
     index: usize,
     title: String,
@@ -165,6 +183,43 @@ fn grouped_indices(keys: &[String]) -> Vec<Vec<usize>> {
     groups.into_iter().map(|(_, members)| members).collect()
 }
 
+/// A closed session that stays drawn in the sidebar while it animates out.
+pub(super) struct DepartingSession {
+    /// The pane group of the closed tab.
+    id: EntityId,
+    /// The row drawn below this one when it closed, or `None` if it was last in its group.
+    anchor: Option<EntityId>,
+    /// Position of its group among the sidebar groups when it closed.
+    group_position: usize,
+    session: Session,
+    selected: bool,
+    active: bool,
+    hovered: bool,
+    started: Instant,
+}
+
+impl DepartingSession {
+    fn is_animating(&self) -> bool {
+        self.started.elapsed() < Motion::Departure.duration()
+    }
+}
+
+/// Orders live rows and the rows departing from among them. `departures` are in the order they
+/// closed; each returns to just above its anchor, which may itself be departing.
+fn place_departures<Id: PartialEq + Copy, T>(
+    live: Vec<(Id, T)>,
+    departures: impl DoubleEndedIterator<Item = (Id, Option<Id>, T)>,
+) -> Vec<T> {
+    let mut rows = live;
+    for (id, anchor, row) in departures.rev() {
+        let position = anchor
+            .and_then(|anchor| rows.iter().position(|(existing, _)| *existing == anchor))
+            .unwrap_or(rows.len());
+        rows.insert(position, (id, row));
+    }
+    rows.into_iter().map(|(_, row)| row).collect()
+}
+
 pub(in crate::workspace::view) fn session_order(
     workspace: &Workspace,
     app: &AppContext,
@@ -191,39 +246,82 @@ impl Workspace {
         index: usize,
         ctx: &mut ViewContext<Self>,
     ) {
+        if !warp_core::channel::ChannelState::is_local_only() || !self.vertical_tabs_panel_open {
+            return;
+        }
+        let started = Instant::now();
+        self.tabs[index].sidebar_arrival_started = Some(started);
+        let Some((motion, _)) = arrival_motion(Some(started)) else {
+            return;
+        };
+        let id = self.tabs[index].pane_group.id();
+        let frames = motion.duration().as_millis() / SCROLL_FOLLOW_INTERVAL.as_millis() + 1;
+        // The row repaints itself while it grows; keep re-arming the scroll target so a row added
+        // at the bottom of a long list stays fully in view.
+        ctx.spawn_stream_local(
+            async_io::Timer::interval(SCROLL_FOLLOW_INTERVAL).take(frames as usize),
+            move |workspace, _, _| {
+                if workspace.vertical_tabs_panel_open
+                    && workspace.active_tab_pane_group().id() == id
+                {
+                    workspace
+                        .vertical_tabs_panel
+                        .scroll_to_tab(workspace.active_tab_index);
+                }
+            },
+            |_, _| {},
+        );
+    }
+
+    pub(in crate::workspace::view) fn capture_sidebar_departure(
+        &mut self,
+        index: usize,
+        ctx: &mut ViewContext<Self>,
+    ) {
+        self.vertical_tabs_panel
+            .departing_sessions
+            .retain(DepartingSession::is_animating);
         if !warp_core::channel::ChannelState::is_local_only()
             || !self.vertical_tabs_panel_open
-            || !sidebar_motion_enabled()
+            || motion_preference() != Some(MotionPreference::Full)
         {
             return;
         }
-        let id = self.tabs[index].pane_group.id();
-        self.tabs[index].sidebar_arrival_started = Some(Instant::now());
-        ctx.spawn_stream_local(
-            async_io::Timer::interval(Duration::from_millis(16)).take(12),
-            move |workspace, _, ctx| {
-                if workspace.vertical_tabs_panel_open
-                    && workspace.tabs.iter().any(|tab| tab.pane_group.id() == id)
-                {
-                    if workspace.active_tab_pane_group().id() == id {
-                        workspace
-                            .vertical_tabs_panel
-                            .scroll_to_tab(workspace.active_tab_index);
-                    }
-                    ctx.notify();
-                }
-            },
-            move |workspace, ctx| {
-                if let Some(tab) = workspace
-                    .tabs
-                    .iter_mut()
-                    .find(|tab| tab.pane_group.id() == id)
-                {
-                    tab.sidebar_arrival_started = None;
-                    ctx.notify();
-                }
-            },
-        );
+        let mut sessions = sessions(self, ctx);
+        if index >= sessions.len() || group_collapsed(self, &sessions[index]) {
+            return;
+        }
+        let keys = sessions
+            .iter()
+            .map(|session| session.group_key.clone())
+            .collect::<Vec<_>>();
+        let groups = grouped_indices(&keys);
+        let Some((group_position, members)) = groups
+            .iter()
+            .enumerate()
+            .find(|(_, members)| members.contains(&index))
+        else {
+            return;
+        };
+        let position = members.iter().position(|member| *member == index).unwrap();
+        let anchor = members
+            .get(position + 1)
+            .map(|below| self.tabs[*below].pane_group.id());
+        let tab = &self.tabs[index];
+        let departing = DepartingSession {
+            id: tab.pane_group.id(),
+            anchor,
+            group_position,
+            selected: index == self.active_tab_index || tab.in_multi_selection,
+            active: index == self.active_tab_index,
+            hovered: tab
+                .tab_mouse_state
+                .lock()
+                .is_ok_and(|state| state.is_hovered()),
+            session: sessions.swap_remove(index),
+            started: Instant::now(),
+        };
+        self.vertical_tabs_panel.departing_sessions.push(departing);
     }
 
     pub(in crate::workspace::view) fn reveal_sidebar_project(&mut self, directory: &Path) {
@@ -508,6 +606,129 @@ fn status_icon(session: &Session, palette: &Palette) -> Box<dyn Element> {
         .finish()
 }
 
+fn group_collapsed(workspace: &Workspace, session: &Session) -> bool {
+    workspace.tabs[session.index]
+        .group_id
+        .and_then(|id| workspace.tab_groups.get(&id))
+        .map_or_else(
+            || {
+                workspace
+                    .vertical_tabs_panel
+                    .collapsed_torch_groups
+                    .contains(&session.group_key)
+            },
+            |group| group.collapsed,
+        )
+}
+
+fn session_title(
+    session: &Session,
+    palette: &Palette,
+    appearance: &Appearance,
+) -> Box<dyn Element> {
+    label(
+        &session.title,
+        13.,
+        palette.text,
+        if session.unread {
+            Weight::Semibold
+        } else {
+            Weight::Normal
+        },
+        appearance,
+    )
+}
+
+fn session_age(session: &Session, palette: &Palette, appearance: &Appearance) -> Box<dyn Element> {
+    label(
+        &session.age,
+        12.,
+        palette.secondary,
+        Weight::Normal,
+        appearance,
+    )
+}
+
+fn session_status(session: &Session, palette: &Palette) -> Box<dyn Element> {
+    if session.status.is_none() && session.age.is_empty() && !session.agent_status_unavailable {
+        Empty::new().finish()
+    } else {
+        status_icon(session, palette)
+    }
+}
+
+struct RowParts {
+    title: Box<dyn Element>,
+    age_or_close: Box<dyn Element>,
+    status: Box<dyn Element>,
+}
+
+fn row_surface(parts: RowParts, background: ElementFill, border: ElementFill) -> Box<dyn Element> {
+    let trailing = Flex::row()
+        .with_cross_axis_alignment(CrossAxisAlignment::Center)
+        .with_spacing(10.)
+        .with_child(
+            ConstrainedBox::new(Align::new(parts.age_or_close).finish())
+                .with_width(28.)
+                .with_height(20.)
+                .finish(),
+        )
+        .with_child(
+            ConstrainedBox::new(Align::new(parts.status).finish())
+                .with_width(20.)
+                .with_height(20.)
+                .finish(),
+        )
+        .finish();
+    let contents = Flex::row()
+        .with_cross_axis_alignment(CrossAxisAlignment::Center)
+        .with_spacing(10.)
+        .with_child(Expanded::new(1., parts.title).finish())
+        .with_child(trailing)
+        .finish();
+    ConstrainedBox::new(
+        Container::new(contents)
+            .with_padding(Padding::uniform(3.).with_horizontal(12.))
+            .with_corner_radius(CornerRadius::with_all(Radius::Pixels(8.)))
+            .with_background(background)
+            .with_border(Border::all(1.).with_border_fill(border))
+            .finish(),
+    )
+    .with_height(ROW_HEIGHT)
+    .finish()
+}
+
+/// A non-interactive copy of a closed session's row, as it looked when it closed.
+fn departing_row(
+    departing: &DepartingSession,
+    palette: &Palette,
+    appearance: &Appearance,
+) -> Box<dyn Element> {
+    let session = &departing.session;
+    let parts = RowParts {
+        title: session_title(session, palette, appearance),
+        age_or_close: if departing.hovered {
+            Empty::new().finish()
+        } else {
+            session_age(session, palette, appearance)
+        },
+        status: session_status(session, palette),
+    };
+    let background = if departing.selected {
+        ElementFill::Solid(palette.selection)
+    } else if departing.hovered {
+        ElementFill::Solid(palette.hover)
+    } else {
+        ElementFill::None
+    };
+    let border = if departing.active {
+        ElementFill::Solid(palette.rule)
+    } else {
+        ElementFill::None
+    };
+    row_surface(parts, background, border)
+}
+
 fn row(
     session: &Session,
     workspace: &Workspace,
@@ -517,10 +738,6 @@ fn row(
     let appearance = Appearance::as_ref(app);
     let index = session.index;
     let active = index == workspace.active_tab_index;
-    let progress = workspace.tabs[index]
-        .sidebar_arrival_started
-        .map(|started| arrival_progress(started.elapsed()))
-        .unwrap_or(1.);
     let selected = palette.selection;
     let hover = palette.hover;
     let rule = palette.rule;
@@ -533,37 +750,10 @@ fn row(
     let title = if workspace.current_workspace_state.tab_being_renamed() == Some(index) {
         render_inline_tab_rename_editor(&workspace.tab_rename_editor, appearance, app)
     } else {
-        label(
-            &session.title,
-            13.,
-            palette.text,
-            if session.unread {
-                Weight::Semibold
-            } else {
-                Weight::Normal
-            },
-            appearance,
-        )
+        session_title(session, palette, appearance)
     };
-    let contents = Flex::row()
-        .with_cross_axis_alignment(CrossAxisAlignment::Center)
-        .with_spacing(10.)
-        .with_child(Expanded::new(1., title).finish());
-    let age = label(
-        &session.age,
-        12.,
-        palette.secondary,
-        Weight::Normal,
-        appearance,
-    );
-    let status = if session.status.is_none()
-        && session.age.is_empty()
-        && !session.agent_status_unavailable
-    {
-        Empty::new().finish()
-    } else {
-        status_icon(session, palette)
-    };
+    let age = session_age(session, palette, appearance);
+    let status = session_status(session, palette);
     let tooltip = appearance
         .ui_builder()
         .tool_tip("Close session".to_string())
@@ -583,47 +773,28 @@ fn row(
     let row = Hoverable::new(
         workspace.tabs[index].tab_mouse_state.clone(),
         move |state| {
-            let age_or_close = if state.is_hovered() {
-                close_button
-            } else {
-                age
+            let parts = RowParts {
+                title,
+                age_or_close: if state.is_hovered() {
+                    close_button
+                } else {
+                    age
+                },
+                status,
             };
-            let trailing = Flex::row()
-                .with_cross_axis_alignment(CrossAxisAlignment::Center)
-                .with_spacing(10.)
-                .with_child(
-                    ConstrainedBox::new(Align::new(age_or_close).finish())
-                        .with_width(28.)
-                        .with_height(20.)
-                        .finish(),
-                )
-                .with_child(
-                    ConstrainedBox::new(Align::new(status).finish())
-                        .with_width(20.)
-                        .with_height(20.)
-                        .finish(),
-                )
-                .finish();
-            ConstrainedBox::new(
-                Container::new(contents.with_child(trailing).finish())
-                    .with_padding(Padding::uniform(3.).with_horizontal(12.))
-                    .with_corner_radius(CornerRadius::with_all(Radius::Pixels(8.)))
-                    .with_background(if active || in_multi_selection {
-                        ElementFill::Solid(selected)
-                    } else if state.is_hovered() {
-                        ElementFill::Solid(hover)
-                    } else {
-                        ElementFill::None
-                    })
-                    .with_border(Border::all(1.).with_border_fill(if active {
-                        ElementFill::Solid(rule)
-                    } else {
-                        ElementFill::None
-                    }))
-                    .finish(),
-            )
-            .with_height(ROW_HEIGHT)
-            .finish()
+            let background = if active || in_multi_selection {
+                ElementFill::Solid(selected)
+            } else if state.is_hovered() {
+                ElementFill::Solid(hover)
+            } else {
+                ElementFill::None
+            };
+            let border = if active {
+                ElementFill::Solid(rule)
+            } else {
+                ElementFill::None
+            };
+            row_surface(parts, background, border)
         },
     )
     .with_defer_events_to_children()
@@ -654,7 +825,7 @@ fn row(
     })
     .with_cursor(Cursor::PointingHand)
     .finish();
-    let row = Draggable::new(workspace.tabs[index].draggable_state.clone(), row)
+    Draggable::new(workspace.tabs[index].draggable_state.clone(), row)
         .with_drag_axis(DragAxis::VerticalOnly)
         .on_drag_start(|ctx, _, _| ctx.dispatch_typed_action(WorkspaceAction::StartTabDrag))
         .on_drag(move |ctx, _, rect, _| {
@@ -670,13 +841,290 @@ fn row(
             });
             ctx.dispatch_typed_action(WorkspaceAction::DropTab);
         })
-        .finish();
-    let row = if progress < 1. {
-        SessionArrival::new(row, progress).finish()
+        .finish()
+}
+
+enum SidebarRow<'a> {
+    Live(&'a Session),
+    Departing(&'a DepartingSession),
+}
+
+fn group_title(
+    label_text: &str,
+    count: usize,
+    collapsed: bool,
+    palette: &Palette,
+    appearance: &Appearance,
+) -> Box<dyn Element> {
+    Flex::row()
+        .with_main_axis_size(MainAxisSize::Min)
+        .with_cross_axis_alignment(CrossAxisAlignment::Center)
+        .with_spacing(6.)
+        .with_child(icon(
+            if collapsed {
+                WarpIcon::ChevronRight
+            } else {
+                WarpIcon::ChevronDown
+            },
+            12.,
+            palette.secondary,
+        ))
+        .with_child(
+            Shrinkable::new(
+                1.,
+                label(label_text, 12., palette.muted, Weight::Semibold, appearance),
+            )
+            .finish(),
+        )
+        .with_child(label(
+            count.to_string(),
+            12.,
+            palette.muted,
+            Weight::Normal,
+            appearance,
+        ))
+        .finish()
+}
+
+fn padded_heading(content: Box<dyn Element>) -> Box<dyn Element> {
+    Container::new(content)
+        .with_padding(
+            Padding::uniform(0.)
+                .with_left(12.)
+                .with_right(10.)
+                .with_top(12.)
+                .with_bottom(7.),
+        )
+        .finish()
+}
+
+fn group_spacer() -> Box<dyn Element> {
+    ConstrainedBox::new(Empty::new().finish())
+        .with_height(15.)
+        .finish()
+}
+
+fn live_group(
+    members: &[&Session],
+    workspace: &Workspace,
+    palette: &Palette,
+    app: &AppContext,
+) -> Box<dyn Element> {
+    let appearance = Appearance::as_ref(app);
+    let state = &workspace.vertical_tabs_panel;
+    let mut group_content = Flex::column().with_cross_axis_alignment(CrossAxisAlignment::Stretch);
+    let needs = members
+        .iter()
+        .filter(|session| matches!(session.status, Some(ConversationStatus::Blocked { .. })))
+        .count();
+    let group = workspace.tabs[members[0].index]
+        .group_id
+        .and_then(|id| workspace.tab_groups.get(&id));
+    let collapsed = group_collapsed(workspace, members[0]);
+    let title = group_title(
+        &members[0].group_label,
+        members.len(),
+        collapsed,
+        palette,
+        appearance,
+    );
+    let mut heading = Flex::row()
+        .with_main_axis_size(MainAxisSize::Max)
+        .with_main_axis_alignment(MainAxisAlignment::SpaceBetween)
+        .with_cross_axis_alignment(CrossAxisAlignment::Center)
+        .with_spacing(6.)
+        .with_child(Shrinkable::new(1., title).finish());
+    if needs > 0 {
+        heading.add_child(label(
+            format!("{needs} needs you"),
+            12.,
+            palette.attention,
+            Weight::Medium,
+            appearance,
+        ));
+    }
+    let heading = if let Some(group) = group {
+        let group_id = group.id;
+        let mouse = state
+            .tab_group_mouse_states
+            .borrow_mut()
+            .entry(group_id)
+            .or_default()
+            .header
+            .clone();
+        let content = if workspace
+            .current_workspace_state
+            .is_tab_group_being_renamed(group_id)
+        {
+            render_inline_tab_rename_editor(&workspace.tab_group_rename_editor, appearance, app)
+        } else {
+            heading.finish()
+        };
+        Hoverable::new(mouse, |_| padded_heading(content))
+            .with_cursor(Cursor::PointingHand)
+            .on_click(move |ctx, _, _| {
+                ctx.dispatch_typed_action(WorkspaceAction::ToggleTabGroupCollapsed(group_id))
+            })
+            .on_double_click(move |ctx, _, _| {
+                ctx.dispatch_typed_action(WorkspaceAction::RenameTabGroup(group_id))
+            })
+            .on_right_click(move |ctx, _, position| {
+                ctx.dispatch_typed_action(WorkspaceAction::ToggleTabGroupRightClickMenu {
+                    group_id,
+                    anchor: TabContextMenuAnchor::Pointer(position),
+                })
+            })
+            .finish()
     } else {
-        row
+        let key = members[0].group_key.clone();
+        let mouse_states = state
+            .torch_group_mouse_states
+            .borrow_mut()
+            .entry(key.clone())
+            .or_default()
+            .clone();
+        let new_session = members[0].project_directory.as_ref().map(|directory| {
+            let directory = directory.clone();
+            let tooltip = appearance
+                .ui_builder()
+                .tool_tip(format!("New session in {}", members[0].group_label))
+                .build()
+                .finish();
+            icon_button(
+                appearance,
+                UiIcon::Plus,
+                false,
+                mouse_states.new_session.clone(),
+            )
+            .with_style(UiComponentStyles::default().set_width(20.).set_height(20.))
+            .with_tooltip(move || tooltip)
+            .build()
+            .on_click(move |ctx, _, _| {
+                ctx.dispatch_typed_action(WorkspaceAction::NewSessionInDirectory(directory.clone()))
+            })
+            .finish()
+        });
+        Hoverable::new(mouse_states.header, move |mouse| {
+            if let Some(button) = new_session {
+                heading.add_child(if mouse.is_hovered() {
+                    button
+                } else {
+                    ConstrainedBox::new(Empty::new().finish())
+                        .with_width(20.)
+                        .with_height(20.)
+                        .finish()
+                });
+            }
+            padded_heading(heading.finish())
+        })
+        .with_defer_events_to_children()
+        .with_cursor(Cursor::PointingHand)
+        .on_click(move |ctx, _, _| {
+            ctx.dispatch_typed_action(WorkspaceAction::ToggleSidebarGroupCollapsed(key.clone()))
+        })
+        .finish()
     };
-    SavePosition::new(row, &tab_position_id(index)).finish()
+    group_content.add_child(heading);
+    let departing = state
+        .departing_sessions
+        .iter()
+        .filter(|departing| {
+            departing.is_animating() && departing.session.group_key == members[0].group_key
+        })
+        .collect::<Vec<_>>();
+    // A group created by its only session arrives as a whole, heading included.
+    let group_arrival = (members.len() == 1 && departing.is_empty())
+        .then(|| arrival_motion(workspace.tabs[members[0].index].sidebar_arrival_started))
+        .flatten();
+    if !collapsed {
+        let mut rows = Flex::column()
+            .with_cross_axis_alignment(CrossAxisAlignment::Stretch)
+            .with_spacing(2.);
+        let live = members
+            .iter()
+            .map(|session| {
+                (
+                    workspace.tabs[session.index].pane_group.id(),
+                    SidebarRow::Live(session),
+                )
+            })
+            .collect();
+        let departures = departing.iter().map(|departing| {
+            (
+                departing.id,
+                departing.anchor,
+                SidebarRow::Departing(departing),
+            )
+        });
+        for entry in place_departures(live, departures) {
+            rows.add_child(match entry {
+                SidebarRow::Live(session) => {
+                    let element = row(session, workspace, palette, app);
+                    let element =
+                        match arrival_motion(workspace.tabs[session.index].sidebar_arrival_started)
+                        {
+                            Some((motion, started)) if group_arrival.is_none() => {
+                                SessionMotion::new(element, motion, started).finish()
+                            }
+                            Some(_) | None => element,
+                        };
+                    SavePosition::new(element, &tab_position_id(session.index)).finish()
+                }
+                SidebarRow::Departing(departing) => SessionMotion::new(
+                    departing_row(departing, palette, appearance),
+                    Motion::Departure,
+                    departing.started,
+                )
+                .finish(),
+            });
+        }
+        group_content.add_child(rows.finish());
+    }
+    group_content.add_child(group_spacer());
+    let group_content = match group_arrival {
+        Some((motion, started)) => {
+            SessionMotion::new(group_content.finish(), motion, started).finish()
+        }
+        None => group_content.finish(),
+    };
+    if let Some(group) = group {
+        SavePosition::new(group_content, &vtab_group_position_id(group.id)).finish()
+    } else {
+        group_content
+    }
+}
+
+/// A group whose last sessions closed, leaving with them.
+fn vanished_group(
+    members: &[&DepartingSession],
+    palette: &Palette,
+    appearance: &Appearance,
+) -> Box<dyn Element> {
+    let heading = padded_heading(group_title(
+        &members[0].session.group_label,
+        members.len(),
+        false,
+        palette,
+        appearance,
+    ));
+    let mut rows = Flex::column()
+        .with_cross_axis_alignment(CrossAxisAlignment::Stretch)
+        .with_spacing(2.);
+    for departing in members {
+        rows.add_child(departing_row(departing, palette, appearance));
+    }
+    let content = Flex::column()
+        .with_cross_axis_alignment(CrossAxisAlignment::Stretch)
+        .with_child(heading)
+        .with_child(rows.finish())
+        .with_child(group_spacer())
+        .finish();
+    let started = members
+        .iter()
+        .map(|departing| departing.started)
+        .max()
+        .expect("vanished groups have members");
+    SessionMotion::new(content, Motion::Departure, started).finish()
 }
 
 fn sidebar(
@@ -717,189 +1165,38 @@ fn sidebar(
         .iter()
         .map(|session| session.group_key.clone())
         .collect::<Vec<_>>();
-    let groups = grouped_indices(&keys);
+    let mut groups = grouped_indices(&keys)
+        .into_iter()
+        .map(|indices| {
+            let members = indices
+                .into_iter()
+                .map(|index| &sessions[index])
+                .collect::<Vec<_>>();
+            live_group(&members, workspace, palette, app)
+        })
+        .collect::<Vec<_>>();
+    let mut vanished: Vec<(usize, Vec<&DepartingSession>)> = Vec::new();
+    for departing in state.departing_sessions.iter().filter(|departing| {
+        departing.is_animating() && !keys.contains(&departing.session.group_key)
+    }) {
+        match vanished
+            .iter_mut()
+            .find(|(_, members)| members[0].session.group_key == departing.session.group_key)
+        {
+            Some((_, members)) => members.push(departing),
+            None => vanished.push((departing.group_position, vec![departing])),
+        }
+    }
+    vanished.sort_by_key(|(position, _)| *position);
+    for (position, members) in vanished {
+        groups.insert(
+            position.min(groups.len()),
+            vanished_group(&members, palette, appearance),
+        );
+    }
     let mut list = Flex::column().with_cross_axis_alignment(CrossAxisAlignment::Stretch);
-    for indices in groups {
-        let members = indices
-            .into_iter()
-            .map(|index| &sessions[index])
-            .collect::<Vec<_>>();
-        let mut group_content =
-            Flex::column().with_cross_axis_alignment(CrossAxisAlignment::Stretch);
-        let needs = members
-            .iter()
-            .filter(|session| matches!(session.status, Some(ConversationStatus::Blocked { .. })))
-            .count();
-        let group = workspace.tabs[members[0].index]
-            .group_id
-            .and_then(|id| workspace.tab_groups.get(&id));
-        let collapsed = group.map_or_else(
-            || state.collapsed_torch_groups.contains(&members[0].group_key),
-            |group| group.collapsed,
-        );
-        let title = Flex::row()
-            .with_main_axis_size(MainAxisSize::Min)
-            .with_cross_axis_alignment(CrossAxisAlignment::Center)
-            .with_spacing(6.)
-            .with_child(icon(
-                if collapsed {
-                    WarpIcon::ChevronRight
-                } else {
-                    WarpIcon::ChevronDown
-                },
-                12.,
-                palette.secondary,
-            ))
-            .with_child(
-                Shrinkable::new(
-                    1.,
-                    label(
-                        &members[0].group_label,
-                        12.,
-                        palette.muted,
-                        Weight::Semibold,
-                        appearance,
-                    ),
-                )
-                .finish(),
-            )
-            .with_child(label(
-                members.len().to_string(),
-                12.,
-                palette.muted,
-                Weight::Normal,
-                appearance,
-            ))
-            .finish();
-        let mut heading = Flex::row()
-            .with_main_axis_size(MainAxisSize::Max)
-            .with_main_axis_alignment(MainAxisAlignment::SpaceBetween)
-            .with_cross_axis_alignment(CrossAxisAlignment::Center)
-            .with_spacing(6.)
-            .with_child(Shrinkable::new(1., title).finish());
-        if needs > 0 {
-            heading.add_child(label(
-                format!("{needs} needs you"),
-                12.,
-                palette.attention,
-                Weight::Medium,
-                appearance,
-            ));
-        }
-        let padded_heading = |content| {
-            Container::new(content)
-                .with_padding(
-                    Padding::uniform(0.)
-                        .with_left(12.)
-                        .with_right(10.)
-                        .with_top(12.)
-                        .with_bottom(7.),
-                )
-                .finish()
-        };
-        let heading = if let Some(group) = group {
-            let group_id = group.id;
-            let mouse = state
-                .tab_group_mouse_states
-                .borrow_mut()
-                .entry(group_id)
-                .or_default()
-                .header
-                .clone();
-            let content = if workspace
-                .current_workspace_state
-                .is_tab_group_being_renamed(group_id)
-            {
-                render_inline_tab_rename_editor(&workspace.tab_group_rename_editor, appearance, app)
-            } else {
-                heading.finish()
-            };
-            Hoverable::new(mouse, |_| padded_heading(content))
-                .with_cursor(Cursor::PointingHand)
-                .on_click(move |ctx, _, _| {
-                    ctx.dispatch_typed_action(WorkspaceAction::ToggleTabGroupCollapsed(group_id))
-                })
-                .on_double_click(move |ctx, _, _| {
-                    ctx.dispatch_typed_action(WorkspaceAction::RenameTabGroup(group_id))
-                })
-                .on_right_click(move |ctx, _, position| {
-                    ctx.dispatch_typed_action(WorkspaceAction::ToggleTabGroupRightClickMenu {
-                        group_id,
-                        anchor: TabContextMenuAnchor::Pointer(position),
-                    })
-                })
-                .finish()
-        } else {
-            let key = members[0].group_key.clone();
-            let mouse_states = state
-                .torch_group_mouse_states
-                .borrow_mut()
-                .entry(key.clone())
-                .or_default()
-                .clone();
-            let new_session = members[0].project_directory.as_ref().map(|directory| {
-                let directory = directory.clone();
-                let tooltip = appearance
-                    .ui_builder()
-                    .tool_tip(format!("New session in {}", members[0].group_label))
-                    .build()
-                    .finish();
-                icon_button(
-                    appearance,
-                    UiIcon::Plus,
-                    false,
-                    mouse_states.new_session.clone(),
-                )
-                .with_style(UiComponentStyles::default().set_width(20.).set_height(20.))
-                .with_tooltip(move || tooltip)
-                .build()
-                .on_click(move |ctx, _, _| {
-                    ctx.dispatch_typed_action(WorkspaceAction::NewSessionInDirectory(
-                        directory.clone(),
-                    ))
-                })
-                .finish()
-            });
-            Hoverable::new(mouse_states.header, move |mouse| {
-                if let Some(button) = new_session {
-                    heading.add_child(if mouse.is_hovered() {
-                        button
-                    } else {
-                        ConstrainedBox::new(Empty::new().finish())
-                            .with_width(20.)
-                            .with_height(20.)
-                            .finish()
-                    });
-                }
-                padded_heading(heading.finish())
-            })
-            .with_defer_events_to_children()
-            .with_cursor(Cursor::PointingHand)
-            .on_click(move |ctx, _, _| {
-                ctx.dispatch_typed_action(WorkspaceAction::ToggleSidebarGroupCollapsed(key.clone()))
-            })
-            .finish()
-        };
-        group_content.add_child(heading);
-        if !collapsed {
-            let mut rows = Flex::column()
-                .with_cross_axis_alignment(CrossAxisAlignment::Stretch)
-                .with_spacing(2.);
-            for session in members {
-                rows.add_child(row(session, workspace, palette, app));
-            }
-            group_content.add_child(rows.finish());
-        }
-        group_content.add_child(
-            ConstrainedBox::new(Empty::new().finish())
-                .with_height(15.)
-                .finish(),
-        );
-        list.add_child(if let Some(group) = group {
-            SavePosition::new(group_content.finish(), &vtab_group_position_id(group.id)).finish()
-        } else {
-            group_content.finish()
-        });
+    for group in groups {
+        list.add_child(group);
     }
     let scroller = ClippedScrollable::vertical(
         state.scroll_state.clone(),

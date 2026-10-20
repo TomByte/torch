@@ -1,7 +1,8 @@
-use super::*;
 use warp_core::ui::color::contrast::{MinimumAllowedContrast, high_enough_contrast};
 use warp_core::ui::theme::{Details, Fill};
 use warpui::TypedActionView;
+
+use super::*;
 
 #[test]
 fn completed_sessions_only_have_a_filled_check_until_read() {
@@ -334,29 +335,108 @@ fn new_session_has_its_project_before_the_shell_reports_a_directory() {
     });
 }
 
-#[test]
-fn session_arrival_settles_quickly_and_never_overshoots() {
-    assert_eq!(arrival_progress(Duration::ZERO), 0.);
-    assert!(arrival_progress(Duration::from_millis(90)) > 0.95);
-    assert_eq!(arrival_progress(ARRIVAL_DURATION), 1.);
-    assert_eq!(arrival_progress(Duration::from_secs(20)), 1.);
-    let frames = (0..=180)
-        .map(|ms| arrival_progress(Duration::from_millis(ms)))
-        .collect::<Vec<_>>();
-    assert!(frames.windows(2).all(|pair| pair[0] <= pair[1]));
-    assert!(frames.iter().all(|progress| (0. ..=1.).contains(progress)));
+fn frames(motion: Motion) -> Vec<motion::MotionFrame> {
+    let total = motion.duration().as_millis() as u64;
+    (0..=total)
+        .map(|ms| motion.frame(Duration::from_millis(ms)))
+        .collect()
 }
 
-struct ArrivalLayoutTestView;
-impl warpui::Entity for ArrivalLayoutTestView {
+#[test]
+fn arrival_only_slides_in_from_the_left_and_settles_exactly() {
+    let first = Motion::Arrival.frame(Duration::ZERO);
+    assert_eq!(first.opacity, 0.);
+    assert!(first.offset < 0. && first.blur > 0.);
+    assert_eq!(
+        Motion::Arrival.frame(Motion::Arrival.duration()),
+        motion::MotionFrame::SETTLED
+    );
+    let frames = frames(Motion::Arrival);
+    assert!(frames.iter().all(|frame| frame.height == 1.));
+    assert!(frames.windows(2).all(|pair| {
+        pair[0].opacity <= pair[1].opacity
+            && pair[0].offset <= pair[1].offset
+            && pair[0].blur >= pair[1].blur
+    }));
+    assert!(frames.iter().all(|frame| {
+        (0. ..=1.).contains(&frame.opacity)
+            && (0. ..=1.).contains(&frame.blur)
+            && frame.offset <= 0.
+    }));
+}
+
+#[test]
+fn departure_slides_out_before_its_empty_space_closes() {
+    assert_eq!(
+        Motion::Departure.frame(Duration::ZERO),
+        motion::MotionFrame::SETTLED
+    );
+    let frames = frames(Motion::Departure);
+    assert!(frames.windows(2).all(|pair| {
+        pair[0].height >= pair[1].height
+            && pair[0].opacity >= pair[1].opacity
+            && pair[0].offset >= pair[1].offset
+    }));
+    assert!(
+        frames
+            .iter()
+            .filter(|frame| frame.opacity > 0.)
+            .all(|frame| frame.height == 1.)
+    );
+    let last = frames.last().unwrap();
+    assert_eq!((last.height, last.opacity), (0., 0.));
+}
+
+#[test]
+fn reduced_arrival_fades_without_moving() {
+    for frame in frames(Motion::ReducedArrival) {
+        assert_eq!((frame.height, frame.offset, frame.blur), (1., 0., 0.));
+    }
+    assert_eq!(Motion::ReducedArrival.frame(Duration::ZERO).opacity, 0.);
+}
+
+#[test]
+fn departing_rows_return_to_their_original_order() {
+    let live = |ids: &[usize]| ids.iter().map(|id| (*id, *id)).collect::<Vec<_>>();
+    // Bulk closes remove from the bottom up, so every departure anchors to the same survivor.
+    assert_eq!(
+        place_departures(
+            live(&[0, 4]),
+            [(3, Some(4), 3), (2, Some(4), 2), (1, Some(4), 1)].into_iter()
+        ),
+        [0, 1, 2, 3, 4]
+    );
+    // Closing top-down anchors each departure to the next one.
+    assert_eq!(
+        place_departures(
+            live(&[0, 4]),
+            [(1, Some(2), 1), (2, Some(3), 2), (3, Some(4), 3)].into_iter()
+        ),
+        [0, 1, 2, 3, 4]
+    );
+    assert_eq!(
+        place_departures(live(&[0]), [(2, None, 2), (1, None, 1)].into_iter()),
+        [0, 1, 2]
+    );
+    assert_eq!(
+        place_departures(live(&[0, 1]), [(5, Some(9), 5)].into_iter()),
+        [0, 1, 5]
+    );
+}
+
+struct MotionLayoutTestView {
+    motion: Motion,
+    started: Instant,
+}
+impl warpui::Entity for MotionLayoutTestView {
     type Event = ();
 }
-impl warpui::TypedActionView for ArrivalLayoutTestView {
+impl warpui::TypedActionView for MotionLayoutTestView {
     type Action = ();
 }
-impl warpui::View for ArrivalLayoutTestView {
+impl warpui::View for MotionLayoutTestView {
     fn ui_name() -> &'static str {
-        "ArrivalLayoutTest"
+        "MotionLayoutTest"
     }
     fn render(&self, _: &AppContext) -> Box<dyn Element> {
         let full_row = SavePosition::new(
@@ -370,7 +450,11 @@ impl warpui::View for ArrivalLayoutTestView {
         let rows = Flex::column()
             .with_main_axis_size(MainAxisSize::Min)
             .with_child(
-                SavePosition::new(SessionArrival::new(full_row, 0.5).finish(), "arrival").finish(),
+                SavePosition::new(
+                    SessionMotion::new(full_row, self.motion, self.started).finish(),
+                    "moving",
+                )
+                .finish(),
             )
             .with_child(
                 SavePosition::new(
@@ -389,12 +473,16 @@ impl warpui::View for ArrivalLayoutTestView {
     }
 }
 
-#[test]
-fn arrival_opens_space_without_compressing_the_session_contents() {
+/// Lays out a [`SessionMotion`] row `elapsed` into `motion` and returns the height of its painted
+/// contents, the height of its slot, and where the next row starts.
+fn motion_layout(motion: Motion, elapsed: Duration) -> (Option<f32>, f32, f32) {
+    let result = std::rc::Rc::new(std::cell::Cell::new((None, 0., 0.)));
+    let output = result.clone();
     warpui::App::test((), |mut app| async move {
+        let started = Instant::now() - elapsed;
         let (window_id, _view) = app
             .add_window(warpui::platform::WindowStyle::NotStealFocus, |_| {
-                ArrivalLayoutTestView
+                MotionLayoutTestView { motion, started }
             });
         let root = app.root_view_id(window_id).unwrap();
         let mut presenter = warpui::Presenter::new(window_id);
@@ -408,22 +496,36 @@ fn arrival_opens_space_without_compressing_the_session_contents() {
             );
             presenter.build_scene(vec2f(272., 600.), 1., None, ctx);
             let positions = presenter.position_cache();
-            assert_eq!(
-                positions.get_position("full-row").unwrap().height(),
-                ROW_HEIGHT
-            );
-            assert_eq!(
-                positions.get_position("arrival").unwrap().height(),
-                ROW_HEIGHT / 2.
-            );
-            assert_eq!(
+            output.set((
+                positions.get_position("full-row").map(|row| row.height()),
+                positions.get_position("moving").unwrap().height(),
                 positions
                     .get_position("following-row")
                     .unwrap()
                     .origin()
                     .y(),
-                ROW_HEIGHT / 2.
-            );
+            ));
         });
     });
+    result.get()
+}
+
+#[test]
+fn moving_rows_keep_their_height_until_a_departure_has_faded() {
+    let settled = motion_layout(Motion::Arrival, Duration::from_secs(5));
+    assert_eq!(settled, (Some(ROW_HEIGHT), ROW_HEIGHT, ROW_HEIGHT));
+
+    let arriving = motion_layout(Motion::Arrival, Duration::from_millis(100));
+    assert_eq!(arriving, (Some(ROW_HEIGHT), ROW_HEIGHT, ROW_HEIGHT));
+
+    let sliding_out = motion_layout(Motion::Departure, Duration::from_millis(100));
+    assert_eq!(sliding_out, (Some(ROW_HEIGHT), ROW_HEIGHT, ROW_HEIGHT));
+
+    let (painted, slot, following) = motion_layout(Motion::Departure, Duration::from_millis(250));
+    assert_eq!(painted, None);
+    assert!(slot > 0. && slot < ROW_HEIGHT);
+    assert_eq!(following, slot);
+
+    let gone = motion_layout(Motion::Departure, Duration::from_secs(5));
+    assert_eq!(gone, (None, 0., 0.));
 }

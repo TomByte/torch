@@ -375,10 +375,15 @@ shadow. The exact native shadows are recorded in the sidecar as `terminal-pane` 
 `terminal-pane-dark` for dark mode. Both use offset (0, 2), blur 12, and spread 0 in logical pixels;
 the light shadow is faint blue-black and the dark shadow is translucent black. Hover changes fill.
 New terminal rows are allocated to their launch folder before the first sidebar render. On macOS,
-the row opens vertically in place over 180 ms with exponential ease-out; neighbouring rows move
-only to make room within that group. Restored tabs and Reduce Motion use immediate placement.
-Other platforms keep immediate placement until their system motion preference is available.
-Running status glyphs remain static; the arrival transition does not imply a spinning indicator.
+a new or reopened row takes its full height immediately and slides 12 px in from the left over
+340 ms with a cubic ease-out, fading in during the first 60%. A soft motion blur, faint copies on
+both sides along the direction of travel, follows its speed and dissolves as it settles. A closed
+row reverses this over 300 ms: it accelerates 12 px to the left with the blur growing and fades
+out, and only once it has gone does its empty space close, so rows never appear to move
+vertically. A group created or emptied by that row moves with it, heading included. With Reduce
+Motion, new rows fade in place over 160 ms and closed rows are removed immediately. Sessions restored
+at launch use immediate placement, and other platforms keep it until their system motion
+preference is available. Running status glyphs remain static; the transitions do not imply a spinning indicator.
 
 ## Shapes
 
