@@ -5522,6 +5522,8 @@ fn model_selector_keybinding_ignores_closed_selector_window() {
         });
     });
 }
+// Local-only builds never register slash-command bindings.
+#[cfg(not(feature = "local_only"))]
 #[test]
 fn test_new_conversation_keybinding_requires_double_press_in_non_empty_agent_view() {
     App::test((), |mut app| async move {
@@ -5707,6 +5709,8 @@ fn question_mark_does_not_toggle_shortcuts_while_editing_queued_prompt() {
     });
 }
 
+// Local-only builds never register slash-command bindings.
+#[cfg(not(feature = "local_only"))]
 #[test]
 fn test_new_conversation_keybinding_does_not_require_confirmation_in_empty_agent_view() {
     App::test((), |mut app| async move {

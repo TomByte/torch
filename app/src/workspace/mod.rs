@@ -672,7 +672,8 @@ pub fn init(app: &mut AppContext) {
                 & id!("WarpDrive_BelongsToTeam")
                 & id!("IsOnline"),
         )
-        .with_group(bindings::BindingGroup::Notebooks.as_str()),
+        .with_group(bindings::BindingGroup::Notebooks.as_str())
+        .with_enabled(has_cloud_surfaces),
         EditableBinding::new(
             "workspace:create_personal_notebook",
             BindingDescription::new("Create a new personal notebook")
@@ -681,7 +682,8 @@ pub fn init(app: &mut AppContext) {
         )
         .with_group(bindings::BindingGroup::Notebooks.as_str())
         .with_custom_action(CustomAction::NewPersonalNotebook)
-        .with_context_predicate(id!("Workspace") & id!(flags::ENABLE_WARP_DRIVE)),
+        .with_context_predicate(id!("Workspace") & id!(flags::ENABLE_WARP_DRIVE))
+        .with_enabled(has_cloud_surfaces),
         EditableBinding::new(
             "workspace:create_team_workflow",
             BindingDescription::new("Create a new team workflow")
@@ -695,7 +697,8 @@ pub fn init(app: &mut AppContext) {
                 & id!("IsOnline")
                 & id!("WarpDrive_BelongsToTeam"),
         )
-        .with_group(bindings::BindingGroup::Workflow.as_str()),
+        .with_group(bindings::BindingGroup::Workflow.as_str())
+        .with_enabled(has_cloud_surfaces),
         EditableBinding::new(
             "workspace:create_personal_workflow",
             BindingDescription::new("Create a new personal workflow")
@@ -704,7 +707,8 @@ pub fn init(app: &mut AppContext) {
         )
         .with_group(bindings::BindingGroup::Workflow.as_str())
         .with_custom_action(CustomAction::NewPersonalWorkflow)
-        .with_context_predicate(id!("Workspace") & id!(flags::ENABLE_WARP_DRIVE)),
+        .with_context_predicate(id!("Workspace") & id!(flags::ENABLE_WARP_DRIVE))
+        .with_enabled(has_cloud_surfaces),
         EditableBinding::new(
             "workspace:create_team_folder",
             BindingDescription::new("Create a new team folder")
@@ -717,7 +721,8 @@ pub fn init(app: &mut AppContext) {
                 & id!("IsOnline")
                 & id!("WarpDrive_BelongsToTeam"),
         )
-        .with_group(bindings::BindingGroup::Folders.as_str()),
+        .with_group(bindings::BindingGroup::Folders.as_str())
+        .with_enabled(has_cloud_surfaces),
         EditableBinding::new(
             "workspace:create_personal_folder",
             BindingDescription::new("Create a new personal folder")
@@ -725,7 +730,8 @@ pub fn init(app: &mut AppContext) {
             WorkspaceAction::CreatePersonalFolder,
         )
         .with_group(bindings::BindingGroup::Folders.as_str())
-        .with_context_predicate(id!("Workspace") & id!(flags::ENABLE_WARP_DRIVE) & id!("IsOnline")),
+        .with_context_predicate(id!("Workspace") & id!(flags::ENABLE_WARP_DRIVE) & id!("IsOnline"))
+        .with_enabled(has_cloud_surfaces),
         EditableBinding::new(
             NEW_TAB_BINDING_NAME,
             BindingDescription::new(session_label("Create new tab", "New session")),
@@ -753,7 +759,8 @@ pub fn init(app: &mut AppContext) {
         .with_custom_action(CustomAction::NewAgentTab)
         .with_context_predicate(
             id!("Workspace") & id!(flags::IS_ANY_AI_ENABLED) & !id!("Workspace_PaneDragging"),
-        ),
+        )
+        .with_enabled(has_cloud_surfaces),
         EditableBinding::new(
             NEW_AMBIENT_AGENT_TAB_BINDING_NAME,
             BindingDescription::new("New Cloud Agent Tab"),
@@ -845,6 +852,7 @@ pub fn init(app: &mut AppContext) {
         )
         .with_group(bindings::BindingGroup::Navigation.as_str())
         .with_context_predicate(id!("Workspace") & id!(flags::ENABLE_WARP_DRIVE))
+        .with_enabled(has_cloud_surfaces)
         .with_mac_key_binding("ctrl-4")
         .with_linux_or_windows_key_binding("alt-4"),
         EditableBinding::new(
@@ -872,7 +880,8 @@ pub fn init(app: &mut AppContext) {
                 .with_custom_description(bindings::MAC_MENUS_CONTEXT, "Torch Drive"),
             WorkspaceAction::ToggleWarpDrive,
         )
-        .with_context_predicate(id!("Workspace") & id!(flags::ENABLE_WARP_DRIVE)),
+        .with_context_predicate(id!("Workspace") & id!(flags::ENABLE_WARP_DRIVE))
+        .with_enabled(has_cloud_surfaces),
         EditableBinding::new(
             TOGGLE_CONVERSATION_LIST_VIEW_BINDING_NAME,
             BindingDescription::new("Toggle Agent conversation list view").with_custom_description(
@@ -1232,7 +1241,8 @@ pub fn init(app: &mut AppContext) {
             },
         )
         .with_context_predicate(id!("Workspace"))
-        .with_custom_action(CustomAction::SearchDrive),
+        .with_custom_action(CustomAction::SearchDrive)
+        .with_enabled(has_cloud_surfaces),
     ]);
 
     if FeatureFlag::Autoupdate.is_enabled() {
@@ -1285,7 +1295,8 @@ pub fn init(app: &mut AppContext) {
             WorkspaceAction::ExportAllWarpDriveObjects,
         )
         .with_group(bindings::BindingGroup::Settings.as_str())
-        .with_context_predicate(id!("Workspace") & id!(flags::ENABLE_WARP_DRIVE))]);
+        .with_context_predicate(id!("Workspace") & id!(flags::ENABLE_WARP_DRIVE))
+        .with_enabled(has_cloud_surfaces)]);
     }
 
     // Oz and Warp Control CLI install/uninstall actions (macOS only)
@@ -1377,7 +1388,7 @@ pub fn init(app: &mut AppContext) {
             "Toggle Torch AI",
             WorkspaceAction::ToggleAIAssistant,
         )
-        .with_enabled(|| !FeatureFlag::AgentMode.is_enabled())
+        .with_enabled(|| !FeatureFlag::AgentMode.is_enabled() && has_cloud_surfaces())
         .with_context_predicate(id!("Workspace") & id!(flags::IS_ANY_AI_ENABLED))
         .with_group(bindings::BindingGroup::WarpAi.as_str())
         // We use the same custom action as AM so that we don't have
@@ -1402,7 +1413,8 @@ pub fn init(app: &mut AppContext) {
                 & id!("WarpDrive_BelongsToTeam")
                 & id!("IsOnline"),
         )
-        .with_group(bindings::BindingGroup::EnvVarCollection.as_str()),
+        .with_group(bindings::BindingGroup::EnvVarCollection.as_str())
+        .with_enabled(has_cloud_surfaces),
         EditableBinding::new(
             "workspace:create_personal_env_vars",
             BindingDescription::new("Create new personal environment variables")
@@ -1414,7 +1426,8 @@ pub fn init(app: &mut AppContext) {
         )
         .with_group(bindings::BindingGroup::EnvVarCollection.as_str())
         .with_custom_action(CustomAction::NewPersonalEnvVars)
-        .with_context_predicate(id!("Workspace") & id!(flags::ENABLE_WARP_DRIVE)),
+        .with_context_predicate(id!("Workspace") & id!(flags::ENABLE_WARP_DRIVE))
+        .with_enabled(has_cloud_surfaces),
         EditableBinding::new(
             "workspace:create_personal_ai_prompt",
             BindingDescription::new("Create a new personal prompt")
@@ -1425,7 +1438,8 @@ pub fn init(app: &mut AppContext) {
         .with_custom_action(CustomAction::NewPersonalAIPrompt)
         .with_context_predicate(
             id!("Workspace") & id!(flags::ENABLE_WARP_DRIVE) & id!(flags::IS_ANY_AI_ENABLED),
-        ),
+        )
+        .with_enabled(has_cloud_surfaces),
         EditableBinding::new(
             "workspace:create_team_ai_prompt",
             BindingDescription::new("Create a new team prompt")
@@ -1440,7 +1454,8 @@ pub fn init(app: &mut AppContext) {
                 & id!("WarpDrive_BelongsToTeam")
                 & id!("IsOnline")
                 & id!(flags::IS_ANY_AI_ENABLED),
-        ),
+        )
+        .with_enabled(has_cloud_surfaces),
     ]);
 
     app.register_editable_bindings([
@@ -1466,7 +1481,8 @@ pub fn init(app: &mut AppContext) {
             "Import To Personal Drive",
             WorkspaceAction::ImportToPersonalDrive,
         )
-        .with_context_predicate(id!("Workspace") & id!(flags::ENABLE_WARP_DRIVE)),
+        .with_context_predicate(id!("Workspace") & id!(flags::ENABLE_WARP_DRIVE))
+        .with_enabled(has_cloud_surfaces),
         EditableBinding::new(
             "workspace:import_to_team_drive",
             "Import To Team Drive",
@@ -1474,7 +1490,8 @@ pub fn init(app: &mut AppContext) {
         )
         .with_context_predicate(
             id!("Workspace") & id!(flags::ENABLE_WARP_DRIVE) & id!("WarpDrive_BelongsToTeam"),
-        ),
+        )
+        .with_enabled(has_cloud_surfaces),
     ]);
 
     // Register a debug-only action for writing the user's access token to the system clipboard
@@ -1517,7 +1534,7 @@ pub fn init(app: &mut AppContext) {
                 .with_custom_description(bindings::MAC_MENUS_CONTEXT, "Open AI Rules"),
             WorkspaceAction::OpenAIFactCollection,
         )
-        .with_enabled(|| FeatureFlag::AIRules.is_enabled())
+        .with_enabled(|| FeatureFlag::AIRules.is_enabled() && has_cloud_surfaces())
         .with_custom_action(CustomAction::OpenAIFactCollection)
         .with_context_predicate(id!("Workspace") & id!(flags::IS_ANY_AI_ENABLED))
         .with_group(bindings::BindingGroup::WarpAi.as_str()),
@@ -1530,7 +1547,9 @@ pub fn init(app: &mut AppContext) {
         WorkspaceAction::OpenMCPServerCollection,
     )
     .with_enabled(|| {
-        FeatureFlag::McpServer.is_enabled() && ContextFlag::ShowMCPServers.is_enabled()
+        FeatureFlag::McpServer.is_enabled()
+            && ContextFlag::ShowMCPServers.is_enabled()
+            && has_cloud_surfaces()
     })
     .with_custom_action(CustomAction::OpenMCPServerCollection)
     .with_context_predicate(id!("Workspace") & id!(flags::IS_ANY_AI_ENABLED))

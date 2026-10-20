@@ -2157,7 +2157,9 @@ pub fn init(app: &mut AppContext) {
         "Show Torch network log",
         WorkspaceAction::OpenNetworkLogPane,
     )
-    .with_enabled(|| ContextFlag::NetworkLogConsole.is_enabled())]);
+    .with_enabled(|| {
+        ContextFlag::NetworkLogConsole.is_enabled() && !ChannelState::is_local_only()
+    })]);
 
     app.register_editable_bindings([EditableBinding::new(
         "input:clear_screen",
@@ -2302,7 +2304,8 @@ pub fn init(app: &mut AppContext) {
                 & !id!("AIInput"),
         )
         .with_group(bindings::BindingGroup::WarpAi.as_str())
-        .with_custom_action(CustomAction::AISearch),
+        .with_custom_action(CustomAction::AISearch)
+        .with_enabled(|| !ChannelState::is_local_only()),
         EditableBinding::new(
             START_NEW_CONVERSATION_KEYBINDING_NAME,
             "New agent conversation",
@@ -2312,7 +2315,7 @@ pub fn init(app: &mut AppContext) {
                 },
             },
         )
-        .with_enabled(|| !FeatureFlag::AgentView.is_enabled())
+        .with_enabled(|| !FeatureFlag::AgentView.is_enabled() && !ChannelState::is_local_only())
         .with_group(bindings::BindingGroup::WarpAi.as_str())
         .with_context_predicate(
             id!("Input") & id!(flags::IS_ANY_AI_ENABLED) & id!("TerminalView_NonEmptyBlockList"),
@@ -2339,43 +2342,46 @@ pub fn init(app: &mut AppContext) {
             InputAction::ClearAndResetAIContextMenuQuery,
         )
         .with_context_predicate(id!("Input") & id!("AIContextMenuOpen") & !id!("IMEOpen"))
+        .with_enabled(|| !ChannelState::is_local_only())
         .with_mac_key_binding("cmd-shift-backspace")
         .with_linux_or_windows_key_binding("ctrl-shift-backspace"),
     ]);
 
-    let slash_command_bindings = COMMAND_REGISTRY
-        .all_commands()
-        .map(|command| {
-            use crate::search::slash_command_menu::static_commands::{
-                bindings as slash_command_bindings, bindings::DefaultSlashCommandBinding,
-            };
+    if !ChannelState::is_local_only() {
+        let slash_command_bindings = COMMAND_REGISTRY
+            .all_commands()
+            .map(|command| {
+                use crate::search::slash_command_menu::static_commands::{
+                    bindings as slash_command_bindings, bindings::DefaultSlashCommandBinding,
+                };
 
-            let context_predicate = id!("Input")
-                & !id!("IMEOpen")
-                & id!(command.name)
-                & !id!(flags::ACTIVE_INLINE_AGENT_VIEW)
-                & (id!(flags::ACTIVE_AGENT_VIEW) | id!(flags::SLASH_COMMANDS_IN_TERMINAL_FLAG));
+                let context_predicate = id!("Input")
+                    & !id!("IMEOpen")
+                    & id!(command.name)
+                    & !id!(flags::ACTIVE_INLINE_AGENT_VIEW)
+                    & (id!(flags::ACTIVE_AGENT_VIEW) | id!(flags::SLASH_COMMANDS_IN_TERMINAL_FLAG));
 
-            let mut binding = EditableBinding::new(
-                command.name,
-                slash_command_bindings::binding_description(command),
-                InputAction::TriggerSlashCommandFromKeybinding(command.name),
-            )
-            .with_context_predicate(context_predicate);
+                let mut binding = EditableBinding::new(
+                    command.name,
+                    slash_command_bindings::binding_description(command),
+                    InputAction::TriggerSlashCommandFromKeybinding(command.name),
+                )
+                .with_context_predicate(context_predicate);
 
-            binding = match slash_command_bindings::default_binding_for_command(command.name) {
-                DefaultSlashCommandBinding::None => binding,
-                DefaultSlashCommandBinding::Single(keys) => binding.with_key_binding(keys),
-                DefaultSlashCommandBinding::PerPlatform(keys) => binding
-                    .with_mac_key_binding(keys.mac)
-                    .with_linux_or_windows_key_binding(keys.linux_and_windows),
-            };
+                binding = match slash_command_bindings::default_binding_for_command(command.name) {
+                    DefaultSlashCommandBinding::None => binding,
+                    DefaultSlashCommandBinding::Single(keys) => binding.with_key_binding(keys),
+                    DefaultSlashCommandBinding::PerPlatform(keys) => binding
+                        .with_mac_key_binding(keys.mac)
+                        .with_linux_or_windows_key_binding(keys.linux_and_windows),
+                };
 
-            binding
-        })
-        .collect::<Vec<_>>();
+                binding
+            })
+            .collect::<Vec<_>>();
 
-    app.register_editable_bindings(slash_command_bindings);
+        app.register_editable_bindings(slash_command_bindings);
+    }
 
     // Fixed bindings for passive code diffs
     app.register_fixed_bindings([FixedBinding::new(

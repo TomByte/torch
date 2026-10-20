@@ -21,6 +21,7 @@ use warpui::{
 use super::command_dialog::EnvVarCommandDialog;
 use super::menus::Menus;
 use crate::ai::blocklist::block::secret_redaction::find_secrets_in_text_with_levels;
+use crate::channel::ChannelState;
 use crate::cloud_object::breadcrumbs::ContainingObject;
 use crate::cloud_object::model::persistence::{CloudModel, CloudModelEvent};
 use crate::cloud_object::{CloudObjectEventEntrypoint, Owner};
@@ -100,7 +101,8 @@ pub fn init(app: &mut AppContext) {
         EnvVarCollectionAction::Close,
     )
     .with_custom_action(CustomAction::CloseCurrentSession)
-    .with_context_predicate(id!(EnvVarCollectionView::ui_name()))]);
+    .with_context_predicate(id!(EnvVarCollectionView::ui_name()))
+    .with_enabled(|| !ChannelState::is_local_only())]);
 }
 
 #[derive(PartialEq, Clone, Copy)]

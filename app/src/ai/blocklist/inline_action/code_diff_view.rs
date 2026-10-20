@@ -79,6 +79,7 @@ use crate::ai::skills::{
     SkillManager, SkillOpenOrigin, SkillReference, SkillTelemetryEvent,
     icon_override_for_skill_name, render_skill_button, skill_path_from_location,
 };
+use crate::channel::ChannelState;
 use crate::code::diff_viewer::{DiffViewer, DisplayMode};
 use crate::code::editor::view::{CodeEditorEvent, CodeEditorRenderOptions, CodeEditorView};
 use crate::code::editor::{add_color, remove_color};
@@ -202,6 +203,7 @@ pub fn init(app: &mut AppContext) {
         CodeDiffViewAction::Edit,
     )
     .with_context_predicate(id!(CodeDiffView::ui_name()) & !id!(DISPATCHED_REQUESTED_EDIT_EXPANDED))
+    .with_enabled(|| !ChannelState::is_local_only())
     .with_key_binding(cmd_or_ctrl_shift("e"))]);
 }
 

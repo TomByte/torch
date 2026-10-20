@@ -30,6 +30,7 @@ use crate::ai::document::ai_document_model::{
 };
 use crate::ai::document::orchestration_config_block::OrchestrationConfigBlockView;
 use crate::appearance::Appearance;
+use crate::channel::ChannelState;
 use crate::drive::CloudObjectTypeAndId;
 use crate::drive::items::WarpDriveItemId;
 use crate::drive::sharing::ShareableObject;
@@ -70,6 +71,7 @@ pub fn init(app: &mut AppContext) {
         AIDocumentAction::SendUpdatedPlan,
     )
     .with_context_predicate(id!("AIDocumentView") & !id!("IMEOpen"))
+    .with_enabled(|| !ChannelState::is_local_only())
     .with_key_binding("cmdorctrl-s")]);
 
     // Allow closing the AI document pane with the same toggle keybinding used in Terminal

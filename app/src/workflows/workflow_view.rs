@@ -41,6 +41,7 @@ use crate::ai::blocklist::secret_redaction::find_secrets_in_text;
 use crate::appearance::Appearance;
 use crate::auth::auth_state::AuthState;
 use crate::auth::{AuthStateProvider, UserUid};
+use crate::channel::ChannelState;
 use crate::cloud_object::breadcrumbs::ContainingObject;
 use crate::cloud_object::model::persistence::{CloudModel, CloudModelEvent};
 use crate::cloud_object::model::view::CloudViewModel;
@@ -113,6 +114,7 @@ pub fn init(app: &mut AppContext) {
         WorkflowAction::Save,
     )
     .with_context_predicate(id!("WorkflowView"))
+    .with_enabled(|| !ChannelState::is_local_only())
     .with_key_binding("cmdorctrl-s")]);
 
     app.register_editable_bindings([EditableBinding::new(
@@ -121,7 +123,8 @@ pub fn init(app: &mut AppContext) {
         WorkflowAction::Close,
     )
     .with_custom_action(CustomAction::CloseCurrentSession)
-    .with_context_predicate(id!(WorkflowView::ui_name()))]);
+    .with_context_predicate(id!(WorkflowView::ui_name()))
+    .with_enabled(|| !ChannelState::is_local_only())]);
 }
 
 const WORKFLOW_ICON_DIMENSIONS: f32 = 16.;

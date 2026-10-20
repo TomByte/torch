@@ -35,6 +35,7 @@ use super::{
 };
 use crate::ai::AIRequestUsageModel;
 use crate::appearance::Appearance;
+use crate::channel::ChannelState;
 use crate::editor::{
     EditorOptions, EditorView, Event as EditorEvent, PropagateAndNoOpNavigationKeys, TextOptions,
 };
@@ -159,6 +160,7 @@ pub fn init(app: &mut AppContext) {
             AIAssistantAction::FocusTerminalInput,
         )
         .with_context_predicate(id!("AIAssistantPanel"))
+        .with_enabled(|| !ChannelState::is_local_only())
         .with_key_binding(cmd_or_ctrl_shift("l")),
         EditableBinding::new(
             "ai_assistant_panel:reset_context",
@@ -166,6 +168,7 @@ pub fn init(app: &mut AppContext) {
             AIAssistantAction::ResetContext,
         )
         .with_context_predicate(id!("AIAssistantPanel"))
+        .with_enabled(|| !ChannelState::is_local_only())
         .with_key_binding("ctrl-l"),
         EditableBinding::new(
             "ai_assistant_panel:reset_context",
@@ -173,6 +176,7 @@ pub fn init(app: &mut AppContext) {
             AIAssistantAction::ResetContext,
         )
         .with_context_predicate(id!("AIAssistantPanel"))
+        .with_enabled(|| !ChannelState::is_local_only())
         .with_key_binding(cmd_or_ctrl_shift("k")),
     ]);
 }

@@ -56,6 +56,7 @@ use crate::ai::blocklist::{
     ClientIdentifiers,
 };
 use crate::ai::mcp::TemplatableMCPServerManager;
+use crate::channel::ChannelState;
 use crate::cmd_or_ctrl_shift;
 use crate::code::editor::view::{CodeEditorEvent, CodeEditorRenderOptions, CodeEditorView};
 use crate::editor::InteractionState;
@@ -181,7 +182,8 @@ pub fn init(app: &mut AppContext) {
         id!(RequestedCommandView::ui_name())
             & id!(REQUESTED_ACTION_BLOCKED_KEYMAP_CONTEXT)
             & !id!(EDIT_MODE_OPEN_KEYMAP_CONTEXT),
-    )]);
+    )
+    .with_enabled(|| !ChannelState::is_local_only())]);
 }
 
 /// Structured representation of an MCP tool call request for JSON tree rendering.

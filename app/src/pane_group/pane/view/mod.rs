@@ -23,6 +23,7 @@ use super::{
     BackingView, PaneConfiguration, PaneConfigurationEvent, PaneId, PaneStack, PaneStackEvent,
 };
 use crate::appearance::Appearance;
+use crate::channel::ChannelState;
 use crate::pane_group::focus_state::{PaneFocusHandle, PaneGroupFocusEvent};
 use crate::pane_group::pane::ActionOrigin;
 use crate::pane_group::{Direction, SplitPaneState, TabBarHoverIndex};
@@ -50,6 +51,7 @@ pub fn init(app: &mut AppContext) {
         PaneAction::ShareContents,
     )
     .with_custom_action(CustomAction::SharePaneContents)
+    .with_enabled(|| !ChannelState::is_local_only())
     .with_context_predicate(id!("PaneView") & id!(HAS_SHARED_OBJECT_CONTEXT_KEY))]);
 }
 

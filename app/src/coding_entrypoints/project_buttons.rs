@@ -21,6 +21,7 @@ use warpui::{
     AppContext, Element, Entity, SingletonEntity as _, TypedActionView, View, ViewContext,
 };
 
+use crate::channel::ChannelState;
 use crate::util::bindings::{BindingGroup, CustomAction, keybinding_name_to_display_string};
 
 const BUTTON_MIN_WIDTH: f32 = 149.;
@@ -36,14 +37,17 @@ pub fn init(app: &mut AppContext) {
         )
         .with_context_predicate(id!("ProjectButons"))
         .with_group(BindingGroup::Folders.as_str())
-        .with_custom_action(CustomAction::OpenRepository),
+        .with_custom_action(CustomAction::OpenRepository)
+        .with_enabled(|| !ChannelState::is_local_only()),
         EditableBinding::new(
             "project_buttons:create_new_project",
             "Create new project",
             ProjectButtonsAction::CreateProject,
         )
         .with_context_predicate(id!("ProjectButons"))
-        .with_enabled(|| FeatureFlag::CreateProjectFlow.is_enabled())
+        .with_enabled(|| {
+            FeatureFlag::CreateProjectFlow.is_enabled() && !ChannelState::is_local_only()
+        })
         .with_mac_key_binding("cmd-shift-N")
         .with_linux_or_windows_key_binding("alt-shift-N"),
     ]);

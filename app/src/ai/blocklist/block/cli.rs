@@ -72,6 +72,7 @@ use crate::ai::control_code_parser::{ParsedControlCodeOutput, parse_control_code
 use crate::ai::execution_profiles::profiles::{
     AIExecutionProfilesModel, AIExecutionProfilesModelEvent,
 };
+use crate::channel::ChannelState;
 use crate::code::editor::view::{CodeEditorEvent, CodeEditorRenderOptions, CodeEditorView};
 use crate::code::editor_management::CodeSource;
 use crate::editor::InteractionState;
@@ -170,7 +171,8 @@ pub fn init(app: &mut AppContext) {
     .with_linux_or_windows_key_binding("ctrl-i")
     .with_context_predicate(
         id!(CLISubagentView::ui_name()) & id!(HAS_PENDING_CLI_ACTION_CONTEXT_KEY),
-    )]);
+    )
+    .with_enabled(|| !ChannelState::is_local_only())]);
 }
 
 #[derive(Default)]

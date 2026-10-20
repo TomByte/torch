@@ -15,6 +15,7 @@ use warpui::{
     ViewContext, ViewHandle,
 };
 
+use crate::channel::ChannelState;
 use crate::coding_entrypoints::clone_repo_view::{CloneRepoEvent, CloneRepoView};
 use crate::coding_entrypoints::create_project_view::{CreateProjectEvent, CreateProjectView};
 use crate::coding_entrypoints::project_buttons::{ProjectButtons, ProjectButtonsEvent};
@@ -37,7 +38,8 @@ pub fn init(app: &mut AppContext) {
     )
     .with_context_predicate(id!("GetStartedView"))
     .with_group(BindingGroup::Terminal.as_str())
-    .with_custom_action(CustomAction::NewTab)]);
+    .with_custom_action(CustomAction::NewTab)
+    .with_enabled(|| !ChannelState::is_local_only())]);
 }
 
 #[derive(Debug, Default)]
