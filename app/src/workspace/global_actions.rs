@@ -156,7 +156,7 @@ fn save_app(_: &(), ctx: &mut AppContext) {
         }
         ctx.spawn(Timer::after(SAVE_APP_COALESCE_WINDOW), |pending, _, ctx| {
             if std::mem::take(&mut pending.scheduled) {
-                save_app_now(ctx);
+                write_app_snapshot(ctx);
             }
         });
     });
@@ -167,14 +167,18 @@ pub fn flush_pending_save_app(ctx: &mut AppContext) {
     let scheduled = PendingAppSave::handle(ctx)
         .update(ctx, |pending, _| std::mem::take(&mut pending.scheduled));
     if scheduled {
-        save_app_now(ctx);
+        write_app_snapshot(ctx);
     }
 }
 
 /// Writes an app-state snapshot immediately, superseding any waiting one.
 pub fn save_app_now(ctx: &mut AppContext) {
     PendingAppSave::handle(ctx).update(ctx, |pending, _| pending.scheduled = false);
+    write_app_snapshot(ctx);
+}
 
+/// Doesn't touch [`PendingAppSave`], so its coalescing timer can call it while updating it.
+fn write_app_snapshot(ctx: &AppContext) {
     if !AppExecutionMode::as_ref(ctx).can_save_session() {
         return;
     }
