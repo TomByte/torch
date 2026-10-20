@@ -15,6 +15,7 @@ use repo_metadata::repositories::{
 use repo_metadata::repository::{Repository, RepositorySubscriber, SubscriberId};
 use repo_metadata::watcher::{DirectoryWatcher, RepositoryUpdate};
 use strum::IntoEnumIterator;
+use warp_core::channel::ChannelState;
 use warp_core::safe_warn;
 use warpui::{Entity, ModelContext, ModelHandle, SingletonEntity};
 use watcher::HomeDirectoryWatcherEvent;
@@ -168,6 +169,16 @@ pub struct FileMCPWatcher {
 
 impl FileMCPWatcher {
     pub fn new(ctx: &mut ModelContext<Self>) -> Self {
+        // Local-only builds have no agent to hand MCP servers to, and agent CLIs write to their
+        // config directories constantly, so skip watching and parsing them entirely.
+        if ChannelState::is_local_only() {
+            return Self::new_inert();
+        }
+        Self::new_watching(ctx)
+    }
+
+    /// A watcher that watches home and repository MCP config files.
+    pub(crate) fn new_watching(ctx: &mut ModelContext<Self>) -> Self {
         let (file_mcp_tx, file_mcp_rx) = async_channel::unbounded::<FileMCPDetectionMessage>();
         let settings_mode = settings::settings_mode();
 
@@ -249,9 +260,7 @@ impl FileMCPWatcher {
         watcher
     }
 
-    /// A watcher with no filesystem subscriptions and no owed scans, so tests can feed
-    /// consumers a deterministic event sequence.
-    #[cfg(test)]
+    /// A watcher with no filesystem subscriptions and no owed scans.
     pub(crate) fn new_inert() -> Self {
         Self {
             file_mcp_tx: async_channel::unbounded().0,

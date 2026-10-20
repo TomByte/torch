@@ -28428,6 +28428,11 @@ impl TypedActionView for TerminalView {
             ImportSettings => {
                 #[cfg(feature = "local_fs")]
                 {
+                    ImportedConfigModel::handle(ctx).update(ctx, |model, ctx| {
+                        if !model.is_started() {
+                            model.search_for_settings_to_import(ctx);
+                        }
+                    });
                     self.add_settings_import_block(ctx);
                     send_telemetry_from_ctx!(TelemetryEvent::SettingsImportInitiated, ctx);
                 }

@@ -14,6 +14,7 @@ use repo_metadata::{
     DirectoryWatcher, RepoMetadataModel, RepositoryIdentifier, RepositoryUpdate,
     RepositoryWatchMode,
 };
+use warp_core::channel::ChannelState;
 use warp_util::local_or_remote_path::LocalOrRemotePath;
 use warpui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
 use watcher::{BulkFilesystemWatcherEvent, HomeDirectoryWatcher, HomeDirectoryWatcherEvent};
@@ -96,7 +97,14 @@ impl SkillWatcher {
     }
 
     pub fn new(ctx: &mut ModelContext<Self>, watcher_event_tx: Sender<SkillWatcherEvent>) -> Self {
-        Self::new_internal(ctx, watcher_event_tx, dirs::home_dir())
+        // Local-only builds have no agent that consumes skills, and agent CLIs write to their
+        // home directories (e.g. `~/.claude`) constantly, so don't scan or watch them.
+        let home_dir = if ChannelState::is_local_only() {
+            None
+        } else {
+            dirs::home_dir()
+        };
+        Self::new_internal(ctx, watcher_event_tx, home_dir)
     }
 
     /// Test-only constructor that skips home-directory watching so tests are not

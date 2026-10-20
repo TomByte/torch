@@ -484,7 +484,7 @@ fn startup_scan_parses_existing_subdir_config_before_completion() {
 
     App::test((), |mut app| async move {
         initialize_app_for_terminal_view(&mut app);
-        let watcher = app.add_singleton_model(FileMCPWatcher::new);
+        let watcher = app.add_singleton_model(FileMCPWatcher::new_watching);
         let collector = app.add_model(|_| WatcherEventCollector);
         let (tx, rx) = futures::channel::oneshot::channel();
         let mut tx = Some(tx);

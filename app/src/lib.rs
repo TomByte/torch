@@ -637,7 +637,8 @@ impl LaunchMode {
             LaunchMode::RemoteServerDaemon { .. } => {
                 FeatureFlag::RemoteCodebaseIndexing.is_enabled()
             }
-            LaunchMode::App { .. } | LaunchMode::Test { .. } => true,
+            // Local-only builds have no agent that consumes codebase outlines or embeddings.
+            LaunchMode::App { .. } | LaunchMode::Test { .. } => !ChannelState::is_local_only(),
             LaunchMode::RemoteServerProxy => false,
             // Codebase indexing stays off for the TUI until it has deferred
             // persisted-index restore and multi-process-safe snapshot writes
@@ -1949,7 +1950,11 @@ pub(crate) fn initialize_app(
             );
         });
         ctx.add_singleton_model(|_| DetectedRepositories::default());
-        if let Some(home_dir) = dirs::home_dir() {
+        // Nothing in local-only builds consumes home directory events, and watching `$HOME`
+        // means filtering every filesystem event beneath it (agent CLIs write there constantly).
+        if ChannelState::is_local_only() {
+            ctx.add_singleton_model(HomeDirectoryWatcher::new_inert);
+        } else if let Some(home_dir) = dirs::home_dir() {
             ctx.add_singleton_model(|ctx| HomeDirectoryWatcher::new(home_dir, ctx));
         } else {
             log::info!("Home directory not found; skipping HomeDirectoryWatcher registration");
@@ -1960,7 +1965,11 @@ pub(crate) fn initialize_app(
     {
         let imported_config_model = ctx.add_singleton_model(ImportedConfigModel::new);
 
-        if ChannelState::channel() != warp_core::channel::Channel::Integration {
+        // Local-only builds defer the search (which enumerates every system font and parses other
+        // terminals' configs) until the user opens the import flow.
+        if ChannelState::channel() != warp_core::channel::Channel::Integration
+            && !ChannelState::is_local_only()
+        {
             imported_config_model.update(ctx, |model, ctx| {
                 model.search_for_settings_to_import(ctx);
             });
@@ -1968,8 +1977,12 @@ pub(crate) fn initialize_app(
 
         let emit_incremental_updates = matches!(launch_mode, LaunchMode::RemoteServerDaemon { .. });
         ctx.add_singleton_model(|ctx| {
+            // Local-only builds have no consumer of whole-repo file trees, so don't build and
+            // recursively watch one for every repository the user `cd`s into.
             let model = if emit_incremental_updates {
                 RepoMetadataModel::new_with_incremental_updates(ctx)
+            } else if ChannelState::is_local_only() {
+                RepoMetadataModel::new_without_auto_indexing(ctx)
             } else {
                 RepoMetadataModel::new(ctx)
             };
@@ -2510,6 +2523,15 @@ pub(crate) fn initialize_app(
                 ctx,
             );
         }
+        // Without snapshot storage the manager neither creates nor migrates the snapshot dir.
+        #[cfg(feature = "local_fs")]
+        if ChannelState::is_local_only() {
+            return CodebaseIndexManager::new_with_snapshot_storage(
+                codebase_index_config,
+                None,
+                ctx,
+            );
+        }
 
         CodebaseIndexManager::new_with_config(codebase_index_config, ctx)
     });
@@ -2524,7 +2546,9 @@ pub(crate) fn initialize_app(
 
     // Index global rules (e.g. ~/.agents/AGENTS.md) on a background task so
     // they are available to subsequent agent queries.
-    ProjectContextModel::handle(ctx).update(ctx, |me, ctx| me.index_global_rules(ctx));
+    if !ChannelState::is_local_only() {
+        ProjectContextModel::handle(ctx).update(ctx, |me, ctx| me.index_global_rules(ctx));
+    }
     #[cfg(all(not(target_family = "wasm"), feature = "local_fs"))]
     {
         ctx.add_singleton_model(ai::remote_agent_context::RemoteAgentContext::new);

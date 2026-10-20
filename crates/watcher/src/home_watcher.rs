@@ -38,10 +38,15 @@ impl HomeDirectoryWatcher {
         Self { _watcher: watcher }
     }
 
-    /// Test-only constructor that uses a stub filesystem watcher with no background thread,
-    pub fn new_for_test(ctx: &mut ModelContext<Self>) -> Self {
+    /// Constructs a watcher backed by a stub filesystem watcher with no background thread, so it
+    /// never emits events.
+    pub fn new_inert(ctx: &mut ModelContext<Self>) -> Self {
         let watcher = ctx.add_model(|_| BulkFilesystemWatcher::new_for_test());
         Self { _watcher: watcher }
+    }
+
+    pub fn new_for_test(ctx: &mut ModelContext<Self>) -> Self {
+        Self::new_inert(ctx)
     }
 
     /// Forwards filesystem events to home directory watcher subscribers.

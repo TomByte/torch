@@ -369,9 +369,24 @@ impl GetContentsArgs {
 }
 
 impl LocalRepoMetadataModel {
-    /// Creates a new LocalRepoMetadataModel.
-    #[cfg_attr(not(feature = "local_fs"), allow(unused_variables), allow(unused_mut))]
+    /// Creates a new LocalRepoMetadataModel that indexes every detected git repository.
     pub fn new(ctx: &mut ModelContext<Self>) -> Self {
+        let model = Self::new_without_auto_indexing(ctx);
+        #[cfg(feature = "local_fs")]
+        ctx.subscribe_to_model(&DetectedRepositories::handle(ctx), |me, _, event, ctx| {
+            let DetectedRepositoriesEvent::DetectedGitRepo { repository, .. } = event;
+            let repo_path = repository.as_ref(ctx).root_dir().clone();
+            if let Err(e) = me.index_directory(repository.clone(), ctx) {
+                log::warn!("Failed to index directory {repo_path}: {e}");
+            }
+        });
+        model
+    }
+
+    /// Creates a new LocalRepoMetadataModel that only indexes directories it is explicitly asked
+    /// to index.
+    #[cfg_attr(not(feature = "local_fs"), allow(unused_variables), allow(unused_mut))]
+    pub fn new_without_auto_indexing(ctx: &mut ModelContext<Self>) -> Self {
         let mut model = Self {
             repositories: HashMap::new(),
             standing_results: HashMap::new(),
@@ -399,16 +414,6 @@ impl LocalRepoMetadataModel {
                 });
                 ctx.subscribe_to_model(&watcher, |me, _, event, ctx| me.handle_watcher_event(event, ctx));
                 model.watcher = Some(watcher);
-
-                ctx.subscribe_to_model(&DetectedRepositories::handle(ctx), |me, _, event, ctx| {
-                    let DetectedRepositoriesEvent::DetectedGitRepo { repository, .. } = event;
-                    let repo_path = repository.as_ref(ctx).root_dir().clone();
-                    if let Err(e) = me.index_directory(repository.clone(), ctx) {
-                        log::warn!(
-                            "Failed to index directory {repo_path}: {e}"
-                        );
-                    }
-                });
             }
         }
 

@@ -313,13 +313,14 @@ impl PersistedWorkspace {
         // indexing off (e.g. the TUI front-end). The embedding half of
         // `index_repo` stays behind its own gates, and
         // `CodebaseIndexManager::index_directory` no-ops when indexing is
-        // disabled.
+        // disabled. Local-only builds skip it: they have no agent that consumes project rules.
         #[cfg(feature = "local_fs")]
         if !cfg!(any(
             test,
             feature = "fast_dev",
             feature = "integration_tests"
-        )) {
+        )) && !ChannelState::is_local_only()
+        {
             ctx.subscribe_to_model(&DetectedRepositories::handle(ctx), |me, _, event, ctx| {
                 let DetectedRepositoriesEvent::DetectedGitRepo { repository, .. } = event;
                 let repo_path = repository.as_ref(ctx).root_dir().to_local_path_lossy();
@@ -349,7 +350,8 @@ impl PersistedWorkspace {
             test,
             feature = "fast_dev",
             feature = "integration_tests"
-        )) && !startup_workspace_paths.is_empty()
+        )) && crate::code::editor_available()
+            && !startup_workspace_paths.is_empty()
         {
             result.detect_available_servers_for_workspaces(startup_workspace_paths, true, ctx);
         }

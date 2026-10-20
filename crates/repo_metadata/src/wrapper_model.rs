@@ -71,12 +71,14 @@ impl RepoMetadataModel {
     /// subscribing to their events for forwarding.
     pub fn new(ctx: &mut ModelContext<Self>) -> Self {
         let local = ctx.add_model(LocalRepoMetadataModel::new);
-        let remote = ctx.add_model(RemoteRepoMetadataModel::new);
+        Self::new_with_local(local, ctx)
+    }
 
-        ctx.subscribe_to_model(&local, Self::forward_local_event);
-        ctx.subscribe_to_model(&remote, Self::forward_remote_event);
-
-        Self { local, remote }
+    /// Creates a new `RepoMetadataModel` whose local sub-model only indexes directories it is
+    /// explicitly asked to index, rather than every detected git repository.
+    pub fn new_without_auto_indexing(ctx: &mut ModelContext<Self>) -> Self {
+        let local = ctx.add_model(LocalRepoMetadataModel::new_without_auto_indexing);
+        Self::new_with_local(local, ctx)
     }
 
     /// Creates a new `RepoMetadataModel` with incremental update emission
@@ -87,6 +89,13 @@ impl RepoMetadataModel {
             model.set_emit_incremental_updates(true);
             model
         });
+        Self::new_with_local(local, ctx)
+    }
+
+    fn new_with_local(
+        local: ModelHandle<LocalRepoMetadataModel>,
+        ctx: &mut ModelContext<Self>,
+    ) -> Self {
         let remote = ctx.add_model(RemoteRepoMetadataModel::new);
 
         ctx.subscribe_to_model(&local, Self::forward_local_event);
