@@ -227,10 +227,13 @@ fn establish_connection(database_url: &str, read_only: bool) -> Result<SqliteCon
     // The auto-checkpoint interval is lowered from the default of 1000 because all writes
     // already run in a background thread and can afford to checkpoint slightly more often.
     // At the default value, the WAL can grow larger than a typical database (for our usage).
+    // NORMAL synchronization is durable across app crashes in WAL mode; only an OS crash or power
+    // loss can roll back the most recent commits, which is acceptable for session state.
     conn.batch_execute(
         r#"
         PRAGMA journal_mode=WAL;
         PRAGMA wal_autocheckpoint=500;
+        PRAGMA synchronous=NORMAL;
     "#,
     )
     .context("Failed to enable WAL")?;

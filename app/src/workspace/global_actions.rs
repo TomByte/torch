@@ -1,11 +1,13 @@
 use std::path::PathBuf;
+use std::time::Duration;
 
 use ::settings::ToggleableSetting;
 use warp_core::execution_mode::AppExecutionMode;
 use warp_errors::report_error;
 use warp_graphql::mutations::create_anonymous_user::AnonymousUserType;
+use warpui::r#async::Timer;
 use warpui::windowing::WindowManager;
-use warpui::{AppContext, SingletonEntity, TypedActionView};
+use warpui::{AppContext, Entity, SingletonEntity, TypedActionView};
 
 use crate::ai::agent::AIAgentExchangeId;
 use crate::ai::agent::conversation::AIConversationId;
@@ -83,6 +85,7 @@ pub fn init_global_actions(app: &mut AppContext) {
     app.add_global_action("workspace:toggle_mouse_reporting", toggle_mouse_reporting);
     app.add_global_action("workspace:toggle_scroll_reporting", toggle_scroll_reporting);
     app.add_global_action("workspace:toggle_focus_reporting", toggle_focus_reporting);
+    app.add_singleton_model(|_| PendingAppSave::default());
     app.add_global_action("workspace:save_app", save_app);
     app.add_global_action("workspace:fork_ai_conversation", fork_ai_conversation);
     app.add_global_action(
@@ -130,7 +133,48 @@ fn toggle_focus_reporting(_: &(), ctx: &mut AppContext) {
     });
 }
 
+/// How long app-state save requests are gathered into one snapshot. Window moves, resizes, and
+/// focus changes arrive in bursts, and each snapshot rebuilds and rewrites the whole app state.
+const SAVE_APP_COALESCE_WINDOW: Duration = Duration::from_millis(750);
+
+/// Whether an app-state snapshot is waiting for the end of its coalescing window.
+#[derive(Default)]
+pub struct PendingAppSave {
+    scheduled: bool,
+}
+
+impl Entity for PendingAppSave {
+    type Event = ();
+}
+
+impl SingletonEntity for PendingAppSave {}
+
 fn save_app(_: &(), ctx: &mut AppContext) {
+    PendingAppSave::handle(ctx).update(ctx, |pending, ctx| {
+        if std::mem::replace(&mut pending.scheduled, true) {
+            return;
+        }
+        ctx.spawn(Timer::after(SAVE_APP_COALESCE_WINDOW), |pending, _, ctx| {
+            if std::mem::take(&mut pending.scheduled) {
+                save_app_now(ctx);
+            }
+        });
+    });
+}
+
+/// Writes any app-state snapshot still waiting in its coalescing window.
+pub fn flush_pending_save_app(ctx: &mut AppContext) {
+    let scheduled = PendingAppSave::handle(ctx)
+        .update(ctx, |pending, _| std::mem::take(&mut pending.scheduled));
+    if scheduled {
+        save_app_now(ctx);
+    }
+}
+
+/// Writes an app-state snapshot immediately, superseding any waiting one.
+pub fn save_app_now(ctx: &mut AppContext) {
+    PendingAppSave::handle(ctx).update(ctx, |pending, _| pending.scheduled = false);
+
     if !AppExecutionMode::as_ref(ctx).can_save_session() {
         return;
     }
@@ -261,3 +305,7 @@ fn summarize_ai_conversation(prompt: &Option<String>, ctx: &mut AppContext) {
 fn trigger_log_out(_: &(), ctx: &mut AppContext) {
     auth::log_out(ctx)
 }
+
+#[cfg(test)]
+#[path = "global_actions_tests.rs"]
+mod tests;

@@ -23,6 +23,7 @@ use base64::Engine as _;
 use base64::engine::general_purpose;
 use element::CommandXRayMouseStateHandle;
 use figma_utils::is_figma_png;
+use instant::Instant;
 use itertools::{Either, Itertools};
 use mime_guess::from_path;
 use model::{
@@ -134,6 +135,9 @@ use crate::vim_registers::{RegisterContent, VimRegisters};
 use crate::workspace::{ToastStack, Workspace};
 
 const CURSOR_BLINK_INTERVAL: Duration = Duration::from_millis(500);
+/// How long the cursor keeps blinking without input. Each blink repaints the window, so an idle
+/// editor settles on a steady cursor.
+const CURSOR_BLINK_IDLE_TIMEOUT: Duration = Duration::from_secs(15);
 const DEFAULT_TAB_SIZE: usize = 4;
 
 pub const ACCEPT_AUTOSUGGESTION_KEYBINDING_NAME: &str = "editor_view:insert_autosuggestion";
@@ -1779,6 +1783,7 @@ pub struct EditorView {
     get_cursor_colors_fn: CursorColorsFn,
     cursors_visible: bool,
     blink_epoch: usize,
+    last_cursor_activity: Instant,
     single_line: bool,
     /// A cache for text that is cut within the input using ctrl-k/u. This text is not copied to clipboard.
     internal_clipboard: String,
@@ -3197,6 +3202,7 @@ impl EditorView {
             focused: false,
             cursors_visible: false,
             blink_epoch: 0,
+            last_cursor_activity: Instant::now(),
             single_line: options.single_line,
             internal_clipboard: "".to_string(),
             propagate_vertical_navigation_keys: options
@@ -7555,6 +7561,7 @@ impl EditorView {
     /// Mark the cursor as visible and schedule the next cursor blink at the right interval.
     fn reset_cursor_blink_timer(&mut self, ctx: &mut ViewContext<Self>) {
         self.cursors_visible = true;
+        self.last_cursor_activity = Instant::now();
         ctx.notify();
 
         let epoch = self.next_blink_epoch();
@@ -7581,9 +7588,11 @@ impl EditorView {
                 // if blinking is enabled. Otherwise, it can only recurse if
                 // cursors_visible is false, then it may recurse just 1 more time
                 // to make the cursor visible again and remain that way. We need
-                // to allow that in case blinking gets disabled while
+                // to allow that in case blinking gets disabled or times out while
                 // cursors_visible is false
-                cursor_blink.value() == &CursorBlink::Enabled || !self.cursors_visible
+                (cursor_blink.value() == &CursorBlink::Enabled
+                    && self.last_cursor_activity.elapsed() < CURSOR_BLINK_IDLE_TIMEOUT)
+                    || !self.cursors_visible
             )
         {
             self.cursors_visible = !self.cursors_visible;
@@ -8857,6 +8866,7 @@ impl View for EditorView {
     fn on_focus(&mut self, focus_ctx: &FocusContext, ctx: &mut ViewContext<Self>) {
         if focus_ctx.is_self_focused() {
             self.focused = true;
+            self.last_cursor_activity = Instant::now();
             self.blink_cursors(self.blink_epoch, ctx);
             if self.select_all_on_focus {
                 self.select_all(ctx);

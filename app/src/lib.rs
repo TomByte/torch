@@ -2661,6 +2661,7 @@ pub(crate) fn app_callbacks(
                 // been sent to the writer thread before terminating.
                 manager.close_notebooks(ctx);
             });
+            workspace::flush_pending_save_app(ctx);
 
             PersistenceWriter::handle(ctx).update(ctx, |writer, _ctx| {
                 writer.terminate();
@@ -2888,7 +2889,7 @@ pub(crate) fn app_callbacks(
                     stack.handle_window_closed(window_data, ctx);
                 });
             }
-            ctx.dispatch_global_action("workspace:save_app", &());
+            workspace::save_app_now(ctx);
         })),
         on_window_moved: Some(Box::new(move |ctx| {
             ctx.dispatch_global_action("workspace:save_app", &());
