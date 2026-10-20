@@ -1,73 +1,89 @@
 # Claude session status in Torch
 
-Torch displays a broken ring while Claude works, an amber ring and dot when it
-needs permission or an answer, a filled check for an unread completed turn,
-and a quiet check once you have read it. Errors have an amber exclamation mark.
-An idle or uninstrumented session has a muted dot; an open CLI alone is not
-evidence that an agent is working. Project headers count sessions needing you,
-including those in collapsed groups.
+Torch shows a working ring, an amber marker when Claude needs you, a filled check
+for an unread completed turn, and a quiet check once you read it. Errors have an
+amber exclamation mark. An uninstrumented session has a neutral dot. Collapsed
+project headers still count sessions needing attention.
 
-## Install
+## Set up from the shipped app
 
-Requires Python 3 and a current Claude Code version supporting the
+1. Install Torch normally. No source checkout, Python, Node, or separate helper is required.
+2. Open **Settings → Scripting → Claude session status**.
+3. Check the Claude configuration folder. The default is `CLAUDE_CONFIG_DIR` when
+   present in Torch's environment, otherwise `~/.claude`. Use **Choose folder…**
+   for another profile. A GUI app may not inherit variables from your shell startup file.
+4. Click **Install / repair**. Setup merges Torch's entries into `settings.json`,
+   preserves other hooks, plugins, and permissions, and displays a private backup
+   path if it changed an existing file. Invalid JSON or unexpected hook structure
+   produces an error instead of replacing the file.
+5. Open a new Torch terminal and start a new Claude session. Existing shells and
+   Claude processes may still hold their old environment or hooks.
+
+Requires a current Claude Code version supporting
 [`terminalSequence` hook output](https://code.claude.com/docs/en/hooks#emit-terminal-notifications).
-The development host uses Claude Code 2.1.304. Hook translation and native status
-rendering were verified with local event fixtures on macOS; Linux and Windows
-have not been run through this check. From this checkout:
+This output works in interactive Claude sessions, not `claude -p` or the Agent SDK.
+Setup does not install Claude or enable hooks disabled by your Claude settings or
+organization policy.
 
-```sh
-python3 integrations/claude/install.py
-```
+**Remove** deletes only entries labelled `Torch session status`; restart Claude
+for removal to take effect. Backups are retained. Install / repair also migrates
+entries created by Torch's early Python installer. Its old `torch/status.py` file
+is no longer used and can be deleted after restarting Claude.
 
-Restart Torch and launch a new Claude session. Existing sessions may retain their
-old hook configuration and environment. The installer copies the hook to your
-Claude configuration directory, merges its entries into `settings.json`, and
-prints the location of a dated backup. Existing hooks, plugins, and permissions
-are preserved. Re-running the installer updates Torch's entries without duplicates.
-`CLAUDE_CONFIG_DIR` and `--config-dir PATH` are supported.
+## How this ships and updates
 
-The hook runs only when `TORCH_TERMINAL=1`, which Torch supplies to new local
-shells. It emits status through Claude's terminal output; there are no network
-requests, transcript reads, prompt/response logging, or permission decisions.
-It deliberately ignores idle reminder notifications and subagent completions.
-The `warp://cli-agent` wire identifier is retained for protocol compatibility.
+The translator is compiled into the Torch executable (`app/src/local_hooks.rs`).
+Its `--torch-claude-status-hook` entry point exits before GUI, logging, or network
+initialization. All normal Torch bundles contain it automatically; there are no
+extra runtime assets to copy or interpreters to discover.
 
-This reports the parent turn's lifecycle, not a percentage complete. When Claude
-reports pending background tasks or scheduled wakeups, Torch retains the working
-state rather than marking the session complete. Remote SSH shells do not
-automatically inherit this local integration.
+The installed command is identical on every supported machine. Each new local
+terminal supplies `TORCH_TERMINAL=1` and `TORCH_HOOK_EXECUTABLE`, pointing to the
+executable that launched it. The command quotes that path and resolves it at run
+time, so spaces, Unicode, different usernames, app locations, and normal in-place
+updates require no settings rewrite. After moving or updating Torch, reopen it
+and start new terminals. A missing executable or a non-Torch environment is a
+silent no-op. Re-running setup is safe and does not duplicate entries.
 
-## Remove
+Only lifecycle metadata (event, session ID, working directory, and counts of
+pending background tasks) is forwarded through Claude's terminal. Prompts,
+responses, tool inputs, and transcripts are neither read nor forwarded. No network,
+permission decisions, or account service is involved. Child-agent completions
+and idle reminders cannot complete the parent turn. Hook errors exit successfully
+and must not block Claude. The internal `warp://cli-agent` identifier is retained
+for compatibility with the terminal parser.
 
-```sh
-python3 integrations/claude/install.py --uninstall
-```
+The setup control currently supports **macOS and Linux local shells**. macOS is
+verified; Linux is implemented but still requires a packaged smoke test before a
+Linux release. Windows/WSL setup is not exposed yet: it needs a native invocation
+and packaging check. SSH and containers need an executable installed in that
+environment; this local integration does not forward a host executable into them.
+The Claude installer does not configure Codex or other agents.
 
-Only Torch's hook entries are removed. The copied script and backups are retained.
-Restart Claude to stop using the hooks. To restore the whole previous settings
-file instead, use the printed backup (this also reverts later settings edits).
+## Release checks
 
-## Other CLI agents
+- Run `cargo test -p warp --lib --features gui,local_only local_hooks::tests` and
+  `cargo test -p warp --lib --features gui,local_only settings_view::scripting_page::tests`.
+- Build the normal app bundle. On a clean account with no checkout or Python,
+  install through Settings into a temporary Claude configuration folder; verify
+  unrelated settings survive install, repair, and removal.
+- Move the app to a path containing spaces, reopen it, and start a new terminal.
+  Check that the hook invokes that copy and returns status JSON without opening
+  another window. Check a non-Torch shell remains silent.
+- With current Claude Code, submit a prompt, exercise an actual permission or
+  question request, then switch away before completion. Verify the attention count,
+  unread check, and read transition. Event fixtures alone do not validate Claude's
+  end-to-end event delivery.
+- Repeat the packaged test on each OS/architecture being released. Do not infer
+  Windows, WSL, or Linux success from a macOS build.
 
-The sidebar also consumes existing structured CLI status events from Codex and
-other supported agents. This installer configures **Claude only**. Uninstrumented
-agents remain a neutral dot rather than showing guessed working/permission states.
+## Verification recorded for this change
 
-## Verify
-
-```sh
-python3 -m unittest discover -s integrations/claude -p 'test_*.py'
-```
-
-In Torch, submit a Claude prompt, observe the working ring, then observe a real
-permission/question prompt and its amber marker. Switch away before the turn
-finishes to see the unread check, then reopen it to see the quiet check. Hovering
-a row keeps its status visible and shows the close button in the timestamp slot.
-
-The implementation passed 13 sidebar tests, the local unread-notification regression
-test, and seven Python hook/installer tests, plus targeted Clippy and a macOS build.
-Native event fixtures confirmed attention counts, working/error indicators, hover
-behavior, and unread-to-read transitions. The broader CLI suite passed 178 tests;
-four inherited plugin-manager checks still fail because they expect Warp branding
-or feature flags disabled by Torch. Cross-platform runners were unavailable
-(`oz-dev` is not installed), so Windows/WSL and Linux remain unverified.
+On macOS, 10 native hook/installer tests and two settings tests passed, followed
+by targeted Clippy and a normal packaged build. The relocated app was opened
+with a separate data profile and temporary Claude settings. UI install, repeated
+repair, removal, and search passed; removal restored the original configuration.
+The installed command invoked the relocated executable, and a new native terminal
+received that executable's actual path. Invalid input and non-Torch invocations
+exited silently. No paid Claude request was made during this packaging check.
+Linux/Windows cloud runners were unavailable (`oz-dev` is not installed).

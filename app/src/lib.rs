@@ -44,6 +44,7 @@ mod interval_timer;
 mod linear;
 #[cfg(feature = "local_fs")]
 mod local_control;
+pub mod local_hooks;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 mod login_item;
 mod menu;

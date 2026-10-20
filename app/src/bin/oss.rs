@@ -8,6 +8,9 @@ use warp_core::channel::{Channel, ChannelConfig, ChannelState, OzConfig, WarpSer
 
 // Simple wrapper around warp::run() for Warp OSS builds.
 fn main() -> Result<()> {
+    if warp::local_hooks::run_if_requested() {
+        return Ok(());
+    }
     let state = ChannelState::new(
         Channel::Oss,
         ChannelConfig {

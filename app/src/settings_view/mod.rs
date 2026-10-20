@@ -1338,7 +1338,9 @@ impl SettingsView {
         ctx.subscribe_to_view(&referrals_page_handle, |me, _, event, ctx| {
             me.handle_referrals_page_event(event, ctx);
         });
-        let scripting_page_handle = if FeatureFlag::WarpControlCli.is_enabled() {
+        let scripting_available = FeatureFlag::WarpControlCli.is_enabled()
+            || (cfg!(unix) && ChannelState::is_local_only());
+        let scripting_page_handle = if scripting_available {
             Some(ctx.add_typed_action_view(ScriptingSettingsPageView::new))
         } else {
             None
@@ -1462,7 +1464,7 @@ impl SettingsView {
             SettingsNavItem::Page(SettingsSection::About),
         ];
 
-        if FeatureFlag::WarpControlCli.is_enabled() {
+        if scripting_available {
             let shared_blocks_index = nav_items
                 .iter()
                 .position(|item| {
@@ -1496,9 +1498,7 @@ impl SettingsView {
         };
 
         let initial_page = match page {
-            Some(SettingsSection::Scripting) if !FeatureFlag::WarpControlCli.is_enabled() => {
-                SettingsSection::Account
-            }
+            Some(SettingsSection::Scripting) if !scripting_available => SettingsSection::Account,
             other => other.unwrap_or_default(),
         };
 

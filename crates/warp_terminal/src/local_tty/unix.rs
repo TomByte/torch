@@ -327,6 +327,9 @@ fn build_host_shell_command(
     builder.env("TERM_PROGRAM", "WarpTerminal");
     if ChannelState::is_local_only() {
         builder.env("TORCH_TERMINAL", "1");
+        if let Ok(executable) = std::env::current_exe() {
+            builder.env("TORCH_HOOK_EXECUTABLE", executable);
+        }
     }
     // Advertise 24-bit color support.
     builder.env("COLORTERM", "truecolor");
@@ -872,6 +875,7 @@ fn build_docker_sandbox_command(
     builder.env("TERM_PROGRAM", "WarpTerminal");
     if ChannelState::is_local_only() {
         builder.env("TORCH_TERMINAL", "1");
+        builder.env_remove("TORCH_HOOK_EXECUTABLE");
     }
     builder.env("COLORTERM", "truecolor");
     builder.env_remove("DESKTOP_STARTUP_ID");

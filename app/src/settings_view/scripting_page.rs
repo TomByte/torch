@@ -3,13 +3,10 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 
 use settings::Setting as _;
-#[cfg(target_os = "macos")]
 use warp_core::channel::ChannelState;
 use warp_errors::report_if_error;
 use warpui::elements::{ChildView, Element, MouseStateHandle};
-#[cfg(target_os = "macos")]
 use warpui::ui_components::button::ButtonVariant;
-#[cfg(target_os = "macos")]
 use warpui::ui_components::components::UiComponent;
 use warpui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
 
@@ -30,12 +27,17 @@ use crate::workspace::{ToastStack, cli_install};
 #[derive(Clone, Debug, PartialEq)]
 pub enum ScriptingSettingsPageAction {
     SetLocalControlMode(LocalControlMode),
+    ConfigureClaude(bool),
+    ChooseClaudeFolder,
     #[cfg(target_os = "macos")]
     InstallWarpControlCli,
 }
 
 pub struct ScriptingSettingsPageView {
     page: PageType<Self>,
+    hook_config_dir: Option<std::path::PathBuf>,
+    hook_message: Option<String>,
+    hook_busy: bool,
     local_only_icon_tooltip_states: RefCell<HashMap<String, MouseStateHandle>>,
     local_control_mode_dropdown: ViewHandle<Dropdown<ScriptingSettingsPageAction>>,
     #[cfg(target_os = "macos")]
@@ -49,9 +51,8 @@ impl ScriptingSettingsPageView {
             dropdown.set_top_bar_max_width(360.);
             dropdown
         });
-        Self::update_local_control_mode_dropdown(local_control_mode_dropdown.clone(), ctx);
-
         if FeatureFlag::WarpControlCli.is_enabled() {
+            Self::update_local_control_mode_dropdown(local_control_mode_dropdown.clone(), ctx);
             ctx.subscribe_to_model(&LocalControlSettings::handle(ctx), |view, _, _, ctx| {
                 Self::update_local_control_mode_dropdown(
                     view.local_control_mode_dropdown.clone(),
@@ -61,16 +62,20 @@ impl ScriptingSettingsPageView {
             });
         }
 
-        #[cfg(target_os = "macos")]
-        let widgets: Vec<Box<dyn SettingsWidget<View = Self>>> = vec![
-            Box::new(WarpControlCliInstallWidget::default()),
-            Box::new(LocalControlModeWidget),
-        ];
-        #[cfg(not(target_os = "macos"))]
-        let widgets: Vec<Box<dyn SettingsWidget<View = Self>>> =
-            vec![Box::new(LocalControlModeWidget)];
+        let mut widgets: Vec<Box<dyn SettingsWidget<View = Self>>> = Vec::new();
+        if FeatureFlag::WarpControlCli.is_enabled() {
+            #[cfg(target_os = "macos")]
+            widgets.push(Box::new(WarpControlCliInstallWidget::default()));
+            widgets.push(Box::new(LocalControlModeWidget));
+        }
+        if cfg!(unix) && ChannelState::is_local_only() {
+            widgets.push(Box::new(ClaudeHooksWidget::default()));
+        }
 
         Self {
+            hook_config_dir: crate::local_hooks::default_config_dir(),
+            hook_message: None,
+            hook_busy: false,
             page: PageType::new_uncategorized(widgets, Some(PageTitle::new("Scripting"))),
             local_only_icon_tooltip_states: RefCell::new(HashMap::new()),
             local_control_mode_dropdown,
@@ -158,6 +163,57 @@ impl TypedActionView for ScriptingSettingsPageView {
 
     fn handle_action(&mut self, action: &Self::Action, ctx: &mut ViewContext<Self>) {
         match action {
+            ScriptingSettingsPageAction::ChooseClaudeFolder => {
+                ctx.open_file_picker(
+                    move |result, ctx| {
+                        if let Ok(paths) = result
+                            && let Some(path) = paths.into_iter().next()
+                            && let Some(handle) = ctx.handle().upgrade(ctx)
+                        {
+                            handle.update(ctx, |view, ctx| {
+                                view.hook_config_dir = Some(path.into());
+                                view.hook_message = None;
+                                ctx.notify();
+                            });
+                        }
+                    },
+                    warpui::platform::FilePickerConfiguration::new().folders_only(),
+                );
+            }
+            ScriptingSettingsPageAction::ConfigureClaude(install) => {
+                if self.hook_busy {
+                    return;
+                }
+                let Some(directory) = self.hook_config_dir.clone() else {
+                    return;
+                };
+                let install = *install;
+                self.hook_busy = true;
+                self.hook_message = None;
+                ctx.notify();
+                ctx.spawn(
+                    async move { crate::local_hooks::configure(&directory, install) },
+                    move |view, result, ctx| {
+                        view.hook_busy = false;
+                        view.hook_message = Some(match result {
+                            Ok(backup) => {
+                                let mut message = if install {
+                                    "Installed. Open a new terminal and start a new Claude session."
+                                        .to_owned()
+                                } else {
+                                    "Removed Torch hooks. Restart Claude to apply.".to_owned()
+                                };
+                                if let Some(path) = backup {
+                                    message.push_str(&format!(" Backup: {}", path.display()));
+                                }
+                                message
+                            }
+                            Err(error) => format!("Could not change hooks: {error}"),
+                        });
+                        ctx.notify();
+                    },
+                );
+            }
             ScriptingSettingsPageAction::SetLocalControlMode(mode) => {
                 LocalControlSettings::handle(ctx).update(ctx, |settings, ctx| {
                     report_if_error!(settings.local_control_mode.set_value(*mode, ctx));
@@ -186,7 +242,9 @@ impl SettingsPageMeta for ScriptingSettingsPageView {
     }
 
     fn should_render(&self, _ctx: &AppContext) -> bool {
-        cfg!(not(target_family = "wasm")) && FeatureFlag::WarpControlCli.is_enabled()
+        cfg!(not(target_family = "wasm"))
+            && (FeatureFlag::WarpControlCli.is_enabled()
+                || (cfg!(unix) && ChannelState::is_local_only()))
     }
 
     fn update_filter(&mut self, query: &str, ctx: &mut ViewContext<Self>) -> MatchData {
@@ -300,3 +358,85 @@ impl SettingsWidget for LocalControlModeWidget {
         )
     }
 }
+
+#[derive(Default)]
+struct ClaudeHooksWidget {
+    install: MouseStateHandle,
+    remove: MouseStateHandle,
+    folder: MouseStateHandle,
+}
+
+impl SettingsWidget for ClaudeHooksWidget {
+    type View = ScriptingSettingsPageView;
+
+    fn search_terms(&self) -> &str {
+        "claude code hooks session status working attention permission integration install remove scripting"
+    }
+
+    fn render(
+        &self,
+        view: &Self::View,
+        appearance: &Appearance,
+        _: &AppContext,
+    ) -> Box<dyn Element> {
+        use warpui::elements::{Flex, ParentElement};
+        let mut buttons = Flex::row().with_spacing(8.);
+        for (label, state, action) in [
+            (
+                "Install / repair",
+                &self.install,
+                ScriptingSettingsPageAction::ConfigureClaude(true),
+            ),
+            (
+                "Remove",
+                &self.remove,
+                ScriptingSettingsPageAction::ConfigureClaude(false),
+            ),
+            (
+                "Choose folder…",
+                &self.folder,
+                ScriptingSettingsPageAction::ChooseClaudeFolder,
+            ),
+        ] {
+            let mut button = appearance
+                .ui_builder()
+                .button(ButtonVariant::Secondary, state.clone())
+                .with_text_label(label.to_owned());
+            if view.hook_busy {
+                button = button.disabled();
+            }
+            buttons.add_child(
+                button
+                    .build()
+                    .on_click(move |ctx, _, _| {
+                        ctx.dispatch_typed_action(action.clone());
+                    })
+                    .finish(),
+            );
+        }
+        let directory = view
+            .hook_config_dir
+            .as_ref()
+            .map(|path| path.display().to_string())
+            .unwrap_or_else(|| "Choose your Claude configuration folder".to_owned());
+        let mut description = format!(
+            "Show when Claude is working or needs you. Requires a current Claude Code version. Existing hooks and permissions are preserved.\nClaude configuration: {directory}"
+        );
+        if let Some(message) = &view.hook_message {
+            description.push_str(&format!("\n{message}"));
+        }
+        render_body_item::<ScriptingSettingsPageAction>(
+            "Claude session status".into(),
+            None,
+            LocalOnlyIconState::Hidden,
+            ToggleState::Enabled,
+            appearance,
+            buttons.finish(),
+            Some(description),
+        )
+    }
+}
+
+#[cfg(test)]
+#[path = "scripting_page_tests.rs"]
+mod tests;
