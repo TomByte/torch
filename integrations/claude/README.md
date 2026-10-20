@@ -8,7 +8,8 @@ project headers still count sessions needing attention.
 ## Set up from the shipped app
 
 1. Install Torch normally. No source checkout, Python, Node, or separate helper is required.
-2. Open **Settings → Scripting → Claude session status**.
+2. Open **Settings → Agents → Claude session status**. It shows whether Torch's
+   hooks are installed, outdated, or missing.
 3. Check the Claude configuration folder. The default is `CLAUDE_CONFIG_DIR` when
    present in Torch's environment, otherwise `~/.claude`. Use **Choose folder…**
    for another profile. A GUI app may not inherit variables from your shell startup file.
@@ -45,8 +46,9 @@ updates require no settings rewrite. After moving or updating Torch, reopen it
 and start new terminals. A missing executable or a non-Torch environment is a
 silent no-op. Re-running setup is safe and does not duplicate entries.
 
-Only lifecycle metadata (event, session ID, working directory, and counts of
-pending background tasks) is forwarded through Claude's terminal. Prompts,
+Only lifecycle metadata (event, session ID, working directory, the tool name of a
+permission request, and counts of pending background tasks) is forwarded through
+Claude's terminal. Prompts,
 responses, tool inputs, and transcripts are neither read nor forwarded. No network,
 permission decisions, or account service is involved. Child-agent completions
 and idle reminders cannot complete the parent turn. Hook errors exit successfully
@@ -58,6 +60,19 @@ verified; Linux is implemented but still requires a packaged smoke test before a
 Linux release. Windows/WSL setup is not exposed yet: it needs a native invocation
 and packaging check. SSH and containers need an executable installed in that
 environment; this local integration does not forward a host executable into them.
+
+## Codex
+
+**Settings → Agents → Codex session status** installs the same status hooks into
+Codex's `hooks.json` (`CODEX_HOME`, otherwise `~/.codex`), leaving `config.toml`,
+its `notify` program, and other hooks untouched. Codex asks you to trust new or
+changed hooks once; run `/hooks` in Codex if it does not. Codex runs hooks in a new
+session with captured output, so `--torch-codex-status-hook` writes the
+notification to the controlling terminal of the Codex process that ran it. The
+command runs through `/bin/sh`, so it works when your login shell is not POSIX.
+Codex reports prompt submission, permission requests, tool completion, turn end,
+and interrupts; it has no idle or question events. Without the hooks, Codex's own
+OSC 9 notifications still mark approval requests and finished turns.
 The Claude installer does not configure Codex or other agents.
 
 ## Release checks
