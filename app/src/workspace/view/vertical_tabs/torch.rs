@@ -7,7 +7,7 @@ use warpui::ViewContext;
 
 pub(super) const SIDEBAR_WIDTH: f32 = 272.;
 const HEADER_HEIGHT: f32 = 48.;
-const ROW_HEIGHT: f32 = 31.;
+const ROW_HEIGHT: f32 = 28.;
 
 struct Palette {
     sidebar_top: ColorU,
@@ -409,7 +409,7 @@ fn row(
     } else {
         label(
             &session.title,
-            14.,
+            13.,
             palette.text,
             if session.unread {
                 Weight::Semibold
@@ -443,8 +443,8 @@ fn row(
         move |state| {
             ConstrainedBox::new(
                 Container::new(contents)
-                    .with_padding(Padding::uniform(4.).with_horizontal(12.))
-                    .with_corner_radius(CornerRadius::with_all(Radius::Pixels(9.)))
+                    .with_padding(Padding::uniform(3.).with_horizontal(12.))
+                    .with_corner_radius(CornerRadius::with_all(Radius::Pixels(8.)))
                     .with_background(if active || in_multi_selection {
                         ElementFill::Solid(selected)
                     } else if state.is_hovered() {
@@ -679,9 +679,13 @@ fn sidebar(
         };
         group_content.add_child(heading);
         if !collapsed {
+            let mut rows = Flex::column()
+                .with_cross_axis_alignment(CrossAxisAlignment::Stretch)
+                .with_spacing(2.);
             for session in members {
-                group_content.add_child(row(session, workspace, palette, app));
+                rows.add_child(row(session, workspace, palette, app));
             }
+            group_content.add_child(rows.finish());
         }
         group_content.add_child(
             ConstrainedBox::new(Empty::new().finish())

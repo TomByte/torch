@@ -102,6 +102,10 @@ typography:
     fontFamily: "Roboto"
     fontSize: "12px"
     fontWeight: 400
+  session:
+    fontFamily: "Roboto"
+    fontSize: "13px"
+    fontWeight: 400
   group-label:
     fontFamily: "Roboto"
     fontSize: "12px"
@@ -114,10 +118,11 @@ rounded:
   control: "6px"
   command-palette: "8px"
   command-result: "4px"
-  session: "9px"
+  session: "8px"
   terminal: "12px"
 spacing:
-  row-vertical: "4px"
+  row-vertical: "3px"
+  session-gap: "2px"
   control-inset: "6px"
   group-heading-bottom: "7px"
   pane-inset: "8px"
@@ -141,26 +146,26 @@ components:
     width: "272px"
   session:
     textColor: "{colors.light-text}"
-    typography: "{typography.body}"
+    typography: "{typography.session}"
     rounded: "{rounded.session}"
-    height: "31px"
-    padding: "4px 12px"
+    height: "28px"
+    padding: "3px 12px"
   session-selected:
     backgroundColor: "{colors.light-selection}"
     textColor: "{colors.light-text}"
-    typography: "{typography.body}"
+    typography: "{typography.session}"
     rounded: "{rounded.session}"
-    height: "31px"
-    padding: "4px 12px"
+    height: "28px"
+    padding: "3px 12px"
   session-hover:
     backgroundColor: "{colors.light-hover}"
   session-selected-dark:
     backgroundColor: "{colors.dark-selection}"
     textColor: "{colors.dark-text}"
-    typography: "{typography.body}"
+    typography: "{typography.session}"
     rounded: "{rounded.session}"
-    height: "31px"
-    padding: "4px 12px"
+    height: "28px"
+    padding: "3px 12px"
   session-hover-dark:
     backgroundColor: "{colors.dark-hover}"
   icon-control:
@@ -349,8 +354,8 @@ in the terminal header. There is no web breakpoint or mobile layout.
 
 The sidebar header is 56 logical pixels high and reserves space for native window controls. The
 session list has the `sidebar-list-inset` on both sides, vertical scrolling, and an overlay scrollbar
-3 logical pixels wide. Groups use a padded heading, contiguous compact rows, and `group-tail`
-spacing. Long session names ellipsize rather than increasing row height.
+3 logical pixels wide. Groups use a padded heading, compact rows separated by a 2-logical-pixel gap,
+and `group-tail` spacing. Long session names ellipsize rather than increasing row height.
 
 The terminal pane uses `pane-inset` on its top, right, and bottom edges, and on all four edges when
 the sidebar is hidden. No left inset is added while the sidebar is open. Its header uses the
@@ -388,6 +393,11 @@ state handles supply hover and click behavior. Preserve native command routing a
 behavior; do not manufacture a web toolbar or account menu.
 
 ### Session rows
+
+A session uses a 28-logical-pixel surface with a 13-logical-pixel title. The gap between rows stays
+outside their hover and selection fills, keeping adjacent states distinct. The macOS captures
+`compact-sidebar-light.png` and `compact-sidebar-dark.png` in `.impeccable/review/` verify this spacing;
+keyboard switching, inline rename, and group collapse were also checked in the native app.
 
 A row places the title first, then age, then status, with the `row-gap` between them. A normal click
 activates; Shift-click selects a range in displayed grouped order; Command-click toggles membership

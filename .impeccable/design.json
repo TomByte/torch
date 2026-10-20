@@ -1291,7 +1291,7 @@
       "refersTo": "session",
       "description": "Unselected native row; sample text is illustrative and has no live application state.",
       "html": "<button class=\"ds-row\"><span class=\"ds-name\">Terminal</span><span class=\"ds-age\">now</span><svg width=\"14\" height=\"14\" viewBox=\"0 0 14 14\" aria-hidden=\"true\"><circle cx=\"7\" cy=\"7\" r=\"5.5\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\" stroke-dasharray=\"28 7\"/></svg></button>",
-      "css": ".ds-row{display:flex;align-items:center;gap:10px;width:254px;height:31px;padding:4px 12px;border:1px solid transparent;border-radius:9px;background:transparent;color:#202124;font:400 14px Roboto,sans-serif;text-align:left;cursor:pointer}.ds-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-age{font-size:12px;color:#616268}.ds-row:hover,.ds-row:active{background:#FFFFFF70}.ds-row:focus-visible{outline:1px solid #616268;outline-offset:1px}"
+      "css": ".ds-row{display:flex;align-items:center;gap:10px;width:254px;height:28px;padding:3px 12px;border:1px solid transparent;border-radius:8px;background:transparent;color:#202124;font:400 13px Roboto,sans-serif;text-align:left;cursor:pointer}.ds-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-age{font-size:12px;color:#616268}.ds-row:hover,.ds-row:active{background:#FFFFFF70}.ds-row:focus-visible{outline:1px solid #616268;outline-offset:1px}"
     },
     {
       "name": "Selected session row",
@@ -1299,7 +1299,7 @@
       "refersTo": "session-selected",
       "description": "Active native row with rule; the focus outline is only for this HTML preview.",
       "html": "<button class=\"ds-selected\" aria-current=\"page\"><span class=\"ds-selected-name\">Terminal</span><span class=\"ds-selected-age\">now</span><svg width=\"14\" height=\"14\" viewBox=\"0 0 14 14\" aria-hidden=\"true\"><circle cx=\"7\" cy=\"7\" r=\"5.5\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\" stroke-dasharray=\"28 7\"/></svg></button>",
-      "css": ".ds-selected{display:flex;align-items:center;gap:10px;width:254px;height:31px;padding:4px 12px;border:1px solid #D5D6DB;border-radius:9px;background:#FFFFFFF5;color:#202124;font:400 14px Roboto,sans-serif;text-align:left;cursor:pointer}.ds-selected-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-selected-age{font-size:12px;color:#616268}.ds-selected:hover,.ds-selected:active{background:#FFFFFFF5}.ds-selected:focus-visible{outline:1px solid #616268;outline-offset:1px}"
+      "css": ".ds-selected{display:flex;align-items:center;gap:10px;width:254px;height:28px;padding:3px 12px;border:1px solid #D5D6DB;border-radius:8px;background:#FFFFFFF5;color:#202124;font:400 13px Roboto,sans-serif;text-align:left;cursor:pointer}.ds-selected-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-selected-age{font-size:12px;color:#616268}.ds-selected:hover,.ds-selected:active{background:#FFFFFFF5}.ds-selected:focus-visible{outline:1px solid #616268;outline-offset:1px}"
     },
     {
       "name": "Automatic folder heading",
@@ -1331,7 +1331,7 @@
       "refersTo": "session-selected-dark",
       "description": "Dark-mode counterpart. Active native row with rule; the focus outline is only for this HTML preview.",
       "html": "<button class=\"ds-dark-selected\" aria-current=\"page\"><span class=\"ds-dark-selected-name\">Terminal</span><span class=\"ds-dark-selected-age\">now</span><svg width=\"14\" height=\"14\" viewBox=\"0 0 14 14\" aria-hidden=\"true\"><circle cx=\"7\" cy=\"7\" r=\"5.5\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\" stroke-dasharray=\"28 7\"/></svg></button>",
-      "css": ".ds-dark-selected{display:flex;align-items:center;gap:10px;width:254px;height:31px;padding:4px 12px;border:1px solid #424242;border-radius:9px;background:#3B3B3B;color:#E6E6E6;font:400 14px Roboto,sans-serif;text-align:left;cursor:pointer}.ds-dark-selected-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-dark-selected-age{font-size:12px;color:#B5B5B5}.ds-dark-selected:hover,.ds-dark-selected:active{background:#3B3B3B}.ds-dark-selected:focus-visible{outline:1px solid #B5B5B5;outline-offset:1px}"
+      "css": ".ds-dark-selected{display:flex;align-items:center;gap:10px;width:254px;height:28px;padding:3px 12px;border:1px solid #424242;border-radius:8px;background:#3B3B3B;color:#E6E6E6;font:400 13px Roboto,sans-serif;text-align:left;cursor:pointer}.ds-dark-selected-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-dark-selected-age{font-size:12px;color:#B5B5B5}.ds-dark-selected:hover,.ds-dark-selected:active{background:#3B3B3B}.ds-dark-selected:focus-visible{outline:1px solid #B5B5B5;outline-offset:1px}"
     },
     {
       "name": "Dark terminal context header",
