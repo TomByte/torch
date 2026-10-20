@@ -3,6 +3,7 @@ pub mod listener;
 pub(crate) mod notification;
 #[cfg(not(target_family = "wasm"))]
 pub(crate) mod plugin_manager;
+pub mod resume;
 
 use std::collections::{HashMap, HashSet};
 use std::time::Duration;

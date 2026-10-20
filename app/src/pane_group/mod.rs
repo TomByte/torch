@@ -1714,6 +1714,12 @@ impl PaneGroup {
                 );
 
                 let terminal_view_id = terminal_view.id();
+                if let Some(session) = &terminal_snapshot.cli_agent_session {
+                    let command = session.resume_command();
+                    terminal_view.update(ctx, |view, _| {
+                        view.suggest_command_after_bootstrap(command);
+                    });
+                }
 
                 let pane_data = TerminalPane::new(
                     uuid.0,
@@ -2190,6 +2196,7 @@ impl PaneGroup {
                             active_profile_id: None,
                             conversation_ids_to_restore: Vec::new(),
                             active_conversation_id: None,
+                            cli_agent_session: None,
                         })
                     }
                 };

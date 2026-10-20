@@ -477,7 +477,10 @@ Agents installs, repairs, or removes these hooks for Claude and Codex and report
 installed. Codex hooks live in `hooks.json`, write the same notifications to Codex's terminal, and
 must be trusted once in Codex. Without hooks, Codex's own terminal notifications still mark
 approval requests as blocked and finished turns as complete. Typing or pasting into a blocked
-session returns it to running. Only the tool name of a permission request is forwarded.
+session returns it to running. Only the tool name of a permission request is forwarded. When a
+restored pane's Claude or Codex conversation was still running as Torch closed, its resume command
+(`claude --resume ID` or `codex resume ID`) appears selected in the empty input once the shell is
+ready; nothing runs until the user presses Enter, and typing replaces it.
 
 Jump to next session needing attention (Cmd+J on macOS) activates the next blocked session in
 sidebar order, then the next unread finished one, revealing collapsed groups. On macOS the Dock

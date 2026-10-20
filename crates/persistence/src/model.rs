@@ -433,6 +433,8 @@ pub struct TerminalPane {
     pub conversation_ids: Option<String>,
     /// The active conversation ID if the agent view was open in fullscreen mode.
     pub active_conversation_id: Option<String>,
+    /// Serialized JSON for the CLI agent conversation running in the pane, if resumable.
+    pub cli_agent_session: Option<String>,
 }
 
 #[derive(Identifiable, Queryable, Selectable)]
@@ -611,6 +613,8 @@ pub struct NewTerminalPane {
     pub conversation_ids: Option<String>,
     /// The active conversation ID if the agent view was open in fullscreen mode.
     pub active_conversation_id: Option<String>,
+    /// Serialized JSON for the CLI agent conversation running in the pane, if resumable.
+    pub cli_agent_session: Option<String>,
 }
 
 #[derive(Insertable)]

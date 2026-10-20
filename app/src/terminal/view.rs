@@ -2631,6 +2631,8 @@ pub struct TerminalView {
     /// next `AfterBlockCompleted`, at which point `Event::PendingCommandCompleted`
     /// is emitted so subscribers know the command has finished.
     awaiting_pending_command_completion: bool,
+    /// Placed in the empty input, selected, once the shell finishes bootstrapping. Never run.
+    suggested_command_after_bootstrap: Option<String>,
     /// Commands that should run as separate blocks after the active pending
     /// command finishes successfully.
     pending_command_queue: VecDeque<String>,
@@ -4417,6 +4419,7 @@ impl TerminalView {
             bootstrap_start: None,
             is_login_shell_bootstrapped: false,
             awaiting_pending_command_completion: false,
+            suggested_command_after_bootstrap: None,
             pending_command_queue: Default::default(),
             enter_agent_view_after_pending_commands: false,
             slow_bootstrap_banner,
@@ -13746,6 +13749,7 @@ impl TerminalView {
             }
             ModelEvent::BootstrapPrecmdDone => {
                 self.execute_pending_command((), ctx);
+                self.prefill_suggested_command(ctx);
             }
             ModelEvent::AgentTaggedInChanged {
                 block_id,
@@ -17037,6 +17041,21 @@ impl TerminalView {
     //
     // If we set it as pending, the command will execute when we trigger another call to
     // `execute_pending_command` (either from a `BlockCompleted` or `BootstrapPrecmdDone` event)
+    pub fn suggest_command_after_bootstrap(&mut self, command: String) {
+        self.suggested_command_after_bootstrap = Some(command);
+    }
+
+    fn prefill_suggested_command(&mut self, ctx: &mut ViewContext<Self>) {
+        let Some(command) = self.suggested_command_after_bootstrap.take() else {
+            return;
+        };
+        self.input.update(ctx, |input, ctx| {
+            if input.buffer_text(ctx).is_empty() {
+                input.prefill_buffer_and_select_all(&command, ctx);
+            }
+        });
+    }
+
     pub fn execute_command_or_set_pending(&mut self, command: &str, ctx: &mut ViewContext<Self>) {
         self.set_pending_command(command, ctx);
         self.execute_pending_command((), ctx);

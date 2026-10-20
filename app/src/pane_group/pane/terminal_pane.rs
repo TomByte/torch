@@ -60,6 +60,7 @@ use crate::server::team_scope::RequestTeamScope;
 use crate::server::telemetry::CloudAgentShellRecoveryFailureClass;
 use crate::session_management::SessionNavigationData;
 use crate::terminal::cli_agent_sessions::CLIAgentSessionsModel;
+use crate::terminal::cli_agent_sessions::resume::ResumableAgentSession;
 use crate::terminal::general_settings::GeneralSettings;
 #[cfg(not(target_family = "wasm"))]
 use crate::terminal::shared_session::SharedSessionSource;
@@ -495,6 +496,7 @@ impl PaneContent for TerminalPane {
                 active_profile_id: None,
                 conversation_ids_to_restore: vec![],
                 active_conversation_id: None,
+                cli_agent_session: None,
             })
         } else if let Some(task_id) = view
             .ambient_agent_view_model()
@@ -525,6 +527,7 @@ impl PaneContent for TerminalPane {
                     active_profile_id: None,
                     conversation_ids_to_restore: vec![],
                     active_conversation_id: None,
+                    cli_agent_session: None,
                 })
             }
         } else {
@@ -566,6 +569,7 @@ impl PaneContent for TerminalPane {
                 active_profile_id,
                 conversation_ids_to_restore,
                 active_conversation_id,
+                cli_agent_session: resumable_agent_session(view.id(), app),
             })
         }
     }
@@ -2167,6 +2171,17 @@ fn handle_ai_history_event(
         | BlocklistAIHistoryEvent::ConversationUsageMetadataUpdated { .. }
         | BlocklistAIHistoryEvent::LocalSharedSessionEstablished { .. } => (),
     }
+}
+
+fn resumable_agent_session(
+    terminal_view_id: EntityId,
+    app: &AppContext,
+) -> Option<ResumableAgentSession> {
+    let session = CLIAgentSessionsModel::as_ref(app).session(terminal_view_id)?;
+    ResumableAgentSession::new(
+        session.agent,
+        session.session_context.session_id.as_deref()?,
+    )
 }
 
 #[cfg(all(test, not(target_family = "wasm")))]

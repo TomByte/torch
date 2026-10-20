@@ -105,6 +105,7 @@ use crate::settings_view::SettingsSection;
 use crate::suggestions::ignored_suggestions_model::SuggestionType;
 use crate::tab::SelectedTabColor;
 use crate::terminal::ShellLaunchData;
+use crate::terminal::cli_agent_sessions::resume::ResumableAgentSession;
 use crate::terminal::history::PersistedCommand;
 use crate::themes::theme::AnsiColorIdentifier;
 use crate::workflows::WorkflowId;
@@ -1270,6 +1271,10 @@ fn save_pane_state(
                 active_conversation_id: terminal_snapshot
                     .active_conversation_id
                     .map(|id| id.to_string()),
+                cli_agent_session: terminal_snapshot
+                    .cli_agent_session
+                    .as_ref()
+                    .and_then(ResumableAgentSession::to_json),
             };
 
             diesel::insert_into(schema::terminal_panes::dsl::terminal_panes)
@@ -2251,6 +2256,10 @@ fn read_node(conn: &mut SqliteConnection, node: model::PaneNode) -> Result<PaneN
                         active_profile_id,
                         conversation_ids_to_restore,
                         active_conversation_id,
+                        cli_agent_session: terminal_pane
+                            .cli_agent_session
+                            .as_deref()
+                            .and_then(ResumableAgentSession::from_json),
                     })
                 }
                 NOTEBOOK_PANE_KIND => {
