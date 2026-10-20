@@ -1839,8 +1839,21 @@ pub(crate) fn initialize_app(
 
     // Add truly global actions that don't depend on the existence of any view here
     ctx.add_global_action("app:toggle_user_ps1", move |_args: &(), ctx| {
+        // The input type and PS1 setting must change together; see `InputSettings::input_type`.
+        let use_shell_prompt = crate::settings::InputSettings::as_ref(ctx).input_type(ctx)
+            == crate::settings::InputBoxType::Universal;
+        crate::settings::InputSettings::handle(ctx).update(ctx, |input_settings, ctx| {
+            report_if_error!(input_settings.input_box_type.set_value(
+                if use_shell_prompt {
+                    crate::settings::InputBoxType::Classic
+                } else {
+                    crate::settings::InputBoxType::Universal
+                },
+                ctx
+            ));
+        });
         SessionSettings::handle(ctx).update(ctx, |session_settings, ctx| {
-            report_if_error!(session_settings.honor_ps1.toggle_and_save_value(ctx));
+            report_if_error!(session_settings.honor_ps1.set_value(use_shell_prompt, ctx));
         });
     });
     ctx.add_global_action("app:toggle_copy_on_select", move |_args: &(), ctx| {

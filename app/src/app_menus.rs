@@ -31,7 +31,6 @@ use crate::settings::{
     AISettings, BlockVisibilitySettings, DebugSettings, DefaultSessionMode, SelectionSettings,
 };
 use crate::terminal::alt_screen_reporting::AltScreenReporting;
-use crate::terminal::session_settings::SessionSettings;
 use crate::terminal::settings::{SpacingMode, TerminalSettings};
 use crate::undo_close::UndoCloseStack;
 use crate::user_config::WarpConfig;
@@ -324,9 +323,8 @@ fn make_new_edit_menu(ctx: &AppContext) -> Menu {
             move |ctx| ctx.dispatch_global_action("app:toggle_user_ps1", &()),
             move |_props, ctx| MenuItemPropertyChanges {
                 checked: Some(
-                    SessionSettings::handle(ctx).read(ctx, |session_settings, _ctx| {
-                        !session_settings.honor_ps1.value()
-                    }),
+                    crate::settings::InputSettings::as_ref(ctx).input_type(ctx)
+                        == crate::settings::InputBoxType::Universal,
                 ),
                 ..Default::default()
             },

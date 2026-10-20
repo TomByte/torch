@@ -132,8 +132,12 @@ pub fn init(
     // One-time migration: copy public settings from the platform-native store
     // into the TOML file so existing users don't lose their customizations
     // when the settings file feature is first enabled.
-    if needs_settings_file_migration(ctx) {
+    let is_new_profile = needs_settings_file_migration(ctx);
+    if is_new_profile {
         migrate_native_settings_to_settings_file(ctx);
+    }
+    if is_new_profile && warp_core::channel::ChannelState::is_local_only() {
+        apply_torch_defaults_for_new_profile(ctx);
     }
     stage_legacy_background_backdrop(ctx);
     ctx.add_singleton_model(super::ProjectCatalog::new);
@@ -361,6 +365,33 @@ pub fn init_public_user_preferences() -> (user_preferences::Model, Option<user_p
 /// 2. The `settings.toml` file does not yet exist on disk.
 /// 3. The migration-complete marker is absent from the native store
 ///    (handles the case where a user deletes `settings.toml` to reset).
+/// Torch's terminal-first defaults, applied once to a fresh profile so that values an existing
+/// profile relies on, chosen or not, never change underneath it. Choices carried over from the
+/// native store are kept.
+fn apply_torch_defaults_for_new_profile(ctx: &mut AppContext) {
+    ThemeSettings::handle(ctx).update(ctx, |settings, ctx| {
+        if !settings.theme_kind.is_value_explicitly_set()
+            && !settings.use_system_theme.is_value_explicitly_set()
+        {
+            report_if_error!(settings.use_system_theme.set_value(true, ctx));
+        }
+    });
+    let input_type_chosen = InputSettings::as_ref(ctx)
+        .input_box_type
+        .is_value_explicitly_set()
+        || SessionSettings::as_ref(ctx)
+            .honor_ps1
+            .is_value_explicitly_set();
+    if !input_type_chosen {
+        InputSettings::handle(ctx).update(ctx, |settings, ctx| {
+            report_if_error!(settings.input_box_type.set_value(InputBoxType::Classic, ctx));
+        });
+        SessionSettings::handle(ctx).update(ctx, |settings, ctx| {
+            report_if_error!(settings.honor_ps1.set_value(true, ctx));
+        });
+    }
+}
+
 fn needs_settings_file_migration(ctx: &AppContext) -> bool {
     // Migration only applies to the GUI surface, which is the one with legacy
     // native-store settings to move into its TOML file. Other surfaces (e.g.
