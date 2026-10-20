@@ -406,6 +406,11 @@ multi-selection context menu. Inline rename uses the existing native editor. Ver
 uses neighboring sessions from the same effective group; it must not silently move a tab into an
 unrelated folder group.
 
+Hovering a session swaps its trailing status indicator for a small close button in a fixed
+20-logical-pixel slot, so the title and age do not move. The button uses the shared icon-button
+styling and “Close session” tooltip. Its click takes precedence over row selection and dispatches
+the normal tab-close action, including existing running-process confirmation and undo behavior.
+
 ### Group headings
 
 Explicit manual groups take precedence over project-root and working-directory groups. A local

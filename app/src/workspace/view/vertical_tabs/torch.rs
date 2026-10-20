@@ -1,5 +1,6 @@
 use super::*;
 use crate::session_management::CommandContext;
+use crate::ui_components::buttons::icon_button;
 use crate::workspace::header_toolbar_item::HeaderToolbarItemKind;
 use crate::workspace::view::PanelPosition;
 use warp_core::ui::theme::ColorScheme;
@@ -429,20 +430,41 @@ fn row(
             palette.secondary,
             Weight::Normal,
             appearance,
-        ))
-        .with_child(if session.status.is_none() && session.age.is_empty() {
-            ConstrainedBox::new(Empty::new().finish())
-                .with_width(14.)
-                .finish()
-        } else {
-            status_icon(session.status.as_ref(), palette)
-        })
+        ));
+    let status = if session.status.is_none() && session.age.is_empty() {
+        Empty::new().finish()
+    } else {
+        status_icon(session.status.as_ref(), palette)
+    };
+    let tooltip = appearance
+        .ui_builder()
+        .tool_tip("Close session".to_string())
+        .build()
         .finish();
+    let close_button = icon_button(
+        appearance,
+        UiIcon::X,
+        false,
+        workspace.tabs[index].close_mouse_state.clone(),
+    )
+    .with_style(UiComponentStyles::default().set_width(20.).set_height(20.))
+    .with_tooltip(move || tooltip)
+    .build()
+    .on_click(move |ctx, _, _| ctx.dispatch_typed_action(WorkspaceAction::CloseTab(index)))
+    .finish();
     let row = Hoverable::new(
         workspace.tabs[index].tab_mouse_state.clone(),
         move |state| {
+            let trailing = if state.is_hovered() {
+                close_button
+            } else {
+                ConstrainedBox::new(Align::new(status).finish())
+                    .with_width(20.)
+                    .with_height(20.)
+                    .finish()
+            };
             ConstrainedBox::new(
-                Container::new(contents)
+                Container::new(contents.with_child(trailing).finish())
                     .with_padding(Padding::uniform(3.).with_horizontal(12.))
                     .with_corner_radius(CornerRadius::with_all(Radius::Pixels(8.)))
                     .with_background(if active || in_multi_selection {
@@ -463,6 +485,7 @@ fn row(
             .finish()
         },
     )
+    .with_defer_events_to_children()
     .on_click_with_modifiers(move |ctx, _, _, modifiers| {
         if modifiers.shift {
             ctx.dispatch_typed_action(WorkspaceAction::ShiftSelectTabRange { locator });
