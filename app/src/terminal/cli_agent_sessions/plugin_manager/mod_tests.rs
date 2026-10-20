@@ -3,11 +3,13 @@ use std::cmp::Ordering;
 use super::{compare_versions, plugin_manager_for};
 use crate::terminal::CLIAgent;
 
+#[cfg(not(feature = "local_only"))]
 #[test]
 fn returns_manager_for_claude() {
     assert!(plugin_manager_for(CLIAgent::Claude).is_some());
 }
 
+#[cfg(not(feature = "local_only"))]
 #[test]
 fn returns_manager_for_opencode() {
     let _oc_guard = crate::features::FeatureFlag::OpenCodeNotifications.override_enabled(true);
@@ -15,6 +17,7 @@ fn returns_manager_for_opencode() {
     assert!(plugin_manager_for(CLIAgent::OpenCode).is_some());
 }
 
+#[cfg(not(feature = "local_only"))]
 #[test]
 fn returns_manager_for_codex() {
     let _codex_guard = crate::features::FeatureFlag::CodexNotifications.override_enabled(true);
@@ -22,11 +25,20 @@ fn returns_manager_for_codex() {
     assert!(plugin_manager_for(CLIAgent::Codex).is_some());
 }
 
+#[cfg(not(feature = "local_only"))]
 #[test]
 fn returns_manager_for_gemini() {
     let _gemini_guard = crate::features::FeatureFlag::GeminiNotifications.override_enabled(true);
     let _hoa_guard = crate::features::FeatureFlag::HOANotifications.override_enabled(true);
     assert!(plugin_manager_for(CLIAgent::Gemini).is_some());
+}
+
+#[cfg(feature = "local_only")]
+#[test]
+fn local_only_never_offers_warp_plugins() {
+    for agent in enum_iterator::all::<CLIAgent>() {
+        assert!(plugin_manager_for(agent).is_none(), "{agent:?}");
+    }
 }
 
 #[test]

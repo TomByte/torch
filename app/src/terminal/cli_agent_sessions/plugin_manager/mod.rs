@@ -13,6 +13,7 @@ use claude::ClaudeCodePluginManager;
 use codex::CodexPluginManager;
 use gemini::GeminiPluginManager;
 use opencode::OpenCodePluginManager;
+use warp_core::channel::ChannelState;
 
 use crate::features::FeatureFlag;
 use crate::terminal::CLIAgent;
@@ -253,6 +254,10 @@ pub(crate) fn plugin_manager_for_with_shell(
     shell_type: Option<ShellType>,
     path_env_var: Option<String>,
 ) -> Option<Box<dyn CliAgentPluginManager>> {
+    // Torch ships its own status hooks (`local_hooks`); Warp's plugins come from GitHub.
+    if ChannelState::is_local_only() {
+        return None;
+    }
     match agent {
         CLIAgent::Claude => Some(Box::new(ClaudeCodePluginManager::new(
             shell_path,

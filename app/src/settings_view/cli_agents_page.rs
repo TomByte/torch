@@ -6,11 +6,13 @@
 
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::path::PathBuf;
 
 use enum_iterator::all;
 use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
 use regex::Regex;
 use settings::{Setting, ToggleableSetting};
+use warp_core::channel::ChannelState;
 use warp_core::features::FeatureFlag;
 use warp_errors::report_if_error;
 use warpui::elements::{
@@ -19,6 +21,7 @@ use warpui::elements::{
     ParentElement, Radius, Shrinkable,
 };
 use warpui::keymap::ContextPredicate;
+use warpui::ui_components::button::ButtonVariant;
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::ui_components::switch::SwitchStateHandle;
 use warpui::{
@@ -32,13 +35,14 @@ use super::ai_shared::{
 use super::settings_page::{
     AdditionalInfo, CONTENT_FONT_SIZE, LocalOnlyIconState, MatchData, PageTitle, PageType,
     SettingsPageMeta, SettingsPageViewHandle, SettingsWidget, ToggleState, build_toggle_element,
-    render_body_item_label,
+    render_body_item, render_body_item_label,
 };
 use super::{SettingsAction, SettingsSection, ToggleSettingActionPair, flags};
 use crate::ai::blocklist::agent_view::agent_input_footer::editor::{
     AgentToolbarEditorMode, AgentToolbarInlineEditor,
 };
 use crate::appearance::Appearance;
+use crate::local_hooks::{SetupState, StatusAgent};
 use crate::menu::{MenuItem, MenuItemFields};
 use crate::settings::{
     AISettings, AISettingsChangedEvent, AutoDismissRichInputAfterSubmit,
@@ -52,6 +56,26 @@ use crate::view_components::{Dropdown, SubmittableTextInput, SubmittableTextInpu
 use crate::{TelemetryEvent, send_telemetry_from_ctx};
 
 const PAGE_TITLE: &str = "Third party CLI agents";
+const LOCAL_PAGE_TITLE: &str = "Agents";
+
+/// Torch's status hooks for one agent, as last read from its configuration folder.
+struct AgentStatusSetup {
+    config_dir: Option<PathBuf>,
+    state: Option<Result<SetupState, String>>,
+    message: Option<String>,
+    busy: bool,
+}
+
+impl AgentStatusSetup {
+    fn new(agent: StatusAgent) -> Self {
+        Self {
+            config_dir: agent.default_config_dir(),
+            state: None,
+            message: None,
+            busy: false,
+        }
+    }
+}
 
 pub struct CLIAgentsPageView {
     page: PageType<Self>,
@@ -60,6 +84,8 @@ pub struct CLIAgentsPageView {
     cli_agent_footer_command_mouse_state_handles: Vec<MouseStateHandle>,
     cli_agent_footer_command_agent_dropdowns: Vec<ViewHandle<Dropdown<CLIAgentsPageAction>>>,
     cli_agent_toolbar_inline_editor: ViewHandle<AgentToolbarInlineEditor>,
+    claude_status: AgentStatusSetup,
+    codex_status: AgentStatusSetup,
 }
 
 impl CLIAgentsPageView {
@@ -114,18 +140,94 @@ impl CLIAgentsPageView {
             ctx.notify();
         });
 
-        Self {
+        let mut page = Self {
             page: Self::build_page(),
             local_only_icon_tooltip_states: Default::default(),
             cli_agent_footer_command_editor,
             cli_agent_footer_command_mouse_state_handles,
             cli_agent_footer_command_agent_dropdowns: Self::create_cli_agent_dropdowns(ctx),
             cli_agent_toolbar_inline_editor,
+            claude_status: AgentStatusSetup::new(StatusAgent::Claude),
+            codex_status: AgentStatusSetup::new(StatusAgent::Codex),
+        };
+        if shows_status_setup() {
+            for agent in [StatusAgent::Claude, StatusAgent::Codex] {
+                page.refresh_status_state(agent, ctx);
+            }
+        }
+        page
+    }
+
+    fn status_setup(&self, agent: StatusAgent) -> &AgentStatusSetup {
+        match agent {
+            StatusAgent::Claude => &self.claude_status,
+            StatusAgent::Codex => &self.codex_status,
         }
     }
 
+    fn status_setup_mut(&mut self, agent: StatusAgent) -> &mut AgentStatusSetup {
+        match agent {
+            StatusAgent::Claude => &mut self.claude_status,
+            StatusAgent::Codex => &mut self.codex_status,
+        }
+    }
+
+    fn refresh_status_state(&mut self, agent: StatusAgent, ctx: &mut ViewContext<Self>) {
+        let Some(directory) = self.status_setup(agent).config_dir.clone() else {
+            return;
+        };
+        ctx.spawn(
+            async move { crate::local_hooks::setup_state(agent, &directory) },
+            move |view, result, ctx| {
+                view.status_setup_mut(agent).state =
+                    Some(result.map_err(|error| error.to_string()));
+                ctx.notify();
+            },
+        );
+    }
+
+    fn configure_status(&mut self, agent: StatusAgent, install: bool, ctx: &mut ViewContext<Self>) {
+        let setup = self.status_setup_mut(agent);
+        if setup.busy {
+            return;
+        }
+        let Some(directory) = setup.config_dir.clone() else {
+            return;
+        };
+        setup.busy = true;
+        setup.message = None;
+        ctx.notify();
+        ctx.spawn(
+            async move {
+                let result = crate::local_hooks::configure(agent, &directory, install);
+                (result, crate::local_hooks::setup_state(agent, &directory))
+            },
+            move |view, (result, state), ctx| {
+                let setup = view.status_setup_mut(agent);
+                setup.busy = false;
+                setup.state = Some(state.map_err(|error| error.to_string()));
+                setup.message = Some(match result {
+                    Ok(backup) => {
+                        let mut message = status_change_message(agent, install).to_owned();
+                        if let Some(path) = backup {
+                            message.push_str(&format!(" Backup: {}", path.display()));
+                        }
+                        message
+                    }
+                    Err(error) => format!("Could not change hooks: {error}"),
+                });
+                ctx.notify();
+            },
+        );
+    }
+
     fn build_page() -> PageType<Self> {
-        let widgets: Vec<Box<dyn SettingsWidget<View = Self>>> = vec![
+        let mut widgets: Vec<Box<dyn SettingsWidget<View = Self>>> = Vec::new();
+        if shows_status_setup() {
+            widgets.push(Box::new(AgentStatusWidget::new(StatusAgent::Claude)));
+            widgets.push(Box::new(AgentStatusWidget::new(StatusAgent::Codex)));
+        }
+        widgets.extend::<[Box<dyn SettingsWidget<View = Self>>; 7]>([
             Box::new(CLIAgentWidget::default()),
             Box::new(CLIAgentAutoToggleRichInputWidget::default()),
             Box::new(CLIAgentAutoOpenRichInputWidget::default()),
@@ -133,8 +235,13 @@ impl CLIAgentsPageView {
             Box::new(CLIAgentSubmitRichInputWidget::default()),
             Box::new(CLIAgentCommandsWidget),
             Box::new(CLIAgentToolbarLayoutWidget),
-        ];
-        PageType::new_uncategorized(widgets, Some(PageTitle::new(PAGE_TITLE)))
+        ]);
+        let title = if ChannelState::is_local_only() {
+            LOCAL_PAGE_TITLE
+        } else {
+            PAGE_TITLE
+        };
+        PageType::new_uncategorized(widgets, Some(PageTitle::new(title)))
     }
 
     fn create_cli_agent_dropdowns(
@@ -243,6 +350,11 @@ pub enum CLIAgentsPageAction {
         pattern: String,
         agent: Option<CLIAgent>,
     },
+    ConfigureStatus {
+        agent: StatusAgent,
+        install: bool,
+    },
+    ChooseStatusFolder(StatusAgent),
 }
 
 impl TypedActionView for CLIAgentsPageView {
@@ -312,6 +424,30 @@ impl TypedActionView for CLIAgentsPageView {
                     settings.set_cli_agent_for_command(pattern, *agent, ctx);
                 });
             }
+            CLIAgentsPageAction::ConfigureStatus { agent, install } => {
+                self.configure_status(*agent, *install, ctx);
+            }
+            CLIAgentsPageAction::ChooseStatusFolder(agent) => {
+                let agent = *agent;
+                ctx.open_file_picker(
+                    move |result, ctx| {
+                        if let Ok(paths) = result
+                            && let Some(path) = paths.into_iter().next()
+                            && let Some(handle) = ctx.handle().upgrade(ctx)
+                        {
+                            handle.update(ctx, |view, ctx| {
+                                let setup = view.status_setup_mut(agent);
+                                setup.config_dir = Some(path.into());
+                                setup.state = None;
+                                setup.message = None;
+                                view.refresh_status_state(agent, ctx);
+                                ctx.notify();
+                            });
+                        }
+                    },
+                    warpui::platform::FilePickerConfiguration::new().folders_only(),
+                );
+            }
         }
     }
 }
@@ -322,7 +458,7 @@ impl SettingsPageMeta for CLIAgentsPageView {
     }
 
     fn should_render(&self, _ctx: &AppContext) -> bool {
-        FeatureFlag::AgentMode.is_enabled()
+        FeatureFlag::AgentMode.is_enabled() || ChannelState::is_local_only()
     }
 
     fn update_filter(&mut self, query: &str, ctx: &mut ViewContext<Self>) -> MatchData {
@@ -480,6 +616,161 @@ fn should_render_cli_agent_rich_input(app: &AppContext) -> bool {
     should_render_cli_agent_detail(app) && FeatureFlag::CLIAgentRichInput.is_enabled()
 }
 
+/// Automatic Rich Input needs Warp AI, which local-only builds never enable.
+fn should_render_automatic_rich_input(app: &AppContext) -> bool {
+    should_render_cli_agent_rich_input(app) && !ChannelState::is_local_only()
+}
+
+fn shows_status_setup() -> bool {
+    cfg!(unix) && ChannelState::is_local_only()
+}
+
+/// Widget id of an agent's status setup, for scrolling to it from elsewhere.
+pub fn agent_status_widget_id(agent: StatusAgent) -> &'static str {
+    match agent {
+        StatusAgent::Claude => "agent_status_claude",
+        StatusAgent::Codex => "agent_status_codex",
+    }
+}
+
+fn status_change_message(agent: StatusAgent, install: bool) -> &'static str {
+    match (agent, install) {
+        (StatusAgent::Claude, true) => {
+            "Installed. Open a new terminal and start a new Claude session."
+        }
+        (StatusAgent::Codex, true) => {
+            "Installed. Start a new Codex session and trust the Torch hooks when asked, or run /hooks."
+        }
+        (StatusAgent::Claude, false) => "Removed Torch hooks. Restart Claude to apply.",
+        (StatusAgent::Codex, false) => "Removed Torch hooks. Restart Codex to apply.",
+    }
+}
+
+fn setup_state_label(state: Option<&Result<SetupState, String>>) -> String {
+    match state {
+        None => "Checking…".to_owned(),
+        Some(Ok(SetupState::Installed)) => "Installed".to_owned(),
+        Some(Ok(SetupState::Outdated)) => "Outdated, choose Install / repair".to_owned(),
+        Some(Ok(SetupState::Missing)) => "Not installed".to_owned(),
+        Some(Err(error)) => format!("Unreadable: {error}"),
+    }
+}
+
+struct AgentStatusWidget {
+    agent: StatusAgent,
+    install: MouseStateHandle,
+    remove: MouseStateHandle,
+    folder: MouseStateHandle,
+}
+
+impl AgentStatusWidget {
+    fn new(agent: StatusAgent) -> Self {
+        Self {
+            agent,
+            install: Default::default(),
+            remove: Default::default(),
+            folder: Default::default(),
+        }
+    }
+}
+
+impl SettingsWidget for AgentStatusWidget {
+    type View = CLIAgentsPageView;
+
+    fn widget_id(&self) -> &'static str {
+        agent_status_widget_id(self.agent)
+    }
+
+    fn search_terms(&self) -> &str {
+        match self.agent {
+            StatusAgent::Claude => {
+                "claude code hooks session status working attention permission integration install remove notifications"
+            }
+            StatusAgent::Codex => {
+                "codex openai hooks session status working attention permission approval integration install remove notifications"
+            }
+        }
+    }
+
+    fn render(
+        &self,
+        view: &Self::View,
+        appearance: &Appearance,
+        _: &AppContext,
+    ) -> Box<dyn Element> {
+        let agent = self.agent;
+        let setup = view.status_setup(agent);
+        let mut buttons = Flex::row().with_spacing(8.);
+        for (label, state, action) in [
+            (
+                "Install / repair",
+                &self.install,
+                CLIAgentsPageAction::ConfigureStatus {
+                    agent,
+                    install: true,
+                },
+            ),
+            (
+                "Remove",
+                &self.remove,
+                CLIAgentsPageAction::ConfigureStatus {
+                    agent,
+                    install: false,
+                },
+            ),
+            (
+                "Choose folder…",
+                &self.folder,
+                CLIAgentsPageAction::ChooseStatusFolder(agent),
+            ),
+        ] {
+            let mut button = appearance
+                .ui_builder()
+                .button(ButtonVariant::Secondary, state.clone())
+                .with_text_label(label.to_owned());
+            if setup.busy {
+                button = button.disabled();
+            }
+            buttons.add_child(
+                button
+                    .build()
+                    .on_click(move |ctx, _, _| {
+                        ctx.dispatch_typed_action(action.clone());
+                    })
+                    .finish(),
+            );
+        }
+        let name = agent.display_name();
+        let directory = setup
+            .config_dir
+            .as_ref()
+            .map(|path| path.display().to_string())
+            .unwrap_or_else(|| format!("Choose your {name} configuration folder"));
+        let requirement = match agent {
+            StatusAgent::Claude => "Requires a current Claude Code version.",
+            StatusAgent::Codex => {
+                "Requires a Codex version with hooks; Codex asks you to trust them once."
+            }
+        };
+        let mut description = format!(
+            "Show when {name} is working or needs you. {requirement} Existing hooks and settings are preserved.\n{name} configuration: {directory}\nStatus: {}",
+            setup_state_label(setup.state.as_ref())
+        );
+        if let Some(message) = &setup.message {
+            description.push_str(&format!("\n{message}"));
+        }
+        render_body_item::<CLIAgentsPageAction>(
+            format!("{name} session status"),
+            None,
+            LocalOnlyIconState::Hidden,
+            ToggleState::Enabled,
+            appearance,
+            buttons.finish(),
+            Some(description),
+        )
+    }
+}
+
 #[derive(Default)]
 struct CLIAgentAutoToggleRichInputWidget {
     toggle: SwitchStateHandle,
@@ -494,7 +785,7 @@ impl SettingsWidget for CLIAgentAutoToggleRichInputWidget {
     }
 
     fn should_render(&self, app: &AppContext) -> bool {
-        should_render_cli_agent_rich_input(app)
+        should_render_automatic_rich_input(app)
     }
 
     fn render(
@@ -556,7 +847,7 @@ impl SettingsWidget for CLIAgentAutoOpenRichInputWidget {
     }
 
     fn should_render(&self, app: &AppContext) -> bool {
-        should_render_cli_agent_rich_input(app)
+        should_render_automatic_rich_input(app)
     }
 
     fn render(

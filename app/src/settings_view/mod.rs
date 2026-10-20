@@ -132,7 +132,7 @@ pub(crate) use admin_actions::AdminActions;
 pub(crate) use billing_and_usage::billing_cycle_usage_common::{format_cost_cents, format_credits};
 pub use billing_and_usage_page::create_discount_badge;
 #[cfg(not(target_family = "wasm"))]
-pub use cli_agents_page::cli_agent_settings_widget_id;
+pub use cli_agents_page::{agent_status_widget_id, cli_agent_settings_widget_id};
 pub use code_indexing_page::CodeIndexingPageView;
 pub use features_page::FeaturesPageAction;
 pub use main_page::handle_experiment_change;
@@ -357,6 +357,9 @@ impl Display for SettingsSection {
             SettingsSection::AgentProfiles => write!(f, "Profiles"),
             SettingsSection::AgentMCPServers => write!(f, "MCP servers"),
             SettingsSection::Knowledge => write!(f, "Knowledge"),
+            SettingsSection::ThirdPartyCLIAgents if ChannelState::is_local_only() => {
+                write!(f, "Agents")
+            }
             SettingsSection::ThirdPartyCLIAgents => write!(f, "Third party CLI agents"),
             SettingsSection::CodeIndexing => write!(f, "Indexing and projects"),
             SettingsSection::EditorAndCodeReview => write!(f, "Editor and Code Review"),
@@ -378,6 +381,7 @@ impl SettingsSection {
                 | Self::About
                 | Self::Scripting
                 | Self::Projects
+                | Self::ThirdPartyCLIAgents
         )
     }
 
@@ -1338,8 +1342,7 @@ impl SettingsView {
         ctx.subscribe_to_view(&referrals_page_handle, |me, _, event, ctx| {
             me.handle_referrals_page_event(event, ctx);
         });
-        let scripting_available = FeatureFlag::WarpControlCli.is_enabled()
-            || (cfg!(unix) && ChannelState::is_local_only());
+        let scripting_available = FeatureFlag::WarpControlCli.is_enabled();
         let scripting_page_handle = if scripting_available {
             Some(ctx.add_typed_action_view(ScriptingSettingsPageView::new))
         } else {
@@ -1482,6 +1485,10 @@ impl SettingsView {
                 ctx.add_typed_action_view(ProjectsPageView::new),
             ));
             nav_items.insert(0, SettingsNavItem::Page(SettingsSection::Projects));
+            nav_items.insert(
+                1,
+                SettingsNavItem::Page(SettingsSection::ThirdPartyCLIAgents),
+            );
             settings_pages.retain(|page| page.section.is_available_locally());
             nav_items.retain(|item| match item {
                 SettingsNavItem::Page(section) => section.is_available_locally(),

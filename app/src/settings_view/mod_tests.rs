@@ -100,7 +100,11 @@ fn subpage_display_names_are_correct() {
     assert_eq!(SettingsSection::Knowledge.to_string(), "Knowledge");
     assert_eq!(
         SettingsSection::ThirdPartyCLIAgents.to_string(),
-        "Third party CLI agents"
+        if ChannelState::is_local_only() {
+            "Agents"
+        } else {
+            "Third party CLI agents"
+        }
     );
     assert_eq!(
         SettingsSection::CodeIndexing.to_string(),
@@ -155,8 +159,11 @@ const ALL_SECTIONS: &[SettingsSection] = &[
 /// Sections whose user-facing Display label has deliberately diverged from the
 /// slug it was seeded from, because the slug is a stored contract that the
 /// rename must not follow.
-const SECTIONS_WITH_RENAMED_DISPLAY_LABELS: &[SettingsSection] =
-    &[SettingsSection::WarpCloudAgentAPIKeys];
+const SECTIONS_WITH_RENAMED_DISPLAY_LABELS: &[SettingsSection] = &[
+    SettingsSection::WarpCloudAgentAPIKeys,
+    // Local-only builds label it "Agents".
+    SettingsSection::ThirdPartyCLIAgents,
+];
 
 #[test]
 fn all_sections_list_is_exhaustive() {

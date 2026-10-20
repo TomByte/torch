@@ -27,6 +27,7 @@ use voice_input::{
     StartListeningError, VoiceInputLifecycle, VoiceInputLifecycleState, VoiceSessionResult,
 };
 use warp_cli::agent::Harness;
+use warp_core::channel::ChannelState;
 use warp_core::context_flag::ContextFlag;
 use warp_core::ui::color::ContrastingColor;
 use warp_core::ui::color::blend::Blend;
@@ -69,6 +70,7 @@ use crate::context_chips::display_chip::{DisplayChip, DisplayChipConfig, PromptC
 use crate::context_chips::prompt_type::PromptType;
 use crate::context_chips::{self, ContextChipKind};
 use crate::features::FeatureFlag;
+use crate::local_hooks::{SetupState, StatusAgent};
 use crate::network::NetworkStatus;
 use crate::send_telemetry_from_ctx;
 #[cfg(feature = "voice_input")]
@@ -241,6 +243,10 @@ pub struct AgentInputFooter {
     /// giving the plugin time to connect before we prompt installation.
     /// Reset to `false` when a listener connects.
     plugin_chip_ready: bool,
+    /// Offers Torch's own status hooks in local-only builds, in place of Warp's plugins.
+    status_setup_button: ViewHandle<ActionButton>,
+    /// Whether Torch's status hooks are missing or outdated for this session's agent.
+    needs_status_setup: bool,
 
     // Fast-forward (auto-approve) toggle button shown in the agent view footer.
     fast_forward_button: ViewHandle<ActionButton>,
@@ -580,6 +586,18 @@ impl AgentInputFooter {
                 })
         });
 
+        let status_setup_button = ctx.add_typed_action_view(|_ctx| {
+            ActionButton::new("Set up session status", InstallPluginButtonTheme)
+                .with_icon(Icon::Info)
+                .with_tooltip("Show in the sidebar when this agent is working or needs you")
+                .with_size(cli_button_size)
+                .with_tooltip_alignment(TooltipAlignment::Left)
+                .with_adjoined_side(AdjoinedSide::Right)
+                .on_click(|ctx| {
+                    ctx.dispatch_typed_action(AgentInputFooterAction::OpenStatusSetup);
+                })
+        });
+
         // Toggle rich input button label when CLI input session opens/closes.
         // Also reset CLI voice state if the session ends while voice is active.
         ctx.subscribe_to_model(
@@ -595,6 +613,7 @@ impl AgentInputFooter {
                     #[cfg(feature = "voice_input")]
                     me.stop_cli_voice_and_reset(ctx);
                     me.plugin_chip_ready = false;
+                    me.needs_status_setup = false;
                 }
 
                 // When a structured plugin connects, the plugin is verified
@@ -613,6 +632,9 @@ impl AgentInputFooter {
                 if let CLIAgentSessionsModelEvent::Started { .. } = event
                     && let Some(agent) = me.cli_agent(ctx)
                 {
+                    if ChannelState::is_local_only() {
+                        me.check_status_setup(agent, ctx);
+                    }
                     let label = format!("Enable {} notifications", agent.display_name());
                     me.install_plugin_button.update(ctx, |button, ctx| {
                         button.set_label(label, ctx);
@@ -981,6 +1003,8 @@ impl AgentInputFooter {
             dismiss_plugin_chip_button,
             plugin_operation_in_progress: false,
             plugin_chip_ready: false,
+            status_setup_button,
+            needs_status_setup: false,
             context_window_button,
             usage_button,
             live_session_indicator,
@@ -1206,6 +1230,48 @@ impl AgentInputFooter {
             },
             file_picker_config,
         );
+    }
+
+    fn check_status_setup(&mut self, agent: CLIAgent, ctx: &mut ViewContext<Self>) {
+        self.needs_status_setup = false;
+        let Some(status_agent) = StatusAgent::for_cli_agent(agent) else {
+            return;
+        };
+        let Some(directory) = status_agent.default_config_dir() else {
+            return;
+        };
+        ctx.spawn(
+            async move { crate::local_hooks::setup_state(status_agent, &directory) },
+            |me, state, ctx| {
+                me.needs_status_setup =
+                    matches!(state, Ok(SetupState::Missing | SetupState::Outdated));
+                ctx.notify();
+            },
+        );
+    }
+
+    fn should_show_status_setup_chip(&self, app: &AppContext) -> bool {
+        if !self.needs_status_setup {
+            return false;
+        }
+        let Some(session) = CLIAgentSessionsModel::as_ref(app).session(self.terminal_view_id)
+        else {
+            return false;
+        };
+        let chip_key = plugin_chip_key(session.agent.command_prefix(), &session.remote_host);
+        !session.supports_rich_status()
+            && !session.is_remote()
+            && !AISettings::as_ref(app).is_plugin_install_chip_dismissed(&chip_key)
+    }
+
+    fn render_plugin_chip(&self, chip_kind: PluginChipKind, app: &AppContext) -> Box<dyn Element> {
+        let button = match (chip_kind, self.should_use_manual_mode(app)) {
+            (PluginChipKind::Install, false) => &self.install_plugin_button,
+            (PluginChipKind::Install, true) => &self.plugin_instructions_button,
+            (PluginChipKind::Update, false) => &self.update_plugin_button,
+            (PluginChipKind::Update, true) => &self.update_instructions_button,
+        };
+        ChildView::new(button).finish()
     }
 
     /// Which plugin chip to show, if any.
@@ -1737,22 +1803,13 @@ impl AgentInputFooter {
             left_buttons.add_child(indicator);
         }
 
-        if let Some(chip_kind) = self.plugin_chip_kind(app) {
-            let manual = self.should_use_manual_mode(app);
-            let chip = match (chip_kind, manual) {
-                (PluginChipKind::Install, false) => {
-                    ChildView::new(&self.install_plugin_button).finish()
-                }
-                (PluginChipKind::Install, true) => {
-                    ChildView::new(&self.plugin_instructions_button).finish()
-                }
-                (PluginChipKind::Update, false) => {
-                    ChildView::new(&self.update_plugin_button).finish()
-                }
-                (PluginChipKind::Update, true) => {
-                    ChildView::new(&self.update_instructions_button).finish()
-                }
-            };
+        let plugin_chip = if self.should_show_status_setup_chip(app) {
+            Some(ChildView::new(&self.status_setup_button).finish())
+        } else {
+            self.plugin_chip_kind(app)
+                .map(|chip_kind| self.render_plugin_chip(chip_kind, app))
+        };
+        if let Some(chip) = plugin_chip {
             let chip_with_dismiss = Flex::row()
                 .with_cross_axis_alignment(CrossAxisAlignment::Center)
                 .with_child(chip)
@@ -2666,6 +2723,7 @@ pub enum AgentInputFooterAction {
     StartRemoteControl,
     StopRemoteControl,
     OpenCodingAgentSettings,
+    OpenStatusSetup,
     /// User clicked the "Hand off to cloud" footer chip. The terminal `Input`
     /// subscriber decides whether to dispatch the immediate empty-prompt
     /// handoff or enter `&` compose mode based on the current input state.
@@ -2853,6 +2911,15 @@ impl TypedActionView for AgentInputFooter {
                     page: SettingsSection::ThirdPartyCLIAgents,
                     widget_id: crate::settings_view::cli_agent_settings_widget_id(),
                 });
+            }
+            AgentInputFooterAction::OpenStatusSetup => {
+                #[cfg(not(target_family = "wasm"))]
+                if let Some(agent) = self.cli_agent(ctx).and_then(StatusAgent::for_cli_agent) {
+                    ctx.dispatch_typed_action_deferred(WorkspaceAction::ScrollToSettingsWidget {
+                        page: SettingsSection::ThirdPartyCLIAgents,
+                        widget_id: crate::settings_view::agent_status_widget_id(agent),
+                    });
+                }
             }
             AgentInputFooterAction::HandoffChipClicked => {
                 if FeatureFlag::OzHandoff.is_enabled()
