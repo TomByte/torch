@@ -1,4 +1,58 @@
 use super::*;
+use warp_core::ui::color::contrast::{MinimumAllowedContrast, high_enough_contrast};
+use warp_core::ui::theme::{Details, Fill};
+
+#[test]
+fn dark_sidebar_text_remains_readable_in_selected_and_idle_rows() {
+    let theme = crate::themes::default_themes::dark_theme();
+    let palette = Palette::new(&theme);
+    for background in [
+        palette.sidebar_top,
+        palette.sidebar_bottom,
+        palette.selection,
+    ] {
+        for foreground in [
+            palette.text,
+            palette.secondary,
+            palette.muted,
+            palette.attention,
+        ] {
+            assert!(high_enough_contrast(
+                foreground,
+                background,
+                MinimumAllowedContrast::Text,
+            ));
+        }
+    }
+    assert!(high_enough_contrast(
+        theme.foreground().into_solid(),
+        theme.background().into_solid(),
+        MinimumAllowedContrast::Text,
+    ));
+}
+
+#[test]
+fn sidebar_follows_custom_theme_color_scheme_instead_of_red_channel() {
+    // A bright cyan theme has a low red channel but still needs the light shell.
+    let theme = WarpTheme::new(
+        Fill::Solid(ColorU::from_u32(0x00FFFFFF)),
+        ColorU::black(),
+        Fill::Solid(ColorU::from_u32(0x007799FF)),
+        None,
+        Some(Details::Lighter),
+        crate::themes::default_themes::light_theme()
+            .terminal_colors()
+            .clone(),
+        None,
+        None,
+    );
+    let palette = Palette::new(&theme);
+    assert!(high_enough_contrast(
+        ColorU::black(),
+        palette.sidebar_top,
+        MinimumAllowedContrast::Text,
+    ));
+}
 
 #[test]
 fn ranges_follow_folder_order_instead_of_underlying_tab_indices() {

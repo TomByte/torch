@@ -11,20 +11,38 @@ colors:
   light-hover: "#FFFFFF70"
   light-rule: "#D5D6DB"
   light-attention: "#98651F"
-  dark-sidebar-top: "#242832"
-  dark-sidebar-bottom: "#2B2734"
-  dark-text: "#F0EFF3"
-  dark-secondary: "#BCBAC4"
-  dark-muted: "#A19EAB"
-  dark-selection: "#45434E"
+  dark-sidebar-top: "#242424"
+  dark-sidebar-bottom: "#212121"
+  dark-text: "#E6E6E6"
+  dark-secondary: "#B5B5B5"
+  dark-muted: "#A0A0A0"
+  dark-selection: "#373737"
   dark-hover: "#FFFFFF12"
-  dark-rule: "#57535F"
-  dark-attention: "#E6B873"
+  dark-rule: "#3C3C3C"
+  dark-attention: "#D9B96E"
   light-terminal-background: "#FFFFFF"
   light-terminal-foreground: "#111111"
-  dark-terminal-background: "#050505"
-  dark-terminal-foreground: "#FFFFFF"
+  dark-terminal-background: "#181818"
+  dark-terminal-foreground: "#E6E6E6"
   header-rule: "#88888818"
+  dark-terminal-accent: "#8DAEDC"
+  dark-header-rule: "#FFFFFF12"
+  dark-ansi-normal-black: "#858585"
+  dark-ansi-normal-red: "#E88484"
+  dark-ansi-normal-green: "#88BE8C"
+  dark-ansi-normal-yellow: "#D9B96E"
+  dark-ansi-normal-blue: "#8DAEDC"
+  dark-ansi-normal-magenta: "#BFA0D6"
+  dark-ansi-normal-cyan: "#89C4C4"
+  dark-ansi-normal-white: "#D8D8D8"
+  dark-ansi-bright-black: "#A0A0A0"
+  dark-ansi-bright-red: "#F0A0A0"
+  dark-ansi-bright-green: "#A3D4A7"
+  dark-ansi-bright-yellow: "#E8CE94"
+  dark-ansi-bright-blue: "#ADC8EC"
+  dark-ansi-bright-magenta: "#D3BCE4"
+  dark-ansi-bright-cyan: "#A6D8D8"
+  dark-ansi-bright-white: "#F0F0F0"
 typography:
   terminal:
     fontFamily: "Hack"
@@ -88,6 +106,10 @@ components:
   session-selected-dark:
     backgroundColor: "{colors.dark-selection}"
     textColor: "{colors.dark-text}"
+    typography: "{typography.body}"
+    rounded: "{rounded.session}"
+    height: "31px"
+    padding: "4px 12px"
   session-hover-dark:
     backgroundColor: "{colors.dark-hover}"
   icon-control:
@@ -101,6 +123,12 @@ components:
     typography: "{typography.group-label}"
     padding: "12px 10px 7px 12px"
   terminal-header:
+    typography: "{typography.title}"
+    height: "40px"
+    padding: "0px 24px 0px 32px"
+  terminal-header-dark:
+    backgroundColor: "{colors.dark-terminal-background}"
+    textColor: "{colors.dark-text}"
     typography: "{typography.title}"
     height: "40px"
     padding: "0px 24px 0px 32px"
@@ -120,10 +148,15 @@ components:
 
 **Creative North Star: "The Quiet Native Terminal"**
 
-Torch uses a cool blue-to-lilac sidebar, compact grouped sessions, and a lightly raised terminal pane.
-The interface keeps session context legible while leaving the working area to shell output. The
-binding visual direction is the user-supplied [terminal reference](docs/design/terminal-reference.png).
-The north-star phrase describes that direction; it is not a separate user-approved brand name.
+Torch pairs compact grouped sessions with a lightly raised terminal pane. Light mode uses a cool
+blue-to-lilac sidebar and a white working surface; dark mode uses neutral charcoal layers and soft
+gray text. The interface keeps session context legible while leaving the working area to shell output.
+
+The binding layout direction is the user-supplied
+[terminal reference](docs/design/terminal-reference.png), reinforced by the later light-sidebar
+reference. The user's Codex dark UI reference guides the dark palette while preserving that layout.
+Its personal sidebar history is not a design asset and is not copied into the repository. The
+north-star phrase describes this direction; it is not a separate user-approved brand name.
 
 This is a Rust/WarpUI desktop system. Frontmatter dimensions use portable `px` notation for WarpUI
 logical pixels, not screenshot pixels. The tokens describe the current implementation in
@@ -132,12 +165,21 @@ logical pixels, not screenshot pixels. The tokens describe the current implement
 Default terminal colors come from `app/src/themes/default_themes.rs`, and UI font loading comes from
 `app/src/appearance.rs`. User-selected terminal themes and fonts remain authoritative at runtime.
 
-The macOS captures in `.impeccable/review/desktop.png` (2560 × 1600 screenshot pixels),
-`desktop-narrow.png`, and `desktop-long-title.png` (1730 × 2046 each, native half-screen windows)
-support close visual fidelity, not pixel identity. Their explicitly labelled synthetic transcript is
-a visual test fixture, not evidence of a completed CLI task. The dark palette is extracted from
-source; these captures do not verify dark rendering or other operating systems. Native recording
-badges and cursor halos are capture artifacts, not Torch components.
+The original macOS layout captures in `.impeccable/review/desktop.png`, `desktop-narrow.png`, and
+`desktop-long-title.png` establish the compact sidebar and long-title clipping. The final dark-mode
+review covers seven captures in the same directory: `dark-desktop.png` (2560 × 1604 screenshot
+pixels), `dark-narrow.png` (1730 × 2046), `light-theme-regression.png` (2560 × 1602),
+`dark-terminal-input.png`, `dark-context-menu.png`, `dark-theme-picker.png`, and
+`dark-system-settings.png`. Independent finish review found no material defects in this scope,
+confirmed dark palette coherence, and found no material light-mode regression. This supports close
+visual fidelity, not pixel identity. Synthetic transcripts remain labelled test fixtures rather than
+evidence of completed CLI tasks. Recording badges and cursor halos are capture artifacts.
+
+Live macOS checks passed choosing Dark in the native theme picker, syncing with the currently dark
+OS appearance, returning to Light, retaining Dark after app restart, and completing `/usr/bi` to
+`/usr/bin/` with Tab. The context menu and narrow layout were also verified. Six focused tests,
+Clippy with existing baseline exemptions, and the native bundle passed. Cross-platform runner
+`oz-dev` was unavailable; this evidence covers macOS only.
 
 The final macOS live verification passed short reordering within a manual group, a long drag out
 and back, Shift-selection across noncontiguous underlying tabs in displayed group order, and
@@ -154,13 +196,17 @@ interaction rules below; screenshots alone do not verify interactions.
 
 ## Colors
 
-The sidebar moves vertically from cool blue to pale lilac in light mode, and from charcoal blue to
-charcoal violet in dark mode. The frontmatter holds exact values, including source alpha channels.
+The sidebar moves vertically from cool blue to pale lilac in light mode, and through closely spaced
+neutral charcoal tones in dark mode. The darker terminal surface, lighter sidebar, and selected-row
+fill create distinct layers without a purple cast. The frontmatter holds exact values and alpha.
 
 ### Primary
 
-The terminal theme owns the application accent and ANSI output palette. This workspace shell does
-not introduce a new promotional accent: active sessions use a neutral selection fill and rule.
+The terminal theme owns the application accent and ANSI output palette. The bundled local-only
+Dark theme uses `dark-terminal-accent`, a restrained blue, with coordinated normal and bright ANSI
+colors. The `dark-ansi-normal-*` and `dark-ansi-bright-*` tokens map directly to the eight standard
+ANSI slots in each intensity. Programs retain control of which slots or explicit colors they use.
+Active sessions use a neutral selection fill and rule rather than the theme accent.
 
 ### Secondary
 
@@ -173,13 +219,19 @@ attention text counts blocked sessions only. Amber must not become general decor
 status glyphs; `secondary` carries paths, ages, and controls; `muted` carries group labels and quiet
 checks. `selection`, `hover`, and `rule` distinguish interaction states without bright fills.
 `terminal-background` and `terminal-foreground` describe the bundled Light and Dark themes only;
-custom terminal themes keep their own colors. The faint `header-rule` separates context from output.
+custom terminal themes keep their own colors. The faint `header-rule` in light mode and
+`dark-header-rule` in dark mode separate context from output.
 
 **The State Evidence Rule.** Color and status symbols represent observed application state, never
 invented activity, sample project progress, or presumed CLI success.
 
-The sidebar chooses the light branch when the solid terminal-background red channel exceeds 128,
-otherwise the dark branch. This is the implemented heuristic, not a luminance or contrast guarantee.
+The sidebar follows `theme.inferred_color_scheme()`: `DarkOnLight` selects the light palette;
+otherwise it selects the dark palette. This uses the theme's color-scheme inference rather than a
+single color-channel threshold. Explicit custom terminal themes retain their own output colors.
+
+Measured dark token contrasts are body text on the terminal (14.23:1), muted text on selection
+(4.55:1), muted text on the sidebar top endpoint (5.94:1), and normal ANSI black on the
+terminal (4.81:1). These checks describe these specific pairs, not every ANSI program or custom theme.
 
 ## Typography
 
@@ -219,10 +271,11 @@ establish an untested minimum window size.
 ## Elevation & Depth
 
 The sidebar is tonal, and session rows remain flat. The main pane uses a thin rule and one restrained
-shadow. The exact native shadow is recorded in the sidecar as `terminal-pane`: offset (0, 2), blur
-12, spread 0, color `#22223312`, in logical pixels. Hover changes fill; no animation timing or easing
-is defined in this workspace renderer. Do not infer a pulsing or spinning animation from a static
-running glyph.
+shadow. The exact native shadows are recorded in the sidecar as `terminal-pane` for light mode and
+`terminal-pane-dark` for dark mode. Both use offset (0, 2), blur 12, and spread 0 in logical pixels;
+the light shadow is faint blue-black and the dark shadow is translucent black. Hover changes fill;
+no animation timing or easing is defined in this workspace renderer. Do not infer a pulsing or
+spinning animation from a static running glyph.
 
 ## Shapes
 
@@ -272,6 +325,14 @@ uses a filled check, and errors use an amber alert. Cancelled, waiting, or absen
 muted check; this quiet check must not be interpreted as proof of successful execution. When both
 status and activity age are absent, the status slot is empty. Unread activity makes the title bold.
 
+### Theme controls
+
+Use the existing native Settings → Appearance controls: Current theme opens the theme chooser,
+and Sync with OS selects the configured theme for the current system appearance. The chooser
+renders as a native workspace panel. Dark selection persists across restart; enabling OS sync
+follows the configured system themes. Light remains the default for local-only builds, and explicit
+custom themes remain available. Theme switching preserves the sidebar layout and terminal behavior.
+
 ### Terminal pane
 
 The header shows the active title and current working folder; the body remains the real terminal
@@ -292,6 +353,7 @@ remain normative. No additional product palette or motion behavior is implied by
 - Do keep user titles, working directories, activity, and unread state tied to real application data.
 - Do preserve explicit groups and use the displayed group order for range selection.
 - Do keep terminal themes, font preferences, shell completion, and full-screen programs functional.
+- Do preserve the shared sidebar layout and native theme controls in both light and dark modes.
 - Do distinguish source-derived styling, visual fixtures, and live behavior verification.
 
 ### Don't:
@@ -299,5 +361,5 @@ remain normative. No additional product palette or motion behavior is implied by
 - Don't add built-in AI, account, billing, telemetry, or cloud controls to this local terminal.
 - Don't fabricate session activity or treat a quiet check as guaranteed command success.
 - Don't reproduce the operating system's recording badge or capture cursor halo as product UI.
-- Don't claim pixel identity, dark-mode visual verification, or untested platform coverage.
+- Don't claim pixel identity or verification beyond the recorded macOS captures and live checks.
 - Don't replace terminal output with static product-owned conversation content.

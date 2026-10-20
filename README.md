@@ -13,6 +13,8 @@ Torch is a local terminal based on Warp, maintained independently at [TomByte/to
 
 Torch uses a compact session sidebar and an inset terminal pane, with a light theme and 14-point terminal text by default. Existing explicit theme and font preferences remain respected.
 
+Choose **Dark** in **Settings → Appearance → Current theme** for the charcoal terminal and sidebar. Enable **Sync with OS** to switch automatically between your chosen light and dark themes. The built-in Dark theme includes coordinated terminal colors; custom themes retain their own terminal palette.
+
 Sessions group automatically by their working folder. Right-click a session and choose **New group with tab** to place it in a manual group; manual groups take precedence over folders. Double-click a session or manual group to rename it, and click a manual group heading to collapse or expand it. The sidebar toggle and plus button sit beside the native window controls.
 
 Activity ages and status indicators come from actual terminal state. Rich Claude/Codex status appears when the CLI supplies supported status events; ordinary commands display their running or idle state. Torch does not manufacture agent activity.
@@ -47,7 +49,7 @@ Upstream tests that explicitly exercise authenticated or AI-enabled behavior des
 
 The initial Torch changes were validated on macOS with a native app build, shell execution and Tab-completion smoke tests, 14 path tests, and four feature-policy tests. Linux and Windows packaging changes have not been run on those platforms. Rust 1.97 reports inherited style warnings under strict whole-app Clippy; targeted policy/core Clippy checks pass.
 
-The sidebar redesign adds four focused tests for folder identity, activity labels, and grouped selection order. Native macOS checks cover normal shell completion, manual group creation/rename/collapse, long titles, smaller windows, and legacy layout preferences. The app Clippy gate passes with inherited style-lint categories allowed; no new warning exemptions are added to the source.
+The sidebar redesign adds focused tests for folder identity, activity labels, grouped selection order, dark text contrast, and custom theme classification. Native macOS checks cover normal shell completion, manual group creation/rename/collapse, long titles, smaller windows, and legacy layout preferences. The app Clippy gate passes with inherited style-lint categories allowed; no new warning exemptions are added to the source.
 
 ## Source and licences
 

@@ -1,6 +1,8 @@
 use super::*;
 use crate::session_management::CommandContext;
 use crate::workspace::header_toolbar_item::HeaderToolbarItemKind;
+use crate::workspace::view::PanelPosition;
+use warp_core::ui::theme::ColorScheme;
 
 pub(super) const SIDEBAR_WIDTH: f32 = 272.;
 const HEADER_HEIGHT: f32 = 48.;
@@ -16,11 +18,13 @@ struct Palette {
     hover: ColorU,
     rule: ColorU,
     attention: ColorU,
+    header_rule: ColorU,
+    shadow: ColorU,
 }
 
 impl Palette {
     fn new(theme: &WarpTheme) -> Self {
-        if theme.background().into_solid().r > 128 {
+        if theme.inferred_color_scheme() == ColorScheme::DarkOnLight {
             Self {
                 sidebar_top: ColorU::from_u32(0xE6ECF4FF),
                 sidebar_bottom: ColorU::from_u32(0xEEE9F4FF),
@@ -31,18 +35,22 @@ impl Palette {
                 hover: ColorU::from_u32(0xFFFFFF70),
                 rule: ColorU::from_u32(0xD5D6DBFF),
                 attention: ColorU::from_u32(0x98651FFF),
+                header_rule: ColorU::from_u32(0x88888818),
+                shadow: ColorU::from_u32(0x22223312),
             }
         } else {
             Self {
-                sidebar_top: ColorU::from_u32(0x242832FF),
-                sidebar_bottom: ColorU::from_u32(0x2B2734FF),
-                text: ColorU::from_u32(0xF0EFF3FF),
-                secondary: ColorU::from_u32(0xBCBAC4FF),
-                muted: ColorU::from_u32(0xA19EABFF),
-                selection: ColorU::from_u32(0x45434EFF),
+                sidebar_top: ColorU::from_u32(0x242424FF),
+                sidebar_bottom: ColorU::from_u32(0x212121FF),
+                text: ColorU::from_u32(0xE6E6E6FF),
+                secondary: ColorU::from_u32(0xB5B5B5FF),
+                muted: ColorU::from_u32(0xA0A0A0FF),
+                selection: ColorU::from_u32(0x373737FF),
                 hover: ColorU::from_u32(0xFFFFFF12),
-                rule: ColorU::from_u32(0x57535FFF),
-                attention: ColorU::from_u32(0xE6B873FF),
+                rule: ColorU::from_u32(0x3C3C3CFF),
+                attention: ColorU::from_u32(0xD9B96EFF),
+                header_rule: ColorU::from_u32(0xFFFFFF12),
+                shadow: ColorU::from_u32(0x00000030),
             }
         }
     }
@@ -662,7 +670,7 @@ pub(in crate::workspace::view) fn render(
                     80.
                 })
                 .with_padding_right(24.)
-                .with_border(Border::bottom(1.).with_border_fill(ColorU::from_u32(0x88888818)))
+                .with_border(Border::bottom(1.).with_border_fill(palette.header_rule))
                 .finish(),
         )
         .with_height(40.)
@@ -681,6 +689,13 @@ pub(in crate::workspace::view) fn render(
         if let Some(panel) = workspace.render_config_panel(&item, pane_group, config, app) {
             body.add_child(panel);
         }
+    }
+    if workspace.current_workspace_state.is_theme_chooser_open {
+        body.add_child(workspace.render_panel(
+            app,
+            workspace.render_theme_chooser(),
+            &PanelPosition::Left,
+        ));
     }
     let is_right_maximized = pane_group.right_panel_open && pane_group.is_right_panel_maximized;
     if !is_right_maximized {
@@ -721,7 +736,7 @@ pub(in crate::workspace::view) fn render(
         .with_corner_radius(CornerRadius::with_all(Radius::Pixels(12.)))
         .with_border(Border::all(1.).with_border_fill(palette.rule))
         .with_drop_shadow(DropShadow {
-            color: ColorU::from_u32(0x22223312),
+            color: palette.shadow,
             offset: vec2f(0., 2.),
             blur_radius: 12.,
             spread_radius: 0.,

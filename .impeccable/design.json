@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-20T10:28:10.007451+00:00",
+  "generatedAt": "2026-10-20T10:43:37.756073+00:00",
   "title": "Design System: Torch",
   "extensions": {
     "colorMeta": {
@@ -142,91 +142,91 @@
       "dark-sidebar-top": {
         "role": "neutral",
         "displayName": "Dark Sidebar Top",
-        "canonical": "#242832",
+        "canonical": "#242424",
         "tonalRamp": [
-          "oklch(15% 0.0194 267.98)",
-          "oklch(26% 0.0194 267.98)",
-          "oklch(38% 0.0194 267.98)",
-          "oklch(49% 0.0194 267.98)",
-          "oklch(61% 0.0194 267.98)",
-          "oklch(72% 0.0194 267.98)",
-          "oklch(84% 0.0194 267.98)",
-          "oklch(95% 0.0194 267.98)"
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
         ]
       },
       "dark-sidebar-bottom": {
         "role": "neutral",
         "displayName": "Dark Sidebar Bottom",
-        "canonical": "#2B2734",
+        "canonical": "#212121",
         "tonalRamp": [
-          "oklch(15% 0.0241 298.93)",
-          "oklch(26% 0.0241 298.93)",
-          "oklch(38% 0.0241 298.93)",
-          "oklch(49% 0.0241 298.93)",
-          "oklch(61% 0.0241 298.93)",
-          "oklch(72% 0.0241 298.93)",
-          "oklch(84% 0.0241 298.93)",
-          "oklch(95% 0.0241 298.93)"
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
         ]
       },
       "dark-text": {
         "role": "neutral",
         "displayName": "Dark Text",
-        "canonical": "#F0EFF3",
+        "canonical": "#E6E6E6",
         "tonalRamp": [
-          "oklch(15% 0.0054 297.72)",
-          "oklch(26% 0.0054 297.72)",
-          "oklch(38% 0.0054 297.72)",
-          "oklch(49% 0.0054 297.72)",
-          "oklch(61% 0.0054 297.72)",
-          "oklch(72% 0.0054 297.72)",
-          "oklch(84% 0.0054 297.72)",
-          "oklch(95% 0.0054 297.72)"
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
         ]
       },
       "dark-secondary": {
         "role": "neutral",
         "displayName": "Dark Secondary",
-        "canonical": "#BCBAC4",
+        "canonical": "#B5B5B5",
         "tonalRamp": [
-          "oklch(15% 0.0141 295.25)",
-          "oklch(26% 0.0141 295.25)",
-          "oklch(38% 0.0141 295.25)",
-          "oklch(49% 0.0141 295.25)",
-          "oklch(61% 0.0141 295.25)",
-          "oklch(72% 0.0141 295.25)",
-          "oklch(84% 0.0141 295.25)",
-          "oklch(95% 0.0141 295.25)"
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
         ]
       },
       "dark-muted": {
         "role": "neutral",
         "displayName": "Dark Muted",
-        "canonical": "#A19EAB",
+        "canonical": "#A0A0A0",
         "tonalRamp": [
-          "oklch(15% 0.0190 296.48)",
-          "oklch(26% 0.0190 296.48)",
-          "oklch(38% 0.0190 296.48)",
-          "oklch(49% 0.0190 296.48)",
-          "oklch(61% 0.0190 296.48)",
-          "oklch(72% 0.0190 296.48)",
-          "oklch(84% 0.0190 296.48)",
-          "oklch(95% 0.0190 296.48)"
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
         ]
       },
       "dark-selection": {
         "role": "neutral",
         "displayName": "Dark Selection",
-        "canonical": "#45434E",
+        "canonical": "#373737",
         "tonalRamp": [
-          "oklch(15% 0.0186 293.86)",
-          "oklch(26% 0.0186 293.86)",
-          "oklch(38% 0.0186 293.86)",
-          "oklch(49% 0.0186 293.86)",
-          "oklch(61% 0.0186 293.86)",
-          "oklch(72% 0.0186 293.86)",
-          "oklch(84% 0.0186 293.86)",
-          "oklch(95% 0.0186 293.86)"
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
         ]
       },
       "dark-hover": {
@@ -247,31 +247,31 @@
       "dark-rule": {
         "role": "neutral",
         "displayName": "Dark Rule",
-        "canonical": "#57535F",
+        "canonical": "#3C3C3C",
         "tonalRamp": [
-          "oklch(15% 0.0199 300.78)",
-          "oklch(26% 0.0199 300.78)",
-          "oklch(38% 0.0199 300.78)",
-          "oklch(49% 0.0199 300.78)",
-          "oklch(61% 0.0199 300.78)",
-          "oklch(72% 0.0199 300.78)",
-          "oklch(84% 0.0199 300.78)",
-          "oklch(95% 0.0199 300.78)"
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
         ]
       },
       "dark-attention": {
         "role": "secondary",
         "displayName": "Dark Attention",
-        "canonical": "#E6B873",
+        "canonical": "#D9B96E",
         "tonalRamp": [
-          "oklch(15% 0.1019 76.65)",
-          "oklch(26% 0.1019 76.65)",
-          "oklch(38% 0.1019 76.65)",
-          "oklch(49% 0.1019 76.65)",
-          "oklch(61% 0.1019 76.65)",
-          "oklch(72% 0.1019 76.65)",
-          "oklch(84% 0.1019 76.65)",
-          "oklch(95% 0.1019 76.65)"
+          "oklch(15% 0.1012 87.01)",
+          "oklch(26% 0.1012 87.01)",
+          "oklch(38% 0.1012 87.01)",
+          "oklch(49% 0.1012 87.01)",
+          "oklch(61% 0.1012 87.01)",
+          "oklch(72% 0.1012 87.01)",
+          "oklch(84% 0.1012 87.01)",
+          "oklch(95% 0.1012 87.01)"
         ]
       },
       "light-terminal-background": {
@@ -307,7 +307,7 @@
       "dark-terminal-background": {
         "role": "neutral",
         "displayName": "Dark Terminal Background",
-        "canonical": "#050505",
+        "canonical": "#181818",
         "tonalRamp": [
           "oklch(15% 0.0000 89.88)",
           "oklch(26% 0.0000 89.88)",
@@ -322,7 +322,7 @@
       "dark-terminal-foreground": {
         "role": "neutral",
         "displayName": "Dark Terminal Foreground",
-        "canonical": "#FFFFFF",
+        "canonical": "#E6E6E6",
         "tonalRamp": [
           "oklch(15% 0.0000 89.88)",
           "oklch(26% 0.0000 89.88)",
@@ -338,6 +338,276 @@
         "role": "neutral",
         "displayName": "Header Rule",
         "canonical": "#88888818",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "dark-terminal-accent": {
+        "role": "primary",
+        "displayName": "Dark Terminal Accent",
+        "canonical": "#8DAEDC",
+        "tonalRamp": [
+          "oklch(15% 0.0761 256.75)",
+          "oklch(26% 0.0761 256.75)",
+          "oklch(38% 0.0761 256.75)",
+          "oklch(49% 0.0761 256.75)",
+          "oklch(61% 0.0761 256.75)",
+          "oklch(72% 0.0761 256.75)",
+          "oklch(84% 0.0761 256.75)",
+          "oklch(95% 0.0761 256.75)"
+        ]
+      },
+      "dark-header-rule": {
+        "role": "neutral",
+        "displayName": "Dark Header Rule",
+        "canonical": "#FFFFFF12",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "dark-ansi-normal-black": {
+        "role": "neutral",
+        "displayName": "Dark Ansi Normal Black",
+        "canonical": "#858585",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "dark-ansi-normal-red": {
+        "role": "secondary",
+        "displayName": "Dark Ansi Normal Red",
+        "canonical": "#E88484",
+        "tonalRamp": [
+          "oklch(15% 0.1231 20.54)",
+          "oklch(26% 0.1231 20.54)",
+          "oklch(38% 0.1231 20.54)",
+          "oklch(49% 0.1231 20.54)",
+          "oklch(61% 0.1231 20.54)",
+          "oklch(72% 0.1231 20.54)",
+          "oklch(84% 0.1231 20.54)",
+          "oklch(95% 0.1231 20.54)"
+        ]
+      },
+      "dark-ansi-normal-green": {
+        "role": "secondary",
+        "displayName": "Dark Ansi Normal Green",
+        "canonical": "#88BE8C",
+        "tonalRamp": [
+          "oklch(15% 0.0908 146.45)",
+          "oklch(26% 0.0908 146.45)",
+          "oklch(38% 0.0908 146.45)",
+          "oklch(49% 0.0908 146.45)",
+          "oklch(61% 0.0908 146.45)",
+          "oklch(72% 0.0908 146.45)",
+          "oklch(84% 0.0908 146.45)",
+          "oklch(95% 0.0908 146.45)"
+        ]
+      },
+      "dark-ansi-normal-yellow": {
+        "role": "secondary",
+        "displayName": "Dark Ansi Normal Yellow",
+        "canonical": "#D9B96E",
+        "tonalRamp": [
+          "oklch(15% 0.1012 87.01)",
+          "oklch(26% 0.1012 87.01)",
+          "oklch(38% 0.1012 87.01)",
+          "oklch(49% 0.1012 87.01)",
+          "oklch(61% 0.1012 87.01)",
+          "oklch(72% 0.1012 87.01)",
+          "oklch(84% 0.1012 87.01)",
+          "oklch(95% 0.1012 87.01)"
+        ]
+      },
+      "dark-ansi-normal-blue": {
+        "role": "secondary",
+        "displayName": "Dark Ansi Normal Blue",
+        "canonical": "#8DAEDC",
+        "tonalRamp": [
+          "oklch(15% 0.0761 256.75)",
+          "oklch(26% 0.0761 256.75)",
+          "oklch(38% 0.0761 256.75)",
+          "oklch(49% 0.0761 256.75)",
+          "oklch(61% 0.0761 256.75)",
+          "oklch(72% 0.0761 256.75)",
+          "oklch(84% 0.0761 256.75)",
+          "oklch(95% 0.0761 256.75)"
+        ]
+      },
+      "dark-ansi-normal-magenta": {
+        "role": "secondary",
+        "displayName": "Dark Ansi Normal Magenta",
+        "canonical": "#BFA0D6",
+        "tonalRamp": [
+          "oklch(15% 0.0831 310.44)",
+          "oklch(26% 0.0831 310.44)",
+          "oklch(38% 0.0831 310.44)",
+          "oklch(49% 0.0831 310.44)",
+          "oklch(61% 0.0831 310.44)",
+          "oklch(72% 0.0831 310.44)",
+          "oklch(84% 0.0831 310.44)",
+          "oklch(95% 0.0831 310.44)"
+        ]
+      },
+      "dark-ansi-normal-cyan": {
+        "role": "secondary",
+        "displayName": "Dark Ansi Normal Cyan",
+        "canonical": "#89C4C4",
+        "tonalRamp": [
+          "oklch(15% 0.0607 195.98)",
+          "oklch(26% 0.0607 195.98)",
+          "oklch(38% 0.0607 195.98)",
+          "oklch(49% 0.0607 195.98)",
+          "oklch(61% 0.0607 195.98)",
+          "oklch(72% 0.0607 195.98)",
+          "oklch(84% 0.0607 195.98)",
+          "oklch(95% 0.0607 195.98)"
+        ]
+      },
+      "dark-ansi-normal-white": {
+        "role": "neutral",
+        "displayName": "Dark Ansi Normal White",
+        "canonical": "#D8D8D8",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "dark-ansi-bright-black": {
+        "role": "neutral",
+        "displayName": "Dark Ansi Bright Black",
+        "canonical": "#A0A0A0",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "dark-ansi-bright-red": {
+        "role": "secondary",
+        "displayName": "Dark Ansi Bright Red",
+        "canonical": "#F0A0A0",
+        "tonalRamp": [
+          "oklch(15% 0.0957 19.44)",
+          "oklch(26% 0.0957 19.44)",
+          "oklch(38% 0.0957 19.44)",
+          "oklch(49% 0.0957 19.44)",
+          "oklch(61% 0.0957 19.44)",
+          "oklch(72% 0.0957 19.44)",
+          "oklch(84% 0.0957 19.44)",
+          "oklch(95% 0.0957 19.44)"
+        ]
+      },
+      "dark-ansi-bright-green": {
+        "role": "secondary",
+        "displayName": "Dark Ansi Bright Green",
+        "canonical": "#A3D4A7",
+        "tonalRamp": [
+          "oklch(15% 0.0807 146.92)",
+          "oklch(26% 0.0807 146.92)",
+          "oklch(38% 0.0807 146.92)",
+          "oklch(49% 0.0807 146.92)",
+          "oklch(61% 0.0807 146.92)",
+          "oklch(72% 0.0807 146.92)",
+          "oklch(84% 0.0807 146.92)",
+          "oklch(95% 0.0807 146.92)"
+        ]
+      },
+      "dark-ansi-bright-yellow": {
+        "role": "secondary",
+        "displayName": "Dark Ansi Bright Yellow",
+        "canonical": "#E8CE94",
+        "tonalRamp": [
+          "oklch(15% 0.0803 86.52)",
+          "oklch(26% 0.0803 86.52)",
+          "oklch(38% 0.0803 86.52)",
+          "oklch(49% 0.0803 86.52)",
+          "oklch(61% 0.0803 86.52)",
+          "oklch(72% 0.0803 86.52)",
+          "oklch(84% 0.0803 86.52)",
+          "oklch(95% 0.0803 86.52)"
+        ]
+      },
+      "dark-ansi-bright-blue": {
+        "role": "secondary",
+        "displayName": "Dark Ansi Bright Blue",
+        "canonical": "#ADC8EC",
+        "tonalRamp": [
+          "oklch(15% 0.0587 255.69)",
+          "oklch(26% 0.0587 255.69)",
+          "oklch(38% 0.0587 255.69)",
+          "oklch(49% 0.0587 255.69)",
+          "oklch(61% 0.0587 255.69)",
+          "oklch(72% 0.0587 255.69)",
+          "oklch(84% 0.0587 255.69)",
+          "oklch(95% 0.0587 255.69)"
+        ]
+      },
+      "dark-ansi-bright-magenta": {
+        "role": "secondary",
+        "displayName": "Dark Ansi Bright Magenta",
+        "canonical": "#D3BCE4",
+        "tonalRamp": [
+          "oklch(15% 0.0604 310.80)",
+          "oklch(26% 0.0604 310.80)",
+          "oklch(38% 0.0604 310.80)",
+          "oklch(49% 0.0604 310.80)",
+          "oklch(61% 0.0604 310.80)",
+          "oklch(72% 0.0604 310.80)",
+          "oklch(84% 0.0604 310.80)",
+          "oklch(95% 0.0604 310.80)"
+        ]
+      },
+      "dark-ansi-bright-cyan": {
+        "role": "secondary",
+        "displayName": "Dark Ansi Bright Cyan",
+        "canonical": "#A6D8D8",
+        "tonalRamp": [
+          "oklch(15% 0.0517 196.22)",
+          "oklch(26% 0.0517 196.22)",
+          "oklch(38% 0.0517 196.22)",
+          "oklch(49% 0.0517 196.22)",
+          "oklch(61% 0.0517 196.22)",
+          "oklch(72% 0.0517 196.22)",
+          "oklch(84% 0.0517 196.22)",
+          "oklch(95% 0.0517 196.22)"
+        ]
+      },
+      "dark-ansi-bright-white": {
+        "role": "neutral",
+        "displayName": "Dark Ansi Bright White",
+        "canonical": "#F0F0F0",
         "tonalRamp": [
           "oklch(15% 0.0000 89.88)",
           "oklch(26% 0.0000 89.88)",
@@ -380,7 +650,12 @@
       {
         "name": "terminal-pane",
         "value": "0 2px 12px 0 #22223312",
-        "purpose": "Source-derived WarpUI main-pane shadow, expressed as CSS in logical pixels."
+        "purpose": "Source-derived light-mode WarpUI main-pane shadow, expressed as CSS in logical pixels."
+      },
+      {
+        "name": "terminal-pane-dark",
+        "value": "0 2px 12px 0 #00000030",
+        "purpose": "Source-derived dark-mode WarpUI main-pane shadow, expressed as CSS in logical pixels."
       }
     ],
     "motion": [],
@@ -434,11 +709,35 @@
       "description": "Native terminal container translated to an inert preview; sample prompt is not real output.",
       "html": "<div class=\"ds-pane\"><div class=\"ds-pane-head\">Terminal</div><pre class=\"ds-pane-output\">$ </pre></div>",
       "css": ".ds-pane{overflow:hidden;border:1px solid #D5D6DB;border-radius:12px;background:#FFFFFF;color:#111111;box-shadow:0 2px 12px 0 #22223312}.ds-pane-head{display:flex;align-items:center;height:40px;padding:0 24px 0 32px;border-bottom:1px solid #88888818;font:600 14px Roboto,sans-serif}.ds-pane-output{margin:16px 32px;font:400 14px/1.3 Hack,monospace}"
+    },
+    {
+      "name": "Selected dark session row",
+      "kind": "nav",
+      "refersTo": "session-selected-dark",
+      "description": "Dark-mode counterpart. Active native row with rule; the focus outline is only for this HTML preview.",
+      "html": "<button class=\"ds-dark-selected\" aria-current=\"page\"><span class=\"ds-dark-selected-name\">Terminal</span><span class=\"ds-dark-selected-age\">now</span><svg width=\"14\" height=\"14\" viewBox=\"0 0 14 14\" aria-hidden=\"true\"><circle cx=\"7\" cy=\"7\" r=\"5.5\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\" stroke-dasharray=\"28 7\"/></svg></button>",
+      "css": ".ds-dark-selected{display:flex;align-items:center;gap:10px;width:254px;height:31px;padding:4px 12px;border:1px solid #3C3C3C;border-radius:9px;background:#373737;color:#E6E6E6;font:400 14px Roboto,sans-serif;text-align:left;cursor:pointer}.ds-dark-selected-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-dark-selected-age{font-size:12px;color:#B5B5B5}.ds-dark-selected:hover,.ds-dark-selected:active{background:#373737}.ds-dark-selected:focus-visible{outline:1px solid #B5B5B5;outline-offset:1px}"
+    },
+    {
+      "name": "Dark terminal context header",
+      "kind": "custom",
+      "refersTo": "terminal-header-dark",
+      "description": "Dark-mode counterpart. Active title and folder; labels clip to preserve one native header row.",
+      "html": "<div class=\"ds-dark-header\"><span class=\"ds-dark-header-title\">Terminal</span><span class=\"ds-dark-header-path\">~/project</span></div>",
+      "css": ".ds-dark-header{display:flex;align-items:center;gap:12px;height:40px;padding:0 24px 0 32px;border-bottom:1px solid #FFFFFF12;background:#181818;color:#E6E6E6;font:400 14px Roboto,sans-serif}.ds-dark-header-title{max-width:280px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-dark-header-path{flex:1;min-width:0;color:#B5B5B5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}"
+    },
+    {
+      "name": "Inset dark terminal surface",
+      "kind": "card",
+      "refersTo": "terminal-pane-dark",
+      "description": "Dark-mode counterpart. Native terminal container translated to an inert preview; sample prompt is not real output.",
+      "html": "<div class=\"ds-dark-pane\"><div class=\"ds-dark-pane-head\">Terminal</div><pre class=\"ds-dark-pane-output\">$ </pre></div>",
+      "css": ".ds-dark-pane{overflow:hidden;border:1px solid #3C3C3C;border-radius:12px;background:#181818;color:#E6E6E6;box-shadow:0 2px 12px 0 #00000030}.ds-dark-pane-head{display:flex;align-items:center;height:40px;padding:0 24px 0 32px;border-bottom:1px solid #FFFFFF12;font:600 14px Roboto,sans-serif}.ds-dark-pane-output{margin:16px 32px;font:400 14px/1.3 Hack,monospace}"
     }
   ],
   "narrative": {
     "northStar": "The Quiet Native Terminal",
-    "overview": "Torch uses a cool blue-to-lilac sidebar, compact grouped sessions, and a lightly raised terminal pane.\nThe interface keeps session context legible while leaving the working area to shell output. The\nbinding visual direction is the user-supplied [terminal reference](docs/design/terminal-reference.png).\nThe north-star phrase describes that direction; it is not a separate user-approved brand name.\n\nThis is a Rust/WarpUI desktop system. Frontmatter dimensions use portable `px` notation for WarpUI\nlogical pixels, not screenshot pixels. The tokens describe the current implementation in\n`app/src/workspace/view/vertical_tabs/torch.rs`; font and terminal defaults come from\n`app/src/settings/font.rs`, `app/src/settings/theme.rs`, and `app/src/terminal/settings.rs`.\nDefault terminal colors come from `app/src/themes/default_themes.rs`, and UI font loading comes from\n`app/src/appearance.rs`. User-selected terminal themes and fonts remain authoritative at runtime.\n\nThe macOS captures in `.impeccable/review/desktop.png` (2560 \u00d7 1600 screenshot pixels),\n`desktop-narrow.png`, and `desktop-long-title.png` (1730 \u00d7 2046 each, native half-screen windows)\nsupport close visual fidelity, not pixel identity. Their explicitly labelled synthetic transcript is\na visual test fixture, not evidence of a completed CLI task. The dark palette is extracted from\nsource; these captures do not verify dark rendering or other operating systems. Native recording\nbadges and cursor halos are capture artifacts, not Torch components.\n\nThe final macOS live verification passed short reordering within a manual group, a long drag out\nand back, Shift-selection across noncontiguous underlying tabs in displayed group order, and\nreopening the sidebar after restoring its stored closed state. The final drop resolves the dragged\ntab by stable identity before applying its position. These results supplement the source-derived\ninteraction rules below; screenshots alone do not verify interactions.",
+    "overview": "Torch pairs compact grouped sessions with a lightly raised terminal pane. Light mode uses a cool\nblue-to-lilac sidebar and a white working surface; dark mode uses neutral charcoal layers and soft\ngray text. The interface keeps session context legible while leaving the working area to shell output.\n\nThe binding layout direction is the user-supplied\n[terminal reference](docs/design/terminal-reference.png), reinforced by the later light-sidebar\nreference. The user's Codex dark UI reference guides the dark palette while preserving that layout.\nIts personal sidebar history is not a design asset and is not copied into the repository. The\nnorth-star phrase describes this direction; it is not a separate user-approved brand name.\n\nThis is a Rust/WarpUI desktop system. Frontmatter dimensions use portable `px` notation for WarpUI\nlogical pixels, not screenshot pixels. The tokens describe the current implementation in\n`app/src/workspace/view/vertical_tabs/torch.rs`; font and terminal defaults come from\n`app/src/settings/font.rs`, `app/src/settings/theme.rs`, and `app/src/terminal/settings.rs`.\nDefault terminal colors come from `app/src/themes/default_themes.rs`, and UI font loading comes from\n`app/src/appearance.rs`. User-selected terminal themes and fonts remain authoritative at runtime.\n\nThe original macOS layout captures in `.impeccable/review/desktop.png`, `desktop-narrow.png`, and\n`desktop-long-title.png` establish the compact sidebar and long-title clipping. The final dark-mode\nreview covers seven captures in the same directory: `dark-desktop.png` (2560 \u00d7 1604 screenshot\npixels), `dark-narrow.png` (1730 \u00d7 2046), `light-theme-regression.png` (2560 \u00d7 1602),\n`dark-terminal-input.png`, `dark-context-menu.png`, `dark-theme-picker.png`, and\n`dark-system-settings.png`. Independent finish review found no material defects in this scope,\nconfirmed dark palette coherence, and found no material light-mode regression. This supports close\nvisual fidelity, not pixel identity. Synthetic transcripts remain labelled test fixtures rather than\nevidence of completed CLI tasks. Recording badges and cursor halos are capture artifacts.\n\nLive macOS checks passed choosing Dark in the native theme picker, syncing with the currently dark\nOS appearance, returning to Light, retaining Dark after app restart, and completing `/usr/bi` to\n`/usr/bin/` with Tab. The context menu and narrow layout were also verified. Six focused tests,\nClippy with existing baseline exemptions, and the native bundle passed. Cross-platform runner\n`oz-dev` was unavailable; this evidence covers macOS only.\n\nThe final macOS live verification passed short reordering within a manual group, a long drag out\nand back, Shift-selection across noncontiguous underlying tabs in displayed group order, and\nreopening the sidebar after restoring its stored closed state. The final drop resolves the dragged\ntab by stable identity before applying its position. These results supplement the source-derived\ninteraction rules below; screenshots alone do not verify interactions.",
     "keyCharacteristics": [
       "Compact session navigation with restrained activity markers.",
       "Tonal sidebar depth and one inset terminal surface.",
@@ -462,13 +761,14 @@
       "Do keep user titles, working directories, activity, and unread state tied to real application data.",
       "Do preserve explicit groups and use the displayed group order for range selection.",
       "Do keep terminal themes, font preferences, shell completion, and full-screen programs functional.",
+      "Do preserve the shared sidebar layout and native theme controls in both light and dark modes.",
       "Do distinguish source-derived styling, visual fixtures, and live behavior verification."
     ],
     "donts": [
       "Don't add built-in AI, account, billing, telemetry, or cloud controls to this local terminal.",
       "Don't fabricate session activity or treat a quiet check as guaranteed command success.",
       "Don't reproduce the operating system's recording badge or capture cursor halo as product UI.",
-      "Don't claim pixel identity, dark-mode visual verification, or untested platform coverage.",
+      "Don't claim pixel identity or verification beyond the recorded macOS captures and live checks.",
       "Don't replace terminal output with static product-owned conversation content."
     ]
   }

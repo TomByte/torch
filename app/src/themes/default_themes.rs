@@ -260,6 +260,39 @@ pub(super) fn adeberry_colors() -> TerminalColors {
 
 /// Default bundled themes
 pub fn dark_theme() -> WarpTheme {
+    if warp_core::channel::ChannelState::is_local_only() {
+        return WarpTheme::new(
+            Fill::Solid(ColorU::from_u32(0x181818FF)),
+            ColorU::from_u32(0xE6E6E6FF),
+            Fill::Solid(ColorU::from_u32(0x8DAEDCFF)),
+            None,
+            Some(Details::Darker),
+            TerminalColors::new(
+                AnsiColors::new(
+                    AnsiColor::from_u32(0x858585FF),
+                    AnsiColor::from_u32(0xE88484FF),
+                    AnsiColor::from_u32(0x88BE8CFF),
+                    AnsiColor::from_u32(0xD9B96EFF),
+                    AnsiColor::from_u32(0x8DAEDCFF),
+                    AnsiColor::from_u32(0xBFA0D6FF),
+                    AnsiColor::from_u32(0x89C4C4FF),
+                    AnsiColor::from_u32(0xD8D8D8FF),
+                ),
+                AnsiColors::new(
+                    AnsiColor::from_u32(0xA0A0A0FF),
+                    AnsiColor::from_u32(0xF0A0A0FF),
+                    AnsiColor::from_u32(0xA3D4A7FF),
+                    AnsiColor::from_u32(0xE8CE94FF),
+                    AnsiColor::from_u32(0xADC8ECFF),
+                    AnsiColor::from_u32(0xD3BCE4FF),
+                    AnsiColor::from_u32(0xA6D8D8FF),
+                    AnsiColor::from_u32(0xF0F0F0FF),
+                ),
+            ),
+            None,
+            Some("Dark".to_string()),
+        );
+    }
     WarpTheme::new(
         Fill::Solid(ColorU::from_u32(0x050505FF)),
         ColorU::from_u32(0xffffffff),
