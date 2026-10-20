@@ -258,7 +258,8 @@ session list has the `sidebar-list-inset` on both sides, vertical scrolling, and
 3 logical pixels wide. Groups use a padded heading, contiguous compact rows, and `group-tail`
 spacing. Long session names ellipsize rather than increasing row height.
 
-The terminal pane uses `pane-inset` on its top, right, and bottom edges. Its header uses the
+The terminal pane uses `pane-inset` on its top, right, and bottom edges, and on all four edges when
+the sidebar is hidden. No left inset is added while the sidebar is open. Its header uses the
 `terminal-header` tokens, a title capped at 280 logical pixels, and a flexible working-directory
 label. Both clip with ellipsis. With the sidebar hidden, header left padding becomes
 `window-controls-reserve`. Existing configured side panels remain part of the workspace layout.

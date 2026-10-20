@@ -751,6 +751,11 @@ pub(in crate::workspace::view) fn render(
             1.,
             Container::new(main)
                 .with_padding_top(8.)
+                .with_padding_left(if workspace.vertical_tabs_panel_open {
+                    0.
+                } else {
+                    8.
+                })
                 .with_padding_right(8.)
                 .with_padding_bottom(8.)
                 .finish(),
