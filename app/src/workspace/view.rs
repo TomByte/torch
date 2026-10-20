@@ -2984,6 +2984,10 @@ impl Workspace {
         ctx.observe(
             &crate::settings::ProjectCatalog::handle(ctx),
             |workspace, catalog, ctx| {
+                workspace
+                    .vertical_tabs_panel
+                    .torch_sessions
+                    .invalidate_all();
                 if workspace.current_workspace_state.is_palette_open {
                     let projects = catalog.as_ref(ctx).projects.clone();
                     workspace
@@ -3621,11 +3625,7 @@ impl Workspace {
         ws.sync_window_button_visibility(ctx);
         ws.update_titlebar_height(ctx);
         if ChannelState::is_local_only() {
-            ctx.spawn_stream_local(
-                async_io::Timer::interval(Duration::from_secs(60)),
-                |_, _, ctx| ctx.notify(),
-                |_, _| {},
-            );
+            ws.schedule_sidebar_age_refresh(ctx);
         }
         // Seed the settings pane with the initial settings-file error (if
         // any) read from `GlobalResourceHandles`. Subsequent updates are
@@ -3667,6 +3667,7 @@ impl Workspace {
         event: &AgentManagementEvent,
         ctx: &mut ViewContext<Self>,
     ) {
+        self.vertical_tabs_panel.torch_sessions.invalidate_all();
         // Only process events for the active window.
         if ctx
             .windows()
@@ -3729,6 +3730,7 @@ impl Workspace {
         event: &BlocklistAIHistoryEvent,
         ctx: &mut ViewContext<Self>,
     ) {
+        self.vertical_tabs_panel.torch_sessions.invalidate_all();
         #[cfg(target_family = "wasm")]
         if self
             .current_workspace_state
@@ -3812,6 +3814,7 @@ impl Workspace {
         event: &CLIAgentSessionsModelEvent,
         ctx: &mut ViewContext<Self>,
     ) {
+        self.vertical_tabs_panel.torch_sessions.invalidate_all();
         if ChannelState::is_local_only() {
             vertical_tabs::torch::update_attention_badge(event, ctx);
         }
@@ -12391,6 +12394,12 @@ impl Workspace {
     }
 
     pub fn activate_prev_tab(&mut self, ctx: &mut ViewContext<Self>) {
+        if ChannelState::is_local_only() {
+            if let Some(index) = self.sidebar_session_from_active(-1, ctx) {
+                self.activate_tab(index, ctx);
+            }
+            return;
+        }
         let index = if self.vertical_tabs_panel.search_query.is_empty() {
             if self.active_tab_index > 0 {
                 self.active_tab_index - 1
@@ -12416,6 +12425,12 @@ impl Workspace {
     }
 
     pub fn activate_next_tab(&mut self, ctx: &mut ViewContext<Self>) {
+        if ChannelState::is_local_only() {
+            if let Some(index) = self.sidebar_session_from_active(1, ctx) {
+                self.activate_tab(index, ctx);
+            }
+            return;
+        }
         let index = if self.vertical_tabs_panel.search_query.is_empty() {
             if self.active_tab_index + 1 < self.tabs.len() {
                 self.active_tab_index + 1
@@ -12440,6 +12455,12 @@ impl Workspace {
     }
 
     pub fn activate_last_tab(&mut self, ctx: &mut ViewContext<Self>) {
+        if ChannelState::is_local_only() {
+            if let Some(index) = self.last_sidebar_session(ctx) {
+                self.activate_tab(index, ctx);
+            }
+            return;
+        }
         if self.tabs.len() > 1 {
             let target_index = self.tabs.len() - 1;
             self.activate_tab(target_index, ctx);
@@ -14738,6 +14759,10 @@ impl Workspace {
     /// ungrouped tab, or reordering within the tab's own group, is an ordinary
     /// one-slot move.
     fn move_tab(&mut self, index: usize, direction: TabMovement, ctx: &mut ViewContext<Self>) {
+        if ChannelState::is_local_only() {
+            self.move_sidebar_session(index, direction, ctx);
+            return;
+        }
         if !self.can_move_tab(index, direction) {
             return;
         }
@@ -16610,6 +16635,9 @@ impl Workspace {
         event: &pane_group::Event,
         ctx: &mut ViewContext<Self>,
     ) {
+        self.vertical_tabs_panel
+            .torch_sessions
+            .invalidate(pane_group.id());
         match event {
             pane_group::Event::AppStateChanged => {
                 ctx.dispatch_global_action("workspace:save_app", ());
@@ -24503,6 +24531,11 @@ impl TypedActionView for Workspace {
 
         match action {
             ActivateTab(index) => self.activate_tab(*index, ctx),
+            ActivateTabByNumber(num) if ChannelState::is_local_only() => {
+                if let Some(index) = self.sidebar_session_at(num.saturating_sub(1), ctx) {
+                    self.activate_tab(index, ctx);
+                }
+            }
             ActivateTabByNumber(num) => self.activate_tab(num.saturating_sub(1), ctx),
             SetTabShortcutModifierKey { key_code, pressed } => {
                 TabShortcutModifierState::handle(ctx).update(ctx, |state, ctx| {

@@ -11,10 +11,10 @@ use warpui::ViewContext;
 
 use super::*;
 use crate::menu::{MenuItem, MenuItemFields};
-use crate::session_management::CommandContext;
 use crate::terminal::CLIAgent;
 use crate::terminal::cli_agent_sessions::CLIAgentSessionsModelEvent;
 use crate::ui_components::buttons::icon_button;
+use crate::workspace::TabMovement;
 use crate::workspace::header_toolbar_item::HeaderToolbarItemKind;
 use crate::workspace::view::PanelPosition;
 
@@ -243,7 +243,88 @@ pub(in crate::workspace::view) fn session_order(
         .collect()
 }
 
+/// Every tab in sidebar order, paired with whether its group is expanded.
+fn sidebar_rows(workspace: &Workspace, app: &AppContext) -> Vec<(usize, bool)> {
+    let sessions = sessions(workspace, app);
+    let keys = sessions
+        .iter()
+        .map(|session| session.group_key.clone())
+        .collect::<Vec<_>>();
+    grouped_indices(&keys)
+        .into_iter()
+        .flatten()
+        .map(|index| (index, !group_collapsed(workspace, &sessions[index])))
+        .collect()
+}
+
+/// The first expanded row `step` rows at a time away from `current`, wrapping around the list.
+fn expanded_row_from(rows: &[(usize, bool)], current: usize, step: isize) -> Option<usize> {
+    let start = rows.iter().position(|(index, _)| *index == current)? as isize;
+    let len = rows.len() as isize;
+    (1..=len)
+        .map(|offset| rows[(start + step * offset).rem_euclid(len) as usize])
+        .find(|(_, expanded)| *expanded)
+        .map(|(index, _)| index)
+}
+
 impl Workspace {
+    /// The session `step` visible rows from the active one in the sidebar, wrapping around.
+    pub(in crate::workspace::view) fn sidebar_session_from_active(
+        &self,
+        step: isize,
+        ctx: &AppContext,
+    ) -> Option<usize> {
+        expanded_row_from(&sidebar_rows(self, ctx), self.active_tab_index, step)
+    }
+
+    /// The session at a zero-based position among the visible sidebar rows.
+    pub(in crate::workspace::view) fn sidebar_session_at(
+        &self,
+        position: usize,
+        ctx: &AppContext,
+    ) -> Option<usize> {
+        sidebar_rows(self, ctx)
+            .into_iter()
+            .filter(|(_, expanded)| *expanded)
+            .nth(position)
+            .map(|(index, _)| index)
+    }
+
+    pub(in crate::workspace::view) fn last_sidebar_session(
+        &self,
+        ctx: &AppContext,
+    ) -> Option<usize> {
+        sidebar_rows(self, ctx)
+            .into_iter()
+            .filter(|(_, expanded)| *expanded)
+            .last()
+            .map(|(index, _)| index)
+    }
+
+    /// Moves a session one row up or down within its sidebar group.
+    pub(in crate::workspace::view) fn move_sidebar_session(
+        &mut self,
+        index: usize,
+        direction: TabMovement,
+        ctx: &mut ViewContext<Self>,
+    ) {
+        let (above, below) = drag_neighbors(self, index, ctx);
+        // The later tab always moves to the earlier one's position, so no group's first
+        // occurrence moves and the groups keep their sidebar order.
+        match direction {
+            TabMovement::Left => {
+                if let Some(above) = above {
+                    self.hop_tab_to_index(index, above, ctx);
+                }
+            }
+            TabMovement::Right => {
+                if let Some(below) = below {
+                    self.hop_tab_to_index(below, index, ctx);
+                }
+            }
+        }
+    }
+
     pub(in crate::workspace::view) fn animate_sidebar_arrival(
         &mut self,
         index: usize,
@@ -325,6 +406,28 @@ impl Workspace {
             started: Instant::now(),
         };
         self.vertical_tabs_panel.departing_sessions.push(departing);
+    }
+
+    /// Refreshes sidebar activity ages at each wall-clock minute while the sidebar shows them.
+    pub(in crate::workspace::view) fn schedule_sidebar_age_refresh(
+        &mut self,
+        ctx: &mut ViewContext<Self>,
+    ) {
+        let into_minute =
+            Duration::from_millis(chrono::Local::now().timestamp_millis() as u64 % 60_000);
+        ctx.spawn(
+            warpui::r#async::Timer::after(Duration::from_secs(60) - into_minute),
+            |workspace, _, ctx| {
+                if workspace.vertical_tabs_panel_open {
+                    workspace
+                        .vertical_tabs_panel
+                        .torch_sessions
+                        .invalidate_all();
+                    ctx.notify();
+                }
+                workspace.schedule_sidebar_age_refresh(ctx);
+            },
+        );
     }
 
     pub(in crate::workspace::view) fn reveal_sidebar_project(&mut self, directory: &Path) {
@@ -508,108 +611,294 @@ pub(in crate::workspace::view) fn drag_neighbors(
     )
 }
 
+/// How long terminal-derived row data may be reused when no invalidating event arrives.
+const SNAPSHOT_LIFETIME: Duration = Duration::from_secs(1);
+
+/// The directory or project that keeps a session in one sidebar group after it changes directory.
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum GroupAnchor {
+    Project(PathBuf),
+    Folder(String),
+}
+
+/// Keeps a session's first project match, otherwise its first known directory. A session that
+/// later enters a project joins it, so projects discovered after launch still group their sessions.
+fn next_anchor(
+    previous: Option<&GroupAnchor>,
+    project: Option<&Path>,
+    directory: &str,
+    is_known_project: impl Fn(&Path) -> bool,
+) -> Option<GroupAnchor> {
+    match (previous, project) {
+        (Some(GroupAnchor::Project(path)), _) if is_known_project(path) => previous.cloned(),
+        (_, Some(project)) => Some(GroupAnchor::Project(project.to_owned())),
+        (Some(GroupAnchor::Folder(_)), None) => previous.cloned(),
+        (Some(GroupAnchor::Project(_)) | None, None) => {
+            (!directory.trim_end_matches(['/', '\\']).is_empty())
+                .then(|| GroupAnchor::Folder(directory.to_owned()))
+        }
+    }
+}
+
+/// Orders statuses by how urgently they need the user, so a tab surfaces its most urgent pane.
+fn status_urgency(status: Option<&ConversationStatus>, unread: bool) -> u8 {
+    match status {
+        Some(ConversationStatus::Blocked { .. }) => 4,
+        Some(ConversationStatus::InProgress) => 3,
+        Some(ConversationStatus::Success) if unread => 2,
+        Some(ConversationStatus::Error | ConversationStatus::TransientError) => 1,
+        Some(
+            ConversationStatus::Success
+            | ConversationStatus::Cancelled
+            | ConversationStatus::WaitingForEvents,
+        )
+        | None => 0,
+    }
+}
+
+struct PaneStatus {
+    status: Option<ConversationStatus>,
+    unread: bool,
+    agent_status_unavailable: bool,
+}
+
+/// The most urgent pane status; ties keep the earliest pane.
+fn most_urgent(statuses: impl IntoIterator<Item = PaneStatus>) -> Option<PaneStatus> {
+    statuses
+        .into_iter()
+        .fold(None, |best, candidate| match best {
+            Some(best)
+                if status_urgency(best.status.as_ref(), best.unread)
+                    >= status_urgency(candidate.status.as_ref(), candidate.unread) =>
+            {
+                Some(best)
+            }
+            Some(_) | None => Some(candidate),
+        })
+}
+
+fn pane_status(
+    view: &TerminalView,
+    is_running_command: impl FnOnce() -> bool,
+    app: &AppContext,
+) -> PaneStatus {
+    let mut status = summary_conversation_status_for_terminal(view, app);
+    let agent_status_unavailable = status.is_none()
+        && CLIAgentSessionsModel::as_ref(app)
+            .session(view.id())
+            .is_some();
+    if status.is_none() && !agent_status_unavailable && is_running_command() {
+        status = Some(ConversationStatus::InProgress);
+    }
+    PaneStatus {
+        status,
+        unread: has_unread_activity_for_terminal_view(view.id(), app),
+        agent_status_unavailable,
+    }
+}
+
+/// Terminal-derived row data for one tab.
+#[derive(Clone)]
+struct TerminalSnapshot {
+    captured: Instant,
+    title: String,
+    directory: String,
+    /// The directory used for project matching: the launch directory until the shell reports one.
+    project_lookup: Option<PathBuf>,
+    status: Option<ConversationStatus>,
+    agent_status_unavailable: bool,
+    age: String,
+    unread: bool,
+}
+
+/// Sidebar row data cached per pane group, so renders do not lock every terminal model.
+#[derive(Default)]
+pub(in crate::workspace::view) struct SessionCache {
+    snapshots: RefCell<HashMap<EntityId, TerminalSnapshot>>,
+    anchors: RefCell<HashMap<EntityId, GroupAnchor>>,
+}
+
+impl SessionCache {
+    pub(in crate::workspace::view) fn invalidate(&mut self, pane_group: EntityId) {
+        self.snapshots.get_mut().remove(&pane_group);
+    }
+
+    pub(in crate::workspace::view) fn invalidate_all(&mut self) {
+        self.snapshots.get_mut().clear();
+    }
+
+    fn snapshot(&self, tab: &TabData, app: &AppContext) -> TerminalSnapshot {
+        let id = tab.pane_group.id();
+        if let Some(snapshot) = self.snapshots.borrow().get(&id)
+            && snapshot.captured.elapsed() < SNAPSHOT_LIFETIME
+        {
+            return snapshot.clone();
+        }
+        let snapshot = capture_snapshot(tab, app);
+        self.snapshots.borrow_mut().insert(id, snapshot.clone());
+        snapshot
+    }
+
+    fn prune(&self, tabs: &[TabData]) {
+        if self.snapshots.borrow().len() <= tabs.len() && self.anchors.borrow().len() <= tabs.len()
+        {
+            return;
+        }
+        let live = |id: &EntityId| tabs.iter().any(|tab| tab.pane_group.id() == *id);
+        self.snapshots.borrow_mut().retain(|id, _| live(id));
+        self.anchors.borrow_mut().retain(|id, _| live(id));
+    }
+}
+
+fn capture_snapshot(tab: &TabData, app: &AppContext) -> TerminalSnapshot {
+    let pane_group = tab.pane_group.as_ref(app);
+    let focused = pane_group.focused_session_view(app);
+    let terminal = focused.as_ref().map(|view| view.as_ref(app));
+    let startup_directory = tab
+        .sidebar_startup_directory
+        .as_ref()
+        .filter(|_| terminal.is_some_and(|view| !view.is_login_shell_bootstrapped()));
+    let directory = startup_directory
+        .map(|path| {
+            let home = dirs::home_dir();
+            warp_util::path::user_friendly_path(
+                &path.to_string_lossy(),
+                home.as_ref().and_then(|path| path.to_str()),
+            )
+            .to_string()
+        })
+        .or_else(|| terminal.and_then(|view| view.display_working_directory(app)))
+        .unwrap_or_default();
+    let cli_session =
+        terminal.and_then(|view| CLIAgentSessionsModel::as_ref(app).session(view.id()));
+    let title = cli_session
+        .and_then(|session| session.session_context.display_title())
+        .unwrap_or_else(|| {
+            let title = pane_group.title(app);
+            if title.is_empty() || title == directory {
+                "Terminal".to_owned()
+            } else {
+                title
+            }
+        });
+    let activity = terminal.map(TerminalView::session_activity);
+    let focused_id = terminal.map(TerminalView::id);
+    let focused_status = terminal.map(|view| {
+        pane_status(
+            view,
+            || {
+                activity
+                    .as_ref()
+                    .is_some_and(|activity| activity.is_running_command)
+            },
+            app,
+        )
+    });
+    let other_statuses = pane_group
+        .terminal_views(app)
+        .into_iter()
+        .filter(|view| Some(view.id()) != focused_id)
+        .map(|view| {
+            let view = view.as_ref(app);
+            pane_status(view, || view.session_activity().is_running_command, app)
+        })
+        .collect::<Vec<_>>();
+    let unread = focused_status
+        .iter()
+        .chain(&other_statuses)
+        .any(|pane| pane.unread);
+    let status = most_urgent(focused_status.into_iter().chain(other_statuses));
+    TerminalSnapshot {
+        captured: Instant::now(),
+        title,
+        directory,
+        project_lookup: startup_directory.cloned().or_else(|| {
+            terminal
+                .and_then(|view| view.canonical_session_pwd_if_local(app))
+                .map(|path| path.as_path().to_owned())
+        }),
+        agent_status_unavailable: status
+            .as_ref()
+            .is_some_and(|pane| pane.agent_status_unavailable),
+        status: status.and_then(|pane| pane.status),
+        age: activity
+            .and_then(|activity| activity.age_minutes)
+            .map(age_label)
+            .unwrap_or_default(),
+        unread,
+    }
+}
+
+fn session(workspace: &Workspace, index: usize, app: &AppContext) -> Session {
+    let tab = &workspace.tabs[index];
+    let cache = &workspace.vertical_tabs_panel.torch_sessions;
+    let snapshot = cache.snapshot(tab, app);
+    let title = tab
+        .pane_group
+        .as_ref(app)
+        .custom_title(app)
+        .unwrap_or(snapshot.title);
+    let manual_group = tab.group_id.and_then(|id| {
+        workspace
+            .tab_groups
+            .get(&id)
+            .map(|group| (format!("manual:{id:?}"), group_display_name(group)))
+    });
+    let mut project = None;
+    let (group_key, group_label) = manual_group.unwrap_or_else(|| {
+        let projects = &crate::settings::ProjectCatalog::as_ref(app).projects;
+        let find_project = |path: &Path| projects.iter().find(|project| project.path == path);
+        let matched = snapshot
+            .project_lookup
+            .as_deref()
+            .and_then(|path| crate::settings::project_for_directory(projects, path));
+        let id = tab.pane_group.id();
+        let mut anchors = cache.anchors.borrow_mut();
+        let anchor = next_anchor(
+            anchors.get(&id),
+            matched.map(|project| project.path.as_path()),
+            &snapshot.directory,
+            |path| find_project(path).is_some(),
+        );
+        match &anchor {
+            Some(anchor) => anchors.insert(id, anchor.clone()),
+            None => anchors.remove(&id),
+        };
+        match anchor {
+            Some(GroupAnchor::Project(path)) => {
+                project = find_project(&path);
+                (
+                    format!("project:{}", path.display()),
+                    project
+                        .map(|project| project.name.clone())
+                        .unwrap_or_default(),
+                )
+            }
+            Some(GroupAnchor::Folder(folder)) => (folder_key(&folder), folder_label(&folder)),
+            None => (folder_key(""), folder_label("")),
+        }
+    });
+    Session {
+        index,
+        title,
+        directory: snapshot.directory,
+        group_key,
+        group_label,
+        project_directory: project.map(|project| project.path.clone()),
+        status: snapshot.status,
+        agent_status_unavailable: snapshot.agent_status_unavailable,
+        age: snapshot.age,
+        unread: snapshot.unread,
+    }
+}
+
 fn sessions(workspace: &Workspace, app: &AppContext) -> Vec<Session> {
     workspace
-        .tabs
-        .iter()
-        .enumerate()
-        .map(|(index, tab)| {
-            let pane_group = tab.pane_group.as_ref(app);
-            let terminal = pane_group.focused_session_view(app);
-            let terminal = terminal.as_ref().map(|view| view.as_ref(app));
-            let startup_directory = tab
-                .sidebar_startup_directory
-                .as_ref()
-                .filter(|_| terminal.is_some_and(|view| !view.is_login_shell_bootstrapped()));
-            let directory = startup_directory
-                .map(|path| {
-                    let home = dirs::home_dir();
-                    warp_util::path::user_friendly_path(
-                        &path.to_string_lossy(),
-                        home.as_ref().and_then(|path| path.to_str()),
-                    )
-                    .to_string()
-                })
-                .or_else(|| terminal.and_then(|view| view.display_working_directory(app)))
-                .unwrap_or_default();
-            let cli_session =
-                terminal.and_then(|view| CLIAgentSessionsModel::as_ref(app).session(view.id()));
-            let title = pane_group
-                .custom_title(app)
-                .or_else(|| cli_session.and_then(|session| session.session_context.display_title()))
-                .unwrap_or_else(|| {
-                    let title = pane_group.display_title(app);
-                    if title.is_empty() || title == directory {
-                        "Terminal".to_owned()
-                    } else {
-                        title
-                    }
-                });
-            let mut status =
-                terminal.and_then(|view| summary_conversation_status_for_terminal(view, app));
-            let agent_status_unavailable = cli_session.is_some() && status.is_none();
-            if status.is_none()
-                && !agent_status_unavailable
-                && terminal.is_some_and(|view| {
-                    matches!(
-                        view.session_command_context(app),
-                        CommandContext::RunningCommand { .. }
-                    )
-                })
-            {
-                status = Some(ConversationStatus::InProgress);
-            }
-            let age = terminal
-                .and_then(TerminalView::session_activity_age_minutes)
-                .map(age_label)
-                .unwrap_or_default();
-            let live_directory = terminal.and_then(|view| view.canonical_session_pwd_if_local(app));
-            let project = if tab.group_id.is_none() {
-                startup_directory
-                    .map(PathBuf::as_path)
-                    .or_else(|| live_directory.as_ref().map(|path| path.as_path()))
-                    .and_then(|path| {
-                        crate::settings::project_for_directory(
-                            &crate::settings::ProjectCatalog::as_ref(app).projects,
-                            path,
-                        )
-                    })
-            } else {
-                None
-            };
-            let (group_key, group_label) = tab
-                .group_id
-                .and_then(|id| {
-                    workspace
-                        .tab_groups
-                        .get(&id)
-                        .map(|group| (format!("manual:{id:?}"), group_display_name(group)))
-                })
-                .unwrap_or_else(|| {
-                    project
-                        .map(|project| {
-                            (
-                                format!("project:{}", project.path.display()),
-                                project.name.clone(),
-                            )
-                        })
-                        .unwrap_or_else(|| (folder_key(&directory), folder_label(&directory)))
-                });
-            let unread =
-                terminal.is_some_and(|view| has_unread_activity_for_terminal_view(view.id(), app));
-            Session {
-                index,
-                title,
-                directory,
-                group_key,
-                group_label,
-                project_directory: project.map(|project| project.path.clone()),
-                status,
-                agent_status_unavailable,
-                age,
-                unread,
-            }
-        })
+        .vertical_tabs_panel
+        .torch_sessions
+        .prune(&workspace.tabs);
+    (0..workspace.tabs.len())
+        .map(|index| session(workspace, index, app))
         .collect()
 }
 
@@ -1353,8 +1642,15 @@ pub(in crate::workspace::view) fn render(
 ) -> Box<dyn Element> {
     let appearance = Appearance::as_ref(app);
     let palette = Palette::new(appearance.theme());
-    let sessions = sessions(workspace, app);
-    let active = &sessions[workspace.active_tab_index];
+    let sessions = if workspace.vertical_tabs_panel_open {
+        sessions(workspace, app)
+    } else {
+        Vec::new()
+    };
+    let active = sessions
+        .get(workspace.active_tab_index)
+        .cloned()
+        .unwrap_or_else(|| session(workspace, workspace.active_tab_index, app));
     let mut header = Flex::row()
         .with_cross_axis_alignment(CrossAxisAlignment::Center)
         .with_spacing(12.);

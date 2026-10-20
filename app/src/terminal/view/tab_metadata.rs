@@ -4,23 +4,33 @@ use crate::context_chips::display_chip::GitLineChanges;
 use crate::context_chips::{ContextChipKind, git_line_changes_from_chips};
 use crate::terminal::TerminalView;
 
+/// Shell activity shown in the sidebar, read under a single terminal-model lock.
+pub(crate) struct SessionActivity {
+    pub is_running_command: bool,
+    pub age_minutes: Option<i64>,
+}
+
 impl TerminalView {
-    pub(crate) fn session_activity_age_minutes(&self) -> Option<i64> {
+    pub(crate) fn session_activity(&self) -> SessionActivity {
         let model = self.model.lock();
         let blocks = model.block_list();
         let active = blocks.active_block();
-        let timestamp = if active.is_active_and_long_running() {
+        let is_running_command = active.is_active_and_long_running();
+        let timestamp = if is_running_command {
             active.start_ts()
         } else {
             blocks
                 .last_non_hidden_block()
                 .and_then(|block| block.completed_ts())
-        }?;
-        Some(
-            chrono::Local::now()
-                .signed_duration_since(*timestamp)
-                .num_minutes(),
-        )
+        };
+        SessionActivity {
+            is_running_command,
+            age_minutes: timestamp.map(|timestamp| {
+                chrono::Local::now()
+                    .signed_duration_since(*timestamp)
+                    .num_minutes()
+            }),
+        }
     }
 
     fn prompt_chip_value(&self, chip_kind: &ContextChipKind, ctx: &AppContext) -> Option<String> {

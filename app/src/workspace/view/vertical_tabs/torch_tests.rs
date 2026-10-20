@@ -562,3 +562,148 @@ fn attention_jump_falls_back_to_unread_and_skips_the_active_session() {
         None
     );
 }
+
+fn pane(status: Option<ConversationStatus>, unread: bool) -> PaneStatus {
+    PaneStatus {
+        status,
+        unread,
+        agent_status_unavailable: false,
+    }
+}
+
+#[test]
+fn a_tab_surfaces_its_most_urgent_pane() {
+    let blocked = ConversationStatus::Blocked {
+        blocked_action: "Permission required".into(),
+    };
+    let surfaced = |panes: Vec<PaneStatus>| most_urgent(panes).and_then(|pane| pane.status);
+    assert_eq!(
+        surfaced(vec![
+            pane(Some(ConversationStatus::InProgress), false),
+            pane(Some(blocked.clone()), false),
+        ]),
+        Some(blocked),
+    );
+    assert_eq!(
+        surfaced(vec![
+            pane(Some(ConversationStatus::Success), true),
+            pane(Some(ConversationStatus::InProgress), false),
+        ]),
+        Some(ConversationStatus::InProgress),
+    );
+    assert_eq!(
+        surfaced(vec![
+            pane(Some(ConversationStatus::Error), false),
+            pane(Some(ConversationStatus::Success), true),
+        ]),
+        Some(ConversationStatus::Success),
+    );
+    assert_eq!(
+        surfaced(vec![
+            pane(Some(ConversationStatus::Success), false),
+            pane(Some(ConversationStatus::Error), false),
+        ]),
+        Some(ConversationStatus::Error),
+    );
+    assert_eq!(
+        surfaced(vec![
+            pane(None, false),
+            pane(Some(ConversationStatus::Success), false),
+        ]),
+        None,
+        "equally quiet panes keep the focused pane's status",
+    );
+    assert!(surfaced(Vec::new()).is_none());
+}
+
+#[test]
+fn keyboard_navigation_follows_sidebar_rows_and_skips_collapsed_groups() {
+    // Tabs 0 and 2 share a group shown first; tab 3 is in a collapsed group.
+    let rows = [(0, true), (2, true), (1, true), (3, false)];
+    assert_eq!(expanded_row_from(&rows, 0, 1), Some(2));
+    assert_eq!(expanded_row_from(&rows, 2, 1), Some(1));
+    assert_eq!(
+        expanded_row_from(&rows, 1, 1),
+        Some(0),
+        "wraps past collapsed rows"
+    );
+    assert_eq!(expanded_row_from(&rows, 0, -1), Some(1));
+    assert_eq!(
+        expanded_row_from(&rows, 3, 1),
+        Some(0),
+        "leaves a collapsed active row"
+    );
+    assert_eq!(expanded_row_from(&[(4, true)], 4, 1), Some(4));
+    assert_eq!(expanded_row_from(&rows, 9, 1), None);
+}
+
+#[test]
+fn moving_a_session_keeps_it_in_its_group_and_groups_in_order() {
+    use crate::workspace::view::tests::{initialize_app, mock_workspace};
+    warpui::App::test((), |mut app| async move {
+        initialize_app(&mut app);
+        app.add_singleton_model(|_| crate::settings::ProjectsSettings {
+            directories: crate::settings::ProjectDirectories::new(None),
+            parent_directories: crate::settings::ProjectParentDirectories::new(None),
+        });
+        app.add_singleton_model(|_| crate::settings::ProjectCatalog::default());
+        let workspace = mock_workspace(&mut app);
+        workspace.update(&mut app, |workspace, ctx| {
+            while workspace.tabs.len() < 3 {
+                workspace.add_terminal_tab(false, ctx);
+            }
+            let ids = workspace
+                .tabs
+                .iter()
+                .map(|tab| tab.pane_group.id())
+                .collect::<Vec<_>>();
+            let order = session_order(workspace, ctx);
+            assert_eq!(order, vec![0, 1, 2], "mock sessions share one group");
+
+            workspace.move_sidebar_session(0, TabMovement::Right, ctx);
+            assert_eq!(workspace.tabs[1].pane_group.id(), ids[0]);
+            assert_eq!(workspace.tabs[0].pane_group.id(), ids[1]);
+
+            workspace.move_sidebar_session(1, TabMovement::Left, ctx);
+            assert_eq!(workspace.tabs[0].pane_group.id(), ids[0]);
+
+            workspace.move_sidebar_session(0, TabMovement::Left, ctx);
+            assert_eq!(
+                workspace.tabs[0].pane_group.id(),
+                ids[0],
+                "first row stays put"
+            );
+        });
+    });
+}
+
+#[test]
+fn changing_directory_keeps_a_session_in_its_launch_group() {
+    let no_projects = |_: &Path| false;
+    let launched = next_anchor(None, None, "~/code/scratch", no_projects);
+    assert_eq!(launched, Some(GroupAnchor::Folder("~/code/scratch".into())));
+    assert_eq!(
+        next_anchor(launched.as_ref(), None, "~/elsewhere", no_projects),
+        launched,
+    );
+    assert_eq!(next_anchor(None, None, "", no_projects), None);
+}
+
+#[test]
+fn sessions_join_their_first_project_and_stay_there() {
+    let alpha = PathBuf::from("/projects/alpha");
+    let beta = PathBuf::from("/projects/beta");
+    let known = |path: &Path| path == alpha || path == beta;
+    let home = Some(GroupAnchor::Folder("~".into()));
+    let joined = next_anchor(home.as_ref(), Some(&alpha), "~/projects/alpha", known);
+    assert_eq!(joined, Some(GroupAnchor::Project(alpha.clone())));
+    assert_eq!(
+        next_anchor(joined.as_ref(), Some(&beta), "~/projects/beta", known),
+        joined,
+    );
+    assert_eq!(
+        next_anchor(joined.as_ref(), None, "/tmp", |path| path == beta),
+        Some(GroupAnchor::Folder("/tmp".into())),
+        "a removed project releases its sessions",
+    );
+}
