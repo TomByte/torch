@@ -42,6 +42,10 @@ On macOS, `./script/run` creates `target/debug/bundle/osx/Torch.app`. Linux uses
 
 `local_only` is enabled by default and explicitly by the run script. The Torch executable requires this feature, including for custom builds. The inherited cloud and AI implementation remains in the source for shared type compatibility, but the local-only policy prevents authentication, AI enablement, cloud GraphQL requests, and account UI. Ordinary CLI tools, including separately installed agent CLIs, can still run in the shell.
 
+## Updates
+
+For a future independent update service, see the [update server and release guide](docs/update-server.md). It covers the required one-time client changes, HTTPS hosting, macOS signing, and publishing; automatic updates remain disabled until that integration is implemented.
+
 ## Validation
 
 ```sh
