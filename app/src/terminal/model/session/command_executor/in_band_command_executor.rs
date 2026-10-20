@@ -330,7 +330,7 @@ impl InBandCommandExecutor {
                 let in_band_command = match shell.shell_type() {
                     ShellType::PowerShell => {
                         format!(
-                            "Warp-Run-GeneratorCommand {id} '{escaped_command}' -ErrorAction Ignore"
+                            "Torch-Run-GeneratorCommand {id} '{escaped_command}' -ErrorAction Ignore"
                         )
                     }
                     ShellType::Fish => {
@@ -443,7 +443,7 @@ impl CommandExecutor for InBandCommandExecutor {
 /// fish's command history.  Thus we strip leading whitespace before matching the `command`.
 pub fn is_in_band_command(command: &str) -> bool {
     let trimmed = command.trim_start();
-    trimmed.starts_with("Warp-Run-GeneratorCommand")
+    trimmed.starts_with("Torch-Run-GeneratorCommand")
         || trimmed.starts_with("warp_run_generator_command")
 }
 

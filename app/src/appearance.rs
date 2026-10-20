@@ -177,6 +177,9 @@ impl AppearanceManager {
     /// changes to the dock tile plugin.
     #[cfg(target_os = "macos")]
     pub fn set_app_icon(&self, app: &AppContext) {
+        if ChannelState::is_local_only() {
+            return;
+        }
         let icon = *AppIconSettings::as_ref(app).app_icon.value();
 
         // This function is invoked from multiple call sites, including app

@@ -24,7 +24,7 @@ use crate::workflows::workflow::Workflow;
 
 lazy_static! {
     pub static ref LAUNCH_CONFIG_COMMENT: String = format!(
-        "# Warp Launch Configuration
+        "# Torch Launch Configuration
 #
 #
 # Use this to start a certain configuration of windows, tabs, and panes.

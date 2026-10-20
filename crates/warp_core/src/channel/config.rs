@@ -54,6 +54,16 @@ pub struct WarpServerConfig {
 }
 
 impl WarpServerConfig {
+    pub fn disabled() -> Self {
+        Self {
+            server_root_url: "https://cloud-disabled.torch.invalid".into(),
+            rtc_server_url: "wss://cloud-disabled.torch.invalid".into(),
+            session_sharing_server_url: None,
+            firebase_auth_api_key: "".into(),
+            iap_config: None,
+        }
+    }
+
     pub fn production() -> Self {
         Self {
             server_root_url: "https://app.warp.dev".into(),
@@ -77,6 +87,13 @@ pub struct OzConfig {
 }
 
 impl OzConfig {
+    pub fn disabled() -> Self {
+        Self {
+            oz_root_url: "https://cloud-disabled.torch.invalid".into(),
+            workload_audience_url: None,
+        }
+    }
+
     pub fn production() -> Self {
         Self {
             oz_root_url: "https://oz.warp.dev".into(),

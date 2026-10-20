@@ -7,8 +7,9 @@ set -eo pipefail
 # the prompts in unattended environments.
 
 OS_TYPE="$(uname -s)"
+export WARP_SKIP_GCLOUD_AUTH=1
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
-INSTALL_COMMON_SKILLS=1
+INSTALL_COMMON_SKILLS=0
 COMMON_SKILLS_TARGET="${WARP_COMMON_SKILLS_INSTALL_TARGET:-}"
 PLATFORM_ARGS=()
 

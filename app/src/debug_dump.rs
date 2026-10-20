@@ -9,7 +9,7 @@ use warp_core::channel::ChannelState;
 use warpui::windowing;
 
 pub(crate) fn run() -> anyhow::Result<()> {
-    println!("Warp version: {:?}", ChannelState::app_version());
+    println!("Torch version: {:?}", ChannelState::app_version());
 
     #[cfg(not(windows))]
     {

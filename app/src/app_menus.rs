@@ -8,6 +8,7 @@ use enclose::enclose;
 use itertools::Itertools;
 use settings::Setting as _;
 use settings::manager::SettingsManager;
+use warp_core::channel::ChannelState;
 use warp_core::context_flag::ContextFlag;
 use warp_errors::{report_error, report_if_error};
 use warp_util::path::user_friendly_path;
@@ -63,18 +64,21 @@ const MAX_RECENT_REPOS_IN_MENU: usize = 10;
 
 /// Creates the root app menu bar
 pub fn menu_bar(ctx: &mut AppContext) -> MenuBar {
-    MenuBar::new(vec![
+    let mut menus = vec![
         make_new_app_menu(ctx),
         make_new_file_menu(ctx),
         make_new_edit_menu(ctx),
         make_new_view_menu(ctx),
         make_new_tab_menu(ctx),
         make_new_blocks_menu(ctx),
-        make_new_ai_menu(ctx),
-        make_new_drive_menu(ctx),
-        make_new_window_menu(),
-        make_new_help_menu(),
-    ])
+    ];
+    if !ChannelState::is_local_only() {
+        menus.push(make_new_ai_menu(ctx));
+        menus.push(make_new_drive_menu(ctx));
+    }
+    menus.push(make_new_window_menu());
+    menus.push(make_new_help_menu());
+    MenuBar::new(menus)
 }
 
 // Creates the app dock menu
@@ -144,18 +148,20 @@ fn make_new_app_menu(ctx: &AppContext) -> Menu {
         ctx,
     )];
 
-    if !FeatureFlag::AvatarInTabBar.is_enabled() {
+    if !ChannelState::is_local_only() && !FeatureFlag::AvatarInTabBar.is_enabled() {
         menu_items.push(updateable_custom_item_without_checkmark(
             CustomAction::ToggleResourceCenter,
             ctx,
         ))
     }
 
-    menu_items.extend([
-        MenuItem::Separator,
-        updateable_custom_item_without_checkmark(CustomAction::ReferAFriend, ctx),
-        MenuItem::Separator,
-    ]);
+    if !ChannelState::is_local_only() {
+        menu_items.extend([
+            MenuItem::Separator,
+            updateable_custom_item_without_checkmark(CustomAction::ReferAFriend, ctx),
+            MenuItem::Separator,
+        ]);
+    }
 
     let preferences_menu_items = vec![
         updateable_custom_item_without_checkmark(CustomAction::ShowSettings, ctx),
@@ -188,12 +194,18 @@ fn make_new_app_menu(ctx: &AppContext) -> Menu {
     }
 
     menu_items.push(MenuItem::Separator);
-    menu_items.push(link_menu_item(
-        "Privacy Policy...",
-        links::PRIVACY_POLICY_URL.into(),
-    ));
+    if !ChannelState::is_local_only() {
+        menu_items.push(link_menu_item(
+            "Privacy Policy...",
+            links::PRIVACY_POLICY_URL.into(),
+        ));
+    }
 
-    let debug_menu_items = debug_menu_items();
+    let debug_menu_items = if ChannelState::is_local_only() {
+        Vec::new()
+    } else {
+        debug_menu_items()
+    };
     if !debug_menu_items.is_empty() {
         menu_items.push(MenuItem::Custom(CustomMenuItem::new_with_submenu(
             "Debug",
@@ -210,7 +222,7 @@ fn make_new_app_menu(ctx: &AppContext) -> Menu {
     menu_items.push(MenuItem::Standard(StandardAction::ShowAllApps));
     menu_items.push(MenuItem::Separator);
     menu_items.push(MenuItem::Custom(CustomMenuItem::new(
-        "Set Warp as Default Terminal",
+        "Set Torch as Default Terminal",
         move |ctx| {
             DefaultTerminal::handle(ctx).update(ctx, |default_terminal, ctx| {
                 default_terminal.make_warp_default(ctx)
@@ -229,23 +241,25 @@ fn make_new_app_menu(ctx: &AppContext) -> Menu {
         None,
     )));
     menu_items.push(MenuItem::Separator);
-    menu_items.push(MenuItem::Custom(CustomMenuItem::new(
-        "Log out",
-        auth::maybe_log_out,
-        move |_, ctx| {
-            let is_anonymous = AuthStateProvider::handle(ctx)
-                .as_ref(ctx)
-                .get()
-                .is_anonymous_or_logged_out();
-            MenuItemPropertyChanges {
-                disabled: Some(is_anonymous),
-                ..Default::default()
-            }
-        },
-        None,
-    )));
+    if !ChannelState::is_local_only() {
+        menu_items.push(MenuItem::Custom(CustomMenuItem::new(
+            "Log out",
+            auth::maybe_log_out,
+            move |_, ctx| {
+                let is_anonymous = AuthStateProvider::handle(ctx)
+                    .as_ref(ctx)
+                    .get()
+                    .is_anonymous_or_logged_out();
+                MenuItemPropertyChanges {
+                    disabled: Some(is_anonymous),
+                    ..Default::default()
+                }
+            },
+            None,
+        )));
+    }
     menu_items.push(MenuItem::Standard(StandardAction::Quit));
-    Menu::new("Warp", menu_items)
+    Menu::new("Torch", menu_items)
 }
 
 fn make_new_file_menu(ctx: &AppContext) -> Menu {
@@ -301,7 +315,7 @@ fn make_new_edit_menu(ctx: &AppContext) -> Menu {
     ];
     let group_5 = vec![
         MenuItem::Custom(CustomMenuItem::new(
-            "Use Warp's Prompt",
+            "Use Torch's Prompt",
             move |ctx| ctx.dispatch_global_action("app:toggle_user_ps1", &()),
             move |_props, ctx| MenuItemPropertyChanges {
                 checked: Some(
@@ -375,19 +389,15 @@ fn make_new_edit_menu(ctx: &AppContext) -> Menu {
 
 fn make_new_view_menu(ctx: &AppContext) -> Menu {
     let mut items = vec![
-        updateable_custom_item_without_checkmark(CustomAction::ToggleWarpDrive, ctx),
-        MenuItem::Separator,
         updateable_custom_item_without_checkmark(CustomAction::CommandPalette, ctx),
         updateable_custom_item_without_checkmark(CustomAction::NavigationPalette, ctx),
         updateable_custom_item_without_checkmark(CustomAction::LaunchConfigPalette, ctx),
         updateable_custom_item_without_checkmark(CustomAction::FilesPalette, ctx),
         updateable_custom_item_without_checkmark(CustomAction::ToggleProjectExplorer, ctx),
-        updateable_custom_item_without_checkmark(CustomAction::ToggleConversationListView, ctx),
         updateable_custom_item_without_checkmark(CustomAction::ToggleGlobalSearch, ctx),
         MenuItem::Separator,
         updateable_custom_item_without_checkmark(CustomAction::History, ctx),
         updateable_custom_item_without_checkmark(CustomAction::CommandSearch, ctx),
-        updateable_custom_item_without_checkmark(CustomAction::Workflows, ctx),
         MenuItem::Separator,
         MenuItem::Custom(CustomMenuItem::new(
             "Toggle Mouse Reporting",
@@ -436,6 +446,22 @@ fn make_new_view_menu(ctx: &AppContext) -> Menu {
             None,
         )),
     ];
+    if !ChannelState::is_local_only() {
+        items.insert(
+            0,
+            updateable_custom_item_without_checkmark(CustomAction::ToggleWarpDrive, ctx),
+        );
+        items.push(updateable_custom_item_without_checkmark(
+            CustomAction::Workflows,
+            ctx,
+        ));
+        if FeatureFlag::AgentViewConversationListView.is_enabled() {
+            items.push(updateable_custom_item_without_checkmark(
+                CustomAction::ToggleConversationListView,
+                ctx,
+            ));
+        }
+    }
 
     let is_compact_mode = matches!(
         TerminalSettings::handle(ctx)
@@ -566,8 +592,6 @@ fn make_new_blocks_menu(ctx: &AppContext) -> Menu {
     ));
     items.push(MenuItem::Separator);
     items.extend([
-        updateable_custom_item_without_checkmark(CustomAction::CreateBlockPermalink, ctx),
-        non_updateable_custom_item(CustomAction::ViewSharedBlocks, ctx),
         updateable_custom_item_without_checkmark(CustomAction::ToggleBookmarkBlock, ctx),
         updateable_custom_item_without_checkmark(CustomAction::FindWithinBlock, ctx),
         MenuItem::Separator,
@@ -576,6 +600,16 @@ fn make_new_blocks_menu(ctx: &AppContext) -> Menu {
         updateable_custom_item_without_checkmark(CustomAction::CopyBlockOutput, ctx),
     ]);
 
+    if !ChannelState::is_local_only() {
+        items.push(updateable_custom_item_without_checkmark(
+            CustomAction::CreateBlockPermalink,
+            ctx,
+        ));
+        items.push(non_updateable_custom_item(
+            CustomAction::ViewSharedBlocks,
+            ctx,
+        ));
+    }
     let debug_items = block_menu_debug_items();
     if !debug_items.is_empty() {
         items.push(MenuItem::Separator);
@@ -930,9 +964,9 @@ fn make_new_help_menu() -> Menu {
         "Help",
         vec![
             feedback_menu_item(),
-            link_menu_item("Warp Documentation...", links::USER_DOCS_URL.into()),
+            link_menu_item("Torch Documentation...", links::USER_DOCS_URL.into()),
             link_menu_item("GitHub Issues...", links::GITHUB_ISSUES_URL.into()),
-            link_menu_item("Join our Slack community...", links::SLACK_URL.into()),
+            link_menu_item("Torch project...", links::SLACK_URL.into()),
         ],
     )
 }
@@ -1021,39 +1055,46 @@ fn make_new_elements_menu_items(ctx: &AppContext) -> Vec<MenuItem> {
             },
             Some(Keystroke::parse("cmd-t").expect("Valid keystroke")),
         )),
-        MenuItem::Custom(CustomMenuItem::new(
-            "New Agent Tab",
-            open_new_agent_tab_or_window,
-            move |_props: &MenuItemProperties, ctx: &mut AppContext| {
-                let mut changes = MenuItemPropertyChanges::default();
-                let (is_any_ai_enabled, is_default_session_mode_agent) = AISettings::handle(ctx)
-                    .read(ctx, |ai_settings, ctx| {
-                        let enabled = ai_settings.is_any_ai_enabled(ctx);
-                        let agent = enabled
-                            && ai_settings.default_session_mode(ctx) == DefaultSessionMode::Agent;
-                        (enabled, agent)
-                    });
-                if !is_any_ai_enabled {
-                    changes.disabled = Some(true);
-                    return changes;
-                }
-                let trigger = if is_default_session_mode_agent {
-                    Trigger::Custom(CustomAction::NewTab.into())
-                } else {
-                    Trigger::Custom(CustomAction::NewAgentTab.into())
-                };
-                let binding = ctx
-                    .get_key_bindings()
-                    .find(|b| b.trigger == &trigger || b.original_trigger == Some(&trigger));
-                if let Some(binding) = binding {
-                    changes.keystroke = Some(bindings::trigger_to_keystroke(binding.trigger));
-                }
-                changes
-            },
-            None,
-        )),
         non_updateable_custom_item(CustomAction::NewFile, ctx),
     ];
+
+    if !ChannelState::is_local_only() {
+        new_elements_menu.insert(
+            2,
+            MenuItem::Custom(CustomMenuItem::new(
+                "New Agent Tab",
+                open_new_agent_tab_or_window,
+                move |_props: &MenuItemProperties, ctx: &mut AppContext| {
+                    let mut changes = MenuItemPropertyChanges::default();
+                    let (is_any_ai_enabled, is_default_session_mode_agent) =
+                        AISettings::handle(ctx).read(ctx, |ai_settings, ctx| {
+                            let enabled = ai_settings.is_any_ai_enabled(ctx);
+                            let agent = enabled
+                                && ai_settings.default_session_mode(ctx)
+                                    == DefaultSessionMode::Agent;
+                            (enabled, agent)
+                        });
+                    if !is_any_ai_enabled {
+                        changes.disabled = Some(true);
+                        return changes;
+                    }
+                    let trigger = if is_default_session_mode_agent {
+                        Trigger::Custom(CustomAction::NewTab.into())
+                    } else {
+                        Trigger::Custom(CustomAction::NewAgentTab.into())
+                    };
+                    let binding = ctx
+                        .get_key_bindings()
+                        .find(|b| b.trigger == &trigger || b.original_trigger == Some(&trigger));
+                    if let Some(binding) = binding {
+                        changes.keystroke = Some(bindings::trigger_to_keystroke(binding.trigger));
+                    }
+                    changes
+                },
+                None,
+            )),
+        );
+    }
 
     let reopen_session_action_updater =
         custom_action_updater(CustomAction::ReopenClosedSession, Box::new(|_| false));

@@ -712,13 +712,13 @@ impl BuyCreditsBanner {
             UsageDisplayUnit::Credits => (
                 "Out of credits",
                 "Purchasing these credits would take you over your monthly spend limit. ",
-                "Add more credits to your account to continue using the Warp Agent.",
+                "Add more credits to your account to continue using the Torch Agent.",
                 "Contact a team admin to purchase more credits to continue.",
             ),
             UsageDisplayUnit::Dollars => (
                 "Out of usage",
                 "This purchase would take you over your monthly spend limit. ",
-                "Add more usage to your account to continue using the Warp Agent.",
+                "Add more usage to your account to continue using the Torch Agent.",
                 "Contact a team admin to purchase more usage to continue.",
             ),
         };

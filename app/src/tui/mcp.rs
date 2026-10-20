@@ -74,7 +74,7 @@ impl TuiMcpServerSource {
                 .as_ref()
                 .map(|creator| format!("shared by {creator}"))
                 .unwrap_or_else(|| "shared by a team member".to_owned()),
-            Self::Gallery => "shared by Warp".to_owned(),
+            Self::Gallery => "shared by Torch".to_owned(),
             Self::FileBased { sources } => {
                 let labels = sources
                     .iter()

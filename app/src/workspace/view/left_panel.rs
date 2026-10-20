@@ -256,7 +256,7 @@ impl LeftPanelView {
     ) -> Box<dyn Element> {
         let (title, description) = match (view, availability) {
             (ToolPanelView::WarpDrive, ToolPanelAvailability::RequiresAccount) => (
-                "Sign in to access Warp Drive",
+                "Sign in to access Torch Drive",
                 "Create an account to save and share workflows, notebooks, prompts, and more.",
             ),
             (ToolPanelView::ConversationListView, ToolPanelAvailability::RequiresAccount) => (
@@ -265,7 +265,7 @@ impl LeftPanelView {
             ),
             (ToolPanelView::ConversationListView, ToolPanelAvailability::RequiresAi) => (
                 "Turn on AI to access Agent conversations",
-                "Enable Warp AI to access your conversation history.",
+                "Enable Torch AI to access your conversation history.",
             ),
             (
                 ToolPanelView::ProjectExplorer
@@ -587,7 +587,7 @@ impl LeftPanelView {
                 ToolbeltButtonConfig {
                     icon: Icon::WarpDrive,
                     active_icon: None,
-                    tooltip_text: "Warp Drive".to_string(),
+                    tooltip_text: "Torch Drive".to_string(),
                     action: LeftPanelAction::WarpDrive,
                     render_with_active_state: false,
                     tooltip_keybinding: toolbelt_tooltip_keybinding(&tooltip_keybinding_names, ctx),

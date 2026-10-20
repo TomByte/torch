@@ -694,7 +694,7 @@ impl SettingsWidget for AutoSaveToggleWidget {
                 })
                 .finish(),
             Some(
-                "Automatically saves changes in the Warp text editor as you type and when the editor loses focus."
+                "Automatically saves changes in the Torch text editor as you type and when the editor loses focus."
                     .into(),
             ),
         )

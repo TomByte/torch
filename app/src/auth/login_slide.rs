@@ -93,7 +93,7 @@ impl LoginPurpose {
     fn copy(self) -> (&'static str, &'static str) {
         match self {
             LoginPurpose::WarpDrive => (
-                "Get started with Warp Drive",
+                "Get started with Torch Drive",
                 "Connect your account to save and share notebooks, workflows, and more across devices.",
             ),
             LoginPurpose::WarpAgent => (
@@ -102,7 +102,7 @@ impl LoginPurpose {
             ),
             LoginPurpose::ThirdParty => (
                 "Create an account",
-                "Create a Warp account to enable AI-powered planning, coding, and automations.",
+                "Create a Torch account to enable AI-powered planning, coding, and automations.",
             ),
             LoginPurpose::AccountFirst => (
                 "Create an account",
@@ -641,7 +641,7 @@ impl LoginSlideView {
         let tos_line = Flex::row()
             .with_child(
                 ui_builder
-                    .span("By continuing, you agree to Warp's ")
+                    .span("By continuing, you agree to Torch's ")
                     .with_style(disclaimer_styles)
                     .build()
                     .finish(),
@@ -796,7 +796,7 @@ impl LoginSlideView {
 
         let cmd_enter = Keystroke::parse("cmdorctrl-enter").unwrap_or_default();
         let skip_label = match self.login_purpose() {
-            LoginPurpose::WarpDrive => "Disable Warp Drive",
+            LoginPurpose::WarpDrive => "Disable Torch Drive",
             LoginPurpose::WarpAgent => "Skip for now",
             LoginPurpose::ThirdParty => "Skip for now",
             LoginPurpose::AccountFirst => "Skip",
@@ -1107,14 +1107,14 @@ impl LoginSlideView {
             &'static str,
         ) = match self.login_purpose() {
             LoginPurpose::WarpDrive => (
-                "Are you sure you want to disable Warp Drive?",
-                "Warp Drive lets you save workflows and knowledge across devices and share them with your team. By continuing, you won't have access to the following features:",
+                "Are you sure you want to disable Torch Drive?",
+                "Torch Drive lets you save workflows and knowledge across devices and share them with your team. By continuing, you won't have access to the following features:",
                 WARP_DRIVE_FEATURES,
-                "Enable Warp Drive",
+                "Enable Torch Drive",
             ),
             LoginPurpose::WarpAgent | LoginPurpose::ThirdParty | LoginPurpose::AccountFirst => (
                 "Continue without signing in?",
-                "Without an account, you won't have access to Warp's AI features. Sign in anytime to unlock agents and other AI features.",
+                "Without an account, you won't have access to Torch's AI features. Sign in anytime to unlock agents and other AI features.",
                 &[],
                 "Sign in",
             ),

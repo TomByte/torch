@@ -46,7 +46,7 @@ const FEATURE_ITEMS: &[FeatureItem] = &[
     FeatureItem {
         icon: Icon::HeartHand,
         title: "Contribute",
-        description: "Warp's client code is now open source. Get started by using the /feedback skill to open an issue, and follow the contribution guidelines here.",
+        description: "Torch's client code is now open source. Get started by using the /feedback skill to open an issue, and follow the contribution guidelines here.",
         inline_link: Some(InlineLink {
             text: "here",
             url: CONTRIBUTING_URL,
@@ -55,7 +55,7 @@ const FEATURE_ITEMS: &[FeatureItem] = &[
     FeatureItem {
         icon: Icon::Oz,
         title: "Open Automated Development",
-        description: "The Warp repo is managed by an agent-first workflow powered by Oz, our cloud agent orchestration platform.",
+        description: "The Torch repo is managed by an agent-first workflow powered by Oz, our cloud agent orchestration platform.",
         inline_link: Some(InlineLink {
             text: "Oz",
             url: OZ_URL,
@@ -212,7 +212,7 @@ impl OpenWarpLaunchModal {
     }
 
     fn render_title(appearance: &Appearance) -> Box<dyn Element> {
-        Text::new("Warp is now open-source", appearance.ui_font_family(), 20.)
+        Text::new("Torch is now open-source", appearance.ui_font_family(), 20.)
             .with_color(PhenomenonStyle::modal_title_text())
             .with_style(Properties::default().weight(Weight::Semibold))
             .finish()
@@ -220,7 +220,7 @@ impl OpenWarpLaunchModal {
 
     fn render_description(appearance: &Appearance) -> Box<dyn Element> {
         Text::new(
-            "You, our community, can participate in building Warp using an agent-first workflow.",
+            "You, our community, can participate in building Torch using an agent-first workflow.",
             appearance.ui_font_family(),
             14.,
         )

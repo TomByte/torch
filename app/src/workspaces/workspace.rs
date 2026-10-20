@@ -804,7 +804,7 @@ impl BillingMetadata {
 
     // Whether the enterprise customer is our Stable Warp Enterprise team (internal team of Warpers).
     pub fn is_warp_plan(&self) -> bool {
-        self.tier.name == "Warp Plan"
+        self.tier.name == "Torch Plan"
     }
 
     pub fn has_active_subscription(&self) -> bool {

@@ -1,3 +1,7 @@
+# Torch-specific guidance
+
+This is the independent Torch fork. The guidance below documents inherited architecture. Torch builds use `cargo check -p warp --bin torch --features gui` and `./script/run`; the Cargo package is still `warp`. Keep `local_only` enabled. Do not add Warp login, AI prediction, cloud integration, telemetry, or upstream release/sync automation. Preserve ordinary completions and shell behavior, plus original licence/copyright notices. The only Git remote is `TomByte/torch`.
+
 # AGENTS.md
 
 This file provides guidance when working with code in this repository.

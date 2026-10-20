@@ -30,7 +30,7 @@ pub(crate) fn ensure_warp_watch_roots_exist() {
     let data_dir = warp_data_dir();
     if let Err(err) = fs::create_dir_all(&data_dir) {
         log::warn!(
-            "Failed to create Warp data directory {}: {err}",
+            "Failed to create Torch data directory {}: {err}",
             data_dir.display()
         );
     }
@@ -40,7 +40,7 @@ pub(crate) fn ensure_warp_watch_roots_exist() {
         && let Err(err) = fs::create_dir_all(&config_local_dir)
     {
         log::warn!(
-            "Failed to create Warp config directory {}: {err}",
+            "Failed to create Torch config directory {}: {err}",
             config_local_dir.display()
         );
     }
@@ -53,7 +53,7 @@ pub(crate) fn ensure_warp_watch_roots_exist() {
         let tui_config_local_dir = warp_core::paths::tui_config_local_dir();
         if let Err(err) = fs::create_dir_all(&tui_config_local_dir) {
             log::warn!(
-                "Failed to create Warp TUI config directory {}: {err}",
+                "Failed to create Torch TUI config directory {}: {err}",
                 tui_config_local_dir.display()
             );
         }
@@ -274,7 +274,7 @@ impl WarpManagedPathsWatcher {
                 data_dir.clone(),
                 WatchFilter::with_filter(filter.clone(), filter),
                 RecursiveMode::Recursive,
-                "Warp data directory",
+                "Torch data directory",
             );
             if should_register_config_local_dir {
                 Self::register_path(
@@ -283,7 +283,7 @@ impl WarpManagedPathsWatcher {
                     config_local_dir.clone(),
                     WatchFilter::accept_all(),
                     RecursiveMode::Recursive,
-                    "Warp config directory",
+                    "Torch config directory",
                 );
             }
             // Watch the TUI settings directory for that surface. On macOS it's
@@ -304,7 +304,7 @@ impl WarpManagedPathsWatcher {
                         tui_config_local_dir,
                         WatchFilter::accept_all(),
                         RecursiveMode::Recursive,
-                        "Warp TUI config directory",
+                        "Torch TUI config directory",
                     );
                 }
             }
@@ -320,7 +320,7 @@ impl WarpManagedPathsWatcher {
                     warp_home_skills_dir,
                     WatchFilter::accept_all(),
                     RecursiveMode::Recursive,
-                    "Warp home skills directory",
+                    "Torch home skills directory",
                 );
             }
             let active_mcp_config_path = active_mcp_config_file_path();
@@ -353,7 +353,7 @@ impl WarpManagedPathsWatcher {
                     active_mcp_config_dir,
                     WatchFilter::with_filter(Arc::new(|_: &Path| true), emit),
                     RecursiveMode::NonRecursive,
-                    "Warp MCP config directory",
+                    "Torch MCP config directory",
                 );
             }
         }

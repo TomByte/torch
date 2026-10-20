@@ -5953,11 +5953,11 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
                 "InitialWorkingDirectoryConfigurationChanged"
             }
             Self::InputModeChanged => "Input Mode Changed",
-            Self::OpenedWarpAI => "Opened Warp AI",
-            Self::WarpAIRequestIssued => "Warp AI Request Issued",
-            Self::WarpAIAction => "Warp AI Action",
-            Self::UsedWarpAIPreparedPrompt => "Used Warp AI Prepared Prompt",
-            Self::WarpAICharacterLimitExceeded => "Warp AI Character Limit Exceeded",
+            Self::OpenedWarpAI => "Opened Torch AI",
+            Self::WarpAIRequestIssued => "Torch AI Request Issued",
+            Self::WarpAIAction => "Torch AI Action",
+            Self::UsedWarpAIPreparedPrompt => "Used Torch AI Prepared Prompt",
+            Self::WarpAICharacterLimitExceeded => "Torch AI Character Limit Exceeded",
             Self::OpenInputContextMenu => "OpenInputBoxContextMenu",
             Self::InputCutSelectedText => "InputBoxCutSelectedText",
             Self::InputCopySelectedText => "InputBoxCutSelectedText",
@@ -5995,8 +5995,8 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::EnableAliasExpansionFromBanner => "Enable Alias Expansion From Banner",
             Self::InitiateReauth => "Initiate Reauth",
             Self::NeedsReauth => "Needs Reauth",
-            Self::WarpDriveOpened => "Warp Drive Opened",
-            Self::ToggleWarpAI => "Toggle Warp AI",
+            Self::WarpDriveOpened => "Torch Drive Opened",
+            Self::ToggleWarpAI => "Toggle Torch AI",
             Self::ToggleSecretRedaction => "Toggle Secret Redaction",
             Self::CustomSecretRegexAdded => "Custom Secret Regex Added",
             Self::ToggleObfuscateSecret => "Toggle Obfuscate Secret",
@@ -6021,8 +6021,8 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::JumpToSharedSessionParticipant { .. } => "Jumped to Shared Session Participant",
             Self::CopiedSharedSessionLink { .. } => "Copied Shared Session Link",
             Self::WebSessionOpenedOnDesktop { .. } => "Web session opened on desktop",
-            Self::WebCloudObjectOpenedOnDesktop { .. } => "Warp Drive object opened on desktop",
-            Self::DriveSharingOnboardingBlockShown => "Warp Drive Sharing onboarding block shown",
+            Self::WebCloudObjectOpenedOnDesktop { .. } => "Torch Drive object opened on desktop",
+            Self::DriveSharingOnboardingBlockShown => "Torch Drive Sharing onboarding block shown",
             Self::UnsupportedShell => "Unsupported Shell",
             Self::SettingsImportInitiated => "Settings Import Initiated",
             Self::InviteTeammates => "Invited Teammates",
@@ -6321,7 +6321,7 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             }
             Self::InitiateAnonymousUserSignup => "An anonymous user initiated the sign up flow",
             Self::AnonymousUserExpirationLockout => {
-                "An anonymous user opened Warp after their conversion deadline and was locked out"
+                "An anonymous user opened Torch after their conversion deadline and was locked out"
             }
             Self::AnonymousUserLinkedFromBrowser => {
                 "Received an auth payload from anonymous user after linking in browser"
@@ -6333,7 +6333,7 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
                 "Anonymous user attempted to create a cloud object past their personal object limit"
             }
             Self::BackgroundBlockStarted => {
-                "Warp created a background-output Block (whenever a processes has been backgrounded and yields some output)"
+                "Torch created a background-output Block (whenever a processes has been backgrounded and yields some output)"
             }
             Self::SessionCreation => "Created a tab",
             Self::MCPServerCollectionPaneOpened { .. } => "MCP Server Collection Pane Opened",
@@ -6422,9 +6422,9 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
                 "Database write error when trying to write app state for session restoration"
             }
             Self::AppStartup => "App is launched",
-            Self::LoggedOutStartup => "Started Warp in the logged-out / signed-out state",
+            Self::LoggedOutStartup => "Started Torch in the logged-out / signed-out state",
             Self::DownloadSource => {
-                "Whether the Warp was installed from the home page or through homebrew"
+                "Whether the Torch was installed from the home page or through homebrew"
             }
             Self::SSHBootstrapAttempt => "Attempted bootstrapping for an SSH session",
             Self::SSHControlMasterError => {
@@ -6459,13 +6459,13 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             }
             Self::NotificationSent => "Sent desktop notification",
             Self::NotificationFailedToSend => "Failed to send desktop notification",
-            Self::NotificationClicked => "Clicked desktop notification sent from Warp",
+            Self::NotificationClicked => "Clicked desktop notification sent from Torch",
             Self::ToggleShowAgentTips => "Toggled the Show Agent Tips setting in AI settings",
             Self::ToggleFindOption => "Changed settings in Find Toggle",
             Self::SignUpButtonClicked => "Clicked \"Sign Up\" button",
             Self::LoginButtonClicked => "Clicked on \"Log in\" button",
             Self::OpenNewSessionFromFilePath => {
-                "Dragged a file, folder, etc. into Warp to start a session"
+                "Dragged a file, folder, etc. into Torch to start a session"
             }
             Self::OpenTeamFromURI => {
                 "Showed settings view of their newly joined team within the app"
@@ -6514,16 +6514,16 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
                 "Opened the launch config YAML file from modal once saved successfully"
             }
             Self::OpenLaunchConfig => "Opened launch config for a session",
-            Self::TeamCreated => "Created a Warp Drive team",
-            Self::TeamJoined => "Joined a Warp Drive team",
-            Self::TeamLeft => "Left a Warp Drive team",
-            Self::TeamLinkCopied => "Copied a Warp Drive team link",
-            Self::RemovedUserFromTeam => "Remove user from Warp Drive team",
-            Self::DeletedWorkflow => "Deleted workflow from Warp Drive team",
-            Self::DeletedNotebook => "Deleted notebook from Warp Drive team",
+            Self::TeamCreated => "Created a Torch Drive team",
+            Self::TeamJoined => "Joined a Torch Drive team",
+            Self::TeamLeft => "Left a Torch Drive team",
+            Self::TeamLinkCopied => "Copied a Torch Drive team link",
+            Self::RemovedUserFromTeam => "Remove user from Torch Drive team",
+            Self::DeletedWorkflow => "Deleted workflow from Torch Drive team",
+            Self::DeletedNotebook => "Deleted notebook from Torch Drive team",
             Self::ToggleApprovalsModal => "Opened or closed teams modal",
             Self::ChangedInviteViewOption => "Toggled between link and invite for invite",
-            Self::SendEmailInvites => "Sent email invites for Warp Drive team",
+            Self::SendEmailInvites => "Sent email invites for Torch Drive team",
             Self::SetLineHeight => "Set line height through Settings -> Appearance",
             Self::ResourceCenterOpened => "Opened Resource Center pane",
             Self::ResourceCenterTipsCompleted => "Completed resource center tips",
@@ -6549,7 +6549,7 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             }
             Self::QuitModalCancel => "`Cancel` button on the alert modal was pressed",
             Self::QuitModalDisabled => {
-                "The quit modal dialog has been disabled and will not popup when a user closes Warp while a session is running"
+                "The quit modal dialog has been disabled and will not popup when a user closes Torch while a session is running"
             }
             Self::UserInitiatedLogOut => {
                 "Confirms a user has explicitly logged out of the application"
@@ -6574,14 +6574,14 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::InitialWorkingDirectoryConfigurationChanged => {
                 "Replaced the default working directory with a different path"
             }
-            Self::OpenedWarpAI => "Activated Warp AI",
-            Self::WarpAIRequestIssued => "Issued a question to Warp AI",
-            Self::WarpAIAction => "Executed a Warp AI action: Restart, Copy, Insert into terminal",
+            Self::OpenedWarpAI => "Activated Torch AI",
+            Self::WarpAIRequestIssued => "Issued a question to Torch AI",
+            Self::WarpAIAction => "Executed a Torch AI action: Restart, Copy, Insert into terminal",
             Self::UsedWarpAIPreparedPrompt => {
-                "Used one of the Warp-provided prompts, like \"Show examples\""
+                "Used one of the Torch-provided prompts, like \"Show examples\""
             }
             Self::WarpAICharacterLimitExceeded => {
-                "Attempted to ask a question longer than 1k chars to Warp AI"
+                "Attempted to ask a question longer than 1k chars to Torch AI"
             }
             Self::OpenInputContextMenu => "Opened the Input Editor's context menu",
             Self::InputCutSelectedText => {
@@ -6600,7 +6600,7 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::InputAICommandSearch => {
                 "Opened AI Command Search via the Input Editor's context menu (right clicking the buffer)"
             }
-            Self::InputAskWarpAI => "Clicked \"Ask Warp AI\" from the Input Editor's context menu",
+            Self::InputAskWarpAI => "Clicked \"Ask Torch AI\" from the Input Editor's context menu",
             Self::SaveAsWorkflowModal => {
                 "Opened the modal to create a new workflow using a Block's context--command, etc."
             }
@@ -6631,25 +6631,25 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
                 "Enabled or disabled preserving the active tab color"
             }
             Self::ShowSubshellBanner => {
-                "Displayed the banner asking whether Warp should Warpify the current session via Warp's subshell wrapper"
+                "Displayed the banner asking whether Torch should Warpify the current session via Torch's subshell wrapper"
             }
             Self::DeclineSubshellBootstrap => {
-                "Developer declined the Warp banner to Warpify the current session"
+                "Developer declined the Torch banner to Warpify the current session"
             }
             Self::TriggerSubshellBootstrap => {
-                "Attempted to Warpify the current session via Warp's subshell wrapper"
+                "Attempted to Warpify the current session via Torch's subshell wrapper"
             }
             Self::AddDenylistedSubshellCommand => {
-                "Explicitly prevent a command from being Warpified via Warp's subshell wrapper"
+                "Explicitly prevent a command from being Warpified via Torch's subshell wrapper"
             }
             Self::RemoveDenylistedSubshellCommand => {
-                "Removed a command from the list of commands to IGNORE when trying to Warpify via Warp's subshell wrapper"
+                "Removed a command from the list of commands to IGNORE when trying to Warpify via Torch's subshell wrapper"
             }
             Self::AddAddedSubshellCommand => {
-                "Added a command to be automatically Warpified via Warp's subshell wrapper"
+                "Added a command to be automatically Warpified via Torch's subshell wrapper"
             }
             Self::RemoveAddedSubshellCommand => {
-                "Removed a command from the list of commands to automatically Warpify via Warp's subshell wrapper"
+                "Removed a command from the list of commands to automatically Warpify via Torch's subshell wrapper"
             }
             Self::ReceivedSubshellRcFileDcs => "Spawned a subshell to be automatically Warpified",
             Self::ToggleSshWarpification => "Changed the setting for SSH sessions to be warified",
@@ -6666,7 +6666,7 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::AgentToolbarDismissed => "User dismissed the use-agent toolbar",
             Self::WarpifyFooterAcceptedWarpify => "User clicked Warpify in the warpify footer",
             Self::ShowAliasExpansionBanner => {
-                "Displayed the banner asking whether Warp should automatically expand aliases within the Input Editor"
+                "Displayed the banner asking whether Torch should automatically expand aliases within the Input Editor"
             }
             Self::EnableAliasExpansionFromBanner => {
                 "Enabled automatic alias expansion within the Input Editor from the banner"
@@ -6675,7 +6675,7 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
                 "Dismissed the banner to enable automatic alias expansion within the Input Editor"
             }
             Self::ShowVimKeybindingsBanner => {
-                "Displayed the banner asking whether Warp should enable Vim keybindings in the Input Editor"
+                "Displayed the banner asking whether Torch should enable Vim keybindings in the Input Editor"
             }
             Self::EnableVimKeybindingsFromBanner => {
                 "Enabled Vim keybindings in the Input Editor from the banner"
@@ -6685,9 +6685,9 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             }
             Self::InitiateReauth => "Started the flow to re-authenticate the client",
             Self::NeedsReauth => "User needs to re-authenticate",
-            Self::WarpDriveOpened => "Opened Warp Drive panel",
+            Self::WarpDriveOpened => "Opened Torch Drive panel",
             Self::ToggleWarpAI => {
-                "Toggled Warp AI--an AI assistant to help you debug errors, look up forgotten commands and more"
+                "Toggled Torch AI--an AI assistant to help you debug errors, look up forgotten commands and more"
             }
             Self::ToggleSecretRedaction => {
                 "Toggled on/off the setting for Secret Redaction - attempts to redact secrets and sensitive information"
@@ -6696,18 +6696,18 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::ToggleObfuscateSecret => "Revealed or hid a secret",
             Self::CopySecret => "Copied a secret's obfuscated contents to clipboard",
             Self::AutoGenerateMetadataSuccess => {
-                "Successfully generated metadata for a workflow using Warp AI"
+                "Successfully generated metadata for a workflow using Torch AI"
             }
             Self::AutoGenerateMetadataError => {
-                "Failed to generate metadata for a workflow using Warp AI"
+                "Failed to generate metadata for a workflow using Torch AI"
             }
-            Self::UpdateSortingChoice => "Modified the sorting scheme for Warp Drive objects",
+            Self::UpdateSortingChoice => "Modified the sorting scheme for Torch Drive objects",
             Self::UndoClose => "Re-opened a closed tab or window (undo closing a tab or window)",
             Self::PtyThroughput => "A sample of the max PTY throughput in bytes/sec",
-            Self::DuplicateObject => "Cloned a Warp Drive object",
-            Self::ExportObject => "Exported a Warp Drive object",
+            Self::DuplicateObject => "Cloned a Torch Drive object",
+            Self::ExportObject => "Exported a Torch Drive object",
             Self::CommandFileRun => {
-                "Opened a .cmd or unix executable file and ran it directly in Warp"
+                "Opened a .cmd or unix executable file and ran it directly in Torch"
             }
             Self::PageUpDownInEditorPressed => {
                 "Pressed `PAGE-UP` or `PAGE-DOWN` within the Input Editor"
@@ -6715,7 +6715,7 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::StartedSharingCurrentSession => "Started sharing the current session",
             Self::StoppedSharingCurrentSession => "Halted sharing the current session",
             Self::JoinedSharedSession => {
-                "When you join another instance of Warp using shared sessions"
+                "When you join another instance of Torch using shared sessions"
             }
             Self::SharedSessionModalUpgradePressed => {
                 "Pressed upgrade after reaching max session sharing limit"
@@ -6734,15 +6734,15 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
                 "Shared session viewed on the web was opened on the desktop"
             }
             Self::WebCloudObjectOpenedOnDesktop => {
-                "Warp Drive object on the web was opened on the desktop"
+                "Torch Drive object on the web was opened on the desktop"
             }
             Self::DriveSharingOnboardingBlockShown => {
-                "Showed onboarding block for Warp Drive sharing"
+                "Showed onboarding block for Torch Drive sharing"
             }
-            Self::UnsupportedShell => "Booted Warp with a shell that isn't supported",
-            Self::LogOut => "Logged out of the Warp client",
+            Self::UnsupportedShell => "Booted Torch with a shell that isn't supported",
+            Self::LogOut => "Logged out of the Torch client",
             Self::SettingsImportInitiated => "Started the import settings flow for new users",
-            Self::InviteTeammates => "Sent emails to invite teammates to join Warp Drive team",
+            Self::InviteTeammates => "Sent emails to invite teammates to join Torch Drive team",
             Self::CopyObjectToClipboard => "Copied an object to the user's keyboard",
             Self::OpenAndWarpifyDockerSubshell => {
                 "Warpifying a docker subshell from using the docker extension"
@@ -6892,7 +6892,7 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             }
             Self::AgentModeOpenedCitation => "Opened a citation that was surfaced in agent mode",
             Self::OpenedSharingDialog => {
-                "Opened the sharing settings dialog for a session or Warp Drive object"
+                "Opened the sharing settings dialog for a session or Torch Drive object"
             }
             Self::ToggleGlobalAI => "Toggled global AI enablement.",
             Self::SuperGrokSubscriptionConnectInitiated => {
@@ -6903,13 +6903,13 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             }
             Self::ToggleActiveAI => "Toggled active AI enablement.",
             Self::ToggleLigatureRendering => "Toggled ligature rendering",
-            Self::WorkflowAliasAdded => "Added an alias to a Warp Drive workflow",
-            Self::WorkflowAliasRemoved => "Removed an alias from a Warp Drive workflow",
+            Self::WorkflowAliasAdded => "Added an alias to a Torch Drive workflow",
+            Self::WorkflowAliasRemoved => "Removed an alias from a Torch Drive workflow",
             Self::WorkflowAliasArgumentEdited => {
-                "Edited an argument in a Warp Drive workflow alias"
+                "Edited an argument in a Torch Drive workflow alias"
             }
             Self::WorkflowAliasEnvVarsAttached => {
-                "Added or removed environment variables for a Warp Drive workflow alias"
+                "Added or removed environment variables for a Torch Drive workflow alias"
             }
             Self::ToggledAgentModeAutoexecuteReadonlyCommandsSetting => {
                 "Toggled setting to autoexecute readonly Agent Mode requested commands"
@@ -6938,11 +6938,11 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             }
             #[cfg(windows)]
             Self::AutoupdateMutexTimeout => {
-                "The Windows auto-update installer timed out waiting for Warp to release its mutex; a force-kill was attempted"
+                "The Windows auto-update installer timed out waiting for Torch to release its mutex; a force-kill was attempted"
             }
             #[cfg(windows)]
             Self::AutoupdateForcekillFailed { .. } => {
-                "The Windows auto-update installer failed to force-kill Warp after the mutex timeout"
+                "The Windows auto-update installer failed to force-kill Torch after the mutex timeout"
             }
             #[cfg(windows)]
             Self::AutoupdateMinidumpCleanupFailed { .. } => {
@@ -7059,7 +7059,7 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
                 "User copied a session link from the Agent Management View"
             }
             Self::DetectedIsolationPlatform { .. } => {
-                "Detected that Warp is running in an isolated sandbox"
+                "Detected that Torch is running in an isolated sandbox"
             }
             Self::AgentTipShown => "Selected an Agent Tip to show in the Agent Mode status bar",
             Self::AgentTipClicked => "User clicked a link or action in an Agent Tip",

@@ -585,7 +585,7 @@ impl ThemePickerSlide {
         let tos_line = Flex::row()
             .with_child(
                 ui_builder
-                    .span("By continuing, you agree to Warp's ")
+                    .span("By continuing, you agree to Torch's ")
                     .with_style(disclaimer_styles)
                     .build()
                     .finish(),

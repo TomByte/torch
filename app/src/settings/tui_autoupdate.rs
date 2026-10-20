@@ -16,6 +16,6 @@ define_settings_group!(TuiAutoupdateSettings, settings: [
         surface: settings::SettingSurfaces::TUI,
         private: false,
         toml_path: "general.autoupdate_enabled",
-        description: "Whether Warp Agent CLI checks for updates and automatically installs them when supported by the installation method.",
+        description: "Whether Torch Agent CLI checks for updates and automatically installs them when supported by the installation method.",
     },
 ]);

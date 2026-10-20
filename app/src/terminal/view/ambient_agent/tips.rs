@@ -93,7 +93,7 @@ pub fn get_cloud_mode_tips() -> Vec<CloudModeTip> {
             Some("https://docs.warp.dev/platform/overview/"),
         ),
         CloudModeTip::new(
-            "Fork a completed Oz cloud agent session into Warp to continue the work locally.",
+            "Fork a completed Oz cloud agent session into Torch to continue the work locally.",
             Some("https://docs.warp.dev/platform/viewing-cloud-agent-runs"),
         ),
         CloudModeTip::new(
@@ -117,7 +117,7 @@ pub fn get_cloud_mode_tips() -> Vec<CloudModeTip> {
             Some("https://docs.warp.dev/agents/capabilities/mcp"),
         ),
         CloudModeTip::new(
-            "Use `oz agent run` to kick off tasks without opening the Warp terminal.",
+            "Use `oz agent run` to kick off tasks without opening the Torch terminal.",
             Some("https://docs.warp.dev/platform/overview/"),
         ),
         CloudModeTip::new(

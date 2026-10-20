@@ -21,6 +21,7 @@ use settings::{
 };
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
+use warp_core::channel::ChannelState;
 use warp_core::execution_mode::AppExecutionMode;
 use warp_core::features::FeatureFlag;
 use warp_errors::report_if_error;
@@ -652,7 +653,7 @@ settings::macros::implement_setting_for_enum!(
     settings_value::SettingsValue,
 )]
 #[schemars(
-    description = "Which unit the usage entry displays in Warp Agent CLI.",
+    description = "Which unit the usage entry displays in Torch Agent CLI.",
     rename_all = "snake_case"
 )]
 pub enum TuiUsageDisplayMode {
@@ -671,7 +672,7 @@ settings::macros::implement_setting_for_enum!(
     surface: settings::SettingSurfaces::TUI,
     private: false,
     toml_path: "agents.usage_display_mode",
-    description: "Which unit the usage entry displays in Warp Agent CLI: credits or dollars.",
+    description: "Which unit the usage entry displays in Torch Agent CLI: credits or dollars.",
 );
 
 /// Unit for GUI usage and spend displays.
@@ -731,7 +732,7 @@ impl UsageDisplayUnit {
     settings_value::SettingsValue,
 )]
 #[schemars(
-    description = "A configurable item in the Warp Agent CLI statusline.",
+    description = "A configurable item in the Torch Agent CLI statusline.",
     rename_all = "snake_case"
 )]
 #[serde(rename_all = "snake_case")]
@@ -1541,7 +1542,7 @@ define_settings_group!(AISettings, settings: [
         surface: settings::SettingSurfaces::TUI,
         private: false,
         toml_path: "agents.statusline",
-        description: "Controls the order and visibility of Warp Agent CLI statusline items.",
+        description: "Controls the order and visibility of Torch Agent CLI statusline items.",
     },
     // Whether or not the profile-level command autoexecution speedbump has been shown.
     //
@@ -1614,7 +1615,7 @@ define_settings_group!(AISettings, settings: [
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "cloud_platform.third_party_api_keys.aws_bedrock_credentials_enabled",
-        description: "Whether Warp should use your local AWS credentials for Bedrock-enabled requests.",
+        description: "Whether Torch should use your local AWS credentials for Bedrock-enabled requests.",
     }
     // Whether to automatically run the AWS login command when Bedrock credentials are expired.
     //
@@ -1676,7 +1677,7 @@ define_settings_group!(AISettings, settings: [
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "cloud_platform.third_party_api_keys.gemini_enterprise_credentials_enabled",
-        description: "Whether Warp should route eligible requests through your workspace's Gemini Enterprise Google Cloud project.",
+        description: "Whether Torch should route eligible requests through your workspace's Gemini Enterprise Google Cloud project.",
     }
     // Whether or not the user wants agent mode requests to use their saved rules.
     memory_enabled: MemoryEnabled {
@@ -1698,7 +1699,7 @@ define_settings_group!(AISettings, settings: [
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "agents.knowledge.warp_drive_context_enabled",
-        description: "Whether Warp Drive context is included in AI requests.",
+        description: "Whether Torch Drive context is included in AI requests.",
     }
 
     // Whether the codebase speedbump banner has been permanently dismissed for a given repo path.
@@ -1889,7 +1890,7 @@ define_settings_group!(AISettings, settings: [
         private: false,
         storage_key: "CanUseWarpCreditsWithByok",
         toml_path: "cloud_platform.third_party_api_keys.can_use_warp_credits_with_byok",
-        description: "Whether Warp credits can be used as a fallback for user-provided models.",
+        description: "Whether Torch credits can be used as a fallback for user-provided models.",
     }
 
     should_render_use_agent_footer_for_user_commands: ShouldRenderUseAgentToolbarForUserCommands {
@@ -2162,7 +2163,7 @@ define_settings_group!(AISettings, settings: [
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "agents.warp_agent.other.agent_attribution_enabled",
-        description: "Whether the Warp Agent adds an attribution co-author line to commit messages and pull requests it creates.",
+        description: "Whether the Torch Agent adds an attribution co-author line to commit messages and pull requests it creates.",
     }
 
     should_force_disable_cloud_handoff: ShouldForceDisableCloudHandoff {
@@ -2195,7 +2196,7 @@ define_settings_group!(AISettings, settings: [
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "agents.warp_agent.other.auto_handoff_on_sleep_enabled",
-        description: "Whether Warp automatically hands off local agent conversations to cloud when the computer is about to sleep.",
+        description: "Whether Torch automatically hands off local agent conversations to cloud when the computer is about to sleep.",
     }
 
     // This is not a user-visible setting - it's merely a one-time flag to track if the
@@ -2263,6 +2264,10 @@ impl AISettings {
     }
 
     pub fn is_any_ai_enabled(&self, app: &AppContext) -> bool {
+        if ChannelState::is_local_only() {
+            return false;
+        }
+
         // Disable AI for anonymous and logged-out users.
         let is_anonymous_or_logged_out = AuthStateProvider::as_ref(app)
             .get()

@@ -73,7 +73,7 @@ pub const FEATURE_INTROS: &[FeatureIntro] = &[FeatureIntro {
     id: FeatureIntroId::CustomModelRouter,
     hero_image_path: "async/png/onboarding/custom_model_router_intro_banner.png",
     badge: Some("NEW"),
-    title: "Build a custom model router for the Warp Agent.",
+    title: "Build a custom model router for the Torch Agent.",
     description: "Custom routers can be complexity-based, where tasks are routed based on how difficult they are, or rule-based, where they are routed based on a set of natural language prompts.",
     description_icon: Some(Icon::Compass),
     cta_label: "Get started",

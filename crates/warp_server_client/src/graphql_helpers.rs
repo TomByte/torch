@@ -54,6 +54,10 @@ pub(crate) async fn send_graphql_request_with_options<QF, O>(
 where
     O: Operation<QF> + Send,
 {
+    if warp_core::channel::ChannelState::is_local_only() {
+        return Err(anyhow!("Torch does not support account-backed services"));
+    }
+
     let operation_name = operation.operation_name().map(Cow::into_owned);
     let response = match operation
         .send_request(base_client.owned_http_client(), options)

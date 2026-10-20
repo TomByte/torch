@@ -3,7 +3,7 @@ use warp_errors::report_error;
 
 use super::browser_url_resolution::resolve_browser_url;
 
-const DEFAULT_TITLE: &str = "Warp";
+const DEFAULT_TITLE: &str = "Torch";
 
 pub fn update_browser_url(url: Option<Url>, force_redirect: bool) {
     let current_url = parse_current_url();

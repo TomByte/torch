@@ -1111,6 +1111,51 @@ pub const RUNTIME_FEATURE_FLAGS: &[FeatureFlag] = &[FeatureFlag::LocalClaudeCode
 
 impl FeatureFlag {
     pub fn is_enabled(&self) -> bool {
+        if cfg!(feature = "local_only") {
+            if matches!(
+                self,
+                Self::AgentMode
+                    | Self::AgentPredict
+                    | Self::AgentView
+                    | Self::AgentViewPromptChip
+                    | Self::AgentViewConversationListView
+                    | Self::AgentManagementView
+                    | Self::AgentOnboarding
+                    | Self::ForceLogin
+                    | Self::AvatarInTabBar
+                    | Self::CloudObjects
+                    | Self::CloudEnvironments
+                    | Self::CloudMode
+                    | Self::CloudModeFromLocalSession
+                    | Self::CloudConversations
+                    | Self::CreatingSharedSessions
+                    | Self::ViewingSharedSessions
+                    | Self::WelcomeBlock
+                    | Self::WelcomeTips
+                    | Self::AIGeneratedOnboardingSuggestions
+                    | Self::Changelog
+                    | Self::OzChangelogUpdates
+                    | Self::Autoupdate
+                    | Self::CocoaSentry
+                    | Self::CrashReporting
+                    | Self::GlobalAIAnalyticsBanner
+                    | Self::GlobalAIAnalyticsCollection
+                    | Self::AgentCliLaunchModal
+                    | Self::AtMenuOutsideOfAIMode
+                    | Self::AIContextMenuEnabled
+                    | Self::AmbientAgentsCommandLine
+                    | Self::HOANotifications
+                    | Self::HOAOnboardingFlow
+                    | Self::AccountFirstOnboarding
+                    | Self::OpenWarpLaunchModal
+            ) {
+                return false;
+            }
+            if matches!(self, Self::SkipFirebaseAnonymousUser) {
+                return true;
+            }
+        }
+
         #[cfg(all(debug_assertions, not(feature = "test-util")))]
         {
             use std::sync::atomic::Ordering;

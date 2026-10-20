@@ -166,7 +166,7 @@ impl OneTimeModalModel {
                         .did_check_to_trigger_agent_cli_launch_modal
                         .set_value(true, ctx)
                     {
-                        log::warn!("Failed to mark Warp Agent CLI launch modal as dismissed: {e}");
+                        log::warn!("Failed to mark Torch Agent CLI launch modal as dismissed: {e}");
                     }
                     // New signups shouldn't see feature-intro popovers on their second
                     // startup, so pre-mark every registered feature intro as seen.
@@ -925,7 +925,7 @@ impl OneTimeModalModel {
                 .did_check_to_trigger_agent_cli_launch_modal
                 .set_value(true, ctx)
             {
-                log::warn!("Failed to mark Warp Agent CLI launch modal as dismissed: {e}");
+                log::warn!("Failed to mark Torch Agent CLI launch modal as dismissed: {e}");
             }
         });
 

@@ -18,22 +18,13 @@ cd "${REPO_ROOT}"
 
 OS_TYPE="$(uname -s)"
 
-FEATURES="gui"
-INSTALL_COMMON_SKILLS=1
+FEATURES="gui,local_only"
+INSTALL_COMMON_SKILLS=0
 FORCE_COMMON_SKILLS=0
 COMMON_SKILLS_TARGET="${WARP_COMMON_SKILLS_INSTALL_TARGET:-}"
 
-./script/install_channel_config || echo "Skipping internal channel config installation (no repo access)."
-
-
-# If warp_channel_config is on PATH, build the Local channel binary; otherwise build the OSS channel.
-if command -v warp-channel-config &>/dev/null; then
-    WARP_BIN_NAME="warp"
-    WARP_CHANNEL="local"
-else
-    WARP_BIN_NAME="warp-oss"
-    WARP_CHANNEL="oss"
-fi
+WARP_BIN_NAME="torch"
+WARP_CHANNEL="oss"
 
 # Shared argument parsing. macOS-specific flags (--dont-open,
 # --open_with_launchd, --generate-schema) are forwarded through MAC_ARGS and

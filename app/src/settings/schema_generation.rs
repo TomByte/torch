@@ -85,12 +85,12 @@ fn settings_schema_json(is_flag_enabled: impl Fn(FeatureFlag) -> bool) -> Result
     );
     root.insert(
         "title".to_string(),
-        Value::String("Warp Settings".to_string()),
+        Value::String("Torch Settings".to_string()),
     );
     root.insert(
         "description".to_string(),
         Value::String(format!(
-            "JSON Schema for Warp settings ({} channel, {entry_count} settings)",
+            "JSON Schema for Torch settings ({} channel, {entry_count} settings)",
             ChannelState::channel()
         )),
     );

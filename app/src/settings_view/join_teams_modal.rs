@@ -12,7 +12,7 @@ use warpui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View
 use crate::appearance::Appearance;
 use crate::server::ids::ServerId;
 use crate::workspaces::team::DiscoverableTeam;
-const SUBTITLE: &str = "You can join any open team in your Warp workspace.";
+const SUBTITLE: &str = "You can join any open team in your Torch workspace.";
 const MAX_VISIBLE_TEAMS: usize = 4;
 const TEAM_LIST_MAX_HEIGHT: f32 = 264.;
 

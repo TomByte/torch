@@ -239,6 +239,10 @@ impl AuthSession {
     }
 
     pub async fn get_or_refresh_access_token(&self) -> Result<AuthToken> {
+        if warp_core::channel::ChannelState::is_local_only() {
+            bail!("Torch does not support account-backed services");
+        }
+
         if cfg!(feature = "skip_login") {
             bail!("skip_login enabled; failing all authenticated requests");
         }

@@ -64,7 +64,7 @@ const FONT_SIZE: f32 = 12.;
 
 const SAFE_MODE_TITLE: &str = "Secret redaction";
 static SAFE_MODE_DESCRIPTION: LazyLock<&'static str> = LazyLock::new(|| {
-    "When this setting is enabled, Warp will scan blocks, the contents of \
+    "When this setting is enabled, Torch will scan blocks, the contents of \
         Warp Drive objects, and Oz prompts for potential sensitive \
         information and prevent saving or sending this data to any \
         servers. You can customize this list via regexes."
@@ -75,7 +75,7 @@ const USER_SECRET_REGEX_DESCRIPTION: &str = "Use regex to define additional secr
     to make it case-insensitive.";
 const TELEMETRY_DESCRIPTION_OLD: &str = "App analytics help us make the product better for you. We only collect \
     app usage metadata, never console input or output.";
-const TELEMETRY_TITLE: &str = "Help improve Warp";
+const TELEMETRY_TITLE: &str = "Help improve Torch";
 const TELEMETRY_DESCRIPTION: &str = "App analytics help us make the product better for you. We may collect \
     certain console interactions to improve Warp's AI capabilities.";
 const TELEMETRY_DOCS_URL: &str = "https://docs.warp.dev/support-and-community/privacy-and-security/privacy#what-telemetry-data-does-warp-collect-and-why";
@@ -86,7 +86,7 @@ const DATA_MANAGEMENT_DESCRIPTION: &str = "At any time, you may choose to delete
 const DATA_MANAGEMENT_LINK_TEXT: &str = "Visit the data management page";
 
 const PRIVACY_POLICY_TITLE: &str = "Privacy policy";
-const PRIVACY_POLICY_LINK_TEXT: &str = "Read Warp's privacy policy";
+const PRIVACY_POLICY_LINK_TEXT: &str = "Read Torch's privacy policy";
 
 pub fn data_management_url(custom_token: Option<&str>) -> String {
     match custom_token {
@@ -228,8 +228,10 @@ impl PrivacyPageView {
         if ContextFlag::NetworkLogConsole.is_enabled() {
             widgets.push(Box::new(NetworkLogWidget::default()));
         }
-        widgets.push(Box::new(DataManagementWidget::default()));
-        widgets.push(Box::new(PrivacyPolicyWidget::default()));
+        if !ChannelState::is_local_only() {
+            widgets.push(Box::new(DataManagementWidget::default()));
+            widgets.push(Box::new(PrivacyPolicyWidget::default()));
+        }
         PageType::new_uncategorized(widgets, Some(PageTitle::new("Privacy")))
     }
 
@@ -1547,7 +1549,7 @@ impl SettingsWidget for AppAnalyticsWidget {
             Align::new(
                 ui_builder
                     .link(
-                        "Read more about Warp's use of data".into(),
+                        "Read more about Torch's use of data".into(),
                         Some(TELEMETRY_DOCS_URL.into()),
                         None,
                         self.docs_link_mouse_state.clone(),

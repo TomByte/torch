@@ -193,11 +193,11 @@ impl CliAgentPluginManager for CodexPluginManager {
     }
 
     fn install_success_message(&self) -> &'static str {
-        "Warp plugin installed. Please restart Codex to activate."
+        "Torch plugin installed. Please restart Codex to activate."
     }
 
     fn update_success_message(&self) -> &'static str {
-        "Warp plugin updated. Please restart Codex to activate."
+        "Torch plugin updated. Please restart Codex to activate."
     }
 
     fn install_instructions(&self) -> &'static PluginInstructions {
@@ -273,17 +273,17 @@ impl CliAgentPluginManager for CodexPluginManager {
 
 static PLUGIN_INSTALL_INSTRUCTIONS: LazyLock<PluginInstructions> =
     LazyLock::new(|| PluginInstructions {
-        title: "Install Warp Plugin for Codex",
+        title: "Install Torch Plugin for Codex",
         subtitle: "Run the following commands, then restart Codex.",
         steps: &[
             PluginInstructionStep {
-                description: "Add the Warp plugin marketplace repository",
+                description: "Add the Torch plugin marketplace repository",
                 command: "codex plugin marketplace add warpdotdev/codex-warp",
                 executable: true,
                 link: None,
             },
             PluginInstructionStep {
-                description: "Install the Warp plugin",
+                description: "Install the Torch plugin",
                 command: "codex plugin add warp@codex-warp",
                 executable: true,
                 link: None,
@@ -294,8 +294,8 @@ static PLUGIN_INSTALL_INSTRUCTIONS: LazyLock<PluginInstructions> =
 
 static NATIVE_INSTALL_INSTRUCTIONS: LazyLock<PluginInstructions> = LazyLock::new(|| {
     PluginInstructions {
-        title: "Enable Warp Notifications for Codex",
-        subtitle: "Update Codex to the latest version, then enable in-focus notifications so Warp can display them while you work.",
+        title: "Enable Torch Notifications for Codex",
+        subtitle: "Update Codex to the latest version, then enable in-focus notifications so Torch can display them while you work.",
         steps: &[
             PluginInstructionStep {
                 description: "Update Codex to the latest version.",
@@ -323,7 +323,7 @@ static EMPTY_INSTRUCTIONS: LazyLock<PluginInstructions> = LazyLock::new(|| Plugi
 
 static PLUGIN_UPDATE_INSTRUCTIONS: LazyLock<PluginInstructions> = LazyLock::new(|| {
     PluginInstructions {
-        title: "Update Warp Plugin for Codex",
+        title: "Update Torch Plugin for Codex",
         subtitle: "Run the following commands, then restart Codex.",
         steps: &[
             PluginInstructionStep {
@@ -333,7 +333,7 @@ static PLUGIN_UPDATE_INSTRUCTIONS: LazyLock<PluginInstructions> = LazyLock::new(
                 link: None,
             },
             PluginInstructionStep {
-                description: "Reinstall the Warp plugin",
+                description: "Reinstall the Torch plugin",
                 command: "codex plugin add warp@codex-warp",
                 executable: true,
                 link: None,

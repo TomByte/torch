@@ -70,7 +70,7 @@ use crate::workflows::local_workflows::tail_command_for_shell;
 use crate::workspace::Workspace;
 use crate::workspaces::user_workspaces::UserWorkspaces;
 
-const DESCRIPTION_TEXT: &str = "Add MCP servers to extend the Warp Agent's capabilities. MCP servers expose data sources or tools to agents through a standardized interface, essentially acting like plugins. Add a custom server, or use the presets to get started with popular servers. You can also find team servers that have been shared with you here. ";
+const DESCRIPTION_TEXT: &str = "Add MCP servers to extend the Torch Agent's capabilities. MCP servers expose data sources or tools to agents through a standardized interface, essentially acting like plugins. Add a custom server, or use the presets to get started with popular servers. You can also find team servers that have been shared with you here. ";
 
 #[derive(Debug, Clone)]
 pub enum MCPServersListPageViewEvent {
@@ -1289,8 +1289,8 @@ impl MCPServersListPageView {
                         .team_for_view_handle(&self.handle, app)
                         .map(|team| team.name.clone());
                     let shared_by_text = match team_name {
-                        Some(name) => format!("Shared by Warp and {name}"),
-                        None => "Shared by Warp and from other devices".to_string(),
+                        Some(name) => format!("Shared by Torch and {name}"),
+                        None => "Shared by Torch and from other devices".to_string(),
                     };
 
                     page.add_child(self.render_server_cards_section(
@@ -1301,7 +1301,7 @@ impl MCPServersListPageView {
                     ));
                 } else if !filtered_gallery_cards.is_empty() {
                     page.add_child(self.render_server_cards_section(
-                        "Shared from Warp",
+                        "Shared from Torch",
                         &filtered_gallery_cards,
                         appearance,
                         app,

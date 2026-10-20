@@ -250,7 +250,7 @@ pub fn render_settings_error_alert(
             ui_font_family,
             text_color,
             mouse_states.alert_fix_with_oz_button.clone(),
-            "Fix with Warp Agent",
+            "Fix with Torch Agent",
             Some(Icon::Agent),
             /*bordered=*/ false,
             WorkspaceAction::FixSettingsWithOz { error_description },

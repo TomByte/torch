@@ -1,0 +1,14 @@
+name: Torch local policy
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  local-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.92.0
+        with:
+          components: clippy
+      - run: cargo test -p warp_features --features local_only,test-util
+      - run: cargo clippy -p warp_features --features local_only,test-util --all-targets -- -D warnings

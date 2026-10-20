@@ -88,7 +88,9 @@ impl Input {
                 )
                 .finish(),
         );
-        column.add_child(ChildView::new(&self.universal_developer_input_button_bar).finish());
+        if !warp_core::channel::ChannelState::is_local_only() {
+            column.add_child(ChildView::new(&self.universal_developer_input_button_bar).finish());
+        }
 
         if matches!(input_mode, InputMode::PinnedToTop)
             && let Some(banner) =

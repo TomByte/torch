@@ -8,22 +8,19 @@ use warp_core::channel::{Channel, ChannelConfig, ChannelState, OzConfig, WarpSer
 
 // Simple wrapper around warp::run() for Warp OSS builds.
 fn main() -> Result<()> {
-    let mut state = ChannelState::new(
+    let state = ChannelState::new(
         Channel::Oss,
         ChannelConfig {
-            app_id: AppId::new("dev", "warp", "WarpOss"),
-            logfile_name: "warp-oss.log".into(),
-            server_config: WarpServerConfig::production(),
-            oz_config: OzConfig::production(),
+            app_id: AppId::new("dev", "tombyte", "Torch"),
+            logfile_name: "torch.log".into(),
+            server_config: WarpServerConfig::disabled(),
+            oz_config: OzConfig::disabled(),
             telemetry_config: None,
             crash_reporting_config: None,
             autoupdate_config: None,
             mcp_static_config: None,
         },
     );
-    if cfg!(debug_assertions) {
-        state = state.with_additional_features(warp_core::features::DEBUG_FLAGS);
-    }
     ChannelState::set(state);
 
     warp::run()
@@ -39,15 +36,15 @@ embed_plist::embed_info_plist_bytes!(r#"
     <key>CFBundleDevelopmentRegion</key>
     <string>English</string>
     <key>CFBundleDisplayName</key>
-    <string>WarpOss</string>
+    <string>Torch</string>
     <key>CFBundleExecutable</key>
-    <string>warp-oss</string>
+    <string>torch</string>
     <key>CFBundleIdentifier</key>
-    <string>dev.warp.WarpOss</string>
+    <string>dev.tombyte.Torch</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>WarpOss</string>
+    <string>Torch</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
@@ -59,7 +56,7 @@ embed_plist::embed_info_plist_bytes!(r#"
     <key>UIDesignRequiresCompatibility</key>
     <true/>
     <key>CFBundleURLTypes</key>
-    <array><dict><key>CFBundleURLName</key><string>Custom App</string><key>CFBundleURLSchemes</key><array><string>warposs</string></array></dict></array>
+    <array><dict><key>CFBundleURLName</key><string>Custom App</string><key>CFBundleURLSchemes</key><array><string>torch</string></array></dict></array>
     <key>NSHumanReadableCopyright</key>
     <string>© 2026, Denver Technologies, Inc</string>
     </dict>

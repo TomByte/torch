@@ -115,7 +115,7 @@ impl AiAccessSlide {
             .finish();
 
         let subtitle = FormattedTextElement::from_str(
-            "Save with a recurring plan, or explore Warp's AI before committing.",
+            "Save with a recurring plan, or explore Torch's AI before committing.",
             appearance.ui_font_family(),
             16.,
         )

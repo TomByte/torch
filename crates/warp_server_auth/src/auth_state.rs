@@ -119,6 +119,10 @@ impl AuthState {
     pub fn initialize(ctx: &AppContext) -> Self {
         let state = Self::new(ctx);
 
+        if ChannelState::is_local_only() {
+            return state;
+        }
+
         if Self::should_use_test_user() {
             state.set_user(Some(User::test()));
             #[cfg(any(
@@ -171,6 +175,10 @@ impl AuthState {
     /// storage.
     pub fn initialize_for_credential_validation(ctx: &AppContext) -> Self {
         let state = Self::new(ctx);
+
+        if ChannelState::is_local_only() {
+            return state;
+        }
 
         if Self::should_use_test_user() {
             state.set_user(Some(User::test()));

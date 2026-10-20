@@ -999,7 +999,7 @@ pub fn run_tui_worker_if_requested() -> Option<Result<()>> {
     let args = warp_cli::Args::from_env();
     let Some(warp_cli::Command::Worker(worker)) = args.command() else {
         return Some(Err(anyhow!(
-            "Recognized a Warp worker invocation, but failed to parse its worker command"
+            "Recognized a Torch worker invocation, but failed to parse its worker command"
         )));
     };
     Some(run_worker_command(worker))

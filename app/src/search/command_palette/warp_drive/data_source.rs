@@ -124,7 +124,7 @@ impl DataSource {
         self.searcher
             .refresh_search_index(&self.scope, ctx)
             .unwrap_or_else(|err| {
-                report_error!(err.context("Error refreshing Warp Drive search index"));
+                report_error!(err.context("Error refreshing Torch Drive search index"));
             });
     }
 

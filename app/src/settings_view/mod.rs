@@ -349,8 +349,8 @@ impl Display for SettingsSection {
             SettingsSection::Keybindings => write!(f, "Keyboard shortcuts"),
             SettingsSection::SharedBlocks => write!(f, "Shared blocks"),
             SettingsSection::Scripting => write!(f, "Scripting"),
-            SettingsSection::WarpDrive => write!(f, "Warp Drive"),
-            SettingsSection::WarpAgent => write!(f, "Warp Agent"),
+            SettingsSection::WarpDrive => write!(f, "Torch Drive"),
+            SettingsSection::WarpAgent => write!(f, "Torch Agent"),
             SettingsSection::AgentProfiles => write!(f, "Profiles"),
             SettingsSection::AgentMCPServers => write!(f, "MCP servers"),
             SettingsSection::Knowledge => write!(f, "Knowledge"),
@@ -365,6 +365,18 @@ impl Display for SettingsSection {
 }
 
 impl SettingsSection {
+    fn is_available_locally(self) -> bool {
+        matches!(
+            self,
+            Self::Appearance
+                | Self::Features
+                | Self::Keybindings
+                | Self::Privacy
+                | Self::About
+                | Self::Scripting
+        )
+    }
+
     /// Stable identifier for this section, used everywhere the section leaves
     /// the process: the SQLite session-restore key and the
     /// `surface.settings.open --page` warpctrl vocabulary.
@@ -391,9 +403,9 @@ impl SettingsSection {
             Self::Scripting => "Scripting",
             Self::SharedBlocks => "Shared blocks",
             Self::Teams => "Teams",
-            Self::WarpDrive => "Warp Drive",
+            Self::WarpDrive => "Torch Drive",
             Self::Warpify => "Warpify",
-            Self::WarpAgent => "Warp Agent",
+            Self::WarpAgent => "Torch Agent",
             Self::AgentProfiles => "Profiles",
             Self::AgentMCPServers => "MCP servers",
             Self::Knowledge => "Knowledge",
@@ -427,10 +439,10 @@ impl SettingsSection {
             "Scripting" => Self::Scripting,
             "Shared blocks" => Self::SharedBlocks,
             "Teams" => Self::Teams,
-            "Warp Drive" | "WarpDrive" => Self::WarpDrive,
+            "Torch Drive" | "Warp Drive" | "WarpDrive" => Self::WarpDrive,
             "Warpify" => Self::Warpify,
             // "Oz" and "AI" are older names for what is now the Warp Agent page.
-            "Warp Agent" | "Oz" | "AI" => Self::WarpAgent,
+            "Torch Agent" | "Warp Agent" | "Oz" | "AI" => Self::WarpAgent,
             "Profiles" | "AgentProfiles" => Self::AgentProfiles,
             // "MCP Servers" named the standalone page before it moved under the
             // Agents umbrella; it differs from the current slug only by casing.
@@ -1455,6 +1467,22 @@ impl SettingsView {
                 SettingsNavItem::Page(SettingsSection::Scripting),
             );
         }
+
+        if ChannelState::is_local_only() {
+            settings_pages.retain(|page| page.section.is_available_locally());
+            nav_items.retain(|item| match item {
+                SettingsNavItem::Page(section) => section.is_available_locally(),
+                SettingsNavItem::Umbrella(_) => false,
+            });
+        }
+        let page = if ChannelState::is_local_only() {
+            Some(
+                page.filter(|section| section.is_available_locally())
+                    .unwrap_or(SettingsSection::Appearance),
+            )
+        } else {
+            page
+        };
 
         let initial_page = match page {
             Some(SettingsSection::Scripting) if !FeatureFlag::WarpControlCli.is_enabled() => {

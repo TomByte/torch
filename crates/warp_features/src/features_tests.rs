@@ -26,3 +26,39 @@ fn local_child_harnesses_are_local_only_by_default() {
     assert!(!DEBUG_FLAGS.contains(&FeatureFlag::LocalClaudeCodexChildHarnesses));
     assert!(!DOGFOOD_FLAGS.contains(&FeatureFlag::LocalClaudeCodexChildHarnesses));
 }
+
+#[cfg(all(feature = "local_only", feature = "test-util"))]
+#[test]
+fn torch_cannot_reenable_accounts_ai_or_cloud_with_runtime_overrides() {
+    for flag in [
+        FeatureFlag::ForceLogin,
+        FeatureFlag::AgentOnboarding,
+        FeatureFlag::AgentMode,
+        FeatureFlag::AgentPredict,
+        FeatureFlag::AgentViewPromptChip,
+        FeatureFlag::CloudObjects,
+        FeatureFlag::CloudConversations,
+        FeatureFlag::Autoupdate,
+    ] {
+        let _enabled = flag.override_enabled(true);
+        assert!(!flag.is_enabled(), "{flag:?} must stay disabled in Torch");
+    }
+    let _disabled = FeatureFlag::SkipFirebaseAnonymousUser.override_enabled(false);
+    assert!(FeatureFlag::SkipFirebaseAnonymousUser.is_enabled());
+}
+
+#[cfg(all(feature = "local_only", feature = "test-util"))]
+#[test]
+fn torch_preserves_normal_completion_preferences() {
+    for flag in [
+        FeatureFlag::ClassicCompletions,
+        FeatureFlag::ForceClassicCompletions,
+    ] {
+        {
+            let _enabled = flag.override_enabled(true);
+            assert!(flag.is_enabled());
+        }
+        let _disabled = flag.override_enabled(false);
+        assert!(!flag.is_enabled());
+    }
+}

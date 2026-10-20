@@ -477,7 +477,7 @@ impl HoaOnboardingFlow {
 
         let formatted = FormattedText::new([FormattedTextLine::Line(vec![
             FormattedTextFragment::plain_text(
-                "Warp pipes through notifications from any CLI coding agent into a unified notification center that works across all coding agents and harnesses. ",
+                "Torch pipes through notifications from any CLI coding agent into a unified notification center that works across all coding agents and harnesses. ",
             ),
             learn_more_fragment,
         ])]);

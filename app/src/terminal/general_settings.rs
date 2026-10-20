@@ -15,7 +15,7 @@ define_settings_group!(GeneralSettings, settings: [
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "general.show_warning_before_quitting",
-        description: "Whether to show a warning dialog before quitting Warp.",
+        description: "Whether to show a warning dialog before quitting Torch.",
     },
     quit_on_last_window_closed: QuitOnLastWindowClosed {
         type: bool,
@@ -25,7 +25,7 @@ define_settings_group!(GeneralSettings, settings: [
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "general.quit_on_last_window_closed",
-        description: "Whether to quit Warp when the last window is closed.",
+        description: "Whether to quit Torch when the last window is closed.",
     },
     restore_session: RestoreSession {
         type: bool,
@@ -35,7 +35,7 @@ define_settings_group!(GeneralSettings, settings: [
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "general.restore_session",
-        description: "Whether to restore the previous session when Warp starts up.",
+        description: "Whether to restore the previous session when Torch starts up.",
     },
     add_app_as_login_item: LoginItem {
         type: bool,
@@ -48,7 +48,7 @@ define_settings_group!(GeneralSettings, settings: [
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "general.login_item",
-        description: "Whether to launch Warp automatically when you log in.",
+        description: "Whether to launch Torch automatically when you log in.",
     },
     // Records whether the app has been added as a login item.
     // If it has, we don't try to add it again unless the user explicitly

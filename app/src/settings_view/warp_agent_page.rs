@@ -286,8 +286,8 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
         vec![
             ToggleSettingActionPair::custom(
                 SettingActionPairDescriptions::new(
-                    "Show Warp Agent changelog in new agent conversation view",
-                    "Hide Warp Agent changelog in new agent conversation view",
+                    "Show Torch Agent changelog in new agent conversation view",
+                    "Hide Torch Agent changelog in new agent conversation view",
                 ),
                 builder(SettingsAction::WarpAgent(
                     WarpAgentPageAction::ToggleShowOzUpdatesInZeroState,
@@ -564,7 +564,7 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
     ToggleSettingActionPair::add_toggle_setting_action_pairs_as_bindings(
         vec![
             ToggleSettingActionPair::new(
-                "Warp credit fallback",
+                "Torch credit fallback",
                 builder(SettingsAction::WarpAgent(
                     WarpAgentPageAction::ToggleCanUseWarpCreditsForFallback,
                 )),
@@ -2428,7 +2428,7 @@ impl WarpAgentPageView {
         let global_ai_sign_up_button = MouseStateHandle::default();
         PageType::new_categorized(
             categories,
-            Some(PageTitle::new("Warp Agent").with_trailing_element(
+            Some(PageTitle::new("Torch Agent").with_trailing_element(
                 move |_view, appearance, app| {
                     render_global_ai_toggle(
                         &global_ai_switch_state,
@@ -4128,7 +4128,7 @@ impl VoiceWidget {
 
         let voice_input_description_text_fragments = vec![
             FormattedTextFragment::plain_text(
-                "Voice input allows you to control Warp by speaking directly to your terminal (powered by ",
+                "Voice input allows you to control Torch by speaking directly to your terminal (powered by ",
             ),
             FormattedTextFragment::hyperlink("Wispr Flow", WISPR_FLOW_URL),
             FormattedTextFragment::plain_text(")."),
@@ -4330,7 +4330,7 @@ impl SettingsWidget for ShowOzUpdatesInZeroStateWidget {
         let ai_settings = AISettings::as_ref(app);
         let is_toggleable = ai_settings.is_any_ai_enabled(app);
         render_ai_setting_toggle::<ShouldShowOzUpdatesInZeroState>(
-            "Show Warp Agent changelog in new conversation view",
+            "Show Torch Agent changelog in new conversation view",
             WarpAgentPageAction::ToggleShowOzUpdatesInZeroState,
             *ai_settings.should_show_oz_updates_in_zero_state,
             is_toggleable,
@@ -4667,7 +4667,7 @@ impl SettingsWidget for AgentAttributionWidget {
         Flex::column()
             .with_child(toggle_row)
             .with_child(render_ai_setting_description(
-                "Warp Agent can add attribution to commit messages and pull requests it creates",
+                "Torch Agent can add attribution to commit messages and pull requests it creates",
                 !state.is_disabled,
                 app,
             ))
@@ -4765,7 +4765,7 @@ impl SettingsWidget for CloudAgentComputerUseWidget {
         Flex::column()
             .with_child(toggle_row)
             .with_child(render_ai_setting_description(
-                "Enable computer use in cloud agent conversations started from the Warp app.",
+                "Enable computer use in cloud agent conversations started from the Torch app.",
                 !is_disabled,
                 app,
             ))
@@ -4916,7 +4916,7 @@ impl SettingsWidget for AutoHandoffOnSleepWidget {
         Flex::column()
             .with_child(auto_handoff_on_sleep_row)
             .with_child(render_ai_setting_description(
-                "When macOS is about to sleep, automatically moves the most recently focused running local Warp Agent conversation to Cloud Mode so it can keep working.",
+                "When macOS is about to sleep, automatically moves the most recently focused running local Torch Agent conversation to Cloud Mode so it can keep working.",
                 true,
                 app,
             ))
@@ -5464,7 +5464,7 @@ impl ApiKeysWidget {
 
         if show_provider_keys {
             add_paragraph(vec![FormattedTextFragment::plain_text(
-                "Use your own API keys from model providers for Warp Agent. API keys are used to make requests to your chosen model provider. Using auto models or models you do not have available API keys for will consume Warp credits.",
+                "Use your own API keys from model providers for Torch Agent. API keys are used to make requests to your chosen model provider. Using auto models or models you do not have available API keys for will consume Torch credits.",
             )]);
         }
 
@@ -5476,7 +5476,7 @@ impl ApiKeysWidget {
 
         if show_provider_keys || show_custom_endpoints {
             add_paragraph(vec![FormattedTextFragment::plain_text(
-                "API keys added here are stored only on this device, not on Warp's servers.",
+                "API keys added here are stored only on this device, not on Torch's servers.",
             )]);
             add_paragraph(vec![FormattedTextFragment::hyperlink(
                 "Learn more",
@@ -5620,7 +5620,7 @@ impl ApiKeysWidget {
 
         let description = Container::new(
             Text::new(
-                "Connect your SuperGrok plan to use Grok models in the Warp Agent through your xAI account.",
+                "Connect your SuperGrok plan to use Grok models in the Torch Agent through your xAI account.",
                 appearance.ui_font_family(),
                 CONTENT_FONT_SIZE,
             )
@@ -5732,7 +5732,7 @@ impl ApiKeysWidget {
 
         let description = Container::new(
             Text::new(
-                "Connect your ChatGPT plan to use OpenAI models in the Warp Agent through your OpenAI account.",
+                "Connect your ChatGPT plan to use OpenAI models in the Torch Agent through your OpenAI account.",
                 appearance.ui_font_family(),
                 CONTENT_FONT_SIZE,
             )
@@ -5838,7 +5838,7 @@ impl ApiKeysWidget {
         let ai_settings = AISettings::as_ref(app);
 
         let toggle = render_ai_setting_toggle::<CanUseWarpCreditsForFallback>(
-            "Warp credit fallback",
+            "Torch credit fallback",
             WarpAgentPageAction::ToggleCanUseWarpCreditsForFallback,
             *ai_settings.can_use_warp_credits_for_fallback,
             ai_settings.is_any_ai_enabled(app),
@@ -5848,7 +5848,7 @@ impl ApiKeysWidget {
         );
 
         let description = render_ai_setting_description(
-            "When enabled, agent requests may be routed to one of Warp's provided models in the event of an error. Warp will prioritize using your API keys over your Warp credits.",
+            "When enabled, agent requests may be routed to one of Torch's provided models in the event of an error. Torch will prioritize using your API keys over your Torch credits.",
             ai_settings.is_any_ai_enabled(app),
             app,
         );
@@ -6359,9 +6359,9 @@ impl AwsBedrockWidget {
             user_workspaces.is_aws_bedrock_credentials_enabled(&scope, app);
         let is_usage_enabled = is_section_enabled && are_credentials_enabled;
         let toggle_description = if is_admin_enforced {
-            "Warp loads and sends local AWS CLI credentials for Bedrock-supported models. This setting is managed by your organization.".to_string()
+            "Torch loads and sends local AWS CLI credentials for Bedrock-supported models. This setting is managed by your organization.".to_string()
         } else {
-            "Warp loads and sends local AWS CLI credentials for Bedrock-supported models."
+            "Torch loads and sends local AWS CLI credentials for Bedrock-supported models."
                 .to_string()
         };
 

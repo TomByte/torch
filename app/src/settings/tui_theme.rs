@@ -23,7 +23,7 @@ use crate::themes::default_themes::{dark_theme, light_theme};
     settings_value::SettingsValue,
 )]
 #[schemars(
-    description = "The color theme used by Warp Agent CLI.",
+    description = "The color theme used by Torch Agent CLI.",
     rename_all = "snake_case"
 )]
 pub enum TuiTheme {
@@ -89,7 +89,7 @@ define_settings_group!(TuiThemeSettings, settings: [
         surface: settings::SettingSurfaces::TUI,
         private: false,
         toml_path: "appearance.theme",
-        description: "The Warp Agent CLI color theme. Auto matches the host terminal background.",
+        description: "The Torch Agent CLI color theme. Auto matches the host terminal background.",
     },
 ]);
 

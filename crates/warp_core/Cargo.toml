@@ -6,6 +6,7 @@ publish.workspace = true
 license.workspace = true
 
 [features]
+local_only = ["warp_features/local_only"]
 integration_tests = []
 local_fs = []
 release_bundle = []

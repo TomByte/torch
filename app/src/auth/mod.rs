@@ -91,7 +91,7 @@ pub fn web_logout_url() -> String {
 #[cfg(feature = "tui")]
 pub fn web_logout_url_with_continue(continue_url: &str) -> Option<String> {
     let mut logout_url =
-        Url::parse(&web_logout_url()).expect("configured Warp web logout URL must be valid");
+        Url::parse(&web_logout_url()).expect("configured Torch web logout URL must be valid");
     let continue_url = Url::parse(continue_url).ok()?;
     let has_required_query = continue_url
         .query_pairs()

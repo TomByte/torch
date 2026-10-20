@@ -591,7 +591,7 @@ const TAB_BAR_PILL_WIDTH: f32 = 100.;
 const PILL_FONT_SIZE: f32 = 12.;
 // We use the word "Warp" in the Update Ready button to make it obvious that the terminal is Warp.
 // This can lead to free advertising when users screen-share Warp when an update is available.
-const UPDATE_READY_TEXT: &str = "Update Warp";
+const UPDATE_READY_TEXT: &str = "Update Torch";
 
 const TAB_BAR_OVERFLOW_MENU_WIDTH: f32 = 300.;
 
@@ -643,7 +643,7 @@ const AI_ASSISTANT_BUTTON_ID: &str = "workspace_view:ai_assistant_button";
 
 const VERSION_DEPRECATION_BANNER_TEXT: &str = "Your app is out of date and some features may not work as expected. Please update immediately.";
 
-const VERSION_DEPRECATION_WITHOUT_PERMISSIONS_BANNER_TEXT: &str = "Some Warp features may not work as expected without updating immediately, but Warp is unable to perform the update.";
+const VERSION_DEPRECATION_WITHOUT_PERMISSIONS_BANNER_TEXT: &str = "Some Torch features may not work as expected without updating immediately, but Torch is unable to perform the update.";
 
 const ASK_AI_ASSISTANT_KEYBINDING_NAME: &str = "workspace:toggle_ai_assistant";
 const TOGGLE_RESOURCE_CENTER_KEYBINDING_NAME: &str = "workspace:toggle_resource_center";
@@ -737,7 +737,7 @@ const MAX_WINDOW_TITLE_LENGTH: usize = 80;
 
 #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
 const AUTO_CLOUD_HANDOFF_PROMPT: &str =
-    "Continue this local Warp Agent task in the cloud from the current conversation state.";
+    "Continue this local Torch Agent task in the cloud from the current conversation state.";
 
 /// The default display name used for the user if they have no associated display name.
 pub const DEFAULT_USER_DISPLAY_NAME: &str = "User";
@@ -8257,7 +8257,7 @@ impl Workspace {
                         .into_item(),
                 ),
                 AutoupdateStage::UnableToUpdateToNewVersion { .. } => menu_items.push(
-                    MenuItemFields::new("Update Warp manually")
+                    MenuItemFields::new("Update Torch manually")
                         .with_on_select_action(WorkspaceAction::DownloadNewVersion)
                         .into_item(),
                 ),
@@ -9373,7 +9373,7 @@ impl Workspace {
     fn install_oz(&mut self, ctx: &mut ViewContext<Self>) {
         ctx.spawn(async { cli_install::install_oz() }, |view, result, ctx| {
             let command_name = ChannelState::channel().cli_command_name();
-            let message = format!("Installed the Oz CLI globally. You can now run '{command_name}' from any terminal outside of Warp.");
+            let message = format!("Installed the Oz CLI globally. You can now run '{command_name}' from any terminal outside of Torch.");
             let toast = DismissibleToast::success(message).with_link(
                 ToastLink::new("Learn more".to_string())
                     .with_href("https://docs.warp.dev/reference/cli".to_string()),
@@ -9389,7 +9389,7 @@ impl Workspace {
             async { cli_install::uninstall_oz() },
             |view, result, ctx| {
                 let toast = DismissibleToast::success(
-                    "Removed the global Oz CLI installation — it still works inside Warp."
+                    "Removed the global Oz CLI installation — it still works inside Torch."
                         .to_string(),
                 );
                 view.handle_cli_command_result(
@@ -9409,12 +9409,12 @@ impl Workspace {
             async { cli_install::install_warpctrl() },
             |view, result, ctx| {
                 let command_name = ChannelState::channel().warpctrl_command_name();
-                let message = format!("Installed the Warp Control CLI globally. You can now run '{command_name}' from any terminal outside of Warp.");
+                let message = format!("Installed the Torch Control CLI globally. You can now run '{command_name}' from any terminal outside of Torch.");
                 let toast = DismissibleToast::success(message);
                 view.handle_cli_command_result(
                     result,
                     toast,
-                    "Failed to install Warp Control command",
+                    "Failed to install Torch Control command",
                     ctx,
                 );
             },
@@ -9428,13 +9428,13 @@ impl Workspace {
             async { cli_install::uninstall_warpctrl() },
             |view, result, ctx| {
                 let toast = DismissibleToast::success(
-                    "Removed the global Warp Control CLI installation — it still works inside Warp."
+                    "Removed the global Torch Control CLI installation — it still works inside Torch."
                         .to_string(),
                 );
                 view.handle_cli_command_result(
                     result,
                     toast,
-                    "Failed to uninstall Warp Control command",
+                    "Failed to uninstall Torch Control command",
                     ctx,
                 );
             },
@@ -10003,6 +10003,23 @@ impl Workspace {
     }
 
     fn user_menu_items(&self, app: &AppContext) -> Vec<MenuItem<WorkspaceAction>> {
+        if ChannelState::is_local_only() {
+            return vec![
+                MenuItemFields::new("Settings")
+                    .with_on_select_action(WorkspaceAction::ShowSettings)
+                    .into_item(),
+                MenuItemFields::new("Keyboard shortcuts")
+                    .with_on_select_action(WorkspaceAction::ToggleKeybindingsPage)
+                    .into_item(),
+                MenuItemFields::new("Torch documentation")
+                    .with_on_select_action(WorkspaceAction::ViewUserDocs)
+                    .into_item(),
+                MenuItemFields::new("Report an issue")
+                    .with_on_select_action(WorkspaceAction::SendFeedback)
+                    .into_item(),
+            ];
+        }
+
         let mut items = Vec::new();
         if !self.auth_state.is_anonymous_or_logged_out() {
             let name = self.auth_state.username_for_display().unwrap_or_default();
@@ -10024,7 +10041,7 @@ impl Workspace {
                     ) =>
                 {
                     items.push(
-                        MenuItemFields::new("Update and relaunch Warp")
+                        MenuItemFields::new("Update and relaunch Torch")
                             .with_on_select_action(WorkspaceAction::ApplyUpdate)
                             .with_override_text_color(appearance.theme().ansi_fg_red())
                             .into_item(),
@@ -10047,7 +10064,7 @@ impl Workspace {
                     ) =>
                 {
                     items.push(
-                        MenuItemFields::new("Update Warp manually")
+                        MenuItemFields::new("Update Torch manually")
                             .with_on_select_action(WorkspaceAction::DownloadNewVersion)
                             .with_override_text_color(appearance.theme().ansi_fg_red())
                             .into_item(),
@@ -10078,7 +10095,7 @@ impl Workspace {
 
         #[cfg(not(target_family = "wasm"))]
         items.push(
-            MenuItemFields::new("View Warp logs")
+            MenuItemFields::new("View Torch logs")
                 .with_on_select_action(WorkspaceAction::ViewLogs)
                 .into_item(),
         );
@@ -14666,7 +14683,7 @@ impl Workspace {
                         let url = NOTIFICATIONS_TROUBLESHOOT_URL.to_string();
                         view.toast_stack.update(ctx, |toast_stack, ctx| {
                             let toast = DismissibleToast::error(
-                                "Warp doesn't have permission to send desktop notifications."
+                                "Torch doesn't have permission to send desktop notifications."
                                     .to_string(),
                             )
                             .with_link(
@@ -14961,6 +14978,10 @@ impl Workspace {
     }
 
     fn open_require_login_modal(&mut self, variant: AuthViewVariant, ctx: &mut ViewContext<Self>) {
+        if ChannelState::is_local_only() {
+            return;
+        }
+
         self.require_login_modal.update(ctx, |modal, ctx| {
             modal.set_variant(ctx, variant);
         });
@@ -15335,7 +15356,7 @@ impl Workspace {
                                 link = link.with_keystroke(keystroke);
                             }
 
-                            let toast = DismissibleToast::default(String::from("Warp updated!"))
+                            let toast = DismissibleToast::default(String::from("Torch updated!"))
                                 .with_link(link);
 
                             stack.add_ephemeral_toast(toast, ctx);
@@ -16232,7 +16253,7 @@ impl Workspace {
                 "Your conversation hasn't synced to the cloud yet. Try sending another message, then hand off again."
             }
             HandoffPrepareError::InvalidModel => {
-                "Custom models can't run in the cloud. Switch to a Warp model to hand off."
+                "Custom models can't run in the cloud. Switch to a Torch model to hand off."
             }
             HandoffPrepareError::EmptySourceAndPrompt => {
                 "Nothing to hand off — start a conversation first."
@@ -16567,7 +16588,7 @@ impl Workspace {
                         ctx,
                     ),
                     _ => {
-                        log::warn!("Attempted to open an unsupported Warp Drive link")
+                        log::warn!("Attempted to open an unsupported Torch Drive link")
                     }
                 }
             }
@@ -18574,7 +18595,7 @@ impl Workspace {
                                         .contains_ai_document(&ai_doc_id, ctx)
                                 }) {
                                     new_toast = DismissibleToast::success(
-                                        "Plan synced to your Warp Drive".to_string(),
+                                        "Plan synced to your Torch Drive".to_string(),
                                     )
                                     .with_object_id(object_id_clone)
                                     .with_link(
@@ -19331,7 +19352,7 @@ impl Workspace {
                 let command = code.trim().to_string();
                 let args_state =
                     ArgumentsState::for_command_workflow(&Default::default(), command.clone());
-                let workflow = Workflow::new("Command from Warp AI", command)
+                let workflow = Workflow::new("Command from Torch AI", command)
                     .with_arguments(args_state.arguments);
                 self.run_workflow_in_active_input(
                     &WorkflowType::AIGenerated {
@@ -20143,7 +20164,7 @@ impl Workspace {
         let body = appearance
             .ui_builder()
             .wrappable_text(
-                "Ask Warp AI to explain errors, suggest commands or write scripts.".to_owned(),
+                "Ask Torch AI to explain errors, suggest commands or write scripts.".to_owned(),
                 true,
             )
             .with_style(UiComponentStyles {
@@ -20819,7 +20840,7 @@ impl Workspace {
                     {
                         ToolPanelView::ProjectExplorer => "Project explorer",
                         ToolPanelView::GlobalSearch { .. } => "Global search",
-                        ToolPanelView::WarpDrive => "Warp Drive",
+                        ToolPanelView::WarpDrive => "Torch Drive",
                         ToolPanelView::ConversationListView => "Agent conversations",
                     }
                 } else {
@@ -20873,7 +20894,7 @@ impl Workspace {
             {
                 ToolPanelView::ProjectExplorer => "Project explorer",
                 ToolPanelView::GlobalSearch { .. } => "Global search",
-                ToolPanelView::WarpDrive => "Warp Drive",
+                ToolPanelView::WarpDrive => "Torch Drive",
                 ToolPanelView::ConversationListView => "Agent conversations",
             }
         } else {
@@ -21650,6 +21671,7 @@ impl Workspace {
 
         // Legacy AI assistant button (non-agent-mode only)
         if is_online
+            && AISettings::as_ref(ctx).is_any_ai_enabled(ctx)
             && !FeatureFlag::AgentMode.is_enabled()
             && !is_web_anonymous_user
             && !self.current_workspace_state.is_ai_assistant_panel_open
@@ -21679,7 +21701,10 @@ impl Workspace {
             );
         } else {
             let resource_center_closed = !self.current_workspace_state.is_resource_center_open;
-            if resource_center_closed && ContextFlag::WarpEssentials.is_enabled() {
+            if !ChannelState::is_local_only()
+                && resource_center_closed
+                && ContextFlag::WarpEssentials.is_enabled()
+            {
                 target.add_child(
                     Container::new(self.render_resource_center_button(appearance, ctx))
                         .with_margin_left(TAB_BAR_PADDING_LEFT)
@@ -22059,7 +22084,7 @@ impl Workspace {
                 icons::Icon::Lightbulb,
                 &self.mouse_states.resource_center_icon,
                 WorkspaceAction::ToggleResourceCenter,
-                "Warp Essentials".to_string(),
+                "Torch Essentials".to_string(),
                 self.cached_keybindings[TOGGLE_RESOURCE_CENTER_KEYBINDING_NAME].clone(),
                 false,
                 false,
@@ -22471,7 +22496,7 @@ impl Workspace {
             AISettings::as_ref(app)
                 .is_any_ai_enabled(app)
                 .then(|| WorkspaceBannerButtonDetails {
-                    text: "Fix with Warp Agent".to_owned(),
+                    text: "Fix with Torch Agent".to_owned(),
                     action: WorkspaceAction::FixSettingsWithOz {
                         error_description: error.to_string(),
                     },
@@ -22535,7 +22560,7 @@ impl Workspace {
                         if is_incoming_version_past_current(new_version.soft_cutoff.as_deref()) {
                             VERSION_DEPRECATION_WITHOUT_PERMISSIONS_BANNER_TEXT.to_owned()
                         } else {
-                            "A new version is available but Warp is unable to perform the update."
+                            "A new version is available but Torch is unable to perform the update."
                                 .to_owned()
                         };
 
@@ -22546,7 +22571,7 @@ impl Workspace {
                         description,
                         secondary_button: None,
                         button: Some(WorkspaceBannerButtonDetails {
-                            text: "Update Warp manually".to_string(),
+                            text: "Update Torch manually".to_string(),
                             action: WorkspaceAction::DownloadNewVersion,
                             variant: BannerButtonVariant::Outlined,
                             icon: None,
@@ -22561,7 +22586,7 @@ impl Workspace {
                         if is_incoming_version_past_current(new_version.soft_cutoff.as_deref()) {
                             VERSION_DEPRECATION_WITHOUT_PERMISSIONS_BANNER_TEXT.to_owned()
                         } else {
-                            "Warp was unable to launch the new installed version.".to_owned()
+                            "Torch was unable to launch the new installed version.".to_owned()
                         };
 
                     Some(WorkspaceBannerFields {
@@ -22571,7 +22596,7 @@ impl Workspace {
                         description,
                         secondary_button: None,
                         button: Some(WorkspaceBannerButtonDetails {
-                            text: "Update Warp manually".to_string(),
+                            text: "Update Torch manually".to_string(),
                             action: WorkspaceAction::DownloadNewVersion,
                             variant: BannerButtonVariant::Outlined,
                             icon: None,
@@ -23908,6 +23933,10 @@ impl Workspace {
         entrypoint: AnonymousUserSignupEntrypoint,
         ctx: &mut ViewContext<Self>,
     ) {
+        if ChannelState::is_local_only() {
+            return;
+        }
+
         if self.auth_state.is_user_anonymous().unwrap_or_default() {
             // User has a Firebase anonymous account — use the linking flow.
             AuthManager::handle(ctx).update(ctx, |auth_manager, ctx| {
@@ -24083,7 +24112,7 @@ impl Workspace {
                 entry_focus: GlobalSearchEntryFocus::Results,
             });
         }
-        if *WarpDriveSettings::as_ref(ctx).enable_warp_drive {
+        if !ChannelState::is_local_only() && *WarpDriveSettings::as_ref(ctx).enable_warp_drive {
             views.push(ToolPanelView::WarpDrive);
         }
         views
@@ -24122,7 +24151,7 @@ impl Workspace {
             // Many users' browser settings will block Local Network Access so this will end up redirecting to download page,
             // even if they have the app installed.
             let toast_message = format!(
-                "Have Warp installed but redirecting to download page?\nEnable Local Network Access for {} in your browser.",
+                "Have Torch installed but redirecting to download page?\nEnable Local Network Access for {} in your browser.",
                 ChannelState::server_root_url()
             );
             self.toast_stack.update(ctx, |toast_stack, ctx| {
@@ -24161,6 +24190,19 @@ impl TypedActionView for Workspace {
 
     fn handle_action(&mut self, action: &Self::Action, ctx: &mut ViewContext<Self>) {
         use WorkspaceAction::*;
+        if ChannelState::is_local_only()
+            && matches!(
+                action,
+                Reauth
+                    | SignupAnonymousUser
+                    | SignInAnonymousWebUser
+                    | LogOut
+                    | ShowUpgrade
+                    | ToggleResourceCenter
+            )
+        {
+            return;
+        }
         let window_id = ctx.window_id();
 
         if self.auth_state.is_anonymous_or_logged_out() && action.blocked_for_anonymous_user() {
@@ -26240,14 +26282,14 @@ impl TypedActionView for Workspace {
                         .set_value(false, ctx)
                     {
                         log::warn!(
-                            "Failed to reset Warp Agent CLI launch modal dismissed setting: {e}"
+                            "Failed to reset Torch Agent CLI launch modal dismissed setting: {e}"
                         );
                     }
                 });
                 let new_value =
                     *AISettings::as_ref(ctx).did_check_to_trigger_agent_cli_launch_modal;
                 log::info!(
-                    "Warp Agent CLI launch modal state: old={old_value}, new={new_value}, feature_flag_enabled={}",
+                    "Torch Agent CLI launch modal state: old={old_value}, new={new_value}, feature_flag_enabled={}",
                     FeatureFlag::AgentCliLaunchModal.is_enabled()
                 );
             }

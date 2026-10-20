@@ -37,7 +37,7 @@ fn base_warp_config_dir_name() -> String {
         // Preview shares the same directory as Stable for backward
         // compatibility — existing users already have config in `.warp`.
         Channel::Stable | Channel::Preview => WARP_CONFIG_DIR.to_owned(),
-        Channel::Oss => format!("{WARP_CONFIG_DIR}-oss"),
+        Channel::Oss => ".torch".to_owned(),
         Channel::Dev => format!("{WARP_CONFIG_DIR}-dev"),
         Channel::Integration => format!("{WARP_CONFIG_DIR}-integration"),
         Channel::Local => format!("{WARP_CONFIG_DIR}-local"),
@@ -101,7 +101,7 @@ fn macos_config_dir_name_for(channel: Channel, data_profile: Option<&str>) -> St
     let base_dir_name = match channel {
         Channel::Stable => WARP_CONFIG_DIR.to_owned(),
         Channel::Preview => format!("{WARP_CONFIG_DIR}-preview"),
-        Channel::Oss => format!("{WARP_CONFIG_DIR}-oss"),
+        Channel::Oss => ".torch".to_owned(),
         Channel::Dev => format!("{WARP_CONFIG_DIR}-dev"),
         Channel::Integration => format!("{WARP_CONFIG_DIR}-integration"),
         Channel::Local => format!("{WARP_CONFIG_DIR}-local"),
@@ -136,7 +136,7 @@ pub fn data_dir() -> PathBuf {
 #[cfg(any(not(target_os = "macos"), test))]
 fn gui_app_id_for_channel(channel: Channel, current_app_id: AppId) -> AppId {
     match channel {
-        Channel::Oss => AppId::new("dev", "warp", "WarpOss"),
+        Channel::Oss => AppId::new("dev", "tombyte", "Torch"),
         Channel::Stable
         | Channel::Preview
         | Channel::Dev
@@ -212,7 +212,9 @@ pub fn gui_mcp_config_file_path() -> Option<PathBuf> {
 /// changed once established.
 #[cfg(target_os = "macos")]
 fn macos_tui_config_dir_name() -> String {
-    macos_config_dir_name().replacen(WARP_CONFIG_DIR, ".warp_cli", 1)
+    macos_config_dir_name()
+        .replacen(WARP_CONFIG_DIR, ".warp_cli", 1)
+        .replacen(".torch", ".torch_cli", 1)
 }
 
 /// Returns the path to the directory where non-portable configuration files for
@@ -276,7 +278,7 @@ pub fn state_dir() -> PathBuf {
 /// On macOS, this will use the App Group container directory if available.
 pub fn secure_state_dir() -> Option<PathBuf> {
     // Do not use the secure state directory in integration tests, which have a temporary home directory instead.
-    if ChannelState::channel() == Channel::Integration {
+    if ChannelState::is_local_only() || ChannelState::channel() == Channel::Integration {
         return None;
     }
 

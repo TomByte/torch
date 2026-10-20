@@ -224,7 +224,7 @@ impl AgentSlide {
     fn render_header(&self, appearance: &Appearance) -> Box<dyn Element> {
         let title = appearance
             .ui_builder()
-            .paragraph("Customize your Warp Agent")
+            .paragraph("Customize your Torch Agent")
             .with_style(UiComponentStyles {
                 font_size: Some(36.),
                 font_weight: Some(Weight::Medium),
@@ -234,7 +234,7 @@ impl AgentSlide {
             .finish();
 
         let subtitle = FormattedTextElement::from_str(
-            "Select your Warp Agent's defaults.",
+            "Select your Torch Agent's defaults.",
             appearance.ui_font_family(),
             16.,
         )
@@ -738,19 +738,19 @@ impl AgentSlide {
             (
                 AgentAutonomy::Full,
                 "Full",
-                "Warp Agent runs commands, writes code, and reads files without asking.",
+                "Torch Agent runs commands, writes code, and reads files without asking.",
                 self.autonomy_full_mouse_state.clone(),
             ),
             (
                 AgentAutonomy::Partial,
                 "Partial",
-                "Warp Agent can plan, read files, and execute low-risk commands. Asks before making any changes or executing sensitive commands.",
+                "Torch Agent can plan, read files, and execute low-risk commands. Asks before making any changes or executing sensitive commands.",
                 self.autonomy_partial_mouse_state.clone(),
             ),
             (
                 AgentAutonomy::None,
                 "None",
-                "Warp Agent takes no actions without your approval.",
+                "Torch Agent takes no actions without your approval.",
                 self.autonomy_none_mouse_state.clone(),
             ),
         ];

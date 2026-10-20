@@ -25,7 +25,7 @@ pub enum StartupArgsForwardingError {
     /// which would open a duplicate window.
     #[error("should not forward arguments from the crash recovery process")]
     IgnoredForCrashRecoveryProcess,
-    #[error("there is no other instance of Warp")]
+    #[error("there is no other instance of Torch")]
     NoExistingInstance,
     #[error("failed to construct url")]
     CouldNotCreateUrl(#[from] url::ParseError),

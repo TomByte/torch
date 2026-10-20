@@ -15,7 +15,7 @@ define_settings_group!(WarpDriveSettings, settings: [
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "warp_drive.sorting_choice",
-        description: "The sort order for items in Warp Drive.",
+        description: "The sort order for items in Torch Drive.",
     },
     sharing_onboarding_block_shown: WarpDriveSharingOnboardingBlockShown {
         type: bool,
@@ -34,7 +34,7 @@ define_settings_group!(WarpDriveSettings, settings: [
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "warp_drive.enabled",
-        description: "Whether Warp Drive is enabled.",
+        description: "Whether Torch Drive is enabled.",
     },
 ]);
 
@@ -46,6 +46,10 @@ impl WarpDriveSettings {
     /// preference so Warp Drive appears automatically after signup, while the
     /// feature remains unavailable until then.
     pub fn is_warp_drive_available(app: &warpui::AppContext) -> bool {
+        if warp_core::channel::ChannelState::is_local_only() {
+            return false;
+        }
+
         use warpui::SingletonEntity as _;
         !FeatureFlag::SkipFirebaseAnonymousUser.is_enabled()
             || !crate::auth::AuthStateProvider::as_ref(app)

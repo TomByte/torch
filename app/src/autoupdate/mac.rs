@@ -729,7 +729,7 @@ fn dmg_name(channel: Channel) -> String {
 
 fn app_name_prefix(channel: Channel) -> &'static str {
     match channel {
-        Channel::Stable => "Warp",
+        Channel::Stable => "Torch",
         Channel::Preview => "WarpPreview",
         Channel::Local => "warp",
         Channel::Integration => "integration",

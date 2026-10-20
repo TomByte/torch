@@ -62,7 +62,7 @@ impl OfferVariant {
     pub(crate) fn primary_label(self) -> &'static str {
         match self {
             OfferVariant::HeadStart => "Unlock the full AI experience",
-            OfferVariant::ChooseHowToStart => "Use Warp with AI",
+            OfferVariant::ChooseHowToStart => "Use Torch with AI",
         }
     }
 
@@ -72,7 +72,7 @@ impl OfferVariant {
                 "Get more monthly usage, expanded cloud agent access, and collaboration features."
             }
             OfferVariant::ChooseHowToStart => {
-                "Warp Agent works locally or in the cloud with frontier and OSS models. Proactively fix terminal errors, implement changes, and ship verified code."
+                "Torch Agent works locally or in the cloud with frontier and OSS models. Proactively fix terminal errors, implement changes, and ship verified code."
             }
         }
     }
@@ -107,7 +107,7 @@ impl OfferVariant {
             OfferVariant::HeadStart => &[
                 "Limited monthly AI usage for occasional tasks",
                 "Access to premium and open-source models",
-                "Use the Warp Agent locally and in the cloud",
+                "Use the Torch Agent locally and in the cloud",
             ],
             OfferVariant::ChooseHowToStart => &[],
         }

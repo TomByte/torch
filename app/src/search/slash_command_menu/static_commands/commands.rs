@@ -149,7 +149,7 @@ pub const MANAGE_BILLING: StaticCommand = StaticCommand {
 };
 pub const UPGRADE: StaticCommand = StaticCommand {
     name: "/upgrade",
-    description: "Open the Warp upgrade page in your browser",
+    description: "Open the Torch upgrade page in your browser",
     kind: SlashCommandKind::Upgrade,
     supported_surfaces: SlashCommandSurfaces::TuiOnly,
     availability: Availability::ALWAYS,
@@ -172,7 +172,7 @@ pub const THEME: StaticCommand = StaticCommand {
 
 pub const EXIT: StaticCommand = StaticCommand {
     name: "/exit",
-    description: "Exit Warp",
+    description: "Exit Torch",
     kind: SlashCommandKind::Exit,
     supported_surfaces: SlashCommandSurfaces::TuiOnly,
     availability: Availability::ALWAYS,
@@ -192,7 +192,7 @@ pub const STATUS: StaticCommand = StaticCommand {
 
 pub const LOGOUT: StaticCommand = StaticCommand {
     name: "/logout",
-    description: "Log out of Warp",
+    description: "Log out of Torch",
     kind: SlashCommandKind::Logout,
     supported_surfaces: SlashCommandSurfaces::TuiOnly,
     availability: Availability::ALWAYS,
@@ -242,7 +242,7 @@ pub static CREATE_NEW_PROJECT: LazyLock<StaticCommand> = LazyLock::new(|| Static
 
 pub static EDIT_SKILL: LazyLock<StaticCommand> = LazyLock::new(|| StaticCommand {
     name: "/open-skill",
-    description: "Open a skill's markdown file in Warp's built-in editor",
+    description: "Open a skill's markdown file in Torch's built-in editor",
     kind: SlashCommandKind::EditSkill,
     supported_surfaces: SlashCommandSurfaces::GuiOnly {
         icon_path: "bundled/svg/file-code-02.svg",
@@ -294,7 +294,7 @@ pub const ADD_RULE: StaticCommand = StaticCommand {
 
 pub static EDIT: LazyLock<StaticCommand> = LazyLock::new(|| StaticCommand {
     name: "/open-file",
-    description: "Open a file in Warp's code editor",
+    description: "Open a file in Torch's code editor",
     kind: SlashCommandKind::Edit,
     supported_surfaces: SlashCommandSurfaces::GuiOnly {
         icon_path: "bundled/svg/file-code-02.svg",

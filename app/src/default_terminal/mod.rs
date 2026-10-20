@@ -98,7 +98,9 @@ impl DefaultTerminal {
     /// "unset" it unless we pick a new default terminal. Picking a new default is complicated.
     pub fn make_warp_default(&mut self, ctx: &mut ModelContext<Self>) {
         if let Err(e) = set_warp_as_default_terminal() {
-            report_error!(anyhow::anyhow!("{e}").context("Error setting Warp as default terminal"));
+            report_error!(
+                anyhow::anyhow!("{e}").context("Error setting Torch as default terminal")
+            );
         } else {
             self.set_is_warp_default(true, ctx);
         }

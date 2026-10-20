@@ -2064,7 +2064,7 @@ pub fn failed_to_add_guests_user_error(reason: &FailedToAddGuestsReason) -> Stri
     match reason {
         FailedToAddGuestsReason::Invalid => "Something went wrong. Please try again.",
         FailedToAddGuestsReason::NotWarpUsers => {
-            "One or more emails were not associated with Warp accounts."
+            "One or more emails were not associated with Torch accounts."
         }
         FailedToAddGuestsReason::GuestAlreadyAdded => {
             "One or more emails have already been added to the session."

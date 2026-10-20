@@ -82,7 +82,7 @@ struct AgentTipShownAnalyticsRequest {
 /// more specific error code information, so that the client can discern between different
 /// errors with the same error code.
 /// See errors/http_error_codes.go on the server for possible values.
-const WARP_ERROR_CODE_HEADER: &str = "X-Warp-Error-Code";
+const WARP_ERROR_CODE_HEADER: &str = "X-Torch-Error-Code";
 
 /// An error indicating the user is out of credits. The server sends 429s to communicate this
 /// state, but if Cloud Run is overloaded, it can also send 429s that aren't credit-related.
@@ -163,7 +163,7 @@ pub enum AIApiError {
         user_display_message: Option<String>,
     },
 
-    #[error("Warp is currently overloaded. Please try again later.")]
+    #[error("Torch is currently overloaded. Please try again later.")]
     ServerOverloaded,
 
     #[error("Internal error occurred at transport layer.")]
@@ -378,7 +378,7 @@ pub enum TranscribeError {
     #[error("Request failed due to lack of Voice quota.")]
     QuotaLimit,
 
-    #[error("Warp is currently overloaded. Please try again later.")]
+    #[error("Torch is currently overloaded. Please try again later.")]
     ServerOverloaded,
 
     #[error("Internal error occurred at transport layer.")]
@@ -1440,9 +1440,9 @@ impl ServerApi {
             .append_pair("include_changelogs", &include_changelogs.to_string());
 
         if include_changelogs {
-            log::info!("Fetching channel versions and changelogs from Warp server");
+            log::info!("Fetching channel versions and changelogs from Torch server");
         } else {
-            log::info!("Fetching channel versions (without changelogs) from Warp server");
+            log::info!("Fetching channel versions (without changelogs) from Torch server");
         }
 
         let mut request_builder = self
@@ -1470,7 +1470,7 @@ impl ServerApi {
             self.observe_iap_challenge(&response);
         }
         let versions: ChannelVersions = response.json().await?;
-        log::info!("Received channel versions from Warp server: {versions}");
+        log::info!("Received channel versions from Torch server: {versions}");
         Ok(versions)
     }
 }

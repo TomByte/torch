@@ -1362,11 +1362,11 @@ impl BillingAndUsagePageV2View {
                         option.price_usd_cents_with_premium(premium_bps) as f64 / 100.0
                     );
                     format!(
-                        "Your admin has enabled auto-reload for add-on credits. When your team's add-on credit balance runs low, Warp will automatically purchase {amount} for {price} and add them to your team's shared pool."
+                        "Your admin has enabled auto-reload for add-on credits. When your team's add-on credit balance runs low, Torch will automatically purchase {amount} for {price} and add them to your team's shared pool."
                     )
                 }
                 (UsageDisplayUnit::Credits, None) => {
-                    "Your admin has enabled auto-reload for add-on credits. When your team's add-on credit balance runs low, Warp will automatically purchase add-on credits and add them to your team's shared pool.".to_string()
+                    "Your admin has enabled auto-reload for add-on credits. When your team's add-on credit balance runs low, Torch will automatically purchase add-on credits and add them to your team's shared pool.".to_string()
                 }
                 (UsageDisplayUnit::Dollars, Some(option)) => {
                     let amount = PackAmount::of(option, unit).label();
@@ -1375,11 +1375,11 @@ impl BillingAndUsagePageV2View {
                         option.price_usd_cents_with_premium(premium_bps) as f64 / 100.0
                     );
                     format!(
-                        "Your admin has enabled auto-reload. When your team's purchased usage runs low, Warp will automatically purchase {amount} for {price} and add it to your team's shared pool."
+                        "Your admin has enabled auto-reload. When your team's purchased usage runs low, Torch will automatically purchase {amount} for {price} and add it to your team's shared pool."
                     )
                 }
                 (UsageDisplayUnit::Dollars, None) => {
-                    "Your admin has enabled auto-reload. When your team's purchased usage runs low, Warp will automatically purchase more and add it to your team's shared pool.".to_string()
+                    "Your admin has enabled auto-reload. When your team's purchased usage runs low, Torch will automatically purchase more and add it to your team's shared pool.".to_string()
                 }
             };
             return AddonCreditsPanelState::AutoreloadNonAdmin {

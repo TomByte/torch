@@ -2818,7 +2818,7 @@ impl AgentsWidget {
         );
         render_ai_list(
             "Command denylist",
-            "Regular expressions to match commands that the Warp Agent should always ask permission to execute.",
+            "Regular expressions to match commands that the Torch Agent should always ask permission to execute.",
             list,
             view,
             ai_settings,
@@ -2856,7 +2856,7 @@ impl AgentsWidget {
 
         render_ai_list(
             "Command allowlist",
-            "Regular expressions to match commands that can be automatically executed by the Warp Agent.",
+            "Regular expressions to match commands that can be automatically executed by the Torch Agent.",
             list,
             view,
             ai_settings,
@@ -2959,7 +2959,7 @@ impl AgentsWidget {
             appearance,
             "Base model",
             Some(
-                "This model serves as the primary engine behind the Warp Agent. It powers most interactions and invokes other models for tasks like planning or code generation when necessary. Warp may automatically switch to alternate models based on model availability or for auxiliary tasks such as conversation summarization.",
+                "This model serves as the primary engine behind the Torch Agent. It powers most interactions and invokes other models for tasks like planning or code generation when necessary. Torch may automatically switch to alternate models based on model availability or for auxiliary tasks such as conversation summarization.",
             ),
             Some(show_in_prompt_checkbox),
             LocalOnlyIconState::Hidden,
@@ -2990,7 +2990,7 @@ impl AgentsWidget {
 
         let codebase_context_description = vec![
             FormattedTextFragment::plain_text(
-                "Allow the Warp Agent to generate an outline of your codebase that can be used for context. No code is ever stored on our servers. ",
+                "Allow the Torch Agent to generate an outline of your codebase that can be used for context. No code is ever stored on our servers. ",
             ),
             FormattedTextFragment::hyperlink(
                 "Learn more",
@@ -3063,7 +3063,7 @@ impl AgentsWidget {
         let subtext = {
             let subtext_fragments = vec![
                 FormattedTextFragment::plain_text(
-                    "You haven't added any MCP servers yet. Once you do, you'll be able to control how much autonomy the Warp Agent has when interacting with them. ",
+                    "You haven't added any MCP servers yet. Once you do, you'll be able to control how much autonomy the Torch Agent has when interacting with them. ",
                 ),
                 FormattedTextFragment::hyperlink_action(
                     "Add a server",
@@ -3145,7 +3145,7 @@ impl AgentsWidget {
         {
             let allowlist = self.render_mcp_list(
                 "MCP allowlist",
-                "Allow the Warp Agent to call these MCP servers.",
+                "Allow the Torch Agent to call these MCP servers.",
                 &view.mcp_allowlist_dropdown,
                 BlocklistAIPermissions::as_ref(app).get_mcp_allowlist(app, None),
                 view.mcp_allowlist_mouse_state_handles.clone(),
@@ -3162,7 +3162,7 @@ impl AgentsWidget {
         {
             let denylist = self.render_mcp_list(
                 "MCP denylist",
-                "The Warp Agent will always ask for permission before calling any MCP servers on this list.",
+                "The Torch Agent will always ask for permission before calling any MCP servers on this list.",
                 &view.mcp_denylist_dropdown,
                 BlocklistAIPermissions::as_ref(app).get_mcp_denylist(app, None),
                 view.mcp_denylist_mouse_state_handles.clone(),

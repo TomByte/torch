@@ -452,26 +452,26 @@ const AGENT_MODE_AI_DISABLED_AUTODETECTION_DISABLED_HINT_TEXT: &str = "Run comma
 
 // Rotating hint text options for new Agent Mode conversations
 const AGENT_MODE_HINT_OPTIONS: &[&str] = &[
-    "Warp anything e.g. Deploy my React app to Vercel and set up environment variables",
-    "Warp anything e.g. Help me debug why my Python tests are failing in CI",
-    "Warp anything e.g. Set up a new microservice with Docker and create the deployment pipeline",
-    "Warp anything e.g. Find and fix the memory leak in my Node.js application",
-    "Warp anything e.g. Create a backup script for my PostgreSQL database and schedule it",
-    "Warp anything e.g. Help me migrate my data from MySQL to PostgreSQL",
-    "Warp anything e.g. Set up monitoring and alerts for my AWS infrastructure",
-    "Warp anything e.g. Build a REST API for my mobile app using FastAPI",
-    "Warp anything e.g. Help me optimize my SQL queries that are running slowly",
-    "Warp anything e.g. Create a GitHub Actions workflow to automatically deploy on merge",
-    "Warp anything e.g. Set up Redis caching for my web application",
-    "Warp anything e.g. Help me troubleshoot why my Kubernetes pods keep crashing",
-    "Warp anything e.g. Build a data pipeline to process CSV files and load them into BigQuery",
-    "Warp anything e.g. Set up SSL certificates and configure HTTPS for my domain",
-    "Warp anything e.g. Help me refactor this legacy code to use modern design patterns",
-    "Warp anything e.g. Create unit tests for my authentication service",
-    "Warp anything e.g. Set up log aggregation with ELK stack for my distributed system",
-    "Warp anything e.g. Help me implement OAuth2 authentication in my Express.js app",
-    "Warp anything e.g. Optimize my Docker images to reduce build times and size",
-    "Warp anything e.g. Set up A/B testing infrastructure for my web application",
+    "Torch anything e.g. Deploy my React app to Vercel and set up environment variables",
+    "Torch anything e.g. Help me debug why my Python tests are failing in CI",
+    "Torch anything e.g. Set up a new microservice with Docker and create the deployment pipeline",
+    "Torch anything e.g. Find and fix the memory leak in my Node.js application",
+    "Torch anything e.g. Create a backup script for my PostgreSQL database and schedule it",
+    "Torch anything e.g. Help me migrate my data from MySQL to PostgreSQL",
+    "Torch anything e.g. Set up monitoring and alerts for my AWS infrastructure",
+    "Torch anything e.g. Build a REST API for my mobile app using FastAPI",
+    "Torch anything e.g. Help me optimize my SQL queries that are running slowly",
+    "Torch anything e.g. Create a GitHub Actions workflow to automatically deploy on merge",
+    "Torch anything e.g. Set up Redis caching for my web application",
+    "Torch anything e.g. Help me troubleshoot why my Kubernetes pods keep crashing",
+    "Torch anything e.g. Build a data pipeline to process CSV files and load them into BigQuery",
+    "Torch anything e.g. Set up SSL certificates and configure HTTPS for my domain",
+    "Torch anything e.g. Help me refactor this legacy code to use modern design patterns",
+    "Torch anything e.g. Create unit tests for my authentication service",
+    "Torch anything e.g. Set up log aggregation with ELK stack for my distributed system",
+    "Torch anything e.g. Help me implement OAuth2 authentication in my Express.js app",
+    "Torch anything e.g. Optimize my Docker images to reduce build times and size",
+    "Torch anything e.g. Set up A/B testing infrastructure for my web application",
 ];
 
 fn get_agent_mode_new_conversation_hint_text() -> &'static str {
@@ -2154,7 +2154,7 @@ pub fn init(app: &mut AppContext) {
 
     app.register_editable_bindings([EditableBinding::new(
         "input:insert_network_logging_workflow",
-        "Show Warp network log",
+        "Show Torch network log",
         WorkspaceAction::OpenNetworkLogPane,
     )
     .with_enabled(|| ContextFlag::NetworkLogConsole.is_enabled())]);
@@ -4981,7 +4981,7 @@ impl Input {
         ToastStack::handle(ctx).update(ctx, |ts, ctx| {
             ts.add_ephemeral_toast(
                 DismissibleToast::error(
-                    "Custom models can't run in the cloud. Switch to a Warp model to hand off."
+                    "Custom models can't run in the cloud. Switch to a Torch model to hand off."
                         .to_owned(),
                 ),
                 window_id,
@@ -15472,6 +15472,10 @@ impl Input {
 
     /// Returns true if toggling the input mode is disabled.
     fn is_input_mode_toggle_disabled(&self, ctx: &ViewContext<Self>) -> bool {
+        if warp_core::channel::ChannelState::is_local_only() {
+            return true;
+        }
+
         // Don't allow input mode changes for:
         // - read-only viewers in shared sessions.
         // - long-running commands with an agent tagged in or in control.

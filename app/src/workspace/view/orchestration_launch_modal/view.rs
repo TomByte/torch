@@ -73,7 +73,7 @@ const FEATURE_ITEMS: &[FeatureItem] = &[
     FeatureItem {
         icon: Icon::Atom,
         title: "Multi-agent orchestration",
-        description: "Warp Agents will now orchestrate swarms of subagents, allowing you to parallelize tasks.",
+        description: "Torch Agents will now orchestrate swarms of subagents, allowing you to parallelize tasks.",
         badge: None,
     },
     FeatureItem {
@@ -280,7 +280,7 @@ impl OrchestrationLaunchModal {
 
     fn render_description(appearance: &Appearance) -> Box<dyn Element> {
         Text::new(
-            "We've made major improvements to Warp's cloud agent orchestration platform, Oz.",
+            "We've made major improvements to Torch's cloud agent orchestration platform, Oz.",
             appearance.ui_font_family(),
             14.,
         )
