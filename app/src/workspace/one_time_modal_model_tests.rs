@@ -45,6 +45,8 @@ fn mark_cloud_preferences_loaded(app: &mut App) {
     });
 }
 
+// Local-only builds never enable the ChatGPT subscription flag.
+#[cfg(not(feature = "local_only"))]
 #[test]
 fn chatgpt_plan_modal_shows_once_for_an_active_subscription() {
     App::test((), |mut app| async move {
@@ -99,6 +101,8 @@ fn chatgpt_plan_modal_requires_an_active_subscription() {
     });
 }
 
+// Local-only builds never enable the ChatGPT subscription flag.
+#[cfg(not(feature = "local_only"))]
 #[test]
 fn chatgpt_plan_modal_waits_for_the_initial_preferences_load() {
     App::test((), |mut app| async move {
@@ -122,6 +126,8 @@ fn chatgpt_plan_modal_waits_for_the_initial_preferences_load() {
     });
 }
 
+// Local-only builds never enable the ChatGPT subscription flag.
+#[cfg(not(feature = "local_only"))]
 #[test]
 fn chatgpt_plan_modal_trusts_preferences_already_loaded_for_the_same_user() {
     App::test((), |mut app| async move {
@@ -193,6 +199,8 @@ fn chatgpt_plan_modal_respects_the_synced_seen_marker() {
     });
 }
 
+// Local-only builds never enable the ChatGPT subscription flag.
+#[cfg(not(feature = "local_only"))]
 #[test]
 fn chatgpt_plan_modal_defers_while_another_one_time_modal_is_open() {
     App::test((), |mut app| async move {
@@ -218,6 +226,8 @@ fn chatgpt_plan_modal_defers_while_another_one_time_modal_is_open() {
     });
 }
 
+// Local-only builds never enable the ChatGPT subscription flag.
+#[cfg(not(feature = "local_only"))]
 #[test]
 fn chatgpt_plan_modal_defers_while_the_onboarding_tutorial_is_active() {
     App::test((), |mut app| async move {

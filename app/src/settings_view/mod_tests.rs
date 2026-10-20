@@ -163,6 +163,8 @@ const SECTIONS_WITH_RENAMED_DISPLAY_LABELS: &[SettingsSection] = &[
     SettingsSection::WarpCloudAgentAPIKeys,
     // Local-only builds label it "Agents".
     SettingsSection::ThirdPartyCLIAgents,
+    // Local-only builds label it Secret redaction.
+    SettingsSection::Privacy,
 ];
 
 #[test]
