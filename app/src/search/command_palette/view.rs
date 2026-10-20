@@ -444,6 +444,7 @@ impl View {
                 | (PaletteMode::LaunchConfig, QueryFilter::LaunchConfigurations)
                 | (PaletteMode::Files, QueryFilter::Files)
                 | (PaletteMode::Conversations, QueryFilter::Conversations)
+                | (PaletteMode::Agents, QueryFilter::Agents)
                 | (PaletteMode::WarpDrive, QueryFilter::Drive)
         )
     }
@@ -840,6 +841,14 @@ impl View {
                 }) => {
                     self.reset(ctx);
                     self.set_active_query_filter(QueryFilter::Conversations, ctx);
+                    return;
+                }
+                Some(WorkspaceAction::TogglePalette {
+                    mode: PaletteMode::Agents,
+                    source: _,
+                }) => {
+                    self.reset(ctx);
+                    self.set_active_query_filter(QueryFilter::Agents, ctx);
                     return;
                 }
                 Some(WorkspaceAction::TogglePalette {

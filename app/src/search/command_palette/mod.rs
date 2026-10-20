@@ -1,3 +1,4 @@
+mod agents;
 pub mod conversations;
 mod data_sources;
 mod files;

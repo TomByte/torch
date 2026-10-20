@@ -5321,7 +5321,7 @@ impl SettingsWidget for DesktopNotificationsWidget {
             column.add_child(render_group(toggles, appearance));
         }
 
-        if FeatureFlag::HOANotifications.is_enabled() {
+        if FeatureFlag::HOANotifications.is_enabled() || ChannelState::is_local_only() {
             let ai_settings = AISettings::as_ref(app);
             let show_agent_notifications = *ai_settings.show_agent_notifications;
             column.add_child(render_body_item::<FeaturesPageAction>(

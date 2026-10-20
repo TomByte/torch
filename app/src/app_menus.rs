@@ -542,6 +542,7 @@ fn make_new_view_menu(ctx: &AppContext) -> Menu {
             0..0,
             [
                 updateable_custom_item_without_checkmark(CustomAction::ToggleSidebar, ctx),
+                updateable_custom_item_without_checkmark(CustomAction::AgentsPalette, ctx),
                 MenuItem::Separator,
             ],
         );

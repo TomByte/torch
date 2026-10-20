@@ -81,6 +81,60 @@ fn local_cli_completion_can_be_read_without_warp_notifications_enabled() {
     });
 }
 
+#[cfg(feature = "local_only")]
+#[test]
+fn local_cli_notifications_use_torch_wording_and_clear_when_the_agent_moves_on() {
+    use crate::terminal::CLIAgent;
+    use crate::terminal::cli_agent_sessions::{
+        BlockedSource, CLIAgentSessionContext, CLIAgentSessionStatus, CLIAgentSessionsModelEvent,
+    };
+
+    App::test((), |mut app| async move {
+        let (_history, notifications) = setup_app(&mut app);
+        app.add_singleton_model(|_| crate::workspace::WorkspaceRegistry::new());
+        let terminal_view_id = EntityId::new();
+        let status_changed = |status| CLIAgentSessionsModelEvent::StatusChanged {
+            terminal_view_id,
+            agent: CLIAgent::Claude,
+            status,
+            is_prompt_submit: false,
+            session_context: Box::new(CLIAgentSessionContext {
+                tool_name: Some("Bash".to_owned()),
+                ..Default::default()
+            }),
+        };
+        notifications.update(&mut app, |model, ctx| {
+            model.handle_cli_agent_session_event(
+                &status_changed(CLIAgentSessionStatus::Blocked {
+                    message: None,
+                    source: BlockedSource::PermissionRequest,
+                }),
+                ctx,
+            );
+            let item = model
+                .notifications()
+                .items_filtered(NotificationFilter::All)
+                .next()
+                .expect("a blocked agent is notified");
+            assert_eq!(item.category, NotificationCategory::Request);
+            assert_eq!(item.message, "Claude Code wants to use Bash");
+
+            for status in [
+                CLIAgentSessionStatus::InProgress,
+                CLIAgentSessionStatus::Cancelled,
+            ] {
+                model.handle_cli_agent_session_event(&status_changed(status), ctx);
+                assert_eq!(
+                    model
+                        .notifications()
+                        .filtered_count(NotificationFilter::All),
+                    0
+                );
+            }
+        });
+    });
+}
+
 fn make_plan_artifact(doc_uid: &str, title: &str) -> Artifact {
     Artifact::Plan {
         document_uid: doc_uid.to_string(),

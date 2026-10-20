@@ -28,6 +28,14 @@ mod vertical_tabs;
 #[cfg(target_family = "wasm")]
 mod wasm_view;
 
+pub(crate) use vertical_tabs::torch::AgentPane;
+
+/// Torch shows its coding agents' notifications as in-app toasts without Warp's notification
+/// mailbox.
+fn shows_agent_notification_toasts() -> bool {
+    FeatureFlag::HOANotifications.is_enabled() || ChannelState::is_local_only()
+}
+
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
@@ -3209,7 +3217,7 @@ impl Workspace {
             None
         };
 
-        let notification_toast_stack = if FeatureFlag::HOANotifications.is_enabled() {
+        let notification_toast_stack = if shows_agent_notification_toasts() {
             Some(ctx.add_typed_action_view(AgentNotificationToastStack::new))
         } else {
             None
@@ -15104,6 +15112,31 @@ impl Workspace {
         ctx.notify();
     }
 
+    fn open_agents_palette(&mut self, ctx: &mut ViewContext<Self>) {
+        let mut panes = Vec::new();
+        for window_id in ctx.window_ids() {
+            for workspace in ctx
+                .views_of_type::<Workspace>(window_id)
+                .unwrap_or_default()
+            {
+                panes.extend(vertical_tabs::torch::agent_panes(
+                    workspace.as_ref(ctx),
+                    window_id,
+                    ctx,
+                ));
+            }
+        }
+        self.palette.update(ctx, |view, ctx| {
+            view.data_source_store.update(ctx, |store, ctx| {
+                store.set_agent_panes(panes, ctx);
+            });
+            view.reset(ctx);
+            view.set_active_query_filter(QueryFilter::Agents, ctx);
+            view.set_initial_selection_offset(0, ctx);
+        });
+        ctx.notify();
+    }
+
     fn open_conversations_palette(&mut self, ctx: &mut ViewContext<Self>) {
         self.palette.update(ctx, |view, ctx| {
             view.reset(ctx);
@@ -15353,6 +15386,7 @@ impl Workspace {
             PaletteMode::WarpDrive => self.open_warp_drive_palette(ctx),
             PaletteMode::Files => self.open_files_palette(ctx),
             PaletteMode::Conversations => self.open_conversations_palette(ctx),
+            PaletteMode::Agents => self.open_agents_palette(ctx),
         }
 
         ctx.focus(&self.palette);
@@ -28454,9 +28488,7 @@ impl View for Workspace {
         );
 
         // Render agent toast stack (for agent-related notifications) if popup is not open
-        if FeatureFlag::HOANotifications.is_enabled()
-            && *AISettings::as_ref(app).show_agent_notifications
-        {
+        if shows_agent_notification_toasts() && *AISettings::as_ref(app).show_agent_notifications {
             if !self.current_workspace_state.is_notification_mailbox_open
                 && let Some(stack_view) = &self.notification_toast_stack
             {

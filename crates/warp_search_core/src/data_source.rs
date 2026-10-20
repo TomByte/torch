@@ -56,6 +56,10 @@ lazy_static! {
         primary_text: "sessions:",
         aliases: vec![]
     };
+    static ref AGENTS_FILTER_ATOM: FilterAtom = FilterAtom {
+        primary_text: "agents:",
+        aliases: vec![]
+    };
     static ref CONVERSATIONS_FILTER_ATOM: FilterAtom = FilterAtom {
         primary_text: "conversations:",
         aliases: vec![]
@@ -176,6 +180,9 @@ pub enum QueryFilter {
     /// Filter results for all conversations.
     Conversations,
 
+    /// Filter results for sessions running a coding agent.
+    Agents,
+
     /// Filter results for launch configurations.
     LaunchConfigurations,
 
@@ -244,6 +251,7 @@ impl QueryFilter {
             QueryFilter::Sessions => "Search sessions",
             QueryFilter::Tabs => "Search tabs",
             QueryFilter::Conversations => "Search conversations",
+            QueryFilter::Agents => "Search agents, projects, or states like working or idle",
             QueryFilter::LaunchConfigurations => "Search launch configurations",
             QueryFilter::Drive => "Search objects in drive",
             QueryFilter::EnvironmentVariables => "Search environment variables",
@@ -278,6 +286,7 @@ impl QueryFilter {
             QueryFilter::Sessions => &SESSIONS_FILTER_ATOM,
             QueryFilter::Tabs => &NO_FILTER_ATOM,
             QueryFilter::Conversations => &CONVERSATIONS_FILTER_ATOM,
+            QueryFilter::Agents => &AGENTS_FILTER_ATOM,
             QueryFilter::LaunchConfigurations => &LAUNCH_CONFIG_FILTER_ATOM,
             QueryFilter::Drive => &DRIVE_FILTER_ATOM,
             QueryFilter::EnvironmentVariables => &ENV_VARS_FILTER_ATOM,
@@ -310,6 +319,7 @@ impl QueryFilter {
             QueryFilter::Sessions => "sessions",
             QueryFilter::Tabs => "tabs",
             QueryFilter::Conversations => "conversations",
+            QueryFilter::Agents => "agents",
             QueryFilter::LaunchConfigurations => "launch configurations",
             QueryFilter::Drive => "Warp Drive",
             QueryFilter::EnvironmentVariables => "environment variables",
@@ -347,6 +357,7 @@ impl QueryFilter {
             QueryFilter::Sessions => Some("bundled/svg/terminal-input.svg"),
             QueryFilter::Tabs => Some("bundled/svg/terminal-input.svg"),
             QueryFilter::Conversations => Some("bundled/svg/conversation.svg"),
+            QueryFilter::Agents => Some("bundled/svg/terminal-input.svg"),
             QueryFilter::LaunchConfigurations => Some("bundled/svg/navigation.svg"),
             QueryFilter::Drive => Some("bundled/svg/warp-drive.svg"),
             QueryFilter::EnvironmentVariables => Some("bundled/svg/env-var-collection.svg"),

@@ -13,8 +13,12 @@ use crate::ai::agent_management::notifications::{
 };
 use crate::ai::artifacts::Artifact;
 use crate::ai::blocklist::{BlocklistAIHistoryEvent, ConversationStatusUpdate, QueuedQueryModel};
+use crate::terminal::cli_agent_sessions::notification::{
+    CLIAgentNotificationSubject, notification_text,
+};
 use crate::terminal::cli_agent_sessions::{
-    CLIAgentSessionStatus, CLIAgentSessionsModel, CLIAgentSessionsModelEvent,
+    CLIAgentSessionContext, CLIAgentSessionStatus, CLIAgentSessionsModel,
+    CLIAgentSessionsModelEvent,
 };
 use crate::terminal::{CLIAgent, TerminalView};
 use crate::workspace::util::is_terminal_view_in_same_tab;
@@ -147,6 +151,21 @@ impl AgentNotificationsModel {
                 status,
                 session_context,
                 ..
+            } if ChannelState::is_local_only() => {
+                self.add_local_cli_notification(
+                    *terminal_view_id,
+                    *agent,
+                    status,
+                    session_context,
+                    ctx,
+                );
+            }
+            CLIAgentSessionsModelEvent::StatusChanged {
+                terminal_view_id,
+                agent,
+                status,
+                session_context,
+                ..
             } => match status {
                 // When the agent resumes its work we can assume that the previous notification is stale.
                 CLIAgentSessionStatus::InProgress => {
@@ -252,6 +271,60 @@ impl AgentNotificationsModel {
                 }
             },
         }
+    }
+
+    /// Words a notification the way Torch's desktop notifications do, and skips the statuses
+    /// they skip.
+    fn add_local_cli_notification(
+        &mut self,
+        terminal_view_id: EntityId,
+        agent: CLIAgent,
+        status: &CLIAgentSessionStatus,
+        session_context: &CLIAgentSessionContext,
+        ctx: &mut ModelContext<Self>,
+    ) {
+        let origin = NotificationOrigin::CLISession(terminal_view_id);
+        let category = match status {
+            CLIAgentSessionStatus::Blocked { .. } => NotificationCategory::Request,
+            CLIAgentSessionStatus::Success => NotificationCategory::Complete,
+            CLIAgentSessionStatus::Failed { .. } => NotificationCategory::Error,
+            CLIAgentSessionStatus::InProgress | CLIAgentSessionStatus::Cancelled => {
+                self.remove_notification_by_source(origin, ctx);
+                return;
+            }
+        };
+        let terminal_view = find_terminal_view_by_id(terminal_view_id, ctx);
+        let view = terminal_view.as_ref().map(|view| view.as_ref(ctx));
+        let text = match view {
+            Some(view) => view.agent_notification_text(agent, status, session_context, ctx),
+            None => notification_text(
+                &CLIAgentNotificationSubject {
+                    agent_name: agent.display_name(),
+                    session_title: None,
+                    group_label: None,
+                    tool_name: session_context.tool_name.as_deref(),
+                },
+                status,
+            ),
+        };
+        let Some(text) = text else {
+            return;
+        };
+        let branch = view.and_then(|view| view.current_git_branch(ctx));
+        self.add_notification(
+            text.title,
+            text.body,
+            category,
+            NotificationSourceAgent::CLI {
+                agent,
+                is_ambient: false,
+            },
+            origin,
+            terminal_view_id,
+            vec![],
+            branch,
+            ctx,
+        );
     }
 
     fn handle_history_event(

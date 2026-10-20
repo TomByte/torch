@@ -9,6 +9,7 @@ use std::collections::{HashMap, HashSet};
 use std::time::Duration;
 
 use event::{CLIAgentEvent, CLIAgentEventSource, CLIAgentEventType};
+use instant::Instant;
 use warp_core::execution_mode::AppExecutionMode;
 use warpui::r#async::SpawnedFutureHandle;
 use warpui::{Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
@@ -406,6 +407,8 @@ pub struct CLIAgentSessionsModel {
     next_ctrl_c_token: u64,
     /// Sessions whose status has come from Codex's OSC 9 fallback notifications.
     fallback_status_sessions: HashSet<EntityId>,
+    /// When each session's status last changed.
+    status_since: HashMap<EntityId, Instant>,
 }
 
 impl Entity for CLIAgentSessionsModel {
@@ -422,11 +425,17 @@ impl CLIAgentSessionsModel {
             ctrl_c_cancel_state: HashMap::new(),
             next_ctrl_c_token: 0,
             fallback_status_sessions: HashSet::new(),
+            status_since: HashMap::new(),
         }
     }
 
     pub fn session(&self, terminal_view_id: EntityId) -> Option<&CLIAgentSession> {
         self.sessions.get(&terminal_view_id)
+    }
+
+    /// When the session's status last changed.
+    pub fn status_since(&self, terminal_view_id: EntityId) -> Option<Instant> {
+        self.status_since.get(&terminal_view_id).copied()
     }
 
     /// Whether the session's status reflects notifications from the agent rather than the
@@ -484,6 +493,7 @@ impl CLIAgentSessionsModel {
         {
             // Upgrade existing session with plugin context.
             session.status = CLIAgentSessionStatus::InProgress;
+            self.status_since.insert(terminal_view_id, Instant::now());
             session.listener = Some(listener);
             session.plugin_version = plugin_version;
             session.remote_host = remote_host;
@@ -523,6 +533,7 @@ impl CLIAgentSessionsModel {
         self.abort_pending_cancel(terminal_view_id);
         self.ctrl_c_cancel_state.remove(&terminal_view_id);
         self.fallback_status_sessions.remove(&terminal_view_id);
+        self.status_since.remove(&terminal_view_id);
         if let Some(session) = self.sessions.remove(&terminal_view_id) {
             ctx.emit(CLIAgentSessionsModelEvent::Ended {
                 terminal_view_id,
@@ -589,6 +600,7 @@ impl CLIAgentSessionsModel {
         };
         if let Some(new_status) = new_status {
             let agent = session.agent;
+            self.status_since.insert(terminal_view_id, Instant::now());
             ctx.emit(CLIAgentSessionsModelEvent::StatusChanged {
                 terminal_view_id,
                 agent,
@@ -622,6 +634,7 @@ impl CLIAgentSessionsModel {
         }
         session.clear_permission_scoped_state();
         session.status = CLIAgentSessionStatus::InProgress;
+        self.status_since.insert(terminal_view_id, Instant::now());
         ctx.emit(CLIAgentSessionsModelEvent::StatusChanged {
             terminal_view_id,
             agent: session.agent,
@@ -751,6 +764,7 @@ impl CLIAgentSessionsModel {
         }
 
         session.status = CLIAgentSessionStatus::Cancelled;
+        self.status_since.insert(terminal_view_id, Instant::now());
         let agent = session.agent;
         let session_context = Box::new(session.session_context.clone());
         ctx.emit(CLIAgentSessionsModelEvent::StatusChanged {
@@ -846,6 +860,7 @@ impl CLIAgentSessionsModel {
         self.abort_pending_cancel(terminal_view_id);
         self.ctrl_c_cancel_state.remove(&terminal_view_id);
         self.fallback_status_sessions.remove(&terminal_view_id);
+        self.status_since.insert(terminal_view_id, Instant::now());
         if let Some(old) = self.sessions.insert(terminal_view_id, session) {
             ctx.emit(CLIAgentSessionsModelEvent::Ended {
                 terminal_view_id,

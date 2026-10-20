@@ -24,6 +24,7 @@ use crate::settings::AISettings;
 /// Store of all of the [`crate::search::DataSource`]s for the command palette.
 pub struct DataSourceStore {
     local_navigation: ModelHandle<super::local_navigation::DataSource>,
+    agents: ModelHandle<super::agents::DataSource>,
     actions_data_source: ModelHandle<CommandBindingDataSource>,
     sessions_data_source: ModelHandle<navigation::DataSource>,
     warp_drive_data_source: ModelHandle<warp_drive::DataSource>,
@@ -63,6 +64,7 @@ impl DataSourceStore {
 
         Self {
             local_navigation: ctx.add_model(|_| super::local_navigation::DataSource::default()),
+            agents: ctx.add_model(|_| super::agents::DataSource::default()),
             actions_data_source,
             sessions_data_source,
             warp_drive_data_source,
@@ -81,6 +83,17 @@ impl DataSourceStore {
     ) {
         self.local_navigation.update(ctx, |source, ctx| {
             source.set_tabs(tabs);
+            ctx.notify();
+        });
+    }
+
+    pub(crate) fn set_agent_panes(
+        &self,
+        panes: Vec<crate::workspace::view::AgentPane>,
+        ctx: &mut ModelContext<Self>,
+    ) {
+        self.agents.update(ctx, |source, ctx| {
+            source.set_panes(panes);
             ctx.notify();
         });
     }
@@ -122,6 +135,7 @@ impl DataSourceStore {
                         QueryFilter::Repos,
                     ]),
                 );
+                mixer.add_sync_source(self.agents.clone(), HashSet::from([QueryFilter::Agents]));
             }
             mixer.add_sync_source(
                 self.sessions_data_source.clone(),

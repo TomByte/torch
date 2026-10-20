@@ -633,6 +633,21 @@ pub fn init(app: &mut AppContext) {
         .with_mac_key_binding("cmd-j")
         .with_linux_or_windows_key_binding("ctrl-shift-J"),
         EditableBinding::new(
+            "workspace:toggle_agents_palette",
+            BindingDescription::new("Show agents")
+                .with_custom_description(bindings::MAC_MENUS_CONTEXT, "Show Agents"),
+            WorkspaceAction::TogglePalette {
+                mode: PaletteMode::Agents,
+                source: PaletteSource::Keybinding,
+            },
+        )
+        .with_context_predicate(id!("Workspace"))
+        .with_group(bindings::BindingGroup::Navigation.as_str())
+        .with_custom_action(CustomAction::AgentsPalette)
+        .with_enabled(ChannelState::is_local_only)
+        .with_mac_key_binding("cmd-shift-J")
+        .with_linux_or_windows_key_binding("ctrl-alt-j"),
+        EditableBinding::new(
             "workspace:activate_next_tab",
             session_label("Activate next tab", "Next session"),
             WorkspaceAction::ActivateNextTab,

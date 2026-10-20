@@ -504,6 +504,16 @@ sidebar order, then the next unread finished one, revealing collapsed groups. On
 icon shows the number of blocked agent sessions. Desktop notifications, sent only while the window
 is inactive, use the session title and say which group it belongs to and whether it needs input,
 finished, or failed.
+While Torch is in front, the same notification appears as an in-app toast below the header, unless
+that session is already on screen; clicking it opens the session. Settings → Features → Notifications
+turns toasts off and sets how long they stay. Resuming or cancelling an agent removes its toast.
+
+Show Agents (Cmd+Shift+J on macOS, also in View and the command palette) opens the palette on every
+pane running a coding agent across all windows, ordered needs you, finished, failed, working, idle,
+then agents that report no status; ties keep sidebar order. Each row shows the sidebar's status
+icon, what the agent is working on (its terminal title), and agent · project · state with time in
+that state. Typing filters by any of them, so “working” or a project name narrows the list. Enter
+focuses that pane.
 
 ### Projects settings
 

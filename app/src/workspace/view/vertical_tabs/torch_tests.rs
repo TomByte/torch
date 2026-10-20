@@ -748,3 +748,29 @@ fn sessions_join_their_first_project_and_stay_there() {
         "a removed project releases its sessions",
     );
 }
+
+#[test]
+fn agents_needing_the_user_sort_before_busy_and_idle_ones() {
+    let mut states = [
+        (Some(ConversationStatus::Success), false),
+        (Some(ConversationStatus::InProgress), false),
+        (None, false),
+        (Some(ConversationStatus::Success), true),
+        (
+            Some(ConversationStatus::Blocked {
+                blocked_action: String::new(),
+            }),
+            false,
+        ),
+    ]
+    .map(|(status, unread)| agent_state(session_indicator(status.as_ref(), unread, false)));
+    states.sort();
+    assert_eq!(
+        states.map(AgentState::label),
+        ["needs you", "finished", "working", "idle", "idle"],
+    );
+    assert_eq!(
+        agent_state(session_indicator(None, false, true)).label(),
+        "running"
+    );
+}

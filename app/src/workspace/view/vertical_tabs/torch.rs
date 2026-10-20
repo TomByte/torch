@@ -1022,6 +1022,128 @@ fn session(workspace: &Workspace, index: usize, app: &AppContext) -> Session {
     }
 }
 
+/// A pane running a coding agent, as the Agents palette lists it.
+#[derive(Clone)]
+pub(crate) struct AgentPane {
+    pub(crate) window_id: WindowId,
+    pub(crate) locator: PaneViewLocator,
+    pub(crate) agent: &'static str,
+    /// What the agent is working on, when it has said.
+    pub(crate) task: Option<String>,
+    /// The sidebar group the pane's session belongs to.
+    pub(crate) project: String,
+    pub(crate) status_since: Option<Instant>,
+    session: Session,
+}
+
+/// Where an agent stands, ordered from most to least in need of the user.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) enum AgentState {
+    NeedsYou,
+    Finished,
+    Failed,
+    Working,
+    Idle,
+    /// The agent has not reported a status, so Torch cannot tell what it is doing.
+    Running,
+}
+
+impl AgentState {
+    pub(crate) fn label(self) -> &'static str {
+        match self {
+            AgentState::NeedsYou => "needs you",
+            AgentState::Finished => "finished",
+            AgentState::Failed => "failed",
+            AgentState::Working => "working",
+            AgentState::Idle => "idle",
+            AgentState::Running => "running",
+        }
+    }
+}
+
+impl AgentPane {
+    pub(crate) fn state(&self) -> AgentState {
+        agent_state(session_indicator(
+            self.session.status.as_ref(),
+            self.session.unread,
+            self.session.agent_status_unavailable,
+        ))
+    }
+
+    /// The sidebar's indicator for this pane's state.
+    pub(crate) fn render_status_icon(&self, appearance: &Appearance) -> Box<dyn Element> {
+        status_icon(&self.session, &Palette::new(appearance.theme()))
+    }
+
+    /// The color the sidebar uses for text about this pane's state.
+    pub(crate) fn state_color(&self, appearance: &Appearance) -> ColorU {
+        let palette = Palette::new(appearance.theme());
+        match self.state() {
+            AgentState::NeedsYou | AgentState::Failed => palette.attention,
+            AgentState::Finished | AgentState::Working | AgentState::Idle | AgentState::Running => {
+                palette.secondary
+            }
+        }
+    }
+}
+
+/// A finished agent stays "finished" until its session is seen, then it is idle.
+fn agent_state(indicator: SessionIndicator) -> AgentState {
+    match indicator {
+        SessionIndicator::NeedsInput => AgentState::NeedsYou,
+        SessionIndicator::UnreadComplete => AgentState::Finished,
+        SessionIndicator::Failed => AgentState::Failed,
+        SessionIndicator::Working => AgentState::Working,
+        SessionIndicator::Complete | SessionIndicator::Idle => AgentState::Idle,
+        SessionIndicator::Unknown => AgentState::Running,
+    }
+}
+
+/// Every pane in `workspace` running a coding agent, in sidebar tab order.
+pub(in crate::workspace::view) fn agent_panes(
+    workspace: &Workspace,
+    window_id: WindowId,
+    app: &AppContext,
+) -> Vec<AgentPane> {
+    let agents = CLIAgentSessionsModel::as_ref(app);
+    let mut panes = Vec::new();
+    for (index, tab) in workspace.tabs.iter().enumerate() {
+        let pane_group = tab.pane_group.as_ref(app);
+        let mut tab_session = None;
+        for view in pane_group.terminal_views(app) {
+            let view = view.as_ref(app);
+            let Some(agent) = agents.session(view.id()) else {
+                continue;
+            };
+            let Some(pane_id) = pane_group.find_pane_id_for_terminal_view(view.id(), app) else {
+                continue;
+            };
+            let tab_session: &Session =
+                tab_session.get_or_insert_with(|| session(workspace, index, app));
+            // A shell command running beside the agent says nothing about the agent itself.
+            let status = pane_status(view, || false, app);
+            panes.push(AgentPane {
+                window_id,
+                locator: PaneViewLocator {
+                    pane_group_id: tab.pane_group.id(),
+                    pane_id,
+                },
+                agent: agent.agent.display_name(),
+                task: view.agent_task_title(&agent.session_context),
+                project: tab_session.group_label.clone(),
+                status_since: agents.status_since(view.id()),
+                session: Session {
+                    status: status.status,
+                    unread: status.unread,
+                    agent_status_unavailable: status.agent_status_unavailable,
+                    ..tab_session.clone()
+                },
+            });
+        }
+    }
+    panes
+}
+
 fn sessions(workspace: &Workspace, app: &AppContext) -> Vec<Session> {
     workspace
         .vertical_tabs_panel

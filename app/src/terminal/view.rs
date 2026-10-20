@@ -410,7 +410,10 @@ use crate::terminal::cli_agent_sessions::{
     CLIAgentInputEntrypoint, CLIAgentInputState, CLIAgentRichInputCloseReason, CLIAgentSession,
     CLIAgentSessionContext, CLIAgentSessionStatus, CLIAgentSessionsModel,
     CLIAgentSessionsModelEvent,
-    notification::{CLIAgentNotificationSubject, notification_text as cli_agent_notification_text},
+    notification::{
+        CLIAgentNotificationSubject, CLIAgentNotificationText,
+        notification_text as cli_agent_notification_text,
+    },
 };
 use crate::terminal::color::List;
 use crate::terminal::command_corrections_denylist::COMMAND_CORRECTIONS_PREFERRED_DENYLIST;
@@ -16900,40 +16903,7 @@ impl TerminalView {
         session_context: &CLIAgentSessionContext,
         ctx: &mut ViewContext<Self>,
     ) {
-        // Agents such as Claude prefix their terminal title with an activity glyph.
-        let terminal_title = self.model.lock().terminal_title().map(|title| {
-            title
-                .trim_start_matches(|ch: char| !ch.is_alphanumeric())
-                .to_owned()
-        });
-        let session_title = session_context.display_title().or(terminal_title);
-        let directory = session_context
-            .cwd
-            .as_deref()
-            .map(PathBuf::from)
-            .or_else(|| {
-                self.canonical_session_pwd_if_local(ctx)
-                    .map(|path| path.as_path().to_path_buf())
-            });
-        let group_label = directory.as_deref().and_then(|directory| {
-            crate::settings::project_for_directory(
-                &crate::settings::ProjectCatalog::as_ref(ctx).projects,
-                directory,
-            )
-            .map(|project| project.name.clone())
-            .or_else(|| {
-                directory
-                    .file_name()
-                    .map(|name| name.to_string_lossy().into_owned())
-            })
-        });
-        let subject = CLIAgentNotificationSubject {
-            agent_name: agent.display_name(),
-            session_title: session_title.as_deref(),
-            group_label: group_label.as_deref(),
-            tool_name: session_context.tool_name.as_deref(),
-        };
-        let Some(text) = cli_agent_notification_text(&subject, status) else {
+        let Some(text) = self.agent_notification_text(agent, status, session_context, ctx) else {
             return;
         };
         let trigger = match status {
@@ -16952,6 +16922,65 @@ impl TerminalView {
             Some(NotificationAgentVariant::CLIAgent(agent)),
             ctx,
         );
+    }
+
+    /// What the coding agent in this session is working on: the prompt or summary its hooks
+    /// report, otherwise the title it gives the terminal.
+    pub(crate) fn agent_task_title(
+        &self,
+        session_context: &CLIAgentSessionContext,
+    ) -> Option<String> {
+        session_context.display_title().or_else(|| {
+            // Agents such as Claude prefix their terminal title with an activity glyph.
+            self.model
+                .lock()
+                .terminal_title()
+                .map(|title| {
+                    title
+                        .trim_start_matches(|ch: char| !ch.is_alphanumeric())
+                        .to_owned()
+                })
+                .filter(|title| !title.is_empty())
+        })
+    }
+
+    /// How a local notification describes this session's agent reaching `status`, or `None` when
+    /// the status needs no notification.
+    pub(crate) fn agent_notification_text(
+        &self,
+        agent: CLIAgent,
+        status: &CLIAgentSessionStatus,
+        session_context: &CLIAgentSessionContext,
+        app: &AppContext,
+    ) -> Option<CLIAgentNotificationText> {
+        let session_title = self.agent_task_title(session_context);
+        let directory = session_context
+            .cwd
+            .as_deref()
+            .map(PathBuf::from)
+            .or_else(|| {
+                self.canonical_session_pwd_if_local(app)
+                    .map(|path| path.as_path().to_path_buf())
+            });
+        let group_label = directory.as_deref().and_then(|directory| {
+            crate::settings::project_for_directory(
+                &crate::settings::ProjectCatalog::as_ref(app).projects,
+                directory,
+            )
+            .map(|project| project.name.clone())
+            .or_else(|| {
+                directory
+                    .file_name()
+                    .map(|name| name.to_string_lossy().into_owned())
+            })
+        });
+        let subject = CLIAgentNotificationSubject {
+            agent_name: agent.display_name(),
+            session_title: session_title.as_deref(),
+            group_label: group_label.as_deref(),
+            tool_name: session_context.tool_name.as_deref(),
+        };
+        cli_agent_notification_text(&subject, status)
     }
 
     fn send_agent_desktop_notification_or_show_banner(

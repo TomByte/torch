@@ -113,6 +113,9 @@ impl ZeroState {
             valid_filters.push(QueryFilter::Drive);
         }
         valid_filters.extend([QueryFilter::Actions, QueryFilter::Sessions]);
+        if warp_core::channel::ChannelState::is_local_only() {
+            valid_filters.push(QueryFilter::Agents);
+        }
 
         if ContextFlag::LaunchConfigurations.is_enabled() {
             valid_filters.push(QueryFilter::LaunchConfigurations);
