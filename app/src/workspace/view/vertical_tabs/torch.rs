@@ -38,6 +38,22 @@ impl Palette {
                 header_rule: ColorU::from_u32(0x88888818),
                 shadow: ColorU::from_u32(0x22223312),
             }
+        } else if matches!(theme.name().as_deref(), Some("Kanagawa" | "Ayu")) {
+            let background = theme.background();
+            let foreground = theme.foreground();
+            Self {
+                sidebar_top: background.blend(&foreground.with_opacity(4)).into_solid(),
+                sidebar_bottom: background.blend(&foreground.with_opacity(2)).into_solid(),
+                text: foreground.into_solid(),
+                secondary: background.blend(&foreground.with_opacity(85)).into_solid(),
+                muted: background.blend(&foreground.with_opacity(80)).into_solid(),
+                selection: background.blend(&foreground.with_opacity(10)).into_solid(),
+                hover: foreground.with_opacity(5).into_solid(),
+                rule: background.blend(&foreground.with_opacity(18)).into_solid(),
+                attention: theme.terminal_colors().bright.yellow.into(),
+                header_rule: foreground.with_opacity(7).into_solid(),
+                shadow: ColorU::from_u32(0x00000030),
+            }
         } else {
             Self {
                 sidebar_top: ColorU::from_u32(0x2B2B2BFF),

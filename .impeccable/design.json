@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-20T11:13:12.734713+00:00",
+  "generatedAt": "2026-10-20T11:50:10.956537+00:00",
   "title": "Design System: Torch",
   "extensions": {
     "colorMeta": {
@@ -633,6 +633,606 @@
           "oklch(84% 0.0728 254.72)",
           "oklch(95% 0.0728 254.72)"
         ]
+      },
+      "kanagawa-terminal-background": {
+        "role": "neutral",
+        "displayName": "Kanagawa Wave Terminal Background",
+        "canonical": "#1F1F28",
+        "tonalRamp": [
+          "oklch(15% 0.0170 285.06)",
+          "oklch(26% 0.0170 285.06)",
+          "oklch(38% 0.0170 285.06)",
+          "oklch(49% 0.0170 285.06)",
+          "oklch(61% 0.0170 285.06)",
+          "oklch(72% 0.0170 285.06)",
+          "oklch(84% 0.0170 285.06)",
+          "oklch(95% 0.0170 285.06)"
+        ]
+      },
+      "kanagawa-terminal-foreground": {
+        "role": "neutral",
+        "displayName": "Kanagawa Wave Terminal Foreground",
+        "canonical": "#DCD7BA",
+        "tonalRamp": [
+          "oklch(15% 0.0391 99.09)",
+          "oklch(26% 0.0391 99.09)",
+          "oklch(38% 0.0391 99.09)",
+          "oklch(49% 0.0391 99.09)",
+          "oklch(61% 0.0391 99.09)",
+          "oklch(72% 0.0391 99.09)",
+          "oklch(84% 0.0391 99.09)",
+          "oklch(95% 0.0391 99.09)"
+        ]
+      },
+      "kanagawa-terminal-accent": {
+        "role": "primary",
+        "displayName": "Kanagawa Wave Terminal Accent",
+        "canonical": "#7E9CD8",
+        "tonalRamp": [
+          "oklch(15% 0.0951 263.66)",
+          "oklch(26% 0.0951 263.66)",
+          "oklch(38% 0.0951 263.66)",
+          "oklch(49% 0.0951 263.66)",
+          "oklch(61% 0.0951 263.66)",
+          "oklch(72% 0.0951 263.66)",
+          "oklch(84% 0.0951 263.66)",
+          "oklch(95% 0.0951 263.66)"
+        ]
+      },
+      "kanagawa-terminal-cursor": {
+        "role": "secondary",
+        "displayName": "Kanagawa Wave Terminal Cursor",
+        "canonical": "#C8C093",
+        "tonalRamp": [
+          "oklch(15% 0.0608 99.15)",
+          "oklch(26% 0.0608 99.15)",
+          "oklch(38% 0.0608 99.15)",
+          "oklch(49% 0.0608 99.15)",
+          "oklch(61% 0.0608 99.15)",
+          "oklch(72% 0.0608 99.15)",
+          "oklch(84% 0.0608 99.15)",
+          "oklch(95% 0.0608 99.15)"
+        ]
+      },
+      "kanagawa-ansi-normal-black": {
+        "role": "neutral",
+        "displayName": "Kanagawa Wave Ansi Normal Black",
+        "canonical": "#090618",
+        "tonalRamp": [
+          "oklch(15% 0.0393 289.14)",
+          "oklch(26% 0.0393 289.14)",
+          "oklch(38% 0.0393 289.14)",
+          "oklch(49% 0.0393 289.14)",
+          "oklch(61% 0.0393 289.14)",
+          "oklch(72% 0.0393 289.14)",
+          "oklch(84% 0.0393 289.14)",
+          "oklch(95% 0.0393 289.14)"
+        ]
+      },
+      "kanagawa-ansi-normal-red": {
+        "role": "secondary",
+        "displayName": "Kanagawa Wave Ansi Normal Red",
+        "canonical": "#C34043",
+        "tonalRamp": [
+          "oklch(15% 0.1670 23.09)",
+          "oklch(26% 0.1670 23.09)",
+          "oklch(38% 0.1670 23.09)",
+          "oklch(49% 0.1670 23.09)",
+          "oklch(61% 0.1670 23.09)",
+          "oklch(72% 0.1670 23.09)",
+          "oklch(84% 0.1670 23.09)",
+          "oklch(95% 0.1670 23.09)"
+        ]
+      },
+      "kanagawa-ansi-normal-green": {
+        "role": "secondary",
+        "displayName": "Kanagawa Wave Ansi Normal Green",
+        "canonical": "#76946A",
+        "tonalRamp": [
+          "oklch(15% 0.0698 136.92)",
+          "oklch(26% 0.0698 136.92)",
+          "oklch(38% 0.0698 136.92)",
+          "oklch(49% 0.0698 136.92)",
+          "oklch(61% 0.0698 136.92)",
+          "oklch(72% 0.0698 136.92)",
+          "oklch(84% 0.0698 136.92)",
+          "oklch(95% 0.0698 136.92)"
+        ]
+      },
+      "kanagawa-ansi-normal-yellow": {
+        "role": "secondary",
+        "displayName": "Kanagawa Wave Ansi Normal Yellow",
+        "canonical": "#C0A36E",
+        "tonalRamp": [
+          "oklch(15% 0.0780 82.02)",
+          "oklch(26% 0.0780 82.02)",
+          "oklch(38% 0.0780 82.02)",
+          "oklch(49% 0.0780 82.02)",
+          "oklch(61% 0.0780 82.02)",
+          "oklch(72% 0.0780 82.02)",
+          "oklch(84% 0.0780 82.02)",
+          "oklch(95% 0.0780 82.02)"
+        ]
+      },
+      "kanagawa-ansi-normal-blue": {
+        "role": "secondary",
+        "displayName": "Kanagawa Wave Ansi Normal Blue",
+        "canonical": "#7E9CD8",
+        "tonalRamp": [
+          "oklch(15% 0.0951 263.66)",
+          "oklch(26% 0.0951 263.66)",
+          "oklch(38% 0.0951 263.66)",
+          "oklch(49% 0.0951 263.66)",
+          "oklch(61% 0.0951 263.66)",
+          "oklch(72% 0.0951 263.66)",
+          "oklch(84% 0.0951 263.66)",
+          "oklch(95% 0.0951 263.66)"
+        ]
+      },
+      "kanagawa-ansi-normal-magenta": {
+        "role": "secondary",
+        "displayName": "Kanagawa Wave Ansi Normal Magenta",
+        "canonical": "#957FB8",
+        "tonalRamp": [
+          "oklch(15% 0.0870 301.70)",
+          "oklch(26% 0.0870 301.70)",
+          "oklch(38% 0.0870 301.70)",
+          "oklch(49% 0.0870 301.70)",
+          "oklch(61% 0.0870 301.70)",
+          "oklch(72% 0.0870 301.70)",
+          "oklch(84% 0.0870 301.70)",
+          "oklch(95% 0.0870 301.70)"
+        ]
+      },
+      "kanagawa-ansi-normal-cyan": {
+        "role": "secondary",
+        "displayName": "Kanagawa Wave Ansi Normal Cyan",
+        "canonical": "#6A9589",
+        "tonalRamp": [
+          "oklch(15% 0.0504 175.42)",
+          "oklch(26% 0.0504 175.42)",
+          "oklch(38% 0.0504 175.42)",
+          "oklch(49% 0.0504 175.42)",
+          "oklch(61% 0.0504 175.42)",
+          "oklch(72% 0.0504 175.42)",
+          "oklch(84% 0.0504 175.42)",
+          "oklch(95% 0.0504 175.42)"
+        ]
+      },
+      "kanagawa-ansi-normal-white": {
+        "role": "neutral",
+        "displayName": "Kanagawa Wave Ansi Normal White",
+        "canonical": "#C8C093",
+        "tonalRamp": [
+          "oklch(15% 0.0608 99.15)",
+          "oklch(26% 0.0608 99.15)",
+          "oklch(38% 0.0608 99.15)",
+          "oklch(49% 0.0608 99.15)",
+          "oklch(61% 0.0608 99.15)",
+          "oklch(72% 0.0608 99.15)",
+          "oklch(84% 0.0608 99.15)",
+          "oklch(95% 0.0608 99.15)"
+        ]
+      },
+      "kanagawa-ansi-bright-black": {
+        "role": "neutral",
+        "displayName": "Kanagawa Wave Ansi Bright Black",
+        "canonical": "#727169",
+        "tonalRamp": [
+          "oklch(15% 0.0122 100.99)",
+          "oklch(26% 0.0122 100.99)",
+          "oklch(38% 0.0122 100.99)",
+          "oklch(49% 0.0122 100.99)",
+          "oklch(61% 0.0122 100.99)",
+          "oklch(72% 0.0122 100.99)",
+          "oklch(84% 0.0122 100.99)",
+          "oklch(95% 0.0122 100.99)"
+        ]
+      },
+      "kanagawa-ansi-bright-red": {
+        "role": "secondary",
+        "displayName": "Kanagawa Wave Ansi Bright Red",
+        "canonical": "#E82424",
+        "tonalRamp": [
+          "oklch(15% 0.2269 27.65)",
+          "oklch(26% 0.2269 27.65)",
+          "oklch(38% 0.2269 27.65)",
+          "oklch(49% 0.2269 27.65)",
+          "oklch(61% 0.2269 27.65)",
+          "oklch(72% 0.2269 27.65)",
+          "oklch(84% 0.2269 27.65)",
+          "oklch(95% 0.2269 27.65)"
+        ]
+      },
+      "kanagawa-ansi-bright-green": {
+        "role": "secondary",
+        "displayName": "Kanagawa Wave Ansi Bright Green",
+        "canonical": "#98BB6C",
+        "tonalRamp": [
+          "oklch(15% 0.1125 128.36)",
+          "oklch(26% 0.1125 128.36)",
+          "oklch(38% 0.1125 128.36)",
+          "oklch(49% 0.1125 128.36)",
+          "oklch(61% 0.1125 128.36)",
+          "oklch(72% 0.1125 128.36)",
+          "oklch(84% 0.1125 128.36)",
+          "oklch(95% 0.1125 128.36)"
+        ]
+      },
+      "kanagawa-ansi-bright-yellow": {
+        "role": "secondary",
+        "displayName": "Kanagawa Wave Ansi Bright Yellow",
+        "canonical": "#E6C384",
+        "tonalRamp": [
+          "oklch(15% 0.0899 81.64)",
+          "oklch(26% 0.0899 81.64)",
+          "oklch(38% 0.0899 81.64)",
+          "oklch(49% 0.0899 81.64)",
+          "oklch(61% 0.0899 81.64)",
+          "oklch(72% 0.0899 81.64)",
+          "oklch(84% 0.0899 81.64)",
+          "oklch(95% 0.0899 81.64)"
+        ]
+      },
+      "kanagawa-ansi-bright-blue": {
+        "role": "secondary",
+        "displayName": "Kanagawa Wave Ansi Bright Blue",
+        "canonical": "#7FB4CA",
+        "tonalRamp": [
+          "oklch(15% 0.0640 225.72)",
+          "oklch(26% 0.0640 225.72)",
+          "oklch(38% 0.0640 225.72)",
+          "oklch(49% 0.0640 225.72)",
+          "oklch(61% 0.0640 225.72)",
+          "oklch(72% 0.0640 225.72)",
+          "oklch(84% 0.0640 225.72)",
+          "oklch(95% 0.0640 225.72)"
+        ]
+      },
+      "kanagawa-ansi-bright-magenta": {
+        "role": "secondary",
+        "displayName": "Kanagawa Wave Ansi Bright Magenta",
+        "canonical": "#938AA9",
+        "tonalRamp": [
+          "oklch(15% 0.0466 298.38)",
+          "oklch(26% 0.0466 298.38)",
+          "oklch(38% 0.0466 298.38)",
+          "oklch(49% 0.0466 298.38)",
+          "oklch(61% 0.0466 298.38)",
+          "oklch(72% 0.0466 298.38)",
+          "oklch(84% 0.0466 298.38)",
+          "oklch(95% 0.0466 298.38)"
+        ]
+      },
+      "kanagawa-ansi-bright-cyan": {
+        "role": "secondary",
+        "displayName": "Kanagawa Wave Ansi Bright Cyan",
+        "canonical": "#7AA89F",
+        "tonalRamp": [
+          "oklch(15% 0.0511 181.30)",
+          "oklch(26% 0.0511 181.30)",
+          "oklch(38% 0.0511 181.30)",
+          "oklch(49% 0.0511 181.30)",
+          "oklch(61% 0.0511 181.30)",
+          "oklch(72% 0.0511 181.30)",
+          "oklch(84% 0.0511 181.30)",
+          "oklch(95% 0.0511 181.30)"
+        ]
+      },
+      "kanagawa-ansi-bright-white": {
+        "role": "neutral",
+        "displayName": "Kanagawa Wave Ansi Bright White",
+        "canonical": "#DCD7BA",
+        "tonalRamp": [
+          "oklch(15% 0.0391 99.09)",
+          "oklch(26% 0.0391 99.09)",
+          "oklch(38% 0.0391 99.09)",
+          "oklch(49% 0.0391 99.09)",
+          "oklch(61% 0.0391 99.09)",
+          "oklch(72% 0.0391 99.09)",
+          "oklch(84% 0.0391 99.09)",
+          "oklch(95% 0.0391 99.09)"
+        ]
+      },
+      "ayu-terminal-background": {
+        "role": "neutral",
+        "displayName": "Ayu Mirage Terminal Background",
+        "canonical": "#242936",
+        "tonalRamp": [
+          "oklch(15% 0.0251 268.36)",
+          "oklch(26% 0.0251 268.36)",
+          "oklch(38% 0.0251 268.36)",
+          "oklch(49% 0.0251 268.36)",
+          "oklch(61% 0.0251 268.36)",
+          "oklch(72% 0.0251 268.36)",
+          "oklch(84% 0.0251 268.36)",
+          "oklch(95% 0.0251 268.36)"
+        ]
+      },
+      "ayu-terminal-foreground": {
+        "role": "neutral",
+        "displayName": "Ayu Mirage Terminal Foreground",
+        "canonical": "#CCCAC2",
+        "tonalRamp": [
+          "oklch(15% 0.0112 95.19)",
+          "oklch(26% 0.0112 95.19)",
+          "oklch(38% 0.0112 95.19)",
+          "oklch(49% 0.0112 95.19)",
+          "oklch(61% 0.0112 95.19)",
+          "oklch(72% 0.0112 95.19)",
+          "oklch(84% 0.0112 95.19)",
+          "oklch(95% 0.0112 95.19)"
+        ]
+      },
+      "ayu-terminal-accent": {
+        "role": "primary",
+        "displayName": "Ayu Mirage Terminal Accent",
+        "canonical": "#FFCC66",
+        "tonalRamp": [
+          "oklch(15% 0.1325 82.74)",
+          "oklch(26% 0.1325 82.74)",
+          "oklch(38% 0.1325 82.74)",
+          "oklch(49% 0.1325 82.74)",
+          "oklch(61% 0.1325 82.74)",
+          "oklch(72% 0.1325 82.74)",
+          "oklch(84% 0.1325 82.74)",
+          "oklch(95% 0.1325 82.74)"
+        ]
+      },
+      "ayu-terminal-cursor": {
+        "role": "secondary",
+        "displayName": "Ayu Mirage Terminal Cursor",
+        "canonical": "#FFCC66",
+        "tonalRamp": [
+          "oklch(15% 0.1325 82.74)",
+          "oklch(26% 0.1325 82.74)",
+          "oklch(38% 0.1325 82.74)",
+          "oklch(49% 0.1325 82.74)",
+          "oklch(61% 0.1325 82.74)",
+          "oklch(72% 0.1325 82.74)",
+          "oklch(84% 0.1325 82.74)",
+          "oklch(95% 0.1325 82.74)"
+        ]
+      },
+      "ayu-ansi-normal-black": {
+        "role": "neutral",
+        "displayName": "Ayu Mirage Ansi Normal Black",
+        "canonical": "#0A0000",
+        "tonalRamp": [
+          "oklch(15% 0.0373 29.23)",
+          "oklch(26% 0.0373 29.23)",
+          "oklch(38% 0.0373 29.23)",
+          "oklch(49% 0.0373 29.23)",
+          "oklch(61% 0.0373 29.23)",
+          "oklch(72% 0.0373 29.23)",
+          "oklch(84% 0.0373 29.23)",
+          "oklch(95% 0.0373 29.23)"
+        ]
+      },
+      "ayu-ansi-normal-red": {
+        "role": "secondary",
+        "displayName": "Ayu Mirage Ansi Normal Red",
+        "canonical": "#F06B5C",
+        "tonalRamp": [
+          "oklch(15% 0.1671 28.65)",
+          "oklch(26% 0.1671 28.65)",
+          "oklch(38% 0.1671 28.65)",
+          "oklch(49% 0.1671 28.65)",
+          "oklch(61% 0.1671 28.65)",
+          "oklch(72% 0.1671 28.65)",
+          "oklch(84% 0.1671 28.65)",
+          "oklch(95% 0.1671 28.65)"
+        ]
+      },
+      "ayu-ansi-normal-green": {
+        "role": "secondary",
+        "displayName": "Ayu Mirage Ansi Normal Green",
+        "canonical": "#BFE76D",
+        "tonalRamp": [
+          "oklch(15% 0.1561 124.62)",
+          "oklch(26% 0.1561 124.62)",
+          "oklch(38% 0.1561 124.62)",
+          "oklch(49% 0.1561 124.62)",
+          "oklch(61% 0.1561 124.62)",
+          "oklch(72% 0.1561 124.62)",
+          "oklch(84% 0.1561 124.62)",
+          "oklch(95% 0.1561 124.62)"
+        ]
+      },
+      "ayu-ansi-normal-yellow": {
+        "role": "secondary",
+        "displayName": "Ayu Mirage Ansi Normal Yellow",
+        "canonical": "#E6B752",
+        "tonalRamp": [
+          "oklch(15% 0.1295 83.93)",
+          "oklch(26% 0.1295 83.93)",
+          "oklch(38% 0.1295 83.93)",
+          "oklch(49% 0.1295 83.93)",
+          "oklch(61% 0.1295 83.93)",
+          "oklch(72% 0.1295 83.93)",
+          "oklch(84% 0.1295 83.93)",
+          "oklch(95% 0.1295 83.93)"
+        ]
+      },
+      "ayu-ansi-normal-blue": {
+        "role": "secondary",
+        "displayName": "Ayu Mirage Ansi Normal Blue",
+        "canonical": "#3BBBF4",
+        "tonalRamp": [
+          "oklch(15% 0.1354 232.41)",
+          "oklch(26% 0.1354 232.41)",
+          "oklch(38% 0.1354 232.41)",
+          "oklch(49% 0.1354 232.41)",
+          "oklch(61% 0.1354 232.41)",
+          "oklch(72% 0.1354 232.41)",
+          "oklch(84% 0.1354 232.41)",
+          "oklch(95% 0.1354 232.41)"
+        ]
+      },
+      "ayu-ansi-normal-magenta": {
+        "role": "secondary",
+        "displayName": "Ayu Mirage Ansi Normal Magenta",
+        "canonical": "#D09FFD",
+        "tonalRamp": [
+          "oklch(15% 0.1392 307.40)",
+          "oklch(26% 0.1392 307.40)",
+          "oklch(38% 0.1392 307.40)",
+          "oklch(49% 0.1392 307.40)",
+          "oklch(61% 0.1392 307.40)",
+          "oklch(72% 0.1392 307.40)",
+          "oklch(84% 0.1392 307.40)",
+          "oklch(95% 0.1392 307.40)"
+        ]
+      },
+      "ayu-ansi-normal-cyan": {
+        "role": "secondary",
+        "displayName": "Ayu Mirage Ansi Normal Cyan",
+        "canonical": "#84CEB5",
+        "tonalRamp": [
+          "oklch(15% 0.0825 170.76)",
+          "oklch(26% 0.0825 170.76)",
+          "oklch(38% 0.0825 170.76)",
+          "oklch(49% 0.0825 170.76)",
+          "oklch(61% 0.0825 170.76)",
+          "oklch(72% 0.0825 170.76)",
+          "oklch(84% 0.0825 170.76)",
+          "oklch(95% 0.0825 170.76)"
+        ]
+      },
+      "ayu-ansi-normal-white": {
+        "role": "neutral",
+        "displayName": "Ayu Mirage Ansi Normal White",
+        "canonical": "#D2D6DC",
+        "tonalRamp": [
+          "oklch(15% 0.0093 258.34)",
+          "oklch(26% 0.0093 258.34)",
+          "oklch(38% 0.0093 258.34)",
+          "oklch(49% 0.0093 258.34)",
+          "oklch(61% 0.0093 258.34)",
+          "oklch(72% 0.0093 258.34)",
+          "oklch(84% 0.0093 258.34)",
+          "oklch(95% 0.0093 258.34)"
+        ]
+      },
+      "ayu-ansi-bright-black": {
+        "role": "neutral",
+        "displayName": "Ayu Mirage Ansi Bright Black",
+        "canonical": "#707A8C",
+        "tonalRamp": [
+          "oklch(15% 0.0302 262.26)",
+          "oklch(26% 0.0302 262.26)",
+          "oklch(38% 0.0302 262.26)",
+          "oklch(49% 0.0302 262.26)",
+          "oklch(61% 0.0302 262.26)",
+          "oklch(72% 0.0302 262.26)",
+          "oklch(84% 0.0302 262.26)",
+          "oklch(95% 0.0302 262.26)"
+        ]
+      },
+      "ayu-ansi-bright-red": {
+        "role": "secondary",
+        "displayName": "Ayu Mirage Ansi Bright Red",
+        "canonical": "#F39184",
+        "tonalRamp": [
+          "oklch(15% 0.1210 28.31)",
+          "oklch(26% 0.1210 28.31)",
+          "oklch(38% 0.1210 28.31)",
+          "oklch(49% 0.1210 28.31)",
+          "oklch(61% 0.1210 28.31)",
+          "oklch(72% 0.1210 28.31)",
+          "oklch(84% 0.1210 28.31)",
+          "oklch(95% 0.1210 28.31)"
+        ]
+      },
+      "ayu-ansi-bright-green": {
+        "role": "secondary",
+        "displayName": "Ayu Mirage Ansi Bright Green",
+        "canonical": "#D5FF80",
+        "tonalRamp": [
+          "oklch(15% 0.1610 124.53)",
+          "oklch(26% 0.1610 124.53)",
+          "oklch(38% 0.1610 124.53)",
+          "oklch(49% 0.1610 124.53)",
+          "oklch(61% 0.1610 124.53)",
+          "oklch(72% 0.1610 124.53)",
+          "oklch(84% 0.1610 124.53)",
+          "oklch(95% 0.1610 124.53)"
+        ]
+      },
+      "ayu-ansi-bright-yellow": {
+        "role": "secondary",
+        "displayName": "Ayu Mirage Ansi Bright Yellow",
+        "canonical": "#FFCD66",
+        "tonalRamp": [
+          "oklch(15% 0.1329 83.41)",
+          "oklch(26% 0.1329 83.41)",
+          "oklch(38% 0.1329 83.41)",
+          "oklch(49% 0.1329 83.41)",
+          "oklch(61% 0.1329 83.41)",
+          "oklch(72% 0.1329 83.41)",
+          "oklch(84% 0.1329 83.41)",
+          "oklch(95% 0.1329 83.41)"
+        ]
+      },
+      "ayu-ansi-bright-blue": {
+        "role": "secondary",
+        "displayName": "Ayu Mirage Ansi Bright Blue",
+        "canonical": "#73D0FF",
+        "tonalRamp": [
+          "oklch(15% 0.1107 232.31)",
+          "oklch(26% 0.1107 232.31)",
+          "oklch(38% 0.1107 232.31)",
+          "oklch(49% 0.1107 232.31)",
+          "oklch(61% 0.1107 232.31)",
+          "oklch(72% 0.1107 232.31)",
+          "oklch(84% 0.1107 232.31)",
+          "oklch(95% 0.1107 232.31)"
+        ]
+      },
+      "ayu-ansi-bright-magenta": {
+        "role": "secondary",
+        "displayName": "Ayu Mirage Ansi Bright Magenta",
+        "canonical": "#DFBFFF",
+        "tonalRamp": [
+          "oklch(15% 0.0935 307.24)",
+          "oklch(26% 0.0935 307.24)",
+          "oklch(38% 0.0935 307.24)",
+          "oklch(49% 0.0935 307.24)",
+          "oklch(61% 0.0935 307.24)",
+          "oklch(72% 0.0935 307.24)",
+          "oklch(84% 0.0935 307.24)",
+          "oklch(95% 0.0935 307.24)"
+        ]
+      },
+      "ayu-ansi-bright-cyan": {
+        "role": "secondary",
+        "displayName": "Ayu Mirage Ansi Bright Cyan",
+        "canonical": "#95E6CB",
+        "tonalRamp": [
+          "oklch(15% 0.0884 171.10)",
+          "oklch(26% 0.0884 171.10)",
+          "oklch(38% 0.0884 171.10)",
+          "oklch(49% 0.0884 171.10)",
+          "oklch(61% 0.0884 171.10)",
+          "oklch(72% 0.0884 171.10)",
+          "oklch(84% 0.0884 171.10)",
+          "oklch(95% 0.0884 171.10)"
+        ]
+      },
+      "ayu-ansi-bright-white": {
+        "role": "neutral",
+        "displayName": "Ayu Mirage Ansi Bright White",
+        "canonical": "#E3E6EA",
+        "tonalRamp": [
+          "oklch(15% 0.0063 255.48)",
+          "oklch(26% 0.0063 255.48)",
+          "oklch(38% 0.0063 255.48)",
+          "oklch(49% 0.0063 255.48)",
+          "oklch(61% 0.0063 255.48)",
+          "oklch(72% 0.0063 255.48)",
+          "oklch(84% 0.0063 255.48)",
+          "oklch(95% 0.0063 255.48)"
+        ]
       }
     },
     "typographyMeta": {
@@ -760,7 +1360,7 @@
   ],
   "narrative": {
     "northStar": "The Quiet Native Terminal",
-    "overview": "Torch pairs compact grouped sessions with a lightly raised terminal pane. Light mode uses a cool\nblue-to-lilac sidebar and a soft off-white working surface; dark mode uses neutral charcoal layers and soft\ngray text. The interface keeps session context legible while leaving the working area to shell output.\n\nThe binding layout direction is the user-supplied\n[terminal reference](docs/design/terminal-reference.png), reinforced by the later light-sidebar\nreference. The user's Codex dark UI reference guides the dark palette while preserving that layout.\nIts personal sidebar history is not a design asset and is not copied into the repository. The\nnorth-star phrase describes this direction; it is not a separate user-approved brand name.\n\nThis is a Rust/WarpUI desktop system. Frontmatter dimensions use portable `px` notation for WarpUI\nlogical pixels, not screenshot pixels. The tokens describe the current implementation in\n`app/src/workspace/view/vertical_tabs/torch.rs`; font and terminal defaults come from\n`app/src/settings/font.rs`, `app/src/settings/theme.rs`, and `app/src/terminal/settings.rs`.\nDefault terminal colors come from `app/src/themes/default_themes.rs`; derived command fills come\nfrom `app/src/themes/mod.rs`. UI font loading comes from `app/src/appearance.rs`. Local palette\nbehavior comes from `app/src/search/command_palette/local_navigation.rs` and its workspace actions.\nUser-selected terminal themes and fonts remain authoritative at runtime.\n\nThe original macOS layout captures in `.impeccable/review/desktop.png`, `desktop-narrow.png`, and\n`desktop-long-title.png` establish the compact sidebar and long-title clipping. The initial dark-mode\nreview covers seven captures in the same directory: `dark-desktop.png` (2560 \u00d7 1604 screenshot\npixels), `dark-narrow.png` (1730 \u00d7 2046), `light-theme-regression.png` (2560 \u00d7 1602),\n`dark-terminal-input.png`, `dark-context-menu.png`, `dark-theme-picker.png`, and\n`dark-system-settings.png`. Independent finish review found no material defects in this scope,\nconfirmed dark palette coherence, and found no material light-mode regression. This supports close\nvisual fidelity, not pixel identity. Synthetic transcripts remain labelled test fixtures rather than\nevidence of completed CLI tasks. Recording badges and cursor halos are capture artifacts.\n\nInitial dark-mode live macOS checks passed choosing Dark in the native theme picker, syncing with the currently dark\nOS appearance, returning to Light, retaining Dark after app restart, and completing `/usr/bi` to\n`/usr/bin/` with Tab. The context menu and narrow layout were also verified. Six focused tests,\nClippy with existing baseline exemptions, and the native bundle passed. Cross-platform runner\n`oz-dev` was unavailable; this evidence covers macOS only.\n\nThe softer palette and Cmd+P revision is captured in `soft-dark-terminal.png`,\n`soft-dark-collapsed.png`, `soft-dark-palette.png`, `soft-light-terminal.png`,\n`soft-light-palette.png`, `soft-light-narrow.png`, `soft-directory-query-final.png`, and\n`soft-chooser.png` under `.impeccable/review/`. Files ending in `before` are comparison evidence,\nnot the current palette. Four focused navigation tests and seven theme/group tests passed; final\nnative build and lint results are tracked separately from these documentation captures. Verification\nremains limited to macOS. Private reference images are not repository assets.\n\nThe final macOS live verification passed short reordering within a manual group, a long drag out\nand back, Shift-selection across noncontiguous underlying tabs in displayed group order, and\nreopening the sidebar after restoring its stored closed state. The final drop resolves the dragged\ntab by stable identity before applying its position. These results supplement the source-derived\ninteraction rules below; screenshots alone do not verify interactions.",
+    "overview": "Torch pairs compact grouped sessions with a lightly raised terminal pane. Light mode uses a cool\nblue-to-lilac sidebar and a soft off-white working surface; dark mode uses neutral charcoal layers and soft\ngray text. The interface keeps session context legible while leaving the working area to shell output.\n\nThe binding layout direction is the user-supplied\n[terminal reference](docs/design/terminal-reference.png), reinforced by the later light-sidebar\nreference. The user's Codex dark UI reference guides the dark palette while preserving that layout.\nIts personal sidebar history is not a design asset and is not copied into the repository. The\nnorth-star phrase describes this direction; it is not a separate user-approved brand name.\n\nThis is a Rust/WarpUI desktop system. Frontmatter dimensions use portable `px` notation for WarpUI\nlogical pixels, not screenshot pixels. The tokens describe the current implementation in\n`app/src/workspace/view/vertical_tabs/torch.rs`; font and terminal defaults come from\n`app/src/settings/font.rs`, `app/src/settings/theme.rs`, and `app/src/terminal/settings.rs`.\nDefault terminal colors come from `app/src/themes/default_themes.rs`; derived command fills come\nfrom `app/src/themes/mod.rs`. UI font loading comes from `app/src/appearance.rs`. Local palette\nbehavior comes from `app/src/search/command_palette/local_navigation.rs` and its workspace actions.\nThe four built-in choices are Light, Dark, Kanagawa, and Ayu. Existing custom theme references and\nfont preferences remain readable; retired built-in names follow the compatibility mapping described\nbelow. The theme variants share the established layout and component geometry.\n\nThe original macOS layout captures in `.impeccable/review/desktop.png`, `desktop-narrow.png`, and\n`desktop-long-title.png` establish the compact sidebar and long-title clipping. The initial dark-mode\nreview covers seven captures in the same directory: `dark-desktop.png` (2560 \u00d7 1604 screenshot\npixels), `dark-narrow.png` (1730 \u00d7 2046), `light-theme-regression.png` (2560 \u00d7 1602),\n`dark-terminal-input.png`, `dark-context-menu.png`, `dark-theme-picker.png`, and\n`dark-system-settings.png`. Independent finish review found no material defects in this scope,\nconfirmed dark palette coherence, and found no material light-mode regression. This supports close\nvisual fidelity, not pixel identity. Synthetic transcripts remain labelled test fixtures rather than\nevidence of completed CLI tasks. Recording badges and cursor halos are capture artifacts.\n\nInitial dark-mode live macOS checks passed choosing Dark in the native theme picker, syncing with the currently dark\nOS appearance, returning to Light, retaining Dark after app restart, and completing `/usr/bi` to\n`/usr/bin/` with Tab. The context menu and narrow layout were also verified. Six focused tests,\nClippy with existing baseline exemptions, and the native bundle passed. Cross-platform runner\n`oz-dev` was unavailable; this evidence covers macOS only.\n\nThe softer palette and Cmd+P revision is captured in `soft-dark-terminal.png`,\n`soft-dark-collapsed.png`, `soft-dark-palette.png`, `soft-light-terminal.png`,\n`soft-light-palette.png`, `soft-light-narrow.png`, `soft-directory-query-final.png`, and\n`soft-chooser.png` under `.impeccable/review/`. Files ending in `before` are comparison evidence,\nnot the current palette. Final corrections are captured in `soft-dark-palette-reviewed.png` and\n`soft-light-palette-reviewed.png`. Four focused navigation tests, seven theme/group tests,\nbaseline-aware strict Clippy, and the native bundle passed. The independent finish review\nreturned ship with no remaining material findings. Verification remains limited to macOS.\nPrivate reference images are not repository assets.\n\nThe final macOS live verification passed short reordering within a manual group, a long drag out\nand back, Shift-selection across noncontiguous underlying tabs in displayed group order, and\nreopening the sidebar after restoring its stored closed state. The final drop resolves the dragged\ntab by stable identity before applying its position. These results supplement the source-derived\ninteraction rules below; screenshots alone do not verify interactions.",
     "keyCharacteristics": [
       "Compact session navigation with restrained activity markers.",
       "Tonal sidebar depth and one inset terminal surface.",

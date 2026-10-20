@@ -2819,6 +2819,9 @@ struct CreateCustomThemeWidget {
 
 impl SettingsWidget for CreateCustomThemeWidget {
     type View = AppearanceSettingsPageView;
+    fn should_render(&self, _: &AppContext) -> bool {
+        !warp_core::channel::ChannelState::is_local_only()
+    }
 
     fn search_terms(&self) -> &str {
         "create theme create custom theme"

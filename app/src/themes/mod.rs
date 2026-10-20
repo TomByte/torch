@@ -10,6 +10,14 @@ pub mod theme_deletion_modal;
 use warp_core::ui::theme::WarpTheme;
 
 pub fn onboarding_theme_picker_themes() -> [WarpTheme; 4] {
+    if warp_core::channel::ChannelState::is_local_only() {
+        return [
+            default_themes::light_theme(),
+            default_themes::dark_theme(),
+            default_themes::kanagawa(),
+            default_themes::ayu(),
+        ];
+    }
     [
         default_themes::phenomenon(),
         default_themes::dark_theme(),

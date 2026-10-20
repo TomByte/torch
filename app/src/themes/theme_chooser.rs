@@ -101,7 +101,7 @@ impl ThemeChooserMode {
         let theme_settings = ThemeSettings::as_ref(ctx);
         let theme_kind = theme_settings.theme_kind.value();
         match (self, &respect_system_theme(theme_settings)) {
-            (ThemeChooserMode::SystemAgnostic, _) => theme_kind.clone(),
+            (ThemeChooserMode::SystemAgnostic, _) => crate::settings::available_theme(theme_kind),
             (ThemeChooserMode::SystemLight, RespectSystemTheme::On(system_themes)) => {
                 system_themes.light.clone()
             }
@@ -178,6 +178,9 @@ fn theme_chooser_items(
 
     let mut theme_items: Vec<ThemeChooserItem> = theme_config
         .theme_items()
+        .filter(|(key, _)| {
+            !warp_core::channel::ChannelState::is_local_only() || key.is_torch_builtin()
+        })
         .filter(|(key, _)| match key {
             // Only show the referral reward themes if they are active
             ThemeKind::SentReferralReward => sent_referral_theme_active,
@@ -187,7 +190,17 @@ fn theme_chooser_items(
         })
         .map(|(key, theme)| ThemeChooserItem::new(key.clone(), theme.clone()))
         .collect();
-    theme_items.sort_by(|a, b| a.kind.cmp(&b.kind));
+    if warp_core::channel::ChannelState::is_local_only() {
+        let order = [
+            ThemeKind::Light,
+            ThemeKind::Dark,
+            ThemeKind::Kanagawa,
+            ThemeKind::Ayu,
+        ];
+        theme_items.sort_by_key(|item| order.iter().position(|kind| kind == &item.kind));
+    } else {
+        theme_items.sort_by(|a, b| a.kind.cmp(&b.kind));
+    }
     theme_items
 }
 
@@ -291,7 +304,8 @@ impl ThemeChooser {
             (RespectSystemTheme::Off, ThemeChooserMode::SystemAgnostic, _) => {
                 // If we are choosing the global theme, ensure that we update the chooser state to match the
                 // model state
-                let theme = ThemeSettings::as_ref(ctx).theme_kind.value().clone();
+                let theme =
+                    crate::settings::available_theme(ThemeSettings::as_ref(ctx).theme_kind.value());
                 self.select_theme(theme, ctx);
             }
             _ => {
@@ -656,7 +670,7 @@ impl ThemeChooser {
             );
 
         // Custom themes are only supported on desktop platforms currently.
-        if cfg!(not(target_family = "wasm")) {
+        if cfg!(not(target_family = "wasm")) && !warp_core::channel::ChannelState::is_local_only() {
             let create_theme_button = SavePosition::new(
                 icon_button(
                     appearance,
@@ -995,3 +1009,7 @@ impl ThemeChooserItem {
         .finish()
     }
 }
+
+#[cfg(test)]
+#[path = "theme_chooser_tests.rs"]
+mod tests;

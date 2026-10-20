@@ -674,3 +674,73 @@ pub(super) fn received_referral_reward() -> WarpTheme {
         Some("Received Referral Reward".to_string()),
     )
 }
+
+/// Kanagawa Wave; see docs/design/theme-sources.md for palette provenance.
+pub fn kanagawa() -> WarpTheme {
+    WarpTheme::new(
+        ColorU::from_u32(0x1F1F28FF).into(),
+        ColorU::from_u32(0xDCD7BAFF),
+        ColorU::from_u32(0x7E9CD8FF).into(),
+        Some(ColorU::from_u32(0xC8C093FF).into()),
+        Some(Details::Darker),
+        TerminalColors::new(
+            AnsiColors::new(
+                AnsiColor::from_u32(0x090618FF),
+                AnsiColor::from_u32(0xC34043FF),
+                AnsiColor::from_u32(0x76946AFF),
+                AnsiColor::from_u32(0xC0A36EFF),
+                AnsiColor::from_u32(0x7E9CD8FF),
+                AnsiColor::from_u32(0x957FB8FF),
+                AnsiColor::from_u32(0x6A9589FF),
+                AnsiColor::from_u32(0xC8C093FF),
+            ),
+            AnsiColors::new(
+                AnsiColor::from_u32(0x727169FF),
+                AnsiColor::from_u32(0xE82424FF),
+                AnsiColor::from_u32(0x98BB6CFF),
+                AnsiColor::from_u32(0xE6C384FF),
+                AnsiColor::from_u32(0x7FB4CAFF),
+                AnsiColor::from_u32(0x938AA9FF),
+                AnsiColor::from_u32(0x7AA89FFF),
+                AnsiColor::from_u32(0xDCD7BAFF),
+            ),
+        ),
+        None,
+        Some("Kanagawa".into()),
+    )
+}
+
+/// Ayu Mirage; its bright black uses the readable UI gray rather than near-black.
+pub fn ayu() -> WarpTheme {
+    WarpTheme::new(
+        ColorU::from_u32(0x242936FF).into(),
+        ColorU::from_u32(0xCCCAC2FF),
+        ColorU::from_u32(0xFFCC66FF).into(),
+        Some(ColorU::from_u32(0xFFCC66FF).into()),
+        Some(Details::Darker),
+        TerminalColors::new(
+            AnsiColors::new(
+                AnsiColor::from_u32(0x0A0000FF),
+                AnsiColor::from_u32(0xF06B5CFF),
+                AnsiColor::from_u32(0xBFE76DFF),
+                AnsiColor::from_u32(0xE6B752FF),
+                AnsiColor::from_u32(0x3BBBF4FF),
+                AnsiColor::from_u32(0xD09FFDFF),
+                AnsiColor::from_u32(0x84CEB5FF),
+                AnsiColor::from_u32(0xD2D6DCFF),
+            ),
+            AnsiColors::new(
+                AnsiColor::from_u32(0x707A8CFF),
+                AnsiColor::from_u32(0xF39184FF),
+                AnsiColor::from_u32(0xD5FF80FF),
+                AnsiColor::from_u32(0xFFCD66FF),
+                AnsiColor::from_u32(0x73D0FFFF),
+                AnsiColor::from_u32(0xDFBFFFFF),
+                AnsiColor::from_u32(0x95E6CBFF),
+                AnsiColor::from_u32(0xE3E6EAFF),
+            ),
+        ),
+        None,
+        Some("Ayu".into()),
+    )
+}

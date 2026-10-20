@@ -44,6 +44,46 @@ colors:
   dark-ansi-bright-magenta: "#D3BCE4"
   dark-ansi-bright-cyan: "#A6D8D8"
   dark-ansi-bright-white: "#F0F0F0"
+  kanagawa-terminal-background: "#1F1F28"
+  kanagawa-terminal-foreground: "#DCD7BA"
+  kanagawa-terminal-accent: "#7E9CD8"
+  kanagawa-terminal-cursor: "#C8C093"
+  kanagawa-ansi-normal-black: "#090618"
+  kanagawa-ansi-normal-red: "#C34043"
+  kanagawa-ansi-normal-green: "#76946A"
+  kanagawa-ansi-normal-yellow: "#C0A36E"
+  kanagawa-ansi-normal-blue: "#7E9CD8"
+  kanagawa-ansi-normal-magenta: "#957FB8"
+  kanagawa-ansi-normal-cyan: "#6A9589"
+  kanagawa-ansi-normal-white: "#C8C093"
+  kanagawa-ansi-bright-black: "#727169"
+  kanagawa-ansi-bright-red: "#E82424"
+  kanagawa-ansi-bright-green: "#98BB6C"
+  kanagawa-ansi-bright-yellow: "#E6C384"
+  kanagawa-ansi-bright-blue: "#7FB4CA"
+  kanagawa-ansi-bright-magenta: "#938AA9"
+  kanagawa-ansi-bright-cyan: "#7AA89F"
+  kanagawa-ansi-bright-white: "#DCD7BA"
+  ayu-terminal-background: "#242936"
+  ayu-terminal-foreground: "#CCCAC2"
+  ayu-terminal-accent: "#FFCC66"
+  ayu-terminal-cursor: "#FFCC66"
+  ayu-ansi-normal-black: "#0A0000"
+  ayu-ansi-normal-red: "#F06B5C"
+  ayu-ansi-normal-green: "#BFE76D"
+  ayu-ansi-normal-yellow: "#E6B752"
+  ayu-ansi-normal-blue: "#3BBBF4"
+  ayu-ansi-normal-magenta: "#D09FFD"
+  ayu-ansi-normal-cyan: "#84CEB5"
+  ayu-ansi-normal-white: "#D2D6DC"
+  ayu-ansi-bright-black: "#707A8C"
+  ayu-ansi-bright-red: "#F39184"
+  ayu-ansi-bright-green: "#D5FF80"
+  ayu-ansi-bright-yellow: "#FFCD66"
+  ayu-ansi-bright-blue: "#73D0FF"
+  ayu-ansi-bright-magenta: "#DFBFFF"
+  ayu-ansi-bright-cyan: "#95E6CB"
+  ayu-ansi-bright-white: "#E3E6EA"
 typography:
   terminal:
     fontFamily: "Hack"
@@ -151,6 +191,14 @@ components:
     backgroundColor: "{colors.dark-terminal-background}"
     textColor: "{colors.dark-terminal-foreground}"
     rounded: "{rounded.terminal}"
+  terminal-pane-kanagawa:
+    backgroundColor: "{colors.kanagawa-terminal-background}"
+    textColor: "{colors.kanagawa-terminal-foreground}"
+    rounded: "{rounded.terminal}"
+  terminal-pane-ayu:
+    backgroundColor: "{colors.ayu-terminal-background}"
+    textColor: "{colors.ayu-terminal-foreground}"
+    rounded: "{rounded.terminal}"
 ---
 
 # Design System: Torch
@@ -176,7 +224,9 @@ logical pixels, not screenshot pixels. The tokens describe the current implement
 Default terminal colors come from `app/src/themes/default_themes.rs`; derived command fills come
 from `app/src/themes/mod.rs`. UI font loading comes from `app/src/appearance.rs`. Local palette
 behavior comes from `app/src/search/command_palette/local_navigation.rs` and its workspace actions.
-User-selected terminal themes and fonts remain authoritative at runtime.
+The four built-in choices are Light, Dark, Kanagawa, and Ayu. Existing custom theme references and
+font preferences remain readable; retired built-in names follow the compatibility mapping described
+below. The theme variants share the established layout and component geometry.
 
 The original macOS layout captures in `.impeccable/review/desktop.png`, `desktop-narrow.png`, and
 `desktop-long-title.png` establish the compact sidebar and long-title clipping. The initial dark-mode
@@ -233,6 +283,14 @@ ANSI slots in each intensity. Programs retain control of which slots or explicit
 Sidebar sessions use a neutral selection fill and rule. Local command-palette results use a
 restrained accent blend for selection.
 
+Kanagawa uses the official Windows Terminal KanagawaWave palette: blue-violet background, warm
+foreground, blue accent, and a separate warm cursor. Ayu uses the official npm `ayu@9.1.0` Mirage
+palette: blue-gray background, soft foreground, and amber accent/cursor. Ayu's bright-black ANSI
+slot deliberately uses Mirage's UI gray for legibility instead of its near-black terminal value.
+The `kanagawa-*` and `ayu-*` tokens capture these two variants; the existing Light and Dark tokens
+remain unchanged. [Palette sources and licences](docs/design/theme-sources.md) record upstream
+provenance and the Ayu adjustment. Terminal text selection keeps Torch's theme-engine behavior.
+
 ### Secondary
 
 The `light-attention` and `dark-attention` amber tokens identify blocked or error states. Group
@@ -243,16 +301,20 @@ attention text counts blocked sessions only. Amber must not become general decor
 `sidebar-top` and `sidebar-bottom` define each mode's gradient. `text` carries names and active
 status glyphs; `secondary` carries paths, ages, and controls; `muted` carries group labels and quiet
 checks. `selection`, `hover`, and `rule` distinguish interaction states without bright fills.
-`terminal-background` and `terminal-foreground` describe the bundled Light and Dark themes only;
-custom terminal themes keep their own colors. The faint `header-rule` in light mode and
-`dark-header-rule` in dark mode separate context from output.
+The prefixed `terminal-background` and `terminal-foreground` tokens describe each named built-in
+theme; existing custom terminal themes keep their own colors. The faint `header-rule` in Light and
+`dark-header-rule` in Dark separate context from output.
 
 **The State Evidence Rule.** Color and status symbols represent observed application state, never
 invented activity, sample project progress, or presumed CLI success.
 
-The sidebar follows `theme.inferred_color_scheme()`: `DarkOnLight` selects the light palette;
-otherwise it selects the dark palette. This uses the theme's color-scheme inference rather than a
-single color-channel threshold. Explicit custom terminal themes retain their own output colors.
+The sidebar first follows `theme.inferred_color_scheme()`: `DarkOnLight` selects the light palette.
+For dark schemes named Kanagawa or Ayu, it derives surfaces from that theme's background and
+foreground: foreground blends at 4% for sidebar top, 2% for bottom, 10% for selected rows, and 18%
+for rules. Secondary text uses an 85% foreground blend; muted text uses 80%. Hover uses foreground
+at 5% opacity, the header rule uses 7%, attention uses the theme's bright-yellow ANSI slot, and the
+shadow retains the dark shadow token. Other dark schemes use the neutral Dark sidebar palette.
+These theme-relative colors preserve the existing hierarchy without importing a new layout.
 
 Measured dark token contrasts are body text on the terminal (12.59:1), muted text on selection
 (4.71:1), muted text on the sidebar top endpoint (5.95:1), and normal ANSI black on the terminal
@@ -404,11 +466,16 @@ a maximum height of 464 logical pixels. Preview browser focus outlines are illus
 
 ### Theme controls
 
-Use the existing native Settings → Appearance controls: Current theme opens the theme chooser,
-and Sync with OS selects the configured theme for the current system appearance. The chooser
-renders as a native workspace panel. Dark selection persists across restart; enabling OS sync
-follows the configured system themes. Light remains the default for local-only builds, and explicit
-custom themes remain available. Theme switching preserves the sidebar layout and terminal behavior.
+Use the existing native Settings → Appearance controls. Current theme opens the native picker
+with exactly four entries, ordered Light, Dark, Kanagawa, and Ayu. Kanagawa is the Wave variant;
+Ayu is Mirage. Light remains the local-only default. Sync with OS uses the configured light and
+dark appearance choices, with the same four-theme catalog.
+
+Retired built-in preferences resolve to Light or Dark through the compatibility mapping, including
+preferences stored for OS appearance modes. Existing custom theme files and references are retained,
+but custom entries and creation controls are hidden from the four-choice picker and Settings.
+The previously verified Dark selection persists across restart; final validation for newly added
+themes is recorded separately. Theme switching preserves the sidebar layout and terminal behavior.
 
 ### Terminal pane
 

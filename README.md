@@ -11,9 +11,11 @@ Torch is a local terminal based on Warp, maintained independently at [TomByte/to
 
 ## Terminal interface
 
-Torch uses a compact session sidebar and an inset terminal pane, with a light theme and 14-point terminal text by default. Existing explicit theme and font preferences remain respected.
+Torch uses a compact session sidebar and an inset terminal pane, with a light theme and 14-point terminal text by default. Existing font preferences remain respected.
 
-Choose **Dark** in **Settings → Appearance → Current theme** for the charcoal terminal and sidebar. Enable **Sync with OS** to switch automatically between your chosen light and dark themes. The built-in Dark theme includes coordinated terminal colors; custom themes retain their own terminal palette.
+Choose **Light**, **Dark**, **Kanagawa** (Wave), or **Ayu** (Mirage) in **Settings → Appearance → Current theme**. All four keep the same terminal layout and controls. Enable **Sync with OS** to use your chosen themes for light and dark appearance. [Palette sources and licences](docs/design/theme-sources.md) describe Kanagawa and Ayu.
+
+Retired built-in theme preferences fall back to Light or Dark, including choices saved for OS appearance modes. Existing custom theme files and references are preserved, but custom themes and creation controls are hidden from the four-choice picker.
 
 Projects start empty. In **Settings → Projects**, use **Add project** for an individual folder or **Add parent folder** to discover its immediate child directories as projects. Settings are saved locally without cloud sync. Removing a configured folder leaves its files and open sessions intact.
 

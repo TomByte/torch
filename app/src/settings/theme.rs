@@ -64,11 +64,23 @@ impl SystemThemes {
     }
 }
 
+pub(crate) fn available_theme(kind: &ThemeKind) -> ThemeKind {
+    if warp_core::channel::ChannelState::is_local_only() {
+        kind.torch_compatible()
+    } else {
+        kind.clone()
+    }
+}
+
 /// Returns a derived value for whether to respect the system theme based on
 /// the current theme settings.
 pub fn respect_system_theme(theme_settings: &ThemeSettings) -> RespectSystemTheme {
     if *theme_settings.use_system_theme.value() {
-        RespectSystemTheme::On(theme_settings.selected_system_themes.value().clone())
+        let selected = theme_settings.selected_system_themes.value();
+        RespectSystemTheme::On(SelectedSystemThemes {
+            light: available_theme(&selected.light),
+            dark: available_theme(&selected.dark),
+        })
     } else {
         RespectSystemTheme::Off
     }
@@ -82,7 +94,7 @@ pub fn derived_theme_kind(theme_settings: &ThemeSettings, system_theme: SystemTh
             SystemTheme::Light => selected_system_themes.light.clone(),
             SystemTheme::Dark => selected_system_themes.dark.clone(),
         },
-        RespectSystemTheme::Off => theme_settings.theme_kind.value().clone(),
+        RespectSystemTheme::Off => available_theme(theme_settings.theme_kind.value()),
     }
 }
 

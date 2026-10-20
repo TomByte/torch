@@ -485,3 +485,55 @@ fn in_memory_theme_generation_test() {
         )
     );
 }
+
+#[test]
+fn torch_catalog_contains_only_the_four_supported_builtins() {
+    if !warp_core::channel::ChannelState::is_local_only() {
+        return;
+    }
+    let config = WarpThemeConfig::new();
+    let kinds: std::collections::HashSet<_> =
+        config.theme_items().map(|(kind, _)| kind.clone()).collect();
+    assert_eq!(
+        kinds,
+        [
+            ThemeKind::Light,
+            ThemeKind::Dark,
+            ThemeKind::Kanagawa,
+            ThemeKind::Ayu
+        ]
+        .into_iter()
+        .collect()
+    );
+    for kind in [ThemeKind::Kanagawa, ThemeKind::Ayu] {
+        let value = kind.to_file_value();
+        assert_eq!(ThemeKind::from_file_value(&value), Some(kind.clone()));
+        assert_eq!(config.theme(&kind).name(), Some(kind.to_string()));
+    }
+}
+
+#[test]
+fn retired_theme_preferences_resolve_to_the_matching_default() {
+    assert_eq!(
+        ThemeKind::SolarizedLight.torch_compatible(),
+        ThemeKind::Light
+    );
+    assert_eq!(ThemeKind::Dracula.torch_compatible(), ThemeKind::Dark);
+    assert_eq!(ThemeKind::Leafy.torch_compatible(), ThemeKind::Dark);
+    assert_eq!(
+        ThemeKind::ReceivedReferralReward.torch_compatible(),
+        ThemeKind::Light
+    );
+    assert_eq!(
+        ThemeKind::SentReferralReward.torch_compatible(),
+        ThemeKind::Dark
+    );
+    for kind in [
+        ThemeKind::Light,
+        ThemeKind::Dark,
+        ThemeKind::Kanagawa,
+        ThemeKind::Ayu,
+    ] {
+        assert_eq!(kind.torch_compatible(), kind);
+    }
+}

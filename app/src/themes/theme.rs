@@ -52,6 +52,10 @@ pub enum ThemeKind {
     #[default]
     #[schemars(description = "Dark")]
     Dark,
+    #[schemars(description = "Kanagawa (Wave)")]
+    Kanagawa,
+    #[schemars(description = "Ayu (Mirage)")]
+    Ayu,
     #[schemars(description = "Dracula")]
     Dracula,
     #[schemars(description = "Fancy Dracula")]
@@ -112,6 +116,8 @@ impl std::fmt::Display for ThemeKind {
         let value = match &self {
             ThemeKind::Light => "Light",
             ThemeKind::Dark => "Dark",
+            ThemeKind::Kanagawa => "Kanagawa",
+            ThemeKind::Ayu => "Ayu",
             ThemeKind::Dracula => "Dracula",
             ThemeKind::SolarizedDark => "Solarized Dark",
             ThemeKind::SolarizedLight => "Solarized Light",
@@ -142,6 +148,43 @@ impl std::fmt::Display for ThemeKind {
 }
 
 impl ThemeKind {
+    pub fn is_torch_builtin(&self) -> bool {
+        matches!(self, Self::Light | Self::Dark | Self::Kanagawa | Self::Ayu)
+    }
+
+    pub fn torch_compatible(&self) -> Self {
+        match self {
+            Self::Light
+            | Self::Dark
+            | Self::Kanagawa
+            | Self::Ayu
+            | Self::Custom(_)
+            | Self::CustomBase16(_)
+            | Self::InMemory(_) => self.clone(),
+            Self::SolarizedLight
+            | Self::GruvboxLight
+            | Self::ReceivedReferralReward
+            | Self::Marble
+            | Self::PinkCity
+            | Self::Snowy => Self::Light,
+            Self::SentReferralReward
+            | Self::Leafy
+            | Self::Adeberry
+            | Self::Phenomenon
+            | Self::Dracula
+            | Self::FancyDracula
+            | Self::CyberWave
+            | Self::SolarFlare
+            | Self::SolarizedDark
+            | Self::WillowDream
+            | Self::DarkCity
+            | Self::GruvboxDark
+            | Self::RedRock
+            | Self::JellyFish
+            | Self::Koi => Self::Dark,
+        }
+    }
+
     pub fn matches(&self, query: &str) -> bool {
         let theme_name = format!("{self}").to_lowercase();
         theme_name.contains(&query.to_lowercase())
@@ -464,6 +507,16 @@ pub struct WarpThemeConfig {
 
 impl WarpThemeConfig {
     pub fn new() -> Self {
+        if warp_core::channel::ChannelState::is_local_only() {
+            return Self {
+                theme_map: HashMap::from_iter([
+                    (ThemeKind::Light, light_theme()),
+                    (ThemeKind::Dark, dark_theme()),
+                    (ThemeKind::Kanagawa, kanagawa()),
+                    (ThemeKind::Ayu, ayu()),
+                ]),
+            };
+        }
         // preload with built-in themes
         let theme_map: HashMap<ThemeKind, WarpTheme> = HashMap::from_iter([
             (ThemeKind::SentReferralReward, sent_referral_reward()),

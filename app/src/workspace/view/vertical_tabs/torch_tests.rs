@@ -124,3 +124,38 @@ fn quiet_command_surfaces_preserve_text_contrast_in_both_themes() {
         }
     }
 }
+
+#[test]
+fn kanagawa_and_ayu_keep_sidebar_and_command_text_readable() {
+    for theme in [
+        crate::themes::default_themes::kanagawa(),
+        crate::themes::default_themes::ayu(),
+    ] {
+        let palette = Palette::new(&theme);
+        for background in [
+            palette.sidebar_top,
+            palette.sidebar_bottom,
+            palette.selection,
+        ] {
+            for foreground in [
+                palette.text,
+                palette.secondary,
+                palette.muted,
+                palette.attention,
+            ] {
+                assert!(
+                    high_enough_contrast(foreground, background, MinimumAllowedContrast::Text),
+                    "{:?}: {foreground:?} against {background:?}",
+                    theme.name()
+                );
+            }
+        }
+        for background in [theme.background(), crate::themes::command_surface(&theme)] {
+            assert!(high_enough_contrast(
+                theme.foreground().into_solid(),
+                background.into_solid(),
+                MinimumAllowedContrast::Text
+            ));
+        }
+    }
+}
