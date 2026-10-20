@@ -270,6 +270,21 @@ pub enum WorkspaceAction {
         directory: PathBuf,
         position: Vector2F,
     },
+    /// Opens a project group's context menu, with its color, at the clicked position.
+    ToggleProjectGroupMenu {
+        directory: PathBuf,
+        position: Vector2F,
+    },
+    /// Sets the directory's tab color, or clears it if it already has that color.
+    ToggleDirectoryColor {
+        color: AnsiColorIdentifier,
+        directory: PathBuf,
+    },
+    /// Reorders sidebar groups as the group with this key is dragged past its neighbors.
+    DragSidebarGroup {
+        key: String,
+        cursor_position: Vector2F,
+    },
     /// Activates the next sidebar session that needs input, or else the next unread finished one.
     JumpToAttentionSession,
     AddTabWithShell {
@@ -1080,6 +1095,8 @@ impl WorkspaceAction {
             | ToggleTabConfigsMenu
             | ToggleNewSessionMenu { .. }
             | ToggleProjectSessionMenu { .. }
+            | ToggleProjectGroupMenu { .. }
+            | ToggleDirectoryColor { .. }
             | SelectNewSessionMenuItem(_)
             | ToggleTabBarOverflowMenu
             | CheckForUpdate
@@ -1116,6 +1133,7 @@ impl WorkspaceAction {
             | CommitTabDrag { .. }
             | StartTabDrag
             | DragGroup { .. }
+            | DragSidebarGroup { .. }
             | StartGroupDrag(_)
             | ToggleLeftPanel
             | ToggleWarpDrive

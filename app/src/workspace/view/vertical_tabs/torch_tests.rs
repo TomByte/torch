@@ -392,18 +392,28 @@ fn only_a_leading_agent_glyph_is_coloured() {
 }
 
 #[test]
-fn working_pulse_closes_in_on_the_dot_and_fades_out() {
+fn dragging_a_group_past_its_neighbor_moves_every_member_as_a_block() {
+    // Tabs 0 and 2 share a group that appears first, so interleaved members still move together.
+    let groups = grouped_indices(&["a", "b", "a", "c"].map(String::from));
+    assert_eq!(swap_adjacent_groups(groups.clone(), 0), vec![1, 0, 2, 3]);
+    assert_eq!(swap_adjacent_groups(groups, 1), vec![0, 2, 3, 1]);
+}
+
+#[test]
+fn working_pulse_closes_in_on_the_dot_and_loops_without_a_jump() {
     let (start_radius, start_opacity) = motion::pulse_ring(0.);
     let (end_radius, end_opacity) = motion::pulse_ring(1.);
     assert!(start_radius > end_radius);
-    assert_eq!((start_opacity, end_opacity), (1., 0.));
+    assert!(start_opacity.abs() < 0.001 && end_opacity.abs() < 0.001);
     let samples: Vec<_> = (0..=20)
         .map(|step| motion::pulse_ring(step as f32 / 20.))
         .collect();
+    assert!(samples.windows(2).all(|pair| pair[1].0 <= pair[0].0));
+    let (_, middle_opacity) = motion::pulse_ring(0.5);
     assert!(
         samples
-            .windows(2)
-            .all(|pair| pair[1].0 <= pair[0].0 && pair[1].1 <= pair[0].1)
+            .iter()
+            .all(|(_, opacity)| *opacity <= middle_opacity)
     );
 }
 

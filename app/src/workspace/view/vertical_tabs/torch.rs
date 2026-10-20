@@ -11,12 +11,18 @@ use warpui::ViewContext;
 
 use super::*;
 use crate::menu::{MenuItem, MenuItemFields};
+use crate::tab::{ColorPickerTarget, color_picker_menu_items};
 use crate::terminal::CLIAgent;
 use crate::terminal::cli_agent_sessions::CLIAgentSessionsModelEvent;
+use crate::themes::theme::AnsiColorIdentifier;
 use crate::ui_components::buttons::icon_button;
 use crate::workspace::TabMovement;
 use crate::workspace::header_toolbar_item::HeaderToolbarItemKind;
+use crate::workspace::tab_settings::DirectoryTabColor;
 use crate::workspace::view::PanelPosition;
+use warp_core::ui::theme::AnsiColors;
+use warp_errors::report_if_error;
+use warpui::elements::DraggableState;
 
 pub(super) const SIDEBAR_WIDTH: f32 = 272.;
 const HEADER_HEIGHT: f32 = 48.;
@@ -434,6 +440,65 @@ impl Workspace {
         );
     }
 
+    /// Swaps the dragged group with the neighbor whose middle the cursor has crossed. Comparing
+    /// the cursor rather than the group's edges means a swap back needs the cursor to travel the
+    /// dragged group's full height, so the groups never flicker between orders.
+    pub(in crate::workspace::view) fn drag_sidebar_group(
+        &mut self,
+        key: &str,
+        cursor_position: Vector2F,
+        ctx: &mut ViewContext<Self>,
+    ) {
+        let keys = sessions(self, ctx)
+            .into_iter()
+            .map(|session| session.group_key)
+            .collect::<Vec<_>>();
+        let groups = grouped_indices(&keys);
+        let Some(position) = groups.iter().position(|members| keys[members[0]] == key) else {
+            return;
+        };
+        let middle = |group: usize| {
+            ctx.element_position_by_id(group_position_id(&keys[groups[group][0]]))
+                .map(|rect| rect.center().y())
+        };
+        let upper = if position > 0 && middle(position - 1).is_some_and(|y| cursor_position.y() < y)
+        {
+            position - 1
+        } else if position + 1 < groups.len()
+            && middle(position + 1).is_some_and(|y| cursor_position.y() > y)
+        {
+            position
+        } else {
+            return;
+        };
+        let order = swap_adjacent_groups(groups, upper);
+        self.reorder_tabs(&order, ctx);
+    }
+
+    /// Rearranges the tabs into `order`, a permutation of their indices, keeping the same tab
+    /// active.
+    fn reorder_tabs(&mut self, order: &[usize], ctx: &mut ViewContext<Self>) {
+        let active = self.tabs[self.active_tab_index].pane_group.id();
+        let mut tabs = std::mem::take(&mut self.tabs)
+            .into_iter()
+            .map(Some)
+            .collect::<Vec<_>>();
+        self.tabs = order
+            .iter()
+            .map(|index| {
+                tabs[*index]
+                    .take()
+                    .expect("order is a permutation of the tabs")
+            })
+            .collect();
+        self.active_tab_index = self
+            .tabs
+            .iter()
+            .position(|tab| tab.pane_group.id() == active)
+            .unwrap_or_default();
+        ctx.notify();
+    }
+
     pub(in crate::workspace::view) fn reveal_sidebar_project(&mut self, directory: &Path) {
         self.vertical_tabs_panel
             .collapsed_torch_groups
@@ -501,6 +566,60 @@ pub(in crate::workspace::view) fn project_session_menu_items(
         );
     }
     items
+}
+
+/// A project heading's context menu: its color, then the session kinds it can start.
+pub(in crate::workspace::view) fn project_group_menu_items(
+    directory: &Path,
+    terminal_colors: AnsiColors,
+    app: &AppContext,
+) -> Vec<MenuItem<WorkspaceAction>> {
+    let mut items = color_picker_menu_items(
+        directory_color(directory, app),
+        terminal_colors,
+        ColorPickerTarget::Directory {
+            directory: directory.to_owned(),
+        },
+    );
+    items.push(MenuItem::Separator);
+    items.extend(project_session_menu_items(directory));
+    items
+}
+
+fn directory_color(directory: &Path, app: &AppContext) -> Option<AnsiColorIdentifier> {
+    TabSettings::as_ref(app)
+        .directory_tab_colors
+        .value()
+        .color_for_directory(directory)
+        .and_then(DirectoryTabColor::ansi_color)
+}
+
+pub(in crate::workspace::view) fn toggle_directory_color(
+    directory: &Path,
+    color: AnsiColorIdentifier,
+    ctx: &mut AppContext,
+) {
+    let next = if directory_color(directory, ctx) == Some(color) {
+        DirectoryTabColor::Unassigned
+    } else {
+        DirectoryTabColor::Color(color)
+    };
+    TabSettings::handle(ctx).update(ctx, |settings, ctx| {
+        let value = settings
+            .directory_tab_colors
+            .value()
+            .with_color(directory, next);
+        report_if_error!(settings.directory_tab_colors.set_value(value, ctx));
+    });
+}
+
+fn swap_adjacent_groups(mut groups: Vec<Vec<usize>>, upper: usize) -> Vec<usize> {
+    groups.swap(upper, upper + 1);
+    groups.into_iter().flatten().collect()
+}
+
+fn group_position_id(key: &str) -> String {
+    format!("torch_sidebar:group:{key}")
 }
 
 /// Lower ranks need attention sooner.
@@ -1294,6 +1413,7 @@ fn group_title(
     label_text: &str,
     count: usize,
     collapsed: bool,
+    name_color: ColorU,
     palette: &Palette,
     appearance: &Appearance,
 ) -> Box<dyn Element> {
@@ -1313,7 +1433,7 @@ fn group_title(
         .with_child(
             Shrinkable::new(
                 1.,
-                label(label_text, 12., palette.muted, Weight::Semibold, appearance),
+                label(label_text, 12., name_color, Weight::Semibold, appearance),
             )
             .finish(),
         )
@@ -1362,10 +1482,23 @@ fn live_group(
         .group_id
         .and_then(|id| workspace.tab_groups.get(&id));
     let collapsed = group_collapsed(workspace, members[0]);
+    let name_color = match group {
+        Some(group) => group.color.resolve(None),
+        None => members[0]
+            .project_directory
+            .as_deref()
+            .and_then(|directory| directory_color(directory, app)),
+    }
+    .map_or(palette.muted, |color| {
+        color
+            .to_ansi_color(&appearance.theme().terminal_colors().normal)
+            .into()
+    });
     let title = group_title(
         &members[0].group_label,
         members.len(),
         collapsed,
+        name_color,
         palette,
         appearance,
     );
@@ -1448,6 +1581,7 @@ fn live_group(
             })
             .finish()
         });
+        let menu_directory = members[0].project_directory.clone();
         Hoverable::new(mouse_states.header, move |mouse| {
             if let Some(button) = new_session {
                 heading.add_child(if mouse.is_hovered() {
@@ -1465,6 +1599,14 @@ fn live_group(
         .with_cursor(Cursor::PointingHand)
         .on_click(move |ctx, _, _| {
             ctx.dispatch_typed_action(WorkspaceAction::ToggleSidebarGroupCollapsed(key.clone()))
+        })
+        .on_right_click(move |ctx, _, position| {
+            if let Some(directory) = &menu_directory {
+                ctx.dispatch_typed_action(WorkspaceAction::ToggleProjectGroupMenu {
+                    directory: directory.clone(),
+                    position,
+                })
+            }
         })
         .finish()
     };
@@ -1531,11 +1673,44 @@ fn live_group(
         }
         None => group_content.finish(),
     };
+    let group_content = draggable_group(&members[0].group_key, group_content, state);
     if let Some(group) = group {
         SavePosition::new(group_content, &vtab_group_position_id(group.id)).finish()
     } else {
         group_content
     }
+}
+
+fn draggable_group(
+    key: &str,
+    content: Box<dyn Element>,
+    state: &VerticalTabsPanelState,
+) -> Box<dyn Element> {
+    let draggable: DraggableState = state
+        .torch_group_mouse_states
+        .borrow_mut()
+        .entry(key.to_owned())
+        .or_default()
+        .draggable
+        .clone();
+    let cursor = draggable.clone();
+    let position_id = group_position_id(key);
+    let key = key.to_owned();
+    let content = Draggable::new(draggable, content)
+        .with_drag_axis(DragAxis::VerticalOnly)
+        // Rows drag themselves; only a press on the heading moves the whole group.
+        .with_defer_to_handled_child_mouse_down()
+        .on_drag(move |ctx, _, rect, _| {
+            ctx.dispatch_typed_action(WorkspaceAction::DragSidebarGroup {
+                key: key.clone(),
+                cursor_position: cursor
+                    .dragging_mouse_position()
+                    .unwrap_or_else(|| rect.center()),
+            })
+        })
+        .on_drop(|ctx, _, _, _| ctx.dispatch_typed_action(WorkspaceAction::DropGroup))
+        .finish();
+    SavePosition::new(content, &position_id).finish()
 }
 
 /// A group whose last sessions closed, leaving with them.
@@ -1548,6 +1723,7 @@ fn vanished_group(
         &members[0].session.group_label,
         members.len(),
         false,
+        palette.muted,
         palette,
         appearance,
     ));

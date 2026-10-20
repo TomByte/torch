@@ -434,6 +434,9 @@ Explicit manual groups take precedence over project-root and working-directory g
 session inside a configured project groups under that project's root, including subdirectories and
 symlink aliases. If registered roots are nested, the deepest matching root wins. Canonical paths
 keep aliases together while distinct roots with the same short name remain separate projects.
+Dragging a group by its heading moves all of its sessions as one block, swapping with a neighbor
+once the cursor crosses that neighbor's middle. A project heading's context menu sets the
+project's directory color, which tints the group name; manual groups tint it with their own color.
 
 A session keeps the group it first joined. Sessions outside configured projects group by the first
 directory they report, normally their launch directory: keys use the full directory string with

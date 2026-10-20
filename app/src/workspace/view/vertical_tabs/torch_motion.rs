@@ -1,3 +1,4 @@
+use std::f32::consts::PI;
 use std::sync::LazyLock;
 use std::time::Duration;
 
@@ -242,12 +243,16 @@ const PULSE_RESTING_RING_OPACITY: f32 = 0.3;
 /// Shared by every pulse so all working sessions breathe in step, however often rows rebuild.
 static PULSE_EPOCH: LazyLock<Instant> = LazyLock::new(Instant::now);
 
-/// Radius and opacity of the ring that closes in on the dot, at `t` through one cycle.
+/// Peak opacity of the ring that closes in on the dot, reached halfway through each cycle.
+const PULSE_PEAK_OPACITY: f32 = 0.8;
+
+/// Radius and opacity of the ring that closes in on the dot, at `t` through one cycle. It fades in
+/// from nothing and out to nothing, so one cycle hands over to the next without a visible reset.
 pub(super) fn pulse_ring(t: f32) -> (f32, f32) {
-    let progress = ease_in_out_cubic(t);
+    let progress = (1. - (PI * t).cos()) / 2.;
     (
         PULSE_RING_RADIUS - (PULSE_RING_RADIUS - PULSE_DOT_RADIUS) * progress,
-        1. - progress,
+        PULSE_PEAK_OPACITY * (PI * t).sin().powi(2),
     )
 }
 

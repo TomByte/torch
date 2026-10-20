@@ -9093,9 +9093,9 @@ impl Workspace {
         }
     }
 
-    fn toggle_project_session_menu(
+    fn toggle_project_menu(
         &mut self,
-        directory: &Path,
+        menu_items: Vec<MenuItem<WorkspaceAction>>,
         position: Vector2F,
         ctx: &mut ViewContext<Self>,
     ) {
@@ -9104,7 +9104,6 @@ impl Workspace {
             return;
         }
         let anchor = NewSessionMenuAnchor::Pointer(position);
-        let menu_items = vertical_tabs::torch::project_session_menu_items(directory);
         let menu_height = self.new_session_menu_max_height(anchor, ctx);
         ctx.update_view(&self.new_session_dropdown_menu, |menu, ctx| {
             menu.set_width(220.);
@@ -24728,7 +24727,28 @@ impl TypedActionView for Workspace {
             ToggleProjectSessionMenu {
                 directory,
                 position,
-            } => self.toggle_project_session_menu(directory, *position, ctx),
+            } => self.toggle_project_menu(
+                vertical_tabs::torch::project_session_menu_items(directory),
+                *position,
+                ctx,
+            ),
+            ToggleProjectGroupMenu {
+                directory,
+                position,
+            } => {
+                let terminal_colors = Appearance::as_ref(ctx).theme().terminal_colors().normal;
+                let items =
+                    vertical_tabs::torch::project_group_menu_items(directory, terminal_colors, ctx);
+                self.toggle_project_menu(items, *position, ctx)
+            }
+            ToggleDirectoryColor { color, directory } => {
+                vertical_tabs::torch::toggle_directory_color(directory, *color, ctx);
+                ctx.notify();
+            }
+            DragSidebarGroup {
+                key,
+                cursor_position,
+            } => self.drag_sidebar_group(key, *cursor_position, ctx),
             JumpToAttentionSession => self.jump_to_attention_session(ctx),
             AddDefaultTab => {
                 let effective_mode = AISettings::as_ref(ctx).default_session_mode(ctx);

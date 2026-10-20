@@ -309,6 +309,7 @@ struct TabGroupMouseStates {
 struct TorchGroupMouseStates {
     header: MouseStateHandle,
     new_session: MouseStateHandle,
+    draggable: warpui::elements::DraggableState,
 }
 
 /// Describes how a pane row sits in its tab's row layout. Carried as state

@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -927,24 +928,31 @@ impl TabData {
     }
 }
 
-/// Identifies what a color-picker selection recolors: a single tab or a whole
-/// tab group. Used by [`color_picker_menu_items`] to choose the toggle action
-/// dispatched when a dot is clicked.
-#[derive(Clone, Copy)]
+/// Identifies what a color-picker selection recolors: a single tab, a whole
+/// tab group, or a directory. Used by [`color_picker_menu_items`] to choose the
+/// toggle action dispatched when a dot is clicked.
+#[derive(Clone)]
 pub(crate) enum ColorPickerTarget {
     Tab { tab_index: usize },
     Group { group_id: TabGroupId },
+    Directory { directory: PathBuf },
 }
 
 impl ColorPickerTarget {
-    fn toggle_action(self, color: AnsiColorIdentifier) -> WorkspaceAction {
+    fn toggle_action(&self, color: AnsiColorIdentifier) -> WorkspaceAction {
         match self {
-            ColorPickerTarget::Tab { tab_index } => {
-                WorkspaceAction::ToggleTabColor { color, tab_index }
-            }
-            ColorPickerTarget::Group { group_id } => {
-                WorkspaceAction::ToggleTabGroupColor { color, group_id }
-            }
+            ColorPickerTarget::Tab { tab_index } => WorkspaceAction::ToggleTabColor {
+                color,
+                tab_index: *tab_index,
+            },
+            ColorPickerTarget::Group { group_id } => WorkspaceAction::ToggleTabGroupColor {
+                color,
+                group_id: *group_id,
+            },
+            ColorPickerTarget::Directory { directory } => WorkspaceAction::ToggleDirectoryColor {
+                color,
+                directory: directory.clone(),
+            },
         }
     }
 }
@@ -991,6 +999,7 @@ pub(crate) fn color_picker_menu_items(
                         Some(id) => id.to_string(),
                     };
 
+                    let target = target.clone();
                     let dot = render_color_dot(
                         mouse_state,
                         dot_color,
