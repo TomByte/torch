@@ -51,7 +51,6 @@ fn generate_channel_config_if_needed(target_os: &str) {
     // Only tracked for bundled builds, where they affect the embedded config.
     println!("cargo:rerun-if-env-changed=WITH_LOCAL_SERVER");
     println!("cargo:rerun-if-env-changed=WITH_LOCAL_SESSION_SHARING_SERVER");
-    println!("cargo:rerun-if-env-changed=WITH_SANDBOX_TELEMETRY");
     println!("cargo:rerun-if-env-changed=SERVER_ROOT_URL");
     println!("cargo:rerun-if-env-changed=WS_SERVER_URL");
 

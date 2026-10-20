@@ -1,5 +1,3 @@
-use serde_json::json;
-
 use super::*;
 
 // AWS-style access keys used in tests; these match `AWS_ACCESS_ID` from
@@ -101,69 +99,6 @@ fn replace_byte_ranges_with_asterisks_handles_fully_contained_range() {
     let ranges = vec![2..14, 5..8];
     replace_byte_ranges_with_asterisks(&mut s, ranges);
     assert_eq!(s, "01************EF");
-}
-
-#[test]
-fn redact_secrets_in_value_redacts_strings_in_objects() {
-    let mut value = json!({
-        "with_secret": format!("contains {AWS_KEY_1} secret"),
-        "without_secret": "no secret here",
-    });
-    redact_secrets_in_value(&mut value);
-    assert_eq!(
-        value["with_secret"],
-        format!("contains {} secret", "*".repeat(AWS_KEY_1.len())),
-    );
-    assert_eq!(value["without_secret"], "no secret here");
-}
-
-#[test]
-fn redact_secrets_in_value_redacts_strings_in_arrays() {
-    let mut value = json!([
-        format!("first {AWS_KEY_1}"),
-        "second clean",
-        format!("third {AWS_KEY_2}"),
-    ]);
-    redact_secrets_in_value(&mut value);
-    assert_eq!(value[0], format!("first {}", "*".repeat(AWS_KEY_1.len())),);
-    assert_eq!(value[1], "second clean");
-    assert_eq!(value[2], format!("third {}", "*".repeat(AWS_KEY_2.len())),);
-}
-
-#[test]
-fn redact_secrets_in_value_recurses_into_nested_structures() {
-    let mut value = json!({
-        "outer": {
-            "inner_array": [
-                format!("nested {AWS_KEY_1}"),
-                {"inner_object": format!("deep {AWS_KEY_2}")},
-            ],
-            "scalar_int": 42,
-            "scalar_bool": true,
-            "scalar_null": null,
-        }
-    });
-    redact_secrets_in_value(&mut value);
-    assert_eq!(
-        value["outer"]["inner_array"][0],
-        format!("nested {}", "*".repeat(AWS_KEY_1.len())),
-    );
-    assert_eq!(
-        value["outer"]["inner_array"][1]["inner_object"],
-        format!("deep {}", "*".repeat(AWS_KEY_2.len())),
-    );
-    // Non-string scalars are left untouched.
-    assert_eq!(value["outer"]["scalar_int"], 42);
-    assert_eq!(value["outer"]["scalar_bool"], true);
-    assert!(value["outer"]["scalar_null"].is_null());
-}
-
-#[test]
-fn redact_secrets_in_value_leaves_non_string_scalars_untouched() {
-    let mut value = json!({"n": 42, "b": true, "z": null});
-    let expected = value.clone();
-    redact_secrets_in_value(&mut value);
-    assert_eq!(value, expected);
 }
 
 #[test]

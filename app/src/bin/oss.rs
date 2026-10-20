@@ -18,8 +18,6 @@ fn main() -> Result<()> {
             logfile_name: "torch.log".into(),
             server_config: WarpServerConfig::disabled(),
             oz_config: OzConfig::disabled(),
-            telemetry_config: None,
-            crash_reporting_config: None,
             autoupdate_config: None,
             mcp_static_config: None,
         },

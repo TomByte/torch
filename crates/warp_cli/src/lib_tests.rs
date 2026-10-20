@@ -20,7 +20,8 @@ use crate::task::{MessageCommand, TaskCommand};
 
 #[test]
 fn identifies_worker_subcommands() {
-    assert!(is_worker_invocation("minidump-server"));
+    #[cfg(not(target_family = "wasm"))]
+    assert!(is_worker_invocation("remote-server-proxy"));
     #[cfg(unix)]
     assert!(is_worker_invocation(&terminal_server_subcommand()));
     assert!(!is_worker_invocation("--prompt"));

@@ -7,13 +7,8 @@ pub use overrides::{get_overrides, set_overrides};
 #[derive(Copy, Clone, Hash, PartialEq, Eq, Debug, Sequence)]
 pub enum FeatureFlag {
     Changelog,
-    CocoaSentry,
-    CrashReporting,
     DebugMode,
     Autoupdate,
-    LogExpensiveFramesInSentry,
-    WithSandboxTelemetry,
-    RecordAppActiveEvents,
 
     WelcomeTips,
     ThinStrokes,
@@ -368,9 +363,6 @@ pub enum FeatureFlag {
 
     /// Enables the tabbed file viewer
     TabbedEditorView,
-
-    /// Enables sending telemetry data to a file in addition to the server
-    SendTelemetryToFile,
 
     /// Enables multiple agent profiles in settings for managing different AI agent configurations.
     MultiProfile,
@@ -1026,7 +1018,6 @@ pub const LOCAL_FLAGS: &[FeatureFlag] = &[FeatureFlag::LocalClaudeCodexChildHarn
 /// Features enabled for the development team.  The expectation is that, over
 /// time, these will move on to PREVIEW_FLAGS before being launched.
 pub const DOGFOOD_FLAGS: &[FeatureFlag] = &[
-    FeatureFlag::LogExpensiveFramesInSentry,
     FeatureFlag::ToggleBootstrapBlock,
     FeatureFlag::CreatingSharedSessions,
     FeatureFlag::RemoveAutosuggestionDuringTabCompletions,
@@ -1094,7 +1085,6 @@ pub const PREVIEW_FLAGS: &[FeatureFlag] = &[];
 pub const RELEASE_FLAGS: &[FeatureFlag] = &[
     FeatureFlag::Autoupdate,
     FeatureFlag::Changelog,
-    FeatureFlag::CrashReporting,
     FeatureFlag::PeriodicHandoffCheckpoints,
     FeatureFlag::VideoRecording,
     FeatureFlag::WindowsVideoRecording,
@@ -1139,8 +1129,6 @@ impl FeatureFlag {
                     | Self::Changelog
                     | Self::OzChangelogUpdates
                     | Self::Autoupdate
-                    | Self::CocoaSentry
-                    | Self::CrashReporting
                     | Self::GlobalAIAnalyticsBanner
                     | Self::GlobalAIAnalyticsCollection
                     | Self::AgentCliLaunchModal

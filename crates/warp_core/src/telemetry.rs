@@ -138,61 +138,22 @@ pub fn all_events() -> impl Iterator<Item = Box<dyn TelemetryEventDesc>> {
     inventory::iter::<&'static dyn AnyTelemetryEventRegistration>().flat_map(|meta| meta.events())
 }
 
-// Sends a telemetry `track` event to Rudderstack asynchronously. It adds events to the static
-// telemetry queue that is periodically flushed to the Rudderstack API.
-// This is the recommended way of recording telemetry events.
-// You should almost always use this, unless the recording is time-sensitive and cannot be lost.
-// To send a telemetry event synchronously, use [`send_telemetry_sync_from_ctx`].
+/// Telemetry is never collected or sent. Call sites are kept so the event definitions stay
+/// compilable; the arguments are evaluated and dropped so no variable becomes unused.
 #[macro_export]
 macro_rules! send_telemetry_from_ctx {
     ($event:expr, $ctx:expr) => {
-        #[allow(unused_imports)]
-        use warp_core::telemetry::TelemetryEvent as _;
-        let event = $event;
-        if event.enablement_state().is_enabled() {
-            let auth_state =
-                <$crate::telemetry::TelemetryContextModel as $crate::warpui_core::SingletonEntity>::handle($ctx)
-                    .as_ref($ctx);
-            let user_id = auth_state.user_id($ctx);
-            let anonymous_id = auth_state.anonymous_id($ctx);
-            $crate::warpui_core::record_telemetry_from_ctx!(
-                user_id,
-                anonymous_id,
-                event.name().into(),
-                event.payload(),
-                event.contains_ugc(),
-                $ctx
-            );
-        }
+        let _ = $event;
+        let _ = $ctx;
     };
 }
 
-/// Sends telemetry `track` event to Rudderstack API asynchronously. This is the same as the
-/// [`send_telemetry_from_ctx`], except it can be called in instances where you only have
-/// a `AppContext` rather than a `ViewContext`/`ModelContext`.
-///
-/// If possible, use [`send_telemetry_from_ctx`].
+/// See [`send_telemetry_from_ctx`].
 #[macro_export]
 macro_rules! send_telemetry_from_app_ctx {
     ($event:expr, $app_ctx:expr) => {
-        let event = $event;
-        if event.enablement_state().is_enabled() {
-            let auth_state =
-                <$crate::telemetry::TelemetryContextModel as $crate::warpui_core::SingletonEntity>::handle(
-                    $app_ctx,
-                )
-                .as_ref($app_ctx);
-            let user_id = auth_state.user_id($app_ctx.as_ref());
-            let anonymous_id = auth_state.anonymous_id($app_ctx.as_ref());
-            $crate::warpui_core::record_telemetry_on_executor!(
-                user_id,
-                anonymous_id,
-                event.name().into(),
-                event.payload(),
-                event.contains_ugc(),
-                $app_ctx.background_executor()
-            );
-        }
+        let _ = $event;
+        let _ = $app_ctx;
     };
 }
 

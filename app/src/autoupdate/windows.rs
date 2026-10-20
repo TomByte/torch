@@ -198,49 +198,6 @@ pub(super) fn check_and_report_update_errors(ctx: &mut AppContext) {
         );
     }
 
-    #[cfg(feature = "crash_reporting")]
-    {
-        use sentry::protocol::{Attachment, AttachmentType};
-
-        // Patterns for known benign errors that should not trigger Sentry reporting.
-        const IGNOREABLE_ERRORS: &[&[u8]] = &[
-            // User running out of disk space is not an error we need concern ourselves with.
-            // This message occurs after "An error occurred while trying to copy a file:"
-            b"there is not enough space on the disk",
-            // Recent Inno Setup versions try to enable a security feature which is unavailable on
-            // Windows 10 versions prior to 22H2 and this call fails. The failure is benign.
-            b"setprocessmitigationpolicy failed with error code 87",
-            // Bundled skill files whose names contain "error" appear in "Dest filename:" log lines
-            // and produce false positives.
-            b"error-codes.md",
-            b"error-recovery.md",
-        ];
-
-        let mut error_count = memchr::memmem::find_iter(&contents_lowercase, b"error").count();
-
-        for pattern in IGNOREABLE_ERRORS {
-            let ignoreable_count = memchr::memmem::find_iter(&contents_lowercase, pattern).count();
-            error_count = error_count.saturating_sub(ignoreable_count);
-        }
-
-        if error_count > 0 {
-            log::warn!("Autoupdate log file contains errors; reporting to Sentry");
-
-            let attachment = Attachment {
-                buffer: contents,
-                filename: UPDATE_LOG_FILENAME.to_string(),
-                ty: Some(AttachmentType::Attachment),
-                ..Default::default()
-            };
-            sentry::with_scope(
-                |scope| {
-                    scope.add_attachment(attachment);
-                },
-                || sentry::capture_message("Windows auto-update error", sentry::Level::Error),
-            );
-        }
-    }
-
     // Rename the log file to avoid duplicate reports on subsequent launches.
     // We keep the file around so the user can still view it or attach it to a GitHub issue.
     let reported_path = log_path.with_extension("log.reported");

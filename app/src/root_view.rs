@@ -744,14 +744,6 @@ pub fn create_transferred_window(
     new_window_id
 }
 
-#[cfg(feature = "crash_reporting")]
-fn on_gpu_driver_selected_callback() -> Option<Box<OnGPUDeviceSelected>> {
-    Some(Box::new(|gpu_device_info| {
-        crate::crash_reporting::set_gpu_device_info(gpu_device_info)
-    }))
-}
-
-#[cfg(not(feature = "crash_reporting"))]
 fn on_gpu_driver_selected_callback() -> Option<Box<OnGPUDeviceSelected>> {
     None
 }

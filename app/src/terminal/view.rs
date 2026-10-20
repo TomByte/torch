@@ -150,7 +150,6 @@ use warp_util::path::LineAndColumnArg;
 use warp_util::path::ShellFamily;
 use warpui::accessibility::{AccessibilityContent, ActionAccessibilityContent, WarpA11yRole};
 use warpui::assets::asset_cache::{AssetCache, AssetCacheEvent};
-use warpui::r#async::executor::Background;
 use warpui::r#async::{SpawnedFutureHandle, Timer};
 use warpui::clipboard::ClipboardContent;
 use warpui::clipboard_utils::get_image_filepaths_from_paths;
@@ -2625,7 +2624,6 @@ pub struct TerminalView {
 
     last_hover_fragment_boundary: Option<WithinModel<FragmentBoundary>>,
 
-    bootstrap_start: Option<Instant>,
     is_login_shell_bootstrapped: bool,
     /// Set when a pending command is submitted to the shell. Cleared on the
     /// next `AfterBlockCompleted`, at which point `Event::PendingCommandCompleted`
@@ -2689,10 +2687,6 @@ pub struct TerminalView {
     canonical_session_pwd_cache: RefCell<Option<LocalSessionCanonicalPwdCache>>,
 
     block_text_selection_start_position: Option<Vector2F>,
-
-    /// Background executor for sending telemetry when a TerminalView is
-    /// dropped.
-    background_executor: Arc<Background>,
 
     inline_banners_state: InlineBannersState,
 
@@ -4416,7 +4410,6 @@ impl TerminalView {
             find_link_tx,
             highlighted_link: HighlightedLinkOption::default(),
             last_hover_fragment_boundary: None,
-            bootstrap_start: None,
             is_login_shell_bootstrapped: false,
             awaiting_pending_command_completion: false,
             suggested_command_after_bootstrap: None,
@@ -4442,7 +4435,6 @@ impl TerminalView {
             active_block_metadata: None,
             canonical_session_pwd_cache: RefCell::new(None),
             block_text_selection_start_position: None,
-            background_executor: ctx.background_executor().clone(),
             inline_banners_state: Default::default(),
             bookmarked_blocks: Default::default(),
             file_link_scanning_join_handle: None,
@@ -13432,11 +13424,6 @@ impl TerminalView {
                             },
                         );
                     }
-
-                    #[cfg(not(target_family = "wasm"))]
-                    crate::system::SystemInfo::handle(ctx).update(ctx, |system_info, _ctx| {
-                        system_info.handle_block_created();
-                    });
 
                     // Emit the event to the parent view. This will save the block to sqlite if
                     // session restoration is enabled.
@@ -30154,28 +30141,6 @@ impl Drop for TerminalView {
                 log_level,
                 "Session abandoned before bootstrap for shell {pending_shell:?} on ssh {has_pending_ssh_session}"
             );
-
-            let was_ever_visible = self.was_ever_visible;
-            let duration_since_start = self.bootstrap_start.unwrap_or_else(Instant::now).elapsed();
-            let server_api = self.server_api.clone();
-            let privacy_settings_snapshot = self.privacy_settings_snapshot;
-            let task = self.background_executor.spawn(async move {
-                if let Err(error) = server_api
-                    .send_telemetry_event(
-                        TelemetryEvent::SessionAbandonedBeforeBootstrap {
-                            pending_shell,
-                            has_pending_ssh_session,
-                            was_ever_visible,
-                            duration_since_start,
-                        },
-                        privacy_settings_snapshot,
-                    )
-                    .await
-                {
-                    log::warn!("Error occurred with sending telemetry event: {error}");
-                }
-            });
-            task.detach();
         };
     }
 }

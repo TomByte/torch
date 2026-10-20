@@ -20,8 +20,6 @@ log-panics = { version = "2.1.0", features = ["with-backtrace"] }
 zip = "2.1"
 
 # Optional crash reporting integration.
-sentry = { workspace = true, optional = true }
-sentry-log = { workspace = true, optional = true }
 
 [target.'cfg(target_family = "wasm")'.dependencies]
 console_error_panic_hook = { version = "0.1.6" }
@@ -34,5 +32,4 @@ warp_web_event_bus.workspace = true
 tempfile.workspace = true
 
 [features]
-crash_reporting = ["dep:sentry", "dep:sentry-log", "warp_errors/crash_reporting"]
 agent_mode_evals = []

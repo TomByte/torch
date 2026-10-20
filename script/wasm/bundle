@@ -20,8 +20,6 @@ CARGO_TARGET_DIR="$WORKSPACE_ROOT_DIR/target/wasm32-unknown-unknown"
 
 # By default we build dev bundles.
 RELEASE_CHANNEL="dev"
-# TODO: We should enable crash_reporting before enabling for trusted testers.
-# https://linear.app/warpdotdev/issue/PLAT-428/crash-reporting-on-web
 FEATURES="release_bundle,gui"
 FEATURES_ADDITIONS=()
 DEBUG=false
@@ -165,8 +163,7 @@ fi
 # that existing invocations keep working without dropping bundle defaults.
 for mapping in \
     "with_local_server:WITH_LOCAL_SERVER" \
-    "with_local_session_sharing_server:WITH_LOCAL_SESSION_SHARING_SERVER" \
-    "with_sandbox_telemetry:WITH_SANDBOX_TELEMETRY"; do
+    "with_local_session_sharing_server:WITH_LOCAL_SESSION_SHARING_SERVER"; do
     feature="${mapping%%:*}"
     env_var="${mapping##*:}"
     if [[ ",$FEATURES," =~ ,"$feature", ]]; then

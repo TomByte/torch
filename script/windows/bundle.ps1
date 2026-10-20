@@ -16,7 +16,7 @@ Param (
 
     [Alias('release-tag')]
     [String]$RELEASE_TAG = '',
-    [String]$FEATURES = 'release_bundle,crash_reporting,gui',
+    [String]$FEATURES = 'release_bundle,gui',
 
     # Builds only the Warp binary, skips the installer.
     [Switch]$SKIP_BUILD_INSTALLER = $False,
@@ -158,8 +158,6 @@ if ("$CHANNEL" -eq 'local') {
     $WARP_BIN = 'torch'
     $BINARY_NAME = 'torch.exe'
     $APP_NAME = 'Torch'
-    # The OSS channel does not ship Sentry, so drop the crash_reporting feature
-    # (which would otherwise pull in the Sentry SDK as a dependency).
     $FEATURES = 'release_bundle,gui'
 }
 
@@ -192,12 +190,9 @@ if ($IS_TUI) {
         'oss' { 'tui-oss' }
     }
     $FEATURES = 'release_bundle,standalone,voice_input'
-    if ("$CHANNEL" -ne 'oss') {
-        $FEATURES = "$FEATURES,crash_reporting"
-    }
 } elseif ($IS_CLI) {
     # The CLI ships the same channel binary target as the app (no separate bin), so keep
-    # $WARP_BIN and the channel-scoped $FEATURES set above (crash_reporting, preview_channel,
+    # $WARP_BIN and the channel-scoped $FEATURES set above (preview_channel,
     # agent_mode_debug, etc.) but swap the app's `gui` feature for `standalone`, mirroring the
     # macOS and Linux `--artifact cli` builds. Filtering (rather than overwriting) $FEATURES is
     # required so per-channel additions above -- e.g. preview_channel, required by the `preview`

@@ -16,7 +16,6 @@ use futures::FutureExt;
 use futures::future::BoxFuture;
 use warp_cli::agent::Harness;
 use warp_core::execution_mode::AppExecutionMode;
-use warp_core::telemetry::TelemetryEvent as _;
 use warp_core::{send_telemetry_from_app_ctx, send_telemetry_from_ctx};
 use warpui::{Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
 

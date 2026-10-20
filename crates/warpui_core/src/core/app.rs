@@ -5,16 +5,13 @@ use std::fmt::Debug;
 use std::path::Path;
 use std::pin::pin;
 use std::rc::{self, Rc};
-use std::sync::atomic::{AtomicI64, Ordering};
 use std::sync::{Arc, OnceLock};
 
 use anyhow::{Result, anyhow};
-use chrono::Utc;
 use futures::future::join_all;
 use futures::prelude::*;
 use instant::Instant;
 use itertools::Itertools;
-use lazy_static::lazy_static;
 use parking_lot::Mutex;
 use pathfinder_geometry::rect::RectF;
 use pathfinder_geometry::vector::Vector2F;
@@ -28,7 +25,6 @@ use super::{
 };
 use crate::accessibility::{AccessibilityVerbosity, ActionAccessibilityContent};
 use crate::actions::StandardAction;
-use crate::app_focus_telemetry::AppFocusInfo;
 use crate::assets::AssetProvider;
 use crate::assets::asset_cache::{AssetCache, AssetHandle, AssetSource, AssetState};
 use crate::r#async::executor::{self, Background, Foreground, ForegroundTask};
@@ -67,10 +63,6 @@ use crate::{
 
 #[cfg(feature = "tui")]
 mod tui;
-
-lazy_static! {
-    static ref LAST_USER_ACTION_UNIX_TIMESTAMP: AtomicI64 = AtomicI64::new(0);
-}
 
 #[derive(Clone)]
 pub struct App(Rc<RefCell<AppContext>>);
@@ -233,14 +225,6 @@ impl App {
             action,
             log::Level::Info,
         );
-    }
-
-    pub fn last_active_timestamp() -> i64 {
-        LAST_USER_ACTION_UNIX_TIMESTAMP.load(Ordering::SeqCst)
-    }
-
-    pub fn record_last_active_timestamp() {
-        LAST_USER_ACTION_UNIX_TIMESTAMP.fetch_max(Utc::now().timestamp(), Ordering::SeqCst);
     }
 
     pub fn dispatch_global_action<T: 'static + Any>(&self, name: &str, arg: T) {
@@ -671,7 +655,6 @@ pub struct AppContext {
     pub(super) pending_effects: VecDeque<Effect>,
     pending_flushes: usize,
     flushing_effects: bool,
-    app_focus_info: AppFocusInfo,
     #[allow(clippy::type_complexity)]
     first_frame_callback: Option<Box<dyn Fn(&mut AppContext)>>,
     frame_drawn_callback: Option<Box<FrameDrawnCallback>>,
@@ -830,7 +813,6 @@ impl AppContext {
             pending_effects: VecDeque::new(),
             pending_flushes: 0,
             flushing_effects: false,
-            app_focus_info: AppFocusInfo::new(),
             first_frame_callback: None,
             frame_drawn_callback: None,
             global_shortcuts: Default::default(),
@@ -3871,11 +3853,7 @@ impl AppContext {
             // dispatch it at the `trace` log level so it doesn't clutter the
             // logs by default.
             Event::MouseMoved { .. } | Event::ScrollWheel { .. } => log::Level::Trace,
-            _ => {
-                // Update last user action timestamp for non-hover events
-                App::record_last_active_timestamp();
-                log::Level::Info
-            }
+            _ => log::Level::Info,
         };
         let dispatch_result = presenter.borrow_mut().dispatch_event(event, self);
 
@@ -4583,23 +4561,6 @@ impl AppContext {
         self.add_window(options, |ctx| {
             crate::debug::DebugRootView::new(target_window_id, view_parents, root_view_id, ctx)
         });
-    }
-
-    pub fn record_app_focus(&mut self, user_id: Option<String>, anonymous_id: String) {
-        self.app_focus_info.record_app_focus(user_id, anonymous_id);
-    }
-
-    pub fn record_app_blur(&mut self, user_id: Option<String>, anonymous_id: String) {
-        self.app_focus_info.record_app_blur(user_id, anonymous_id);
-    }
-
-    pub fn try_record_daily_app_focus_duration(
-        &mut self,
-        user_id: Option<String>,
-        anonymous_id: String,
-    ) {
-        self.app_focus_info
-            .try_record_daily_app_focus_duration(user_id, anonymous_id);
     }
 
     pub fn is_screen_reader_enabled(&self) -> Option<bool> {

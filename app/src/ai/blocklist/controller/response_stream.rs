@@ -920,54 +920,19 @@ impl ResponseStream {
         is_online: bool,
         recovery_attempt: usize,
     ) {
-        #[cfg(feature = "crash_reporting")]
-        sentry::with_scope(
-            |scope| {
-                scope.set_tag(
-                    "has_received_client_actions",
-                    self.has_received_client_actions,
-                );
-                scope.set_tag("error", format!("{error:?}"));
-                scope.set_tag("is_recoverable", error.is_recoverable());
-                scope.set_tag(
-                    "will_attempt_resume",
-                    self.should_resume_conversation_after_stream_finished(),
-                );
-                scope.set_tag("is_online", is_online);
-                scope.set_tag("failed_request", self.failed_request_label());
-            },
-            || {
-                report_error!(
-                    error.as_ref(),
-                    extra: {
-                        "has_received_client_actions" => self.has_received_client_actions,
-                        "is_recoverable" => error.is_recoverable(),
-                        "will_attempt_resume" => self.should_resume_conversation_after_stream_finished(),
-                        "is_online" => is_online,
-                        "failed_request" => self.failed_request_label(),
-                        "recovery_attempt" => recovery_attempt,
-                        "max_recovery_attempts" => MAX_RECOVERY_ATTEMPTS,
-                        "error_debug" => %format!("{error:?}"),
-                    }
-                );
-            },
+        report_error!(
+            error.as_ref(),
+            extra: {
+                "has_received_client_actions" => self.has_received_client_actions,
+                "is_recoverable" => error.is_recoverable(),
+                "will_attempt_resume" => self.should_resume_conversation_after_stream_finished(),
+                "is_online" => is_online,
+                "failed_request" => self.failed_request_label(),
+                "recovery_attempt" => recovery_attempt,
+                "max_recovery_attempts" => MAX_RECOVERY_ATTEMPTS,
+                "error_debug" => %format!("{error:?}"),
+            }
         );
-        #[cfg(not(feature = "crash_reporting"))]
-        {
-            report_error!(
-                error.as_ref(),
-                extra: {
-                    "has_received_client_actions" => self.has_received_client_actions,
-                    "is_recoverable" => error.is_recoverable(),
-                    "will_attempt_resume" => self.should_resume_conversation_after_stream_finished(),
-                    "is_online" => is_online,
-                    "failed_request" => self.failed_request_label(),
-                    "recovery_attempt" => recovery_attempt,
-                    "max_recovery_attempts" => MAX_RECOVERY_ATTEMPTS,
-                    "error_debug" => %format!("{error:?}"),
-                }
-            );
-        }
     }
 
     /// Parks a retry until connectivity returns; cancellation invalidates the parked

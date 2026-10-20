@@ -22,8 +22,6 @@ pub enum PtySpawnMode {
 }
 
 pub trait PtySpawnHooks {
-    fn before_spawn(&self);
-    fn after_spawn(&self);
     fn spawned(&self, mode: PtySpawnMode, ctx: &mut AppContext);
 }
 /// A handle that can be used to interact with a pty process.
@@ -99,23 +97,6 @@ impl PtyHandle for DirectPtyHandle {
         self.child.kill()
     }
 }
-/// Invokes the provided callback function without crash reporting enabled.
-fn invoke_without_crash_reporting<T>(hooks: &dyn PtySpawnHooks, func: impl FnOnce() -> T) -> T {
-    // Uninitialize cocoa-sentry before spawning the shell process to avoid passing any custom state
-    // (such as BSD signal handlers and mach exception handlers) into the shell process. This means
-    // we lose all Cocoa crash reports from now until when the session is successfully spawned,
-    // which is not ideal but allows us to fully ensure that we don't improperly leak any Sentry state
-    // into the child processes.
-    hooks.before_spawn();
-
-    let retval = func();
-
-    // Now that the child has spawned--reinitialize cocoa sentry.
-    hooks.after_spawn();
-
-    retval
-}
-
 pub(super) struct PtySpawnInfo {
     pub result: PtySpawnResult,
     #[cfg(unix)]
@@ -236,22 +217,18 @@ impl PtySpawner {
             options,
             #[cfg(windows)]
             event_loop_tx,
-            hooks,
         )
     }
 
     fn spawn_pty_directly(
         options: PtyOptions,
         #[cfg(windows)] event_loop_tx: super::mio_channel::Sender<crate::writeable_pty::Message>,
-        hooks: &dyn PtySpawnHooks,
     ) -> Result<(PtySpawnResult, Box<dyn PtyHandle>)> {
-        let pty_spawn_info = invoke_without_crash_reporting(hooks, move || {
-            local_tty::spawn(
-                options,
-                #[cfg(windows)]
-                event_loop_tx,
-            )
-        })?;
+        let pty_spawn_info = local_tty::spawn(
+            options,
+            #[cfg(windows)]
+            event_loop_tx,
+        )?;
         let direct_pty_handle = Box::new(DirectPtyHandle {
             child: pty_spawn_info.child,
         });

@@ -22,7 +22,6 @@ use std::ops::Range;
 use lazy_static::lazy_static;
 use parking_lot::RwLock;
 use regex_automata::meta::Regex;
-use serde_json::Value;
 use warp_errors::report_error;
 
 use crate::terminal::model::secrets::regexes::DEFAULT_REGEXES_WITH_NAMES;
@@ -115,16 +114,6 @@ fn replace_byte_ranges_with_asterisks(input: &mut String, mut ranges: Vec<Range<
     for range in merged.into_iter().rev() {
         let len = range.end - range.start;
         input.replace_range(range, &REDACTION_REPLACEMENT_CHARACTER.repeat(len));
-    }
-}
-/// Walks a [`Value`] and runs [`redact_secrets_in_string`] on every string within
-/// it. Non-string scalars (numbers, booleans, nulls) are left untouched.
-pub fn redact_secrets_in_value(value: &mut Value) {
-    match value {
-        Value::String(s) => redact_secrets_in_string(s),
-        Value::Array(arr) => arr.iter_mut().for_each(redact_secrets_in_value),
-        Value::Object(obj) => obj.values_mut().for_each(redact_secrets_in_value),
-        Value::Null | Value::Bool(_) | Value::Number(_) => {}
     }
 }
 #[cfg(test)]

@@ -12,7 +12,6 @@ use pathfinder_geometry::rect::RectF;
 use pathfinder_geometry::vector::{Vector2F, vec2f};
 use settings::Setting as _;
 use warp_core::context_flag::ContextFlag;
-use warp_core::telemetry::TelemetryEvent as _;
 use warp_core::ui::Icon as WarpIcon;
 use warp_core::ui::color::blend::Blend;
 use warp_core::ui::color::coloru_with_opacity;

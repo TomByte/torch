@@ -550,7 +550,6 @@ fn authenticated_client_with_http(client: http_client::Client) -> ServerApi {
         events,
         None,
         None,
-        crate::server::telemetry::TelemetryApi::new(),
     );
     api.base_client.set_ambient_workload_token_for_test(
         "test-workload-token".to_string(),
