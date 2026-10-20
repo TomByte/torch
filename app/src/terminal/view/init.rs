@@ -297,6 +297,17 @@ pub fn init(app: &mut AppContext) {
         ),
     ]);
 
+    let toggle_cli_agent_rich_input = EditableBinding::new(
+        OPEN_CLI_AGENT_RICH_INPUT_KEYBINDING,
+        "Toggle CLI Agent Rich Input",
+        TerminalAction::ToggleCLIAgentRichInput,
+    );
+    // Claude Code and Codex use Ctrl-G to open $EDITOR, so local-only builds leave it unbound.
+    let toggle_cli_agent_rich_input = if ChannelState::is_local_only() {
+        toggle_cli_agent_rich_input
+    } else {
+        toggle_cli_agent_rich_input.with_key_binding("ctrl-g")
+    };
     app.register_editable_bindings([
         // Ctrl-G: toggle CLI agent rich input.
         // Three contexts match this binding:
@@ -304,13 +315,7 @@ pub fn init(app: &mut AppContext) {
         // 2. EditorView context when rich input is already open (closes rich input, fix for #9286)
         // 3. Terminal context when rich input is open (closes rich input regardless
         //    of focus location or active-block state; fix for #9916)
-        EditableBinding::new(
-            OPEN_CLI_AGENT_RICH_INPUT_KEYBINDING,
-            "Toggle CLI Agent Rich Input",
-            TerminalAction::ToggleCLIAgentRichInput,
-        )
-        .with_key_binding("ctrl-g")
-        .with_context_predicate(
+        toggle_cli_agent_rich_input.with_context_predicate(
             // Case 1: Open from terminal during CLI agent session
             (id!("Terminal")
                 & !id!("IMEOpen")

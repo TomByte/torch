@@ -54,7 +54,11 @@ define_settings_group!(KeysSettings, settings: [
     }
     extra_meta_keys: ExtraMetaKeys {
         type: ExtraMetaKeysEnum,
-        default: ExtraMetaKeysEnum::default(),
+        // Coding agents rely on Meta chords such as Option-Enter; right Option still composes.
+        default: ExtraMetaKeysEnum {
+            left_alt: cfg!(target_os = "macos") && warp_core::channel::ChannelState::is_local_only(),
+            right_alt: false,
+        },
         supported_platforms: SupportedPlatforms::ALL,
         sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
         surface: settings::SettingSurfaces::GUI,
