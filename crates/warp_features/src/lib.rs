@@ -1112,6 +1112,9 @@ pub const RUNTIME_FEATURE_FLAGS: &[FeatureFlag] = &[FeatureFlag::LocalClaudeCode
 impl FeatureFlag {
     pub fn is_enabled(&self) -> bool {
         if cfg!(feature = "local_only") {
+            if matches!(self, Self::VerticalTabs | Self::GroupedTabs) {
+                return true;
+            }
             if matches!(
                 self,
                 Self::AgentMode

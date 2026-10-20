@@ -31,16 +31,21 @@ impl Workspace {
         clicked_index: usize,
         ctx: &mut ViewContext<Self>,
     ) {
-        // Determine the bounds for our range selection.
-        let lo_index = anchor_index.min(clicked_index);
-        let hi_index = anchor_index.max(clicked_index);
+        let order = if warp_core::channel::ChannelState::is_local_only() {
+            super::vertical_tabs::torch::session_order(self, ctx)
+        } else {
+            (0..self.tabs.len()).collect()
+        };
+        let selected =
+            super::vertical_tabs::torch::range_in_order(&order, anchor_index, clicked_index);
 
         // Identify groups in the selection range.
         let crossed_group_ids: HashSet<TabGroupId> = self
             .tabs
-            .get(lo_index..=hi_index)
-            .into_iter()
-            .flatten()
+            .iter()
+            .enumerate()
+            .filter(|(index, _)| selected.contains(index))
+            .map(|(_, tab)| tab)
             .filter_map(|tab| tab.group_id)
             .collect();
 
@@ -53,7 +58,7 @@ impl Workspace {
         self.tabs
             .iter_mut()
             .enumerate()
-            .filter(|(index, _)| (lo_index..=hi_index).contains(index))
+            .filter(|(index, _)| selected.contains(index))
             .for_each(|(_, tab)| tab.in_multi_selection = true);
 
         ctx.dispatch_global_action("workspace:save_app", ());

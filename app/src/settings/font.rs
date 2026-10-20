@@ -9,7 +9,11 @@ use warpui::{AppContext, SingletonEntity};
 use super::EnforceMinimumContrast as EnforceMinimumContrastEnum;
 
 pub const DEFAULT_MONOSPACE_FONT_NAME: &str = "Hack";
-pub const DEFAULT_MONOSPACE_FONT_SIZE: f32 = 13.0;
+pub const DEFAULT_MONOSPACE_FONT_SIZE: f32 = if warp_core::channel::ChannelState::is_local_only() {
+    14.0
+} else {
+    13.0
+};
 pub const DEFAULT_MONOSPACE_FONT_WEIGHT: Weight = Weight::Normal;
 
 define_settings_group!(FontSettings,
@@ -49,7 +53,7 @@ define_settings_group!(FontSettings,
         },
         line_height_ratio: LineHeightRatio {
             type: f32,
-            default: DEFAULT_UI_LINE_HEIGHT_RATIO,
+            default: if warp_core::channel::ChannelState::is_local_only() { 1.3 } else { DEFAULT_UI_LINE_HEIGHT_RATIO },
             supported_platforms: SupportedPlatforms::ALL,
             sync_to_cloud: SyncToCloud::Never,
             surface: settings::SettingSurfaces::GUI,

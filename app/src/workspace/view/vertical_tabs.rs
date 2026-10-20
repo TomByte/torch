@@ -1,4 +1,5 @@
 pub mod telemetry;
+pub(super) mod torch;
 
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
@@ -736,7 +737,13 @@ impl Default for VerticalTabsPanelState {
     fn default() -> Self {
         Self {
             scroll_state: ClippedScrollStateHandle::default(),
-            resizable_state: resizable_state_handle(PANEL_WIDTH),
+            resizable_state: resizable_state_handle(
+                if warp_core::channel::ChannelState::is_local_only() {
+                    torch::SIDEBAR_WIDTH
+                } else {
+                    PANEL_WIDTH
+                },
+            ),
             group_mouse_states: RefCell::default(),
             tab_group_mouse_states: RefCell::default(),
             pane_row_mouse_states: RefCell::default(),

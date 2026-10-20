@@ -9,6 +9,16 @@ Torch is a local terminal based on Warp, maintained independently at [TomByte/to
 - Uses its own `dev.tombyte.Torch` application identity and data directory (`~/.torch` for portable configuration on macOS).
 - Ships without Warp telemetry, crash reporting, automatic updates, or upstream repository automation.
 
+## Terminal interface
+
+Torch uses a compact session sidebar and an inset terminal pane, with a light theme and 14-point terminal text by default. Existing explicit theme and font preferences remain respected.
+
+Sessions group automatically by their working folder. Right-click a session and choose **New group with tab** to place it in a manual group; manual groups take precedence over folders. Double-click a session or manual group to rename it, and click a manual group heading to collapse or expand it. The sidebar toggle and plus button sit beside the native window controls.
+
+Activity ages and status indicators come from actual terminal state. Rich Claude/Codex status appears when the CLI supplies supported status events; ordinary commands display their running or idle state. Torch does not manufacture agent activity.
+
+The visual reference is retained in `docs/design/terminal-reference.png`. To inspect transcript typography without running an agent, run `python3 script/preview-terminal-ui.py` from this checkout in Torch. It displays a labelled synthetic transcript and exits on Enter.
+
 ## Build and run
 
 The workspace uses Rust 1.92.0 (see `rust-toolchain.toml`), Git LFS, and platform build dependencies. On macOS, install Xcode including its Metal Toolchain, CMake, and `cargo-bundle` before building. `./script/bootstrap` can install platform dependencies; it skips Warp account authentication and common agent skill installation by default.
@@ -28,6 +38,7 @@ On macOS, `./script/run` creates `target/debug/bundle/osx/Torch.app`. Linux uses
 
 ```sh
 cargo test -p warp_features --features local_only,test-util
+cargo test -p warp --lib --features gui workspace::view::vertical_tabs::torch::tests
 cargo clippy -p warp_features --features local_only,test-util --all-targets -- -D warnings
 cargo check -p warp --bin torch --features gui
 ```
@@ -35,6 +46,8 @@ cargo check -p warp --bin torch --features gui
 Upstream tests that explicitly exercise authenticated or AI-enabled behavior describe the original product and are not a Torch acceptance suite. Test local-only policy and ordinary terminal behavior when changing this fork.
 
 The initial Torch changes were validated on macOS with a native app build, shell execution and Tab-completion smoke tests, 14 path tests, and four feature-policy tests. Linux and Windows packaging changes have not been run on those platforms. Rust 1.97 reports inherited style warnings under strict whole-app Clippy; targeted policy/core Clippy checks pass.
+
+The sidebar redesign adds four focused tests for folder identity, activity labels, and grouped selection order. Native macOS checks cover normal shell completion, manual group creation/rename/collapse, long titles, smaller windows, and legacy layout preferences. The app Clippy gate passes with inherited style-lint categories allowed; no new warning exemptions are added to the source.
 
 ## Source and licences
 

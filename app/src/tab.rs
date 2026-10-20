@@ -253,7 +253,8 @@ fn tab_group_menu_entry_flags(
 /// Exposed so binding-description overrides in `workspace/mod.rs` and context-
 /// menu builders here can share a single predicate.
 pub fn uses_vertical_tabs(ctx: &AppContext) -> bool {
-    FeatureFlag::VerticalTabs.is_enabled() && *TabSettings::as_ref(ctx).use_vertical_tabs
+    warp_core::channel::ChannelState::is_local_only()
+        || (FeatureFlag::VerticalTabs.is_enabled() && *TabSettings::as_ref(ctx).use_vertical_tabs)
 }
 
 const WARP_2_TAB_COLOR_OPACITY: Opacity = 25;

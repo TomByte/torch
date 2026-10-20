@@ -69,4 +69,5 @@ __pycache__/
 
 # Project notes
 .note/
+.impeccable/review/
 .claude/scheduled_tasks.lock

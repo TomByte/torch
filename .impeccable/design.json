@@ -1,0 +1,475 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-20T10:28:10.007451+00:00",
+  "title": "Design System: Torch",
+  "extensions": {
+    "colorMeta": {
+      "light-sidebar-top": {
+        "role": "neutral",
+        "displayName": "Light Sidebar Top",
+        "canonical": "#E6ECF4",
+        "tonalRamp": [
+          "oklch(15% 0.0126 255.51)",
+          "oklch(26% 0.0126 255.51)",
+          "oklch(38% 0.0126 255.51)",
+          "oklch(49% 0.0126 255.51)",
+          "oklch(61% 0.0126 255.51)",
+          "oklch(72% 0.0126 255.51)",
+          "oklch(84% 0.0126 255.51)",
+          "oklch(95% 0.0126 255.51)"
+        ]
+      },
+      "light-sidebar-bottom": {
+        "role": "neutral",
+        "displayName": "Light Sidebar Bottom",
+        "canonical": "#EEE9F4",
+        "tonalRamp": [
+          "oklch(15% 0.0156 306.41)",
+          "oklch(26% 0.0156 306.41)",
+          "oklch(38% 0.0156 306.41)",
+          "oklch(49% 0.0156 306.41)",
+          "oklch(61% 0.0156 306.41)",
+          "oklch(72% 0.0156 306.41)",
+          "oklch(84% 0.0156 306.41)",
+          "oklch(95% 0.0156 306.41)"
+        ]
+      },
+      "light-text": {
+        "role": "neutral",
+        "displayName": "Light Text",
+        "canonical": "#202124",
+        "tonalRamp": [
+          "oklch(15% 0.0058 271.18)",
+          "oklch(26% 0.0058 271.18)",
+          "oklch(38% 0.0058 271.18)",
+          "oklch(49% 0.0058 271.18)",
+          "oklch(61% 0.0058 271.18)",
+          "oklch(72% 0.0058 271.18)",
+          "oklch(84% 0.0058 271.18)",
+          "oklch(95% 0.0058 271.18)"
+        ]
+      },
+      "light-secondary": {
+        "role": "neutral",
+        "displayName": "Light Secondary",
+        "canonical": "#616268",
+        "tonalRamp": [
+          "oklch(15% 0.0095 278.47)",
+          "oklch(26% 0.0095 278.47)",
+          "oklch(38% 0.0095 278.47)",
+          "oklch(49% 0.0095 278.47)",
+          "oklch(61% 0.0095 278.47)",
+          "oklch(72% 0.0095 278.47)",
+          "oklch(84% 0.0095 278.47)",
+          "oklch(95% 0.0095 278.47)"
+        ]
+      },
+      "light-muted": {
+        "role": "neutral",
+        "displayName": "Light Muted",
+        "canonical": "#85868B",
+        "tonalRamp": [
+          "oklch(15% 0.0075 277.09)",
+          "oklch(26% 0.0075 277.09)",
+          "oklch(38% 0.0075 277.09)",
+          "oklch(49% 0.0075 277.09)",
+          "oklch(61% 0.0075 277.09)",
+          "oklch(72% 0.0075 277.09)",
+          "oklch(84% 0.0075 277.09)",
+          "oklch(95% 0.0075 277.09)"
+        ]
+      },
+      "light-selection": {
+        "role": "neutral",
+        "displayName": "Light Selection",
+        "canonical": "#FFFFFFF5",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "light-hover": {
+        "role": "neutral",
+        "displayName": "Light Hover",
+        "canonical": "#FFFFFF70",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "light-rule": {
+        "role": "neutral",
+        "displayName": "Light Rule",
+        "canonical": "#D5D6DB",
+        "tonalRamp": [
+          "oklch(15% 0.0069 277.15)",
+          "oklch(26% 0.0069 277.15)",
+          "oklch(38% 0.0069 277.15)",
+          "oklch(49% 0.0069 277.15)",
+          "oklch(61% 0.0069 277.15)",
+          "oklch(72% 0.0069 277.15)",
+          "oklch(84% 0.0069 277.15)",
+          "oklch(95% 0.0069 277.15)"
+        ]
+      },
+      "light-attention": {
+        "role": "secondary",
+        "displayName": "Light Attention",
+        "canonical": "#98651F",
+        "tonalRamp": [
+          "oklch(15% 0.1054 70.06)",
+          "oklch(26% 0.1054 70.06)",
+          "oklch(38% 0.1054 70.06)",
+          "oklch(49% 0.1054 70.06)",
+          "oklch(61% 0.1054 70.06)",
+          "oklch(72% 0.1054 70.06)",
+          "oklch(84% 0.1054 70.06)",
+          "oklch(95% 0.1054 70.06)"
+        ]
+      },
+      "dark-sidebar-top": {
+        "role": "neutral",
+        "displayName": "Dark Sidebar Top",
+        "canonical": "#242832",
+        "tonalRamp": [
+          "oklch(15% 0.0194 267.98)",
+          "oklch(26% 0.0194 267.98)",
+          "oklch(38% 0.0194 267.98)",
+          "oklch(49% 0.0194 267.98)",
+          "oklch(61% 0.0194 267.98)",
+          "oklch(72% 0.0194 267.98)",
+          "oklch(84% 0.0194 267.98)",
+          "oklch(95% 0.0194 267.98)"
+        ]
+      },
+      "dark-sidebar-bottom": {
+        "role": "neutral",
+        "displayName": "Dark Sidebar Bottom",
+        "canonical": "#2B2734",
+        "tonalRamp": [
+          "oklch(15% 0.0241 298.93)",
+          "oklch(26% 0.0241 298.93)",
+          "oklch(38% 0.0241 298.93)",
+          "oklch(49% 0.0241 298.93)",
+          "oklch(61% 0.0241 298.93)",
+          "oklch(72% 0.0241 298.93)",
+          "oklch(84% 0.0241 298.93)",
+          "oklch(95% 0.0241 298.93)"
+        ]
+      },
+      "dark-text": {
+        "role": "neutral",
+        "displayName": "Dark Text",
+        "canonical": "#F0EFF3",
+        "tonalRamp": [
+          "oklch(15% 0.0054 297.72)",
+          "oklch(26% 0.0054 297.72)",
+          "oklch(38% 0.0054 297.72)",
+          "oklch(49% 0.0054 297.72)",
+          "oklch(61% 0.0054 297.72)",
+          "oklch(72% 0.0054 297.72)",
+          "oklch(84% 0.0054 297.72)",
+          "oklch(95% 0.0054 297.72)"
+        ]
+      },
+      "dark-secondary": {
+        "role": "neutral",
+        "displayName": "Dark Secondary",
+        "canonical": "#BCBAC4",
+        "tonalRamp": [
+          "oklch(15% 0.0141 295.25)",
+          "oklch(26% 0.0141 295.25)",
+          "oklch(38% 0.0141 295.25)",
+          "oklch(49% 0.0141 295.25)",
+          "oklch(61% 0.0141 295.25)",
+          "oklch(72% 0.0141 295.25)",
+          "oklch(84% 0.0141 295.25)",
+          "oklch(95% 0.0141 295.25)"
+        ]
+      },
+      "dark-muted": {
+        "role": "neutral",
+        "displayName": "Dark Muted",
+        "canonical": "#A19EAB",
+        "tonalRamp": [
+          "oklch(15% 0.0190 296.48)",
+          "oklch(26% 0.0190 296.48)",
+          "oklch(38% 0.0190 296.48)",
+          "oklch(49% 0.0190 296.48)",
+          "oklch(61% 0.0190 296.48)",
+          "oklch(72% 0.0190 296.48)",
+          "oklch(84% 0.0190 296.48)",
+          "oklch(95% 0.0190 296.48)"
+        ]
+      },
+      "dark-selection": {
+        "role": "neutral",
+        "displayName": "Dark Selection",
+        "canonical": "#45434E",
+        "tonalRamp": [
+          "oklch(15% 0.0186 293.86)",
+          "oklch(26% 0.0186 293.86)",
+          "oklch(38% 0.0186 293.86)",
+          "oklch(49% 0.0186 293.86)",
+          "oklch(61% 0.0186 293.86)",
+          "oklch(72% 0.0186 293.86)",
+          "oklch(84% 0.0186 293.86)",
+          "oklch(95% 0.0186 293.86)"
+        ]
+      },
+      "dark-hover": {
+        "role": "neutral",
+        "displayName": "Dark Hover",
+        "canonical": "#FFFFFF12",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "dark-rule": {
+        "role": "neutral",
+        "displayName": "Dark Rule",
+        "canonical": "#57535F",
+        "tonalRamp": [
+          "oklch(15% 0.0199 300.78)",
+          "oklch(26% 0.0199 300.78)",
+          "oklch(38% 0.0199 300.78)",
+          "oklch(49% 0.0199 300.78)",
+          "oklch(61% 0.0199 300.78)",
+          "oklch(72% 0.0199 300.78)",
+          "oklch(84% 0.0199 300.78)",
+          "oklch(95% 0.0199 300.78)"
+        ]
+      },
+      "dark-attention": {
+        "role": "secondary",
+        "displayName": "Dark Attention",
+        "canonical": "#E6B873",
+        "tonalRamp": [
+          "oklch(15% 0.1019 76.65)",
+          "oklch(26% 0.1019 76.65)",
+          "oklch(38% 0.1019 76.65)",
+          "oklch(49% 0.1019 76.65)",
+          "oklch(61% 0.1019 76.65)",
+          "oklch(72% 0.1019 76.65)",
+          "oklch(84% 0.1019 76.65)",
+          "oklch(95% 0.1019 76.65)"
+        ]
+      },
+      "light-terminal-background": {
+        "role": "neutral",
+        "displayName": "Light Terminal Background",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "light-terminal-foreground": {
+        "role": "neutral",
+        "displayName": "Light Terminal Foreground",
+        "canonical": "#111111",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "dark-terminal-background": {
+        "role": "neutral",
+        "displayName": "Dark Terminal Background",
+        "canonical": "#050505",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "dark-terminal-foreground": {
+        "role": "neutral",
+        "displayName": "Dark Terminal Foreground",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "header-rule": {
+        "role": "neutral",
+        "displayName": "Header Rule",
+        "canonical": "#88888818",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "terminal": {
+        "displayName": "Terminal output",
+        "purpose": "Hack defaults for local-only builds; user preferences override size, family, weight, and line height."
+      },
+      "body": {
+        "displayName": "Native UI body",
+        "purpose": "Roboto on macOS; Windows attempts Segoe UI with Roboto fallback. No Windows visual verification is claimed."
+      },
+      "title": {
+        "displayName": "Active and unread titles",
+        "purpose": "Active pane title and unread session names."
+      },
+      "label": {
+        "displayName": "Session metadata",
+        "purpose": "Activity ages and group counts."
+      },
+      "group-label": {
+        "displayName": "Group title",
+        "purpose": "Automatic folder or explicit manual group label."
+      },
+      "attention-label": {
+        "displayName": "Blocked session count",
+        "purpose": "Group count of sessions requiring attention."
+      }
+    },
+    "shadows": [
+      {
+        "name": "terminal-pane",
+        "value": "0 2px 12px 0 #22223312",
+        "purpose": "Source-derived WarpUI main-pane shadow, expressed as CSS in logical pixels."
+      }
+    ],
+    "motion": [],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Sidebar icon control",
+      "kind": "button",
+      "refersTo": "icon-control",
+      "description": "Native add-tab control translated for documentation; browser focus styling is preview-only.",
+      "html": "<button class=\"ds-control\" aria-label=\"New terminal\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M8 2v12M2 8h12\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"/></svg></button>",
+      "css": ".ds-control{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:6px;border:0;border-radius:6px;background:transparent;color:#616268;cursor:pointer}.ds-control:hover,.ds-control:active{background:#FFFFFF70}.ds-control:focus-visible{outline:1px solid #616268;outline-offset:2px}"
+    },
+    {
+      "name": "Session row",
+      "kind": "nav",
+      "refersTo": "session",
+      "description": "Unselected native row; sample text is illustrative and has no live application state.",
+      "html": "<button class=\"ds-row\"><span class=\"ds-name\">Terminal</span><span class=\"ds-age\">now</span><svg width=\"14\" height=\"14\" viewBox=\"0 0 14 14\" aria-hidden=\"true\"><circle cx=\"7\" cy=\"7\" r=\"5.5\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\" stroke-dasharray=\"28 7\"/></svg></button>",
+      "css": ".ds-row{display:flex;align-items:center;gap:10px;width:254px;height:31px;padding:4px 12px;border:1px solid transparent;border-radius:9px;background:transparent;color:#202124;font:400 14px Roboto,sans-serif;text-align:left;cursor:pointer}.ds-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-age{font-size:12px;color:#616268}.ds-row:hover,.ds-row:active{background:#FFFFFF70}.ds-row:focus-visible{outline:1px solid #616268;outline-offset:1px}"
+    },
+    {
+      "name": "Selected session row",
+      "kind": "nav",
+      "refersTo": "session-selected",
+      "description": "Active native row with rule; the focus outline is only for this HTML preview.",
+      "html": "<button class=\"ds-selected\" aria-current=\"page\"><span class=\"ds-selected-name\">Terminal</span><span class=\"ds-selected-age\">now</span><svg width=\"14\" height=\"14\" viewBox=\"0 0 14 14\" aria-hidden=\"true\"><circle cx=\"7\" cy=\"7\" r=\"5.5\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\" stroke-dasharray=\"28 7\"/></svg></button>",
+      "css": ".ds-selected{display:flex;align-items:center;gap:10px;width:254px;height:31px;padding:4px 12px;border:1px solid #D5D6DB;border-radius:9px;background:#FFFFFFF5;color:#202124;font:400 14px Roboto,sans-serif;text-align:left;cursor:pointer}.ds-selected-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-selected-age{font-size:12px;color:#616268}.ds-selected:hover,.ds-selected:active{background:#FFFFFFF5}.ds-selected:focus-visible{outline:1px solid #616268;outline-offset:1px}"
+    },
+    {
+      "name": "Automatic folder heading",
+      "kind": "custom",
+      "refersTo": "group-heading",
+      "description": "Noninteractive folder label and count; attention text is included only as a preview example.",
+      "html": "<div class=\"ds-group\"><span class=\"ds-group-title\">project</span><span>3</span><span class=\"ds-group-attention\">1 needs you</span></div>",
+      "css": ".ds-group{display:flex;align-items:center;gap:6px;width:232px;padding:12px 10px 7px 12px;color:#85868B;font:400 12px Roboto,sans-serif}.ds-group-title{font-weight:600}.ds-group-attention{margin-left:auto;font-weight:500;color:#98651F}"
+    },
+    {
+      "name": "Terminal context header",
+      "kind": "custom",
+      "refersTo": "terminal-header",
+      "description": "Active title and folder; labels clip to preserve one native header row.",
+      "html": "<div class=\"ds-header\"><span class=\"ds-header-title\">Terminal</span><span class=\"ds-header-path\">~/project</span></div>",
+      "css": ".ds-header{display:flex;align-items:center;gap:12px;height:40px;padding:0 24px 0 32px;border-bottom:1px solid #88888818;background:#FFFFFF;color:#202124;font:400 14px Roboto,sans-serif}.ds-header-title{max-width:280px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-header-path{flex:1;min-width:0;color:#616268;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}"
+    },
+    {
+      "name": "Inset terminal surface",
+      "kind": "card",
+      "refersTo": "terminal-pane",
+      "description": "Native terminal container translated to an inert preview; sample prompt is not real output.",
+      "html": "<div class=\"ds-pane\"><div class=\"ds-pane-head\">Terminal</div><pre class=\"ds-pane-output\">$ </pre></div>",
+      "css": ".ds-pane{overflow:hidden;border:1px solid #D5D6DB;border-radius:12px;background:#FFFFFF;color:#111111;box-shadow:0 2px 12px 0 #22223312}.ds-pane-head{display:flex;align-items:center;height:40px;padding:0 24px 0 32px;border-bottom:1px solid #88888818;font:600 14px Roboto,sans-serif}.ds-pane-output{margin:16px 32px;font:400 14px/1.3 Hack,monospace}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Native Terminal",
+    "overview": "Torch uses a cool blue-to-lilac sidebar, compact grouped sessions, and a lightly raised terminal pane.\nThe interface keeps session context legible while leaving the working area to shell output. The\nbinding visual direction is the user-supplied [terminal reference](docs/design/terminal-reference.png).\nThe north-star phrase describes that direction; it is not a separate user-approved brand name.\n\nThis is a Rust/WarpUI desktop system. Frontmatter dimensions use portable `px` notation for WarpUI\nlogical pixels, not screenshot pixels. The tokens describe the current implementation in\n`app/src/workspace/view/vertical_tabs/torch.rs`; font and terminal defaults come from\n`app/src/settings/font.rs`, `app/src/settings/theme.rs`, and `app/src/terminal/settings.rs`.\nDefault terminal colors come from `app/src/themes/default_themes.rs`, and UI font loading comes from\n`app/src/appearance.rs`. User-selected terminal themes and fonts remain authoritative at runtime.\n\nThe macOS captures in `.impeccable/review/desktop.png` (2560 \u00d7 1600 screenshot pixels),\n`desktop-narrow.png`, and `desktop-long-title.png` (1730 \u00d7 2046 each, native half-screen windows)\nsupport close visual fidelity, not pixel identity. Their explicitly labelled synthetic transcript is\na visual test fixture, not evidence of a completed CLI task. The dark palette is extracted from\nsource; these captures do not verify dark rendering or other operating systems. Native recording\nbadges and cursor halos are capture artifacts, not Torch components.\n\nThe final macOS live verification passed short reordering within a manual group, a long drag out\nand back, Shift-selection across noncontiguous underlying tabs in displayed group order, and\nreopening the sidebar after restoring its stored closed state. The final drop resolves the dragged\ntab by stable identity before applying its position. These results supplement the source-derived\ninteraction rules below; screenshots alone do not verify interactions.",
+    "keyCharacteristics": [
+      "Compact session navigation with restrained activity markers.",
+      "Tonal sidebar depth and one inset terminal surface.",
+      "Native UI typography beside configurable monospace output.",
+      "Session content and status derived from application state."
+    ],
+    "rules": [
+      {
+        "name": "The State Evidence Rule",
+        "body": "Color and status symbols represent observed application state, never\ninvented activity, sample project progress, or presumed CLI success.",
+        "section": "colors"
+      },
+      {
+        "name": "The Output Ownership Rule",
+        "body": "Terminal programs own their text, ANSI colors, wrapping, and content.\nDo not reconstruct their output as product cards or embed a built-in assistant transcript.",
+        "section": "typography"
+      }
+    ],
+    "dos": [
+      "Do preserve the binding terminal reference and the compact native hierarchy.",
+      "Do keep user titles, working directories, activity, and unread state tied to real application data.",
+      "Do preserve explicit groups and use the displayed group order for range selection.",
+      "Do keep terminal themes, font preferences, shell completion, and full-screen programs functional.",
+      "Do distinguish source-derived styling, visual fixtures, and live behavior verification."
+    ],
+    "donts": [
+      "Don't add built-in AI, account, billing, telemetry, or cloud controls to this local terminal.",
+      "Don't fabricate session activity or treat a quiet check as guaranteed command success.",
+      "Don't reproduce the operating system's recording badge or capture cursor halo as product UI.",
+      "Don't claim pixel identity, dark-mode visual verification, or untested platform coverage.",
+      "Don't replace terminal output with static product-owned conversation content."
+    ]
+  }
+}

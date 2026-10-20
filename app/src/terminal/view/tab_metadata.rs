@@ -5,6 +5,24 @@ use crate::context_chips::{ContextChipKind, git_line_changes_from_chips};
 use crate::terminal::TerminalView;
 
 impl TerminalView {
+    pub(crate) fn session_activity_age_minutes(&self) -> Option<i64> {
+        let model = self.model.lock();
+        let blocks = model.block_list();
+        let active = blocks.active_block();
+        let timestamp = if active.is_active_and_long_running() {
+            active.start_ts()
+        } else {
+            blocks
+                .last_non_hidden_block()
+                .and_then(|block| block.completed_ts())
+        }?;
+        Some(
+            chrono::Local::now()
+                .signed_duration_since(*timestamp)
+                .num_minutes(),
+        )
+    }
+
     fn prompt_chip_value(&self, chip_kind: &ContextChipKind, ctx: &AppContext) -> Option<String> {
         self.current_prompt
             .as_ref(ctx)

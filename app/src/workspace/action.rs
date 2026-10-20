@@ -360,6 +360,10 @@ pub enum WorkspaceAction {
         tab_index: usize,
         tab_position: RectF,
     },
+    CommitTabDrag {
+        pane_group_id: EntityId,
+        tab_position: RectF,
+    },
     DropTab,
     StartGroupDrag(TabGroupId),
     DragGroup {
@@ -1082,6 +1086,7 @@ impl WorkspaceAction {
             | CreateTeamAIPrompt
             | OpenInExplorer { .. }
             | DragTab { .. }
+            | CommitTabDrag { .. }
             | StartTabDrag
             | DragGroup { .. }
             | StartGroupDrag(_)

@@ -22,7 +22,6 @@ use crate::local_control::resolver::{reject_target_families, require_active_wind
 use crate::pane_group::{PaneGroup, PaneId};
 use crate::settings::{AISettings, CodeSettings};
 use crate::workspace::Workspace;
-use crate::workspace::tab_settings::TabSettings;
 
 #[derive(Serialize)]
 struct InstanceResponse<'a> {
@@ -359,10 +358,7 @@ pub(crate) fn surface_unavailable_reason(
             Some("the left panel has no available views")
         }
         SurfaceDestination::LeftPanel => None,
-        SurfaceDestination::VerticalTabs
-            if !FeatureFlag::VerticalTabs.is_enabled()
-                || !*TabSettings::as_ref(ctx).use_vertical_tabs.value() =>
-        {
+        SurfaceDestination::VerticalTabs if !crate::tab::uses_vertical_tabs(ctx) => {
             Some("vertical tabs are unavailable or disabled")
         }
         SurfaceDestination::VerticalTabs => None,

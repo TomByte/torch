@@ -162,7 +162,11 @@ define_settings_group!(TerminalSettings, settings: [
     },
     alt_screen_padding: AltScreenPadding {
         type: AltScreenPaddingMode,
-        default: AltScreenPaddingMode::default(),
+        default: if warp_core::channel::ChannelState::is_local_only() {
+            AltScreenPaddingMode::MatchBlocklist
+        } else {
+            AltScreenPaddingMode::default()
+        },
         supported_platforms: SupportedPlatforms::ALL,
         sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
         surface: settings::SettingSurfaces::GUI,

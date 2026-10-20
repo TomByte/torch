@@ -378,14 +378,16 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
     }
 
     if FeatureFlag::VerticalTabs.is_enabled() {
-        toggle_binding_pairs.push(ToggleSettingActionPair::new(
-            "vertical tab layout",
-            builder(SettingsAction::AppearancePageToggle(
-                AppearancePageAction::ToggleVerticalTabs,
-            )),
-            context,
-            flags::USE_VERTICAL_TABS_FLAG,
-        ));
+        if !ChannelState::is_local_only() {
+            toggle_binding_pairs.push(ToggleSettingActionPair::new(
+                "vertical tab layout",
+                builder(SettingsAction::AppearancePageToggle(
+                    AppearancePageAction::ToggleVerticalTabs,
+                )),
+                context,
+                flags::USE_VERTICAL_TABS_FLAG,
+            ));
+        }
         toggle_binding_pairs.push(ToggleSettingActionPair::new(
             "show vertical tabs panel in restored windows",
             builder(SettingsAction::AppearancePageToggle(
@@ -1515,7 +1517,9 @@ impl AppearanceSettingsPageView {
         tab_settings_widgets.push(Box::new(PreserveActiveTabColorWidget::default()));
 
         if FeatureFlag::VerticalTabs.is_enabled() {
-            tab_settings_widgets.push(Box::new(VerticalTabsWidget::default()));
+            if !ChannelState::is_local_only() {
+                tab_settings_widgets.push(Box::new(VerticalTabsWidget::default()));
+            }
             tab_settings_widgets.push(Box::new(
                 ShowVerticalTabPanelInRestoredWindowsWidget::default(),
             ));

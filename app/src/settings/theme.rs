@@ -16,7 +16,7 @@ define_settings_group!(ThemeSettings, settings: [
         type: ThemeKind,
         // Note that for new users, we now override this default value in SettingsInitializer
         // to set the default theme to Phenomenon.
-        default: ThemeKind::default(),
+        default: if warp_core::channel::ChannelState::is_local_only() { ThemeKind::Light } else { ThemeKind::default() },
         supported_platforms: SupportedPlatforms::ALL,
         sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
         surface: settings::SettingSurfaces::GUI,

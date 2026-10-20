@@ -91,7 +91,8 @@ impl ChannelState {
     }
 
     pub fn enable_debug_features() -> bool {
-        cfg!(debug_assertions) || matches!(Self::channel(), Channel::Local | Channel::Dev)
+        !Self::is_local_only()
+            && (cfg!(debug_assertions) || matches!(Self::channel(), Channel::Local | Channel::Dev))
     }
 
     pub fn override_server_root_url(url: impl Into<Cow<'static, str>>) -> Result<(), ParseError> {
