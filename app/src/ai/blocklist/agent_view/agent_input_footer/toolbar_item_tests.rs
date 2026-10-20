@@ -8,7 +8,10 @@ fn file_explorer_is_offered_in_the_agent_view() {
             .available_in()
             .is_available_for_agent_view()
     );
-    assert!(AgentToolbarItemKind::all_available().contains(&AgentToolbarItemKind::FileExplorer));
+    assert_eq!(
+        AgentToolbarItemKind::all_available().contains(&AgentToolbarItemKind::FileExplorer),
+        crate::code::editor_available()
+    );
 }
 
 /// ...but it is opt-in, so it must stay out of the default agent view layout.

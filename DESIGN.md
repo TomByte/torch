@@ -479,6 +479,12 @@ configured source remains available. Project configuration does not replace expl
 
 ### Command palette
 
+Torch has no built-in file editor, file search, project file tree, or code review surfaces.
+File links open in external applications; existing editor preferences cannot restore an internal
+editor. Saved file-editor panes are skipped during restoration. The shared text-input components
+remain for terminal commands, search, and renaming. CLI agents and ordinary shell completions remain
+available. Git change counts remain informational rather than opening a code review panel.
+
 Cmd+P opens local project, session, directory, and action navigation with results immediately
 visible. Configured projects lead the empty query, followed by session switching and creation
 options. Resume project NAME switches to an existing session whose working directory belongs to

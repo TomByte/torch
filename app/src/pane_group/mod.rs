@@ -1607,6 +1607,14 @@ impl PaneGroup {
         deferred_panes: &mut Vec<(PaneId, LeafSnapshot)>,
         pending_ambient_restorations: &mut Vec<(AmbientAgentTaskId, PaneId)>,
     ) -> anyhow::Result<(PaneData, InitialFocus)> {
+        if !crate::code::editor_available()
+            && matches!(
+                leaf.contents,
+                LeafContents::Code(_) | LeafContents::Notebook(_)
+            )
+        {
+            anyhow::bail!("File editor panes are not restored in Torch");
+        }
         let custom_vertical_tabs_title = leaf.custom_vertical_tabs_title.clone();
         let result = match leaf.contents {
             LeafContents::AIDocument(_) => {

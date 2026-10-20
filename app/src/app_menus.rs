@@ -308,11 +308,16 @@ fn make_new_edit_menu(ctx: &AppContext) -> Menu {
         updateable_custom_item_without_checkmark(CustomAction::AddCursorAbove, ctx),
         updateable_custom_item_without_checkmark(CustomAction::AddCursorBelow, ctx),
     ];
-    let group_4 = vec![
+    let mut group_4 = vec![
         updateable_custom_item_without_checkmark(CustomAction::Find, ctx),
-        updateable_custom_item_without_checkmark(CustomAction::GoToLine, ctx),
         updateable_custom_item_without_checkmark(CustomAction::FocusInput, ctx),
     ];
+    if crate::code::editor_available() {
+        group_4.insert(
+            1,
+            updateable_custom_item_without_checkmark(CustomAction::GoToLine, ctx),
+        );
+    }
     let group_5 = vec![
         MenuItem::Custom(CustomMenuItem::new(
             "Use Torch's Prompt",
@@ -392,9 +397,6 @@ fn make_new_view_menu(ctx: &AppContext) -> Menu {
         updateable_custom_item_without_checkmark(CustomAction::CommandPalette, ctx),
         updateable_custom_item_without_checkmark(CustomAction::NavigationPalette, ctx),
         updateable_custom_item_without_checkmark(CustomAction::LaunchConfigPalette, ctx),
-        updateable_custom_item_without_checkmark(CustomAction::FilesPalette, ctx),
-        updateable_custom_item_without_checkmark(CustomAction::ToggleProjectExplorer, ctx),
-        updateable_custom_item_without_checkmark(CustomAction::ToggleGlobalSearch, ctx),
         MenuItem::Separator,
         updateable_custom_item_without_checkmark(CustomAction::History, ctx),
         updateable_custom_item_without_checkmark(CustomAction::CommandSearch, ctx),
@@ -446,6 +448,16 @@ fn make_new_view_menu(ctx: &AppContext) -> Menu {
             None,
         )),
     ];
+    if crate::code::editor_available() {
+        items.splice(
+            3..3,
+            [
+                updateable_custom_item_without_checkmark(CustomAction::FilesPalette, ctx),
+                updateable_custom_item_without_checkmark(CustomAction::ToggleProjectExplorer, ctx),
+                updateable_custom_item_without_checkmark(CustomAction::ToggleGlobalSearch, ctx),
+            ],
+        );
+    }
     if !ChannelState::is_local_only() {
         items.insert(
             0,
@@ -1055,10 +1067,10 @@ fn make_new_elements_menu_items(ctx: &AppContext) -> Vec<MenuItem> {
             },
             Some(Keystroke::parse("cmd-t").expect("Valid keystroke")),
         )),
-        non_updateable_custom_item(CustomAction::NewFile, ctx),
     ];
 
     if !ChannelState::is_local_only() {
+        new_elements_menu.push(non_updateable_custom_item(CustomAction::NewFile, ctx));
         new_elements_menu.insert(
             2,
             MenuItem::Custom(CustomMenuItem::new(

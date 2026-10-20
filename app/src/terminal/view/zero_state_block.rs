@@ -230,7 +230,8 @@ impl View for TerminalViewZeroStateBlock {
             ),
         ];
 
-        if *TabSettings::as_ref(app).show_code_review_button
+        if crate::code::editor_available()
+            && *TabSettings::as_ref(app).show_code_review_button
             && let Some(keystroke) =
                 keybinding_name_to_keystroke(TOGGLE_RIGHT_PANEL_BINDING_NAME, app)
         {

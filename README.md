@@ -4,6 +4,7 @@ Torch is a local terminal based on Warp, maintained independently at [TomByte/to
 
 - Opens directly into your shell without an account or login screen.
 - Keeps tab completion, command history, ordinary autosuggestions, terminal blocks, and local settings.
+- Focuses on terminal and CLI-agent sessions: no built-in file editor, file explorer, or code review panels. Cmd+P searches projects, sessions, and terminal actions; file links open externally.
 - Disables built-in AI predictions, natural-language input detection, AI input hints, and account-backed services.
 - Removes account, billing, teams, cloud, and agent settings from navigation and search.
 - Uses its own `dev.tombyte.Torch` application identity and data directory (`~/.torch` for portable configuration on macOS).

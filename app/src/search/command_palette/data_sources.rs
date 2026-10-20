@@ -185,10 +185,12 @@ impl DataSourceStore {
                 );
             }
 
-            mixer.add_sync_source(
-                self.repo_data_source.clone(),
-                HashSet::from([QueryFilter::Repos]),
-            );
+            if !warp_core::channel::ChannelState::is_local_only() {
+                mixer.add_sync_source(
+                    self.repo_data_source.clone(),
+                    HashSet::from([QueryFilter::Repos]),
+                );
+            }
 
             ctx.notify();
         });

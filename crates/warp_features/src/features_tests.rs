@@ -62,3 +62,22 @@ fn torch_preserves_normal_completion_preferences() {
         assert!(!flag.is_enabled());
     }
 }
+
+#[cfg(all(feature = "local_only", feature = "test-util"))]
+#[test]
+fn torch_cannot_reenable_file_search_or_editor_features() {
+    for flag in [
+        FeatureFlag::CommandPaletteFileSearch,
+        FeatureFlag::FileTree,
+        FeatureFlag::GlobalSearch,
+        FeatureFlag::TabbedEditorView,
+        FeatureFlag::VimCodeEditor,
+        FeatureFlag::CodeFindReplace,
+        FeatureFlag::CodeReviewSaveChanges,
+        FeatureFlag::AutoOpenCodeReviewPane,
+        FeatureFlag::JupyterNotebookRendering,
+    ] {
+        let _enabled = flag.override_enabled(true);
+        assert!(!flag.is_enabled(), "{flag:?} must stay disabled in Torch");
+    }
+}

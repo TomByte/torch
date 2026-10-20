@@ -447,7 +447,7 @@ impl RightPanelView {
             "Toggle Maximize Code Review Panel",
             RightPanelAction::ToggleMaximize,
         )
-        .with_enabled(|| cfg!(feature = "local_fs"))
+        .with_enabled(|| cfg!(feature = "local_fs") && crate::code::editor_available())
         .with_context_predicate(id!("RightPanelView"))
         .with_custom_action(CustomAction::ToggleMaximizePane)]);
     }

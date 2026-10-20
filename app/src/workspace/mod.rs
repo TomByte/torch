@@ -98,7 +98,9 @@ pub fn init(app: &mut AppContext) {
     view::cloud_agent_capacity_modal::init(app);
     view::codex_modal::init(app);
     view::free_ai_removal_modal::init(app);
-    view::global_search::view::GlobalSearchView::init(app);
+    if code::editor_available() {
+        view::global_search::view::GlobalSearchView::init(app);
+    }
     view::right_panel::RightPanelView::init(app);
     header_toolbar_editor::init(app);
     view::conversation_list::view::register_conversation_list_view_bindings(app);
@@ -107,7 +109,9 @@ pub fn init(app: &mut AppContext) {
         WorkspaceAction::DispatchToSettingsTab(settings_action)
     });
     global_actions::init_global_actions(app);
-    notebooks::init(app);
+    if code::editor_available() {
+        notebooks::init(app);
+    }
     code::init(app);
     sync_inputs::init(app);
     lsp::init(app);
@@ -369,6 +373,7 @@ pub fn init(app: &mut AppContext) {
         BindingDescription::new("New File"),
         WorkspaceAction::NewCodeFile,
     )
+    .with_enabled(code::editor_available)
     .with_custom_action(CustomAction::NewFile)
     .with_context_predicate(id!("Workspace") & !id!("Workspace_ViewOnlySharedSession"))]);
 
@@ -766,6 +771,7 @@ pub fn init(app: &mut AppContext) {
             BindingDescription::new("Open Left Panel"),
             WorkspaceAction::ToggleLeftPanel,
         )
+        .with_enabled(code::editor_available)
         .with_context_predicate(id!("Workspace"))
         .with_custom_action(CustomAction::ToggleWarpDrive),
         EditableBinding::new(
@@ -774,7 +780,7 @@ pub fn init(app: &mut AppContext) {
                 .with_custom_description(bindings::MAC_MENUS_CONTEXT, "Toggle Code Review"),
             WorkspaceAction::ToggleRightPanel,
         )
-        .with_enabled(|| cfg!(feature = "local_fs"))
+        .with_enabled(|| cfg!(feature = "local_fs") && code::editor_available())
         .with_context_predicate(id!("Workspace"))
         .with_mac_key_binding("cmd-shift-+")
         .with_linux_or_windows_key_binding("ctrl-shift-+"),
@@ -793,6 +799,7 @@ pub fn init(app: &mut AppContext) {
             BindingDescription::new("Left Panel: Project explorer"),
             WorkspaceAction::ToggleProjectExplorer,
         )
+        .with_enabled(code::editor_available)
         .with_group(bindings::BindingGroup::Navigation.as_str())
         .with_context_predicate(id!("Workspace") & id!(flags::SHOW_PROJECT_EXPLORER))
         .with_custom_action(CustomAction::ToggleProjectExplorer),
@@ -819,6 +826,7 @@ pub fn init(app: &mut AppContext) {
             BindingDescription::new("Toggle hidden files in Project Explorer"),
             WorkspaceAction::ToggleHiddenFiles,
         )
+        .with_enabled(code::editor_available)
         .with_group(bindings::BindingGroup::Navigation.as_str())
         .with_context_predicate(id!("Workspace") & id!(flags::SHOW_PROJECT_EXPLORER))
         .with_mac_key_binding("cmd-shift->")
@@ -838,6 +846,7 @@ pub fn init(app: &mut AppContext) {
                 .with_custom_description(bindings::MAC_MENUS_CONTEXT, "Project Explorer"),
             WorkspaceAction::ToggleProjectExplorer,
         )
+        .with_enabled(code::editor_available)
         .with_context_predicate(id!("Workspace") & id!(flags::SHOW_PROJECT_EXPLORER)),
         EditableBinding::new(
             OPEN_GLOBAL_SEARCH_BINDING_NAME,
@@ -845,6 +854,7 @@ pub fn init(app: &mut AppContext) {
                 .with_custom_description(bindings::MAC_MENUS_CONTEXT, "Global Search"),
             WorkspaceAction::OpenGlobalSearch,
         )
+        .with_enabled(code::editor_available)
         .with_context_predicate(id!("Workspace") & id!(flags::SHOW_GLOBAL_SEARCH))
         .with_mac_key_binding("cmd-shift-F")
         // we use alt because we use ctrl-shift-f for find because ctrl-f needs to be reserved for the shell
@@ -1184,7 +1194,8 @@ pub fn init(app: &mut AppContext) {
             },
         )
         .with_context_predicate(id!("Workspace") & !id!("Workspace_ViewOnlySharedSession"))
-        .with_custom_action(CustomAction::FilesPalette),
+        .with_custom_action(CustomAction::FilesPalette)
+        .with_enabled(|| FeatureFlag::CommandPaletteFileSearch.is_enabled()),
         EditableBinding::new(
             "workspace:open_launch_config_save_modal",
             "Save new launch configuration",
@@ -1649,6 +1660,7 @@ fn add_open_setting_pages_as_editable_binding(app: &mut AppContext) {
             BindingDescription::new("Open Settings: Code"),
             WorkspaceAction::ShowSettingsPage(SettingsSection::CodeIndexing),
         )
+        .with_enabled(code::editor_available)
         .with_group(bindings::BindingGroup::Settings.as_str())
         .with_context_predicate(id!("Workspace")),
         EditableBinding::new(

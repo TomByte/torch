@@ -128,7 +128,15 @@ pub use icon::icon_from_file_path;
 #[cfg_attr(target_family = "wasm", path = "wasm.rs")]
 pub mod view;
 
+/// Torch provides terminal sessions; file editing is handled by external applications.
+pub fn editor_available() -> bool {
+    !warp_core::channel::ChannelState::is_local_only()
+}
+
 pub fn init(app: &mut AppContext) {
+    if !editor_available() {
+        return;
+    }
     self::view::init(app);
     self::file_tree::init(app);
     #[cfg(not(target_family = "wasm"))]

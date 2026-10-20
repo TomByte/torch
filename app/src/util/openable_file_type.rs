@@ -77,8 +77,10 @@ pub fn is_supported_code_file(_path: impl AsRef<Path>) -> bool {
 /// enabled.
 pub fn renders_in_warp_notebook_viewer(path: impl AsRef<Path>) -> bool {
     let path = path.as_ref();
-    is_markdown_file(path)
-        || (FeatureFlag::JupyterNotebookRendering.is_enabled() && is_jupyter_notebook_file(path))
+    crate::code::editor_available()
+        && (is_markdown_file(path)
+            || (FeatureFlag::JupyterNotebookRendering.is_enabled()
+                && is_jupyter_notebook_file(path)))
 }
 
 pub fn is_supported_image_file(path: impl AsRef<Path>) -> bool {
@@ -153,6 +155,9 @@ pub fn is_runnable_shell_script(_path: &Path) -> bool {
 /// Determines if a file can be opened in Warp and returns its type.
 /// Returns `None` if the file is binary and should not be opened.
 pub fn is_file_openable_in_warp(path: &Path) -> Option<OpenableFileType> {
+    if !crate::code::editor_available() {
+        return None;
+    }
     if is_binary_file(path) {
         return None;
     }
@@ -178,6 +183,9 @@ pub fn resolve_file_target_to_open_in_warp(
     settings: &EditorSettings,
     layout: Option<EditorLayout>,
 ) -> FileTarget {
+    if !crate::code::editor_available() {
+        return FileTarget::SystemGeneric;
+    }
     let openable_file_type = is_file_openable_in_warp(path);
     let is_markdown = matches!(openable_file_type, Some(OpenableFileType::Markdown));
     let layout = layout.unwrap_or(*settings.open_file_layout);
@@ -220,6 +228,13 @@ pub fn resolve_file_target_with_editor_choice(
     default_layout: EditorLayout,
     layout: Option<EditorLayout>,
 ) -> FileTarget {
+    if !crate::code::editor_available() {
+        return match editor_choice {
+            EditorChoice::EnvEditor => FileTarget::EnvEditor,
+            EditorChoice::ExternalEditor(editor) => FileTarget::ExternalEditor(editor),
+            EditorChoice::SystemDefault | EditorChoice::Warp => FileTarget::SystemGeneric,
+        };
+    }
     let is_openable_in_warp = is_file_openable_in_warp(path);
     let is_markdown = matches!(is_openable_in_warp, Some(OpenableFileType::Markdown));
     let layout = layout.unwrap_or(default_layout);

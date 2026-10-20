@@ -60,7 +60,7 @@ impl HeaderToolbarItemKind {
     pub fn is_supported(&self, app: &AppContext) -> bool {
         match self {
             Self::TabsPanel => crate::tab::uses_vertical_tabs(app),
-            Self::ToolsPanel => true,
+            Self::ToolsPanel => crate::code::editor_available(),
             Self::AgentManagement => {
                 let is_web_anonymous_user = AuthStateProvider::as_ref(app)
                     .get()
@@ -70,7 +70,7 @@ impl HeaderToolbarItemKind {
                     && FeatureFlag::AgentManagementView.is_enabled()
                     && !is_web_anonymous_user
             }
-            Self::CodeReview => cfg!(feature = "local_fs"),
+            Self::CodeReview => cfg!(feature = "local_fs") && crate::code::editor_available(),
             Self::NotificationsMailbox => FeatureFlag::HOANotifications.is_enabled(),
         }
     }

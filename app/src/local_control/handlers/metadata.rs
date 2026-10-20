@@ -304,6 +304,18 @@ pub(crate) fn surface_unavailable_reason(
     destination: SurfaceDestination,
     ctx: &AppContext,
 ) -> Option<&'static str> {
+    if !crate::code::editor_available()
+        && matches!(
+            destination,
+            SurfaceDestination::CodeReview
+                | SurfaceDestination::RightPanel
+                | SurfaceDestination::ProjectExplorer
+                | SurfaceDestination::GlobalSearch
+                | SurfaceDestination::LeftPanel
+        )
+    {
+        return Some("Torch provides terminal sessions without built-in code panels");
+    }
     match destination {
         SurfaceDestination::Settings
         | SurfaceDestination::CommandPalette

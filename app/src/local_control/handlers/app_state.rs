@@ -52,6 +52,23 @@ pub(crate) fn handle(
     target: &TargetSelector,
     ctx: &mut ModelContext<LocalControlBridge>,
 ) -> Result<serde_json::Value, ControlError> {
+    if !crate::code::editor_available()
+        && matches!(
+            action,
+            ActionKind::FileOpen
+                | ActionKind::SurfaceCodeReviewOpen
+                | ActionKind::SurfaceCodeReviewToggle
+                | ActionKind::SurfaceRightPanelToggle
+                | ActionKind::SurfaceProjectExplorerOpen
+                | ActionKind::SurfaceGlobalSearchOpen
+                | ActionKind::SurfaceLeftPanelToggle
+        )
+    {
+        return Err(ControlError::new(
+            ErrorCode::UnsupportedAction,
+            "Torch supports terminal sessions, not built-in file editing or code panels",
+        ));
+    }
     match action {
         ActionKind::AppFocus | ActionKind::WindowFocus => {
             focus_window(instance_id, action, target, ctx)

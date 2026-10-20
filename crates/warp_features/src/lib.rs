@@ -1151,6 +1151,21 @@ impl FeatureFlag {
                     | Self::HOAOnboardingFlow
                     | Self::AccountFirstOnboarding
                     | Self::OpenWarpLaunchModal
+                    | Self::CodeFindReplace
+                    | Self::CommandPaletteFileSearch
+                    | Self::TabbedEditorView
+                    | Self::VimCodeEditor
+                    | Self::FileTree
+                    | Self::GlobalSearch
+                    | Self::CodeReviewSaveChanges
+                    | Self::CodeReviewFind
+                    | Self::AutoOpenCodeReviewPane
+                    | Self::InlineCodeReview
+                    | Self::EmbeddedCodeReviewComments
+                    | Self::HoaCodeReview
+                    | Self::GitOperationsInCodeReview
+                    | Self::RemoteCodeReview
+                    | Self::JupyterNotebookRendering
             ) {
                 return false;
             }

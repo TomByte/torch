@@ -476,21 +476,23 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
         ),
     );
 
-    toggle_binding_pairs.push(
-        ToggleSettingActionPair::new(
-            "code as default editor",
-            builder(SettingsAction::FeaturesPageToggle(
-                FeaturesPageAction::ToggleCodeAsDefaultEditor,
-            )),
-            context,
-            flags::CODE_AS_DEFAULT_EDITOR,
-        )
-        .is_supported_on_current_platform(
-            CodeSettings::as_ref(app)
-                .code_as_default_editor
-                .is_supported_on_current_platform(),
-        ),
-    );
+    if crate::code::editor_available() {
+        toggle_binding_pairs.push(
+            ToggleSettingActionPair::new(
+                "code as default editor",
+                builder(SettingsAction::FeaturesPageToggle(
+                    FeaturesPageAction::ToggleCodeAsDefaultEditor,
+                )),
+                context,
+                flags::CODE_AS_DEFAULT_EDITOR,
+            )
+            .is_supported_on_current_platform(
+                CodeSettings::as_ref(app)
+                    .code_as_default_editor
+                    .is_supported_on_current_platform(),
+            ),
+        );
+    }
 
     toggle_binding_pairs.push(
         ToggleSettingActionPair::new(

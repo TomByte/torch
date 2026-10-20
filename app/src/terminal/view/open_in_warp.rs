@@ -126,6 +126,9 @@ impl TerminalView {
         session: Arc<Session>,
         ctx: &mut ViewContext<Self>,
     ) {
+        if !crate::code::editor_available() {
+            return;
+        }
         if self.open_in_warp_banner_type_dismissed(&openable_path, ctx) {
             return;
         }

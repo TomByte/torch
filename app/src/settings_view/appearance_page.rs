@@ -1401,9 +1401,10 @@ impl AppearanceSettingsPageView {
             window_settings_widgets.push(Box::new(ZoomLevelWidget));
         }
 
-        if window_settings
-            .left_panel_visibility_across_tabs
-            .is_supported_on_current_platform()
+        if crate::code::editor_available()
+            && window_settings
+                .left_panel_visibility_across_tabs
+                .is_supported_on_current_platform()
         {
             window_settings_widgets.push(Box::new(ToolsPanelStateScopeWidget::default()));
         }
@@ -1422,7 +1423,7 @@ impl AppearanceSettingsPageView {
         // of the corresponding tab (not on transient login/AI state), so the
         // section stays stable regardless of when the page is built.
         let mut tools_panel_widgets: Vec<Box<dyn SettingsWidget<View = Self>>> = vec![];
-        if cfg!(feature = "local_fs") {
+        if cfg!(feature = "local_fs") && crate::code::editor_available() {
             tools_panel_widgets.push(Box::new(ToolsPanelProjectExplorerWidget::default()));
         }
         if FeatureFlag::AgentViewConversationListView.is_enabled() {
@@ -1431,7 +1432,9 @@ impl AppearanceSettingsPageView {
         if cfg!(feature = "local_fs") && FeatureFlag::GlobalSearch.is_enabled() {
             tools_panel_widgets.push(Box::new(ToolsPanelGlobalSearchWidget::default()));
         }
-        tools_panel_widgets.push(Box::new(ToolsPanelWarpDriveWidget::default()));
+        if crate::code::editor_available() {
+            tools_panel_widgets.push(Box::new(ToolsPanelWarpDriveWidget::default()));
+        }
         if !tools_panel_widgets.is_empty() {
             categories.push(Category::new("Tools panel", tools_panel_widgets));
         }

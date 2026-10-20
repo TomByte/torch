@@ -197,7 +197,9 @@ impl AgentToolbarItemKind {
             // `Workspace::compute_left_panel_views` and the `SHOW_PROJECT_EXPLORER`
             // keybinding predicate.
             Self::FileExplorer => {
-                cfg!(feature = "local_fs") && *CodeSettings::as_ref(app).show_project_explorer
+                cfg!(feature = "local_fs")
+                    && crate::code::editor_available()
+                    && *CodeSettings::as_ref(app).show_project_explorer
             }
             _ => true,
         }
@@ -268,9 +270,10 @@ impl AgentToolbarItemKind {
             Self::FileAttach,
             Self::ContextWindowUsage,
             Self::UsageSummary,
-            // Opt-in only: deliberately absent from `default_left`/`default_right`.
-            Self::FileExplorer,
         ]);
+        if crate::code::editor_available() {
+            items.push(Self::FileExplorer);
+        }
         if FeatureFlag::FastForwardAutoexecuteButton.is_enabled() {
             items.push(Self::FastForwardToggle);
         }
@@ -300,7 +303,9 @@ impl AgentToolbarItemKind {
         {
             items.push(Self::ShareSession);
         }
-        items.push(Self::FileExplorer);
+        if crate::code::editor_available() {
+            items.push(Self::FileExplorer);
+        }
         if FeatureFlag::CLIAgentRichInput.is_enabled() {
             items.push(Self::RichInput);
         }

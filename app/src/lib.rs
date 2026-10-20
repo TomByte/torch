@@ -2135,7 +2135,9 @@ pub(crate) fn initialize_app(
     app_services::init(ctx);
     // // TODO: Temporarily disabling keybindings for WASM builds. Will be implemented in future WASM support.
     #[cfg(not(target_family = "wasm"))]
-    code::editor::find::view::init(ctx);
+    if code::editor_available() {
+        code::editor::find::view::init(ctx);
+    }
     workspace::init(ctx);
     pane_group::init(ctx);
     terminal::init(ctx);

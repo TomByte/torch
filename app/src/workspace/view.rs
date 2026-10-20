@@ -18,6 +18,9 @@ pub(crate) mod orchestration_launch_modal;
 pub(crate) mod right_panel;
 mod startup_directory;
 mod tab_grouping;
+#[cfg(all(test, feature = "local_only"))]
+#[path = "terminal_only_tests.rs"]
+mod terminal_only_tests;
 #[cfg(test)]
 #[path = "view_tests.rs"]
 pub(crate) mod tests;
@@ -4390,6 +4393,10 @@ impl Workspace {
         left_panel_snapshot: &LeftPanelSnapshot,
         ctx: &mut ViewContext<Self>,
     ) {
+        if !crate::code::editor_available() {
+            return;
+        }
+
         pane_group.update(ctx, |pg, ctx| {
             pg.set_left_panel_open(true, ctx);
         });
@@ -4424,6 +4431,10 @@ impl Workspace {
         right_panel_snapshot: &RightPanelSnapshot,
         ctx: &mut ViewContext<Self>,
     ) {
+        if !crate::code::editor_available() {
+            return;
+        }
+
         pane_group.update(ctx, |pg, _| {
             pg.right_panel_open = true;
             pg.is_right_panel_maximized = right_panel_snapshot.is_maximized;
@@ -6650,6 +6661,16 @@ impl Workspace {
             );
             return;
         }
+
+        let target = if !crate::code::editor_available()
+            && matches!(
+                target,
+                FileTarget::CodeEditor(_) | FileTarget::MarkdownViewer(_)
+            ) {
+            FileTarget::SystemGeneric
+        } else {
+            target
+        };
 
         match target {
             FileTarget::MarkdownViewer(layout) => {
@@ -8897,6 +8918,10 @@ impl Workspace {
         code_source: Option<CodeSource>,
         ctx: &mut ViewContext<Self>,
     ) {
+        if !crate::code::editor_available() {
+            return;
+        }
+
         let existing_file_pane = {
             let pane_group = self.active_tab_pane_group();
             pane_group
@@ -9031,6 +9056,16 @@ impl Workspace {
         additional_paths: &[PathBuf],
         ctx: &mut ViewContext<Self>,
     ) {
+        if !crate::code::editor_available() {
+            if let Some(path) = source
+                .location()
+                .and_then(|location| location.to_local_path().map(Path::to_path_buf))
+            {
+                ctx.open_file_path(&path);
+            }
+            return;
+        }
+
         send_telemetry_from_ctx!(
             TelemetryEvent::CodePaneOpened {
                 source: source.clone(),
@@ -9202,6 +9237,10 @@ impl Workspace {
 
     /// Open a code diff view by temporarily replacing the current pane or in a new tab.
     fn open_code_diff(&mut self, view: ViewHandle<CodeDiffView>, ctx: &mut ViewContext<Self>) {
+        if !crate::code::editor_available() {
+            return;
+        }
+
         let focused_pane_id = self
             .active_tab_pane_group()
             .as_ref(ctx)
@@ -9639,6 +9678,10 @@ impl Workspace {
     }
 
     fn open_left_panel(&mut self, ctx: &mut ViewContext<Self>) {
+        if !crate::code::editor_available() {
+            return;
+        }
+
         self.left_panel_open = true;
 
         let active_pane_group = self.active_tab_pane_group().clone();
@@ -9705,6 +9748,10 @@ impl Workspace {
     }
 
     fn toggle_left_panel(&mut self, ctx: &mut ViewContext<Self>) {
+        if !crate::code::editor_available() {
+            return;
+        }
+
         let active_pane_group = self.active_tab_pane_group().clone();
 
         let was_open = active_pane_group.read(ctx, |pane_group, _| pane_group.left_panel_open);
@@ -9933,6 +9980,10 @@ impl Workspace {
         pane_group_handle: &ViewHandle<PaneGroup>,
         ctx: &mut ViewContext<Self>,
     ) {
+        if !crate::code::editor_available() {
+            return;
+        }
+
         let target_open_state =
             pane_group_handle.read(ctx, |pane_group, _| !pane_group.right_panel_open);
 
@@ -9980,6 +10031,10 @@ impl Workspace {
         cli_agent: Option<crate::terminal::CLIAgent>,
         ctx: &mut ViewContext<Self>,
     ) {
+        if !crate::code::editor_available() {
+            return;
+        }
+
         if pane_group_handle.as_ref(ctx).right_panel_open {
             if let Some(repo_path) = &context.repo_path {
                 self.right_panel_view.update(ctx, |right_panel, ctx| {
@@ -13372,6 +13427,12 @@ impl Workspace {
         file_path: Option<PathBuf>,
         ctx: &mut ViewContext<Self>,
     ) {
+        if !crate::code::editor_available() {
+            if let Some(path) = file_path {
+                ctx.open_file_path(&path);
+            }
+            return;
+        }
         let panes_layout = PanesLayout::Snapshot(Box::new(PaneNodeSnapshot::Leaf(LeafSnapshot {
             is_focused: true,
             custom_vertical_tabs_title: None,
@@ -13434,6 +13495,11 @@ impl Workspace {
         line_and_column: Option<LineAndColumnArg>,
         ctx: &mut ViewContext<Self>,
     ) {
+        if !crate::code::editor_available() {
+            ctx.open_file_path(&file_path);
+            return;
+        }
+
         let source = CodeSource::Link {
             path: file_path,
             range_start: line_and_column,
@@ -13448,6 +13514,10 @@ impl Workspace {
     }
 
     pub fn add_tab_for_new_code_file(&mut self, ctx: &mut ViewContext<Self>) {
+        if !crate::code::editor_available() {
+            return;
+        }
+
         #[cfg(feature = "local_fs")]
         {
             let default_directory = self
@@ -14858,6 +14928,11 @@ impl Workspace {
     }
 
     fn open_files_palette(&mut self, ctx: &mut ViewContext<Self>) {
+        if !crate::code::editor_available() {
+            self.open_command_palette(ctx);
+            return;
+        }
+
         self.tips_completed.update(ctx, |tips_completed, ctx| {
             mark_feature_used_and_write_to_user_defaults(
                 Tip::Action(TipAction::CommandPalette),
@@ -24184,6 +24259,10 @@ impl Workspace {
     }
 
     fn open_left_panel_view(&mut self, action: &LeftPanelAction, ctx: &mut ViewContext<Self>) {
+        if !crate::code::editor_available() {
+            return;
+        }
+
         if !self.active_tab_pane_group().as_ref(ctx).left_panel_open {
             self.toggle_left_panel(ctx);
         }
@@ -24216,7 +24295,10 @@ impl Workspace {
     /// Computes the list of available left panel views based on current AI settings and feature flags.
     fn compute_left_panel_views(ctx: &AppContext) -> Vec<ToolPanelView> {
         let mut views = vec![];
-        if cfg!(feature = "local_fs") && *CodeSettings::as_ref(ctx).show_project_explorer.value() {
+        if cfg!(feature = "local_fs")
+            && crate::code::editor_available()
+            && *CodeSettings::as_ref(ctx).show_project_explorer.value()
+        {
             views.push(ToolPanelView::ProjectExplorer);
         }
         if FeatureFlag::AgentViewConversationListView.is_enabled()
@@ -24319,6 +24401,14 @@ impl TypedActionView for Workspace {
                     | LogOut
                     | ShowUpgrade
                     | ToggleResourceCenter
+                    | NewCodeFile
+                    | ToggleHiddenFiles
+                    | ToggleProjectExplorer
+                    | OpenProjectExplorer
+                    | ToggleGlobalSearch
+                    | OpenGlobalSearch
+                    | ToggleRightPanel
+                    | OpenCodeReviewPanel(_)
             )
         {
             return;
@@ -26999,10 +27089,10 @@ impl View for Workspace {
             context.set.insert(flags::SHOW_CONVERSATION_HISTORY);
         }
 
-        if *CodeSettings::as_ref(app).show_project_explorer {
+        if crate::code::editor_available() && *CodeSettings::as_ref(app).show_project_explorer {
             context.set.insert(flags::SHOW_PROJECT_EXPLORER);
         }
-        if *CodeSettings::as_ref(app).show_global_search {
+        if crate::code::editor_available() && *CodeSettings::as_ref(app).show_global_search {
             context.set.insert(flags::SHOW_GLOBAL_SEARCH);
         }
         if *CodeSettings::as_ref(app).show_hidden_files {
