@@ -783,7 +783,7 @@ lazy_static! {
 
     /// The padding between the left of the element and where the grid contents (either via the
     /// `BlockList` or the `AltScreen`) should be rendered.
-    pub static ref PADDING_LEFT: f32 = if ChannelState::is_local_only() { 32. } else { 16. };
+    pub static ref PADDING_LEFT: f32 = 16.;
 }
 
 /// Interval at which the live command duration counter repaints.

@@ -1696,8 +1696,9 @@ pub(in crate::workspace::view) fn render(
     let header = SavePosition::new(
         ConstrainedBox::new(
             Container::new(header.finish())
+                // Aligns the active title with the terminal's first column.
                 .with_padding_left(if workspace.vertical_tabs_panel_open {
-                    32.
+                    *crate::terminal::view::PADDING_LEFT
                 } else {
                     80.
                 })
