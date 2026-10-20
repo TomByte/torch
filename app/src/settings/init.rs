@@ -63,6 +63,7 @@ pub fn register_all_settings(ctx: &mut AppContext) {
     KeysSettings::register(ctx);
     FontSettings::register(ctx);
     TabSettings::register(ctx);
+    super::ProjectsSettings::register(ctx);
     WindowSettings::register(ctx);
     SafeModeSettings::register(ctx);
     TerminalSettings::register(ctx);
@@ -135,6 +136,7 @@ pub fn init(
         migrate_native_settings_to_settings_file(ctx);
     }
     stage_legacy_background_backdrop(ctx);
+    ctx.add_singleton_model(super::ProjectCatalog::new);
 
     let use_thin_strokes = *FontSettings::as_ref(ctx).use_thin_strokes;
 

@@ -22,6 +22,7 @@ pub enum CommandPaletteItemAction {
         directory: Option<std::path::PathBuf>,
     },
     ChooseLocalDirectory,
+    ManageLocalProjects,
     /// A binding result was clicked.
     AcceptBinding {
         binding: Arc<CommandBinding>,
@@ -93,6 +94,7 @@ impl CommandPaletteItemAction {
     pub fn to_summary(&self) -> ItemSummary {
         match self {
             CommandPaletteItemAction::NewLocalSession { .. }
+            | CommandPaletteItemAction::ManageLocalProjects
             | CommandPaletteItemAction::ChooseLocalDirectory => ItemSummary::NoOp,
             CommandPaletteItemAction::AcceptBinding { binding } => ItemSummary::Action {
                 binding_id: binding.id,

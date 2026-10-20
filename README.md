@@ -15,9 +15,11 @@ Torch uses a compact session sidebar and an inset terminal pane, with a light th
 
 Choose **Dark** in **Settings → Appearance → Current theme** for the charcoal terminal and sidebar. Enable **Sync with OS** to switch automatically between your chosen light and dark themes. The built-in Dark theme includes coordinated terminal colors; custom themes retain their own terminal palette.
 
-Sessions group automatically by their working folder. Right-click a session and choose **New group with tab** to place it in a manual group; manual groups take precedence over folders. Double-click a session or manual group to rename it, and click a manual group heading to collapse or expand it. The sidebar toggle and plus button sit beside the native window controls.
+Projects start empty. In **Settings → Projects**, use **Add project** for an individual folder or **Add parent folder** to discover its immediate child directories as projects. Settings are saved locally without cloud sync. Removing a configured folder leaves its files and open sessions intact.
 
-Press **Cmd+P** to switch sessions, choose **New session** in the current folder, or choose **New session in directory…** to pick a folder. Type a session name to search, or enter an existing absolute path, `~`, or `~/project` to open a new terminal there.
+Press **Cmd+P** to find projects, sessions, and actions. Projects appear first: **Resume project NAME** switches to an existing session in that project, including sessions in subdirectories or reached through a symlink; **Open project NAME** starts one if none is open. Choose **New session in NAME** for an additional terminal, or **Manage projects** to open Settings. **New session** uses the current folder; **New session in directory…** opens a folder chooser. An existing absolute path, `~`, or `~/project` opens a new terminal directly in that directory.
+
+Sessions group automatically by their matching project root, falling back to their working folder. Right-click a session and choose **New group with tab** to place it in a manual group; manual groups take precedence. Double-click a session or manual group to rename it, and click a manual group heading to collapse or expand it. The sidebar toggle and plus button sit beside the native window controls.
 
 Activity ages and status indicators come from actual terminal state. Rich Claude/Codex status appears when the CLI supplies supported status events; ordinary commands display their running or idle state. Torch does not manufacture agent activity.
 

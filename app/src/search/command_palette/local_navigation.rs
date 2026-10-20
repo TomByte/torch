@@ -1,5 +1,5 @@
 //! Local session navigation, available immediately when opening Torch's palette.
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
 use fuzzy_match::match_indices_case_insensitive;
@@ -7,7 +7,8 @@ use ordered_float::OrderedFloat;
 use warp_core::ui::color::blend::Blend;
 use warp_core::ui::theme::Fill;
 use warpui::elements::{Container, Flex, ParentElement, Text};
-use warpui::{AppContext, Element, Entity, SingletonEntity};
+use warpui::text_layout::ClipConfig;
+use warpui::{AppContext, Element, Entity, EntityId, SingletonEntity};
 
 use crate::appearance::Appearance;
 use crate::search::command_palette::mixer::CommandPaletteItemAction;
@@ -17,15 +18,29 @@ use crate::search::item::SearchItem;
 use crate::search::mixer::{DataSourceRunErrorWrapper, SyncDataSource};
 use crate::search::result_renderer::ItemHighlightState;
 use crate::session_management::TabNavigationData;
+use crate::settings::{LocalProject, expand_project_path, project_for_directory};
 use crate::ui_components::icons::Icon;
 
 #[derive(Default)]
 pub struct DataSource {
     tabs: Vec<TabNavigationData>,
+    projects: Vec<LocalProject>,
+    session_directories: HashMap<EntityId, PathBuf>,
 }
 
 impl DataSource {
+    pub fn set_projects(&mut self, projects: Vec<LocalProject>) {
+        self.projects = projects;
+    }
+
     pub fn set_tabs(&mut self, tabs: Vec<TabNavigationData>) {
+        self.session_directories = tabs
+            .iter()
+            .filter_map(|tab| {
+                let path = expand_project_path(std::path::Path::new(tab.subtitle.as_ref()?));
+                Some((tab.pane_group_id, path.canonicalize().unwrap_or(path)))
+            })
+            .collect();
         self.tabs = tabs;
     }
 }
@@ -99,7 +114,50 @@ impl DataSource {
             });
         }
         if allows(QueryFilter::Repos) {
-            let mut seen = HashSet::new();
+            for (rank, project) in self.projects.iter().enumerate() {
+                let open = self.tabs.iter().find(|tab| {
+                    self.session_directories
+                        .get(&tab.pane_group_id)
+                        .is_some_and(|directory| {
+                            project_for_directory(&self.projects, directory) == Some(project)
+                        })
+                });
+                let action = open
+                    .map(|tab| CommandPaletteItemAction::NavigateToTab {
+                        pane_group_id: tab.pane_group_id,
+                        window_id: tab.window_id,
+                    })
+                    .unwrap_or_else(|| CommandPaletteItemAction::NewLocalSession {
+                        directory: Some(project.path.clone()),
+                    });
+                items.push(Item {
+                    title: format!(
+                        "{} project {}",
+                        if open.is_some() { "Resume" } else { "Open" },
+                        project.name
+                    ),
+                    detail: project.path.display().to_string(),
+                    icon: Icon::Folder,
+                    tier: 3,
+                    score: 2000. - rank as f64,
+                    action,
+                });
+                items.push(Item {
+                    title: format!("New session in {}", project.name),
+                    detail: project.path.display().to_string(),
+                    icon: Icon::TerminalInput,
+                    tier: 1,
+                    score: 1.,
+                    action: CommandPaletteItemAction::NewLocalSession {
+                        directory: Some(project.path.clone()),
+                    },
+                });
+            }
+            let mut seen: HashSet<PathBuf> = self
+                .projects
+                .iter()
+                .map(|project| project.path.clone())
+                .collect();
             let paths = self
                 .tabs
                 .iter()
@@ -127,13 +185,23 @@ impl DataSource {
                 });
             }
         }
+        if allows(QueryFilter::Actions) {
+            items.push(Item {
+                title: "Manage projects".into(),
+                detail: "Add project folders in Settings".into(),
+                icon: Icon::Folder,
+                tier: 1,
+                score: 0.,
+                action: CommandPaletteItemAction::ManageLocalProjects,
+            });
+        }
         let typed_path = directory_path(&query.text);
         items.into_iter().filter_map(|mut item| {
-            let is_typed_directory = matches!(&item.action, CommandPaletteItemAction::NewLocalSession { directory: Some(path) } if Some(path) == typed_path.as_ref());
+            let is_typed_directory = item.title.starts_with("New session in ") && matches!(&item.action, CommandPaletteItemAction::NewLocalSession { directory: Some(path) } if Some(path) == typed_path.as_ref());
             if is_typed_directory { item.tier = 5; }
             if !query.text.trim().is_empty() && !is_typed_directory {
                 let matched = match_indices_case_insensitive(&format!("{} {}", item.title, item.detail), query.text.trim())?;
-                item.score = if item.title.eq_ignore_ascii_case(query.text.trim()) {
+                item.score = if item.title.eq_ignore_ascii_case(query.text.trim()) || self.projects.iter().any(|project| project.name.eq_ignore_ascii_case(query.text.trim()) && item.detail == project.path.display().to_string() && (item.title.starts_with("Open project ") || item.title.starts_with("Resume project "))) {
                     item.tier = 4;
                     f64::MAX
                 } else { matched.score as f64 };
@@ -197,6 +265,7 @@ impl SearchItem for Item {
             .with_child(
                 Container::new(
                     Text::new_inline(self.detail.clone(), appearance.ui_font_family(), 12.)
+                        .with_clip(ClipConfig::start())
                         .with_color(
                             appearance
                                 .theme()

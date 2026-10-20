@@ -336,10 +336,14 @@ unrelated folder group.
 
 ### Group headings
 
-Explicit manual groups take precedence over automatic working-directory groups. Automatic group
-keys use the full working-directory string with trailing separators removed; labels use the last
-path component. Distinct paths may therefore share a short label without being merged. Empty and
-home-only paths use Other. Groups appear in first-occurrence order in the workspace tab sequence,
+Explicit manual groups take precedence over project-root and working-directory groups. A local
+session inside a configured project groups under that project's root, including subdirectories and
+symlink aliases. If registered roots are nested, the deepest matching root wins. Canonical paths
+keep aliases together while distinct roots with the same short name remain separate projects.
+
+Sessions outside configured projects retain working-directory grouping: keys use the full directory
+string with trailing separators removed, and labels use its last component. Empty and home-only
+fallback paths use Other. Groups appear in first-occurrence order in the workspace tab sequence,
 and members retain their order within that sequence. Status never sorts sessions.
 
 Manual headings support collapse, rename, and a group context menu. Automatically derived headings
@@ -358,21 +362,39 @@ uses a filled check, and errors use an amber alert. Cancelled, waiting, or absen
 muted check; this quiet check must not be interpreted as proof of successful execution. When both
 status and activity age are absent, the status slot is empty. Unread activity makes the title bold.
 
+### Projects settings
+
+Settings → Projects starts with no configured project or parent folders. Do not seed locations such
+as `~/GIT` or `~/Sessions`. Add project registers one folder; Add parent folder discovers only its
+immediate child directories, without recursive scanning. The catalog refreshes when Cmd+P or the
+Projects page opens and when configuration changes. Settings are persisted locally without cloud
+sync; unavailable configured folders are labelled in the page.
+
+Use the existing native Settings controls and theme styling. Removing an entry removes that
+configured source, without deleting files or closing terminals. A project still supplied by another
+configured source remains available. Project configuration does not replace explicit manual groups.
+
 ### Command palette
 
-Cmd+P opens local session, directory, and action navigation with results immediately visible. An
-empty query lists open terminal sessions first, putting other sessions ahead of the current one;
-New session and New session in directory… follow, then distinct valid directories from open
-sessions. Session lookup includes other windows. New session starts in the current working folder,
-falling back to the home folder if needed; New session in directory… opens the native folder chooser.
+Cmd+P opens local project, session, directory, and action navigation with results immediately
+visible. Configured projects lead the empty query, followed by session switching and creation
+options. Resume project NAME switches to an existing session whose working directory belongs to
+that project; Open project NAME starts a terminal at its root if none exists. Matching includes
+subdirectories, canonical symlink aliases, and sessions in other windows. New session in NAME
+explicitly creates an additional terminal at the project root. Manage projects opens Settings.
 
-Search matches titles and details case-insensitively and supports fuzzy session names. Exact local
-action titles rank above fuzzy session matches. A valid typed absolute path, `~`, or `~/…` ranks
-highest and opens a new terminal directly in that directory. Relative and nonexistent paths do not
-produce that directory action. Paths are passed as filesystem paths, never interpolated into shell
-commands. Existing manual groups and shell Tab completion keep their own behavior.
+Session switching puts other sessions ahead of the current one. New session starts in the current
+working folder, falling back to home if needed; New session in directory… opens the native folder
+chooser. Known valid directories from open sessions remain available even without configured
+projects. Project entries retain full paths as secondary text to distinguish duplicate short names.
 
-The placeholder reads “Search sessions, directories, and actions”. It starts from the active theme
+Search matches titles and details case-insensitively and supports fuzzy session names. Exact project
+names and local action titles rank above fuzzy session matches. A valid typed absolute path, `~`, or
+`~/…` ranks highest and explicitly opens a new terminal in that directory. Relative and nonexistent
+paths do not produce that directory action. Paths are passed as filesystem paths, never interpolated
+into shell commands. Existing manual groups and shell Tab completion keep their own behavior.
+
+The placeholder reads “Search projects, sessions, and actions”. It starts from the active theme
 foreground at 65% opacity and is contrast-adjusted to at least 4.5:1 against the actual command
 surface. Its colors update with appearance changes. Local result icons likewise enforce non-text
 contrast against the actual selected, hovered, or default fill. Result titles use body typography;

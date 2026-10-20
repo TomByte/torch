@@ -18,6 +18,7 @@ use mcp_servers_page::MCPServersSettingsPageView;
 use nav::{SettingsNavItem, SettingsUmbrella};
 use pathfinder_geometry::vector::Vector2F;
 use privacy_page::{PrivacyPageView, PrivacyPageViewEvent};
+use projects_page::ProjectsPageView;
 use referrals_page::{ReferralsPageEvent, ReferralsPageView};
 use scripting_page::ScriptingSettingsPageView;
 use settings_file_footer::{SettingsFooterKind, SettingsFooterMouseStates, render_footer};
@@ -109,6 +110,7 @@ mod platform;
 mod platform_page;
 mod privacy;
 mod privacy_page;
+mod projects_page;
 mod referrals_page;
 mod remove_custom_endpoint_confirmation_dialog;
 mod scripting_page;
@@ -320,6 +322,7 @@ pub enum SettingsSection {
     Privacy,
     Referrals,
     Scripting,
+    Projects,
     SharedBlocks,
     Teams,
     WarpDrive,
@@ -374,6 +377,7 @@ impl SettingsSection {
                 | Self::Privacy
                 | Self::About
                 | Self::Scripting
+                | Self::Projects
         )
     }
 
@@ -401,6 +405,7 @@ impl SettingsSection {
             Self::Privacy => "Privacy",
             Self::Referrals => "Referrals",
             Self::Scripting => "Scripting",
+            Self::Projects => "Projects",
             Self::SharedBlocks => "Shared blocks",
             Self::Teams => "Teams",
             Self::WarpDrive => "Torch Drive",
@@ -437,6 +442,7 @@ impl SettingsSection {
             "Privacy" => Self::Privacy,
             "Referrals" => Self::Referrals,
             "Scripting" => Self::Scripting,
+            "Projects" => Self::Projects,
             "Shared blocks" => Self::SharedBlocks,
             "Teams" => Self::Teams,
             "Torch Drive" | "Warp Drive" | "WarpDrive" => Self::WarpDrive,
@@ -1164,6 +1170,7 @@ macro_rules! update_page {
             SettingsPageViewHandle::Privacy(handle) => $ctx.update_view(handle, $update),
             SettingsPageViewHandle::Referrals(handle) => $ctx.update_view(handle, $update),
             SettingsPageViewHandle::Scripting(handle) => $ctx.update_view(handle, $update),
+            SettingsPageViewHandle::Projects(handle) => $ctx.update_view(handle, $update),
             SettingsPageViewHandle::WarpAgent(handle) => $ctx.update_view(handle, $update),
             SettingsPageViewHandle::AgentProfiles(handle) => $ctx.update_view(handle, $update),
             SettingsPageViewHandle::Knowledge(handle) => $ctx.update_view(handle, $update),
@@ -1469,6 +1476,10 @@ impl SettingsView {
         }
 
         if ChannelState::is_local_only() {
+            settings_pages.push(SettingsPage::new(
+                ctx.add_typed_action_view(ProjectsPageView::new),
+            ));
+            nav_items.insert(0, SettingsNavItem::Page(SettingsSection::Projects));
             settings_pages.retain(|page| page.section.is_available_locally());
             nav_items.retain(|item| match item {
                 SettingsNavItem::Page(section) => section.is_available_locally(),
@@ -2153,6 +2164,7 @@ impl SettingsView {
             SettingsPageViewHandle::Warpify(v) => v.as_ref(app).should_render(app),
             SettingsPageViewHandle::Referrals(v) => v.as_ref(app).should_render(app),
             SettingsPageViewHandle::Scripting(v) => v.as_ref(app).should_render(app),
+            SettingsPageViewHandle::Projects(v) => v.as_ref(app).should_render(app),
             SettingsPageViewHandle::WarpAgent(v) => v.as_ref(app).should_render(app),
             SettingsPageViewHandle::AgentProfiles(v) => v.as_ref(app).should_render(app),
             SettingsPageViewHandle::Knowledge(v) => v.as_ref(app).should_render(app),

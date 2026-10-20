@@ -85,6 +85,17 @@ impl DataSourceStore {
         });
     }
 
+    pub fn set_local_projects(
+        &self,
+        projects: Vec<crate::settings::LocalProject>,
+        ctx: &mut ModelContext<Self>,
+    ) {
+        self.local_navigation.update(ctx, |source, ctx| {
+            source.set_projects(projects);
+            ctx.notify();
+        });
+    }
+
     /// Resets the [`CommandPaletteMixer`] to the set of data sources that are relevant for the command palette.
     pub fn reset_search_mixer(
         &mut self,

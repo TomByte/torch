@@ -93,7 +93,8 @@ fn match_data_countable_zero_is_not_truthy() {
 
 #[test]
 fn subpage_display_names_are_correct() {
-    assert_eq!(SettingsSection::WarpAgent.to_string(), "Warp Agent");
+    assert_eq!(SettingsSection::WarpAgent.to_string(), "Torch Agent");
+    assert_eq!(SettingsSection::Projects.to_string(), "Projects");
     assert_eq!(SettingsSection::AgentProfiles.to_string(), "Profiles");
     assert_eq!(SettingsSection::AgentMCPServers.to_string(), "MCP servers");
     assert_eq!(SettingsSection::Knowledge.to_string(), "Knowledge");
@@ -135,6 +136,7 @@ const ALL_SECTIONS: &[SettingsSection] = &[
     SettingsSection::Privacy,
     SettingsSection::Referrals,
     SettingsSection::Scripting,
+    SettingsSection::Projects,
     SettingsSection::SharedBlocks,
     SettingsSection::Teams,
     SettingsSection::WarpDrive,
@@ -169,6 +171,7 @@ fn all_sections_list_is_exhaustive() {
             | SettingsSection::Privacy
             | SettingsSection::Referrals
             | SettingsSection::Scripting
+            | SettingsSection::Projects
             | SettingsSection::SharedBlocks
             | SettingsSection::Teams
             | SettingsSection::WarpDrive

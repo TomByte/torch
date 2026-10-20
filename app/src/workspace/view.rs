@@ -2982,6 +2982,18 @@ impl Workspace {
         ctx.subscribe_to_model(&state_handle, |me, _, event, ctx| {
             me.handle_window_state_change(event, ctx);
         });
+        ctx.observe(
+            &crate::settings::ProjectCatalog::handle(ctx),
+            |workspace, catalog, ctx| {
+                if workspace.current_workspace_state.is_palette_open {
+                    let projects = catalog.as_ref(ctx).projects.clone();
+                    workspace
+                        .palette
+                        .update(ctx, |view, ctx| view.refresh_local_projects(projects, ctx));
+                }
+                ctx.notify();
+            },
+        );
         ctx.observe(&TabShortcutModifierState::handle(ctx), |_, _, ctx| {
             ctx.notify();
         });
@@ -14752,6 +14764,8 @@ impl Workspace {
             ctx.notify();
         });
 
+        crate::settings::ProjectCatalog::handle(ctx)
+            .update(ctx, |catalog, ctx| catalog.refresh(ctx));
         let mut tabs = self.tab_navigation_data(ctx.window_id(), ctx);
         tabs.retain(|tab| tab.subtitle.is_some());
         // Keep session names searchable across windows, while prioritizing this window.
@@ -14769,11 +14783,16 @@ impl Workspace {
             }
         }
         // Enter switches to another session; keep the current one searchable at the end.
+        let projects = crate::settings::ProjectCatalog::as_ref(ctx)
+            .projects
+            .clone();
         let active_id = self.active_tab_pane_group().id();
         tabs.sort_by_key(|tab| tab.pane_group_id == active_id);
         self.palette.update(ctx, |view, ctx| {
-            view.data_source_store
-                .update(ctx, |store, ctx| store.set_local_tabs(tabs, ctx));
+            view.data_source_store.update(ctx, |store, ctx| {
+                store.set_local_tabs(tabs, ctx);
+                store.set_local_projects(projects, ctx);
+            });
             view.reset(ctx);
         });
     }
@@ -15229,8 +15248,31 @@ impl Workspace {
                     })
                     .or_else(dirs::home_dir);
                 if let Some(path) = path {
+                    if !path.is_dir() {
+                        self.toast_stack.update(ctx, |stack, ctx| {
+                            stack.add_ephemeral_toast(
+                                DismissibleToast::error(format!(
+                                    "Folder is unavailable: {}",
+                                    path.display()
+                                )),
+                                ctx,
+                            );
+                        });
+                        return;
+                    }
+                    let is_project = directory.is_some()
+                        && crate::settings::ProjectCatalog::as_ref(ctx)
+                            .projects
+                            .iter()
+                            .any(|project| project.path == path);
                     self.open_directory_in_new_tab(path, ctx);
+                    if is_project {
+                        self.remove_tab_from_group(self.active_tab_index, ctx);
+                    }
                 }
+            }
+            CommandPaletteEvent::ManageLocalProjects => {
+                self.show_settings_with_section(Some(SettingsSection::Projects), ctx)
             }
             CommandPaletteEvent::ChooseLocalDirectory => {
                 ctx.open_file_picker(

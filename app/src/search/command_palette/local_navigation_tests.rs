@@ -2,8 +2,9 @@ use super::*;
 use warpui::{EntityId, WindowId};
 
 fn source(path: &std::path::Path) -> DataSource {
-    DataSource {
-        tabs: vec!["landing-hero", "pricing-page"]
+    let mut source = DataSource::default();
+    source.set_tabs(
+        vec!["landing-hero", "pricing-page"]
             .into_iter()
             .enumerate()
             .map(|(index, title)| TabNavigationData {
@@ -15,7 +16,8 @@ fn source(path: &std::path::Path) -> DataSource {
                 color: None,
             })
             .collect(),
-    }
+    );
+    source
 }
 
 fn query(text: &str) -> Query {
@@ -29,7 +31,7 @@ fn query(text: &str) -> Query {
 fn empty_query_prioritizes_sessions_and_offers_creation_without_duplicate_directories() {
     let directory = tempfile::tempdir().unwrap();
     let results = source(directory.path()).search(&query(""));
-    assert_eq!(results.len(), 5);
+    assert_eq!(results.len(), 6);
     assert!(
         matches!(results[0].accept_result(), CommandPaletteItemAction::NavigateToTab { pane_group_id, .. } if pane_group_id == EntityId::from_usize(0))
     );
@@ -93,5 +95,68 @@ fn exact_creation_and_directory_requests_rank_above_fuzzy_matches() {
     ));
     assert!(
         matches!(best(directory.path().to_str().unwrap()), CommandPaletteItemAction::NewLocalSession { directory: Some(ref path) } if path == directory.path())
+    );
+}
+
+#[test]
+fn project_selection_resumes_a_session_in_a_subfolder_and_offers_another() {
+    let root = tempfile::tempdir().unwrap();
+    let path = root.path().canonicalize().unwrap();
+    let mut source = source(&path.join("src"));
+    source.projects = vec![LocalProject {
+        path: path.clone(),
+        name: "landing".into(),
+    }];
+    let results = source.search(&query("landing"));
+    let best = results
+        .iter()
+        .max_by_key(|item| (item.priority_tier(), item.score()))
+        .unwrap();
+    assert!(
+        matches!(best.accept_result(), CommandPaletteItemAction::NavigateToTab { pane_group_id, .. } if pane_group_id == EntityId::from_usize(0))
+    );
+    assert!(results.iter().any(|item| matches!(item.accept_result(), CommandPaletteItemAction::NewLocalSession { directory: Some(ref directory) } if directory == &path)));
+    source.tabs.clear();
+    let best = source
+        .search(&query("landing"))
+        .into_iter()
+        .max_by_key(|item| (item.priority_tier(), item.score()))
+        .unwrap();
+    assert!(
+        matches!(best.accept_result(), CommandPaletteItemAction::NewLocalSession { directory: Some(ref directory) } if directory == &path)
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn project_selection_resumes_alias_directory_without_changing_display_path() {
+    let root = tempfile::tempdir().unwrap();
+    let project = root.path().join("project");
+    std::fs::create_dir_all(project.join("src")).unwrap();
+    let alias = root.path().join("alias");
+    std::os::unix::fs::symlink(&project, &alias).unwrap();
+    let mut source = source(&alias.join("src"));
+    source.set_projects(vec![LocalProject {
+        path: project.canonicalize().unwrap(),
+        name: "project".into(),
+    }]);
+    let best = source
+        .search(&query("project"))
+        .into_iter()
+        .max_by_key(|item| (item.priority_tier(), item.score()))
+        .unwrap();
+    assert!(
+        matches!(best.accept_result(), CommandPaletteItemAction::NavigateToTab { pane_group_id, .. } if pane_group_id == EntityId::from_usize(0))
+    );
+    assert_eq!(
+        source.tabs[0].subtitle.as_deref(),
+        alias.join("src").to_str()
+    );
+    assert!(
+        project_for_directory(
+            &source.projects,
+            &source.session_directories[&EntityId::from_usize(0)]
+        )
+        .is_some()
     );
 }

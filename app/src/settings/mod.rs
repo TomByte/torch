@@ -27,6 +27,7 @@ pub mod native_preference;
 mod onboarding;
 mod pane;
 mod privacy;
+pub mod projects;
 mod same_line_prompt_block;
 #[cfg(not(target_family = "wasm"))]
 pub(crate) mod schema_generation;
@@ -67,6 +68,7 @@ pub use native_preference::*;
 pub(crate) use onboarding::*;
 pub use pane::*;
 pub use privacy::*;
+pub use projects::*;
 pub use same_line_prompt_block::*;
 #[cfg(not(target_family = "wasm"))]
 pub use schema_generation::dump_settings_schema;

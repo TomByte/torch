@@ -12,7 +12,9 @@ A local terminal with ordinary shell completion and history, without Warp accoun
 
 ## Operating Context
 
-The user works across multiple terminal and CLI-agent sessions. Sessions are grouped automatically by working folder; explicitly named groups take precedence.
+The user works across multiple terminal and CLI-agent sessions. Projects start empty: the user adds individual project folders or parent folders in Settings → Projects. Parent folders expose only their immediate child directories. Configuration stays local.
+
+Cmd+P prioritizes configured projects, resumes an existing terminal in a project when available, and starts one otherwise. Sessions group by their matching project root, falling back to their working folder; explicit manual groups take precedence.
 
 ## Brand Commitments
 

@@ -89,6 +89,7 @@ pub enum Event {
         directory: Option<std::path::PathBuf>,
     },
     ChooseLocalDirectory,
+    ManageLocalProjects,
     Close {
         accepted_action_type: Option<&'static str>,
     },
@@ -306,7 +307,7 @@ impl View {
                 mixer.clone(),
                 search_bar_state.clone(),
                 if warp_core::channel::ChannelState::is_local_only() {
-                    "Search sessions, directories, and actions"
+                    "Search projects, sessions, and actions"
                 } else {
                     "Search for a command"
                 },
@@ -682,6 +683,17 @@ impl View {
         }
     }
 
+    pub fn refresh_local_projects(
+        &mut self,
+        projects: Vec<crate::settings::LocalProject>,
+        ctx: &mut ViewContext<Self>,
+    ) {
+        self.data_source_store
+            .update(ctx, |store, ctx| store.set_local_projects(projects, ctx));
+        self.search_bar
+            .update(ctx, |search, ctx| search.run_query(ctx));
+    }
+
     pub fn reset(&mut self, ctx: &mut ViewContext<Self>) {
         self.state.clipped_scroll_state.scroll_to(Pixels::zero());
         self.search_bar.update(ctx, |search_bar, ctx| {
@@ -781,6 +793,7 @@ impl View {
             result_action,
             CommandPaletteItemAction::NavigateToTab { .. }
                 | CommandPaletteItemAction::NewLocalSession { .. }
+                | CommandPaletteItemAction::ManageLocalProjects
                 | CommandPaletteItemAction::ChooseLocalDirectory
         ) {
             let selected_items_handle = SelectedItems::handle(ctx);
@@ -953,6 +966,7 @@ impl View {
                 ctx.emit(Event::NewLocalSession { directory })
             }
             CommandPaletteItemAction::ChooseLocalDirectory => ctx.emit(Event::ChooseLocalDirectory),
+            CommandPaletteItemAction::ManageLocalProjects => ctx.emit(Event::ManageLocalProjects),
             CommandPaletteItemAction::NewSession { source } => {
                 self.dispatch_typed_action_on_view(source.action().deref(), ctx);
             }

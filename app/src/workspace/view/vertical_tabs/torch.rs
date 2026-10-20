@@ -210,7 +210,23 @@ fn sessions(workspace: &Workspace, app: &AppContext) -> Vec<Session> {
                         .get(&id)
                         .map(|group| (format!("manual:{id:?}"), group_display_name(group)))
                 })
-                .unwrap_or_else(|| (folder_key(&directory), folder_label(&directory)));
+                .unwrap_or_else(|| {
+                    terminal
+                        .and_then(|view| view.canonical_session_pwd_if_local(app))
+                        .and_then(|path| {
+                            crate::settings::project_for_directory(
+                                &crate::settings::ProjectCatalog::as_ref(app).projects,
+                                path.as_path(),
+                            )
+                        })
+                        .map(|project| {
+                            (
+                                format!("project:{}", project.path.display()),
+                                project.name.clone(),
+                            )
+                        })
+                        .unwrap_or_else(|| (folder_key(&directory), folder_label(&directory)))
+                });
             let unread =
                 terminal.is_some_and(|view| has_unread_activity_for_terminal_view(view.id(), app));
             Session {
