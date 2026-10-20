@@ -114,17 +114,32 @@ impl Osc9FallbackSessionHandler {
             return None;
         }
 
+        // Codex prefixes approval prompts this way; every other notification ends a turn.
+        let (event, payload) = if body.starts_with("Approval requested") {
+            (
+                CLIAgentEventType::PermissionRequest,
+                CLIAgentEventPayload {
+                    summary: Some(body.to_owned()),
+                    ..Default::default()
+                },
+            )
+        } else {
+            (
+                CLIAgentEventType::Stop,
+                CLIAgentEventPayload {
+                    query: Some(body.to_owned()),
+                    ..Default::default()
+                },
+            )
+        };
         Some(CLIAgentEvent {
             v: 1,
             agent,
-            event: CLIAgentEventType::Stop,
+            event,
             session_id: None,
             cwd: None,
             project: None,
-            payload: CLIAgentEventPayload {
-                query: Some(body.to_owned()),
-                ..Default::default()
-            },
+            payload,
             source: CLIAgentEventSource::CodexOsc9Fallback,
         })
     }

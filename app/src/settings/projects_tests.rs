@@ -83,3 +83,100 @@ fn symlink_aliases_do_not_duplicate_projects() {
     std::os::unix::fs::symlink(&real, &alias).unwrap();
     assert_eq!(discover(&[real, alias], &[]).0.len(), 1);
 }
+
+fn project(path: &Path) -> LocalProject {
+    LocalProject {
+        path: path.canonicalize().unwrap(),
+        name: "repo".to_owned(),
+    }
+}
+
+#[test]
+fn linked_worktrees_belong_to_their_repository_project() {
+    let root = tempfile::tempdir().unwrap();
+    let repo = root.path().join("repo");
+    let git_dir = repo.join(".git").join("worktrees").join("feature");
+    std::fs::create_dir_all(&git_dir).unwrap();
+    std::fs::write(git_dir.join("commondir"), "../..\n").unwrap();
+    let worktree = root.path().join("elsewhere").join("feature");
+    std::fs::create_dir_all(worktree.join("src")).unwrap();
+    std::fs::write(
+        worktree.join(".git"),
+        format!("gitdir: {}\n", git_dir.display()),
+    )
+    .unwrap();
+    let projects = vec![project(&repo)];
+    assert_eq!(
+        project_for_directory(&projects, &worktree.join("src")),
+        Some(&projects[0])
+    );
+}
+
+#[test]
+fn submodules_and_unrelated_folders_stay_outside_projects() {
+    let root = tempfile::tempdir().unwrap();
+    let repo = root.path().join("repo");
+    let module_dir = repo.join(".git").join("modules").join("sub");
+    std::fs::create_dir_all(&module_dir).unwrap();
+    let submodule = root.path().join("other").join("sub");
+    std::fs::create_dir_all(&submodule).unwrap();
+    std::fs::write(
+        submodule.join(".git"),
+        format!("gitdir: {}\n", module_dir.display()),
+    )
+    .unwrap();
+    let unrelated = root.path().join("plain");
+    std::fs::create_dir_all(&unrelated).unwrap();
+    let projects = vec![project(&repo)];
+    assert!(project_for_directory(&projects, &submodule).is_none());
+    assert!(project_for_directory(&projects, &unrelated).is_none());
+}
+
+#[test]
+fn real_linked_worktrees_resolve_to_the_main_repository() {
+    use std::process::Command;
+    let root = tempfile::tempdir().unwrap();
+    let repo = root.path().join("repo");
+    std::fs::create_dir(&repo).unwrap();
+    let run = |args: &[&str]| {
+        Command::new("git")
+            .args(args)
+            .current_dir(&repo)
+            .env("GIT_CONFIG_GLOBAL", "/dev/null")
+            .env("GIT_CONFIG_NOSYSTEM", "1")
+            .output()
+    };
+    let Ok(init) = run(&["init", "-q"]) else {
+        return;
+    };
+    assert!(init.status.success());
+    let commit = run(&[
+        "-c",
+        "user.name=Torch",
+        "-c",
+        "user.email=torch@example.com",
+        "commit",
+        "-q",
+        "--allow-empty",
+        "-m",
+        "init",
+    ])
+    .unwrap();
+    assert!(commit.status.success(), "{commit:?}");
+    let worktree = root.path().join("worktrees").join("feature");
+    let added = run(&[
+        "worktree",
+        "add",
+        "-q",
+        "-b",
+        "feature",
+        worktree.to_str().unwrap(),
+    ])
+    .unwrap();
+    assert!(added.status.success(), "{added:?}");
+    let projects = vec![project(&repo)];
+    assert_eq!(
+        project_for_directory(&projects, &worktree),
+        Some(&projects[0])
+    );
+}

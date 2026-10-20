@@ -1,6 +1,7 @@
 //! Local project folders and one-level project discovery.
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
+use std::sync::{LazyLock, Mutex};
 
 use settings::macros::define_settings_group;
 use settings::{Setting as _, SupportedPlatforms, SyncToCloud};
@@ -85,15 +86,68 @@ pub fn expand_project_path(path: &Path) -> PathBuf {
     }
 }
 
+/// The deepest project containing `directory`. A linked git worktree belongs to the project of
+/// its repository's main working tree, wherever the worktree lives.
 pub fn project_for_directory<'a>(
     projects: &'a [LocalProject],
     directory: &Path,
 ) -> Option<&'a LocalProject> {
     let directory = expand_project_path(directory);
+    deepest_project_containing(projects, &directory).or_else(|| {
+        let main_root = linked_worktree_main_root(&directory)?;
+        deepest_project_containing(projects, &main_root)
+    })
+}
+
+fn deepest_project_containing<'a>(
+    projects: &'a [LocalProject],
+    directory: &Path,
+) -> Option<&'a LocalProject> {
     projects
         .iter()
         .filter(|project| directory.starts_with(&project.path))
         .max_by_key(|project| project.path.components().count())
+}
+
+/// Cached because sidebar grouping asks on every render; a directory's worktree never changes.
+fn linked_worktree_main_root(directory: &Path) -> Option<PathBuf> {
+    static MAIN_ROOTS: LazyLock<Mutex<HashMap<PathBuf, Option<PathBuf>>>> =
+        LazyLock::new(Default::default);
+    if let Some(cached) = MAIN_ROOTS
+        .lock()
+        .ok()
+        .and_then(|roots| roots.get(directory).cloned())
+    {
+        return cached;
+    }
+    let main_root = find_linked_worktree_main_root(directory);
+    if let Ok(mut roots) = MAIN_ROOTS.lock() {
+        roots.insert(directory.to_owned(), main_root.clone());
+    }
+    main_root
+}
+
+/// Resolves what `git rev-parse --git-common-dir` reports without running git: a linked worktree's
+/// `.git` file names its private git directory, whose `commondir` file leads to the main `.git`.
+fn find_linked_worktree_main_root(directory: &Path) -> Option<PathBuf> {
+    let dot_git = directory
+        .ancestors()
+        .map(|ancestor| ancestor.join(".git"))
+        .find(|dot_git| dot_git.exists())?;
+    if !dot_git.is_file() {
+        return None;
+    }
+    let contents = std::fs::read_to_string(&dot_git).ok()?;
+    let git_dir = dot_git
+        .parent()?
+        .join(contents.trim().strip_prefix("gitdir:")?.trim());
+    let common_dir = std::fs::read_to_string(git_dir.join("commondir")).ok()?;
+    let common_dir = git_dir.join(common_dir.trim()).canonicalize().ok()?;
+    // Bare repositories have no main working tree to group under.
+    if common_dir.file_name()? != ".git" {
+        return None;
+    }
+    common_dir.parent().map(Path::to_path_buf)
 }
 
 fn discover(directories: &[PathBuf], parents: &[PathBuf]) -> (Vec<LocalProject>, Vec<PathBuf>) {

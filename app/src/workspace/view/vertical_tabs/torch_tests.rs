@@ -529,3 +529,36 @@ fn moving_rows_keep_their_height_until_a_departure_has_faded() {
     let gone = motion_layout(Motion::Departure, Duration::from_secs(5));
     assert_eq!(gone, (None, 0., 0.));
 }
+
+#[test]
+fn attention_jump_prefers_blocked_sessions_and_wraps_in_sidebar_order() {
+    // Sidebar order differs from tab order; 4 and 1 are blocked, 2 finished unread.
+    let order = [3, 4, 0, 2, 1];
+    let rank = |index| match index {
+        4 | 1 => Some(0),
+        2 => Some(1),
+        _ => None,
+    };
+    assert_eq!(next_in_attention_order(&order, rank, 3), Some(4));
+    assert_eq!(next_in_attention_order(&order, rank, 4), Some(1));
+    assert_eq!(next_in_attention_order(&order, rank, 1), Some(4));
+}
+
+#[test]
+fn attention_jump_falls_back_to_unread_and_skips_the_active_session() {
+    let order = [0, 1, 2];
+    let only_active_blocked = |index| match index {
+        1 => Some(0),
+        2 => Some(1),
+        _ => None,
+    };
+    assert_eq!(
+        next_in_attention_order(&order, only_active_blocked, 1),
+        Some(2)
+    );
+    assert_eq!(next_in_attention_order(&order, |_| None, 0), None);
+    assert_eq!(
+        next_in_attention_order(&order, |index| (index == 0).then_some(0), 0),
+        None
+    );
+}

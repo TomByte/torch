@@ -1235,6 +1235,11 @@ impl AppContext {
         self.platform_delegate.set_dock_icon_visible(visible);
     }
 
+    /// Shows a label on the Dock icon, or clears it (macOS only — no-op elsewhere).
+    pub fn set_dock_badge(&self, label: Option<String>) {
+        self.platform_delegate.set_dock_badge(label);
+    }
+
     fn dispatch_draw_frame_error_callback(&mut self, window_id: WindowId) {
         let callback = self.on_draw_frame_error_callback.take();
         if let Some(callback) = &callback {

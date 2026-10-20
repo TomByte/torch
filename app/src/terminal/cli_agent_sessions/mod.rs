@@ -1,5 +1,6 @@
 pub mod event;
 pub mod listener;
+pub(crate) mod notification;
 #[cfg(not(target_family = "wasm"))]
 pub(crate) mod plugin_manager;
 
@@ -402,6 +403,8 @@ pub struct CLIAgentSessionsModel {
     /// Source of `CtrlCCancelState::armed_token` values. Monotonically increasing;
     /// never reused, so a stale callback can never alias a newer window.
     next_ctrl_c_token: u64,
+    /// Sessions whose status has come from Codex's OSC 9 fallback notifications.
+    fallback_status_sessions: HashSet<EntityId>,
 }
 
 impl Entity for CLIAgentSessionsModel {
@@ -417,11 +420,29 @@ impl CLIAgentSessionsModel {
             plugin_auto_failures: HashSet::new(),
             ctrl_c_cancel_state: HashMap::new(),
             next_ctrl_c_token: 0,
+            fallback_status_sessions: HashSet::new(),
         }
     }
 
     pub fn session(&self, terminal_view_id: EntityId) -> Option<&CLIAgentSession> {
         self.sessions.get(&terminal_view_id)
+    }
+
+    /// Whether the session's status reflects notifications from the agent rather than the
+    /// optimistic state set at registration. Unlike `supports_rich_status`, this includes coarse
+    /// OSC 9 fallback status (turn complete or approval requested).
+    pub fn reports_status(&self, terminal_view_id: EntityId) -> bool {
+        self.sessions.get(&terminal_view_id).is_some_and(|session| {
+            session.supports_rich_status()
+                || self.fallback_status_sessions.contains(&terminal_view_id)
+        })
+    }
+
+    pub fn blocked_session_count(&self) -> usize {
+        self.sessions
+            .values()
+            .filter(|session| matches!(session.status, CLIAgentSessionStatus::Blocked { .. }))
+            .count()
     }
 
     /// Returns `true` if the rich input editor is currently open for this terminal.
@@ -500,6 +521,7 @@ impl CLIAgentSessionsModel {
     pub fn remove_session(&mut self, terminal_view_id: EntityId, ctx: &mut ModelContext<Self>) {
         self.abort_pending_cancel(terminal_view_id);
         self.ctrl_c_cancel_state.remove(&terminal_view_id);
+        self.fallback_status_sessions.remove(&terminal_view_id);
         if let Some(session) = self.sessions.remove(&terminal_view_id) {
             ctx.emit(CLIAgentSessionsModelEvent::Ended {
                 terminal_view_id,
@@ -547,8 +569,11 @@ impl CLIAgentSessionsModel {
             .get_mut(&terminal_view_id)
             .expect("session presence checked above");
 
-        if event.source == CLIAgentEventSource::RichPlugin {
-            session.received_rich_notification = true;
+        match event.source {
+            CLIAgentEventSource::RichPlugin => session.received_rich_notification = true,
+            CLIAgentEventSource::CodexOsc9Fallback => {
+                self.fallback_status_sessions.insert(terminal_view_id);
+            }
         }
 
         let event_type = &event.event;
@@ -583,6 +608,26 @@ impl CLIAgentSessionsModel {
                 agent: session.agent,
             });
         }
+    }
+
+    /// Observes keyboard or paste input the user sent to this session's PTY. A blocked agent
+    /// that receives input has been answered, even before its next status event arrives.
+    pub fn observe_user_input(&mut self, terminal_view_id: EntityId, ctx: &mut ModelContext<Self>) {
+        let Some(session) = self.sessions.get_mut(&terminal_view_id) else {
+            return;
+        };
+        if !matches!(session.status, CLIAgentSessionStatus::Blocked { .. }) {
+            return;
+        }
+        session.clear_permission_scoped_state();
+        session.status = CLIAgentSessionStatus::InProgress;
+        ctx.emit(CLIAgentSessionsModelEvent::StatusChanged {
+            terminal_view_id,
+            agent: session.agent,
+            status: CLIAgentSessionStatus::InProgress,
+            is_prompt_submit: false,
+            session_context: Box::new(session.session_context.clone()),
+        });
     }
 
     /// Observes a Ctrl-C byte (`0x03`) written to this session's PTY.
@@ -799,6 +844,7 @@ impl CLIAgentSessionsModel {
         // arm, and any pending window belonged to the session being replaced.
         self.abort_pending_cancel(terminal_view_id);
         self.ctrl_c_cancel_state.remove(&terminal_view_id);
+        self.fallback_status_sessions.remove(&terminal_view_id);
         if let Some(old) = self.sessions.insert(terminal_view_id, session) {
             ctx.emit(CLIAgentSessionsModelEvent::Ended {
                 terminal_view_id,

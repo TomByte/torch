@@ -633,6 +633,16 @@ pub fn init(app: &mut AppContext) {
         .with_mac_key_binding("shift-cmd-{")
         .with_linux_or_windows_key_binding("ctrl-pageup"),
         EditableBinding::new(
+            "workspace:jump_to_attention_session",
+            "Jump to next session needing attention",
+            WorkspaceAction::JumpToAttentionSession,
+        )
+        .with_context_predicate(id!("Workspace") & !id!("Workspace_PaneDragging"))
+        .with_group(bindings::BindingGroup::Navigation.as_str())
+        .with_enabled(ChannelState::is_local_only)
+        .with_mac_key_binding("cmd-j")
+        .with_linux_or_windows_key_binding("ctrl-shift-J"),
+        EditableBinding::new(
             "workspace:activate_next_tab",
             "Activate next tab",
             WorkspaceAction::ActivateNextTab,

@@ -40,6 +40,7 @@ use crate::server::telemetry::{
 use crate::settings_view::{SettingsAction as SettingsTabAction, SettingsSection};
 use crate::tab::{NewSessionMenuItem, SelectedTabColor};
 use crate::tab_configs::TabConfig;
+use crate::terminal::CLIAgent;
 use crate::terminal::available_shells::AvailableShell;
 use crate::terminal::view::inline_banner::ZeroStatePromptSuggestionType;
 use crate::themes::theme::AnsiColorIdentifier;
@@ -251,6 +252,24 @@ pub enum WorkspaceAction {
         hide_homepage: bool,
     },
     NewSessionInDirectory(PathBuf),
+    /// Starts a session in the directory that runs the agent as its first command.
+    NewAgentSessionInDirectory {
+        directory: PathBuf,
+        agent: CLIAgent,
+    },
+    /// Starts a session that creates a new git worktree of the directory's repository and runs
+    /// the agent there.
+    NewAgentWorktreeSession {
+        directory: PathBuf,
+        agent: CLIAgent,
+    },
+    /// Opens the menu of session kinds for a project, at the clicked position.
+    ToggleProjectSessionMenu {
+        directory: PathBuf,
+        position: Vector2F,
+    },
+    /// Activates the next sidebar session that needs input, or else the next unread finished one.
+    JumpToAttentionSession,
     AddTabWithShell {
         shell: AvailableShell,
         source: AddTabWithShellSource,
@@ -935,6 +954,7 @@ impl WorkspaceAction {
             ContinueThirdPartyConversationLocally { .. } => true,
             ActivateTab(_)
             | ActivateTabByNumber(_)
+            | JumpToAttentionSession
             | SetTabShortcutModifierKey { .. }
             | ActivatePrevTab
             | ActivateNextTab
@@ -994,6 +1014,8 @@ impl WorkspaceAction {
             | AddDefaultTab
             | AddTerminalTab { .. }
             | NewSessionInDirectory(_)
+            | NewAgentSessionInDirectory { .. }
+            | NewAgentWorktreeSession { .. }
             | AddTabWithShell { .. }
             | AddGetStartedTab
             | AddAgentTab
@@ -1057,6 +1079,7 @@ impl WorkspaceAction {
             | OpenNewSessionMenu { .. }
             | ToggleTabConfigsMenu
             | ToggleNewSessionMenu { .. }
+            | ToggleProjectSessionMenu { .. }
             | SelectNewSessionMenuItem(_)
             | ToggleTabBarOverflowMenu
             | CheckForUpdate

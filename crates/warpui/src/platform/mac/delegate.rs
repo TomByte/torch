@@ -7,7 +7,7 @@ use cocoa::base::{BOOL, NO, YES, id, nil};
 use objc2::{MainThreadMarker, msg_send};
 use objc2_app_kit::{NSApplication, NSCursor, NSRequestUserAttentionType};
 use objc2_av_foundation::{AVAuthorizationStatus, AVCaptureDevice, AVMediaTypeAudio};
-use objc2_foundation::NSUInteger;
+use objc2_foundation::{NSString, NSUInteger};
 use warpui_core::accessibility::AccessibilityContent;
 use warpui_core::clipboard::InMemoryClipboard;
 use warpui_core::keymap::Keystroke;
@@ -408,6 +408,17 @@ impl platform::Delegate for AppDelegate {
             // `setDockIconVisible:` is a custom warp app-delegate selector.
             // SAFETY: messaging the app delegate on the main thread.
             let _: BOOL = unsafe { msg_send![&*app_delegate, setDockIconVisible: value] };
+        });
+    }
+
+    fn set_dock_badge(&self, label: Option<String>) {
+        dispatch::Queue::main().exec_async(move || {
+            // SAFETY: the closure runs on the main dispatch queue.
+            let mtm = unsafe { MainThreadMarker::new_unchecked() };
+            let label = label.as_deref().map(NSString::from_str);
+            NSApplication::sharedApplication(mtm)
+                .dockTile()
+                .setBadgeLabel(label.as_deref());
         });
     }
 

@@ -411,6 +411,7 @@ use crate::terminal::cli_agent_sessions::{
     CLIAgentInputEntrypoint, CLIAgentInputState, CLIAgentRichInputCloseReason, CLIAgentSession,
     CLIAgentSessionContext, CLIAgentSessionStatus, CLIAgentSessionsModel,
     CLIAgentSessionsModelEvent,
+    notification::{CLIAgentNotificationSubject, notification_text as cli_agent_notification_text},
 };
 use crate::terminal::color::List;
 use crate::terminal::command_corrections_denylist::COMMAND_CORRECTIONS_PREFERRED_DENYLIST;
@@ -9776,7 +9777,7 @@ impl TerminalView {
 
     fn control_sequence_on_terminal(&mut self, bytes: &[u8], ctx: &mut ViewContext<Self>) {
         if self.is_long_running() {
-            self.write_user_bytes_to_pty(bytes.to_owned(), ctx);
+            self.write_typed_bytes_to_pty(bytes.to_owned(), ctx);
         } else {
             safe_warn!(
                 safe: ("command not long-running. ignoring control seq on terminal."),
@@ -9846,7 +9847,7 @@ impl TerminalView {
         if self.is_long_running() {
             self.highlighted_link.invalidate();
             self.report_possible_typeahead(characters);
-            self.write_user_bytes_to_pty(characters.as_bytes().to_vec(), ctx);
+            self.write_typed_bytes_to_pty(characters.as_bytes().to_vec(), ctx);
         } else {
             // When it's not a long-running command, we want to clear the selected block
             // and focus the editor. We specifically don't want to insert
@@ -9890,7 +9891,7 @@ impl TerminalView {
         if self.should_write_typed_chars_to_pty(ctx) {
             self.highlighted_link.invalidate();
             self.report_possible_typeahead(characters);
-            self.write_user_bytes_to_pty(characters.as_bytes().to_vec(), ctx);
+            self.write_typed_bytes_to_pty(characters.as_bytes().to_vec(), ctx);
         } else {
             // We should only insert typed characters into the input box buffer.
             // When input_sequence is triggered on KeyDown, we should focus
@@ -10040,6 +10041,23 @@ impl TerminalView {
         self.write_to_pty(bytes, ctx);
         self.emit_non_editor_typed_event(bytes_vec, ctx);
         true
+    }
+
+    /// Writes keyboard or paste input, which answers a CLI agent waiting on the user. Mouse and
+    /// scroll reports do not.
+    fn write_typed_bytes_to_pty(&mut self, bytes: Vec<u8>, ctx: &mut ViewContext<Self>) {
+        if !self.write_user_bytes_to_pty(bytes, ctx) {
+            return;
+        }
+        let is_blocked = CLIAgentSessionsModel::as_ref(ctx)
+            .session(self.view_id)
+            .is_some_and(|session| matches!(session.status, CLIAgentSessionStatus::Blocked { .. }));
+        if is_blocked {
+            let terminal_view_id = self.view_id;
+            CLIAgentSessionsModel::handle(ctx).update(ctx, |sessions, ctx| {
+                sessions.observe_user_input(terminal_view_id, ctx);
+            });
+        }
     }
 
     /// Write to the PTY if the session has finished bootstrapping and
@@ -14428,6 +14446,11 @@ impl TerminalView {
             return;
         }
 
+        if ChannelState::is_local_only() {
+            self.send_local_cli_agent_notification(*agent, status, session_context, ctx);
+            return;
+        }
+
         let title = session_context
             .query
             .as_deref()
@@ -16879,11 +16902,83 @@ impl TerminalView {
 
     /// Shared logic for sending a desktop notification (or showing a discovery banner)
     /// for any agent status change (both Warp's agent and any CLI agent).
+    fn send_local_cli_agent_notification(
+        &mut self,
+        agent: CLIAgent,
+        status: &CLIAgentSessionStatus,
+        session_context: &CLIAgentSessionContext,
+        ctx: &mut ViewContext<Self>,
+    ) {
+        // Agents such as Claude prefix their terminal title with an activity glyph.
+        let terminal_title = self.model.lock().terminal_title().map(|title| {
+            title
+                .trim_start_matches(|ch: char| !ch.is_alphanumeric())
+                .to_owned()
+        });
+        let session_title = session_context.display_title().or(terminal_title);
+        let directory = session_context
+            .cwd
+            .as_deref()
+            .map(PathBuf::from)
+            .or_else(|| {
+                self.canonical_session_pwd_if_local(ctx)
+                    .map(|path| path.as_path().to_path_buf())
+            });
+        let group_label = directory.as_deref().and_then(|directory| {
+            crate::settings::project_for_directory(
+                &crate::settings::ProjectCatalog::as_ref(ctx).projects,
+                directory,
+            )
+            .map(|project| project.name.clone())
+            .or_else(|| {
+                directory
+                    .file_name()
+                    .map(|name| name.to_string_lossy().into_owned())
+            })
+        });
+        let subject = CLIAgentNotificationSubject {
+            agent_name: agent.display_name(),
+            session_title: session_title.as_deref(),
+            group_label: group_label.as_deref(),
+            tool_name: session_context.tool_name.as_deref(),
+        };
+        let Some(text) = cli_agent_notification_text(&subject, status) else {
+            return;
+        };
+        let trigger = match status {
+            CLIAgentSessionStatus::Blocked { .. } => NotificationsTrigger::NeedsAttention,
+            CLIAgentSessionStatus::Failed { .. } => NotificationsTrigger::AgentTaskCompleted(false),
+            CLIAgentSessionStatus::InProgress
+            | CLIAgentSessionStatus::Success
+            | CLIAgentSessionStatus::Cancelled => NotificationsTrigger::AgentTaskCompleted(true),
+        };
+        self.send_notification_or_show_banner(
+            trigger,
+            BlockNotification {
+                title: text.title,
+                body: text.body,
+            },
+            Some(NotificationAgentVariant::CLIAgent(agent)),
+            ctx,
+        );
+    }
+
     fn send_agent_desktop_notification_or_show_banner(
         &mut self,
         trigger: NotificationsTrigger,
         title: String,
         description: String,
+        agent_variant: Option<NotificationAgentVariant>,
+        ctx: &mut ViewContext<Self>,
+    ) {
+        let notification_content = trigger.create_notification_content(title, description);
+        self.send_notification_or_show_banner(trigger, notification_content, agent_variant, ctx);
+    }
+
+    fn send_notification_or_show_banner(
+        &mut self,
+        trigger: NotificationsTrigger,
+        notification_content: BlockNotification,
         agent_variant: Option<NotificationAgentVariant>,
         ctx: &mut ViewContext<Self>,
     ) {
@@ -16911,7 +17006,6 @@ impl TerminalView {
                 } else if !notification_settings.is_needs_attention_enabled {
                     return;
                 }
-                let notification_content = trigger.create_notification_content(title, description);
                 ctx.emit(Event::SendNotification(notification_content));
                 send_telemetry_from_ctx!(
                     TelemetryEvent::NotificationSent {
@@ -17474,7 +17568,7 @@ impl TerminalView {
                 // See https://cirw.in/blog/bracketed-paste for more info on bracketed paste
                 copied = format!("{BRACKETED_PASTE_PREFIX}{copied}{BRACKETED_PASTE_SUFFIX}");
             }
-            self.write_user_bytes_to_pty(copied.into_bytes(), ctx);
+            self.write_typed_bytes_to_pty(copied.into_bytes(), ctx);
         }
     }
 

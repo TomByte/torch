@@ -1076,15 +1076,16 @@ fn normalize_summary_text(text: &str) -> Option<String> {
 
 /// Returns the conversation status for a terminal pane, used to render the per-line status
 /// pill prefix in Summary mode. Mirrors the status sources used by `render_detail_status_pill`
-/// in the detail sidecar — CLI agent sessions with rich status, Warp Agent conversations, or
+/// in the detail sidecar — CLI agent sessions with reported status, Warp Agent conversations, or
 /// ambient agent sessions. Returns `None` for plain terminals or conversations without status.
 fn summary_conversation_status_for_terminal(
     terminal_view: &TerminalView,
     app: &AppContext,
 ) -> Option<ConversationStatus> {
-    let cli_agent_session = CLIAgentSessionsModel::as_ref(app).session(terminal_view.id());
-    if let Some(session) = cli_agent_session
-        .filter(|s| s.supports_rich_status())
+    let sessions_model = CLIAgentSessionsModel::as_ref(app);
+    if let Some(session) = sessions_model
+        .session(terminal_view.id())
+        .filter(|_| sessions_model.reports_status(terminal_view.id()))
         .filter(|s| !matches!(s.agent, CLIAgent::Unknown))
     {
         return Some(session.status.to_conversation_status());

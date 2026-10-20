@@ -10,7 +10,10 @@ use warp_core::ui::theme::ColorScheme;
 use warpui::ViewContext;
 
 use super::*;
+use crate::menu::{MenuItem, MenuItemFields};
 use crate::session_management::CommandContext;
+use crate::terminal::CLIAgent;
+use crate::terminal::cli_agent_sessions::CLIAgentSessionsModelEvent;
 use crate::ui_components::buttons::icon_button;
 use crate::workspace::header_toolbar_item::HeaderToolbarItemKind;
 use crate::workspace::view::PanelPosition;
@@ -357,6 +360,117 @@ impl Workspace {
         if let Some(group_id) = self.tabs.get(index).and_then(|tab| tab.group_id) {
             self.expand_tab_group(group_id, ctx);
         }
+    }
+}
+
+/// What a project heading's new-session menu offers. A plain shell comes first so the menu
+/// never hides the previous one-click default.
+pub(in crate::workspace::view) fn project_session_menu_items(
+    directory: &Path,
+) -> Vec<MenuItem<WorkspaceAction>> {
+    let mut items = vec![
+        MenuItemFields::new("Shell")
+            .with_on_select_action(WorkspaceAction::NewSessionInDirectory(directory.to_owned()))
+            .into_item(),
+    ];
+    for agent in [CLIAgent::Claude, CLIAgent::Codex] {
+        items.push(
+            MenuItemFields::new(agent.display_name())
+                .with_on_select_action(WorkspaceAction::NewAgentSessionInDirectory {
+                    directory: directory.to_owned(),
+                    agent,
+                })
+                .into_item(),
+        );
+    }
+    if crate::tab_configs::session_config::is_git_repo(directory) {
+        items.push(
+            MenuItemFields::new("Claude Code in new worktree")
+                .with_on_select_action(WorkspaceAction::NewAgentWorktreeSession {
+                    directory: directory.to_owned(),
+                    agent: CLIAgent::Claude,
+                })
+                .into_item(),
+        );
+    }
+    items
+}
+
+/// Lower ranks need attention sooner.
+fn attention_rank(session: &Session) -> Option<u8> {
+    match session_indicator(
+        session.status.as_ref(),
+        session.unread,
+        session.agent_status_unavailable,
+    ) {
+        SessionIndicator::NeedsInput => Some(0),
+        SessionIndicator::UnreadComplete => Some(1),
+        SessionIndicator::Failed if session.unread => Some(1),
+        SessionIndicator::Working
+        | SessionIndicator::Complete
+        | SessionIndicator::Failed
+        | SessionIndicator::Idle
+        | SessionIndicator::Unknown => None,
+    }
+}
+
+/// The first session after `active` in sidebar `order`, wrapping around, among those with the
+/// lowest attention rank. The active session itself is never chosen.
+fn next_in_attention_order(
+    order: &[usize],
+    rank: impl Fn(usize) -> Option<u8>,
+    active: usize,
+) -> Option<usize> {
+    let best = order
+        .iter()
+        .filter(|index| **index != active)
+        .filter_map(|index| rank(*index))
+        .min()?;
+    let start = order
+        .iter()
+        .position(|index| *index == active)
+        .map_or(0, |position| position + 1);
+    order[start..]
+        .iter()
+        .chain(&order[..start])
+        .copied()
+        .find(|index| *index != active && rank(*index) == Some(best))
+}
+
+pub(in crate::workspace::view) fn next_attention_session(
+    workspace: &Workspace,
+    app: &AppContext,
+) -> Option<usize> {
+    let sessions = sessions(workspace, app);
+    let keys = sessions
+        .iter()
+        .map(|session| session.group_key.clone())
+        .collect::<Vec<_>>();
+    let order = grouped_indices(&keys)
+        .into_iter()
+        .flatten()
+        .collect::<Vec<_>>();
+    next_in_attention_order(
+        &order,
+        |index| attention_rank(&sessions[index]),
+        workspace.active_tab_index,
+    )
+}
+
+/// Shows the number of agent sessions waiting on the user on the Dock icon.
+pub(in crate::workspace::view) fn update_attention_badge(
+    event: &CLIAgentSessionsModelEvent,
+    app: &AppContext,
+) {
+    match event {
+        CLIAgentSessionsModelEvent::Started { .. }
+        | CLIAgentSessionsModelEvent::StatusChanged { .. }
+        | CLIAgentSessionsModelEvent::Ended { .. } => {
+            let count = CLIAgentSessionsModel::as_ref(app).blocked_session_count();
+            app.set_dock_badge((count > 0).then(|| count.to_string()));
+        }
+        CLIAgentSessionsModelEvent::InputSessionChanged { .. }
+        | CLIAgentSessionsModelEvent::SessionUpdated { .. } => {}
     }
 }
 
@@ -999,8 +1113,11 @@ fn live_group(
             .with_style(UiComponentStyles::default().set_width(20.).set_height(20.))
             .with_tooltip(move || tooltip)
             .build()
-            .on_click(move |ctx, _, _| {
-                ctx.dispatch_typed_action(WorkspaceAction::NewSessionInDirectory(directory.clone()))
+            .on_click(move |ctx, _, position| {
+                ctx.dispatch_typed_action(WorkspaceAction::ToggleProjectSessionMenu {
+                    directory: directory.clone(),
+                    position,
+                })
             })
             .finish()
         });

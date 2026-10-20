@@ -442,7 +442,7 @@ use crate::terminal::view::{
     SyncInputType, TerminalAction,
 };
 use crate::terminal::warpify::settings::WarpifySettings;
-use crate::terminal::{self, BlockListSettings, SizeInfo, TerminalModel, TerminalView};
+use crate::terminal::{self, BlockListSettings, CLIAgent, SizeInfo, TerminalModel, TerminalView};
 use crate::themes::theme::{AnsiColorIdentifier, RespectSystemTheme, ThemeKind};
 use crate::themes::theme_chooser::{ThemeChooser, ThemeChooserEvent, ThemeChooserMode};
 use crate::themes::theme_creator_modal::{ThemeCreatorModal, ThemeCreatorModalEvent};
@@ -3816,6 +3816,9 @@ impl Workspace {
         event: &CLIAgentSessionsModelEvent,
         ctx: &mut ViewContext<Self>,
     ) {
+        if ChannelState::is_local_only() {
+            vertical_tabs::torch::update_attention_badge(event, ctx);
+        }
         if matches!(
             event,
             CLIAgentSessionsModelEvent::Started { .. }
@@ -9034,6 +9037,84 @@ impl Workspace {
                 self.remove_tab_from_group(self.active_tab_index, ctx);
             }
         }
+    }
+
+    fn new_agent_session(
+        &mut self,
+        directory: PathBuf,
+        agent: CLIAgent,
+        ctx: &mut ViewContext<Self>,
+    ) {
+        self.new_session_running(directory, agent.command_prefix().to_owned(), ctx);
+    }
+
+    fn new_agent_worktree_session(
+        &mut self,
+        directory: PathBuf,
+        agent: CLIAgent,
+        ctx: &mut ViewContext<Self>,
+    ) {
+        let branches = crate::util::git::list_local_branches_sync(&directory);
+        let branch_refs: HashSet<&str> = branches.iter().map(String::as_str).collect();
+        let branch = warp_util::worktree_names::generate_worktree_branch_name(&branch_refs);
+        let worktree =
+            crate::tab_configs::tab_config::generated_worktree_path_string(&directory, &branch);
+        let command = format!(
+            "git worktree add -b {branch} \"{worktree}\" && cd \"{worktree}\" && {}",
+            agent.command_prefix()
+        );
+        self.new_session_running(directory, command, ctx);
+    }
+
+    /// Opens a session like `new_local_session` and runs `command` once its shell is ready.
+    fn new_session_running(
+        &mut self,
+        directory: PathBuf,
+        command: String,
+        ctx: &mut ViewContext<Self>,
+    ) {
+        let tab_count = self.tabs.len();
+        self.new_local_session(Some(directory), ctx);
+        if self.tabs.len() == tab_count {
+            return;
+        }
+        if let Some(terminal) = self.active_session_view(ctx) {
+            terminal.update(ctx, |terminal, ctx| {
+                terminal.execute_command_or_set_pending(&command, ctx);
+            });
+        }
+    }
+
+    fn toggle_project_session_menu(
+        &mut self,
+        directory: &Path,
+        position: Vector2F,
+        ctx: &mut ViewContext<Self>,
+    ) {
+        if self.show_new_session_dropdown_menu.is_some() {
+            self.close_new_session_dropdown_menu(ctx);
+            return;
+        }
+        let anchor = NewSessionMenuAnchor::Pointer(position);
+        let menu_items = vertical_tabs::torch::project_session_menu_items(directory);
+        let menu_height = self.new_session_menu_max_height(anchor, ctx);
+        ctx.update_view(&self.new_session_dropdown_menu, |menu, ctx| {
+            menu.set_width(220.);
+            menu.set_height(menu_height);
+            menu.set_items(menu_items, ctx);
+            menu.reset_selection(ctx);
+        });
+        self.show_new_session_dropdown_menu = Some(anchor);
+        ctx.focus(&self.new_session_dropdown_menu);
+        ctx.notify();
+    }
+
+    fn jump_to_attention_session(&mut self, ctx: &mut ViewContext<Self>) {
+        let Some(index) = vertical_tabs::torch::next_attention_session(self, ctx) else {
+            return;
+        };
+        self.reveal_sidebar_session(index, ctx);
+        self.activate_tab(index, ctx);
     }
 
     fn open_directory_in_new_tab(&mut self, path: PathBuf, ctx: &mut ViewContext<Self>) {
@@ -24601,6 +24682,17 @@ impl TypedActionView for Workspace {
             NewSessionInDirectory(directory) => {
                 self.new_local_session(Some(directory.clone()), ctx);
             }
+            NewAgentSessionInDirectory { directory, agent } => {
+                self.new_agent_session(directory.clone(), *agent, ctx);
+            }
+            NewAgentWorktreeSession { directory, agent } => {
+                self.new_agent_worktree_session(directory.clone(), *agent, ctx);
+            }
+            ToggleProjectSessionMenu {
+                directory,
+                position,
+            } => self.toggle_project_session_menu(directory, *position, ctx),
+            JumpToAttentionSession => self.jump_to_attention_session(ctx),
             AddDefaultTab => {
                 let effective_mode = AISettings::as_ref(ctx).default_session_mode(ctx);
                 match effective_mode {

@@ -279,6 +279,9 @@ pub trait Delegate: 'static {
     /// Default no-op for platforms without a Dock concept.
     fn set_dock_icon_visible(&self, _visible: bool) {}
 
+    /// Shows a label on the application's Dock icon, or clears it (macOS only).
+    fn set_dock_badge(&self, _label: Option<String>) {}
+
     fn terminate_app(&self, termination_mode: TerminationMode);
 
     /// Returns whether or not a screen reader is enabled, or None if we do not

@@ -444,10 +444,14 @@ its terminals. Explicitly activating a tab reveals its group. Rows in collapsed 
 are excluded from Shift-selection ranges.
 
 Configured project headings show a small + button on hover, with a fixed slot to prevent text
-movement. It creates a fresh terminal at the configured project root even when existing sessions
-are in subdirectories, and reveals the new session if the project was collapsed. The button click
-does not trigger the heading's collapse action. Missing directories use the same error handling
-as Cmd+P. Manual groups and unconfigured folder groups have no project-root creation control.
+movement. Clicking it opens a compact native menu at the pointer: Shell, Claude Code, Codex, and,
+for git repositories, Claude Code in new worktree. Each starts a fresh terminal at the configured
+project root even when existing sessions are in subdirectories, and reveals the new session if the
+project was collapsed; agent entries then run the agent as the session's first command. The
+worktree entry creates a branch worktree in Torch's data folder; linked worktrees group under
+their repository's project. The button click does not trigger the heading's collapse action.
+Missing directories use the same error handling as Cmd+P. Manual groups and unconfigured folder
+groups have no project-root creation control.
 
 ### Session identity and activity
 
@@ -468,7 +472,18 @@ collapsed.
 The local Claude integration in `integrations/claude` forwards lifecycle events through terminal
 notifications. It neither reads transcripts nor sends prompt/response content. Hooks are gated by
 Torch's `TORCH_TERMINAL` environment marker; the installer preserves unrelated Claude settings.
-Idle reminder notifications and subagent events cannot override the parent's state.
+Idle reminder notifications and subagent events cannot override the parent's state. Settings →
+Agents installs, repairs, or removes these hooks for Claude and Codex and reports whether each is
+installed. Codex hooks live in `hooks.json`, write the same notifications to Codex's terminal, and
+must be trusted once in Codex. Without hooks, Codex's own terminal notifications still mark
+approval requests as blocked and finished turns as complete. Typing or pasting into a blocked
+session returns it to running. Only the tool name of a permission request is forwarded.
+
+Jump to next session needing attention (Cmd+J on macOS) activates the next blocked session in
+sidebar order, then the next unread finished one, revealing collapsed groups. On macOS the Dock
+icon shows the number of blocked agent sessions. Desktop notifications, sent only while the window
+is inactive, use the session title and say which group it belongs to and whether it needs input,
+finished, or failed.
 
 ### Projects settings
 

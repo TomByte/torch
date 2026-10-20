@@ -27,17 +27,18 @@ fn codex_body_becomes_query() {
 }
 
 #[test]
-fn codex_approval_text_still_becomes_stop() {
+fn codex_approval_text_becomes_permission_request() {
     let event = Osc9FallbackSessionHandler::parse_osc9_text(
         CLIAgent::Codex,
         "Approval requested: rm -rf /tmp/foo",
     )
     .unwrap();
-    assert_eq!(event.event, CLIAgentEventType::Stop);
+    assert_eq!(event.event, CLIAgentEventType::PermissionRequest);
     assert_eq!(
-        event.payload.query.as_deref(),
+        event.payload.summary.as_deref(),
         Some("Approval requested: rm -rf /tmp/foo")
     );
+    assert!(event.payload.query.is_none());
 }
 
 #[test]
