@@ -102,6 +102,11 @@ pub(crate) fn initialize_app_with_team_client(app: &mut App, team_client: Arc<dy
     initialize_settings_for_tests(app);
 
     // Add the necessary singleton models to the App
+    app.add_singleton_model(|_| crate::settings::ProjectsSettings {
+        directories: crate::settings::ProjectDirectories::new(None),
+        parent_directories: crate::settings::ProjectParentDirectories::new(None),
+    });
+    app.add_singleton_model(|_| crate::settings::ProjectCatalog::default());
     app.add_singleton_model(|_ctx| ServerApiProvider::new_for_test());
     app.add_singleton_model(|_| AuthStateProvider::new_for_test());
     app.add_singleton_model(AppTelemetryContextProvider::new_context_provider);

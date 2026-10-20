@@ -52,11 +52,6 @@ fn unavailable_project_does_not_create_a_session_or_expand_its_group() {
     use crate::workspace::view::tests::{initialize_app, mock_workspace};
     warpui::App::test((), |mut app| async move {
         initialize_app(&mut app);
-        app.add_singleton_model(|_| crate::settings::ProjectsSettings {
-            directories: crate::settings::ProjectDirectories::new(None),
-            parent_directories: crate::settings::ProjectParentDirectories::new(None),
-        });
-        app.add_singleton_model(|_| crate::settings::ProjectCatalog::default());
         let workspace = mock_workspace(&mut app);
         let temporary = tempfile::tempdir().unwrap();
         let missing = temporary.path().join("removed project");
@@ -88,11 +83,6 @@ fn collapsing_sidebar_group_keeps_sessions_alive_and_activation_reveals_them() {
     use crate::workspace::view::tests::{initialize_app, mock_workspace};
     warpui::App::test((), |mut app| async move {
         initialize_app(&mut app);
-        app.add_singleton_model(|_| crate::settings::ProjectsSettings {
-            directories: crate::settings::ProjectDirectories::new(None),
-            parent_directories: crate::settings::ProjectParentDirectories::new(None),
-        });
-        app.add_singleton_model(|_| crate::settings::ProjectCatalog::default());
         let workspace = mock_workspace(&mut app);
         workspace.update(&mut app, |workspace, ctx| {
             let key = sessions(workspace, ctx)[0].group_key.clone();
@@ -289,17 +279,13 @@ fn new_session_has_its_project_before_the_shell_reports_a_directory() {
         let root = dunce::canonicalize(temporary.path()).unwrap();
         let child = root.join("nested");
         std::fs::create_dir(&child).unwrap();
-        app.add_singleton_model(|_| crate::settings::ProjectsSettings {
-            directories: crate::settings::ProjectDirectories::new(None),
-            parent_directories: crate::settings::ProjectParentDirectories::new(None),
-        });
-        app.add_singleton_model(|_| {
-            let mut catalog = crate::settings::ProjectCatalog::default();
-            catalog.projects.push(crate::settings::LocalProject {
-                path: root.clone(),
-                name: "Launch".into(),
+        app.update(|ctx| {
+            crate::settings::ProjectCatalog::handle(ctx).update(ctx, |catalog, _| {
+                catalog.projects.push(crate::settings::LocalProject {
+                    path: root.clone(),
+                    name: "Launch".into(),
+                });
             });
-            catalog
         });
         let workspace = mock_workspace(&mut app);
         workspace.update(&mut app, |workspace, ctx| {
@@ -642,11 +628,6 @@ fn moving_a_session_keeps_it_in_its_group_and_groups_in_order() {
     use crate::workspace::view::tests::{initialize_app, mock_workspace};
     warpui::App::test((), |mut app| async move {
         initialize_app(&mut app);
-        app.add_singleton_model(|_| crate::settings::ProjectsSettings {
-            directories: crate::settings::ProjectDirectories::new(None),
-            parent_directories: crate::settings::ProjectParentDirectories::new(None),
-        });
-        app.add_singleton_model(|_| crate::settings::ProjectCatalog::default());
         let workspace = mock_workspace(&mut app);
         workspace.update(&mut app, |workspace, ctx| {
             while workspace.tabs.len() < 3 {

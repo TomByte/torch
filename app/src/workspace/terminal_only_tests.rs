@@ -5,11 +5,6 @@ use warpui::{App, TypedActionView};
 fn terminal_only_restoration_replaces_legacy_file_tabs_with_a_terminal() {
     App::test((), |mut app| async move {
         tests::initialize_app(&mut app);
-        app.add_singleton_model(|_| crate::settings::ProjectCatalog::default());
-        app.add_singleton_model(|_| crate::settings::ProjectsSettings {
-            directories: crate::settings::ProjectDirectories::new(None),
-            parent_directories: crate::settings::ProjectParentDirectories::new(None),
-        });
         let workspace = tests::mock_workspace(&mut app);
         workspace.update(&mut app, |workspace, ctx| {
             let snapshot = PaneNodeSnapshot::Leaf(LeafSnapshot {
@@ -40,11 +35,6 @@ fn terminal_only_restoration_replaces_legacy_file_tabs_with_a_terminal() {
 fn terminal_only_palette_has_sessions_and_projects_without_file_search() {
     App::test((), |mut app| async move {
         tests::initialize_app(&mut app);
-        app.add_singleton_model(|_| crate::settings::ProjectCatalog::default());
-        app.add_singleton_model(|_| crate::settings::ProjectsSettings {
-            directories: crate::settings::ProjectDirectories::new(None),
-            parent_directories: crate::settings::ProjectParentDirectories::new(None),
-        });
         let workspace = tests::mock_workspace(&mut app);
         workspace.update(&mut app, |workspace, ctx| {
             workspace.palette.update(ctx, |palette, ctx| {
@@ -70,11 +60,6 @@ fn terminal_only_palette_has_sessions_and_projects_without_file_search() {
 fn terminal_only_bindings_and_actions_cannot_open_editor_surfaces() {
     App::test((), |mut app| async move {
         tests::initialize_app(&mut app);
-        app.add_singleton_model(|_| crate::settings::ProjectCatalog::default());
-        app.add_singleton_model(|_| crate::settings::ProjectsSettings {
-            directories: crate::settings::ProjectDirectories::new(None),
-            parent_directories: crate::settings::ProjectParentDirectories::new(None),
-        });
         let workspace = tests::mock_workspace(&mut app);
         workspace.update(&mut app, |workspace, ctx| {
             let names = ctx
