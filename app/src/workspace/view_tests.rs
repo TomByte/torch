@@ -5829,3 +5829,25 @@ fn test_tab_group_rename_blur_does_not_commit_unfinished_name() {
         });
     });
 }
+
+#[cfg(feature = "local_only")]
+#[test]
+fn torch_view_menu_shortcuts_have_menu_names() {
+    use crate::util::bindings::{CustomAction, MAC_MENUS_CONTEXT};
+
+    App::test((), |mut app| async move {
+        initialize_app(&mut app);
+        app.read(|ctx| {
+            for (action, name) in [
+                (CustomAction::ToggleSidebar, "Toggle Sidebar"),
+                (CustomAction::AgentsPalette, "Show Agents"),
+            ] {
+                assert_eq!(
+                    ctx.description_for_custom_action(action.into(), MAC_MENUS_CONTEXT)
+                        .as_deref(),
+                    Some(name)
+                );
+            }
+        });
+    });
+}
