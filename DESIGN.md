@@ -385,7 +385,8 @@ out, and only once it has gone does its empty space close, so rows never appear 
 vertically. A group created or emptied by that row moves with it, heading included. With Reduce
 Motion, new rows fade in place over 160 ms and closed rows are removed immediately. Sessions restored
 at launch use immediate placement, and other platforms keep it until their system motion
-preference is available. Running status glyphs remain static; the transitions do not imply a spinning indicator.
+preference is available. The working indicator loops at 30 fps, every pulse in step, and rests
+as a still dot inside a faint ring under Reduce Motion.
 
 ## Shapes
 
@@ -473,7 +474,8 @@ a claim about task duration.
 Status first comes from the terminal's conversation summary. A running shell command without that
 summary supplies InProgress, except for detected CLI agents without structured status: an open
 agent is not evidence of active work. A session with split panes shows its most urgent pane:
-blocked, then running, then unread completion, then error; otherwise the focused pane's status. Running uses a broken ring, blocked uses an amber ring and
+blocked, then running, then unread completion, then error; otherwise the focused pane's status. Running uses an orange dot whose
+ring closes in on it and fades every 1.6 s, blocked uses an amber ring and
 dot, unread completion uses a filled check, and read completion uses a muted check. Errors use an
 amber exclamation ring. Idle, cancelled, waiting, and unknown agent states use a small muted dot.
 Status assets share a 24-unit drawing grid rendered at 16 logical pixels. When both status and

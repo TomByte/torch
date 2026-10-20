@@ -5,7 +5,7 @@ use std::time::Duration;
 
 use futures::StreamExt;
 use instant::Instant;
-use motion::{Motion, SessionMotion};
+use motion::{Motion, SessionMotion, WorkingPulse};
 use warp_core::ui::theme::ColorScheme;
 use warpui::ViewContext;
 
@@ -69,6 +69,7 @@ struct Palette {
     hover: ColorU,
     rule: ColorU,
     attention: ColorU,
+    working: ColorU,
     header_rule: ColorU,
     shadow: ColorU,
 }
@@ -86,6 +87,7 @@ impl Palette {
                 hover: ColorU::from_u32(0xFFFFFF70),
                 rule: ColorU::from_u32(0xD5D6DBFF),
                 attention: ColorU::from_u32(0x98651FFF),
+                working: ColorU::from_u32(0xC15F3CFF),
                 header_rule: ColorU::from_u32(0x88888818),
                 shadow: ColorU::from_u32(0x22223312),
             }
@@ -102,6 +104,7 @@ impl Palette {
                 hover: foreground.with_opacity(5).into_solid(),
                 rule: background.blend(&foreground.with_opacity(18)).into_solid(),
                 attention: theme.terminal_colors().bright.yellow.into(),
+                working: ColorU::from_u32(0xD97757FF),
                 header_rule: foreground.with_opacity(7).into_solid(),
                 shadow: ColorU::from_u32(0x00000030),
             }
@@ -116,6 +119,7 @@ impl Palette {
                 hover: ColorU::from_u32(0xFFFFFF12),
                 rule: ColorU::from_u32(0x424242FF),
                 attention: ColorU::from_u32(0xD9B96EFF),
+                working: ColorU::from_u32(0xD97757FF),
                 header_rule: ColorU::from_u32(0xFFFFFF12),
                 shadow: ColorU::from_u32(0x00000030),
             }
@@ -997,7 +1001,13 @@ fn status_icon(session: &Session, palette: &Palette) -> Box<dyn Element> {
         session.unread,
         session.agent_status_unavailable,
     ) {
-        SessionIndicator::Working => ("bundled/svg/torch-session-running.svg", palette.text),
+        SessionIndicator::Working => {
+            let animated = motion_preference() != Some(MotionPreference::Reduced);
+            return ConstrainedBox::new(WorkingPulse::new(palette.working, animated).finish())
+                .with_width(16.)
+                .with_height(16.)
+                .finish();
+        }
         SessionIndicator::NeedsInput => {
             ("bundled/svg/torch-session-attention.svg", palette.attention)
         }

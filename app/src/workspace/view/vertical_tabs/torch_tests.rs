@@ -382,6 +382,46 @@ fn reduced_arrival_fades_without_moving() {
 }
 
 #[test]
+fn working_pulse_closes_in_on_the_dot_and_fades_out() {
+    let (start_radius, start_opacity) = motion::pulse_ring(0.);
+    let (end_radius, end_opacity) = motion::pulse_ring(1.);
+    assert!(start_radius > end_radius);
+    assert_eq!((start_opacity, end_opacity), (1., 0.));
+    let samples: Vec<_> = (0..=20)
+        .map(|step| motion::pulse_ring(step as f32 / 20.))
+        .collect();
+    assert!(
+        samples
+            .windows(2)
+            .all(|pair| pair[1].0 <= pair[0].0 && pair[1].1 <= pair[0].1)
+    );
+}
+
+#[test]
+fn working_dot_stands_out_from_every_sidebar_background() {
+    for theme in [
+        crate::themes::default_themes::dark_theme(),
+        crate::themes::default_themes::light_theme(),
+        crate::themes::default_themes::kanagawa(),
+        crate::themes::default_themes::ayu(),
+    ] {
+        let palette = Palette::new(&theme);
+        for background in [
+            palette.sidebar_top,
+            palette.sidebar_bottom,
+            palette.selection,
+        ] {
+            assert!(
+                high_enough_contrast(palette.working, background, MinimumAllowedContrast::NonText),
+                "{:?}: {:?} against {background:?}",
+                theme.name(),
+                palette.working
+            );
+        }
+    }
+}
+
+#[test]
 fn departing_rows_return_to_their_original_order() {
     let live = |ids: &[usize]| ids.iter().map(|id| (*id, *id)).collect::<Vec<_>>();
     // Bulk closes remove from the bottom up, so every departure anchors to the same survivor.

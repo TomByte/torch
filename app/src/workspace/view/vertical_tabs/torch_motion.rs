@@ -1,9 +1,11 @@
+use std::sync::LazyLock;
 use std::time::Duration;
 
 use instant::Instant;
+use pathfinder_color::ColorU;
 use pathfinder_geometry::rect::RectF;
 use pathfinder_geometry::vector::{Vector2F, vec2f};
-use warpui::elements::{Element, Point, SizeConstraint};
+use warpui::elements::{Border, CornerRadius, Element, Point, Radius, SizeConstraint};
 use warpui::event::DispatchedEvent;
 use warpui::{
     AfterLayoutContext, AppContext, ClipBounds, EventContext, LayoutContext, PaintContext,
@@ -224,5 +226,139 @@ impl Element for SessionMotion {
         app: &AppContext,
     ) -> bool {
         self.child.origin().is_some() && self.child.dispatch_event(event, ctx, app)
+    }
+}
+
+/// Delay between frames of the working pulse. It loops for as long as an agent works, so it
+/// redraws at a gentler rate than the one-off row motions.
+const PULSE_FRAME_INTERVAL: Duration = Duration::from_millis(33);
+const PULSE_PERIOD: Duration = Duration::from_millis(1600);
+const PULSE_DOT_RADIUS: f32 = 3.5;
+const PULSE_RING_RADIUS: f32 = 7.;
+const PULSE_RING_WIDTH: f32 = 1.5;
+/// Opacity of the ring that stays in place while the moving ring closes in.
+const PULSE_RESTING_RING_OPACITY: f32 = 0.3;
+
+/// Shared by every pulse so all working sessions breathe in step, however often rows rebuild.
+static PULSE_EPOCH: LazyLock<Instant> = LazyLock::new(Instant::now);
+
+/// Radius and opacity of the ring that closes in on the dot, at `t` through one cycle.
+pub(super) fn pulse_ring(t: f32) -> (f32, f32) {
+    let progress = ease_in_out_cubic(t);
+    (
+        PULSE_RING_RADIUS - (PULSE_RING_RADIUS - PULSE_DOT_RADIUS) * progress,
+        1. - progress,
+    )
+}
+
+/// An agent-is-working indicator: a dot with a ring that repeatedly closes in on it and fades.
+/// With `animated` false it rests as a dot inside a faint ring.
+pub(super) struct WorkingPulse {
+    color: ColorU,
+    animated: bool,
+    size: Option<Vector2F>,
+    origin: Option<Point>,
+}
+
+impl WorkingPulse {
+    pub(super) fn new(color: ColorU, animated: bool) -> Self {
+        Self {
+            color,
+            animated,
+            size: None,
+            origin: None,
+        }
+    }
+
+    fn draw_circle(
+        &self,
+        ctx: &mut PaintContext,
+        center: Vector2F,
+        radius: f32,
+        style: CircleStyle,
+    ) {
+        let rect = RectF::new(center - vec2f(radius, radius), vec2f(radius, radius) * 2.);
+        let circle = ctx.scene.draw_rect_without_hit_recording(rect);
+        circle.with_corner_radius(CornerRadius::with_all(Radius::Pixels(radius)));
+        match style {
+            CircleStyle::Filled(opacity) => {
+                circle.with_background(with_opacity(self.color, opacity));
+            }
+            CircleStyle::Outlined(opacity) => {
+                circle.with_border(
+                    Border::all(PULSE_RING_WIDTH)
+                        .with_border_color(with_opacity(self.color, opacity)),
+                );
+            }
+        }
+    }
+}
+
+/// How a circle is drawn, with its opacity.
+enum CircleStyle {
+    Filled(f32),
+    Outlined(f32),
+}
+
+fn with_opacity(color: ColorU, opacity: f32) -> ColorU {
+    ColorU::new(
+        color.r,
+        color.g,
+        color.b,
+        (f32::from(color.a) * opacity).round() as u8,
+    )
+}
+
+impl Element for WorkingPulse {
+    fn layout(
+        &mut self,
+        constraint: SizeConstraint,
+        _ctx: &mut LayoutContext,
+        _app: &AppContext,
+    ) -> Vector2F {
+        let size = constraint.max;
+        self.size = Some(size);
+        size
+    }
+
+    fn after_layout(&mut self, _ctx: &mut AfterLayoutContext, _app: &AppContext) {}
+
+    fn paint(&mut self, origin: Vector2F, ctx: &mut PaintContext, _app: &AppContext) {
+        self.origin = Some(Point::from_vec2f(origin, ctx.scene.z_index()));
+        let Some(size) = self.size else {
+            return;
+        };
+        let center = origin + size / 2.;
+        self.draw_circle(
+            ctx,
+            center,
+            PULSE_RING_RADIUS,
+            CircleStyle::Outlined(PULSE_RESTING_RING_OPACITY),
+        );
+        if self.animated {
+            ctx.repaint_after(PULSE_FRAME_INTERVAL);
+            let period = PULSE_PERIOD.as_secs_f32();
+            let t = PULSE_EPOCH.elapsed().as_secs_f32() % period / period;
+            let (radius, opacity) = pulse_ring(t);
+            self.draw_circle(ctx, center, radius, CircleStyle::Outlined(opacity));
+        }
+        self.draw_circle(ctx, center, PULSE_DOT_RADIUS, CircleStyle::Filled(1.));
+    }
+
+    fn size(&self) -> Option<Vector2F> {
+        self.size
+    }
+
+    fn origin(&self) -> Option<Point> {
+        self.origin
+    }
+
+    fn dispatch_event(
+        &mut self,
+        _event: &DispatchedEvent,
+        _ctx: &mut EventContext,
+        _app: &AppContext,
+    ) -> bool {
+        false
     }
 }
