@@ -1365,7 +1365,11 @@ impl AppearanceSettingsPageView {
 
         if AppIconSettings::as_ref(ctx).is_supported_on_current_platform() {
             categories.push(Category::new(
-                "Icon",
+                if ChannelState::is_local_only() {
+                    "Dock"
+                } else {
+                    "Icon"
+                },
                 vec![Box::new(CustomAppIconWidget::default())],
             ));
         }
@@ -1378,15 +1382,19 @@ impl AppearanceSettingsPageView {
         {
             window_settings_widgets.push(Box::new(CustomWindowSizeWidget::default()));
         }
-        if window_settings
-            .background_opacity
-            .is_supported_on_current_platform()
+        // Torch paints its window opaque, so there is nothing to see through.
+        let has_see_through_window = !ChannelState::is_local_only();
+        if has_see_through_window
+            && window_settings
+                .background_opacity
+                .is_supported_on_current_platform()
         {
             window_settings_widgets.push(Box::new(WindowOpacityWidget::default()));
         }
-        if window_settings
-            .background_blur_radius
-            .is_supported_on_current_platform()
+        if has_see_through_window
+            && window_settings
+                .background_blur_radius
+                .is_supported_on_current_platform()
         {
             window_settings_widgets.push(Box::new(WindowBlurWidget::default()));
         }
@@ -1506,19 +1514,26 @@ impl AppearanceSettingsPageView {
         ));
 
         let tab_settings = TabSettings::as_ref(ctx);
-        let mut tab_settings_widgets: Vec<Box<dyn SettingsWidget<View = Self>>> =
-            vec![Box::new(TabIndicatorWidget::default())];
-        if FeatureFlag::FullScreenZenMode.is_enabled()
+        let mut tab_settings_widgets: Vec<Box<dyn SettingsWidget<View = Self>>> = vec![];
+        // Torch's sidebar replaces the tab bar these settings style.
+        let has_tab_bar = !ChannelState::is_local_only();
+        if has_tab_bar {
+            tab_settings_widgets.push(Box::new(TabIndicatorWidget::default()));
+        }
+        if has_tab_bar
+            && FeatureFlag::FullScreenZenMode.is_enabled()
             && tab_settings
                 .workspace_decoration_visibility
                 .is_supported_on_current_platform()
         {
             tab_settings_widgets.push(Box::new(ZenModeWidget::default()));
         }
-        if FeatureFlag::TabCloseButtonOnLeft.is_enabled() {
+        if has_tab_bar && FeatureFlag::TabCloseButtonOnLeft.is_enabled() {
             tab_settings_widgets.push(Box::new(TabCloseButtonPositionWidget::default()));
         }
-        tab_settings_widgets.push(Box::new(PreserveActiveTabColorWidget::default()));
+        if has_tab_bar {
+            tab_settings_widgets.push(Box::new(PreserveActiveTabColorWidget::default()));
+        }
 
         if FeatureFlag::VerticalTabs.is_enabled() {
             if !ChannelState::is_local_only() {
@@ -1535,7 +1550,7 @@ impl AppearanceSettingsPageView {
                     UseLatestUserPromptAsConversationTitleInTabNamesWidget::default(),
                 ));
             }
-            if FeatureFlag::ConfigurableToolbar.is_enabled() {
+            if has_tab_bar && FeatureFlag::ConfigurableToolbar.is_enabled() {
                 tab_settings_widgets.push(Box::new(EditToolbarWidget));
             }
         }
@@ -1548,7 +1563,10 @@ impl AppearanceSettingsPageView {
             tab_settings_widgets.push(Box::new(DirectoryTabColorsWidget { add_picker }));
         }
 
-        categories.push(Category::new("Tabs", tab_settings_widgets));
+        categories.push(Category::new(
+            if has_tab_bar { "Tabs" } else { "Sidebar" },
+            tab_settings_widgets,
+        ));
 
         categories.push(Category::new(
             "Full-screen Apps",
@@ -5002,7 +5020,7 @@ impl SettingsWidget for ShowVerticalTabPanelInRestoredWindowsWidget {
     type View = AppearanceSettingsPageView;
 
     fn search_terms(&self) -> &str {
-        "vertical tabs panel restore window session snapshot"
+        "sidebar vertical tabs panel restore window session snapshot"
     }
 
     fn render(
@@ -5014,7 +5032,7 @@ impl SettingsWidget for ShowVerticalTabPanelInRestoredWindowsWidget {
         let tab_settings = TabSettings::as_ref(app);
 
         render_body_item::<AppearancePageAction>(
-            "Show vertical tabs panel in restored windows".into(),
+            "Show the sidebar in restored windows".into(),
             None,
             LocalOnlyIconState::for_setting(
                 ShowVerticalTabPanelInRestoredWindows::storage_key(),
@@ -5036,7 +5054,7 @@ impl SettingsWidget for ShowVerticalTabPanelInRestoredWindowsWidget {
                 })
                 .finish(),
             Some(
-                "When enabled, reopening or restoring a window opens the vertical tabs panel even if it was closed when the window was last saved."
+                "Reopening or restoring a window shows the sidebar, even if it was hidden when the window was last saved."
                     .to_string(),
             ),
         )
@@ -5253,7 +5271,7 @@ impl SettingsWidget for DirectoryTabColorsWidget {
     type View = AppearanceSettingsPageView;
 
     fn search_terms(&self) -> &str {
-        "directory tab color folder codebase repo"
+        "directory tab project group color folder codebase repo"
     }
 
     fn render(
@@ -5264,12 +5282,23 @@ impl SettingsWidget for DirectoryTabColorsWidget {
     ) -> Box<dyn Element> {
         let theme = appearance.theme();
 
+        let (title, description) = if ChannelState::is_local_only() {
+            (
+                "Project colors",
+                "Color project groups in the sidebar by folder. Right-click a group to change it.",
+            )
+        } else {
+            (
+                "Directory tab colors",
+                "Automatically color tabs based on the directory or repo you're working in.",
+            )
+        };
         let mut content = Flex::column().with_spacing(8.);
         let header_text = Flex::column()
             .with_spacing(4.)
             .with_child(
                 Text::new(
-                    "Directory tab colors",
+                    title,
                     appearance.ui_font_family(),
                     appearance.ui_font_size(),
                 )
@@ -5279,7 +5308,7 @@ impl SettingsWidget for DirectoryTabColorsWidget {
             )
             .with_child(
                 Text::new(
-                    "Automatically color tabs based on the directory or repo you're working in.",
+                    description,
                     appearance.ui_font_family(),
                     appearance.ui_font_size(),
                 )
@@ -5457,7 +5486,7 @@ impl SettingsWidget for AltScreenPaddingWidget {
         let theme = appearance.theme();
         let mut column = Flex::column().with_child(render_body_item::<AppearancePageAction>(
             "Use custom padding in alt-screen".into(),
-            Some(AdditionalInfo {
+            (!ChannelState::is_local_only()).then(|| AdditionalInfo {
                 mouse_state: self.additional_info_mouse_state.clone(),
                 on_click_action: Some(AppearancePageAction::OpenUrl(
                     "https://docs.warp.dev/terminal/more-features/full-screen-apps#padding".into(),

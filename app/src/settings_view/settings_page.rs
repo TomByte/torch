@@ -2098,7 +2098,6 @@ impl<V: warpui::View> Category<V> {
 
     /// A category whose header carries a subtitle and/or a trailing accessory (see
     /// [`CategoryHeader`]).
-    #[allow(dead_code)]
     pub(super) fn with_header(
         header: CategoryHeader<V>,
         widgets: Vec<Box<dyn SettingsWidget<View = V>>>,

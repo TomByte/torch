@@ -240,9 +240,9 @@ pub enum CtrlTabBehavior {
 impl CtrlTabBehavior {
     pub fn as_dropdown_label(&self) -> &str {
         match self {
-            Self::ActivatePrevNextTab => "Activate previous/next tab",
-            Self::CycleMostRecentSession => "Cycle most recent session",
-            Self::CycleMostRecentTab => "Cycle most recent tab",
+            Self::ActivatePrevNextTab => "Activate previous/next session",
+            Self::CycleMostRecentSession => "Cycle most recent pane",
+            Self::CycleMostRecentTab => "Cycle most recent session",
         }
     }
 }

@@ -3,24 +3,24 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+use pathfinder_color::ColorU;
 use settings::Setting as _;
 use warpui::elements::{
-    Align, Container, CrossAxisAlignment, Expanded, Flex, MouseStateHandle, ParentElement,
-    Shrinkable, Text,
+    Align, Container, CrossAxisAlignment, Expanded, Flex, MouseStateHandle, ParentElement, Text,
 };
 use warpui::platform::FilePickerConfiguration;
 use warpui::text_layout::ClipConfig;
 use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
+use warpui::ui_components::components::UiComponent;
 use warpui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 
+use super::SettingsSection;
 use super::settings_page::{
-    HEADER_PADDING, LocalOnlyIconState, MatchData, PageTitle, PageType, SettingsPageMeta,
-    SettingsPageViewHandle, SettingsWidget, TOGGLE_BUTTON_RIGHT_PADDING, render_body_item_label,
+    Category, CategoryHeader, HEADER_PADDING, MatchData, PageType, SettingsPageMeta,
+    SettingsPageViewHandle, SettingsWidget,
 };
-use super::{SettingsSection, ToggleState};
 use crate::appearance::Appearance;
 use crate::settings::{ProjectCatalog, ProjectsSettings};
 
@@ -42,13 +42,7 @@ impl ProjectsPageView {
             ctx.notify();
         });
         ctx.observe(&ProjectCatalog::handle(ctx), |_, _, ctx| ctx.notify());
-        let mut page = PageType::new_uncategorized(
-            vec![
-                Box::new(LocationsWidget::<false>::default()),
-                Box::new(LocationsWidget::<true>::default()),
-            ],
-            Some(PageTitle::new("Projects")),
-        );
+        let mut page = build_page();
         page.set_min_page_width(0.);
         Self {
             page,
@@ -144,13 +138,34 @@ impl From<ViewHandle<ProjectsPageView>> for SettingsPageViewHandle {
         Self::Projects(handle)
     }
 }
+
+fn build_page() -> PageType<ProjectsPageView> {
+    PageType::new_categorized(
+        vec![
+            Category::with_header(
+                CategoryHeader::new("Projects").with_subtitle(
+                    "Choose a project in Cmd+P to resume its session, or start one if none is open.",
+                ),
+                vec![Box::new(LocationsWidget::<false>::default())],
+            ),
+            Category::with_header(
+                CategoryHeader::new("Discover projects").with_subtitle(
+                    "Each subfolder of these folders becomes a project in Cmd+P.",
+                ),
+                vec![Box::new(LocationsWidget::<true>::default())],
+            ),
+        ],
+        None,
+    )
+}
+
 #[derive(Default)]
 struct LocationsWidget<const PARENTS: bool> {
     add_state: MouseStateHandle,
 }
-fn copy(text: &str, appearance: &Appearance) -> Box<dyn Element> {
+fn copy(text: &str, color: ColorU, appearance: &Appearance) -> Box<dyn Element> {
     Text::new_inline(text.to_owned(), appearance.ui_font_family(), 13.)
-        .with_color(appearance.theme().foreground().into_solid())
+        .with_color(color)
         .with_clip(ClipConfig::ellipsis())
         .finish()
 }
@@ -169,70 +184,14 @@ impl<const PARENTS: bool> SettingsWidget for LocationsWidget<PARENTS> {
         appearance: &Appearance,
         app: &AppContext,
     ) -> Box<dyn Element> {
-        let (title, description, add_label) = if PARENTS {
-            (
-                "Discover projects in",
-                "Each immediate subfolder becomes a project. Torch checks these folders when you open Cmd+P.",
-                "Add parent folder",
-            )
-        } else {
-            (
-                "Project folders",
-                "Choose a project in Cmd+P to resume its session, or start one if it is not open.",
-                "Add project",
-            )
-        };
-        let button = appearance
-            .ui_builder()
-            .button(ButtonVariant::Secondary, self.add_state.clone())
-            .with_text_label(add_label.to_owned())
-            .build()
-            .on_click(|ctx, _, _| {
-                ctx.dispatch_typed_action(ProjectsPageAction::Add { parent: PARENTS })
-            })
-            .finish();
-        let label = render_body_item_label::<ProjectsPageAction>(
-            title.into(),
-            None,
-            None,
-            LocalOnlyIconState::Hidden,
-            ToggleState::Enabled,
-            appearance,
-        );
-        let header = Flex::row()
-            .with_cross_axis_alignment(CrossAxisAlignment::Center)
-            .with_child(
-                Shrinkable::new(
-                    1.,
-                    Container::new(Align::new(label).left().finish()).finish(),
-                )
-                .finish(),
-            )
-            .with_child(
-                Container::new(button)
-                    .with_padding_right(TOGGLE_BUTTON_RIGHT_PADDING)
-                    .finish(),
-            )
-            .finish();
-        let description = appearance
-            .ui_builder()
-            .paragraph(description.to_owned())
-            .with_style(UiComponentStyles {
-                font_color: Some(appearance.theme().foreground().into_solid()),
-                font_size: Some(12.),
-                ..Default::default()
-            })
-            .build()
-            .finish();
-        let mut column = Flex::column().with_child(header).with_child(
-            Container::new(description)
-                .with_padding_top(4.)
-                .with_margin_right(100.)
-                .with_padding_bottom(HEADER_PADDING)
-                .finish(),
-        );
+        let theme = appearance.theme();
+        let mut column = Flex::column();
         if !PARENTS && let Some(error) = &view.error {
-            column.add_child(copy(error, appearance));
+            column.add_child(
+                Container::new(copy(error, theme.foreground().into_solid(), appearance))
+                    .with_padding_bottom(8.)
+                    .finish(),
+            );
         }
         let settings = ProjectsSettings::as_ref(app);
         let paths = if PARENTS {
@@ -244,13 +203,14 @@ impl<const PARENTS: bool> SettingsWidget for LocationsWidget<PARENTS> {
             column.add_child(
                 Container::new(copy(
                     if PARENTS {
-                        "No parent folders added."
+                        "No folders added."
                     } else {
-                        "No projects yet. Add a folder to get started."
+                        "No projects yet."
                     },
+                    theme.nonactive_ui_text_color().into(),
                     appearance,
                 ))
-                .with_padding_bottom(16.)
+                .with_padding_bottom(8.)
                 .finish(),
             );
         }
@@ -300,6 +260,22 @@ impl<const PARENTS: bool> SettingsWidget for LocationsWidget<PARENTS> {
                 .finish(),
             );
         }
+        let add_label = if PARENTS { "Add folder" } else { "Add project" };
+        let add = appearance
+            .ui_builder()
+            .button(ButtonVariant::Secondary, self.add_state.clone())
+            .with_text_label(add_label.to_owned())
+            .build()
+            .on_click(|ctx, _, _| {
+                ctx.dispatch_typed_action(ProjectsPageAction::Add { parent: PARENTS })
+            })
+            .finish();
+        column.add_child(
+            Container::new(Align::new(add).left().finish())
+                .with_padding_top(4.)
+                .with_padding_bottom(HEADER_PADDING)
+                .finish(),
+        );
         column.finish()
     }
 }

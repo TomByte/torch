@@ -3691,8 +3691,8 @@ impl FeaturesPageView {
 
     fn new_tab_placement_dropdown_item_label(val: NewTabPlacement) -> &'static str {
         match val {
-            NewTabPlacement::AfterAllTabs => "After all tabs",
-            NewTabPlacement::AfterCurrentTab => "After current tab",
+            NewTabPlacement::AfterAllTabs => "After all sessions",
+            NewTabPlacement::AfterCurrentTab => "After current session",
         }
     }
 
@@ -4687,7 +4687,7 @@ impl SettingsWidget for SessionRestorationWidget {
             .finish();
 
         let labeled_switch = render_body_item::<FeaturesPageAction>(
-            "Restore windows, tabs, and panes on startup".into(),
+            "Restore windows, sessions, and panes on startup".into(),
             docs_link_info(
                 &self.additional_info_link,
                 "https://docs.warp.dev/terminal/sessions/session-restoration",
@@ -4852,7 +4852,7 @@ impl SettingsWidget for QuitWarningModalWidget {
     type View = FeaturesPageView;
 
     fn search_terms(&self) -> &str {
-        "warning popup modal dialog quit logout log out close"
+        "warning popup modal dialog quit close"
     }
 
     fn render(
@@ -4864,7 +4864,7 @@ impl SettingsWidget for QuitWarningModalWidget {
         let general_settings = GeneralSettings::as_ref(app);
         let ui_builder = appearance.ui_builder();
         render_body_item::<FeaturesPageAction>(
-            "Show warning before quitting/logging out".into(),
+            "Show warning before quitting".into(),
             None,
             LocalOnlyIconState::for_setting(
                 ShowWarningBeforeQuitting::storage_key(),
@@ -5130,7 +5130,7 @@ impl SettingsWidget for DefaultTerminalWidget {
     type View = FeaturesPageView;
 
     fn search_terms(&self) -> &str {
-        "warp default terminal application"
+        "torch default terminal application"
     }
 
     fn render(
@@ -5972,7 +5972,7 @@ impl SettingsWidget for WarpCompletionsWidget {
     type View = FeaturesPageView;
 
     fn search_terms(&self) -> &str {
-        "warp completions built-in shell command suggestions open completions menu as you type typing"
+        "torch completions built-in shell command suggestions open completions menu as you type typing"
     }
 
     fn render(
@@ -6317,7 +6317,7 @@ impl SettingsWidget for VimModeWidget {
         let app_editor_settings = AppEditorSettings::as_ref(app);
         let vim_mode_enabled = *app_editor_settings.vim_mode.value();
         column.add_child(render_body_item::<FeaturesPageAction>(
-            "Edit code and commands with Vim keybindings".into(),
+            "Edit commands with Vim keybindings".into(),
             None,
             LocalOnlyIconState::for_setting(
                 VimModeEnabled::storage_key(),
@@ -7414,7 +7414,7 @@ impl SettingsWidget for NewTabPlacementWidget {
     type View = FeaturesPageView;
 
     fn search_terms(&self) -> &str {
-        "new tab placement"
+        "new session tab placement"
     }
 
     fn render(
@@ -7425,7 +7425,7 @@ impl SettingsWidget for NewTabPlacementWidget {
     ) -> Box<dyn Element> {
         render_dropdown_item(
             appearance,
-            "New tab placement",
+            "New session placement",
             None,
             None,
             LocalOnlyIconState::for_setting(

@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use warp_core::channel::ChannelState;
 use warpui::SingletonEntity;
 
 use super::editor::AgentToolbarEditorMode;
@@ -327,13 +328,15 @@ impl AgentToolbarItemKind {
             .into_iter()
             .map(Self::ContextChip)
             .collect();
-        items.extend([
-            Self::FileExplorer,
-            Self::RichInput,
-            Self::FileAttach,
-            Self::VoiceInput,
-            Self::Settings,
-        ]);
+        if crate::code::editor_available() {
+            items.push(Self::FileExplorer);
+        }
+        items.extend([Self::RichInput, Self::FileAttach]);
+        // Voice input needs Warp AI.
+        if !ChannelState::is_local_only() {
+            items.push(Self::VoiceInput);
+        }
+        items.push(Self::Settings);
         if FeatureFlag::CreatingSharedSessions.is_enabled()
             && FeatureFlag::HOARemoteControl.is_enabled()
         {

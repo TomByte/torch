@@ -59,10 +59,16 @@ const FONT_SIZE: f32 = 12.;
 
 const SAFE_MODE_TITLE: &str = "Secret redaction";
 static SAFE_MODE_DESCRIPTION: LazyLock<&'static str> = LazyLock::new(|| {
-    "When this setting is enabled, Torch will scan blocks, the contents of \
-        Warp Drive objects, and Oz prompts for potential sensitive \
-        information and prevent saving or sending this data to any \
-        servers. You can customize this list via regexes."
+    if ChannelState::is_local_only() {
+        "When this setting is enabled, Torch scans command output for likely secrets, such as \
+            API keys and passwords, and marks or hides them on screen. You can customize this \
+            list via regexes."
+    } else {
+        "When this setting is enabled, Torch will scan blocks, the contents of \
+            Warp Drive objects, and Oz prompts for potential sensitive \
+            information and prevent saving or sending this data to any \
+            servers. You can customize this list via regexes."
+    }
 });
 const USER_SECRET_REGEX_TITLE: &str = "Custom secret redaction";
 const USER_SECRET_REGEX_DESCRIPTION: &str = "Use regex to define additional secrets or data you'd like to redact. This will take effect \
@@ -211,21 +217,15 @@ impl PrivacyPageView {
             Box::new(SecretRedactionWidget::default()),
             Box::new(CloudConversationStorageWidget::default()),
         ];
+        if ChannelState::is_local_only() {
+            return PageType::new_uncategorized(widgets, None);
+        }
         if ContextFlag::NetworkLogConsole.is_enabled() {
             widgets.push(Box::new(NetworkLogWidget::default()));
         }
-        if !ChannelState::is_local_only() {
-            widgets.push(Box::new(DataManagementWidget::default()));
-            widgets.push(Box::new(PrivacyPolicyWidget::default()));
-        }
-        PageType::new_uncategorized(
-            widgets,
-            Some(PageTitle::new(if ChannelState::is_local_only() {
-                "Secret redaction"
-            } else {
-                "Privacy"
-            })),
-        )
+        widgets.push(Box::new(DataManagementWidget::default()));
+        widgets.push(Box::new(PrivacyPolicyWidget::default()));
+        PageType::new_uncategorized(widgets, Some(PageTitle::new("Privacy")))
     }
 
     fn update_button_states(

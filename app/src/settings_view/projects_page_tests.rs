@@ -38,25 +38,21 @@ fn project_settings_layout_handles_empty_and_populated_lists() {
 }
 
 #[test]
-fn project_settings_search_isolates_each_location_type_and_preserves_title() {
+fn project_settings_search_isolates_each_location_type() {
     use super::super::settings_page::FilteredPageType;
     App::test((), |mut app| async move {
         app.update(|ctx| {
-            let mut page = PageType::<ProjectsPageView>::new_uncategorized(
-                vec![
-                    Box::new(LocationsWidget::<false>::default()),
-                    Box::new(LocationsWidget::<true>::default()),
-                ],
-                Some(PageTitle::new("Projects")),
-            );
+            let mut page = build_page();
             for (query, expected) in [("parent", 1), ("individual", 1), ("", 2)] {
                 page.update_filter(query, ctx);
-                let FilteredPageType::Uncategorized { widgets, title, .. } = page.get_filtered()
-                else {
+                let FilteredPageType::Categorized { categories, .. } = page.get_filtered() else {
                     panic!("expected project settings page");
                 };
-                assert_eq!(widgets.len(), expected);
-                assert!(title.is_some());
+                let widgets: usize = categories
+                    .iter()
+                    .map(|category| category.widgets.len())
+                    .sum();
+                assert_eq!(widgets, expected);
             }
         });
     });

@@ -18,7 +18,7 @@ use warp_errors::report_if_error;
 use warpui::elements::{
     ChildView, Container, CornerRadius, CrossAxisAlignment, Element, Empty, Flex,
     FormattedTextElement, HighlightedHyperlink, MainAxisAlignment, MainAxisSize, MouseStateHandle,
-    ParentElement, Radius, Shrinkable,
+    ParentElement, Radius, Shrinkable, Text,
 };
 use warpui::keymap::ContextPredicate;
 use warpui::ui_components::button::ButtonVariant;
@@ -33,9 +33,9 @@ use super::ai_shared::{
     update_editor_interaction_state,
 };
 use super::settings_page::{
-    AdditionalInfo, CONTENT_FONT_SIZE, LocalOnlyIconState, MatchData, PageTitle, PageType,
-    SettingsPageMeta, SettingsPageViewHandle, SettingsWidget, ToggleState, build_toggle_element,
-    render_body_item, render_body_item_label,
+    AdditionalInfo, CONTENT_FONT_SIZE, Category, CategoryHeader, HEADER_PADDING,
+    LocalOnlyIconState, MatchData, PageTitle, PageType, SettingsPageMeta, SettingsPageViewHandle,
+    SettingsWidget, ToggleState, build_toggle_element, render_body_item_label,
 };
 use super::{SettingsAction, SettingsSection, ToggleSettingActionPair, flags};
 use crate::ai::blocklist::agent_view::agent_input_footer::editor::{
@@ -56,7 +56,6 @@ use crate::view_components::{Dropdown, SubmittableTextInput, SubmittableTextInpu
 use crate::{TelemetryEvent, send_telemetry_from_ctx};
 
 const PAGE_TITLE: &str = "Third party CLI agents";
-const LOCAL_PAGE_TITLE: &str = "Agents";
 
 /// Torch's status hooks for one agent, as last read from its configuration folder.
 struct AgentStatusSetup {
@@ -222,12 +221,7 @@ impl CLIAgentsPageView {
     }
 
     fn build_page() -> PageType<Self> {
-        let mut widgets: Vec<Box<dyn SettingsWidget<View = Self>>> = Vec::new();
-        if shows_status_setup() {
-            widgets.push(Box::new(AgentStatusWidget::new(StatusAgent::Claude)));
-            widgets.push(Box::new(AgentStatusWidget::new(StatusAgent::Codex)));
-        }
-        widgets.extend::<[Box<dyn SettingsWidget<View = Self>>; 7]>([
+        let toolbar_widgets: Vec<Box<dyn SettingsWidget<View = Self>>> = vec![
             Box::new(CLIAgentWidget::default()),
             Box::new(CLIAgentAutoToggleRichInputWidget::default()),
             Box::new(CLIAgentAutoOpenRichInputWidget::default()),
@@ -235,13 +229,24 @@ impl CLIAgentsPageView {
             Box::new(CLIAgentSubmitRichInputWidget::default()),
             Box::new(CLIAgentCommandsWidget),
             Box::new(CLIAgentToolbarLayoutWidget),
-        ]);
-        let title = if ChannelState::is_local_only() {
-            LOCAL_PAGE_TITLE
-        } else {
-            PAGE_TITLE
-        };
-        PageType::new_uncategorized(widgets, Some(PageTitle::new(title)))
+        ];
+        if !ChannelState::is_local_only() {
+            return PageType::new_uncategorized(toolbar_widgets, Some(PageTitle::new(PAGE_TITLE)));
+        }
+        let mut categories = Vec::new();
+        if shows_status_setup() {
+            categories.push(Category::with_header(
+                CategoryHeader::new("Session status").with_subtitle(
+                    "Show when an agent is working or needs you. Existing hooks and settings are kept.",
+                ),
+                vec![
+                    Box::new(AgentStatusWidget::new(StatusAgent::Claude)),
+                    Box::new(AgentStatusWidget::new(StatusAgent::Codex)),
+                ],
+            ));
+        }
+        categories.push(Category::new("Coding agent toolbar", toolbar_widgets));
+        PageType::new_categorized(categories, None)
     }
 
     fn create_cli_agent_dropdowns(
@@ -745,29 +750,44 @@ impl SettingsWidget for AgentStatusWidget {
             .config_dir
             .as_ref()
             .map(|path| path.display().to_string())
-            .unwrap_or_else(|| format!("Choose your {name} configuration folder"));
+            .unwrap_or_else(|| "not found, choose your configuration folder".to_owned());
         let requirement = match agent {
             StatusAgent::Claude => "Requires a current Claude Code version.",
             StatusAgent::Codex => {
                 "Requires a Codex version with hooks; Codex asks you to trust them once."
             }
         };
-        let mut description = format!(
-            "Show when {name} is working or needs you. {requirement} Existing hooks and settings are preserved.\n{name} configuration: {directory}\nStatus: {}",
-            setup_state_label(setup.state.as_ref())
-        );
+        let mut description = format!("{requirement}\nConfiguration folder: {directory}");
         if let Some(message) = &setup.message {
             description.push_str(&format!("\n{message}"));
         }
-        render_body_item::<CLIAgentsPageAction>(
-            format!("{name} session status"),
-            None,
-            LocalOnlyIconState::Hidden,
-            ToggleState::Enabled,
-            appearance,
-            buttons.finish(),
-            Some(description),
+        let status = Text::new_inline(
+            setup_state_label(setup.state.as_ref()),
+            appearance.ui_font_family(),
+            CONTENT_FONT_SIZE,
         )
+        .with_color(appearance.theme().nonactive_ui_text_color().into())
+        .finish();
+        Flex::column()
+            .with_child(build_toggle_element(
+                render_body_item_label::<CLIAgentsPageAction>(
+                    name.to_owned(),
+                    None,
+                    None,
+                    LocalOnlyIconState::Hidden,
+                    ToggleState::Enabled,
+                    appearance,
+                ),
+                status,
+                appearance,
+                Some(description),
+            ))
+            .with_child(
+                Container::new(buttons.finish())
+                    .with_padding_bottom(HEADER_PADDING)
+                    .finish(),
+            )
+            .finish()
     }
 }
 
