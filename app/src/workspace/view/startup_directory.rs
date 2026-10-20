@@ -20,7 +20,18 @@ impl Workspace {
             .then(|| {
                 self.active_tab_pane_group().read(ctx, |pane_group, ctx| {
                     pane_group.active_session_id(ctx).and_then(|base_pane_id| {
-                        pane_group.startup_path_for_new_session(Some(base_pane_id), ctx)
+                        pane_group
+                            .startup_path_for_new_session(Some(base_pane_id), ctx)
+                            .or_else(|| {
+                                let terminal = pane_group.focused_session_view(ctx)?;
+                                (!terminal.as_ref(ctx).is_login_shell_bootstrapped())
+                                    .then(|| {
+                                        self.tabs[self.active_tab_index]
+                                            .sidebar_startup_directory
+                                            .clone()
+                                    })
+                                    .flatten()
+                            })
                     })
                 })
             })

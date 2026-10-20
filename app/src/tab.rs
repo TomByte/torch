@@ -371,6 +371,9 @@ pub struct TabData {
     pub in_multi_selection: bool,
     /// True when this tab is pinned to the front of the tab list.
     pub pinned: bool,
+    /// Launch directory used by the sidebar until the shell reports its working directory.
+    pub sidebar_startup_directory: Option<std::path::PathBuf>,
+    pub sidebar_arrival_started: Option<instant::Instant>,
 }
 
 const TAB_COLOR_ICON_PATH: &str = "bundled/svg/ellipse.svg";
@@ -391,6 +394,8 @@ impl TabData {
             group_id: None,
             in_multi_selection: false,
             pinned: false,
+            sidebar_startup_directory: None,
+            sidebar_arrival_started: None,
         }
     }
 

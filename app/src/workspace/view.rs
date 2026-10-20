@@ -13189,6 +13189,18 @@ impl Workspace {
         let active_tab_selected_color = active_tab.map(|tab| tab.selected_color);
         let active_tab_default_color = active_tab.and_then(|tab| tab.default_directory_color);
 
+        let sidebar_startup_directory = if ChannelState::is_local_only() {
+            match &panes_layout {
+                PanesLayout::SingleTerminal(options) => options
+                    .initial_directory
+                    .clone()
+                    .or_else(dirs::home_dir)
+                    .map(|path| dunce::canonicalize(&path).unwrap_or(path)),
+                _ => None,
+            }
+        } else {
+            None
+        };
         let is_new_terminal = matches!(panes_layout, PanesLayout::SingleTerminal(_));
         let is_restoration = matches!(panes_layout, PanesLayout::Snapshot(_));
         let new_pane_group = ctx.add_typed_action_view(|ctx| {
@@ -13221,7 +13233,10 @@ impl Workspace {
         } else {
             self.new_tab_index_and_group(ctx)
         };
-        self.tabs.insert(insert_idx, TabData::new(new_pane_group));
+        let mut tab = TabData::new(new_pane_group);
+        tab.sidebar_startup_directory = sidebar_startup_directory;
+        tab.group_id = inherited_group_id;
+        self.tabs.insert(insert_idx, tab);
         self.tab_mru_order
             .push(self.tabs[insert_idx].pane_group.id());
         self.activate_tab_internal(insert_idx, ctx);
@@ -13233,6 +13248,11 @@ impl Workspace {
                 new_tab.group_id = Some(group_id);
             }
             self.expand_tab_group(group_id, ctx);
+        }
+
+        if !is_restoration && is_new_terminal {
+            self.reveal_sidebar_session(insert_idx, ctx);
+            self.animate_sidebar_arrival(insert_idx, ctx);
         }
 
         if !is_restoration {

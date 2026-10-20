@@ -280,6 +280,7 @@ mach2 = "0.5"
 objc.workspace = true
 objc2.workspace = true
 objc2-app-kit = { workspace = true, features = [
+    "NSAccessibility",
     "NSApplication",
     "NSImage",
     "NSResponder",

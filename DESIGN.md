@@ -373,9 +373,12 @@ establish an untested minimum window size.
 The sidebar is tonal, and session rows remain flat. The main pane uses a thin rule and one restrained
 shadow. The exact native shadows are recorded in the sidecar as `terminal-pane` for light mode and
 `terminal-pane-dark` for dark mode. Both use offset (0, 2), blur 12, and spread 0 in logical pixels;
-the light shadow is faint blue-black and the dark shadow is translucent black. Hover changes fill;
-no animation timing or easing is defined in this workspace renderer. Do not infer a pulsing or
-spinning animation from a static running glyph.
+the light shadow is faint blue-black and the dark shadow is translucent black. Hover changes fill.
+New terminal rows are allocated to their launch folder before the first sidebar render. On macOS,
+the row opens vertically in place over 180 ms with exponential ease-out; neighbouring rows move
+only to make room within that group. Restored tabs and Reduce Motion use immediate placement.
+Other platforms keep immediate placement until their system motion preference is available.
+Running status glyphs remain static; the arrival transition does not imply a spinning indicator.
 
 ## Shapes
 

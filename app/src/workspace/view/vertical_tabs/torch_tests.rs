@@ -278,3 +278,152 @@ fn kanagawa_and_ayu_keep_sidebar_and_command_text_readable() {
         }
     }
 }
+
+#[test]
+fn new_session_has_its_project_before_the_shell_reports_a_directory() {
+    use crate::workspace::view::tests::{initialize_app, mock_workspace};
+    warpui::App::test((), |mut app| async move {
+        initialize_app(&mut app);
+        let temporary = tempfile::tempdir().unwrap();
+        let root = dunce::canonicalize(temporary.path()).unwrap();
+        let child = root.join("nested");
+        std::fs::create_dir(&child).unwrap();
+        app.add_singleton_model(|_| crate::settings::ProjectsSettings {
+            directories: crate::settings::ProjectDirectories::new(None),
+            parent_directories: crate::settings::ProjectParentDirectories::new(None),
+        });
+        app.add_singleton_model(|_| {
+            let mut catalog = crate::settings::ProjectCatalog::default();
+            catalog.projects.push(crate::settings::LocalProject {
+                path: root.clone(),
+                name: "Launch".into(),
+            });
+            catalog
+        });
+        let workspace = mock_workspace(&mut app);
+        workspace.update(&mut app, |workspace, ctx| {
+            workspace
+                .vertical_tabs_panel
+                .collapsed_torch_groups
+                .insert(format!("project:{}", root.display()));
+            workspace.add_tab_with_pane_layout(
+                crate::pane_group::PanesLayout::SingleTerminal(Box::new(
+                    crate::pane_group::NewTerminalOptions {
+                        initial_directory: Some(child.clone()),
+                        ..Default::default()
+                    },
+                )),
+                Arc::new(HashMap::new()),
+                None,
+                ctx,
+            );
+            let index = workspace.active_tab_index;
+            let session = &sessions(workspace, ctx)[index];
+            assert_eq!(session.group_key, format!("project:{}", root.display()));
+            assert_eq!(session.group_label, "Launch");
+            assert!(!session.directory.is_empty());
+            assert!(session_order(workspace, ctx).contains(&index));
+            let inherited = workspace.get_new_tab_startup_directory(
+                crate::terminal::session_settings::NewSessionSource::Tab,
+                Some(ctx.window_id()),
+                None,
+                ctx,
+            );
+            assert_eq!(inherited, Some(child));
+        });
+    });
+}
+
+#[test]
+fn session_arrival_settles_quickly_and_never_overshoots() {
+    assert_eq!(arrival_progress(Duration::ZERO), 0.);
+    assert!(arrival_progress(Duration::from_millis(90)) > 0.95);
+    assert_eq!(arrival_progress(ARRIVAL_DURATION), 1.);
+    assert_eq!(arrival_progress(Duration::from_secs(20)), 1.);
+    let frames = (0..=180)
+        .map(|ms| arrival_progress(Duration::from_millis(ms)))
+        .collect::<Vec<_>>();
+    assert!(frames.windows(2).all(|pair| pair[0] <= pair[1]));
+    assert!(frames.iter().all(|progress| (0. ..=1.).contains(progress)));
+}
+
+struct ArrivalLayoutTestView;
+impl warpui::Entity for ArrivalLayoutTestView {
+    type Event = ();
+}
+impl warpui::TypedActionView for ArrivalLayoutTestView {
+    type Action = ();
+}
+impl warpui::View for ArrivalLayoutTestView {
+    fn ui_name() -> &'static str {
+        "ArrivalLayoutTest"
+    }
+    fn render(&self, _: &AppContext) -> Box<dyn Element> {
+        let full_row = SavePosition::new(
+            ConstrainedBox::new(Empty::new().finish())
+                .with_width(120.)
+                .with_height(ROW_HEIGHT)
+                .finish(),
+            "full-row",
+        )
+        .finish();
+        let rows = Flex::column()
+            .with_main_axis_size(MainAxisSize::Min)
+            .with_child(
+                SavePosition::new(SessionArrival::new(full_row, 0.5).finish(), "arrival").finish(),
+            )
+            .with_child(
+                SavePosition::new(
+                    ConstrainedBox::new(Empty::new().finish())
+                        .with_width(120.)
+                        .with_height(ROW_HEIGHT)
+                        .finish(),
+                    "following-row",
+                )
+                .finish(),
+            )
+            .finish();
+        Stack::new()
+            .with_child(Align::new(rows).top_left().finish())
+            .finish()
+    }
+}
+
+#[test]
+fn arrival_opens_space_without_compressing_the_session_contents() {
+    warpui::App::test((), |mut app| async move {
+        let (window_id, _view) = app
+            .add_window(warpui::platform::WindowStyle::NotStealFocus, |_| {
+                ArrivalLayoutTestView
+            });
+        let root = app.root_view_id(window_id).unwrap();
+        let mut presenter = warpui::Presenter::new(window_id);
+        app.update(|ctx| {
+            presenter.invalidate(
+                warpui::WindowInvalidation {
+                    updated: [root].into_iter().collect(),
+                    ..Default::default()
+                },
+                ctx,
+            );
+            presenter.build_scene(vec2f(272., 600.), 1., None, ctx);
+            let positions = presenter.position_cache();
+            assert_eq!(
+                positions.get_position("full-row").unwrap().height(),
+                ROW_HEIGHT
+            );
+            assert_eq!(
+                positions.get_position("arrival").unwrap().height(),
+                ROW_HEIGHT / 2.
+            );
+            assert_eq!(
+                positions
+                    .get_position("following-row")
+                    .unwrap()
+                    .origin()
+                    .y(),
+                ROW_HEIGHT / 2.
+            );
+        });
+    });
+}

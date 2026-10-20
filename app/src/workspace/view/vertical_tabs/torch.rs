@@ -1,14 +1,43 @@
+#[path = "torch_arrival.rs"]
+mod arrival;
+
 use super::*;
 use crate::session_management::CommandContext;
 use crate::ui_components::buttons::icon_button;
 use crate::workspace::header_toolbar_item::HeaderToolbarItemKind;
 use crate::workspace::view::PanelPosition;
+use arrival::SessionArrival;
+use futures::StreamExt;
+use instant::Instant;
+use std::time::Duration;
 use warp_core::ui::theme::ColorScheme;
 use warpui::ViewContext;
 
 pub(super) const SIDEBAR_WIDTH: f32 = 272.;
 const HEADER_HEIGHT: f32 = 48.;
 const ROW_HEIGHT: f32 = 28.;
+const ARRIVAL_DURATION: Duration = Duration::from_millis(180);
+
+fn arrival_progress(elapsed: Duration) -> f32 {
+    let t = (elapsed.as_secs_f32() / ARRIVAL_DURATION.as_secs_f32()).clamp(0., 1.);
+    if t >= 1. {
+        1.
+    } else {
+        1. - 2_f32.powf(-10. * t)
+    }
+}
+
+fn sidebar_motion_enabled() -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        !objc2_app_kit::NSWorkspace::sharedWorkspace().accessibilityDisplayShouldReduceMotion()
+    }
+    // Keep placement immediate until the other backends expose their system motion preference.
+    #[cfg(not(target_os = "macos"))]
+    {
+        false
+    }
+}
 
 struct Palette {
     sidebar_top: ColorU,
@@ -157,6 +186,46 @@ pub(in crate::workspace::view) fn session_order(
 }
 
 impl Workspace {
+    pub(in crate::workspace::view) fn animate_sidebar_arrival(
+        &mut self,
+        index: usize,
+        ctx: &mut ViewContext<Self>,
+    ) {
+        if !warp_core::channel::ChannelState::is_local_only()
+            || !self.vertical_tabs_panel_open
+            || !sidebar_motion_enabled()
+        {
+            return;
+        }
+        let id = self.tabs[index].pane_group.id();
+        self.tabs[index].sidebar_arrival_started = Some(Instant::now());
+        ctx.spawn_stream_local(
+            async_io::Timer::interval(Duration::from_millis(16)).take(12),
+            move |workspace, _, ctx| {
+                if workspace.vertical_tabs_panel_open
+                    && workspace.tabs.iter().any(|tab| tab.pane_group.id() == id)
+                {
+                    if workspace.active_tab_pane_group().id() == id {
+                        workspace
+                            .vertical_tabs_panel
+                            .scroll_to_tab(workspace.active_tab_index);
+                    }
+                    ctx.notify();
+                }
+            },
+            move |workspace, ctx| {
+                if let Some(tab) = workspace
+                    .tabs
+                    .iter_mut()
+                    .find(|tab| tab.pane_group.id() == id)
+                {
+                    tab.sidebar_arrival_started = None;
+                    ctx.notify();
+                }
+            },
+        );
+    }
+
     pub(in crate::workspace::view) fn reveal_sidebar_project(&mut self, directory: &Path) {
         self.vertical_tabs_panel
             .collapsed_torch_groups
@@ -236,8 +305,20 @@ fn sessions(workspace: &Workspace, app: &AppContext) -> Vec<Session> {
             let pane_group = tab.pane_group.as_ref(app);
             let terminal = pane_group.focused_session_view(app);
             let terminal = terminal.as_ref().map(|view| view.as_ref(app));
-            let directory = terminal
-                .and_then(|view| view.display_working_directory(app))
+            let startup_directory = tab
+                .sidebar_startup_directory
+                .as_ref()
+                .filter(|_| terminal.is_some_and(|view| !view.is_login_shell_bootstrapped()));
+            let directory = startup_directory
+                .map(|path| {
+                    let home = dirs::home_dir();
+                    warp_util::path::user_friendly_path(
+                        &path.to_string_lossy(),
+                        home.as_ref().and_then(|path| path.to_str()),
+                    )
+                    .to_string()
+                })
+                .or_else(|| terminal.and_then(|view| view.display_working_directory(app)))
                 .unwrap_or_default();
             let cli_session =
                 terminal.and_then(|view| CLIAgentSessionsModel::as_ref(app).session(view.id()));
@@ -270,15 +351,20 @@ fn sessions(workspace: &Workspace, app: &AppContext) -> Vec<Session> {
                 .and_then(TerminalView::session_activity_age_minutes)
                 .map(age_label)
                 .unwrap_or_default();
-            let project = terminal
-                .filter(|_| tab.group_id.is_none())
-                .and_then(|view| view.canonical_session_pwd_if_local(app))
-                .and_then(|path| {
-                    crate::settings::project_for_directory(
-                        &crate::settings::ProjectCatalog::as_ref(app).projects,
-                        path.as_path(),
-                    )
-                });
+            let live_directory = terminal.and_then(|view| view.canonical_session_pwd_if_local(app));
+            let project = if tab.group_id.is_none() {
+                startup_directory
+                    .map(PathBuf::as_path)
+                    .or_else(|| live_directory.as_ref().map(|path| path.as_path()))
+                    .and_then(|path| {
+                        crate::settings::project_for_directory(
+                            &crate::settings::ProjectCatalog::as_ref(app).projects,
+                            path,
+                        )
+                    })
+            } else {
+                None
+            };
             let (group_key, group_label) = tab
                 .group_id
                 .and_then(|id| {
@@ -431,6 +517,10 @@ fn row(
     let appearance = Appearance::as_ref(app);
     let index = session.index;
     let active = index == workspace.active_tab_index;
+    let progress = workspace.tabs[index]
+        .sidebar_arrival_started
+        .map(|started| arrival_progress(started.elapsed()))
+        .unwrap_or(1.);
     let selected = palette.selection;
     let hover = palette.hover;
     let rule = palette.rule;
@@ -581,6 +671,11 @@ fn row(
             ctx.dispatch_typed_action(WorkspaceAction::DropTab);
         })
         .finish();
+    let row = if progress < 1. {
+        SessionArrival::new(row, progress).finish()
+    } else {
+        row
+    };
     SavePosition::new(row, &tab_position_id(index)).finish()
 }
 
