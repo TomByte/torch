@@ -22,6 +22,15 @@ pub fn render_search_item_icon(
         None => base_background,
         Some(highlight) => base_background.blend(&highlight),
     };
+    render_search_item_icon_on_background(appearance, icon, icon_color, background_color)
+}
+
+pub(super) fn render_search_item_icon_on_background(
+    appearance: &Appearance,
+    icon: Icon,
+    icon_color: ColorU,
+    background_color: Fill,
+) -> Box<dyn Element> {
     let icon_color = icon_color.on_background(
         background_color.into_solid(),
         MinimumAllowedContrast::NonText,

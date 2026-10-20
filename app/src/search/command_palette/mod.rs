@@ -3,6 +3,7 @@ mod data_sources;
 mod files;
 mod filter_chip_renderer;
 pub mod launch_config;
+mod local_navigation;
 pub mod mixer;
 pub mod navigation;
 #[cfg_attr(not(feature = "local_tty"), allow(dead_code))]

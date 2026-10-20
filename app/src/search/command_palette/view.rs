@@ -85,24 +85,38 @@ pub enum Action {
 
 #[derive(Debug)]
 pub enum Event {
+    NewLocalSession {
+        directory: Option<std::path::PathBuf>,
+    },
+    ChooseLocalDirectory,
     Close {
         accepted_action_type: Option<&'static str>,
     },
     /// Execute the workflow identified by `id`.
-    ExecuteWorkflow { id: SyncId },
+    ExecuteWorkflow {
+        id: SyncId,
+    },
     /// Invoke the env vars identified by `id`.
-    InvokeEnvironmentVariables { id: SyncId },
+    InvokeEnvironmentVariables {
+        id: SyncId,
+    },
     /// Open a notebook identified by `id`.
-    OpenNotebook { id: SyncId },
+    OpenNotebook {
+        id: SyncId,
+    },
     /// View the relevant object in the Warp Drive sidebar.
-    ViewInWarpDrive { id: CloudObjectTypeAndId },
+    ViewInWarpDrive {
+        id: CloudObjectTypeAndId,
+    },
     /// Open a file at the given path.
     OpenFile {
         path: String,
         line_and_column_arg: Option<LineAndColumnArg>,
     },
     /// Open a directory at the given path.
-    OpenDirectory { path: String },
+    OpenDirectory {
+        path: String,
+    },
 }
 
 #[derive(Debug, Clone, Default)]
@@ -194,7 +208,7 @@ impl warpui::View for View {
                             .with_max_height(styles::PALETTE_HEIGHT)
                             .finish(),
                     )
-                    .with_background(theme.surface_2())
+                    .with_background(crate::themes::command_surface(theme))
                     .with_corner_radius(CornerRadius::with_all(Radius::Pixels(8.)))
                     .with_border(Border::all(1.0).with_border_fill(theme.outline()))
                     .with_margin_top(117.)
@@ -228,7 +242,13 @@ impl warpui::View for View {
 impl View {
     pub fn new(navigation_mode: NavigationMode, ctx: &mut ViewContext<Self>) -> Self {
         let search_bar_state = ctx.add_model(|_ctx| {
-            SearchBarState::new(SearchResultOrdering::TopDown).with_max_results(MAX_SEARCH_RESULTS)
+            let state = SearchBarState::new(SearchResultOrdering::TopDown)
+                .with_max_results(MAX_SEARCH_RESULTS);
+            if warp_core::channel::ChannelState::is_local_only() {
+                state.show_results_on_empty()
+            } else {
+                state
+            }
         });
 
         ctx.subscribe_to_model(&search_bar_state, |me, _, event, ctx| {
@@ -282,14 +302,38 @@ impl View {
         let ui_font_family = Appearance::as_ref(ctx).ui_font_family();
 
         let search_bar = ctx.add_typed_action_view(|ctx| {
-            SearchBar::new(
+            let search_bar = SearchBar::new(
                 mixer.clone(),
                 search_bar_state.clone(),
-                "Search for a command",
+                if warp_core::channel::ChannelState::is_local_only() {
+                    "Search sessions, directories, and actions"
+                } else {
+                    "Search for a command"
+                },
                 Self::create_query_result_renderer,
                 ctx,
             )
-            .with_font_family(ui_font_family, ctx)
+            .with_font_family(ui_font_family, ctx);
+            if warp_core::channel::ChannelState::is_local_only() {
+                search_bar.with_text_colors(
+                    |appearance| {
+                        use crate::util::color::{ContrastingColor, MinimumAllowedContrast};
+                        let theme = appearance.theme();
+                        let background = crate::themes::command_surface(theme);
+                        let mut colors = crate::editor::TextColors::from_appearance(appearance);
+                        colors.hint_color = theme
+                            .foreground()
+                            .with_opacity(65)
+                            .into_solid()
+                            .on_background(background.into_solid(), MinimumAllowedContrast::Text)
+                            .into();
+                        colors
+                    },
+                    ctx,
+                )
+            } else {
+                search_bar
+            }
         });
 
         ctx.subscribe_to_view(&search_bar, |me, _, event, ctx| {
@@ -732,11 +776,12 @@ impl View {
         result_action: CommandPaletteItemAction,
         ctx: &mut ViewContext<Self>,
     ) {
-        // Tab navigations don't appear in the main command palette to avoid confusion with session
-        // navigations, so they can't evict real recent items from SelectedItems.
+        // Ephemeral session navigation/creation should not evict recent reusable commands.
         if !matches!(
             result_action,
             CommandPaletteItemAction::NavigateToTab { .. }
+                | CommandPaletteItemAction::NewLocalSession { .. }
+                | CommandPaletteItemAction::ChooseLocalDirectory
         ) {
             let selected_items_handle = SelectedItems::handle(ctx);
             selected_items_handle.update(ctx, |selected_items, _ctx| {
@@ -904,6 +949,10 @@ impl View {
             CommandPaletteItemAction::ViewInWarpDrive { id } => {
                 ctx.emit(Event::ViewInWarpDrive { id })
             }
+            CommandPaletteItemAction::NewLocalSession { directory } => {
+                ctx.emit(Event::NewLocalSession { directory })
+            }
+            CommandPaletteItemAction::ChooseLocalDirectory => ctx.emit(Event::ChooseLocalDirectory),
             CommandPaletteItemAction::NewSession { source } => {
                 self.dispatch_typed_action_on_view(source.action().deref(), ctx);
             }

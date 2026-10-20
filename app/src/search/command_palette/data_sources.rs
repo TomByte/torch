@@ -23,6 +23,7 @@ use crate::settings::AISettings;
 
 /// Store of all of the [`crate::search::DataSource`]s for the command palette.
 pub struct DataSourceStore {
+    local_navigation: ModelHandle<super::local_navigation::DataSource>,
     actions_data_source: ModelHandle<CommandBindingDataSource>,
     sessions_data_source: ModelHandle<navigation::DataSource>,
     warp_drive_data_source: ModelHandle<warp_drive::DataSource>,
@@ -61,6 +62,7 @@ impl DataSourceStore {
         let repo_data_source = ctx.add_model(|_| RepoDataSource::new());
 
         Self {
+            local_navigation: ctx.add_model(|_| super::local_navigation::DataSource::default()),
             actions_data_source,
             sessions_data_source,
             warp_drive_data_source,
@@ -70,6 +72,17 @@ impl DataSourceStore {
             repo_data_source,
             tabs_data_source: None,
         }
+    }
+
+    pub fn set_local_tabs(
+        &self,
+        tabs: Vec<crate::session_management::TabNavigationData>,
+        ctx: &mut ModelContext<Self>,
+    ) {
+        self.local_navigation.update(ctx, |source, ctx| {
+            source.set_tabs(tabs);
+            ctx.notify();
+        });
     }
 
     /// Resets the [`CommandPaletteMixer`] to the set of data sources that are relevant for the command palette.
@@ -89,6 +102,16 @@ impl DataSourceStore {
                 );
             }
 
+            if warp_core::channel::ChannelState::is_local_only() {
+                mixer.add_sync_source(
+                    self.local_navigation.clone(),
+                    HashSet::from([
+                        QueryFilter::Sessions,
+                        QueryFilter::Actions,
+                        QueryFilter::Repos,
+                    ]),
+                );
+            }
             mixer.add_sync_source(
                 self.sessions_data_source.clone(),
                 HashSet::from([QueryFilter::Sessions]),
@@ -136,7 +159,7 @@ impl DataSourceStore {
                     HashSet::from([QueryFilter::Files]),
                     AddAsyncSourceOptions {
                         debounce_interval: None,
-                        run_in_zero_state: true,
+                        run_in_zero_state: !warp_core::channel::ChannelState::is_local_only(),
                         run_when_unfiltered: true,
                     },
                     ctx,

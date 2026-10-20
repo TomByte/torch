@@ -14752,7 +14752,28 @@ impl Workspace {
             ctx.notify();
         });
 
+        let mut tabs = self.tab_navigation_data(ctx.window_id(), ctx);
+        tabs.retain(|tab| tab.subtitle.is_some());
+        // Keep session names searchable across windows, while prioritizing this window.
+        for window_id in ctx.window_ids() {
+            if let Some(workspaces) = ctx.views_of_type::<Workspace>(window_id) {
+                for workspace in workspaces {
+                    tabs.extend(
+                        workspace
+                            .as_ref(ctx)
+                            .tab_navigation_data(window_id, ctx)
+                            .into_iter()
+                            .filter(|tab| tab.subtitle.is_some()),
+                    );
+                }
+            }
+        }
+        // Enter switches to another session; keep the current one searchable at the end.
+        let active_id = self.active_tab_pane_group().id();
+        tabs.sort_by_key(|tab| tab.pane_group_id == active_id);
         self.palette.update(ctx, |view, ctx| {
+            view.data_source_store
+                .update(ctx, |store, ctx| store.set_local_tabs(tabs, ctx));
             view.reset(ctx);
         });
     }
@@ -15197,6 +15218,34 @@ impl Workspace {
                         ctx,
                     );
                 }
+            }
+            CommandPaletteEvent::NewLocalSession { directory } => {
+                let path = directory
+                    .clone()
+                    .or_else(|| {
+                        self.active_tab_pane_group()
+                            .as_ref(ctx)
+                            .active_session_path(ctx)
+                    })
+                    .or_else(dirs::home_dir);
+                if let Some(path) = path {
+                    self.open_directory_in_new_tab(path, ctx);
+                }
+            }
+            CommandPaletteEvent::ChooseLocalDirectory => {
+                ctx.open_file_picker(
+                    |result, ctx| {
+                        if let Ok(paths) = result
+                            && let Some(path) = paths.into_iter().next()
+                            && let Some(handle) = ctx.handle().upgrade(ctx)
+                        {
+                            handle.update(ctx, |workspace, ctx| {
+                                workspace.open_directory_in_new_tab(path.into(), ctx)
+                            });
+                        }
+                    },
+                    FilePickerConfiguration::new().folders_only(),
+                );
             }
             CommandPaletteEvent::OpenDirectory { path } => {
                 let active_terminal_view = self

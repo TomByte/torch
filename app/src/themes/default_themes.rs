@@ -262,14 +262,14 @@ pub(super) fn adeberry_colors() -> TerminalColors {
 pub fn dark_theme() -> WarpTheme {
     if warp_core::channel::ChannelState::is_local_only() {
         return WarpTheme::new(
-            Fill::Solid(ColorU::from_u32(0x181818FF)),
+            Fill::Solid(ColorU::from_u32(0x232323FF)),
             ColorU::from_u32(0xE6E6E6FF),
             Fill::Solid(ColorU::from_u32(0x8DAEDCFF)),
             None,
             Some(Details::Darker),
             TerminalColors::new(
                 AnsiColors::new(
-                    AnsiColor::from_u32(0x858585FF),
+                    AnsiColor::from_u32(0x929292FF),
                     AnsiColor::from_u32(0xE88484FF),
                     AnsiColor::from_u32(0x88BE8CFF),
                     AnsiColor::from_u32(0xD9B96EFF),
@@ -306,6 +306,18 @@ pub fn dark_theme() -> WarpTheme {
 }
 
 pub fn light_theme() -> WarpTheme {
+    if warp_core::channel::ChannelState::is_local_only() {
+        return WarpTheme::new(
+            Fill::Solid(ColorU::from_u32(0xFCFCFDFF)),
+            ColorU::from_u32(0x303238FF),
+            Fill::Solid(ColorU::from_u32(0x7798C2FF)),
+            None,
+            Some(Details::Lighter),
+            light_mode_colors(),
+            None,
+            Some("Light".to_string()),
+        );
+    }
     WarpTheme::new(
         Fill::Solid(ColorU::white()),
         ColorU::new(17, 17, 17, OPAQUE),

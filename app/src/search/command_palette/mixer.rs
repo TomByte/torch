@@ -18,6 +18,10 @@ pub type CommandPaletteMixer = SearchMixer<CommandPaletteItemAction>;
 
 #[derive(Clone, Debug)]
 pub enum CommandPaletteItemAction {
+    NewLocalSession {
+        directory: Option<std::path::PathBuf>,
+    },
+    ChooseLocalDirectory,
     /// A binding result was clicked.
     AcceptBinding {
         binding: Arc<CommandBinding>,
@@ -88,6 +92,8 @@ pub enum CommandPaletteItemAction {
 impl CommandPaletteItemAction {
     pub fn to_summary(&self) -> ItemSummary {
         match self {
+            CommandPaletteItemAction::NewLocalSession { .. }
+            | CommandPaletteItemAction::ChooseLocalDirectory => ItemSummary::NoOp,
             CommandPaletteItemAction::AcceptBinding { binding } => ItemSummary::Action {
                 binding_id: binding.id,
             },

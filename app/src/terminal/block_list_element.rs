@@ -2416,7 +2416,7 @@ impl BlockListElement {
                     grid_origin,
                     Vector2F::new(bounds.width(), block_height),
                 ))
-                .with_background(warp_theme.restored_blocks_overlay());
+                .with_background(crate::themes::restored_command_overlay(warp_theme));
         }
 
         let mut did_render_ai_stripe = false;
@@ -4297,7 +4297,7 @@ impl Element for BlockListElement {
                         grid_origin,
                         vec2f(bounds.width(), *height),
                     ));
-                    rect.with_background(self.warp_theme.restored_blocks_overlay());
+                    rect.with_background(crate::themes::restored_command_overlay(&self.warp_theme));
 
                     // Offset the text by the half of the remaining space between the separator height
                     // and the font line height to center it vertically.

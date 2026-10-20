@@ -17,6 +17,8 @@ Choose **Dark** in **Settings → Appearance → Current theme** for the charcoa
 
 Sessions group automatically by their working folder. Right-click a session and choose **New group with tab** to place it in a manual group; manual groups take precedence over folders. Double-click a session or manual group to rename it, and click a manual group heading to collapse or expand it. The sidebar toggle and plus button sit beside the native window controls.
 
+Press **Cmd+P** to switch sessions, choose **New session** in the current folder, or choose **New session in directory…** to pick a folder. Type a session name to search, or enter an existing absolute path, `~`, or `~/project` to open a new terminal there.
+
 Activity ages and status indicators come from actual terminal state. Rich Claude/Codex status appears when the CLI supplies supported status events; ordinary commands display their running or idle state. Torch does not manufacture agent activity.
 
 The visual reference is retained in `docs/design/terminal-reference.png`. To inspect transcript typography without running an agent, run `python3 script/preview-terminal-ui.py` from this checkout in Torch. It displays a labelled synthetic transcript and exits on Enter.

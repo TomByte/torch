@@ -40,14 +40,14 @@ impl Palette {
             }
         } else {
             Self {
-                sidebar_top: ColorU::from_u32(0x242424FF),
-                sidebar_bottom: ColorU::from_u32(0x212121FF),
+                sidebar_top: ColorU::from_u32(0x2B2B2BFF),
+                sidebar_bottom: ColorU::from_u32(0x282828FF),
                 text: ColorU::from_u32(0xE6E6E6FF),
                 secondary: ColorU::from_u32(0xB5B5B5FF),
-                muted: ColorU::from_u32(0xA0A0A0FF),
-                selection: ColorU::from_u32(0x373737FF),
+                muted: ColorU::from_u32(0xA8A8A8FF),
+                selection: ColorU::from_u32(0x3B3B3BFF),
                 hover: ColorU::from_u32(0xFFFFFF12),
-                rule: ColorU::from_u32(0x3C3C3CFF),
+                rule: ColorU::from_u32(0x424242FF),
                 attention: ColorU::from_u32(0xD9B96EFF),
                 header_rule: ColorU::from_u32(0xFFFFFF12),
                 shadow: ColorU::from_u32(0x00000030),

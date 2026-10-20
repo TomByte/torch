@@ -18,7 +18,7 @@ use crate::appearance::Appearance;
 use crate::editor::{
     AutosuggestionLocation, AutosuggestionType, EditorView, Event as EditorEvent,
     PlainTextEditorViewAction as EditorAction, PropagateAndNoOpNavigationKeys,
-    SingleLineEditorOptions,
+    SingleLineEditorOptions, TextColors,
 };
 use crate::search::QueryFilter;
 use crate::search::data_source::{Query, QueryResult};
@@ -85,6 +85,7 @@ pub struct SearchBarState<T: Action + Clone> {
     /// Whether to run query when buffer is empty. This is useful for search panels that don't have
     /// a dedicated zero state.
     run_query_on_buffer_empty: bool,
+    show_results_on_empty: bool,
 
     /// The offset to apply to the initial selection when the search bar is opened.
     offset_initial_selection_by: isize,
@@ -151,6 +152,7 @@ impl<T: Action + Clone> SearchBarState<T> {
             ordering,
             max_results: SearchResultLimit::Unbounded,
             run_query_on_buffer_empty: false,
+            show_results_on_empty: false,
             offset_initial_selection_by: 0,
         }
     }
@@ -158,6 +160,12 @@ impl<T: Action + Clone> SearchBarState<T> {
     /// Bounds the number of results returned by the mixer to `max_results`.
     pub fn with_max_results(mut self, max_results: usize) -> Self {
         self.max_results = SearchResultLimit::Bounded { max_results };
+        self
+    }
+
+    pub fn show_results_on_empty(mut self) -> Self {
+        self.run_query_on_buffer_empty = true;
+        self.show_results_on_empty = true;
         self
     }
 
@@ -382,6 +390,22 @@ impl<T: Action + Clone> SearchBar<T> {
         self.editor_handle
             .update(ctx, |editor, ctx| editor.set_font_family(font_family, ctx));
         self.font_family_override = Some(font_family);
+        self
+    }
+
+    pub fn with_text_colors(
+        self,
+        colors: fn(&Appearance) -> TextColors,
+        ctx: &mut ViewContext<Self>,
+    ) -> Self {
+        self.editor_handle.update(ctx, |editor, ctx| {
+            editor.set_text_colors(colors(Appearance::as_ref(ctx)), ctx);
+        });
+        ctx.subscribe_to_model(&Appearance::handle(ctx), move |me, _, _, ctx| {
+            me.editor_handle.update(ctx, |editor, ctx| {
+                editor.set_text_colors(colors(Appearance::as_ref(ctx)), ctx);
+            });
+        });
         self
     }
 
@@ -800,7 +824,8 @@ impl<T: Action + Clone> SearchBar<T> {
     }
 
     pub fn should_show_zero_state(&self, app: &AppContext) -> bool {
-        self.editor_handle.as_ref(app).is_empty(app)
+        !self.state.as_ref(app).show_results_on_empty
+            && self.editor_handle.as_ref(app).is_empty(app)
             && self.state.as_ref(app).query_filter.is_none()
     }
 

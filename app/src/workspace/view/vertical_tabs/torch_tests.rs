@@ -102,3 +102,25 @@ fn activity_labels_remain_compact_across_time_boundaries() {
         assert_eq!(age_label(minutes), expected);
     }
 }
+
+#[test]
+fn quiet_command_surfaces_preserve_text_contrast_in_both_themes() {
+    use warp_core::ui::color::blend::Blend;
+    for theme in [
+        crate::themes::default_themes::light_theme(),
+        crate::themes::default_themes::dark_theme(),
+    ] {
+        for surface in [
+            crate::themes::command_surface(&theme),
+            theme
+                .background()
+                .blend(&crate::themes::restored_command_overlay(&theme)),
+        ] {
+            assert!(high_enough_contrast(
+                theme.foreground().into_solid(),
+                surface.into_solid(),
+                MinimumAllowedContrast::Text
+            ));
+        }
+    }
+}

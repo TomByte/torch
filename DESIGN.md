@@ -11,23 +11,24 @@ colors:
   light-hover: "#FFFFFF70"
   light-rule: "#D5D6DB"
   light-attention: "#98651F"
-  dark-sidebar-top: "#242424"
-  dark-sidebar-bottom: "#212121"
+  dark-sidebar-top: "#2B2B2B"
+  dark-sidebar-bottom: "#282828"
   dark-text: "#E6E6E6"
   dark-secondary: "#B5B5B5"
-  dark-muted: "#A0A0A0"
-  dark-selection: "#373737"
+  dark-muted: "#A8A8A8"
+  dark-selection: "#3B3B3B"
   dark-hover: "#FFFFFF12"
-  dark-rule: "#3C3C3C"
+  dark-rule: "#424242"
   dark-attention: "#D9B96E"
-  light-terminal-background: "#FFFFFF"
-  light-terminal-foreground: "#111111"
-  dark-terminal-background: "#181818"
+  light-terminal-background: "#FCFCFD"
+  light-terminal-foreground: "#303238"
+  dark-terminal-background: "#232323"
   dark-terminal-foreground: "#E6E6E6"
   header-rule: "#88888818"
+  light-terminal-accent: "#7798C2"
   dark-terminal-accent: "#8DAEDC"
   dark-header-rule: "#FFFFFF12"
-  dark-ansi-normal-black: "#858585"
+  dark-ansi-normal-black: "#929292"
   dark-ansi-normal-red: "#E88484"
   dark-ansi-normal-green: "#88BE8C"
   dark-ansi-normal-yellow: "#D9B96E"
@@ -71,6 +72,8 @@ typography:
     fontWeight: 500
 rounded:
   control: "6px"
+  command-palette: "8px"
+  command-result: "4px"
   session: "9px"
   terminal: "12px"
 spacing:
@@ -86,6 +89,14 @@ spacing:
   header-left: "32px"
   window-controls-reserve: "80px"
 components:
+  command-palette:
+    typography: "{typography.body}"
+    rounded: "{rounded.command-palette}"
+    width: "640px"
+  command-result:
+    typography: "{typography.body}"
+    rounded: "{rounded.command-result}"
+    padding: "6px 24px"
   sidebar:
     width: "272px"
   session:
@@ -149,7 +160,7 @@ components:
 **Creative North Star: "The Quiet Native Terminal"**
 
 Torch pairs compact grouped sessions with a lightly raised terminal pane. Light mode uses a cool
-blue-to-lilac sidebar and a white working surface; dark mode uses neutral charcoal layers and soft
+blue-to-lilac sidebar and a soft off-white working surface; dark mode uses neutral charcoal layers and soft
 gray text. The interface keeps session context legible while leaving the working area to shell output.
 
 The binding layout direction is the user-supplied
@@ -162,11 +173,13 @@ This is a Rust/WarpUI desktop system. Frontmatter dimensions use portable `px` n
 logical pixels, not screenshot pixels. The tokens describe the current implementation in
 `app/src/workspace/view/vertical_tabs/torch.rs`; font and terminal defaults come from
 `app/src/settings/font.rs`, `app/src/settings/theme.rs`, and `app/src/terminal/settings.rs`.
-Default terminal colors come from `app/src/themes/default_themes.rs`, and UI font loading comes from
-`app/src/appearance.rs`. User-selected terminal themes and fonts remain authoritative at runtime.
+Default terminal colors come from `app/src/themes/default_themes.rs`; derived command fills come
+from `app/src/themes/mod.rs`. UI font loading comes from `app/src/appearance.rs`. Local palette
+behavior comes from `app/src/search/command_palette/local_navigation.rs` and its workspace actions.
+User-selected terminal themes and fonts remain authoritative at runtime.
 
 The original macOS layout captures in `.impeccable/review/desktop.png`, `desktop-narrow.png`, and
-`desktop-long-title.png` establish the compact sidebar and long-title clipping. The final dark-mode
+`desktop-long-title.png` establish the compact sidebar and long-title clipping. The initial dark-mode
 review covers seven captures in the same directory: `dark-desktop.png` (2560 × 1604 screenshot
 pixels), `dark-narrow.png` (1730 × 2046), `light-theme-regression.png` (2560 × 1602),
 `dark-terminal-input.png`, `dark-context-menu.png`, `dark-theme-picker.png`, and
@@ -175,11 +188,21 @@ confirmed dark palette coherence, and found no material light-mode regression. T
 visual fidelity, not pixel identity. Synthetic transcripts remain labelled test fixtures rather than
 evidence of completed CLI tasks. Recording badges and cursor halos are capture artifacts.
 
-Live macOS checks passed choosing Dark in the native theme picker, syncing with the currently dark
+Initial dark-mode live macOS checks passed choosing Dark in the native theme picker, syncing with the currently dark
 OS appearance, returning to Light, retaining Dark after app restart, and completing `/usr/bi` to
 `/usr/bin/` with Tab. The context menu and narrow layout were also verified. Six focused tests,
 Clippy with existing baseline exemptions, and the native bundle passed. Cross-platform runner
 `oz-dev` was unavailable; this evidence covers macOS only.
+
+The softer palette and Cmd+P revision is captured in `soft-dark-terminal.png`,
+`soft-dark-collapsed.png`, `soft-dark-palette.png`, `soft-light-terminal.png`,
+`soft-light-palette.png`, `soft-light-narrow.png`, `soft-directory-query-final.png`, and
+`soft-chooser.png` under `.impeccable/review/`. Files ending in `before` are comparison evidence,
+not the current palette. Final corrections are captured in `soft-dark-palette-reviewed.png` and
+`soft-light-palette-reviewed.png`. Four focused navigation tests, seven theme/group tests,
+baseline-aware strict Clippy, and the native bundle passed. The independent finish review
+returned ship with no remaining material findings. Verification remains limited to macOS.
+Private reference images are not repository assets.
 
 The final macOS live verification passed short reordering within a manual group, a long drag out
 and back, Shift-selection across noncontiguous underlying tabs in displayed group order, and
@@ -203,10 +226,12 @@ fill create distinct layers without a purple cast. The frontmatter holds exact v
 ### Primary
 
 The terminal theme owns the application accent and ANSI output palette. The bundled local-only
-Dark theme uses `dark-terminal-accent`, a restrained blue, with coordinated normal and bright ANSI
-colors. The `dark-ansi-normal-*` and `dark-ansi-bright-*` tokens map directly to the eight standard
+Light theme uses `light-terminal-accent`, a muted blue; Dark uses `dark-terminal-accent`, a lighter
+blue, with coordinated normal and bright ANSI colors. The `dark-ansi-normal-*` and
+`dark-ansi-bright-*` tokens map directly to the eight standard
 ANSI slots in each intensity. Programs retain control of which slots or explicit colors they use.
-Active sessions use a neutral selection fill and rule rather than the theme accent.
+Sidebar sessions use a neutral selection fill and rule. Local command-palette results use a
+restrained accent blend for selection.
 
 ### Secondary
 
@@ -229,9 +254,16 @@ The sidebar follows `theme.inferred_color_scheme()`: `DarkOnLight` selects the l
 otherwise it selects the dark palette. This uses the theme's color-scheme inference rather than a
 single color-channel threshold. Explicit custom terminal themes retain their own output colors.
 
-Measured dark token contrasts are body text on the terminal (14.23:1), muted text on selection
-(4.55:1), muted text on the sidebar top endpoint (5.94:1), and normal ANSI black on the
-terminal (4.81:1). These checks describe these specific pairs, not every ANSI program or custom theme.
+Measured dark token contrasts are body text on the terminal (12.59:1), muted text on selection
+(4.71:1), muted text on the sidebar top endpoint (5.95:1), and normal ANSI black on the terminal
+(5.05:1). Light terminal text is 12.50:1 against its background. These checks describe these specific
+pairs, not every ANSI program or custom theme.
+
+Local command surfaces blend the active theme background with its foreground at 2% opacity. The
+focused terminal composer and command palette share this fill. Restored command history receives
+a foreground overlay at 3% opacity. Local palette selection blends the theme background with its
+accent at 16%; hover uses the theme's `surface_1()`. These are theme-relative formulas, not fixed
+colors that override custom themes.
 
 ## Typography
 
@@ -325,6 +357,28 @@ summary supplies InProgress. Running uses a broken ring, blocked uses an amber r
 uses a filled check, and errors use an amber alert. Cancelled, waiting, or absent status can use a
 muted check; this quiet check must not be interpreted as proof of successful execution. When both
 status and activity age are absent, the status slot is empty. Unread activity makes the title bold.
+
+### Command palette
+
+Cmd+P opens local session, directory, and action navigation with results immediately visible. An
+empty query lists open terminal sessions first, putting other sessions ahead of the current one;
+New session and New session in directory… follow, then distinct valid directories from open
+sessions. Session lookup includes other windows. New session starts in the current working folder,
+falling back to the home folder if needed; New session in directory… opens the native folder chooser.
+
+Search matches titles and details case-insensitively and supports fuzzy session names. Exact local
+action titles rank above fuzzy session matches. A valid typed absolute path, `~`, or `~/…` ranks
+highest and opens a new terminal directly in that directory. Relative and nonexistent paths do not
+produce that directory action. Paths are passed as filesystem paths, never interpolated into shell
+commands. Existing manual groups and shell Tab completion keep their own behavior.
+
+The placeholder reads “Search sessions, directories, and actions”. It starts from the active theme
+foreground at 65% opacity and is contrast-adjusted to at least 4.5:1 against the actual command
+surface. Its colors update with appearance changes. Local result icons likewise enforce non-text
+contrast against the actual selected, hovered, or default fill. Result titles use body typography;
+details use label typography, foreground at 75% opacity, and 3 logical pixels of top separation.
+The palette keeps its native editor, result list, keyboard handling, and theme outline; its body has
+a maximum height of 464 logical pixels. Preview browser focus outlines are illustrative only.
 
 ### Theme controls
 
