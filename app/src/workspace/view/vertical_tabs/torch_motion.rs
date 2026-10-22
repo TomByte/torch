@@ -12,8 +12,8 @@ use warpui::{
     AfterLayoutContext, AppContext, ClipBounds, EventContext, LayoutContext, PaintContext,
 };
 
-/// Delay between animation frames; short enough for 120 Hz displays.
-const FRAME_INTERVAL: Duration = Duration::from_millis(8);
+use crate::ui_components::elevation::soft_shadow;
+use crate::ui_components::motion::{FRAME_INTERVAL, MotionPreference, ease_out_expo};
 /// Horizontal distance a row travels as it enters or leaves.
 const SLIDE_DISTANCE: f32 = 12.;
 /// Gap between successive motion-blur copies at full speed.
@@ -365,5 +365,286 @@ impl Element for WorkingPulse {
         _app: &AppContext,
     ) -> bool {
         false
+    }
+}
+
+/// How long a row's hover tint takes to appear, and to clear once the pointer leaves.
+pub(super) const HOVER_IN: Duration = Duration::from_millis(120);
+pub(super) const HOVER_OUT: Duration = Duration::from_millis(90);
+
+/// A value easing towards a target. Retargeting starts from wherever it currently is, so an
+/// interrupted fade never jumps.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(super) struct Fade {
+    from: f32,
+    to: f32,
+    /// When it started towards `to`, or `None` if it has been there all along.
+    since: Option<Instant>,
+    duration: Duration,
+}
+
+impl Fade {
+    pub(super) fn settled(value: f32) -> Self {
+        Self {
+            from: value,
+            to: value,
+            since: None,
+            duration: Duration::ZERO,
+        }
+    }
+
+    pub(super) fn target(self) -> f32 {
+        self.to
+    }
+
+    /// When the fade started towards its target, or `None` if it has always been there.
+    pub(super) fn since(self) -> Option<Instant> {
+        self.since
+    }
+
+    pub(super) fn retarget(self, to: f32, duration: Duration, now: Instant) -> Self {
+        Self {
+            from: self.value(now),
+            to,
+            since: Some(now),
+            duration,
+        }
+    }
+
+    pub(super) fn value(self, now: Instant) -> f32 {
+        let Some(since) = self.since else {
+            return self.to;
+        };
+        let elapsed = now.saturating_duration_since(since);
+        if elapsed >= self.duration {
+            return self.to;
+        }
+        let t = elapsed.as_secs_f32() / self.duration.as_secs_f32();
+        self.from + (self.to - self.from) * ease_out(t, 2)
+    }
+
+    pub(super) fn is_settled(self, now: Instant) -> bool {
+        self.since
+            .is_none_or(|since| now.saturating_duration_since(since) >= self.duration)
+    }
+}
+
+/// How long the active card takes to reach a newly selected row.
+pub(super) const CARD_GLIDE: Duration = Duration::from_millis(220);
+/// How long the active card takes to fade in where it cannot glide.
+const CARD_FADE: Duration = Duration::from_millis(160);
+/// The farthest the card glides. A previous row further away is treated as being this far, so
+/// distant switches still read as movement without sweeping the whole list.
+pub(super) const CARD_MAX_GLIDE: f32 = 180.;
+
+/// How the active session's card reaches its row after the selection changes.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(super) enum CardEntrance {
+    /// The card has been on this row since it was first drawn.
+    Settled,
+    /// Glides in from the window-space top edge of the previously active row.
+    Glide { from_y: f32, since: Instant },
+    /// Fades in place, where the previous row was not on screen or motion is reduced.
+    Fade { since: Instant },
+}
+
+/// The active card at one instant.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(super) struct CardFrame {
+    /// Vertical displacement from the card's row, in pixels.
+    pub(super) offset: f32,
+    pub(super) opacity: f32,
+}
+
+impl CardFrame {
+    pub(super) const SETTLED: Self = Self {
+        offset: 0.,
+        opacity: 1.,
+    };
+}
+
+impl CardEntrance {
+    /// The entrance for a card leaving a row whose window-space top edge was at `from_y`, if that
+    /// row was on screen.
+    pub(super) fn after_switch(
+        from_y: Option<f32>,
+        preference: Option<MotionPreference>,
+        now: Instant,
+    ) -> Self {
+        match (preference, from_y) {
+            (None, _) => CardEntrance::Settled,
+            (Some(MotionPreference::Full), Some(from_y)) => {
+                CardEntrance::Glide { from_y, since: now }
+            }
+            (Some(MotionPreference::Full), None) | (Some(MotionPreference::Reduced), _) => {
+                CardEntrance::Fade { since: now }
+            }
+        }
+    }
+
+    /// The card's frame `elapsed` into its entrance, for a row whose top edge is at `row_y`.
+    pub(super) fn frame(self, row_y: f32, elapsed: Duration) -> CardFrame {
+        match self {
+            CardEntrance::Settled => CardFrame::SETTLED,
+            CardEntrance::Glide { from_y, .. } => {
+                let t = (elapsed.as_secs_f32() / CARD_GLIDE.as_secs_f32()).min(1.);
+                let distance = (from_y - row_y).clamp(-CARD_MAX_GLIDE, CARD_MAX_GLIDE);
+                CardFrame {
+                    offset: distance * (1. - ease_out_expo(t)),
+                    opacity: 1.,
+                }
+            }
+            CardEntrance::Fade { .. } => {
+                let t = (elapsed.as_secs_f32() / CARD_FADE.as_secs_f32()).min(1.);
+                CardFrame {
+                    offset: 0.,
+                    opacity: ease_out(t, 2),
+                }
+            }
+        }
+    }
+
+    fn since(self) -> Option<Instant> {
+        match self {
+            CardEntrance::Settled => None,
+            CardEntrance::Glide { since, .. } | CardEntrance::Fade { since } => Some(since),
+        }
+    }
+
+    fn duration(self) -> Duration {
+        match self {
+            CardEntrance::Settled => Duration::ZERO,
+            CardEntrance::Glide { .. } => CARD_GLIDE,
+            CardEntrance::Fade { .. } => CARD_FADE,
+        }
+    }
+}
+
+pub(super) const ROW_RADIUS: f32 = 8.;
+
+/// The colors of a row's fills.
+#[derive(Clone, Copy, Debug)]
+pub(super) struct RowFills {
+    pub(super) hover: ColorU,
+    pub(super) selection: ColorU,
+    pub(super) card_edge: ColorU,
+    pub(super) card_shadow: ColorU,
+}
+
+/// Paints the fills behind a session row: its hover tint, its multi-selection fill and, for the
+/// active session, a raised card. The card is drawn by its destination row; a gliding card passes
+/// over the rows between, below their text and icons.
+pub(super) struct RowSurface {
+    child: Box<dyn Element>,
+    fills: RowFills,
+    hover: Fade,
+    multi_selected: bool,
+    card: Option<CardEntrance>,
+    size: Option<Vector2F>,
+    origin: Option<Point>,
+}
+
+impl RowSurface {
+    pub(super) fn new(
+        child: Box<dyn Element>,
+        fills: RowFills,
+        hover: Fade,
+        multi_selected: bool,
+        card: Option<CardEntrance>,
+    ) -> Self {
+        Self {
+            child,
+            fills,
+            hover,
+            multi_selected,
+            card,
+            size: None,
+            origin: None,
+        }
+    }
+}
+
+impl Element for RowSurface {
+    fn layout(
+        &mut self,
+        constraint: SizeConstraint,
+        ctx: &mut LayoutContext,
+        app: &AppContext,
+    ) -> Vector2F {
+        let size = self.child.layout(constraint, ctx, app);
+        self.size = Some(size);
+        size
+    }
+
+    fn after_layout(&mut self, ctx: &mut AfterLayoutContext, app: &AppContext) {
+        self.child.after_layout(ctx, app);
+    }
+
+    fn paint(&mut self, origin: Vector2F, ctx: &mut PaintContext, app: &AppContext) {
+        self.origin = Some(Point::from_vec2f(origin, ctx.scene.z_index()));
+        if let Some(size) = self.size {
+            let now = Instant::now();
+            let rect = RectF::new(origin, size);
+            let radius = CornerRadius::with_all(Radius::Pixels(ROW_RADIUS));
+            let hover = self.hover.value(now);
+            if hover > 0. {
+                ctx.scene
+                    .draw_rect_without_hit_recording(rect)
+                    .with_corner_radius(radius)
+                    .with_background(with_opacity(self.fills.hover, hover));
+            }
+            if self.multi_selected {
+                ctx.scene
+                    .draw_rect_without_hit_recording(rect)
+                    .with_corner_radius(radius)
+                    .with_background(self.fills.selection);
+            }
+            let mut animating = !self.hover.is_settled(now);
+            if let Some(card) = self.card {
+                let elapsed = card
+                    .since()
+                    .map_or(Duration::MAX, |since| now.saturating_duration_since(since));
+                animating |= elapsed < card.duration();
+                let frame = card.frame(origin.y(), elapsed);
+                if frame.opacity > 0. {
+                    ctx.scene
+                        .draw_rect_without_hit_recording(rect + vec2f(0., frame.offset))
+                        .with_corner_radius(radius)
+                        .with_background(with_opacity(self.fills.selection, frame.opacity))
+                        .with_border(
+                            Border::all(1.).with_border_color(with_opacity(
+                                self.fills.card_edge,
+                                frame.opacity,
+                            )),
+                        )
+                        .with_drop_shadow(soft_shadow(
+                            with_opacity(self.fills.card_shadow, frame.opacity),
+                            1.,
+                            2.,
+                        ));
+                }
+            }
+            if animating {
+                ctx.repaint_after(FRAME_INTERVAL);
+            }
+        }
+        self.child.paint(origin, ctx, app);
+    }
+
+    fn size(&self) -> Option<Vector2F> {
+        self.size
+    }
+
+    fn origin(&self) -> Option<Point> {
+        self.origin
+    }
+
+    fn dispatch_event(
+        &mut self,
+        event: &DispatchedEvent,
+        ctx: &mut EventContext,
+        app: &AppContext,
+    ) -> bool {
+        self.child.dispatch_event(event, ctx, app)
     }
 }

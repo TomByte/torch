@@ -1,6 +1,7 @@
 use std::rc::Rc;
 use std::time::Duration;
 
+use instant::Instant;
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use uuid::Uuid;
@@ -26,6 +27,7 @@ use warpui::{
 use super::action_button::ActionButton;
 use crate::appearance::Appearance;
 use crate::themes::theme::Fill;
+use crate::ui_components::motion::{Reveal, Revealing};
 
 const TOAST_WIDTH: f32 = 464.;
 const TOAST_CORNER_RADIUS: f32 = 4.;
@@ -84,6 +86,8 @@ struct ToastData<A: Action + Clone> {
 
     /// Whether this toast's message is currently expanded.
     message_expanded: bool,
+
+    shown_at: Instant,
 }
 /// This View is a stack of toasts, each of which holds some "main text" on the left, and optionally
 /// a hyperlink on the right. They can either be manually dismissed by clicking the X button, or
@@ -130,6 +134,7 @@ impl<A: Action + Clone> DismissibleToastStack<A> {
             abort_handle: Some(abort_handle),
             uuid,
             message_expanded: false,
+            shown_at: Instant::now(),
         });
         self.evict_oldest_toasts();
 
@@ -161,6 +166,7 @@ impl<A: Action + Clone> DismissibleToastStack<A> {
             abort_handle: None,
             uuid: Uuid::new_v4(),
             message_expanded: false,
+            shown_at: Instant::now(),
         });
         self.evict_oldest_toasts();
 
@@ -232,12 +238,17 @@ impl<A: Action + Clone> View for DismissibleToastStack<A> {
         // use this UUID to determine which toast in the stack to close.
         for toast in self.toasts.iter().rev() {
             rendered_toasts.add_child(
-                Container::new(toast.dismissible_toast.render(
-                    app,
-                    toast.uuid,
-                    toast.message_expanded,
-                ))
-                .with_margin_bottom(5.)
+                Revealing::new(
+                    Container::new(toast.dismissible_toast.render(
+                        app,
+                        toast.uuid,
+                        toast.message_expanded,
+                    ))
+                    .with_margin_bottom(5.)
+                    .finish(),
+                    Reveal::Arrive,
+                    toast.shown_at,
+                )
                 .finish(),
             );
         }

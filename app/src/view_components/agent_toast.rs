@@ -1,14 +1,15 @@
 use std::time::Duration;
 
+use instant::Instant;
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use uuid::Uuid;
 use warpui::r#async::{SpawnedFutureHandle, Timer};
 use warpui::elements::{
     ChildAnchor, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, DispatchEventResult,
-    DropShadow, EventHandler, Expanded, Flex, Hoverable, Icon, MouseStateHandle, OffsetPositioning,
-    Padding, ParentElement, PositionedElementAnchor, PositionedElementOffsetBounds, Radius,
-    SavePosition, Stack,
+    EventHandler, Expanded, Flex, Hoverable, Icon, MouseStateHandle, OffsetPositioning, Padding,
+    ParentElement, PositionedElementAnchor, PositionedElementOffsetBounds, Radius, SavePosition,
+    Stack,
 };
 use warpui::keymap::Keystroke;
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
@@ -20,12 +21,14 @@ use warpui::{
 use crate::appearance::Appearance;
 use crate::settings_view::keybindings::{KeybindingChangedEvent, KeybindingChangedNotifier};
 use crate::terminal::view::TerminalAction;
+use crate::ui_components::elevation::floating_shadows;
+use crate::ui_components::motion::{Reveal, Revealing};
 use crate::util::bindings::keybinding_name_to_keystroke;
 use crate::workspace::{Workspace, WorkspaceAction};
 
 const AGENT_TOAST_WIDTH: f32 = 260.;
 const AGENT_TOAST_PADDING: f32 = 12.;
-const AGENT_TOAST_CORNER_RADIUS: f32 = 4.;
+const AGENT_TOAST_CORNER_RADIUS: f32 = 10.;
 const CLOSE_BUTTON_SIZE: f32 = 20.;
 
 /// Data for an individual agent toast
@@ -36,6 +39,7 @@ struct AgentToastData {
     abort_handle: Option<SpawnedFutureHandle>,
     /// Unique identifier for the toast
     uuid: Uuid,
+    shown_at: Instant,
 }
 
 /// A stack of agent-specific toasts for displaying task completion notifications
@@ -93,6 +97,7 @@ impl AgentToastStack {
             toast,
             abort_handle: Some(abort_handle),
             uuid,
+            shown_at: Instant::now(),
         });
 
         ctx.notify();
@@ -162,13 +167,18 @@ impl View for AgentToastStack {
         for toast_data in self.toasts.iter().rev() {
             let is_latest = latest_toast_uuid == Some(toast_data.uuid);
             rendered_toasts.add_child(
-                Container::new(toast_data.toast.render(
-                    app,
-                    toast_data.uuid,
-                    is_latest,
-                    self.jump_to_toast_shortcut.clone(),
-                ))
-                .with_margin_bottom(5.)
+                Revealing::new(
+                    Container::new(toast_data.toast.render(
+                        app,
+                        toast_data.uuid,
+                        is_latest,
+                        self.jump_to_toast_shortcut.clone(),
+                    ))
+                    .with_margin_bottom(5.)
+                    .finish(),
+                    Reveal::Arrive,
+                    toast_data.shown_at,
+                )
                 .finish(),
             );
         }
@@ -374,13 +384,21 @@ impl AgentToast {
         };
         EventHandler::new(
             Hoverable::new(self.container_hover_state.clone(), |mouse_state| {
-                let container = Container::new(content)
-                    .with_padding(Padding::uniform(AGENT_TOAST_PADDING))
-                    .with_background(appearance.theme().surface_3())
-                    .with_drop_shadow(DropShadow::default())
-                    .with_corner_radius(CornerRadius::with_all(Radius::Pixels(
-                        AGENT_TOAST_CORNER_RADIUS,
-                    )));
+                let corner_radius =
+                    CornerRadius::with_all(Radius::Pixels(AGENT_TOAST_CORNER_RADIUS));
+                let [contact_shadow, ambient_shadow] = floating_shadows(appearance, 8.);
+                let container = Container::new(
+                    Container::new(content)
+                        .with_padding(Padding::uniform(AGENT_TOAST_PADDING))
+                        .with_background(appearance.theme().surface_3())
+                        .with_drop_shadow(contact_shadow)
+                        .with_corner_radius(corner_radius)
+                        .finish(),
+                )
+                // The same surface again, under the toast, carries the broad shadow.
+                .with_background(appearance.theme().surface_3())
+                .with_drop_shadow(ambient_shadow)
+                .with_corner_radius(corner_radius);
 
                 let mut stack = Stack::new().with_child(
                     SavePosition::new(container.finish(), &self.position_id(uuid)).finish(),

@@ -5851,3 +5851,41 @@ fn torch_view_menu_shortcuts_have_menu_names() {
         });
     });
 }
+
+#[test]
+fn a_closing_palette_keeps_its_query_until_it_opens_again() {
+    App::test((), |mut app| async move {
+        initialize_app(&mut app);
+        app.add_singleton_model(crate::settings::import::model::ImportedConfigModel::new);
+        app.add_singleton_model(|_| crate::search::command_palette::SelectedItems::new());
+        let workspace = mock_workspace(&mut app);
+        let palette = workspace.read(&app, |workspace, _| workspace.palette.clone());
+        let query = |app: &App| {
+            palette.read(app, |palette, ctx| {
+                palette.search_bar.as_ref(ctx).query(ctx)
+            })
+        };
+
+        workspace.update(&mut app, |workspace, ctx| {
+            workspace.toggle_palette(PaletteMode::Command, PaletteSource::Keybinding, ctx);
+        });
+        palette.update(&mut app, |palette, ctx| {
+            palette.insert_query_text("torch", ctx)
+        });
+        // Closes the way Escape does, through the palette itself.
+        palette.update(&mut app, |palette, ctx| {
+            palette.handle_action(&crate::search::command_palette::view::Action::Close, ctx)
+        });
+        workspace.read(&app, |workspace, _| {
+            assert!(!workspace.current_workspace_state.is_palette_open);
+            assert!(workspace.closing_palette.is_some());
+        });
+        assert_eq!(query(&app), "torch");
+
+        workspace.update(&mut app, |workspace, ctx| {
+            workspace.toggle_palette(PaletteMode::Command, PaletteSource::Keybinding, ctx);
+            assert!(workspace.closing_palette.is_none());
+        });
+        assert_eq!(query(&app), "");
+    });
+}

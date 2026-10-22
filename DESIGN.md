@@ -116,9 +116,10 @@ typography:
     fontWeight: 500
 rounded:
   control: "6px"
-  command-palette: "8px"
+  command-palette: "12px"
   command-result: "4px"
   session: "8px"
+  toast: "10px"
   terminal: "12px"
 spacing:
   row-vertical: "3px"
@@ -265,10 +266,17 @@ reopening the sidebar after restoring its stored closed state. The final drop re
 tab by stable identity before applying its position. These results supplement the source-derived
 interaction rules below; screenshots alone do not verify interactions.
 
+The elevation and motion revision is captured in `elevation-light.png`, `elevation-dark.png`, and
+`elevation-palette-before-after.png` under `.impeccable/review/`, with frame strips from macOS screen
+recordings in `motion-card-glide-dark.png` and `motion-palette-dark.png`. The recordings show the card
+gliding across groups under the rows between, the palette arriving and leaving with its results, and
+a menu popping in. Focused motion, sidebar, and palette tests passed. Hover fades are covered by tests
+and still captures rather than a live pointer recording.
+
 **Key Characteristics:**
 
 - Compact session navigation with restrained activity markers.
-- Tonal sidebar depth and one inset terminal surface.
+- Tonal sidebar depth, one raised active session, and one inset terminal surface.
 - Native UI typography beside configurable monospace output.
 - Session content and status derived from application state.
 
@@ -372,10 +380,16 @@ establish an untested minimum window size.
 
 ## Elevation & Depth
 
-The sidebar is tonal, and session rows remain flat. The main pane uses a thin rule and one restrained
-shadow. The exact native shadows are recorded in the sidecar as `terminal-pane` for light mode and
-`terminal-pane-dark` for dark mode. Both use offset (0, 2), blur 12, and spread 0 in logical pixels;
-the light shadow is faint blue-black and the dark shadow is translucent black. Hover changes fill.
+The sidebar is tonal; only the active session rises from it, on a card: the selection fill, a
+hairline edge (4% black in light mode, 6% white in dark), and a soft shadow 1 logical pixel down with
+a 2-pixel blur. Other rows stay flat, and hover changes fill. The main pane pairs a thin rule with two
+shadows, a tight one 1 pixel down and a broad one 6 pixels down with a 10-pixel blur, faint
+blue-black in light mode and translucent black in dark. Floating surfaces, the command palette and
+agent toasts, use the same two-layer recipe with more lift: the palette's broad shadow drops 12
+pixels with a 16-pixel blur, a toast's 6 with 8. Dark themes deepen every shadow for the same lift.
+WarpUI blurs are Gaussian sigmas, and every shadow keeps room around its shape three times its blur:
+the renderer cuts a shadow off at that room, so a smaller one shows a hard edge. The sidecar records
+the exact values, translated to CSS.
 New terminal rows are allocated to their launch folder before the first sidebar render. On macOS,
 a new or reopened row takes its full height immediately and slides 12 px in from the left over
 340 ms with a cubic ease-out, fading in during the first 60%. A soft motion blur, faint copies on
@@ -388,11 +402,26 @@ at launch use immediate placement, and other platforms keep it until their syste
 preference is available. The working indicator loops at 30 fps, every pulse in step, and rests
 as a still dot inside a faint ring under Reduce Motion.
 
+Switching sessions moves the card: it glides from the previously active row to the new one over
+220 ms with an exponential ease-out, passing under the rows between without covering their text or
+icons. A previous row more than 180 logical pixels away is treated as 180 away. When that row was
+not on screen, or under Reduce Motion, the card fades in place over 160 ms instead. Hover tints fade
+in over 120 ms and out over 90 ms, resuming from wherever an interrupted fade had reached, and a
+hovered session's status and close button swap with a 110 ms fade.
+
+Surfaces that float over the workspace share one motion grammar. The command palette and the
+Ctrl-Tab switcher fade in over 220 ms while settling 8 pixels into place, and fade out over 130 ms
+while lifting 4 pixels, keeping their query and results as they go and taking no input. Session,
+group, and new-session menus pop in over 150 ms from 4 pixels above; toasts arrive like the
+palette. Under Reduce Motion these keep their fades without moving, and other platforms show and
+hide them immediately until their system motion preference is available.
+
 ## Shapes
 
-Controls, session rows, and the terminal pane use their distinct frontmatter radii. The active
-session and main pane use a one-logical-pixel rule; multi-selected inactive rows receive selection
-fill without the active border. The terminal surface clips its contents to its rounded boundary.
+Controls, session rows, the terminal pane, the command palette, and toasts use their distinct
+frontmatter radii. The main pane uses a one-logical-pixel rule and the active session's card a
+translucent hairline edge; multi-selected inactive rows receive the selection fill without the card.
+The terminal surface clips its contents to its rounded boundary.
 Icons stay small and optically quiet: controls and status glyphs use 16 logical pixels.
 
 ## Components
@@ -422,8 +451,8 @@ multi-selection context menu. Inline rename uses the existing native editor. Ver
 uses neighboring sessions from the same effective group; it must not silently move a tab into an
 unrelated folder group.
 
-Hovering a session swaps its timestamp for a small close button in a fixed 28-logical-pixel slot.
-The status stays visible in its own 20-logical-pixel slot and the title does not move.
+Hovering a session swaps its status for a small close button in the fixed 20-logical-pixel status
+slot. The age stays visible in its own 28-logical-pixel slot, and the title does not move.
 The button uses the shared icon-button
 styling and “Close session” tooltip. Its click takes precedence over row selection and dispatches
 the normal tab-close action, including existing running-process confirmation and undo behavior.
@@ -505,8 +534,9 @@ icon shows the number of blocked agent sessions. Desktop notifications, sent onl
 is inactive, use the session title and say which group it belongs to and whether it needs input,
 finished, or failed.
 While Torch is in front, the same notification appears as an in-app toast below the header, unless
-that session is already on screen; clicking it opens the session. Settings → Features → Notifications
-turns toasts off and sets how long they stay. Resuming or cancelling an agent removes its toast.
+that session is already on screen; clicking it opens the session. Agent toasts use the `toast`
+radius and the floating-surface shadows. Settings → Features → Notifications turns toasts off and sets
+how long they stay. Resuming or cancelling an agent removes its toast.
 
 While any coding agent is running, an Agents panel sits below the sessions, divided by the header
 rule. Its heading shows how many agents need you, otherwise how many are working, and collapses the
@@ -566,7 +596,9 @@ surface. Its colors update with appearance changes. Local result icons likewise 
 contrast against the actual selected, hovered, or default fill. Result titles use body typography;
 details use label typography, foreground at 75% opacity, and 3 logical pixels of top separation.
 The palette keeps its native editor, result list, keyboard handling, and theme outline; its body has
-a maximum height of 464 logical pixels. Preview browser focus outlines are illustrative only.
+a maximum height of 464 logical pixels and its corners use the `command-palette` radius. Without the
+search bar, as in the Ctrl-Tab switcher, the results start 6 pixels down so the first highlight stays
+inside the rounded corners. Preview browser focus outlines are illustrative only.
 
 ### Theme controls
 

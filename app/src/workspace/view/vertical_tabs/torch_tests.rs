@@ -382,6 +382,90 @@ fn reduced_arrival_fades_without_moving() {
 }
 
 #[test]
+fn hover_fades_pick_up_from_where_an_interrupted_fade_left_off() {
+    let start = Instant::now();
+    let entering = Fade::settled(0.).retarget(1., HOVER_IN, start);
+    assert_eq!(entering.value(start), 0.);
+    let halfway = start + HOVER_IN / 2;
+    let partial = entering.value(halfway);
+    assert!(partial > 0. && partial < 1.);
+    assert_eq!(entering.value(start + HOVER_IN), 1.);
+
+    let leaving = entering.retarget(0., HOVER_OUT, halfway);
+    assert_eq!(leaving.value(halfway), partial);
+    assert!(!leaving.is_settled(halfway));
+    assert_eq!(leaving.value(halfway + HOVER_OUT), 0.);
+    assert!(leaving.is_settled(halfway + HOVER_OUT));
+}
+
+#[test]
+fn active_card_glides_from_the_previous_row_and_settles_exactly() {
+    let card = CardEntrance::Glide {
+        from_y: 100.,
+        since: Instant::now(),
+    };
+    let row_y = 220.;
+    assert_eq!(
+        card.frame(row_y, Duration::ZERO),
+        motion::CardFrame {
+            offset: -120.,
+            opacity: 1.,
+        }
+    );
+    assert_eq!(
+        card.frame(row_y, motion::CARD_GLIDE),
+        motion::CardFrame::SETTLED
+    );
+    let offsets = (0..=22)
+        .map(|step| card.frame(row_y, motion::CARD_GLIDE * step / 22).offset)
+        .collect::<Vec<_>>();
+    assert!(offsets.windows(2).all(|pair| pair[0] <= pair[1]));
+}
+
+#[test]
+fn distant_switches_glide_in_from_a_capped_distance() {
+    let since = Instant::now();
+    let down = CardEntrance::Glide { from_y: 0., since };
+    let up = CardEntrance::Glide {
+        from_y: 2000.,
+        since,
+    };
+    assert_eq!(
+        down.frame(1000., Duration::ZERO).offset,
+        -motion::CARD_MAX_GLIDE
+    );
+    assert_eq!(
+        up.frame(1000., Duration::ZERO).offset,
+        motion::CARD_MAX_GLIDE
+    );
+}
+
+#[test]
+fn active_card_fades_in_place_without_a_visible_previous_row_or_with_reduced_motion() {
+    let now = Instant::now();
+    assert!(matches!(
+        CardEntrance::after_switch(Some(40.), Some(MotionPreference::Full), now),
+        CardEntrance::Glide { from_y, .. } if from_y == 40.
+    ));
+    for fade in [
+        CardEntrance::after_switch(None, Some(MotionPreference::Full), now),
+        CardEntrance::after_switch(Some(40.), Some(MotionPreference::Reduced), now),
+    ] {
+        assert!(matches!(fade, CardEntrance::Fade { .. }));
+        let first = fade.frame(0., Duration::ZERO);
+        assert_eq!((first.offset, first.opacity), (0., 0.));
+        assert_eq!(
+            fade.frame(0., Duration::from_secs(1)),
+            motion::CardFrame::SETTLED
+        );
+    }
+    assert_eq!(
+        CardEntrance::after_switch(Some(40.), None, now),
+        CardEntrance::Settled
+    );
+}
+
+#[test]
 fn only_a_leading_agent_glyph_is_coloured() {
     assert!(starts_with_agent_glyph("✳ Echo test output"));
     assert!(starts_with_agent_glyph("⠂ Echo test output"));

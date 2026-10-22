@@ -1,5 +1,5 @@
 use warp_core::ui::appearance::Appearance;
-use warpui::elements::{Border, CornerRadius, DropShadow, Radius, ScrollbarWidth};
+use warpui::elements::{Border, CornerRadius, Radius, ScrollbarWidth};
 
 use crate::search::result_renderer::QueryResultRendererStyles;
 
@@ -22,10 +22,9 @@ const COMMAND_PALETTE_BASE_ROW_HEIGHT: f32 = 28.;
 
 pub const PALETTE_HEIGHT: f32 = 464.;
 pub const PALETTE_WIDTH: f32 = 640.;
+pub const PALETTE_CORNER_RADIUS: f32 = 12.;
 
 lazy_static::lazy_static! {
-    pub static ref DROP_SHADOW: DropShadow = DropShadow::default();
-
     pub static ref QUERY_RESULT_RENDERER_STYLES: QueryResultRendererStyles =
         QueryResultRendererStyles {
             result_item_height_fn: |appearance| {

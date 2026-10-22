@@ -1264,16 +1264,102 @@
     "shadows": [
       {
         "name": "terminal-pane",
-        "value": "0 2px 12px 0 #22223312",
-        "purpose": "Source-derived light-mode WarpUI main-pane shadow, expressed as CSS in logical pixels."
+        "value": "0 1px 3px 0 #1A1F3612, 0 6px 20px 0 #1A1F361C",
+        "purpose": "Light-mode main pane: a tight contact shadow under a broad, soft one. WarpUI blurs are Gaussian sigmas; CSS blur radii here are twice the sigma."
       },
       {
         "name": "terminal-pane-dark",
-        "value": "0 2px 12px 0 #00000030",
-        "purpose": "Source-derived dark-mode WarpUI main-pane shadow, expressed as CSS in logical pixels."
+        "value": "0 1px 3px 0 #00000047, 0 6px 20px 0 #00000059",
+        "purpose": "Dark-mode main pane, deepened for the same lift. WarpUI blurs are Gaussian sigmas; CSS blur radii here are twice the sigma."
+      },
+      {
+        "name": "session-card",
+        "value": "0 1px 4px 0 #1A1F3626",
+        "purpose": "Light-mode active session card, with a 1px #0000000A hairline edge. WarpUI blurs are Gaussian sigmas; CSS blur radii here are twice the sigma."
+      },
+      {
+        "name": "session-card-dark",
+        "value": "0 1px 4px 0 #00000066",
+        "purpose": "Dark-mode active session card, with a 1px #FFFFFF10 hairline edge. WarpUI blurs are Gaussian sigmas; CSS blur radii here are twice the sigma."
+      },
+      {
+        "name": "floating-palette",
+        "value": "0 1px 3px 0 #1A1F361A, 0 12px 32px 0 #1A1F3633",
+        "purpose": "Light-mode command palette and Ctrl-Tab switcher. WarpUI blurs are Gaussian sigmas; CSS blur radii here are twice the sigma."
+      },
+      {
+        "name": "floating-palette-dark",
+        "value": "0 1px 3px 0 #00000066, 0 12px 32px 0 #0000008C",
+        "purpose": "Dark-mode command palette and Ctrl-Tab switcher. WarpUI blurs are Gaussian sigmas; CSS blur radii here are twice the sigma."
+      },
+      {
+        "name": "floating-toast",
+        "value": "0 1px 3px 0 #1A1F361A, 0 6px 16px 0 #1A1F3633",
+        "purpose": "Light-mode agent toast, a smaller lift of the palette recipe. WarpUI blurs are Gaussian sigmas; CSS blur radii here are twice the sigma."
+      },
+      {
+        "name": "floating-toast-dark",
+        "value": "0 1px 3px 0 #00000066, 0 6px 16px 0 #0000008C",
+        "purpose": "Dark-mode agent toast. WarpUI blurs are Gaussian sigmas; CSS blur radii here are twice the sigma."
       }
     ],
-    "motion": [],
+    "motion": [
+      {
+        "name": "session-arrival",
+        "value": "340ms; 12px slide from the left on a cubic ease-out, fading in over the first 60%",
+        "purpose": "A new or reopened session row arriving, with motion blur that follows its speed."
+      },
+      {
+        "name": "session-departure",
+        "value": "300ms; 12px slide left on a quadratic ease-in, then its space closes",
+        "purpose": "A closed session row leaving; rows never appear to move vertically."
+      },
+      {
+        "name": "working-pulse",
+        "value": "1600ms loop at 30 fps",
+        "purpose": "A running session's ring closing in on its dot; a still dot under Reduce Motion."
+      },
+      {
+        "name": "card-glide",
+        "value": "220ms; exponential ease-out (1 - 2^-10t)",
+        "purpose": "The active session's card travelling from the previous row, at most 180px, under the rows between."
+      },
+      {
+        "name": "card-fade",
+        "value": "160ms; quadratic ease-out",
+        "purpose": "The active session's card appearing in place when the previous row was off screen or under Reduce Motion."
+      },
+      {
+        "name": "hover-fade",
+        "value": "120ms in, 90ms out; quadratic ease-out",
+        "purpose": "A session row's hover tint; an interrupted fade resumes from its current opacity."
+      },
+      {
+        "name": "status-swap",
+        "value": "110ms fade; quadratic ease-out",
+        "purpose": "A hovered session's status giving way to its close button, and back."
+      },
+      {
+        "name": "surface-arrive",
+        "value": "220ms; quadratic ease-out fade with an 8px drop on an exponential ease-out",
+        "purpose": "The command palette, Ctrl-Tab switcher, and toasts settling into place."
+      },
+      {
+        "name": "menu-pop",
+        "value": "150ms; quadratic ease-out fade with a 4px drop",
+        "purpose": "Session, group, and new-session menus appearing at the pointer."
+      },
+      {
+        "name": "surface-leave",
+        "value": "130ms; quadratic ease-in fade with a 4px lift",
+        "purpose": "A dismissed palette leaving with its query and results; it takes no input as it goes."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "fades only",
+        "purpose": "Under Reduce Motion, surfaces keep their fades without travelling and the card fades in place; other platforms change immediately until their motion preference is available."
+      }
+    ],
     "breakpoints": []
   },
   "components": [
@@ -1297,9 +1383,9 @@
       "name": "Selected session row",
       "kind": "nav",
       "refersTo": "session-selected",
-      "description": "Active native row with rule; the focus outline is only for this HTML preview.",
+      "description": "Active native row raised on its card; the focus outline is only for this HTML preview.",
       "html": "<button class=\"ds-selected\" aria-current=\"page\"><span class=\"ds-selected-name\">Terminal</span><span class=\"ds-selected-age\">now</span><svg width=\"14\" height=\"14\" viewBox=\"0 0 14 14\" aria-hidden=\"true\"><circle cx=\"7\" cy=\"7\" r=\"5.5\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\" stroke-dasharray=\"28 7\"/></svg></button>",
-      "css": ".ds-selected{display:flex;align-items:center;gap:10px;width:254px;height:28px;padding:3px 12px;border:1px solid #D5D6DB;border-radius:8px;background:#FFFFFFF5;color:#202124;font:400 13px Roboto,sans-serif;text-align:left;cursor:pointer}.ds-selected-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-selected-age{font-size:12px;color:#616268}.ds-selected:hover,.ds-selected:active{background:#FFFFFFF5}.ds-selected:focus-visible{outline:1px solid #616268;outline-offset:1px}"
+      "css": ".ds-selected{display:flex;align-items:center;gap:10px;width:254px;height:28px;padding:3px 12px;border:1px solid #0000000A;border-radius:8px;background:#FFFFFFF5;box-shadow:0 1px 4px 0 #1A1F3626;color:#202124;font:400 13px Roboto,sans-serif;text-align:left;cursor:pointer}.ds-selected-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-selected-age{font-size:12px;color:#616268}.ds-selected:hover,.ds-selected:active{background:#FFFFFFF5}.ds-selected:focus-visible{outline:1px solid #616268;outline-offset:1px}"
     },
     {
       "name": "Automatic folder heading",
@@ -1323,15 +1409,15 @@
       "refersTo": "terminal-pane",
       "description": "Native terminal container translated to an inert preview; sample prompt is not real output.",
       "html": "<div class=\"ds-pane\"><div class=\"ds-pane-head\">Terminal</div><pre class=\"ds-pane-output\">$ </pre></div>",
-      "css": ".ds-pane{overflow:hidden;border:1px solid #D5D6DB;border-radius:12px;background:#FCFCFD;color:#303238;box-shadow:0 2px 12px 0 #22223312}.ds-pane-head{display:flex;align-items:center;height:40px;padding:0 24px 0 32px;border-bottom:1px solid #88888818;font:600 14px Roboto,sans-serif}.ds-pane-output{margin:16px 32px;font:400 14px/1.3 Hack,monospace}"
+      "css": ".ds-pane{overflow:hidden;border:1px solid #D5D6DB;border-radius:12px;background:#FCFCFD;color:#303238;box-shadow:0 1px 3px 0 #1A1F3612,0 6px 20px 0 #1A1F361C}.ds-pane-head{display:flex;align-items:center;height:40px;padding:0 24px 0 32px;border-bottom:1px solid #88888818;font:600 14px Roboto,sans-serif}.ds-pane-output{margin:16px 32px;font:400 14px/1.3 Hack,monospace}"
     },
     {
       "name": "Selected dark session row",
       "kind": "nav",
       "refersTo": "session-selected-dark",
-      "description": "Dark-mode counterpart. Active native row with rule; the focus outline is only for this HTML preview.",
+      "description": "Dark-mode counterpart. Active native row raised on its card; the focus outline is only for this HTML preview.",
       "html": "<button class=\"ds-dark-selected\" aria-current=\"page\"><span class=\"ds-dark-selected-name\">Terminal</span><span class=\"ds-dark-selected-age\">now</span><svg width=\"14\" height=\"14\" viewBox=\"0 0 14 14\" aria-hidden=\"true\"><circle cx=\"7\" cy=\"7\" r=\"5.5\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\" stroke-dasharray=\"28 7\"/></svg></button>",
-      "css": ".ds-dark-selected{display:flex;align-items:center;gap:10px;width:254px;height:28px;padding:3px 12px;border:1px solid #424242;border-radius:8px;background:#3B3B3B;color:#E6E6E6;font:400 13px Roboto,sans-serif;text-align:left;cursor:pointer}.ds-dark-selected-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-dark-selected-age{font-size:12px;color:#B5B5B5}.ds-dark-selected:hover,.ds-dark-selected:active{background:#3B3B3B}.ds-dark-selected:focus-visible{outline:1px solid #B5B5B5;outline-offset:1px}"
+      "css": ".ds-dark-selected{display:flex;align-items:center;gap:10px;width:254px;height:28px;padding:3px 12px;border:1px solid #FFFFFF10;border-radius:8px;background:#3B3B3B;box-shadow:0 1px 4px 0 #00000066;color:#E6E6E6;font:400 13px Roboto,sans-serif;text-align:left;cursor:pointer}.ds-dark-selected-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-dark-selected-age{font-size:12px;color:#B5B5B5}.ds-dark-selected:hover,.ds-dark-selected:active{background:#3B3B3B}.ds-dark-selected:focus-visible{outline:1px solid #B5B5B5;outline-offset:1px}"
     },
     {
       "name": "Dark terminal context header",
@@ -1347,7 +1433,7 @@
       "refersTo": "terminal-pane-dark",
       "description": "Dark-mode counterpart. Native terminal container translated to an inert preview; sample prompt is not real output.",
       "html": "<div class=\"ds-dark-pane\"><div class=\"ds-dark-pane-head\">Terminal</div><pre class=\"ds-dark-pane-output\">$ </pre></div>",
-      "css": ".ds-dark-pane{overflow:hidden;border:1px solid #424242;border-radius:12px;background:#232323;color:#E6E6E6;box-shadow:0 2px 12px 0 #00000030}.ds-dark-pane-head{display:flex;align-items:center;height:40px;padding:0 24px 0 32px;border-bottom:1px solid #FFFFFF12;font:600 14px Roboto,sans-serif}.ds-dark-pane-output{margin:16px 32px;font:400 14px/1.3 Hack,monospace}"
+      "css": ".ds-dark-pane{overflow:hidden;border:1px solid #424242;border-radius:12px;background:#232323;color:#E6E6E6;box-shadow:0 1px 3px 0 #00000047,0 6px 20px 0 #00000059}.ds-dark-pane-head{display:flex;align-items:center;height:40px;padding:0 24px 0 32px;border-bottom:1px solid #FFFFFF12;font:600 14px Roboto,sans-serif}.ds-dark-pane-output{margin:16px 32px;font:400 14px/1.3 Hack,monospace}"
     },
     {
       "name": "Local command palette",
@@ -1355,15 +1441,15 @@
       "refersTo": "command-palette",
       "description": "Illustrative native palette excerpt in Dark. CSS color-mix expresses source 2% foreground and 16% accent formulas; native integer blending and contrast adjustment remain authoritative. Sample content is not live session state.",
       "html": "<div class=\"ds-palette\"><input class=\"ds-palette-query\" aria-label=\"Search projects, sessions, and actions\" placeholder=\"Search projects, sessions, and actions\"><button class=\"ds-palette-result\" type=\"button\"><span>Switch to Terminal</span><small>~/project</small></button></div>",
-      "css": ".ds-palette{width:640px;max-width:100%;padding-bottom:10px;border-radius:8px;background:color-mix(in srgb,#232323 98%,#E6E6E6 2%);color:#E6E6E6;font:400 14px Roboto,sans-serif}.ds-palette-query{display:block;width:calc(100% - 48px);margin:0 24px;padding:16px 0;border:0;background:transparent;color:#E6E6E6;font:inherit}.ds-palette-query::placeholder{color:color-mix(in srgb,#E6E6E6 65%,#262626 35%);opacity:1}.ds-palette-result{display:block;width:calc(100% - 8px);margin:0 4px;padding:6px 24px;border:0;border-radius:4px;color:#E6E6E6;background:transparent;font:inherit;text-align:left;cursor:pointer}.ds-palette-result{background:color-mix(in srgb,#232323 84%,#8DAEDC 16%)}.ds-palette small{display:block;padding-top:3px;color:#E6E6E6BF;font-size:12px}.ds-palette-query:focus-visible,.ds-palette-result:focus-visible{outline:1px solid #8DAEDC;outline-offset:0}.ds-palette-result:hover,.ds-palette-result:active{background:color-mix(in srgb,#232323 84%,#8DAEDC 16%)}"
+      "css": ".ds-palette{width:640px;max-width:100%;padding-bottom:10px;border-radius:12px;box-shadow:0 1px 3px 0 #00000066,0 12px 32px 0 #0000008C;background:color-mix(in srgb,#232323 98%,#E6E6E6 2%);color:#E6E6E6;font:400 14px Roboto,sans-serif}.ds-palette-query{display:block;width:calc(100% - 48px);margin:0 24px;padding:16px 0;border:0;background:transparent;color:#E6E6E6;font:inherit}.ds-palette-query::placeholder{color:color-mix(in srgb,#E6E6E6 65%,#262626 35%);opacity:1}.ds-palette-result{display:block;width:calc(100% - 8px);margin:0 4px;padding:6px 24px;border:0;border-radius:4px;color:#E6E6E6;background:transparent;font:inherit;text-align:left;cursor:pointer}.ds-palette-result{background:color-mix(in srgb,#232323 84%,#8DAEDC 16%)}.ds-palette small{display:block;padding-top:3px;color:#E6E6E6BF;font-size:12px}.ds-palette-query:focus-visible,.ds-palette-result:focus-visible{outline:1px solid #8DAEDC;outline-offset:0}.ds-palette-result:hover,.ds-palette-result:active{background:color-mix(in srgb,#232323 84%,#8DAEDC 16%)}"
     }
   ],
   "narrative": {
     "northStar": "The Quiet Native Terminal",
-    "overview": "Torch pairs compact grouped sessions with a lightly raised terminal pane. Light mode uses a cool\nblue-to-lilac sidebar and a soft off-white working surface; dark mode uses neutral charcoal layers and soft\ngray text. The interface keeps session context legible while leaving the working area to shell output.\n\nThe binding layout direction is the user-supplied\n[terminal reference](docs/design/terminal-reference.png), reinforced by the later light-sidebar\nreference. The user's Codex dark UI reference guides the dark palette while preserving that layout.\nIts personal sidebar history is not a design asset and is not copied into the repository. The\nnorth-star phrase describes this direction; it is not a separate user-approved brand name.\n\nThis is a Rust/WarpUI desktop system. Frontmatter dimensions use portable `px` notation for WarpUI\nlogical pixels, not screenshot pixels. The tokens describe the current implementation in\n`app/src/workspace/view/vertical_tabs/torch.rs`; font and terminal defaults come from\n`app/src/settings/font.rs`, `app/src/settings/theme.rs`, and `app/src/terminal/settings.rs`.\nDefault terminal colors come from `app/src/themes/default_themes.rs`; derived command fills come\nfrom `app/src/themes/mod.rs`. UI font loading comes from `app/src/appearance.rs`. Local palette\nbehavior comes from `app/src/search/command_palette/local_navigation.rs` and its workspace actions.\nThe four built-in choices are Light, Dark, Kanagawa, and Ayu. Existing custom theme references and\nfont preferences remain readable; retired built-in names follow the compatibility mapping described\nbelow. The theme variants share the established layout and component geometry.\n\nThe original macOS layout captures in `.impeccable/review/desktop.png`, `desktop-narrow.png`, and\n`desktop-long-title.png` establish the compact sidebar and long-title clipping. The initial dark-mode\nreview covers seven captures in the same directory: `dark-desktop.png` (2560 \u00d7 1604 screenshot\npixels), `dark-narrow.png` (1730 \u00d7 2046), `light-theme-regression.png` (2560 \u00d7 1602),\n`dark-terminal-input.png`, `dark-context-menu.png`, `dark-theme-picker.png`, and\n`dark-system-settings.png`. Independent finish review found no material defects in this scope,\nconfirmed dark palette coherence, and found no material light-mode regression. This supports close\nvisual fidelity, not pixel identity. Synthetic transcripts remain labelled test fixtures rather than\nevidence of completed CLI tasks. Recording badges and cursor halos are capture artifacts.\n\nInitial dark-mode live macOS checks passed choosing Dark in the native theme picker, syncing with the currently dark\nOS appearance, returning to Light, retaining Dark after app restart, and completing `/usr/bi` to\n`/usr/bin/` with Tab. The context menu and narrow layout were also verified. Six focused tests,\nClippy with existing baseline exemptions, and the native bundle passed. Cross-platform runner\n`oz-dev` was unavailable; this evidence covers macOS only.\n\nThe softer palette and Cmd+P revision is captured in `soft-dark-terminal.png`,\n`soft-dark-collapsed.png`, `soft-dark-palette.png`, `soft-light-terminal.png`,\n`soft-light-palette.png`, `soft-light-narrow.png`, `soft-directory-query-final.png`, and\n`soft-chooser.png` under `.impeccable/review/`. Files ending in `before` are comparison evidence,\nnot the current palette. Final corrections are captured in `soft-dark-palette-reviewed.png` and\n`soft-light-palette-reviewed.png`. Four focused navigation tests, seven theme/group tests,\nbaseline-aware strict Clippy, and the native bundle passed. The independent finish review\nreturned ship with no remaining material findings. Verification remains limited to macOS.\nPrivate reference images are not repository assets.\n\nThe final macOS live verification passed short reordering within a manual group, a long drag out\nand back, Shift-selection across noncontiguous underlying tabs in displayed group order, and\nreopening the sidebar after restoring its stored closed state. The final drop resolves the dragged\ntab by stable identity before applying its position. These results supplement the source-derived\ninteraction rules below; screenshots alone do not verify interactions.",
+    "overview": "Torch pairs compact grouped sessions with a lightly raised terminal pane. Light mode uses a cool\nblue-to-lilac sidebar and a soft off-white working surface; dark mode uses neutral charcoal layers and soft\ngray text. The interface keeps session context legible while leaving the working area to shell output.\n\nThe binding layout direction is the user-supplied\n[terminal reference](docs/design/terminal-reference.png), reinforced by the later light-sidebar\nreference. The user's Codex dark UI reference guides the dark palette while preserving that layout.\nIts personal sidebar history is not a design asset and is not copied into the repository. The\nnorth-star phrase describes this direction; it is not a separate user-approved brand name.\n\nThis is a Rust/WarpUI desktop system. Frontmatter dimensions use portable `px` notation for WarpUI\nlogical pixels, not screenshot pixels. The tokens describe the current implementation in\n`app/src/workspace/view/vertical_tabs/torch.rs`; font and terminal defaults come from\n`app/src/settings/font.rs`, `app/src/settings/theme.rs`, and `app/src/terminal/settings.rs`.\nDefault terminal colors come from `app/src/themes/default_themes.rs`; derived command fills come\nfrom `app/src/themes/mod.rs`. UI font loading comes from `app/src/appearance.rs`. Local palette\nbehavior comes from `app/src/search/command_palette/local_navigation.rs` and its workspace actions.\nThe four built-in choices are Light, Dark, Kanagawa, and Ayu. Existing custom theme references and\nfont preferences remain readable; retired built-in names follow the compatibility mapping described\nbelow. The theme variants share the established layout and component geometry.\n\nThe original macOS layout captures in `.impeccable/review/desktop.png`, `desktop-narrow.png`, and\n`desktop-long-title.png` establish the compact sidebar and long-title clipping. The initial dark-mode\nreview covers seven captures in the same directory: `dark-desktop.png` (2560 \u00d7 1604 screenshot\npixels), `dark-narrow.png` (1730 \u00d7 2046), `light-theme-regression.png` (2560 \u00d7 1602),\n`dark-terminal-input.png`, `dark-context-menu.png`, `dark-theme-picker.png`, and\n`dark-system-settings.png`. Independent finish review found no material defects in this scope,\nconfirmed dark palette coherence, and found no material light-mode regression. This supports close\nvisual fidelity, not pixel identity. Synthetic transcripts remain labelled test fixtures rather than\nevidence of completed CLI tasks. Recording badges and cursor halos are capture artifacts.\n\nInitial dark-mode live macOS checks passed choosing Dark in the native theme picker, syncing with the currently dark\nOS appearance, returning to Light, retaining Dark after app restart, and completing `/usr/bi` to\n`/usr/bin/` with Tab. The context menu and narrow layout were also verified. Six focused tests,\nClippy with existing baseline exemptions, and the native bundle passed. Cross-platform runner\n`oz-dev` was unavailable; this evidence covers macOS only.\n\nThe softer palette and Cmd+P revision is captured in `soft-dark-terminal.png`,\n`soft-dark-collapsed.png`, `soft-dark-palette.png`, `soft-light-terminal.png`,\n`soft-light-palette.png`, `soft-light-narrow.png`, `soft-directory-query-final.png`, and\n`soft-chooser.png` under `.impeccable/review/`. Files ending in `before` are comparison evidence,\nnot the current palette. Final corrections are captured in `soft-dark-palette-reviewed.png` and\n`soft-light-palette-reviewed.png`. Four focused navigation tests, seven theme/group tests,\nbaseline-aware strict Clippy, and the native bundle passed. The independent finish review\nreturned ship with no remaining material findings. Verification remains limited to macOS.\nPrivate reference images are not repository assets.\n\nThe final macOS live verification passed short reordering within a manual group, a long drag out\nand back, Shift-selection across noncontiguous underlying tabs in displayed group order, and\nreopening the sidebar after restoring its stored closed state. The final drop resolves the dragged\ntab by stable identity before applying its position. These results supplement the source-derived\ninteraction rules below; screenshots alone do not verify interactions.\n\nThe elevation and motion revision is captured in `elevation-light.png`, `elevation-dark.png`, and\n`elevation-palette-before-after.png` under `.impeccable/review/`, with frame strips from macOS screen\nrecordings in `motion-card-glide-dark.png` and `motion-palette-dark.png`. The recordings show the card\ngliding across groups under the rows between, the palette arriving and leaving with its results, and\na menu popping in. Focused motion, sidebar, and palette tests passed. Hover fades are covered by tests\nand still captures rather than a live pointer recording.",
     "keyCharacteristics": [
       "Compact session navigation with restrained activity markers.",
-      "Tonal sidebar depth and one inset terminal surface.",
+      "Tonal sidebar depth, one raised active session, and one inset terminal surface.",
       "Native UI typography beside configurable monospace output.",
       "Session content and status derived from application state."
     ],

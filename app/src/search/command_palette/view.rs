@@ -45,6 +45,7 @@ use crate::session_management::SessionSource;
 use crate::settings::CtrlTabBehavior;
 use crate::terminal::keys_settings::KeysSettings;
 use crate::themes::theme::WarpTheme;
+use crate::ui_components::elevation::floating_shadows;
 use crate::view_components::DismissibleToast;
 use crate::workspace::{ForkedConversationDestination, WorkspaceAction, active_terminal_in_window};
 use crate::{ToastStack, send_telemetry_from_ctx};
@@ -198,27 +199,41 @@ impl warpui::View for View {
         };
 
         let mut palette = Flex::column();
-        if matches!(self.navigation_mode, NavigationMode::Normal) {
+        let top_padding = if matches!(self.navigation_mode, NavigationMode::Normal) {
             // Don't show the search bar when navigating with ctrl-tab.
             palette.add_child(self.render_search_bar());
-        }
+            0.
+        } else {
+            // Keeps the first result's highlight inside the rounded corners.
+            6.
+        };
         palette.add_child(Shrinkable::new(1., body).finish());
 
+        let corner_radius = CornerRadius::with_all(Radius::Pixels(styles::PALETTE_CORNER_RADIUS));
+        let [contact_shadow, ambient_shadow] = floating_shadows(appearance, 16.);
         EventHandler::new(
             Align::new(
                 Dismiss::new(
                     Container::new(
-                        ConstrainedBox::new(palette.finish())
-                            .with_width(styles::PALETTE_WIDTH)
-                            .with_max_height(styles::PALETTE_HEIGHT)
-                            .finish(),
+                        Container::new(
+                            ConstrainedBox::new(palette.finish())
+                                .with_width(styles::PALETTE_WIDTH)
+                                .with_max_height(styles::PALETTE_HEIGHT)
+                                .finish(),
+                        )
+                        .with_background(crate::themes::command_surface(theme))
+                        .with_corner_radius(corner_radius)
+                        .with_border(Border::all(1.0).with_border_fill(theme.outline()))
+                        .with_padding_top(top_padding)
+                        .with_padding_bottom(10.)
+                        .with_drop_shadow(contact_shadow)
+                        .finish(),
                     )
+                    // The same surface again, under the palette, carries the broad shadow.
                     .with_background(crate::themes::command_surface(theme))
-                    .with_corner_radius(CornerRadius::with_all(Radius::Pixels(8.)))
-                    .with_border(Border::all(1.0).with_border_fill(theme.outline()))
+                    .with_corner_radius(corner_radius)
                     .with_margin_top(117.)
-                    .with_padding_bottom(10.)
-                    .with_drop_shadow(*styles::DROP_SHADOW)
+                    .with_drop_shadow(ambient_shadow)
                     .finish(),
                 )
                 .on_dismiss(|ctx, _app| ctx.dispatch_typed_action(Action::Close))
@@ -675,9 +690,6 @@ impl View {
 
         send_telemetry_from_ctx!(event, ctx);
 
-        self.state.clipped_scroll_state = Default::default();
-        self.reset(ctx);
-
         // Some of the actions that are dispatched before closing can close the Window (e.g. "Close
         // Tab" on the final tab of the window). Confirm that the Window still exists before trying
         // to update the view.
@@ -699,6 +711,8 @@ impl View {
             .update(ctx, |search, ctx| search.run_query(ctx));
     }
 
+    /// Clears the query and scroll position. Every way of opening the palette calls this, so
+    /// closing leaves them in place while the palette fades away.
     pub fn reset(&mut self, ctx: &mut ViewContext<Self>) {
         self.state.clipped_scroll_state.scroll_to(Pixels::zero());
         self.search_bar.update(ctx, |search_bar, ctx| {

@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+use instant::Instant;
 use itertools::{Either, Itertools};
 use warp_core::features::FeatureFlag;
 use warpui::{EntityId, UpdateView, ViewContext};
@@ -579,6 +580,7 @@ impl Workspace {
         self.show_tab_group_right_click_menu = None;
         self.hide_move_to_group_sidecar(ctx);
         self.show_tab_selection_right_click_menu = Some((tab_index, anchor));
+        self.menu_opened_at = Instant::now();
         ctx.focus(&self.tab_right_click_menu);
         ctx.notify();
     }

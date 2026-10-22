@@ -1,11 +1,15 @@
 #[path = "torch_motion.rs"]
 mod motion;
 
+use std::cell::Cell;
 use std::time::Duration;
 
 use futures::StreamExt;
 use instant::Instant;
-use motion::{Motion, SessionMotion, WorkingPulse};
+use motion::{
+    CardEntrance, Fade, HOVER_IN, HOVER_OUT, Motion, RowFills, RowSurface, SessionMotion,
+    WorkingPulse,
+};
 use warp_core::ui::theme::{AnsiColors, ColorScheme};
 use warp_errors::report_if_error;
 use warpui::ViewContext;
@@ -22,6 +26,8 @@ use crate::terminal::cli_agent_sessions::{
 };
 use crate::themes::theme::AnsiColorIdentifier;
 use crate::ui_components::buttons::icon_button;
+use crate::ui_components::elevation::soft_shadow;
+use crate::ui_components::motion::{MotionPreference, Reveal, Revealing, motion_preference};
 use crate::workspace::TabMovement;
 use crate::workspace::header_toolbar_item::HeaderToolbarItemKind;
 use crate::workspace::tab_settings::DirectoryTabColor;
@@ -31,33 +37,6 @@ pub(super) const SIDEBAR_WIDTH: f32 = 272.;
 const HEADER_HEIGHT: f32 = 48.;
 const ROW_HEIGHT: f32 = 28.;
 const SCROLL_FOLLOW_INTERVAL: Duration = Duration::from_millis(16);
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum MotionPreference {
-    Full,
-    Reduced,
-}
-
-/// The system motion preference, or `None` where the sidebar places rows immediately.
-fn motion_preference() -> Option<MotionPreference> {
-    #[cfg(target_os = "macos")]
-    {
-        Some(
-            if objc2_app_kit::NSWorkspace::sharedWorkspace()
-                .accessibilityDisplayShouldReduceMotion()
-            {
-                MotionPreference::Reduced
-            } else {
-                MotionPreference::Full
-            },
-        )
-    }
-    // Keep placement immediate until the other backends expose their system motion preference.
-    #[cfg(not(target_os = "macos"))]
-    {
-        None
-    }
-}
 
 fn arrival_motion(started: Option<Instant>) -> Option<(Motion, Instant)> {
     let started = started?;
@@ -80,7 +59,13 @@ struct Palette {
     attention: ColorU,
     working: ColorU,
     header_rule: ColorU,
+    /// The broad, soft shadow that lifts the terminal pane off the sidebar.
     shadow: ColorU,
+    /// The tight shadow that seats the terminal pane's edge.
+    contact_shadow: ColorU,
+    /// The hairline that crisps the active session's card.
+    card_edge: ColorU,
+    card_shadow: ColorU,
 }
 
 impl Palette {
@@ -98,7 +83,10 @@ impl Palette {
                 attention: ColorU::from_u32(0x98651FFF),
                 working: ColorU::from_u32(0xC15F3CFF),
                 header_rule: ColorU::from_u32(0x88888818),
-                shadow: ColorU::from_u32(0x22223312),
+                shadow: ColorU::from_u32(0x1A1F361C),
+                contact_shadow: ColorU::from_u32(0x1A1F3612),
+                card_edge: ColorU::from_u32(0x0000000A),
+                card_shadow: ColorU::from_u32(0x1A1F3626),
             }
         } else if matches!(theme.name().as_deref(), Some("Kanagawa" | "Ayu")) {
             let background = theme.background();
@@ -115,7 +103,10 @@ impl Palette {
                 attention: theme.terminal_colors().bright.yellow.into(),
                 working: ColorU::from_u32(0xD97757FF),
                 header_rule: foreground.with_opacity(7).into_solid(),
-                shadow: ColorU::from_u32(0x00000030),
+                shadow: ColorU::from_u32(0x00000059),
+                contact_shadow: ColorU::from_u32(0x00000047),
+                card_edge: foreground.with_opacity(8).into_solid(),
+                card_shadow: ColorU::from_u32(0x00000066),
             }
         } else {
             Self {
@@ -130,7 +121,10 @@ impl Palette {
                 attention: ColorU::from_u32(0xD9B96EFF),
                 working: ColorU::from_u32(0xD97757FF),
                 header_rule: ColorU::from_u32(0xFFFFFF12),
-                shadow: ColorU::from_u32(0x00000030),
+                shadow: ColorU::from_u32(0x00000059),
+                contact_shadow: ColorU::from_u32(0x00000047),
+                card_edge: ColorU::from_u32(0xFFFFFF10),
+                card_shadow: ColorU::from_u32(0x00000066),
             }
         }
     }
@@ -141,6 +135,15 @@ impl Palette {
             end: vec2f(0., 1.),
             start_color: self.sidebar_top,
             end_color: self.sidebar_bottom,
+        }
+    }
+
+    fn row_fills(&self) -> RowFills {
+        RowFills {
+            hover: self.hover,
+            selection: self.selection,
+            card_edge: self.card_edge,
+            card_shadow: self.card_shadow,
         }
     }
 }
@@ -879,6 +882,85 @@ impl SessionCache {
     }
 }
 
+/// The active session as of the last render, and how its card arrived there.
+#[derive(Clone, Copy)]
+struct Selection {
+    pane_group: EntityId,
+    /// Its tab index, which names its row's saved position.
+    index: usize,
+    card: CardEntrance,
+}
+
+/// Row hover fades and the active session's card entrance, carried between renders.
+#[derive(Default)]
+pub(in crate::workspace::view) struct RowTransitions {
+    hovers: RefCell<HashMap<EntityId, Fade>>,
+    selection: Cell<Option<Selection>>,
+}
+
+impl RowTransitions {
+    /// Records the active session, starting its card's entrance when it differs from the one
+    /// active at the last render.
+    fn select(&self, workspace: &Workspace, app: &AppContext) {
+        let index = workspace.active_tab_index;
+        let Some(tab) = workspace.tabs.get(index) else {
+            return;
+        };
+        let pane_group = tab.pane_group.id();
+        let card = match self.selection.get() {
+            Some(previous) if previous.pane_group == pane_group => previous.card,
+            Some(previous) => {
+                let from_y = workspace
+                    .tabs
+                    .iter()
+                    .any(|tab| tab.pane_group.id() == previous.pane_group)
+                    .then(|| {
+                        app.element_position_by_id_at_last_frame(
+                            workspace.window_id,
+                            tab_position_id(previous.index),
+                        )
+                    })
+                    .flatten()
+                    .map(|rect| rect.origin_y());
+                CardEntrance::after_switch(from_y, motion_preference(), Instant::now())
+            }
+            None => CardEntrance::Settled,
+        };
+        self.selection.set(Some(Selection {
+            pane_group,
+            index,
+            card,
+        }));
+    }
+
+    fn card(&self) -> CardEntrance {
+        self.selection
+            .get()
+            .map_or(CardEntrance::Settled, |selection| selection.card)
+    }
+
+    /// The hover fade of a session's row, restarted whenever the pointer enters or leaves it.
+    fn hover(&self, pane_group: EntityId, hovered: bool) -> Fade {
+        let target = if hovered { 1. } else { 0. };
+        let mut hovers = self.hovers.borrow_mut();
+        let fade = hovers
+            .entry(pane_group)
+            .or_insert_with(|| Fade::settled(target));
+        if fade.target() != target {
+            let duration = if hovered { HOVER_IN } else { HOVER_OUT };
+            *fade = fade.retarget(target, duration, Instant::now());
+        }
+        *fade
+    }
+
+    fn prune(&self, tabs: &[TabData]) {
+        let mut hovers = self.hovers.borrow_mut();
+        if hovers.len() > tabs.len() {
+            hovers.retain(|id, _| tabs.iter().any(|tab| tab.pane_group.id() == *id));
+        }
+    }
+}
+
 fn capture_snapshot(tab: &TabData, app: &AppContext) -> TerminalSnapshot {
     let pane_group = tab.pane_group.as_ref(app);
     let focused = pane_group.focused_session_view(app);
@@ -1216,6 +1298,10 @@ fn sessions(workspace: &Workspace, app: &AppContext) -> Vec<Session> {
         .vertical_tabs_panel
         .torch_sessions
         .prune(&workspace.tabs);
+    workspace
+        .vertical_tabs_panel
+        .torch_rows
+        .prune(&workspace.tabs);
     (0..workspace.tabs.len())
         .map(|index| session(workspace, index, app))
         .collect()
@@ -1408,22 +1494,23 @@ fn session_status(session: &Session, palette: &Palette) -> Box<dyn Element> {
 
 struct RowParts {
     title: Box<dyn Element>,
-    age_or_close: Box<dyn Element>,
-    status: Box<dyn Element>,
+    age: Box<dyn Element>,
+    /// The session's status, or its close button while the row is hovered.
+    status_or_close: Box<dyn Element>,
 }
 
-fn row_surface(parts: RowParts, background: ElementFill, border: ElementFill) -> Box<dyn Element> {
+fn row_content(parts: RowParts) -> Box<dyn Element> {
     let trailing = Flex::row()
         .with_cross_axis_alignment(CrossAxisAlignment::Center)
         .with_spacing(10.)
         .with_child(
-            ConstrainedBox::new(Align::new(parts.age_or_close).finish())
+            ConstrainedBox::new(Align::new(parts.age).finish())
                 .with_width(28.)
                 .with_height(20.)
                 .finish(),
         )
         .with_child(
-            ConstrainedBox::new(Align::new(parts.status).finish())
+            ConstrainedBox::new(Align::new(parts.status_or_close).finish())
                 .with_width(20.)
                 .with_height(20.)
                 .finish(),
@@ -1438,9 +1525,6 @@ fn row_surface(parts: RowParts, background: ElementFill, border: ElementFill) ->
     ConstrainedBox::new(
         Container::new(contents)
             .with_padding(Padding::uniform(3.).with_horizontal(12.))
-            .with_corner_radius(CornerRadius::with_all(Radius::Pixels(8.)))
-            .with_background(background)
-            .with_border(Border::all(1.).with_border_fill(border))
             .finish(),
     )
     .with_height(ROW_HEIGHT)
@@ -1456,26 +1540,21 @@ fn departing_row(
     let session = &departing.session;
     let parts = RowParts {
         title: session_title(session, palette, appearance),
-        age_or_close: if departing.hovered {
+        age: session_age(session, palette, appearance),
+        status_or_close: if departing.hovered {
             Empty::new().finish()
         } else {
-            session_age(session, palette, appearance)
+            session_status(session, palette)
         },
-        status: session_status(session, palette),
     };
-    let background = if departing.selected {
-        ElementFill::Solid(palette.selection)
-    } else if departing.hovered {
-        ElementFill::Solid(palette.hover)
-    } else {
-        ElementFill::None
-    };
-    let border = if departing.active {
-        ElementFill::Solid(palette.rule)
-    } else {
-        ElementFill::None
-    };
-    row_surface(parts, background, border)
+    RowSurface::new(
+        row_content(parts),
+        palette.row_fills(),
+        Fade::settled(if departing.hovered { 1. } else { 0. }),
+        departing.selected && !departing.active,
+        departing.active.then_some(CardEntrance::Settled),
+    )
+    .finish()
 }
 
 fn row(
@@ -1487,9 +1566,6 @@ fn row(
     let appearance = Appearance::as_ref(app);
     let index = session.index;
     let active = index == workspace.active_tab_index;
-    let selected = palette.selection;
-    let hover = palette.hover;
-    let rule = palette.rule;
     let pane_group = workspace.tabs[index].pane_group.as_ref(app);
     let locator = PaneViewLocator {
         pane_group_id: workspace.tabs[index].pane_group.id(),
@@ -1519,31 +1595,32 @@ fn row(
     .build()
     .on_click(move |ctx, _, _| ctx.dispatch_typed_action(WorkspaceAction::CloseTab(index)))
     .finish();
+    let transitions = &workspace.vertical_tabs_panel.torch_rows;
+    let fills = palette.row_fills();
+    let card = active.then(|| transitions.card());
     let row = Hoverable::new(
         workspace.tabs[index].tab_mouse_state.clone(),
         move |state| {
+            let hovered = state.is_hovered();
+            let hover = transitions.hover(locator.pane_group_id, hovered);
+            let status_or_close = if hovered { close_button } else { status };
+            let status_or_close = match hover.since() {
+                Some(since) => Revealing::new(status_or_close, Reveal::Swap, since).finish(),
+                None => status_or_close,
+            };
             let parts = RowParts {
                 title,
-                age_or_close: if state.is_hovered() {
-                    close_button
-                } else {
-                    age
-                },
-                status,
+                age,
+                status_or_close,
             };
-            let background = if active || in_multi_selection {
-                ElementFill::Solid(selected)
-            } else if state.is_hovered() {
-                ElementFill::Solid(hover)
-            } else {
-                ElementFill::None
-            };
-            let border = if active {
-                ElementFill::Solid(rule)
-            } else {
-                ElementFill::None
-            };
-            row_surface(parts, background, border)
+            RowSurface::new(
+                row_content(parts),
+                fills,
+                hover,
+                in_multi_selection && !active,
+                card,
+            )
+            .finish()
         },
     )
     .with_defer_events_to_children()
@@ -2287,6 +2364,10 @@ pub(in crate::workspace::view) fn render(
 ) -> Box<dyn Element> {
     let appearance = Appearance::as_ref(app);
     let palette = Palette::new(appearance.theme());
+    workspace
+        .vertical_tabs_panel
+        .torch_rows
+        .select(workspace, app);
     let sessions = if workspace.vertical_tabs_panel_open {
         sessions(workspace, app)
     } else {
@@ -2409,16 +2490,18 @@ pub(in crate::workspace::view) fn render(
         .with_child(header)
         .with_child(Expanded::new(1., body.finish()).finish())
         .finish();
+    let pane_radius = CornerRadius::with_all(Radius::Pixels(12.));
     let main = Container::new(Clipped::new(main).finish())
         .with_background(appearance.theme().background())
-        .with_corner_radius(CornerRadius::with_all(Radius::Pixels(12.)))
+        .with_corner_radius(pane_radius)
         .with_border(Border::all(1.).with_border_fill(palette.rule))
-        .with_drop_shadow(DropShadow {
-            color: palette.shadow,
-            offset: vec2f(0., 2.),
-            blur_radius: 12.,
-            spread_radius: 0.,
-        })
+        .with_drop_shadow(soft_shadow(palette.contact_shadow, 1., 1.5))
+        .finish();
+    // A second, broader shadow under the same rounded rect gives the pane soft depth.
+    let main = Container::new(main)
+        .with_background(appearance.theme().background())
+        .with_corner_radius(pane_radius)
+        .with_drop_shadow(soft_shadow(palette.shadow, 6., 10.))
         .finish();
     let mut layout = Flex::row().with_cross_axis_alignment(CrossAxisAlignment::Stretch);
     if workspace.vertical_tabs_panel_open {

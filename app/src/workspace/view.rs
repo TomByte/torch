@@ -454,6 +454,7 @@ use crate::themes::theme_deletion_modal::{ThemeDeletionModal, ThemeDeletionModal
 use crate::tips::{TipsEvent, TipsView};
 use crate::ui_components::avatar::{Avatar, AvatarContent, StatusElementTypes};
 use crate::ui_components::buttons::{combo_inner_button, icon_button_with_color};
+use crate::ui_components::motion::{Reveal, Revealing};
 use crate::ui_components::red_notification_dot::RedNotificationDot;
 use crate::ui_components::window_focus_dimming::WindowFocusDimming;
 use crate::ui_components::{blended_colors, icons};
@@ -1094,9 +1095,15 @@ pub struct Workspace {
     /// variant determines whether the menu sits below the `+` add-tab button
     /// or floats at the pointer position (right-click on the panel chrome).
     show_new_session_dropdown_menu: Option<NewSessionMenuAnchor>,
+    /// When the most recent tab, tab group, or new session menu opened.
+    menu_opened_at: Instant,
     changelog_model: ModelHandle<ChangelogModel>,
     palette: ViewHandle<CommandPalette>,
     ctrl_tab_palette: ViewHandle<CommandPalette>,
+    /// When the open palette appeared.
+    palette_opened_at: Instant,
+    /// A palette that just closed, with when it closed, while it fades away.
+    closing_palette: Option<(ViewHandle<CommandPalette>, Instant)>,
     mouse_states: WorkspaceMouseStates,
     settings_pane: ViewHandle<SettingsView>,
     import_modal: ViewHandle<ImportModal>,
@@ -3498,11 +3505,14 @@ impl Workspace {
             show_tab_selection_right_click_menu: None,
             new_session_dropdown_menu,
             show_new_session_dropdown_menu: None,
+            menu_opened_at: Instant::now(),
             changelog_model,
             welcome_tips_view_state,
             welcome_tips_view,
             palette,
             ctrl_tab_palette,
+            palette_opened_at: Instant::now(),
+            closing_palette: None,
             mouse_states: Default::default(),
             previous_theme: None,
             background_image_animation_start_time: Instant::now(),
@@ -7237,6 +7247,7 @@ impl Workspace {
             }
         });
         self.show_new_session_dropdown_menu = Some(anchor);
+        self.menu_opened_at = Instant::now();
         ctx.focus(&self.new_session_dropdown_menu);
         ctx.notify();
     }
@@ -8191,6 +8202,7 @@ impl Workspace {
         });
         self.show_tab_group_right_click_menu = None;
         self.show_tab_right_click_menu = Some((tab_index, anchor));
+        self.menu_opened_at = Instant::now();
         ctx.focus(&self.tab_right_click_menu);
         ctx.notify();
     }
@@ -8219,6 +8231,7 @@ impl Workspace {
         self.show_tab_right_click_menu = None;
         self.hide_move_to_group_sidecar(ctx);
         self.show_tab_group_right_click_menu = Some((group_id, anchor));
+        self.menu_opened_at = Instant::now();
         ctx.focus(&self.tab_right_click_menu);
         ctx.notify();
     }
@@ -8277,6 +8290,7 @@ impl Workspace {
             context_menu.set_items(menu_items, view_ctx);
         });
         self.show_tab_right_click_menu = Some((tab_index, TabContextMenuAnchor::Pointer(position)));
+        self.menu_opened_at = Instant::now();
         ctx.focus(&self.tab_right_click_menu);
         ctx.notify();
     }
@@ -9122,6 +9136,7 @@ impl Workspace {
             menu.reset_selection(ctx);
         });
         self.show_new_session_dropdown_menu = Some(anchor);
+        self.menu_opened_at = Instant::now();
         ctx.focus(&self.new_session_dropdown_menu);
         ctx.notify();
     }
@@ -15270,6 +15285,30 @@ impl Workspace {
         accepted_action_type: Option<&'static str>,
         ctx: &mut ViewContext<Self>,
     ) {
+        let closing = if self.current_workspace_state.is_ctrl_tab_palette_open {
+            Some(&self.ctrl_tab_palette)
+        } else if self.current_workspace_state.is_palette_open {
+            Some(&self.palette)
+        } else {
+            None
+        };
+        if let Some(palette) = closing {
+            let closed_at = Instant::now();
+            self.closing_palette = Some((palette.clone(), closed_at));
+            ctx.spawn(
+                warpui::r#async::Timer::after(Reveal::Leave.duration()),
+                move |me, _, ctx| {
+                    if me
+                        .closing_palette
+                        .as_ref()
+                        .is_some_and(|(_, at)| *at == closed_at)
+                    {
+                        me.closing_palette = None;
+                        ctx.notify();
+                    }
+                },
+            );
+        }
         self.current_workspace_state.is_palette_open = false;
         self.current_workspace_state.is_ctrl_tab_palette_open = false;
         self.tab_bar_pinned_by_popup = false;
@@ -15349,6 +15388,8 @@ impl Workspace {
         ctx: &mut ViewContext<Self>,
     ) {
         self.close_all_overlays(ctx);
+        self.palette_opened_at = Instant::now();
+        self.closing_palette = None;
 
         // Set the shared session viewer state before opening the palette
         // so it can determine which data sources to include (e.g., exclude Files in shared sessions)
@@ -27672,7 +27713,12 @@ impl View for Workspace {
                 };
                 if let Some(positioning) = positioning {
                     stack.add_positioned_overlay_child(
-                        ChildView::new(&self.tab_right_click_menu).finish(),
+                        Revealing::new(
+                            ChildView::new(&self.tab_right_click_menu).finish(),
+                            Reveal::Pop,
+                            self.menu_opened_at,
+                        )
+                        .finish(),
                         positioning,
                     );
                 }
@@ -27700,7 +27746,12 @@ impl View for Workspace {
                     ParentOffsetBounds::Unbounded
                 };
                 stack.add_positioned_overlay_child(
-                    ChildView::new(&self.tab_right_click_menu).finish(),
+                    Revealing::new(
+                        ChildView::new(&self.tab_right_click_menu).finish(),
+                        Reveal::Pop,
+                        self.menu_opened_at,
+                    )
+                    .finish(),
                     OffsetPositioning::offset_from_parent(
                         position,
                         bounds,
@@ -27759,7 +27810,12 @@ impl View for Workspace {
             };
             if let Some(positioning) = positioning {
                 stack.add_positioned_overlay_child(
-                    ChildView::new(&self.tab_right_click_menu).finish(),
+                    Revealing::new(
+                        ChildView::new(&self.tab_right_click_menu).finish(),
+                        Reveal::Pop,
+                        self.menu_opened_at,
+                    )
+                    .finish(),
                     positioning,
                 );
             }
@@ -27787,7 +27843,12 @@ impl View for Workspace {
                         }
                     };
                     stack.add_positioned_overlay_child(
-                        ChildView::new(&self.new_session_dropdown_menu).finish(),
+                        Revealing::new(
+                            ChildView::new(&self.new_session_dropdown_menu).finish(),
+                            Reveal::Pop,
+                            self.menu_opened_at,
+                        )
+                        .finish(),
                         OffsetPositioning::offset_from_save_position_element(
                             vertical_tabs::VERTICAL_TABS_ADD_TAB_POSITION_ID,
                             vec2f(0., NEW_SESSION_MENU_VERTICAL_BUTTON_OFFSET_Y),
@@ -27809,7 +27870,12 @@ impl View for Workspace {
                         ParentOffsetBounds::Unbounded
                     };
                     stack.add_positioned_overlay_child(
-                        ChildView::new(&self.new_session_dropdown_menu).finish(),
+                        Revealing::new(
+                            ChildView::new(&self.new_session_dropdown_menu).finish(),
+                            Reveal::Pop,
+                            self.menu_opened_at,
+                        )
+                        .finish(),
                         OffsetPositioning::offset_from_parent(
                             menu_anchor.position(),
                             bounds,
@@ -27989,11 +28055,34 @@ impl View for Workspace {
         }
 
         if self.current_workspace_state.is_palette_open {
-            stack.add_overlay_child(ChildView::new(&self.palette).finish());
+            stack.add_overlay_child(
+                Revealing::new(
+                    ChildView::new(&self.palette).finish(),
+                    Reveal::Arrive,
+                    self.palette_opened_at,
+                )
+                .finish(),
+            );
         }
 
         if self.current_workspace_state.is_ctrl_tab_palette_open {
-            stack.add_child(ChildView::new(&self.ctrl_tab_palette).finish());
+            stack.add_child(
+                Revealing::new(
+                    ChildView::new(&self.ctrl_tab_palette).finish(),
+                    Reveal::Arrive,
+                    self.palette_opened_at,
+                )
+                .finish(),
+            );
+        }
+
+        if let Some((palette, closed_at)) = &self.closing_palette
+            && !Reveal::Leave.is_finished(*closed_at)
+        {
+            stack.add_overlay_child(
+                Revealing::new(ChildView::new(palette).finish(), Reveal::Leave, *closed_at)
+                    .finish(),
+            );
         }
 
         if self.current_workspace_state.is_require_login_modal_open {
