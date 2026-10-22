@@ -106,7 +106,7 @@ impl Palette {
                 shadow: ColorU::from_u32(0x00000059),
                 contact_shadow: ColorU::from_u32(0x00000047),
                 card_edge: foreground.with_opacity(8).into_solid(),
-                card_shadow: ColorU::from_u32(0x00000066),
+                card_shadow: ColorU::from_u32(0x00000033),
             }
         } else {
             Self {
@@ -124,7 +124,7 @@ impl Palette {
                 shadow: ColorU::from_u32(0x00000059),
                 contact_shadow: ColorU::from_u32(0x00000047),
                 card_edge: ColorU::from_u32(0xFFFFFF10),
-                card_shadow: ColorU::from_u32(0x00000066),
+                card_shadow: ColorU::from_u32(0x00000033),
             }
         }
     }
