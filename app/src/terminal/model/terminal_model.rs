@@ -2641,6 +2641,8 @@ pub enum CommandType {
 pub enum HandlerEvent {
     InitShell {
         pending_session_info: Box<SessionInfo>,
+        /// Whether the shell sources the bootstrap script itself.
+        sources_bootstrap: bool,
     },
     Bootstrapped(BootstrappedEvent),
     Precmd {
@@ -3241,6 +3243,7 @@ impl ansi::Handler for TerminalModel {
 
             let shell_type = ShellType::from_name(&data.shell)
                 .unwrap_or_else(|| panic!("invalid shell name: {}", data.shell));
+            let sources_bootstrap = data.sources_bootstrap;
 
             let pending_session_info = SessionInfo::create_pending(
                 shell_type,
@@ -3259,6 +3262,7 @@ impl ansi::Handler for TerminalModel {
 
             self.emit_handler_event(HandlerEvent::InitShell {
                 pending_session_info: Box::new(pending_session_info),
+                sources_bootstrap,
             });
             self.commit_lifecycle_transition(&transition);
         }

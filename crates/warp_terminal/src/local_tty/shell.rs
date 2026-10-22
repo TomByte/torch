@@ -15,8 +15,12 @@ use warp_util::path::{
     canonicalize_git_bash_path, is_msys2_path, resolve_executable, warp_shell_path,
 };
 
+#[cfg(unix)]
+use crate::bootstrap::{fish_bootstrap_file, raw_init_shell_script_for_shell};
 use crate::bootstrap::{generate_session_id, init_shell_script_for_shell};
 use crate::local_tty::docker_sandbox::DockerSandboxShellStarter;
+#[cfg(unix)]
+use crate::shell::shell_quote_arg;
 use crate::shell::{ShellLaunchData, ShellName, ShellType, shell_escape_single_quotes};
 
 pub const ZSH_SHELL_PATH: &str = "/bin/zsh";
@@ -762,39 +766,11 @@ fn arguments_for_session_spawning_command(
                 .into(),
             ]
         }
+        #[cfg(unix)]
+        ShellType::Fish => fish_arguments_for_session_spawning_command(session_id),
+        #[cfg(not(unix))]
         ShellType::Fish => {
-            // For now, we are going to plug the init cmd into single quotes.
-            // Note it contains single quotes and there is no way to escape a single quote,
-            // so instead we exit single quotes, emit an (escaped) quote, and re-enter them.
-            //
-            // TODO: we should eventually refactor this and build the init cmd up so that
-            // we don't need to do complicated escaping.
-            // We should also probably store the hex encoded json as a static string
-            // rather than computing it at runtime for each shell we start.
-            vec![
-                // fish sources configuration files whenever it's invoked,
-                // including in non-interactive mode (i.e. '-c'). This differs
-                // from other shells like zsh, so we have to explicitly tell fish
-                // to not source config files.
-                //
-                // There's an open GH issue against fish contesting this behaviour:
-                // https://github.com/fish-shell/fish-shell/issues/5394.
-                "--no-config".to_owned().into(),
-                "-c".to_owned().into(),
-                format!(
-                    // We do _not_ specify `--no-config` here because
-                    // we want fish to source config files for us (we don't
-                    // manually do so in the bootstrap script like we do for zsh, for example).
-                    // `-f no-mark-prompt` disables OSC 133 (the non-standard FinalTerm escape codes).
-                    // Fish's implementation of this breaks Warp by emitting `OSC 133 A` but not
-                    // `OSC 133 B` afterwards, which we have assumed. This is a temporary workaround.
-                    // See this issue: https://github.com/warpdotdev/Warp/issues/7588
-                    r#"exec '{}' -f no-mark-prompt --login --init-command '{}'"#,
-                    resolved_shell_path,
-                    init_shell_script_for_shell(ShellType::Fish, &crate::ASSETS, session_id)
-                )
-                .into(),
-            ]
+            fish_exec_arguments_for_session_spawning_command(resolved_shell_path, session_id)
         }
         ShellType::PowerShell => {
             vec![
@@ -817,6 +793,71 @@ fn arguments_for_session_spawning_command(
     }
 }
 
+/// Launches fish directly with its init script as `--init-command`. Fish runs that after reading the
+/// user's config, so when the bootstrap script can be written to a file, the init script sources it
+/// in the same step: the shell bootstraps before drawing its first prompt instead of waiting for
+/// Torch to write a `source` command to the PTY.
+#[cfg(unix)]
+fn fish_arguments_for_session_spawning_command(session_id: SessionId) -> Vec<OsString> {
+    let mut init_command =
+        raw_init_shell_script_for_shell(ShellType::Fish, &crate::ASSETS, session_id);
+    if let Some(bootstrap_file) = fish_bootstrap_file(&crate::ASSETS) {
+        let bootstrap_file = shell_quote_arg(&bootstrap_file.to_string_lossy(), ShellType::Fish);
+        init_command = format!("set -g WARP_BOOTSTRAP_FILE {bootstrap_file}; {init_command}");
+    }
+    vec![
+        // `-f no-mark-prompt` disables OSC 133 (the non-standard FinalTerm escape codes).
+        // Fish's implementation of this breaks Warp by emitting `OSC 133 A` but not
+        // `OSC 133 B` afterwards, which we have assumed. This is a temporary workaround.
+        // See this issue: https://github.com/warpdotdev/Warp/issues/7588
+        "-f".into(),
+        "no-mark-prompt".into(),
+        "--login".into(),
+        "--init-command".into(),
+        init_command.into(),
+    ]
+}
+
+/// Launches fish through a config-less fish that `exec`s the real one, for launchers that pass the
+/// arguments on to another shell (e.g. WSL), where the bootstrap file isn't reachable.
+fn fish_exec_arguments_for_session_spawning_command(
+    resolved_shell_path: &str,
+    session_id: SessionId,
+) -> Vec<OsString> {
+    // For now, we are going to plug the init cmd into single quotes.
+    // Note it contains single quotes and there is no way to escape a single quote,
+    // so instead we exit single quotes, emit an (escaped) quote, and re-enter them.
+    //
+    // TODO: we should eventually refactor this and build the init cmd up so that
+    // we don't need to do complicated escaping.
+    // We should also probably store the hex encoded json as a static string
+    // rather than computing it at runtime for each shell we start.
+    vec![
+        // fish sources configuration files whenever it's invoked,
+        // including in non-interactive mode (i.e. '-c'). This differs
+        // from other shells like zsh, so we have to explicitly tell fish
+        // to not source config files.
+        //
+        // There's an open GH issue against fish contesting this behaviour:
+        // https://github.com/fish-shell/fish-shell/issues/5394.
+        "--no-config".to_owned().into(),
+        "-c".to_owned().into(),
+        format!(
+            // We do _not_ specify `--no-config` here because
+            // we want fish to source config files for us (we don't
+            // manually do so in the bootstrap script like we do for zsh, for example).
+            // `-f no-mark-prompt` disables OSC 133 (the non-standard FinalTerm escape codes).
+            // Fish's implementation of this breaks Warp by emitting `OSC 133 A` but not
+            // `OSC 133 B` afterwards, which we have assumed. This is a temporary workaround.
+            // See this issue: https://github.com/warpdotdev/Warp/issues/7588
+            r#"exec '{}' -f no-mark-prompt --login --init-command '{}'"#,
+            resolved_shell_path,
+            init_shell_script_for_shell(ShellType::Fish, &crate::ASSETS, session_id)
+        )
+        .into(),
+    ]
+}
+
 fn wsl_arguments_for_session_spawning_command(
     distribution: &str,
     shell_path: &str,
@@ -834,10 +875,16 @@ fn wsl_arguments_for_session_spawning_command(
     // Note we typically go through bash so that we can launch the user's shell
     // with a leading '-', making it a login shell.
     match shell_type {
-        ShellType::Bash | ShellType::Zsh | ShellType::Fish => {
+        ShellType::Bash | ShellType::Zsh => {
             let spawn_args =
                 arguments_for_session_spawning_command(shell_path, shell_type, session_id);
             args.extend(spawn_args);
+            args
+        }
+        ShellType::Fish => {
+            args.extend(fish_exec_arguments_for_session_spawning_command(
+                shell_path, session_id,
+            ));
             args
         }
         _ => todo!("We don't yet support bootstrapping {shell_type:?} on WSL"),

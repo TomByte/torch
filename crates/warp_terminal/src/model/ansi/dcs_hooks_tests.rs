@@ -288,6 +288,7 @@ fn init_shell_hook_round_trips_through_serialization() {
             user: "me".to_string(),
             hostname: "host".to_string(),
             wsl_name: Some("Ubuntu".to_string()),
+            sources_bootstrap: true,
         },
     };
     let json = serde_json::to_string(&hook).unwrap();
@@ -299,4 +300,5 @@ fn init_shell_hook_round_trips_through_serialization() {
     assert_eq!(value.user, "me");
     assert_eq!(value.hostname, "host");
     assert_eq!(value.wsl_name.as_deref(), Some("Ubuntu"));
+    assert!(value.sources_bootstrap);
 }

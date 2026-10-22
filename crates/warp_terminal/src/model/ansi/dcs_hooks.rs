@@ -21,6 +21,12 @@ pub(super) const HEX_ENCODED_JSON_MARKER: char = 'd';
 /// In OSC, it is used as the first parameter.
 pub(super) const UNENCODED_JSON_MARKER: char = 'f';
 
+/// Indicates that the following JSON-encoded message is percent-encoded for Warp's lifecycle
+/// hooks. Like hex encoding, this keeps the payload ASCII, but fish can produce it with a builtin.
+/// In DCS, it is used as the final char in the DCS start sequence.
+/// In OSC, it is used as the first parameter.
+pub(super) const PERCENT_ENCODED_JSON_MARKER: char = 'j';
+
 /// Indicates that the following message is a ANSI-C quoted message for receiving Warp's lifecycle
 /// hooks via key-value pairs.
 /// In OSC< it is used as the first parameter.
@@ -960,6 +966,11 @@ pub struct InitShellValue {
 
     #[serde(deserialize_with = "empty_string_is_none", default)]
     pub wsl_name: Option<String>,
+
+    /// Whether the shell sources the bootstrap script itself right after this hook, so it must not
+    /// also be written to the PTY.
+    #[serde(default)]
+    pub sources_bootstrap: bool,
 }
 
 /// Emitted as part of the subshell bootstrapping process, before the shell type is known

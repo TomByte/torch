@@ -404,16 +404,16 @@ use crate::terminal::cli_agent_sessions::event::{
     CLIAgentEventType, parse_event,
 };
 use crate::terminal::cli_agent_sessions::listener::{CLIAgentSessionListener, is_agent_supported};
+use crate::terminal::cli_agent_sessions::notification::{
+    CLIAgentNotificationSubject, CLIAgentNotificationText,
+    notification_text as cli_agent_notification_text,
+};
 #[cfg(not(target_family = "wasm"))]
 use crate::terminal::cli_agent_sessions::plugin_manager::{PluginModalKind, plugin_manager_for};
 use crate::terminal::cli_agent_sessions::{
     CLIAgentInputEntrypoint, CLIAgentInputState, CLIAgentRichInputCloseReason, CLIAgentSession,
     CLIAgentSessionContext, CLIAgentSessionStatus, CLIAgentSessionsModel,
     CLIAgentSessionsModelEvent,
-    notification::{
-        CLIAgentNotificationSubject, CLIAgentNotificationText,
-        notification_text as cli_agent_notification_text,
-    },
 };
 use crate::terminal::color::List;
 use crate::terminal::command_corrections_denylist::COMMAND_CORRECTIONS_PREFERRED_DENYLIST;
@@ -466,6 +466,7 @@ use crate::terminal::model::terminal_model::{
 };
 use crate::terminal::model::{ObfuscateSecrets, RespectObfuscatedSecrets, SecretHandle};
 use crate::terminal::model_events::{AnsiHandlerEvent, ModelEvent, ModelEventDispatcher};
+use crate::terminal::prompt_render_helper::SLOW_SHELL_START_DURATION;
 use crate::terminal::recorder::PtyRecorder;
 use crate::terminal::safe_mode_settings::get_secret_obfuscation_mode;
 use crate::terminal::session_settings::{
@@ -12580,6 +12581,9 @@ impl TerminalView {
                 self.update_scroll_position_locking(ScrollPositionUpdate::AfterClear, ctx);
                 ctx.notify();
             }
+            // Until the shell has bootstrapped, titles are either the shell-name placeholder or
+            // describe the bootstrap itself, and showing them makes a new session's title flicker.
+            ModelEvent::Title(_) if !self.is_login_shell_bootstrapped => {}
             ModelEvent::Title(title) => {
                 self.terminal_title = title.to_owned();
                 if self.ignore_next_set_title_event {
@@ -13672,6 +13676,7 @@ impl TerminalView {
             }
             ModelEvent::Handler(AnsiHandlerEvent::InitShell {
                 pending_session_info,
+                ..
             }) => {
                 // The remote confirmed a subshell bootstrap is starting. Hide the
                 // original long-running block now so the user doesn't see the
@@ -27589,6 +27594,15 @@ impl TerminalSurface for TerminalView {
             // banner to the user if the bootstrapping takes too long
             self.start_bootstrap_timer(BOOTSTRAP_FAILED_DURATION, ctx);
         }
+        // Redraw the input once a still-starting shell's message should become visible.
+        let _ = ctx.spawn(
+            async {
+                warpui::r#async::Timer::after(SLOW_SHELL_START_DURATION).await;
+            },
+            |me, _, ctx| {
+                me.input.update(ctx, |_, ctx| ctx.notify());
+            },
+        );
     }
 
     fn on_active_shell_launch_data_updated(

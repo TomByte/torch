@@ -15,7 +15,9 @@ impl TerminalView {
         let model = self.model.lock();
         let blocks = model.block_list();
         let active = blocks.active_block();
-        let is_running_command = active.is_active_and_long_running();
+        // The blocks that run the bootstrap aren't the user's commands.
+        let is_running_command =
+            active.bootstrap_stage().is_done() && active.is_active_and_long_running();
         let timestamp = if is_running_command {
             active.start_ts()
         } else {

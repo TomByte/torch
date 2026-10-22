@@ -104,6 +104,7 @@ impl ModelEventDispatcher {
         let event_to_emit = match event {
             Event::Handler(HandlerEvent::InitShell {
                 pending_session_info,
+                sources_bootstrap,
             }) => {
                 self.sessions.update(ctx, |sessions, ctx| {
                     sessions.register_pending_session(pending_session_info.as_ref(), ctx);
@@ -119,6 +120,7 @@ impl ModelEventDispatcher {
                 } else {
                     ModelEvent::Handler(AnsiHandlerEvent::InitShell {
                         pending_session_info,
+                        sources_bootstrap,
                     })
                 }
             }
@@ -498,6 +500,9 @@ pub enum ModelEvent {
 pub enum AnsiHandlerEvent {
     InitShell {
         pending_session_info: Box<SessionInfo>,
+        /// Whether the shell sources the bootstrap script itself, so it must not be written to the
+        /// PTY.
+        sources_bootstrap: bool,
     },
     Bootstrapped {
         session_id: SessionId,

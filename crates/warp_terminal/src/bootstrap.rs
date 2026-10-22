@@ -45,11 +45,11 @@ fn load_script(file_path: &str, assets: &dyn AssetProvider) -> String {
 }
 /// Returns the raw init shell script for the given `shell_type`, without
 /// single-quote escaping. Suitable for passing as an environment variable
-/// where the caller controls the eval context (e.g. Docker sandbox init).
+/// or a standalone argument, where the caller controls the eval context
+/// (e.g. Docker sandbox init, or fish's `--init-command`).
 ///
-/// Gated on `unix` because the sole caller today is the Unix Docker
-/// sandbox spawn path (`local_tty::unix::prepare_docker_sandbox`); on
-/// Windows/wasm the function is dead code.
+/// Gated on `unix` because its callers only spawn shells this way on Unix;
+/// on Windows/wasm the function is dead code.
 #[cfg(unix)]
 pub fn raw_init_shell_script_for_shell(
     shell_type: ShellType,
@@ -167,6 +167,41 @@ pub fn script_for_shell(shell_type: ShellType, assets: &dyn AssetProvider) -> Co
         })
         .into()
 }
+/// Returns the path of a file in Torch's cache directory holding the fish bootstrap script, writing
+/// it first if it isn't there. The file name carries a hash of the script, so each build has its
+/// own file and an existing one never needs rewriting. Returns `None` if the file can't be written.
+#[cfg(unix)]
+pub fn fish_bootstrap_file(assets: &dyn AssetProvider) -> Option<std::path::PathBuf> {
+    use std::hash::{DefaultHasher, Hash as _, Hasher as _};
+
+    let directory = warp_core::paths::cache_dir().join("bootstrap");
+    if !directory.is_absolute() {
+        return None;
+    }
+    let script = script_for_shell(ShellType::Fish, assets);
+    let mut hasher = DefaultHasher::new();
+    script.hash(&mut hasher);
+    let path = directory.join(format!("fish-{:016x}.fish", hasher.finish()));
+    if path.is_file() {
+        return Some(path);
+    }
+
+    // Write under a process-specific name and rename into place, so a shell starting in another
+    // Torch instance never sources a partially written file.
+    let partial_path = path.with_extension(format!("{}.partial", std::process::id()));
+    let result = std::fs::create_dir_all(&directory)
+        .and_then(|()| std::fs::write(&partial_path, &script))
+        .and_then(|()| std::fs::rename(&partial_path, &path));
+    match result {
+        Ok(()) => Some(path),
+        Err(err) => {
+            log::warn!("Failed to write the fish bootstrap file: {err:#}");
+            let _ = std::fs::remove_file(&partial_path);
+            None
+        }
+    }
+}
+
 /// Placeholder in init shell scripts that gets replaced with the client-generated session ID.
 pub const SESSION_ID_PLACEHOLDER: &str = "@@WARP_SESSION_ID@@";
 

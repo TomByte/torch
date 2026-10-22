@@ -1,6 +1,8 @@
 use std::fmt;
 use std::num::NonZeroUsize;
+use std::time::Duration;
 
+use pathfinder_color::ColorU;
 use settings::Setting as _;
 use warp_core::semantic_selection::SemanticSelection;
 use warpui::elements::{
@@ -55,6 +57,17 @@ fn prompt_marker_grace_period(shell_type: Option<ShellType>, is_msys2: bool) -> 
 }
 
 pub const LPROMPT_RIGHT_PADDING_SAME_LINE_PROMPT: f32 = 4.;
+
+/// How long a shell can take to start before the input says that it is starting. Shells usually
+/// start well within this, and the message would otherwise only flash past.
+pub(in crate::terminal) const SLOW_SHELL_START_DURATION: Duration = Duration::from_millis(500);
+
+fn is_shell_slow_to_start(model: &TerminalModel) -> bool {
+    let starting_since = *model.block_list().active_block().creation_ts();
+    (chrono::Local::now() - starting_since)
+        .to_std()
+        .is_ok_and(|elapsed| elapsed >= SLOW_SHELL_START_DURATION)
+}
 
 pub fn should_render_ps1_prompt(terminal_model: &TerminalModel, app: &AppContext) -> bool {
     let is_classic_input_enabled = InputSettings::as_ref(app).is_classic_input_enabled(app);
@@ -283,12 +296,19 @@ impl PromptRenderHelper {
     ) -> Text {
         let prompt_colors: PromptColors = appearance.theme().clone().into();
         let prompt_message = self.bootstrapping_shell_message(model, self.sessions.as_ref(app));
+        // Until the shell is slow to start, the message keeps its space but stays invisible, so
+        // the input doesn't shift when the prompt replaces it.
+        let color = if is_shell_slow_to_start(model) {
+            prompt_colors.input_prompt_pwd
+        } else {
+            ColorU::transparent_black()
+        };
         Text::new_inline(
             prompt_message,
             appearance.monospace_font_family(),
             appearance.monospace_font_size(),
         )
-        .with_color(prompt_colors.input_prompt_pwd)
+        .with_color(color)
         .with_style(Properties::default().weight(Weight::Bold))
         .with_line_height_ratio(appearance.line_height_ratio())
         .with_compute_baseline_position_fn(grid_compute_baseline_position_fn(

@@ -203,6 +203,13 @@ fn percent_decode_utf8(input: &str) -> Option<String> {
     String::from_utf8(decoded).ok()
 }
 
+/// Decodes the payload of a hook sent with [`PERCENT_ENCODED_JSON_MARKER`].
+fn percent_decode_hook_payload(payload: &str) -> Result<Vec<u8>, &'static str> {
+    percent_decode_utf8(payload)
+        .map(String::into_bytes)
+        .ok_or("invalid percent-encoded hook payload")
+}
+
 fn parse_number(input: &[u8]) -> Option<u8> {
     if input.is_empty() {
         return None;
@@ -656,9 +663,8 @@ impl<'a, H: Handler + 'a, W: io::Write> Performer<'a, H, W> {
         }
     }
 
-    /// Handles hex-encoded data from a DCS or an OSC by decoding it and then handling the
-    /// contained hook.
-    fn handle_decoded_data(&mut self, decoded_data: Result<Vec<u8>, hex::FromHexError>) {
+    /// Handles decoded data from a DCS or an OSC by handling the contained hook.
+    fn handle_decoded_data<E: std::fmt::Debug>(&mut self, decoded_data: Result<Vec<u8>, E>) {
         match decoded_data {
             Ok(decoded_data) => {
                 safe_debug!(
@@ -779,6 +785,10 @@ where
                 );
                 let decoded_data = hex::decode(&*dcs_data_str);
                 self.handle_decoded_data(decoded_data);
+            }
+            PERCENT_ENCODED_JSON_MARKER => {
+                let dcs_data_str = String::from_utf8_lossy(&self.state.dcs_data.data);
+                self.handle_decoded_data(percent_decode_hook_payload(&dcs_data_str));
             }
             UNENCODED_JSON_MARKER => {
                 let dcs_data_str = String::from_utf8_lossy(&self.state.dcs_data.data);
@@ -1140,6 +1150,16 @@ where
                         );
                         let decoded_data = hex::decode(&*data_str);
                         self.handle_decoded_data(decoded_data);
+                    }
+                    PERCENT_ENCODED_JSON_MARKER => {
+                        let Some(data_str) = params
+                            .get(2)
+                            .map(|osc_data| String::from_utf8_lossy(osc_data))
+                        else {
+                            log::warn!("Warp OSC marker did not contain payload");
+                            return;
+                        };
+                        self.handle_decoded_data(percent_decode_hook_payload(&data_str));
                     }
                     UNENCODED_JSON_MARKER => {
                         // The payload for the OSC is contained in the third parameter.

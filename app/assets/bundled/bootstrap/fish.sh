@@ -24,6 +24,10 @@ set -g DCS_START \u1b\u50\u24
 # _warp_run_generator_command_internal, which instead end in 'e' (0x65).
 set -g DCS_JSON_MARKER 'd'
 
+# Appended to $DCS_START to signal that the following message is percent-encoded JSON, which fish
+# can produce with a builtin instead of piping through `od`.
+set -g DCS_PERCENT_ENCODED_JSON_MARKER 'j'
+
 set -g DCS_END \x1b\x5c
 
 set -g OSC_START (printf '\e]9278;')
@@ -47,11 +51,11 @@ end
 
 function warp_send_json_message
     # Sends a message to the controlling terminal as a DSC control sequence.
-    set -l escaped_json (warp_hex_encode_string "$argv")
+    set -l escaped_json (string escape --style=url -- "$argv")
     if [ "$WARP_USING_WINDOWS_CON_PTY" = true ]
-        echo -n "$OSC_START$DCS_JSON_MARKER$OSC_PARAM_SEPARATOR$escaped_json$OSC_END"
+        echo -n "$OSC_START$DCS_PERCENT_ENCODED_JSON_MARKER$OSC_PARAM_SEPARATOR$escaped_json$OSC_END"
     else
-        echo -n "$DCS_START$DCS_JSON_MARKER$escaped_json$DCS_END"
+        echo -n "$DCS_START$DCS_PERCENT_ENCODED_JSON_MARKER$escaped_json$DCS_END"
     end
 end
 
@@ -92,7 +96,7 @@ end
 # A list of PIDs for running in-band command(s). This is used to kill running
 # in-band commands in preexec for a user command, so they do not interfere with
 # user command output.
-set -g _warp_generator_pids ''
+set -g _warp_generator_pids
 
 # Runs the given command in the background, records its PID in
 # _WARP_GENERATOR_PIDS_STARTED_TMP_FILE, and adds its PID from the file when
@@ -148,7 +152,7 @@ function  _warp_run_generator_command_internal
 
     # Remove the command's PID from _warp_generator_pids when the command exits.
     function on_command_{$command_pid}_finish --on-process-exit $command_pid --inherit-variable command_pid
-        set -g _warp_generator_pids (string replace $command_pid '' $_warp_generator_pids)
+        set -g _warp_generator_pids (string match -v -- $command_pid $_warp_generator_pids)
 
         # Erase this function after the pids list is updated above so we don't create an infinite number of
         # functions that could pollute the user's context (nested functions are still existing in the global
@@ -217,7 +221,7 @@ function warp_preexec --on-event fish_preexec
             # cancel and this kill command).
             kill -9 $pid >/dev/null 2>/dev/null
         end
-        set -g _warp_generator_pids ''
+        set -g _warp_generator_pids
     end
 end
 
@@ -230,6 +234,68 @@ end
 # order to avoid interfering with manually-run git commands by the user.
 function warp_git
     GIT_OPTIONAL_LOCKS=0 command git $argv
+end
+
+# Prints the branch HEAD is on, then what to show for HEAD: the branch, or the abbreviated commit
+# when HEAD is detached. Prints nothing outside a repository.
+#
+# This runs on every prompt, so it reads HEAD from the repository's files rather than spawning git,
+# which costs several milliseconds per call (more through macOS's /usr/bin/git shim). Anything
+# beyond a plain branch checkout is left to git itself.
+function warp_git_head_info
+    if set -q GIT_DIR; or set -q GIT_CEILING_DIRECTORIES
+        warp_git_head_info_from_git
+        return
+    end
+    set -l dir $PWD
+    set -l git_dir
+    while true
+        if test -d "$dir/.git"
+            set git_dir "$dir/.git"
+            break
+        else if test -f "$dir/.git"
+            # Worktrees and submodules point at their git directory, possibly relative to $dir.
+            read -l gitdir_line <"$dir/.git"
+            set git_dir (string replace -r -- '^gitdir: ' '' "$gitdir_line")
+            string match -q -- '/*' "$git_dir"; or set git_dir "$dir/$git_dir"
+            break
+        else if test -f "$dir/HEAD" -a -d "$dir/objects" -a -d "$dir/refs"
+            set git_dir $dir
+            break
+        end
+        test "$dir" = /; and return
+        set dir (string replace -r -- '/[^/]*$' '' "$dir")
+        test -n "$dir"; or set dir /
+    end
+    read -l head <"$git_dir/HEAD"; or begin
+        warp_git_head_info_from_git
+        return
+    end
+    # Reftable repositories keep a placeholder `refs/heads/.invalid` in the HEAD file.
+    set -l branch (string replace -r -f -- '^ref: refs/heads/' '' "$head")
+    if test -n "$branch" -a "$branch" != .invalid
+        printf '%s\n%s\n' $branch $branch
+    else
+        warp_git_head_info_from_git
+    end
+end
+
+function warp_git_head_info_from_git
+    command -q git; or return
+    set -l branch (warp_git symbolic-ref --short HEAD 2>/dev/null)
+    if test -n "$branch"
+        printf '%s\n%s\n' $branch $branch
+    else
+        printf '\n%s\n' (warp_git rev-parse --short HEAD 2>/dev/null)
+    end
+end
+
+# Prints the version of the `node` on PATH when the binary lives in a version manager's per-version
+# directory (`.../v20.1.0/bin/node` for nvm, `.../v20.1.0/installation/bin/node` for fnm), which
+# avoids starting node just to ask. Prints nothing for other layouts.
+function warp_node_version_from_path
+    set -l node_path (command -s node); or return
+    string match -rg -- '/(v\d+\.\d+\.\d+)(?:/installation)?/bin/node$' (builtin realpath -- $node_path)
 end
 
 # Wrap fish prompt function output with OSC prompt marker sequences,
@@ -368,9 +434,6 @@ function warp_precmd --on-event fish_prompt --on-event fish_posterror
 
     # Define local variables in appropriate outer block for fish variable scoping.
     # See https://stackoverflow.com/a/53685510.
-    set -l escaped_prompt
-    set -l escaped_right_prompt
-
     set -l escaped_pwd
     if set -q WSL_DISTRO_NAME
         # In WSL, avoid symlinks b/c on Windows `std::fs` is unable to resolve symlink inside WSL containers.
@@ -448,7 +511,8 @@ function warp_precmd --on-event fish_prompt --on-event fish_posterror
                     if test "$node_cache_key" = "$_WARP_NODE_VERSION_CACHE_KEY"
                         set escaped_node_version "$_WARP_NODE_VERSION_CACHE_VALUE"
                     else
-                        set -l node_version (node --version 2>/dev/null)
+                        set -l node_version (warp_node_version_from_path)
+                        test -n "$node_version"; or set node_version (node --version 2>/dev/null)
                         if test -n "$node_version"
                             set escaped_node_version (warp_escape_json "$node_version")
                         end
@@ -459,32 +523,12 @@ function warp_precmd --on-event fish_prompt --on-event fish_posterror
             end
         end
 
-      set -l git_branch ""
-      set -l git_head ""
-      if command -q git
-          set git_branch (warp_git symbolic-ref --short HEAD 2> /dev/null)
-          if test -z "$git_branch"
-              # Fallback to the git commit hash if we aren't on a named branch.
-              set git_head (warp_git rev-parse --short HEAD 2> /dev/null)
-          else
-              set git_head "$git_branch"
-          end
-      end
-      set escaped_git_head (warp_escape_json "$git_head")
-      set escaped_git_branch (warp_escape_json "$git_branch")
+      set -l git_info (warp_git_head_info)
+      set escaped_git_branch (warp_escape_json "$git_info[1]")
+      set escaped_git_head (warp_escape_json "$git_info[2]")
     end
 
     warp_update_prompt_vars
-    # This is used solely for prompt previews, when we're using prompt markers with combined grid.
-    # We need to use this since fish does not have a way to ignore printable characters for cursor
-    # positioning (unlike zsh/bash), so we need a separate mechanism to send the prompt to Warp
-    # in the case of Warp prompt (for previewing the PS1). We send an escaped version of the raw prompt
-    # bytes via a hex string (in a JSON payload) to Warp.
-    # Note that we are CALLING the `warp_original_fish_prompt` function on the next line and assigning the
-    # outputted string to the local variable `raw_prompt_for_preview`.
-    set -l raw_prompt_for_preview (warp_original_fish_prompt)
-    # We encode the prompt as a hex string to pass it to Warp.
-    set escaped_prompt (warp_escape_prompt "$raw_prompt_for_preview")
 
     set -l escaped_json
     if test "$WARP_HONOR_PS1" = "1"
@@ -508,7 +552,7 @@ function warp_precmd --on-event fish_prompt --on-event fish_posterror
       \"exit_code\": $exit_code,
       \"next_block_id\": \"$next_block_id\",
       \"pwd\": \"$escaped_pwd\",
-      \"ps1\": \"$escaped_prompt\",
+      \"ps1\": \"$_warp_prompt_preview\",
       \"rprompt\": \"\",
       \"git_head\": \"$escaped_git_head\",
       \"git_branch\": \"$escaped_git_branch\",
@@ -519,6 +563,18 @@ function warp_precmd --on-event fish_prompt --on-event fish_posterror
       }}"
     end
     warp_send_json_message $escaped_json
+
+    # With Warp's prompt the shell prompt is never drawn; it only feeds previews such as the Edit
+    # Prompt modal. Rendering it can take tens of milliseconds (fish's default prompt runs git
+    # several times), so it is rendered after the prompt has been reported, and only when the
+    # directory changes, and the next Precmd carries it.
+    if test -n "$WARP_BOOTSTRAPPED" -a "$WARP_HONOR_PS1" != "1" -a "$PWD" != "$_warp_prompt_preview_pwd"
+        set -g _warp_prompt_preview_pwd $PWD
+        # We send an escaped version of the raw prompt bytes via a hex string (in a JSON payload),
+        # since fish cannot mark which prompt characters are printable for cursor positioning.
+        set -l raw_prompt_for_preview (warp_original_fish_prompt)
+        set -g _warp_prompt_preview (warp_escape_prompt "$raw_prompt_for_preview")
+    end
 end
 
 function warp_escape_prompt
@@ -535,20 +591,9 @@ end
 # are replaced with escaped equivalents. Double quotes and literal backslash characters are also
 # backslash-escaped.
 function warp_escape_json
-    # Explanation of the sed replacements (each command is separated by a `;`):
-    # s/(["\\])/\\\1/g - Replace all double-quote (") and backslash (\) characters with the escaped versions (\" and \\)
-    # s/\b/\\b/g - Replace all backspace characters with \b
-    # s/\t/\\t/g - Replace all tab characters with \t
-    # s/\f/\\f/g - Replace all form feed characters with \f
-    # s/\r/\\r/g - Replace all carriage return characters with \r
-    # $!s/$/\\\\n/ - Replace any newlines (except the last trailing newline) with the literal \n character
-    #
-    # Additional note: In Fish, backslashes still need to be escaped in single quoted strings. So each `\\` below
-    # represents a single `\` in the above regex explanation. We also close the single-quoted string in order to
-    # insert literal characters (Fish supports literals with escapes when not quoting)
-    #
-    # We also use 'command sed' to ensure that we aren't accidentally executing a function named 'sed'
-    string join \n $argv | command sed -E 's/(["\\\\])/\\\\\\1/g; s/'\b'/\\\\b/g; s/'\t'/\\\\t/g; s/'\f'/\\\\f/g; s/'\r'/\\\\r/g; $!s/$/\\\\n/' | command tr -d '\n'
+    # Every stage is a builtin, so escaping costs no process spawns. `string replace` reads stdin a
+    # line at a time, and the final `string join` turns the line breaks into literal \n escapes.
+    string join \n -- $argv | string replace -a -- '\\' '\\\\' | string replace -a -- '"' '\\"' | string replace -a -- \b '\\b' | string replace -a -- \t '\\t' | string replace -a -- \f '\\f' | string replace -a -- \r '\\r' | string join -- '\\n'
 end
 
 # Reports the widget `^R` is bound to, if the user has rebound it away from fish's own
@@ -960,16 +1005,19 @@ esac
     end
 end
 
-warp_precmd
-
 # Print the MotD if this is a login shell. Normally, login(1) or pam_motd(8)
 # would do this. However, Warp does not use login(1) for local sessions and for
 # remote sessions, SSHD thinks it is starting a non-interactive session, so it
 # does not print PAM messages.
+#
+# The precmd starts the visible block that shows the MotD. Without a MotD it is skipped, leaving
+# the shell's start-up output, such as the terminal queries fish sends once its line editor starts,
+# in the hidden bootstrap block.
 if status --is-login
   and test ! -e "$HOME/.hushlogin"
   for motd_file in /etc/motd /run/motd /run/motd.dynamic /usr/lib/motd /usr/lib/motd.dynamic;
     if test -r "$motd_file"
+      warp_precmd
       command cat "$motd_file"
       break
     end

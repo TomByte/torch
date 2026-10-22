@@ -6,8 +6,10 @@ use std::time::Duration;
 use futures::StreamExt;
 use instant::Instant;
 use motion::{Motion, SessionMotion, WorkingPulse};
-use warp_core::ui::theme::ColorScheme;
+use warp_core::ui::theme::{AnsiColors, ColorScheme};
+use warp_errors::report_if_error;
 use warpui::ViewContext;
+use warpui::elements::DraggableState;
 
 use super::*;
 use crate::menu::{MenuItem, MenuItemFields};
@@ -24,9 +26,6 @@ use crate::workspace::TabMovement;
 use crate::workspace::header_toolbar_item::HeaderToolbarItemKind;
 use crate::workspace::tab_settings::DirectoryTabColor;
 use crate::workspace::view::PanelPosition;
-use warp_core::ui::theme::AnsiColors;
-use warp_errors::report_if_error;
-use warpui::elements::DraggableState;
 
 pub(super) const SIDEBAR_WIDTH: f32 = 272.;
 const HEADER_HEIGHT: f32 = 48.;
@@ -884,10 +883,11 @@ fn capture_snapshot(tab: &TabData, app: &AppContext) -> TerminalSnapshot {
     let pane_group = tab.pane_group.as_ref(app);
     let focused = pane_group.focused_session_view(app);
     let terminal = focused.as_ref().map(|view| view.as_ref(app));
+    let is_booting = terminal.is_some_and(|view| !view.is_login_shell_bootstrapped());
     let startup_directory = tab
         .sidebar_startup_directory
         .as_ref()
-        .filter(|_| terminal.is_some_and(|view| !view.is_login_shell_bootstrapped()));
+        .filter(|_| is_booting);
     let directory = startup_directory
         .map(|path| {
             let home = dirs::home_dir();
@@ -904,8 +904,9 @@ fn capture_snapshot(tab: &TabData, app: &AppContext) -> TerminalSnapshot {
     let title = cli_session
         .and_then(|session| session.session_context.display_title())
         .unwrap_or_else(|| {
+            // A booting session's title is still the shell-name placeholder.
             let title = pane_group.title(app);
-            if title.is_empty() || title == directory {
+            if is_booting || title.is_empty() || title == directory {
                 "Terminal".to_owned()
             } else {
                 title

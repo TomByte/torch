@@ -106,8 +106,11 @@ impl<T: EventLoopSender> PtyController<T> {
             }
             ModelEvent::Handler(AnsiHandlerEvent::InitShell {
                 pending_session_info,
+                sources_bootstrap,
             }) => {
-                me.initialize_shell(pending_session_info.as_ref(), ctx);
+                if !sources_bootstrap {
+                    me.initialize_shell(pending_session_info.as_ref(), ctx);
+                }
             }
             ModelEvent::Handler(AnsiHandlerEvent::Bootstrapped { is_subshell, .. }) => {
                 me.shell_bootstrapped(*is_subshell);

@@ -1597,3 +1597,84 @@ fn osc_completions_replacement_span_forwards_out_of_range_pair() {
 
     assert_eq!(handler.replacement_spans, vec![(usize::MAX, 1)]);
 }
+
+/// Percent-encodes a payload the way fish's `string escape --style=url` does.
+fn percent_encode(payload: &str) -> String {
+    payload
+        .bytes()
+        .map(|byte| match byte {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'/' | b'.' | b'~' | b'-' | b'_' | b'*' => {
+                (byte as char).to_string()
+            }
+            _ => format!("%{byte:02X}"),
+        })
+        .collect()
+}
+
+fn percent_encoded_dcs_string(dcs_payload: &str) -> Vec<u8> {
+    [
+        b"\x1bP$j".as_slice(),
+        percent_encode(dcs_payload).as_bytes(),
+        DCS_END_7BIT,
+    ]
+    .concat()
+}
+
+#[test]
+fn parse_percent_encoded_dcs_init_shell_that_sources_bootstrap() {
+    let bytes = percent_encoded_dcs_string(
+        r#"{"hook": "InitShell", "value": {"session_id": 167303092612201, "shell": "fish", "user": "andy", "hostname": "ubuntu-test", "sources_bootstrap": true}}"#,
+    );
+    let (_, handler) = parse_bytes(&bytes);
+
+    assert_eq!(handler.d_proto_hooks.len(), 1);
+    match handler.d_proto_hooks.first().unwrap() {
+        DProtoHook::InitShell { value } => assert_eq!(
+            *value,
+            InitShellValue {
+                session_id: SessionId::from(167303092612201),
+                user: "andy".to_owned(),
+                hostname: "ubuntu-test".to_owned(),
+                shell: "fish".to_string(),
+                sources_bootstrap: true,
+                ..Default::default()
+            }
+        ),
+        _ => panic!("incorrect dcs value"),
+    };
+}
+
+#[test]
+fn parse_percent_encoded_dcs_preserves_multibyte_characters() {
+    let bytes = percent_encoded_dcs_string(
+        r#"{"hook": "InputBuffer", "value": {"buffer": "echo café ✓; ls", "session_id": 167303092612201}}"#,
+    );
+    let (_, handler) = parse_bytes(&bytes);
+
+    assert_eq!(handler.d_proto_hooks.len(), 1);
+    match handler.d_proto_hooks.first().unwrap() {
+        DProtoHook::InputBuffer { value } => assert_eq!(value.buffer, "echo café ✓; ls"),
+        _ => panic!("incorrect dcs value"),
+    };
+}
+
+#[test]
+fn parse_percent_encoded_dcs_with_malformed_escape_is_ignored() {
+    let bytes = [b"\x1bP$j%7B%G1".as_slice(), DCS_END_7BIT].concat();
+    let (_, handler) = parse_bytes(&bytes);
+
+    assert!(handler.d_proto_hooks.is_empty());
+}
+
+#[test]
+fn parse_percent_encoded_osc_hook() {
+    let payload = percent_encode(r#"{"hook": "Clear", "value": {"session_id": 167303092612201}}"#);
+    let bytes = [b"\x1b]9278;j;".as_slice(), payload.as_bytes(), b"\x07"].concat();
+    let (_, handler) = parse_bytes(&bytes);
+
+    assert_eq!(handler.d_proto_hooks.len(), 1);
+    assert!(matches!(
+        handler.d_proto_hooks.first().unwrap(),
+        DProtoHook::Clear { .. }
+    ));
+}
