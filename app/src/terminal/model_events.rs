@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use async_channel::Receiver;
+use instant::Instant;
 use warpui::{Entity, ModelContext, ModelHandle, SingletonEntity};
 
 use super::event::{BootstrappedEvent, SshLoginStatus};
@@ -207,7 +208,13 @@ impl ModelEventDispatcher {
                 ModelEvent::CompletionsFinished(res, replacement_span)
             }
             Event::MouseCursorDirty => ModelEvent::MouseCursorDirty,
-            Event::Title(title) => ModelEvent::Title(title),
+            Event::Title {
+                title,
+                command_start_time,
+            } => ModelEvent::Title {
+                title,
+                command_start_time,
+            },
             Event::VisibleBootstrapBlock => ModelEvent::VisibleBootstrapBlock,
             Event::BlockCompleted(block_completed_event) => {
                 ModelEvent::BlockCompleted(block_completed_event)
@@ -382,7 +389,11 @@ enum PromptKind {
 /// PTY output.
 pub enum ModelEvent {
     MouseCursorDirty,
-    Title(String),
+    Title {
+        title: String,
+        /// The start of the command the shell was running when it set the title, if any.
+        command_start_time: Option<Instant>,
+    },
     VisibleBootstrapBlock,
     /// Performs the minimal work necessary to show that a block has completed.
     /// Treat this as a performance-sensitive path.

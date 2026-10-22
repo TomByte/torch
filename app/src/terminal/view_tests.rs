@@ -7155,6 +7155,94 @@ fn block_prompt_keeps_the_directory_its_command_started_in() {
 }
 
 #[test]
+fn only_commands_that_outlast_a_quick_command_change_the_pane_title() {
+    App::test((), |mut app| async move {
+        initialize_app_for_terminal_view(&mut app);
+        app.add_singleton_model(remote_server::manager::RemoteServerManager::new);
+        let terminal = add_window_with_terminal(&mut app, None);
+        let pane_title = |app: &App| {
+            terminal.read(app, |view, ctx| {
+                view.pane_configuration.as_ref(ctx).title().to_owned()
+            })
+        };
+
+        terminal.update(&mut app, |view, _| {
+            view.is_login_shell_bootstrapped = true;
+            ansi::Handler::set_title(&mut *view.model.lock(), Some("~".to_owned()));
+        });
+        assert_eventually!(pane_title(&app) == "~", "The prompt's title should show");
+
+        terminal.update(&mut app, |view, _| {
+            let mut model = view.model.lock();
+            model.block_list_mut().active_block_mut().start();
+            model.simulate_cmd("ls");
+            ansi::Handler::set_title(&mut *model, Some("ls ~".to_owned()));
+        });
+        assert_eventually!(
+            terminal.read(&app, |view, _| view.held_terminal_title.is_some()),
+            "The view should hold the quick command's title"
+        );
+        assert_eq!(pane_title(&app), "~");
+        terminal.update(&mut app, |view, _| {
+            let mut model = view.model.lock();
+            finish_block_in(&mut model, "/");
+            ansi::Handler::set_title(&mut *model, Some("~".to_owned()));
+        });
+        assert_eventually!(
+            terminal.read(&app, |view, _| view.held_terminal_title.is_none()),
+            "The prompt's title should replace the held one"
+        );
+        assert_eq!(pane_title(&app), "~");
+
+        terminal.update(&mut app, |view, _| {
+            let mut model = view.model.lock();
+            model.block_list_mut().active_block_mut().start();
+            model.simulate_cmd("sleep 5");
+            ansi::Handler::set_title(&mut *model, Some("sleep 5 ~".to_owned()));
+        });
+        assert_eventually!(
+            200 => pane_title(&app) == "sleep 5 ~",
+            "A command's title should show once it outlasts a quick command"
+        );
+    })
+}
+
+#[test]
+fn a_command_shows_as_running_only_once_it_outlasts_a_quick_command() {
+    App::test((), |mut app| async move {
+        initialize_app_for_terminal_view(&mut app);
+        let terminal = add_window_with_terminal(&mut app, None);
+
+        terminal.update(&mut app, |view, _| {
+            let mut model = view.model.lock();
+            model.init_shell(InitShellValue {
+                session_id: 0.into(),
+                shell: "fish".to_owned(),
+                ..Default::default()
+            });
+            model.bootstrapped(BootstrappedValue {
+                shell: "fish".to_owned(),
+                ..Default::default()
+            });
+            // The first block finishes the bootstrap, so only the second one shows in the list.
+            model.simulate_block("ls", "file.txt");
+            model.simulate_block("pwd", "/");
+            model.block_list_mut().active_block_mut().start();
+            model.simulate_cmd("sleep 5");
+        });
+        terminal.read(&app, |view, _| {
+            let activity = view.session_activity();
+            assert!(!activity.is_running_command);
+            assert_eq!(activity.age_minutes, Some(0));
+        });
+        assert_eventually!(
+            200 => terminal.read(&app, |view, _| view.session_activity().is_running_command),
+            "A command should show as running once it outlasts a quick command"
+        );
+    })
+}
+
+#[test]
 fn test_prompt_context_menu_items_for_agent_toolbelt_flag() {
     let _agent_view_guard = FeatureFlag::AgentView.override_enabled(true);
     App::test((), |mut app| async move {

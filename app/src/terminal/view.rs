@@ -187,6 +187,7 @@ use warpui::{
 
 use self::link_detection::HighlightedLinkOption;
 pub use self::link_detection::{GridHighlightedLink, RichContentLink, RichContentLinkTooltipInfo};
+use self::tab_metadata::QUICK_COMMAND_DURATION;
 use super::available_shells::AvailableShell;
 use super::block_list_viewport::FindMatchScrollLocation;
 use super::event::SshLoginStatus;
@@ -2901,9 +2902,9 @@ pub struct TerminalView {
     /// The title of the terminal view to show when there is no selected conversation.
     terminal_title: String,
 
-    // If there is a selected conversation in the view before bootstrapping (from loading a conversation into a new pane),
-    // we want to keep the title as the conversation title, so we should ignore the model event setting the title after bootstrapping finishes
-    ignore_next_set_title_event: bool,
+    /// A title the shell set early in a still-quick command, and the timer that shows it once the
+    /// command outlasts [`QUICK_COMMAND_DURATION`].
+    held_terminal_title: Option<(String, SpawnedFutureHandle)>,
 
     cli_subagent_views: HashMap<BlockId, ViewHandle<CLISubagentView>>,
     cli_subagent_controller: ModelHandle<CLISubagentController>,
@@ -4510,7 +4511,7 @@ impl TerminalView {
             conversation_completed_callbacks: Default::default(),
             current_repo_path: None,
             terminal_title: Default::default(),
-            ignore_next_set_title_event: false,
+            held_terminal_title: None,
             cli_subagent_views: Default::default(),
             cli_subagent_controller,
             use_agent_footer: use_agent_button_bar,
@@ -12553,13 +12554,30 @@ impl TerminalView {
             }
             // Until the shell has bootstrapped, titles are either the shell-name placeholder or
             // describe the bootstrap itself, and showing them makes a new session's title flicker.
-            ModelEvent::Title(_) if !self.is_login_shell_bootstrapped => {}
-            ModelEvent::Title(title) => {
-                self.terminal_title = title.to_owned();
-                if self.ignore_next_set_title_event {
-                    self.ignore_next_set_title_event = false;
-                } else {
-                    self.update_pane_configuration(ctx);
+            ModelEvent::Title { .. } if !self.is_login_shell_bootstrapped => {}
+            ModelEvent::Title {
+                title,
+                command_start_time,
+            } => {
+                if let Some((_, timer)) = self.held_terminal_title.take() {
+                    timer.abort();
+                }
+                let quick_time_left = command_start_time
+                    .and_then(|start| QUICK_COMMAND_DURATION.checked_sub(start.elapsed()));
+                match quick_time_left {
+                    Some(time_left) => {
+                        let timer = ctx.spawn(Timer::after(time_left), |me, _, ctx| {
+                            if let Some((title, _)) = me.held_terminal_title.take() {
+                                me.terminal_title = title;
+                                me.update_pane_configuration(ctx);
+                            }
+                        });
+                        self.held_terminal_title = Some((title.to_owned(), timer));
+                    }
+                    None => {
+                        self.terminal_title = title.to_owned();
+                        self.update_pane_configuration(ctx);
+                    }
                 }
             }
             ModelEvent::ClipboardStore(_, contents) => {
@@ -12824,6 +12842,21 @@ impl TerminalView {
                     return;
                 }
                 self.did_notify_long_running = false;
+
+                // The sidebar starts showing the command as running once it outlasts
+                // QUICK_COMMAND_DURATION, and nothing else redraws it then.
+                let started_block_id = block_id.clone();
+                ctx.spawn(Timer::after(QUICK_COMMAND_DURATION), move |me, _, ctx| {
+                    if me
+                        .model
+                        .lock()
+                        .block_list()
+                        .block_with_id(&started_block_id)
+                        .is_some_and(|block| block.is_active_and_long_running())
+                    {
+                        ctx.emit(Event::TerminalViewStateChanged);
+                    }
+                });
 
                 // Clear any previously active AM query suggestion banners and hidden blocks.
                 self.clear_prompt_suggestions(ctx);
@@ -14583,8 +14616,6 @@ impl TerminalView {
         // the selected conversation. If there is no selected conversation,
         // the title will default to the regular terminal title.
         self.update_pane_configuration(ctx);
-
-        self.ignore_next_set_title_event = true;
 
         let auth_state = AuthStateProvider::as_ref(ctx).get();
         let is_onboarded = auth_state.is_onboarded().unwrap_or(true);

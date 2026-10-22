@@ -920,7 +920,7 @@ fn test_selected_blocks_toggle_off() {
 
 fn validate_title_event(event: Result<Event, async_channel::TryRecvError>, expected_title: String) {
     match event {
-        Ok(Event::Title(title)) => assert_eq!(expected_title, title),
+        Ok(Event::Title { title, .. }) => assert_eq!(expected_title, title),
         _ => panic!("Expected Event::Title({expected_title}), got: {event:?}"),
     }
 }
@@ -962,6 +962,56 @@ fn set_custom_title() {
     terminal.set_custom_title(None);
     assert!(terminal.are_any_events_pending());
     validate_title_event(event_rx.try_recv(), default_title);
+}
+
+/// The `command_start_time` of the last title event sent since the previous call.
+fn last_title_command_start_time(
+    event_rx: &async_channel::Receiver<Event>,
+) -> Option<Option<Instant>> {
+    std::iter::from_fn(|| event_rx.try_recv().ok())
+        .filter_map(|event| match event {
+            Event::Title {
+                command_start_time, ..
+            } => Some(command_start_time),
+            _ => None,
+        })
+        .last()
+}
+
+#[test]
+fn title_events_carry_the_start_of_the_running_command() {
+    let (event_tx, event_rx) = async_channel::unbounded();
+    let event_proxy = ChannelEventListener::builder_for_test()
+        .with_terminal_events_tx(event_tx)
+        .build();
+    let mut terminal = TerminalModel::mock(None, Some(event_proxy));
+    terminal.prompt_only_precmd(PromptMetadata::default());
+
+    terminal.set_title(Some("~".to_owned()));
+    assert_eq!(last_title_command_start_time(&event_rx), Some(None));
+
+    terminal.start_command_execution();
+    let command_start_time = terminal.block_list().active_block().command_start_time();
+    assert!(command_start_time.is_some());
+    // zsh's preexec hooks set the title before Torch's preexec hook runs.
+    terminal.set_title(Some("ls ~".to_owned()));
+    assert_eq!(
+        last_title_command_start_time(&event_rx),
+        Some(command_start_time)
+    );
+    terminal.preexec(PreexecValue {
+        command: "ls".to_owned(),
+        session_id: None,
+    });
+    terminal.set_title(Some("ls ~".to_owned()));
+    assert_eq!(
+        last_title_command_start_time(&event_rx),
+        Some(command_start_time)
+    );
+
+    command_finished_and_precmd(&mut terminal);
+    terminal.set_title(Some("~".to_owned()));
+    assert_eq!(last_title_command_start_time(&event_rx), Some(None));
 }
 
 #[test]

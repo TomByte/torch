@@ -1,8 +1,14 @@
+use std::time::Duration;
+
 use warpui::AppContext;
 
 use crate::context_chips::display_chip::GitLineChanges;
 use crate::context_chips::{ContextChipKind, git_line_changes_from_chips};
 use crate::terminal::TerminalView;
+
+/// Commands that finish within this long never show as running or change the session's title, so
+/// quick commands like `ls` leave the sidebar and header still.
+pub(crate) const QUICK_COMMAND_DURATION: Duration = Duration::from_millis(500);
 
 /// Shell activity shown in the sidebar, read under a single terminal-model lock.
 pub(crate) struct SessionActivity {
@@ -16,13 +22,18 @@ impl TerminalView {
         let blocks = model.block_list();
         let active = blocks.active_block();
         // The blocks that run the bootstrap aren't the user's commands.
-        let is_running_command =
-            active.bootstrap_stage().is_done() && active.is_active_and_long_running();
+        let is_running_command = active.bootstrap_stage().is_done()
+            && active.is_active_and_long_running()
+            && active
+                .command_start_time()
+                .is_some_and(|start| start.elapsed() >= QUICK_COMMAND_DURATION);
         let timestamp = if is_running_command {
             active.start_ts()
         } else {
+            // A command that hasn't finished has no age yet, so read the one before it.
             blocks
-                .last_non_hidden_block()
+                .prev_non_hidden_block_from_index(blocks.active_block_index())
+                .and_then(|index| blocks.block_at(index))
                 .and_then(|block| block.completed_ts())
         };
         SessionActivity {

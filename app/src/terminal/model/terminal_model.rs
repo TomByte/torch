@@ -6,6 +6,7 @@ use std::sync::Arc;
 
 use async_channel::Sender;
 use base64::Engine;
+use instant::Instant;
 use itertools::Either;
 use serde::Serialize;
 use session_sharing_protocol::common::{
@@ -2367,20 +2368,25 @@ impl TerminalModel {
         self.block_list().filter_for_block(block_index)
     }
 
-    fn send_title_event(&mut self, title: Option<String>) {
+    fn send_title_event(&mut self, title: Option<String>, command_start_time: Option<Instant>) {
         let title = title.unwrap_or(self.shell_launch_state().display_name().into());
-        let title_event = Event::Title(title);
-        self.event_proxy.send_app_event(title_event);
+        self.event_proxy.send_app_event(Event::Title {
+            title,
+            command_start_time,
+        });
     }
 
     pub fn set_custom_title(&mut self, custom_title: Option<String>) {
         self.custom_title.clone_from(&custom_title);
         // If the custom title set by the user is None, we "reset" to whatever the title was set by
         // the shell / Warp itself.
-        self.send_title_event(match custom_title {
-            Some(_) => custom_title,
-            None => self.title.clone(),
-        });
+        self.send_title_event(
+            match custom_title {
+                Some(_) => custom_title,
+                None => self.title.clone(),
+            },
+            None,
+        );
     }
 
     pub fn custom_title(&self) -> Option<String> {
@@ -2687,7 +2693,11 @@ impl ansi::Handler for TerminalModel {
 
         // Only send this event if there was no custom title set.
         if self.custom_title.is_none() {
-            self.send_title_event(filtered_title);
+            let active_block = self.block_list.active_block();
+            let command_start_time = active_block
+                .command_start_time()
+                .filter(|_| !active_block.finished());
+            self.send_title_event(filtered_title, command_start_time);
         }
     }
 

@@ -30,7 +30,11 @@ use crate::terminal::shell::ShellType;
 pub enum Event {
     CompletionsFinished(Vec<ShellCompletion>, Option<warp_completer::meta::Span>),
     MouseCursorDirty,
-    Title(String),
+    Title {
+        title: String,
+        /// The start of the command the shell was running when it set the title, if any.
+        command_start_time: Option<Instant>,
+    },
     VisibleBootstrapBlock,
     /// Performs the minimal work necessary to show that a block has completed.
     /// Treat this as a performance-sensitive path.
@@ -434,7 +438,7 @@ impl Debug for Event {
             Event::AfterBlockStarted { .. } => write!(f, "BlockExecutionStarted"),
             Event::BackgroundBlockStarted => write!(f, "BackgroundBlockStarted"),
             Event::VisibleBootstrapBlock => write!(f, "VisibleBootstrapBlock"),
-            Event::Title(title) => write!(f, "Title({title})"),
+            Event::Title { title, .. } => write!(f, "Title({title})"),
             Event::ClipboardStore(_, text) => write!(f, "ClipboardStore({text})"),
             Event::ClipboardLoad(_, _) => write!(f, "ClipboardLoad()"),
             Event::TerminalClear => write!(f, "TerminalClear"),
