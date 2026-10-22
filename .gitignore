@@ -3,6 +3,7 @@ app/frameworks/default/Carthage
 app/frameworks/dev/Carthage
 app/frameworks/**/*.xcframework
 /target
+/dist
 /app/target
 /warp.xcworkspace
 .idea/

@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+#
+# Builds a Torch release to distribute: a universal (Apple Silicon and Intel) app signed with the
+# Developer ID cert, notarized by Apple, and packed into a DMG and, if you choose, a zip. Each run
+# stamps the build with the current date and time as its version and copies the results into
+# dist/, so earlier releases stay alongside.
+#
+# Signing and notarization use the identity and notarytool profile set in script/macos/bundle,
+# which checks for both before it starts building.
+
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: script/release [options]
+
+Builds a signed, notarized Torch release into dist/: a DMG and, optionally, a zip of Torch.app.
+Without --zip or --no-zip, it asks whether to make the zip before building.
+
+Options:
+  --zip          Also zip Torch.app.
+  --no-zip       Only build the DMG.
+  --arch ARCH    Build for one architecture, aarch64 or x86_64, instead of both.
+  -o, --open     Show the results in Finder when done.
+  -h, --help     Show this help.
+EOF
+}
+
+if [[ "$(uname -s)" != Darwin ]]; then
+  echo "script/release builds macOS releases, so it has to run on a Mac." >&2
+  exit 1
+fi
+
+ZIP=""
+ARCH=""
+OPEN=false
+while (( $# )); do
+  case "$1" in
+    --zip) ZIP=true ;;
+    --no-zip) ZIP=false ;;
+    --arch)
+      if [[ $# -lt 2 || ( "$2" != aarch64 && "$2" != x86_64 ) ]]; then
+        echo "--arch takes aarch64 or x86_64." >&2
+        exit 1
+      fi
+      ARCH="$2"
+      shift
+      ;;
+    -o|--open) OPEN=true ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      usage >&2
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+if [[ -z "$ZIP" ]]; then
+  ZIP=true
+  if [[ -t 0 ]]; then
+    read -r -p "Zip Torch.app as well as building the DMG? [Y/n] " answer
+    case "$answer" in
+      [nN]*) ZIP=false ;;
+    esac
+  fi
+fi
+
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
+# script/update_plist turns tags in this form into the app's version, e.g. 0.2026.10.22.14.08.00.
+RELEASE_TAG="v0.$(date +%Y.%m.%d.%H.%M).oss_00"
+COMMIT="$(git rev-parse --short HEAD)"
+if [[ -n "$(git status --porcelain)" ]]; then
+  COMMIT="$COMMIT, with uncommitted changes"
+fi
+
+BUNDLE_ARGS=(--channel oss --release-tag "$RELEASE_TAG")
+if [[ -n "$ARCH" ]]; then
+  BUNDLE_ARGS+=(--arch "$ARCH")
+fi
+
+echo "Building Torch $RELEASE_TAG from $COMMIT"
+echo "  Architecture: ${ARCH:-universal (aarch64 and x86_64)}"
+echo "  Zip:          $([[ $ZIP == true ]] && echo yes || echo no)"
+echo
+
+started=$SECONDS
+./script/macos/bundle "${BUNDLE_ARGS[@]}"
+
+OUT_DIR="target/release-lto/bundle/osx"
+APP="$OUT_DIR/Torch.app"
+VERSION="$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP/Contents/Info.plist")"
+NAME="Torch-$VERSION${ARCH:+-$ARCH}"
+
+mkdir -p dist
+cp "$OUT_DIR/Torch.dmg" "dist/$NAME.dmg"
+RESULTS=("dist/$NAME.dmg")
+if [[ $ZIP == true ]]; then
+  rm -f "dist/$NAME.zip"
+  # ditto keeps the app's signature and stapled notarization ticket intact, which zip can break.
+  ditto -c -k --keepParent "$APP" "dist/$NAME.zip"
+  RESULTS+=("dist/$NAME.zip")
+fi
+
+elapsed=$((SECONDS - started))
+echo
+echo "Torch $VERSION is ready, built in $((elapsed / 60))m $((elapsed % 60))s:"
+for result in "${RESULTS[@]}"; do
+  echo "  $result ($(du -h "$result" | cut -f1 | tr -d ' '))"
+done
+
+if [[ $OPEN == true ]]; then
+  open -R "${RESULTS[0]}"
+fi
