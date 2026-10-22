@@ -48,7 +48,6 @@ use crate::cloud_object::{CloudObjectMetadata, CloudObjectPermissions};
 use crate::code_review::comments::{
     AttachedReviewComment, AttachedReviewCommentTarget, CommentOrigin,
 };
-use crate::context_chips::prompt::Prompt;
 use crate::editor::{AutosuggestionLocation, AutosuggestionType, CrdtOperation};
 use crate::features::FeatureFlag;
 use crate::pane_group::focus_state::PaneGroupFocusState;
@@ -58,7 +57,7 @@ use crate::server::ids::{ClientId, SyncId};
 use crate::server::server_api::ai::SpawnAgentRequest;
 use crate::server::team_scope::RequestTeamScope;
 use crate::settings::import::model::ImportedConfigModel;
-use crate::settings::{AISettings, AppEditorSettings, RightClickBehavior, WarpPromptSeparator};
+use crate::settings::{AISettings, AppEditorSettings, RightClickBehavior};
 use crate::tab::NewSessionMenuItem;
 use crate::terminal::alt_screen::should_intercept_mouse;
 use crate::terminal::block_list_element::{SnackbarPoint, SnackbarTranslationMode};
@@ -72,8 +71,11 @@ use crate::terminal::cli_agent_sessions::{
     CLIAgentInputEntrypoint, CLIAgentInputState, CLIAgentRichInputCloseReason, CLIAgentSession,
     CLIAgentSessionContext, CLIAgentSessionStatus, CLIAgentSessionsModel,
 };
-use crate::terminal::model::ansi::{self, BootstrappedValue, InitShellValue, PreexecValue};
-use crate::terminal::model::block::AgentViewVisibility;
+use crate::terminal::model::ansi::{
+    self, BootstrappedValue, CommandFinishedValue, CompletionMetadata, InitShellValue, PrecmdValue,
+    PreexecValue, PromptMetadata,
+};
+use crate::terminal::model::block::{AgentViewVisibility, BlockId};
 use crate::terminal::model::blocks::{TotalIndex, insert_block};
 use crate::terminal::model::grid::Dimensions as _;
 use crate::terminal::model::terminal_model::WithinBlock;
@@ -7062,101 +7064,92 @@ fn test_prompt_context_menu_items_for_ps1() {
 }
 
 #[test]
-fn test_prompt_context_menu_items_for_context_chips() {
+fn test_prompt_context_menu_items_for_torch_prompt() {
     App::test((), |mut app| async move {
         initialize_app_for_terminal_view(&mut app);
-
         let terminal = add_window_with_terminal(&mut app, None);
-        terminal.update(&mut app, |view, ctx| {
-            let model = view.model.lock();
-            view.current_prompt.update(ctx, |prompt, ctx| {
-                let PromptType::Dynamic { prompt } = prompt else {
-                    return;
-                };
-                prompt.update(ctx, |prompt, ctx| {
-                    prompt.update_context(model.block_list().active_block(), ctx)
-                });
-            })
-        });
 
-        // Set the prompt to something we can actually read for.
-        let prompt = Prompt::handle(&app);
-        prompt.update(&mut app, |prompt, ctx| {
-            prompt
-                .update(
-                    [ContextChipKind::Time12],
-                    false,
-                    WarpPromptSeparator::None,
-                    ctx,
-                )
-                .expect("updating prompt to time chip failed");
-        });
-
-        let session_settings = SessionSettings::handle(&app);
-        session_settings.update(&mut app, |settings, ctx| {
-            // Force a toggle so the change event fires.
-            let _ = settings.honor_ps1.set_value(true, ctx);
-            let _ = settings.honor_ps1.set_value(false, ctx);
+        SessionSettings::handle(&app).update(&mut app, |session_settings, ctx| {
+            let _ = session_settings.honor_ps1.set_value(false, ctx);
         });
 
         terminal.read(&app, |view, ctx| {
-            let items: Vec<MenuItem<TerminalAction>> = view.prompt_context_menu_items(ctx);
-            assert_eq!(items.len(), 5);
-
-            // We expect the prompt menu items to be something like the following when context chips are used:
-            // Copy prompt
-            // ------------
-            // <context chip specific actions>
-            // ------------
-            // Edit prompt
-            assert_eq!(items[0].fields().unwrap().label(), "Copy prompt");
-            assert!(items[1].is_separator());
-            assert_eq!(
-                items[2].fields().unwrap().label(),
-                "Copy Time (12-hour format)"
-            );
-            assert!(items[3].is_separator());
-            assert_eq!(items[4].fields().unwrap().label(), "Edit prompt");
-            assert!(!items[4].fields().unwrap().is_disabled());
+            let items = view.prompt_context_menu_items(ctx);
+            assert_eq!(items.len(), 1);
+            assert_eq!(items[0].fields().unwrap().label(), "Edit prompt");
+            assert!(!items[0].fields().unwrap().is_disabled());
         });
     })
 }
 
+/// Finishes the running block as the shell does when it's back at its prompt in `pwd`.
+fn finish_block_in(model: &mut TerminalModel, pwd: &str) {
+    let completion_metadata = CompletionMetadata {
+        exit_code: ExitCode::from(0),
+        next_block_id: BlockId::new(),
+    };
+    ansi::Handler::command_finished(
+        model,
+        CommandFinishedValue {
+            completion_metadata: completion_metadata.clone(),
+            session_id: None,
+        },
+    );
+    ansi::Handler::precmd_with_completion_metadata(
+        model,
+        PrecmdValue {
+            completion_metadata,
+            prompt_metadata: PromptMetadata {
+                pwd: Some(pwd.to_owned()),
+                session_id: Some(0),
+                ..Default::default()
+            },
+        },
+    );
+}
+
 #[test]
-fn test_prompt_context_menu_items_for_no_context_chips() {
+fn block_prompt_keeps_the_directory_its_command_started_in() {
     App::test((), |mut app| async move {
         initialize_app_for_terminal_view(&mut app);
-
+        app.add_singleton_model(remote_server::manager::RemoteServerManager::new);
         let terminal = add_window_with_terminal(&mut app, None);
-        terminal.update(&mut app, |view, ctx| {
-            let model = view.model.lock();
-            view.current_prompt.update(ctx, |prompt, ctx| {
-                let PromptType::Dynamic { prompt } = prompt else {
-                    return;
-                };
-                prompt.update(ctx, |prompt, ctx| {
-                    prompt.update_context(model.block_list().active_block(), ctx)
-                });
-            })
-        });
 
-        let session_settings = SessionSettings::handle(&app);
-        session_settings.update(&mut app, |settings, ctx| {
-            let _ = settings.honor_ps1.set_value(false, ctx);
+        terminal.update(&mut app, |view, _| {
+            let mut model = view.model.lock();
+            model.block_list_mut().active_block_mut().start();
+            model.simulate_cmd("true");
+            finish_block_in(&mut model, "/start");
+        });
+        // The shell can't run the next command before the view has handled its prompt.
+        assert_eventually!(
+            terminal.read(&app, |view, _| {
+                let model = view.model.lock();
+                model
+                    .block_list()
+                    .active_block()
+                    .prompt_snapshot()
+                    .is_some()
+            }),
+            "The view should snapshot the prompt"
+        );
+
+        let cd_block_index = terminal.update(&mut app, |view, _| {
+            let mut model = view.model.lock();
+            let cd_block_index = model.block_list().active_block_index();
+            model.block_list_mut().active_block_mut().start();
+            model.simulate_cmd("cd /elsewhere");
+            ansi::Handler::set_current_working_directory(&mut *model, "/elsewhere".to_owned());
+            finish_block_in(&mut model, "/elsewhere");
+            cd_block_index
         });
 
         terminal.read(&app, |view, ctx| {
-            let items: Vec<MenuItem<TerminalAction>> = view.prompt_context_menu_items(ctx);
-            assert_eq!(items.len(), 3);
-
-            // We expect the prompt menu items to be something like the following when no context chips exist:
-            // Copy prompt
-            // ------------
-            // Edit prompt
-            assert_eq!(items[0].fields().unwrap().label(), "Copy prompt");
-            assert!(items[1].is_separator());
-            assert_eq!(items[2].fields().unwrap().label(), "Edit prompt");
-            assert!(!items[2].fields().unwrap().is_disabled());
+            let model = view.model.lock();
+            assert_eq!(
+                TerminalView::block_prompt(&model, view.sessions.as_ref(ctx), cd_block_index),
+                "/start"
+            );
         });
     })
 }

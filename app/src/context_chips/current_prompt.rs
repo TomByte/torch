@@ -23,7 +23,7 @@ use super::context_chip::{
 };
 use super::logging::{ChipCommandLogEntry, PromptChipExecutionPhase, PromptChipLogger};
 use super::prompt::Prompt;
-use super::{ChipResult, ChipValue, ContextChipKind, chips_to_string};
+use super::{ChipResult, ChipValue, ContextChipKind};
 use crate::CLIAgentSessionsModel;
 use crate::ai::blocklist::agent_view::AgentViewController;
 use crate::code_review::git_repo_model::{GitRepoStatusEvent, GitRepoStatusModel};
@@ -31,8 +31,7 @@ use crate::code_review::github_repo_model::{GitHubRepoEvent, GitHubRepoModel};
 use crate::context_chips::display_chip::GitLineChanges;
 use crate::editor::EditorView;
 use crate::features::FeatureFlag;
-use crate::menu::{MenuItem, MenuItemFields};
-use crate::settings::{AISettings, AISettingsChangedEvent, InputSettings, WarpPromptSeparator};
+use crate::settings::{AISettings, AISettingsChangedEvent, WarpPromptSeparator};
 use crate::terminal::event::BlockType;
 use crate::terminal::model::block::{Block, BlockMetadata};
 use crate::terminal::model::session::{ExecuteCommandOptions, Session, Sessions, SessionsEvent};
@@ -41,7 +40,6 @@ use crate::terminal::model_events::{ModelEvent, ModelEventDispatcher};
 use crate::terminal::session_settings::{
     SessionSettings, SessionSettingsChangedEvent, ToolbarChipSelection,
 };
-use crate::terminal::view::{ContextMenuAction, PromptPart, PromptPosition, TerminalAction};
 
 #[cfg(test)]
 #[path = "current_prompt_tests.rs"]
@@ -192,14 +190,13 @@ struct PromptContext {
 }
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 struct ActiveChipSurfaces {
-    prompt: bool,
     agent_footer: bool,
     cli_agent_footer: bool,
 }
 
 impl ActiveChipSurfaces {
     fn any(self) -> bool {
-        self.prompt || self.agent_footer || self.cli_agent_footer
+        self.agent_footer || self.cli_agent_footer
     }
 }
 
@@ -1146,20 +1143,7 @@ impl CurrentPrompt {
         });
     }
 
-    /// Reads the currently-configured chips from the [`Prompt`] model and filters out any that are
-    /// missing their definition.
-    fn configured_chips(&self, ctx: &AppContext) -> Vec<ContextChipKind> {
-        let prompt = Prompt::as_ref(ctx);
-        prompt
-            .chip_kinds()
-            .into_iter()
-            .filter(|chip_kind| chip_kind.to_chip().is_some())
-            .collect()
-    }
-
     fn active_surfaces(&self, ctx: &AppContext) -> ActiveChipSurfaces {
-        let prompt = !*SessionSettings::as_ref(ctx).honor_ps1
-            || InputSettings::as_ref(ctx).is_universal_developer_input_enabled(ctx);
         let agent_footer = FeatureFlag::AgentView.is_enabled()
             && self
                 .agent_view_controller
@@ -1174,7 +1158,6 @@ impl CurrentPrompt {
         });
 
         ActiveChipSurfaces {
-            prompt,
             agent_footer,
             cli_agent_footer,
         }
@@ -1185,11 +1168,7 @@ impl CurrentPrompt {
         surfaces: ActiveChipSurfaces,
         ctx: &AppContext,
     ) -> Vec<ContextChipKind> {
-        let mut chips = if surfaces.prompt {
-            self.configured_chips(ctx)
-        } else {
-            Vec::new()
-        };
+        let mut chips = Vec::new();
 
         let mut extend_unique = |new_chips: Vec<ContextChipKind>| {
             for chip_kind in new_chips {
@@ -1271,19 +1250,6 @@ impl CurrentPrompt {
         event: &SessionSettingsChangedEvent,
         ctx: &mut ModelContext<Self>,
     ) {
-        if let SessionSettingsChangedEvent::HonorPS1 { .. } = event {
-            if self.active(ctx) {
-                // If switching from PS1 to context chips, we'll need to restart the chip-updating
-                // loops. Any previous async updates will have been cancelled.
-                log::debug!("Re-enabling context chips");
-                self.update_states_with_new_context(ctx)
-            } else {
-                // If switching from context chips to PS1, stop any in-flight chip updates.
-                log::debug!("Using PS1, disabling context chips");
-                self.clear_chips_and_cache();
-            }
-        }
-
         if let SessionSettingsChangedEvent::SavedPrompt { .. } = event {
             let session_settings = SessionSettings::as_ref(ctx);
 
@@ -1296,13 +1262,6 @@ impl CurrentPrompt {
             // Recompute which chips to run when the agent footer config changes.
             self.update_states_with_new_context(ctx);
         }
-        if let SessionSettingsChangedEvent::GithubPrChipDefaultValidation { .. } = event {
-            // Re-resolve the default prompt's chip list (which gates the
-            // PR chip on `is_suppressed()`) and re-run chips with the new
-            // suppression state.
-            self.update_states_with_new_context(ctx);
-        }
-
         if let SessionSettingsChangedEvent::CLIAgentToolbarChipSelectionSetting { .. } = event {
             self.update_states_with_new_context(ctx);
         }
@@ -1451,43 +1410,6 @@ impl CurrentPrompt {
         func(&context)
     }
 
-    /// Builds context menu items for copying individual context chips
-    pub fn copy_menu_items(
-        &self,
-        position: PromptPosition,
-        ctx: &AppContext,
-    ) -> Vec<MenuItem<TerminalAction>> {
-        Prompt::as_ref(ctx)
-            .chip_kinds()
-            .into_iter()
-            .filter_map(|chip_kind| {
-                let has_value = self
-                    .states
-                    .get(&chip_kind)
-                    .is_some_and(|state| state.last_computed_value.is_some());
-                if has_value && chip_kind.is_copyable() {
-                    if let Some(chip) = chip_kind.to_chip() {
-                        Some(
-                            MenuItemFields::new(format!("Copy {}", chip.title()))
-                                .with_on_select_action(TerminalAction::ContextMenu(
-                                    ContextMenuAction::CopyPrompt {
-                                        position,
-                                        part: PromptPart::ContextChip(chip_kind),
-                                    },
-                                ))
-                                .into_item(),
-                        )
-                    } else {
-                        report_error!("Missing definition for chip", extra: { "chip_kind" => ?chip_kind });
-                        None
-                    }
-                } else {
-                    None
-                }
-            })
-            .collect()
-    }
-
     /// Gets the latest value of the given chip.
     pub fn latest_chip_value(&self, chip_kind: &ContextChipKind) -> Option<&ChipValue> {
         self.states
@@ -1507,25 +1429,6 @@ impl CurrentPrompt {
             value: state.last_computed_value.clone(),
             on_click_values: state.last_on_click_values.clone().unwrap_or_default(),
         })
-    }
-
-    /// Serializes the current prompt as an unstyled string.
-    pub fn prompt_as_string(&self, ctx: &AppContext) -> String {
-        chips_to_string(
-            Prompt::as_ref(ctx)
-                .chip_kinds()
-                .into_iter()
-                .filter_map(|chip_kind| {
-                    let value = &self.states.get(&chip_kind)?.last_computed_value;
-                    let on_click_value = self.states.get(&chip_kind)?.last_on_click_values.clone();
-                    let chip_result = ChipResult {
-                        kind: chip_kind,
-                        value: value.clone(),
-                        on_click_values: on_click_value.unwrap_or_default(),
-                    };
-                    Some(chip_result)
-                }),
-        )
     }
 
     /// Set the per-repo git status model handle. When `Some`, subscribes to

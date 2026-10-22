@@ -327,7 +327,8 @@ use crate::code_review::git_repo_model::{GitRepoModels, GitRepoStatusModel, GitS
 use crate::code_review::github_repo_model::GitHubRepoModel;
 use crate::code_review::telemetry_event::CodeReviewPaneEntrypoint;
 use crate::context_chips::ContextChipKind;
-use crate::context_chips::prompt::{Prompt, PromptSelection};
+use crate::context_chips::prompt::Prompt;
+use crate::context_chips::prompt_snapshot::PromptSnapshot;
 use crate::context_chips::prompt_type::PromptType;
 use crate::drive::CloudObjectTypeAndId;
 use crate::drive::settings::WarpDriveSettings;
@@ -5220,7 +5221,7 @@ impl TerminalView {
         })
     }
 
-    /// Returns whether visible prompt/footer chips need git status updates.
+    /// Returns whether visible footer chips need git status updates.
     fn needs_git_status_for_chip_ui(&self, ctx: &AppContext) -> bool {
         // Agent view: subscribe when the configured agent footer includes
         // git stats or PR info.
@@ -5233,25 +5234,12 @@ impl TerminalView {
         }
         // CLI-agent footer: subscribe only while a CLI-agent session is active,
         // so normal terminal panes do not subscribe just because of CLI footer defaults.
-        if self.has_active_cli_agent_session(ctx)
+        self.has_active_cli_agent_session(ctx)
             && Self::uses_git_status_chips(
                 SessionSettings::as_ref(ctx)
                     .cli_agent_footer_chip_selection
                     .all_chips(),
             )
-        {
-            return true;
-        }
-
-        // Terminal prompt path: the Warp prompt is active when honor_ps1 is
-        // off, or when UDI overrides PS1. The prompt must include a chip backed
-        // by git status.
-        let is_using_warp_prompt = !*SessionSettings::as_ref(ctx).honor_ps1
-            || InputSettings::as_ref(ctx).is_universal_developer_input_enabled(ctx);
-        if is_using_warp_prompt && Self::should_retry_default_pr_chip_validation(ctx) {
-            return true;
-        }
-        is_using_warp_prompt && Self::uses_git_status_chips(Prompt::as_ref(ctx).chip_kinds())
     }
 
     fn needs_git_status_for_agent_context(&self, ctx: &AppContext) -> bool {
@@ -5263,7 +5251,7 @@ impl TerminalView {
         self.needs_git_status_for_chip_ui(ctx) || self.needs_git_status_for_agent_context(ctx)
     }
 
-    /// Whether the terminal's prompt/footer chips need PR info.
+    /// Whether the terminal's footer chips need PR info.
     fn needs_pr_info_for_chip_ui(&self, ctx: &AppContext) -> bool {
         if self.agent_view_controller.as_ref(ctx).is_active() {
             return SessionSettings::as_ref(ctx)
@@ -5271,22 +5259,11 @@ impl TerminalView {
                 .all_chips()
                 .contains(&ContextChipKind::GithubPullRequest);
         }
-        if self.has_active_cli_agent_session(ctx)
+        self.has_active_cli_agent_session(ctx)
             && SessionSettings::as_ref(ctx)
                 .cli_agent_footer_chip_selection
                 .all_chips()
                 .contains(&ContextChipKind::GithubPullRequest)
-        {
-            return true;
-        }
-
-        let is_using_warp_prompt = !*SessionSettings::as_ref(ctx).honor_ps1
-            || InputSettings::as_ref(ctx).is_universal_developer_input_enabled(ctx);
-        is_using_warp_prompt
-            && (Self::should_retry_default_pr_chip_validation(ctx)
-                || Prompt::as_ref(ctx)
-                    .chip_kinds()
-                    .contains(&ContextChipKind::GithubPullRequest))
     }
 
     fn needs_pr_info_for_agent_context(&self, ctx: &AppContext) -> bool {
@@ -5296,13 +5273,6 @@ impl TerminalView {
     /// Whether this terminal needs PR info from the git status model.
     fn needs_pr_info(&self, ctx: &AppContext) -> bool {
         self.needs_pr_info_for_chip_ui(ctx) || self.needs_pr_info_for_agent_context(ctx)
-    }
-
-    fn should_retry_default_pr_chip_validation(ctx: &AppContext) -> bool {
-        let settings = SessionSettings::as_ref(ctx);
-        FeatureFlag::GithubPrPromptChip.is_enabled()
-            && settings.github_pr_chip_default_validation.is_suppressed()
-            && matches!(*settings.saved_prompt, PromptSelection::Default)
     }
 
     /// Re-evaluate whether the terminal needs a PR-info subscription, and
@@ -12855,17 +12825,6 @@ impl TerminalView {
                 }
                 self.did_notify_long_running = false;
 
-                // Snapshot the prompt state as of when the command began executing.
-                // Commands may themselves affect the prompt (if running `git checkout`), for
-                // example, so we want the saved prompt state to match what the user saw when
-                // they entered the command.
-                let prompt_snapshot = self.current_prompt.as_ref(ctx).snapshot(ctx);
-                self.model
-                    .lock()
-                    .block_list_mut()
-                    .active_block_mut()
-                    .set_prompt_snapshot(prompt_snapshot);
-
                 // Clear any previously active AM query suggestion banners and hidden blocks.
                 self.clear_prompt_suggestions(ctx);
                 self.drop_hidden_passive_ai_blocks(ctx);
@@ -13497,6 +13456,7 @@ impl TerminalView {
                 self.handle_control_master_error(ctx);
             }
             ModelEvent::BlockMetadataReceived(block_metadata_received_event) => {
+                self.snapshot_block_prompt(block_metadata_received_event.block_index, ctx);
                 self.apply_block_metadata_update(
                     &block_metadata_received_event.block_metadata,
                     block_metadata_received_event.is_after_in_band_command,
@@ -18542,13 +18502,6 @@ impl TerminalView {
     }
 
     fn prompt_context_menu_items(&self, ctx: &AppContext) -> Vec<MenuItem<TerminalAction>> {
-        let copy_prompt = MenuItemFields::new("Copy prompt")
-            .with_on_select_action(TerminalAction::ContextMenu(ContextMenuAction::CopyPrompt {
-                position: PromptPosition::Input,
-                part: PromptPart::EntirePrompt,
-            }))
-            .into_item();
-
         let has_cli_agent_session = CLIAgentSessionsModel::as_ref(ctx)
             .session(self.view_id)
             .is_some();
@@ -18584,36 +18537,32 @@ impl TerminalView {
             )
         };
 
-        if *SessionSettings::as_ref(ctx).honor_ps1 {
-            let mut items = vec![copy_prompt];
-            if self.is_rprompt_shown(&self.model.lock()) {
-                items.push(
-                    MenuItemFields::new("Copy right prompt")
-                        .with_on_select_action(TerminalAction::ContextMenu(
-                            ContextMenuAction::CopyRprompt,
-                        ))
-                        .into_item(),
-                );
-            }
-            if let Some(edit_menu_item) = edit_menu_item {
-                items.extend([MenuItem::Separator, edit_menu_item]);
-            }
-            items
-        } else {
-            let mut items = vec![copy_prompt];
-            let current_prompt_menu_items = self
-                .current_prompt
-                .as_ref(ctx)
-                .copy_menu_items(PromptPosition::Input, ctx);
-            if !current_prompt_menu_items.is_empty() {
-                items.push(MenuItem::Separator);
-                items.extend(current_prompt_menu_items);
-            }
-            if let Some(edit_menu_item) = edit_menu_item {
-                items.extend([MenuItem::Separator, edit_menu_item]);
-            }
-            items
+        if !*SessionSettings::as_ref(ctx).honor_ps1 {
+            // Torch's own prompt is empty, so it has nothing to copy.
+            return edit_menu_item.into_iter().collect();
         }
+
+        let mut items = vec![
+            MenuItemFields::new("Copy prompt")
+                .with_on_select_action(TerminalAction::ContextMenu(ContextMenuAction::CopyPrompt {
+                    position: PromptPosition::Input,
+                    part: PromptPart::EntirePrompt,
+                }))
+                .into_item(),
+        ];
+        if self.is_rprompt_shown(&self.model.lock()) {
+            items.push(
+                MenuItemFields::new("Copy right prompt")
+                    .with_on_select_action(TerminalAction::ContextMenu(
+                        ContextMenuAction::CopyRprompt,
+                    ))
+                    .into_item(),
+            );
+        }
+        if let Some(edit_menu_item) = edit_menu_item {
+            items.extend([MenuItem::Separator, edit_menu_item]);
+        }
+        items
     }
 
     fn show_prompt_context_menu(&mut self, position: Vector2F, ctx: &mut ViewContext<Self>) {
@@ -24667,6 +24616,22 @@ impl TerminalView {
                 self.update_git_status_subscription(ctx);
             }
             _ => {}
+        }
+    }
+
+    /// Saves the prompt state that the shell reported for the block at `block_index`, so that the
+    /// block keeps showing it after its command changes directory.
+    fn snapshot_block_prompt(&self, block_index: BlockIndex, ctx: &AppContext) {
+        let mut model = self.model.lock();
+        let Some(block) = model.block_list().block_at(block_index) else {
+            return;
+        };
+        let session = block
+            .session_id()
+            .and_then(|session_id| self.sessions.as_ref(ctx).get(session_id));
+        let prompt_snapshot = PromptSnapshot::from_block(block, session.as_deref());
+        if let Some(block) = model.block_list_mut().block_at_mut(block_index) {
+            block.set_prompt_snapshot(prompt_snapshot);
         }
     }
 

@@ -66,6 +66,13 @@ impl TerminalView {
     pub fn current_git_branch(&self, ctx: &AppContext) -> Option<String> {
         self.prompt_chip_value(&ContextChipKind::ShellGitBranch, ctx)
             .or_else(|| {
+                self.model
+                    .lock()
+                    .prompt_block()
+                    .and_then(|block| block.git_branch().cloned())
+                    .filter(|branch| !branch.trim().is_empty())
+            })
+            .or_else(|| {
                 self.git_status_metadata(ctx)
                     .map(|metadata| metadata.current_branch_name.clone())
                     .filter(|branch| !branch.trim().is_empty())

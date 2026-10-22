@@ -326,11 +326,6 @@ impl PromptDisplay {
         }
     }
 
-    /// The current prompt text.
-    pub fn text(&self, ctx: &AppContext) -> String {
-        self.prompt.as_ref(ctx).prompt_as_string(ctx)
-    }
-
     #[cfg(feature = "integration_tests")]
     pub fn git_branch(&self, ctx: &AppContext) -> Option<String> {
         self.prompt.read(ctx, |prompt, ctx| {

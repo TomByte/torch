@@ -10,7 +10,6 @@ use warpui::elements::{
     SelectionHandle, Text,
 };
 use warpui::fonts::{Properties, Weight};
-use warpui::presenter::ChildView;
 use warpui::units::Pixels;
 use warpui::{AppContext, EntityId, ModelAsRef, ModelHandle, SingletonEntity, ViewHandle};
 
@@ -25,7 +24,6 @@ use super::{SizeInfo, TerminalModel, prompt, should_right_click_paste};
 use crate::ai::blocklist::BlocklistAIInputModel;
 use crate::appearance::Appearance;
 use crate::context_chips::display::PromptDisplay;
-use crate::context_chips::spacing;
 use crate::features::FeatureFlag;
 use crate::settings::{FontSettings, InputSettings};
 use crate::terminal::blockgrid_element::BlockGridElement;
@@ -142,15 +140,13 @@ pub(in crate::terminal) enum PromptAndPaddingElement {
     // This is boxed because `BlockGridElement` is large, and without boxing, it
     // bloats the size of the `PromptAndPaddingElement` enum.
     BlockGrid(Box<BlockGridElement>),
-    ContextChips(ViewHandle<PromptDisplay>),
 }
 
 impl PromptAndPaddingElement {
-    pub(in crate::terminal) fn text(&self, ctx: &AppContext) -> String {
+    pub(in crate::terminal) fn text(&self) -> String {
         match self {
             Self::Text(text_element) => text_element.text().to_owned(),
             Self::BlockGrid(block_grid_element) => block_grid_element.text(),
-            Self::ContextChips(view) => view.as_ref(ctx).text(ctx),
         }
     }
 
@@ -158,7 +154,6 @@ impl PromptAndPaddingElement {
         match self {
             Self::Text(text_element) => text_element.finish(),
             Self::BlockGrid(block_grid_element) => block_grid_element.finish(),
-            Self::ContextChips(view) => ChildView::new(&view).finish(),
         }
     }
 }
@@ -575,19 +570,14 @@ impl PromptRenderHelper {
             } else {
                 (Some(prompt), None, None)
             }
+        } else if model.block_list().is_bootstrapped() {
+            // Torch's own prompt is empty: the input shows no context chips.
+            (None, None, None)
         } else {
-            let element = {
-                if model.block_list().is_bootstrapped() {
-                    PromptAndPaddingElement::ContextChips(self.prompt_view.clone())
-                } else {
-                    PromptAndPaddingElement::Text(Box::new(
-                        self.bootstrapping_shell_text(model, appearance, app),
-                    ))
-                }
-            };
-
             let prompt = PromptAndPadding {
-                element,
+                element: PromptAndPaddingElement::Text(Box::new(
+                    self.bootstrapping_shell_text(model, appearance, app),
+                )),
                 padding_left: 0.,
                 padding_right,
             };
@@ -681,59 +671,6 @@ impl PromptRenderHelper {
             )
             .finish(),
         )
-    }
-
-    pub(in crate::terminal) fn render_universal_developer_input_prompt(
-        &self,
-        model: &TerminalModel,
-        appearance: &Appearance,
-        app: &AppContext,
-    ) -> Box<dyn Element> {
-        let element = {
-            if model.block_list().is_bootstrapped() {
-                PromptAndPaddingElement::ContextChips(self.prompt_view.clone())
-            } else {
-                PromptAndPaddingElement::Text(Box::new(
-                    self.bootstrapping_shell_text(model, appearance, app),
-                ))
-            }
-        };
-
-        let view_id = self.prompt_parent_view_id;
-        let position_id = format!("{}_{}", PromptSide::Left, view_id);
-        let size_info = app.model(&self.input_render_state_model_handle).size_info();
-        let terminal_spacing = TerminalSettings::as_ref(app)
-            .terminal_input_spacing(appearance.line_height_ratio(), app);
-
-        let prompt_with_padding_container = Container::new(element.render())
-            .with_padding_top({
-                (terminal_spacing.block_padding.padding_top * size_info.cell_height_px().as_f32()
-                    - get_input_box_top_border_width())
-                    * spacing::UDI_PROMPT_TOP_PADDING_FACTOR
-            })
-            .finish();
-
-        SavePosition::new(
-            EventHandler::new(prompt_with_padding_container)
-                .on_right_mouse_down(move |ctx, app, position, modifiers| {
-                    if should_right_click_paste(modifiers.shift, app) {
-                        ctx.dispatch_typed_action(TerminalAction::Paste);
-                        return DispatchEventResult::StopPropagation;
-                    }
-                    let position_id = format!("prompt_area_{view_id}");
-                    let Some(prompt_rect) = ctx.element_position_by_id(position_id) else {
-                        return DispatchEventResult::PropagateToParent;
-                    };
-                    let offset_position = position - prompt_rect.origin();
-                    ctx.dispatch_typed_action(TerminalAction::PromptContextMenu {
-                        position_offset_from_prompt: offset_position,
-                    });
-                    DispatchEventResult::StopPropagation
-                })
-                .finish(),
-            &position_id,
-        )
-        .finish()
     }
 
     pub(in crate::terminal) fn render_prompt_areas(

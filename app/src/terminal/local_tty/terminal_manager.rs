@@ -37,7 +37,6 @@ use crate::auth::AuthStateProvider;
 use crate::auth::auth_state::AuthState;
 use crate::banner::BannerState;
 use crate::context_chips::ContextChipKind;
-use crate::context_chips::prompt::Prompt;
 use crate::features::FeatureFlag;
 use crate::persistence::ModelEvent;
 use crate::send_telemetry_on_executor;
@@ -1225,21 +1224,16 @@ impl<S> TerminalManager<S> {
         let is_honor_ps1_enabled = *SessionSettings::as_ref(ctx).honor_ps1;
 
         // Determine whether the Node.js Version chip is enabled anywhere it could be
-        // shown (the Warp prompt, the agent footer, or the CLI agent footer). When it
-        // is not, the shell bootstrap skips the expensive per-prompt `node --version`
-        // detection. The chip value is fed by the same precmd payload regardless of
-        // where it is displayed, so we must check all three locations.
+        // shown (the agent footer or the CLI agent footer). When it is not, the shell
+        // bootstrap skips the expensive per-prompt `node --version` detection. The chip
+        // value is fed by the same precmd payload regardless of where it is displayed,
+        // so we must check both locations.
         let node_version_chip_enabled = {
-            let in_prompt = !is_honor_ps1_enabled
-                && Prompt::as_ref(ctx)
-                    .chip_kinds()
-                    .contains(&ContextChipKind::NodeVersion);
             let settings = SessionSettings::as_ref(ctx);
-            in_prompt
-                || settings
-                    .agent_footer_chip_selection
-                    .all_chips()
-                    .contains(&ContextChipKind::NodeVersion)
+            settings
+                .agent_footer_chip_selection
+                .all_chips()
+                .contains(&ContextChipKind::NodeVersion)
                 || settings
                     .cli_agent_footer_chip_selection
                     .all_chips()

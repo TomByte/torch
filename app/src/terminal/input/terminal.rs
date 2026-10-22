@@ -51,12 +51,6 @@ impl Input {
             );
         }
 
-        let prompt_elements = self
-            .prompt_render_helper
-            .render_universal_developer_input_prompt(&model, appearance, app);
-
-        column.add_child(prompt_elements);
-
         let terminal_spacing = TerminalSettings::as_ref(app)
             .terminal_input_spacing(appearance.line_height_ratio(), app);
         column.add_child(

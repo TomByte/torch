@@ -239,9 +239,14 @@ impl TerminalPane {
         app: &AppContext,
     ) -> SessionNavigationData {
         let view = self.terminal_view(app).as_ref(app);
+        let prompt_elements = view.prompt_elements(app);
+        let prompt = match &prompt_elements.prompt_chip_snapshot {
+            Some(snapshot) => snapshot.to_string(),
+            None => view.full_prompt(app),
+        };
         SessionNavigationData::new(
-            view.full_prompt(app),
-            view.prompt_elements(app),
+            prompt,
+            prompt_elements,
             view.session_command_context(app),
             PaneViewLocator {
                 pane_group_id,

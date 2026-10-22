@@ -1,12 +1,16 @@
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
+use warp_util::path::user_friendly_path;
 use warpui::{AppContext, SingletonEntity};
 
+use super::builtins::remote_login;
 use super::current_prompt::CurrentPrompt;
 use super::prompt::Prompt;
 use super::{ChipResult, ChipValue, chips_to_string};
 use crate::context_chips::ContextChipKind;
 use crate::settings::WarpPromptSeparator;
+use crate::terminal::model::block::Block;
+use crate::terminal::model::session::Session;
 
 /// Struct that holds a point in time snapshot of a prompt (chips are no longer interactive)
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -64,6 +68,42 @@ impl PromptSnapshot {
             chips,
             same_line_prompt_enabled,
             separator,
+        }
+    }
+
+    /// A snapshot of where the shell reported it was for `block`: its environments, remote login,
+    /// working directory and git HEAD.
+    pub fn from_block(block: &Block, session: Option<&Session>) -> Self {
+        let home_dir = session.and_then(Session::home_dir);
+        let working_directory = block
+            .pwd()
+            .map(|pwd| user_friendly_path(pwd, home_dir).into_owned());
+        let chips = [
+            (
+                ContextChipKind::CondaEnvironment,
+                block.conda_env().cloned(),
+            ),
+            (
+                ContextChipKind::VirtualEnvironment,
+                block.virtual_env_short_name(),
+            ),
+            (ContextChipKind::Ssh, session.and_then(remote_login)),
+            (ContextChipKind::WorkingDirectory, working_directory),
+            (ContextChipKind::ShellGitBranch, block.git_branch().cloned()),
+        ]
+        .into_iter()
+        .filter_map(|(kind, value)| {
+            Some(ChipResult {
+                kind,
+                value: Some(ChipValue::Text(value?)),
+                on_click_values: Vec::new(),
+            })
+        })
+        .collect();
+        Self {
+            chips,
+            same_line_prompt_enabled: false,
+            separator: WarpPromptSeparator::None,
         }
     }
 

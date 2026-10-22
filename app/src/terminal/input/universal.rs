@@ -36,13 +36,6 @@ impl Input {
         // by reworking the positioning of the children to not depend on this.
         let mut stack = Stack::new().with_constrain_absolute_children();
 
-        let mut prompt_row = Stack::new();
-
-        let prompt_elements = self
-            .prompt_render_helper
-            .render_universal_developer_input_prompt(&model, appearance, app);
-        prompt_row.add_child(prompt_elements);
-
         let vim_state = self.editor.as_ref(app).vim_state(app);
         let app_editor_settings = AppEditorSettings::as_ref(app);
         let show_vim_status = vim_state.is_some() && *app_editor_settings.vim_status_bar.value();
@@ -62,8 +55,6 @@ impl Input {
                     .finish(),
             );
         }
-
-        column.add_child(prompt_row.finish());
 
         let ai_input_model = self.ai_input_model.as_ref(app);
 

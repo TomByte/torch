@@ -225,6 +225,7 @@ use crate::code_review::diff_state::DiffMode;
 use crate::completer::SessionContext;
 use crate::context_chips::display::{PromptDisplay, PromptDisplayEvent};
 use crate::context_chips::display_chip::{DisplayChipConfig, PromptChipShellCommand};
+use crate::context_chips::prompt_snapshot::PromptSnapshot;
 use crate::context_chips::prompt_type::PromptType;
 use crate::context_chips::spacing;
 use crate::editor::{
@@ -1753,7 +1754,6 @@ pub struct Input {
     autosuggestions_abort_handle: Option<AbortHandle>,
 
     pub prompt_render_helper: PromptRenderHelper,
-    prompt_type: ModelHandle<PromptType>,
     // A cached copy of enable_autosuggestions from settings (to avoid
     // a settings read on every typed character).
     enable_autosuggestions_setting: bool,
@@ -4171,7 +4171,6 @@ impl Input {
             universal_developer_input_button_bar,
             terminal_input_message_bar,
             prompt_render_helper,
-            prompt_type: current_prompt,
             ai_controller,
             ai_context_model,
             ai_input_model,
@@ -16145,9 +16144,9 @@ impl Input {
 
         let show_universal_developer_input = self.should_show_universal_developer_input(app);
 
-        let lprompt_top_text = lprompt_top.map(|rendered| rendered.element.text(app));
-        let lprompt_bottom_text = lprompt_bottom.map(|rendered| rendered.element.text(app));
-        let rprompt_text = rprompt.map(|rendered| rendered.element.text(app));
+        let lprompt_top_text = lprompt_top.map(|rendered| rendered.element.text());
+        let lprompt_bottom_text = lprompt_bottom.map(|rendered| rendered.element.text());
+        let rprompt_text = rprompt.map(|rendered| rendered.element.text());
         if should_render_prompt_on_same_line(show_universal_developer_input, &model, app) {
             if let Some(lprompt_top_text) = lprompt_top_text {
                 (
@@ -16181,11 +16180,16 @@ impl Input {
             prompt_elements.ps1_prompt_grid = Some(block.prompt_grid().clone());
         }
 
-        // Always capture a chip snapshot as the fallback prompt representation.
-        // This covers both UDI mode and any edge cases where PS1 is not available
-        // (e.g. not yet bootstrapped, block-level honor_ps1 mismatch).
+        // Without the PS1, which Torch's own prompt doesn't show and which may also not be
+        // available yet (e.g. not yet bootstrapped, block-level honor_ps1 mismatch), the session
+        // is described by what the shell reported for it.
         if prompt_elements.ps1_prompt_grid.is_none() {
-            prompt_elements.prompt_chip_snapshot = Some(self.prompt_type.as_ref(app).snapshot(app));
+            prompt_elements.prompt_chip_snapshot = block.map(|block| {
+                let session = block
+                    .session_id()
+                    .and_then(|session_id| self.sessions.as_ref(app).get(session_id));
+                PromptSnapshot::from_block(block, session.as_deref())
+            });
         }
         prompt_elements
     }

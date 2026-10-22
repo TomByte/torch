@@ -1,14 +1,11 @@
-use warp_errors::report_error;
 use warpui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
 
 use super::current_prompt::CurrentPrompt;
 use super::prompt_snapshot::PromptSnapshot;
 use super::{ChipResult, ChipValue, ContextChipKind};
-use crate::menu::{MenuItem, MenuItemFields};
 use crate::settings::WarpPromptSeparator;
 use crate::terminal::model::session::Sessions;
 use crate::terminal::session_settings::{SessionSettings, ToolbarChipSelection};
-use crate::terminal::view::{ContextMenuAction, PromptPart, PromptPosition, TerminalAction};
 
 /// The type of warp prompt being used
 #[derive(Clone)]
@@ -48,41 +45,6 @@ impl PromptType {
         }
     }
 
-    /// Returns menu items for copying parts of the prompt given a prompt snapshot.
-    pub fn copy_menu_items(
-        &self,
-        position: PromptPosition,
-        ctx: &AppContext,
-    ) -> Vec<MenuItem<TerminalAction>> {
-        self.chips(ctx)
-            .into_iter()
-            .filter_map(|chip_result| {
-                if chip_result.value.is_some() && chip_result.kind.is_copyable() {
-                    if let Some(chip) = chip_result.kind.to_chip() {
-                        Some(
-                            MenuItemFields::new(format!("Copy {}", chip.title()))
-                                .with_on_select_action(TerminalAction::ContextMenu(
-                                    ContextMenuAction::CopyPrompt {
-                                        position,
-                                        part: PromptPart::ContextChip(chip_result.kind),
-                                    },
-                                ))
-                                .into_item(),
-                        )
-                    } else {
-                        report_error!(
-                            "Missing definition for chip",
-                            extra: { "chip_kind" => ?chip_result.kind }
-                        );
-                        None
-                    }
-                } else {
-                    None
-                }
-            })
-            .collect()
-    }
-
     pub fn latest_chip_value(
         &self,
         chip_kind: &ContextChipKind,
@@ -91,13 +53,6 @@ impl PromptType {
         match self {
             Self::Dynamic { prompt } => prompt.as_ref(ctx).latest_chip_value(chip_kind).cloned(),
             Self::Static { snapshot } => snapshot.chip_value(chip_kind),
-        }
-    }
-
-    pub fn prompt_as_string(&self, ctx: &AppContext) -> String {
-        match self {
-            Self::Dynamic { prompt } => prompt.as_ref(ctx).prompt_as_string(ctx),
-            Self::Static { snapshot } => snapshot.to_string(),
         }
     }
 

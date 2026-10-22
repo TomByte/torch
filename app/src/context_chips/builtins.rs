@@ -5,6 +5,7 @@ use warp_util::path::user_friendly_path;
 
 use super::ChipValue;
 use super::context_chip::{GeneratorContext, ShellCommand, ShellCommandGenerator};
+use crate::terminal::model::session::{Session, SessionType};
 use crate::terminal::shell::ShellType;
 
 #[cfg(test)]
@@ -87,18 +88,16 @@ pub fn time24_with_seconds(_: &GeneratorContext) -> Option<ChipValue> {
 
 /// Generator function for SSH session chip.
 pub fn ssh_session(ctx: &GeneratorContext) -> Option<ChipValue> {
-    let session = ctx.active_session?;
-    if session.is_ssh_wrapper_session()
-        || matches!(
-            session.session_type(),
-            crate::terminal::model::session::SessionType::WarpifiedRemote { .. }
-        )
-    {
-        let user = session.user();
-        Some(ChipValue::Text(format!("{}@{}", user, session.hostname())))
-    } else {
-        None
-    }
+    ctx.active_session
+        .and_then(remote_login)
+        .map(ChipValue::Text)
+}
+
+/// The `user@host` that a remote session is logged in as.
+pub(super) fn remote_login(session: &Session) -> Option<String> {
+    let is_remote = session.is_ssh_wrapper_session()
+        || matches!(session.session_type(), SessionType::WarpifiedRemote { .. });
+    is_remote.then(|| format!("{}@{}", session.user(), session.hostname()))
 }
 
 /// Generator function for Subshell session chip.
