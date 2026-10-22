@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# Builds a Torch release to distribute: a universal (Apple Silicon and Intel) app signed with the
-# Developer ID cert, notarized by Apple, and packed into a DMG and, if you choose, a zip. Each run
-# stamps the build with the current date and time as its version and copies the results into
-# dist/, so earlier releases stay alongside.
+# Builds a Torch release to distribute: an app for Apple Silicon and, when this Mac's Rust can build
+# for them, Intel Macs, signed with the Developer ID cert, notarized by Apple, and packed into a DMG
+# and, if you choose, a zip. Each run stamps the build with the current date and time as its
+# version and copies the results into dist/, so earlier releases stay alongside.
 #
 # Signing and notarization use the identity and notarytool profile set in script/macos/bundle,
 # which checks for both before it starts building.
@@ -20,7 +20,8 @@ Without --zip or --no-zip, it asks whether to make the zip before building.
 Options:
   --zip          Also zip Torch.app.
   --no-zip       Only build the DMG.
-  --arch ARCH    Build for one architecture, aarch64 or x86_64, instead of both.
+  --arch ARCH    Build for one architecture, aarch64 or x86_64. Without it, the build covers
+                 both when this Mac's Rust can build for both, otherwise this Mac's alone.
   -o, --open     Show the results in Finder when done.
   -h, --help     Show this help.
 EOF
@@ -72,6 +73,29 @@ fi
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
+mac_name() {
+  case "$1" in
+    aarch64) echo "Apple Silicon" ;;
+    x86_64) echo "Intel" ;;
+  esac
+}
+
+# Building for both also compiles for the other architecture, which needs its Rust standard
+# library. rustup adds it on demand, as script/macos/bundle asks it to; a Rust installed without
+# rustup, such as Homebrew's, only has this Mac's.
+HOST_ARCH="$(rustc -vV | sed -n 's/^host: \([^-]*\)-.*/\1/p')"
+if [[ $HOST_ARCH == aarch64 ]]; then
+  OTHER_ARCH=x86_64
+else
+  OTHER_ARCH=aarch64
+fi
+ARCH_NOTE=""
+if [[ -z "$ARCH" ]] && ! command -v rustup > /dev/null \
+  && [[ ! -d "$(rustc --print sysroot)/lib/rustlib/$OTHER_ARCH-apple-darwin" ]]; then
+  ARCH="$HOST_ARCH"
+  ARCH_NOTE="; this Rust can't build for $(mac_name "$OTHER_ARCH") Macs, which installing rustup fixes"
+fi
+
 # script/update_plist turns tags in this form into the app's version, e.g. 0.2026.10.22.14.08.00.
 RELEASE_TAG="v0.$(date +%Y.%m.%d.%H.%M).oss_00"
 COMMIT="$(git rev-parse --short HEAD)"
@@ -85,8 +109,12 @@ if [[ -n "$ARCH" ]]; then
 fi
 
 echo "Building Torch $RELEASE_TAG from $COMMIT"
-echo "  Architecture: ${ARCH:-universal (aarch64 and x86_64)}"
-echo "  Zip:          $([[ $ZIP == true ]] && echo yes || echo no)"
+if [[ -n "$ARCH" ]]; then
+  echo "  Macs: $(mac_name "$ARCH") only$ARCH_NOTE"
+else
+  echo "  Macs: Apple Silicon and Intel"
+fi
+echo "  Zip:  $([[ $ZIP == true ]] && echo yes || echo no)"
 echo
 
 started=$SECONDS
@@ -95,7 +123,11 @@ started=$SECONDS
 OUT_DIR="target/release-lto/bundle/osx"
 APP="$OUT_DIR/Torch.app"
 VERSION="$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP/Contents/Info.plist")"
-NAME="Torch-$VERSION${ARCH:+-$ARCH}"
+NAME="Torch-$VERSION"
+case "$ARCH" in
+  aarch64) NAME="$NAME-apple-silicon" ;;
+  x86_64) NAME="$NAME-intel" ;;
+esac
 
 mkdir -p dist
 cp "$OUT_DIR/Torch.dmg" "dist/$NAME.dmg"
