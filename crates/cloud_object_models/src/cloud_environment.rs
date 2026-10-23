@@ -61,9 +61,9 @@ impl fmt::Display for CodeForge {
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct GithubRepo {
-    /// Repository owner (e.g. "warpdotdev")
+    /// Repository owner (e.g. "acme")
     pub owner: String,
-    /// Repository name (e.g. "warp-internal")
+    /// Repository name (e.g. "acme-internal")
     pub repo: String,
 }
 

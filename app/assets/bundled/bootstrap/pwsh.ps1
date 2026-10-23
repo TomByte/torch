@@ -293,27 +293,6 @@ $null = New-Module -Name Torch-Module -ScriptBlock {
         Torch-Send-JsonMessage $updateMsg
     }
 
-    function Torch-Handle-DistUpgrade {
-        [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingInvokeExpression', '', Justification = 'We actually need it')]
-        param([string]$sourceFileName)
-
-        $aptConfig = Get-Command -Type Application apt-config | Select-Object -First 1
-        & $aptConfig shell '$aptSourcesDir' 'Dir::Etc::sourceparts/d' | Invoke-Expression
-
-        $sourceFilePath = "${aptSourcesDir}${sourceFileName}"
-
-        if (
-            -not (Test-Path "${sourceFilePath}.list") -and
-            -not (Test-Path "${sourceFilePath}.sources") -and
-            (Test-Path "${sourceFilePath}.list.distUpgrade")
-        ) {
-            # DO NOT DO THIS. We should never run a command for user with 'sudo'. The only reason this
-            # is safe here is because we insert this function into the input for the user to determine
-            # if they want to execute (we never run it on their behalf without their permission).
-            sudo cp "${sourceFilePath}.list.distUpgrade" "${sourceFilePath}.list"
-        }
-    }
-
     # We need this for a few reasons
     # 1. We need to make sure the environment variable GIT_OPTIONAL_LOCKS=0.
     #    See https://stackoverflow.com/questions/71836872/git-environment-variables-on-powershell-on-windows
@@ -1078,7 +1057,7 @@ $null = New-Module -Name Torch-Module -ScriptBlock {
     # bootstrap logic pasted into the PTY and the output of shell startup files.
     Torch-Precmd -status $global:? -code $global:LASTEXITCODE
 
-    Export-ModuleMember -Function clear, Clear-Host, Get-EpochTime, Torch-Finish-Update, Torch-Handle-DistUpgrade, Torch-Run-GeneratorCommand, Torch-Run-GeneratorCommand-NativeCompletion, Torch-Finish-Bootstrap
+    Export-ModuleMember -Function clear, Clear-Host, Get-EpochTime, Torch-Finish-Update, Torch-Run-GeneratorCommand, Torch-Run-GeneratorCommand-NativeCompletion, Torch-Finish-Bootstrap
 }
 
 # Finally, get ready to source the user's RC files. This must be done in the global scope (not

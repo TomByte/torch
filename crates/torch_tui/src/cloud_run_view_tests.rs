@@ -14,7 +14,8 @@ use crate::terminal_session_view::CTRL_C_KILL_CHILD_HINT;
 use crate::test_fixtures::TestHostView;
 use crate::tui_builder::TuiUiBuilder;
 
-const RUN_URL: &str = "https://oz.staging.warp.dev/runs/019f71ef-6285-7480-90f6-3ad84d8e0d1e";
+const RUN_URL: &str =
+    "https://cloud-disabled.torch.invalid/runs/019f71ef-6285-7480-90f6-3ad84d8e0d1e";
 const TASK_ID: &str = "11111111-1111-1111-1111-111111111111";
 
 #[test]

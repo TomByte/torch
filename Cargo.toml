@@ -23,7 +23,7 @@ default-members = [
 ]
 
 [workspace.package]
-authors = ["C10UD Ltd", "Warp Team <dev@warp.dev>"]
+authors = ["C10UD Ltd", "Warp Team"]
 license = "AGPL-3.0-only"
 publish = false
 

@@ -800,31 +800,6 @@ function warp_finish_update
   warp_send_json_message "{\"hook\": \"FinishUpdate\", \"value\": { \"update_id\": \"$update_id\", \"session_id\": $TORCH_SESSION_ID}}"
 end
 
-
-# Check if the warp apt source file has been renamed to `warpdotdev.list.distUpgrade` due to an ubuntu version update.
-# If this occurred, we want to rename the source file back to `warpdotdev.list` to ensure updates can proceed.
-# We purposefully skip this if either the `warpdotdev.list` file already exists (indicating that the user has already
-# done this themselves) _or_ if a `warpdotdev.sources` file exists (which is the new Deb822 format for source files).
-# The `.sources` file could only exist if a user manually created it; Ubuntu doesn't create one automatically for the
-# warp source file due to a bug in its update flow where it considers our source file to be "invalid" because it
-# contains a `signed-by` key.
-function warp_handle_dist_upgrade
-  set -l source_file_name "$argv[1]"
-
-  # The `apt-config shell` command outputs an environment variable assignment in POSIX-compliant syntax. Therefore,
-  # we need to run this from within an sh shell to actually get the correct directory for the sources dir.
-  set -l APT_SOURCESDIR (command sh -c 'eval $(apt-config shell APT_SOURCESDIR "Dir::Etc::sourceparts/d"); echo $APT_SOURCESDIR')
-
-if not test -e $APT_SOURCESDIR$source_file_name.list; and not test -e $APT_SOURCESDIR$source_file_name.sources; and test -e $APT_SOURCESDIR$source_file_name.list.distUpgrade
-      # DO NOT DO THIS. We should never run a command for user with `sudo`. The only reason this is safe here is because
-      # we insert this function into the input for the user to determine if they want to execute (we never run it on
-      # their behalf without their permission).  To be transparent about what is being executed with sudo, we echo out the
-      # command we're about to run.
-      echo "Executing: sudo cp \"$APT_SOURCESDIR$source_file_name.list.distUpgrade\" \"$APT_SOURCESDIR$source_file_name.list\""
-      sudo cp "$APT_SOURCESDIR$source_file_name.list.distUpgrade" "$APT_SOURCESDIR$source_file_name.list"
-  end
-end
-
 # The SSH logic only applies to local sessions, because we don't yet have support for bootstrapping
 # recursive SSH sessions.
 if test "$TORCH_IS_LOCAL_SHELL_SESSION" = "1"

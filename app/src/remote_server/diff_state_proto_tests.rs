@@ -97,7 +97,7 @@ fn diff_metadata_against_base_requires_stats() {
 fn pr_info_round_trips_through_proto() {
     let pr_info = PrInfo {
         number: 42,
-        url: "https://github.com/warpdotdev/Warp/pull/42".into(),
+        url: "https://github.com/TomByte/torch/pull/42".into(),
         state: "OPEN".into(),
         draft: true,
         base_branch: "develop".into(),

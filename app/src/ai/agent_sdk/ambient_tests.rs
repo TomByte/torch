@@ -446,7 +446,7 @@ fn http_error(status: u16, body: &str) -> anyhow::Error {
 fn operation_not_supported_error() -> anyhow::Error {
     http_error(
         422,
-        r#"{"type":"https://docs.warp.dev/errors/operation_not_supported","title":"normalized conversations are only supported for Torch-native transcripts"}"#,
+        r#"{"type":"https://cloud-disabled.torch.invalid/errors/operation_not_supported","title":"normalized conversations are only supported for Torch-native transcripts"}"#,
     )
 }
 
@@ -468,7 +468,7 @@ fn normalized_conversation_unsupported_matches_rfc7807_type() {
 fn normalized_conversation_unsupported_matches_type_regardless_of_title() {
     assert!(is_normalized_conversation_unsupported(&http_error(
         422,
-        r#"{"type":"https://docs.warp.dev/errors/operation_not_supported","title":"forking is not supported"}"#,
+        r#"{"type":"https://cloud-disabled.torch.invalid/errors/operation_not_supported","title":"forking is not supported"}"#,
     )));
 }
 
@@ -484,7 +484,7 @@ fn normalized_conversation_unsupported_rejects_title_only_rfc7807() {
 fn normalized_conversation_unsupported_rejects_arbitrary_substrings() {
     assert!(!is_normalized_conversation_unsupported(&http_error(
         422,
-        "https://docs.warp.dev/errors/operation_not_supported normalized conversations are only supported for Torch-native transcripts",
+        "https://cloud-disabled.torch.invalid/errors/operation_not_supported normalized conversations are only supported for Torch-native transcripts",
     )));
     assert!(!is_normalized_conversation_unsupported(&http_error(
         422,
@@ -499,7 +499,7 @@ fn normalized_conversation_unsupported_rejects_arbitrary_substrings() {
 fn normalized_conversation_unsupported_rejects_wrong_problem_type() {
     assert!(!is_normalized_conversation_unsupported(&http_error(
         422,
-        r#"{"type":"https://docs.warp.dev/errors/invalid_request","title":"normalized conversations are only supported for Torch-native transcripts"}"#,
+        r#"{"type":"https://cloud-disabled.torch.invalid/errors/invalid_request","title":"normalized conversations are only supported for Torch-native transcripts"}"#,
     )));
 }
 
@@ -507,7 +507,7 @@ fn normalized_conversation_unsupported_rejects_wrong_problem_type() {
 fn normalized_conversation_unsupported_rejects_non_422_status() {
     assert!(!is_normalized_conversation_unsupported(&http_error(
         404,
-        r#"{"type":"https://docs.warp.dev/errors/operation_not_supported","title":"normalized conversations are only supported for Torch-native transcripts"}"#,
+        r#"{"type":"https://cloud-disabled.torch.invalid/errors/operation_not_supported","title":"normalized conversations are only supported for Torch-native transcripts"}"#,
     )));
 }
 
@@ -613,7 +613,7 @@ async fn load_run_conversation_preserves_not_found() {
         .returning(|_| {
             Err(http_error(
                 404,
-                r#"{"type":"https://docs.warp.dev/errors/resource_not_found","title":"conversation not found"}"#,
+                r#"{"type":"https://cloud-disabled.torch.invalid/errors/resource_not_found","title":"conversation not found"}"#,
             ))
         });
     mock.expect_download_run_transcript().times(0);
@@ -637,7 +637,7 @@ async fn load_run_conversation_reports_missing_raw_transcript() {
         .returning(|_| {
             Err(http_error(
                 404,
-                r#"{"type":"https://docs.warp.dev/errors/resource_not_found","title":"no transcript path in manifest"}"#,
+                r#"{"type":"https://cloud-disabled.torch.invalid/errors/resource_not_found","title":"no transcript path in manifest"}"#,
             ))
         });
 
@@ -722,7 +722,7 @@ async fn load_public_conversation_reports_missing_raw_transcript() {
         .returning(|_| {
             Err(http_error(
                 404,
-                r#"{"type":"https://docs.warp.dev/errors/resource_not_found","title":"no transcript path in manifest"}"#,
+                r#"{"type":"https://cloud-disabled.torch.invalid/errors/resource_not_found","title":"no transcript path in manifest"}"#,
             ))
         });
 

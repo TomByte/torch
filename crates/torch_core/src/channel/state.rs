@@ -122,10 +122,7 @@ impl ChannelState {
     }
 
     pub fn uses_staging_server() -> bool {
-        let Ok(url) = Url::parse(Self::server_root_url().as_ref()) else {
-            return false;
-        };
-        url.host_str() == Some("staging.warp.dev")
+        false
     }
 
     /// Returns the canonical identifier for the application.

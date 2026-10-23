@@ -208,18 +208,18 @@ class TestResolveCommentLine(unittest.TestCase):
 
 class TestBaseRepoFromUrl(unittest.TestCase):
     def test_same_repo_pr(self):
-        url = "https://github.com/warpdotdev/warp/pull/1"
-        assert base_repo_from_url(url) == ("warpdotdev", "warp")
+        url = "https://github.com/TomByte/torch/pull/1"
+        assert base_repo_from_url(url) == ("TomByte", "torch")
 
     def test_fork_pr_resolves_to_base_repo(self):
         """Regression: a PR opened from a fork must resolve to the base repo.
 
-        The PR URL always points at the base repo (warpdotdev/warp), so even
+        The PR URL always points at the base repo (TomByte/torch), so even
         though the head/fork is th1nkful/warp, comments are fetched from the
         base repo instead of 404ing against the fork.
         """
-        url = "https://github.com/warpdotdev/warp/pull/9850"
-        assert base_repo_from_url(url) == ("warpdotdev", "warp")
+        url = "https://github.com/TomByte/torch/pull/9850"
+        assert base_repo_from_url(url) == ("TomByte", "torch")
 
     def test_enterprise_host(self):
         url = "https://ghe.example.com/acme/widgets/pull/42"

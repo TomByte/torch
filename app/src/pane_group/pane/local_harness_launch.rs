@@ -21,9 +21,7 @@ use crate::ai::ambient_agents::{AgentConfigSnapshot, AmbientAgentTaskId};
 use crate::ai::local_harness_setup::local_harness_product_disabled_message;
 use crate::server::server_api::ai::AIClient;
 use crate::server::team_scope::RequestTeamScope;
-use crate::terminal::cli_agent_sessions::plugin_manager::{
-    CliAgentPluginManager, plugin_manager_for,
-};
+use crate::terminal::cli_agent_sessions::plugin_manager::{CliAgentPluginManager, plugin_manager};
 use crate::terminal::shell::ShellType;
 
 #[derive(Clone)]
@@ -35,12 +33,9 @@ pub(super) struct PreparedLocalHarnessLaunch {
 }
 
 async fn ensure_local_claude_child_plugins(manager: &dyn CliAgentPluginManager) {
-    // Most environments should follow the standard Claude plugin setup path so
-    // hidden local children retain the same notification support as regular
-    // Claude sessions. The exception is local marketplace override testing:
-    // installing/updating the notification plugin re-adds the public
-    // claude-code-warp marketplace, which clobbers a developer's local
-    // claude-code-warp-internal override used for oz-harness-support testing.
+    // Hidden local children follow the standard Claude plugin setup path, except when the
+    // developer has overridden the plugin marketplace locally: installing or updating would
+    // clobber that override.
     if !manager.has_local_marketplace_override() {
         let plugin_result = if manager.needs_update() {
             manager.update().await
@@ -221,7 +216,7 @@ pub(super) async fn prepare_local_harness_child_launch(
                 HarnessSupportSkills::Plugin,
             )
             .map_err(|error| error.to_string())?;
-            if let Some(manager) = plugin_manager_for(third_party_harness.cli_agent()) {
+            if let Some(manager) = plugin_manager() {
                 ensure_local_claude_child_plugins(manager.as_ref()).await;
             }
 

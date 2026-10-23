@@ -45,7 +45,7 @@ fn test_resource(uri: &str) -> Resource {
     .expect("Resource deserialization")
 }
 
-/// Regression test for warpdotdev/warp#6798: each capability is queried
+/// Regression test: each capability is queried
 /// independently. Previously, asymmetric handling could cause `tools/list`
 /// to be skipped when a server advertised both `tools` and `resources`,
 /// resulting in "No tools available" even though the server had tools.

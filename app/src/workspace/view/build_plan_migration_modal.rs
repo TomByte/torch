@@ -1,5 +1,4 @@
 use asset_macro::bundled_or_fetched_asset;
-use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use settings::Setting as _;
@@ -9,9 +8,9 @@ use torch_core::ui::theme::Fill;
 use torch_graphql::billing::{AddonCreditsOption, StripeSubscriptionPlan};
 use torchui::elements::{
     Align, Border, CacheOption, ChildAnchor, ChildView, ConstrainedBox, Container, CornerRadius,
-    CrossAxisAlignment, DropShadow, Flex, FormattedTextElement, HighlightedHyperlink, Image,
-    MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning, ParentAnchor,
-    ParentElement, ParentOffsetBounds, Radius, Shrinkable, Stack,
+    CrossAxisAlignment, DropShadow, Flex, FormattedTextElement, Image, MainAxisAlignment,
+    MainAxisSize, MouseStateHandle, OffsetPositioning, ParentAnchor, ParentElement,
+    ParentOffsetBounds, Radius, Shrinkable, Stack,
 };
 use torchui::fonts::{FamilyId, Weight};
 use torchui::platform::Cursor;
@@ -46,7 +45,6 @@ pub enum BuildPlanMigrationModalViewAction {
     EnableAutoReloadToggled(bool),
     GetStartedClicked,
     Close,
-    OpenUrl(&'static str),
 }
 
 #[derive(Default)]
@@ -624,30 +622,6 @@ impl BuildPlanMigrationModal {
             Self::create_bullet_item("And more...".to_string(), font_family, 14., text_color);
         features_list.add_child(and_more);
 
-        let learn_more_fragments = vec![
-            FormattedTextFragment::plain_text("Learn more on our "),
-            FormattedTextFragment::hyperlink("pricing page", "https://www.warp.dev/pricing"),
-            FormattedTextFragment::plain_text("."),
-        ];
-        let learn_more = Container::new(
-            FormattedTextElement::new(
-                FormattedText::new([FormattedTextLine::Line(learn_more_fragments)]),
-                14.,
-                font_family,
-                font_family,
-                text_color,
-                HighlightedHyperlink::default(),
-            )
-            .with_hyperlink_font_color(appearance.theme().accent().into_solid())
-            .register_default_click_handlers(|_url, ctx, _| {
-                ctx.dispatch_typed_action(BuildPlanMigrationModalViewAction::OpenUrl(
-                    "https://www.warp.dev/pricing",
-                ));
-            })
-            .finish(),
-        )
-        .finish();
-
         Container::new(
             Flex::column()
                 .with_main_axis_size(MainAxisSize::Max)
@@ -675,7 +649,6 @@ impl BuildPlanMigrationModal {
                         .with_margin_bottom(16.)
                         .finish(),
                 )
-                .with_child(Container::new(learn_more).finish())
                 .finish(),
         )
         .with_background_color(blended_colors::neutral_1(theme))
@@ -846,9 +819,6 @@ impl TypedActionView for BuildPlanMigrationModal {
             BuildPlanMigrationModalViewAction::EnableAutoReloadToggled(enabled) => {
                 self.auto_reload_enabled = *enabled;
                 ctx.notify();
-            }
-            BuildPlanMigrationModalViewAction::OpenUrl(url) => {
-                ctx.open_url(url);
             }
         }
     }

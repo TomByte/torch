@@ -130,9 +130,8 @@ pub fn data_dir() -> PathBuf {
 
 /// Returns the GUI application ID for the current channel.
 ///
-/// Most TUI channel binaries use the same application ID as the GUI. The OSS
-/// TUI is the exception: it uses `WarpTui`, while the corresponding GUI uses
-/// `WarpOss`.
+/// Most TUI channel binaries use the same application ID as the GUI. Torch's TUI is the
+/// exception: it uses `TorchTui`, while the GUI uses `Torch`.
 #[cfg(any(not(target_os = "macos"), test))]
 fn gui_app_id_for_channel(channel: Channel, current_app_id: AppId) -> AppId {
     match channel {
@@ -440,11 +439,11 @@ pub fn app_group_container_path() -> Option<PathBuf> {
 ///
 /// ## Linux
 /// The resources directory is `$INSTALL_DIR/resources`, where `$INSTALL_DIR` depends on the
-/// specific package manager. For example, on Ubuntu this might be `/opt/warpdotdev/warp-terminal/resources`.
+/// specific package manager. For example, on Ubuntu this might be `/opt/torch/torch/resources`.
 ///
 /// ## Windows
 /// The resources directory is `$INSTALL_DIR/resources`, where `$INSTALL_DIR` is the directory
-/// containing the Torch executable (e.g. `C:\Program Files\WarpDev\resources`).
+/// containing the Torch executable (e.g. `C:\Program Files\Torch\resources`).
 pub fn bundled_resources_dir() -> Option<PathBuf> {
     cfg_if::cfg_if! {
         if #[cfg(target_os = "macos")] {

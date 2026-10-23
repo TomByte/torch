@@ -17,7 +17,7 @@ fn test_roundtrip_guests() {
         },
         CloudObjectGuest {
             subject: Subject::PendingUser {
-                email: Some("pending@warp.dev".to_string()),
+                email: Some("pending@test.org".to_string()),
             },
             access_level: SharingAccessLevel::View,
             source: Some(ServerObjectContainer::Folder {
@@ -48,7 +48,7 @@ lazy_static! {
         firebase_uid: "2YP93GScglXJMdEr2Id12dI7HCG3".to_string(),
         display_name: "Some User".to_string(),
         photo_url: Some("http://example.com/some-image".to_string()),
-        email: Some("user@warp.dev".to_string()),
+        email: Some("user@test.org".to_string()),
         input_replica_id: InputReplicaId::from("some-id".to_string()),
     };
 }

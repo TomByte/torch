@@ -482,8 +482,7 @@ if [ -z "$TORCH_BOOTSTRAPPED" ]; then
         title="$1"
       fi
       # Set the title. Be sure to make the title a %s argument to prevent title content from ending up
-      # in the block output, see:
-      # https://linear.app/warpdotdev/issue/WAR-6064/bash-commands-having-esc-write-the-command-to-the-block-output
+      # in the block output.
       printf "\033]0;%s\a" "$title"
     }
 
@@ -1142,29 +1141,6 @@ if [ -z "$TORCH_BOOTSTRAPPED" ]; then
       fi
     }
 
-    # Check if the warp apt source file has been renamed to `warpdotdev.list.distUpgrade` due to an ubuntu version update.
-    # If this occurred, we want to rename the source file back to `warpdotdev.list` to ensure updates can proceed.
-    # We purposefully skip this if either the `warpdotdev.list` file already exists (indicating that the user has already
-    # done this themselves) _or_ if a `warpdotdev.sources` file exists (which is the new Deb822 format for source files).
-    # The `.sources` file could only exist if a user manually created it; Ubuntu doesn't create one automatically for the
-    # warp source file due to a bug in its update flow where it considers our source file to be "invalid" because it
-    # contains a `signed-by` key.
-    function warp_handle_dist_upgrade {
-      local source_file_name="$1"
-
-      eval "$(command apt-config shell APT_SOURCESDIR 'Dir::Etc::sourceparts/d')"
-
-      if [[ ! -e $APT_SOURCESDIR$source_file_name.list && \
-          ! -e $APT_SOURCESDIR$source_file_name.sources && \
-           -e $APT_SOURCESDIR$source_file_name.list.distUpgrade ]]; then
-        # DO NOT DO THIS. We should never run a command for user with `sudo`. The only reason this is safe here is because
-        # we insert this function into the input for the user to determine if they want to execute (we never run it on
-        # their behalf without their permission).  To be transparent about what is being executed with sudo, we echo out the
-        # command we're about to run.
-        echo "Executing: sudo cp \"$APT_SOURCESDIR$source_file_name.list.distUpgrade\" \"$APT_SOURCESDIR$source_file_name.list\""
-        sudo cp "$APT_SOURCESDIR$source_file_name.list.distUpgrade" "$APT_SOURCESDIR$source_file_name.list"
-      fi
-    }
 
     # The SSH logic only applies to local sessions, because we don't yet have support for bootstrapping
     # recursive SSH sessions.
@@ -1429,8 +1405,6 @@ esac
     # don't get truncated when we spawn the shell, but once bootstrap has
     # completed, we want the values to be what they would have been if we hadn't
     # set initial values.
-    #
-    # For more context, see: https://github.com/warpdotdev/Warp/issues/1262
     if [[ $HISTFILESIZE == "$TORCH_INITIAL_HISTFILESIZE" ]]; then
         unset HISTFILESIZE
     fi
@@ -1487,7 +1461,7 @@ esac
     # bash-preexec uses a DEBUG trap to trigger the preexec functions, it will run our preexec
     # functions before the command at PROMPT_COMMAND[1], PROMPT_COMMAND[2], etc. This means our
     # Preexec hook gets called without the user submitting a command, putting the input block into
-    # a broken state, e.g. see https://github.com/warpdotdev/Warp/issues/2636
+    # a broken state
     # If they end up fixing this, we may be able to remove this at some point, check this:
     #   https://github.com/rcaloras/bash-preexec/issues/130
     #

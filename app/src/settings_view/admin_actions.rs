@@ -30,14 +30,14 @@ impl AdminActions {
         ctx.open_url(&url);
     }
 
-    /// Open the support email link
+    /// Open the issue tracker
     pub fn contact_support(ctx: &mut AppContext) {
-        ctx.open_url("mailto:support@warp.dev");
+        ctx.open_url("https://github.com/TomByte/torch/issues");
     }
 
-    /// Open the contact sales page
+    /// Open the issue tracker; there is no separate sales contact.
     pub fn contact_sales(ctx: &mut AppContext) {
-        ctx.open_url("https://warp.dev/contact-sales");
+        Self::contact_support(ctx);
     }
 }
 

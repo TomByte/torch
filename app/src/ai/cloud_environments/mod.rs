@@ -23,7 +23,7 @@ use crate::workspaces::user_workspaces::{TeamScope, UserWorkspaces};
 
 /// Oz web app page for viewing and creating cloud environments.
 #[cfg(feature = "tui")]
-pub const OZ_ENVIRONMENTS_URL: &str = "https://oz.warp.dev/environments";
+pub const OZ_ENVIRONMENTS_URL: &str = "https://cloud-disabled.torch.invalid/environments";
 
 impl StringModel for AmbientAgentEnvironment {
     type CloudObjectType = CloudAmbientAgentEnvironment;

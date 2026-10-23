@@ -43,7 +43,7 @@ const GIT_CREDENTIALS_REFRESH_BACKOFF: [Duration; 3] = [
 ];
 
 const DEFAULT_GIT_NAME: &str = "Torch";
-const DEFAULT_GIT_EMAIL: &str = "agent@warp.dev";
+const DEFAULT_GIT_EMAIL: &str = "agent@torch.invalid";
 const READ_ONLY_CREDENTIAL_HELPER: &str =
     r#"!f() { test "$1" = get && exec git credential-store get; }; f"#;
 const GITHUB_HOST: &str = "github.com";

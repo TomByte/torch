@@ -43,14 +43,14 @@ fn test_email_selection() {
     let sel = SemanticSelection::mock(true, "");
     assert_eq!(
         sel.smart_search(
-            "mail to: acarl005@g.ucla.edu andy+1.hello@warp.dev",
+            "mail to: acarl005@g.ucla.edu andy+1.hello@test.org",
             15.into()
         ),
         Some(ByteOffset::range(9..28))
     );
     assert_eq!(
         sel.smart_search(
-            "mail to: acarl005@g.ucla.edu andy+1.hello@warp.dev",
+            "mail to: acarl005@g.ucla.edu andy+1.hello@test.org",
             33.into()
         ),
         Some(ByteOffset::range(29..50))

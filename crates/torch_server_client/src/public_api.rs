@@ -76,7 +76,7 @@ impl PublicApiError {
         let code = self
             .type_uri
             .as_deref()?
-            .strip_prefix("https://docs.warp.dev/errors/")
+            .strip_prefix("https://cloud-disabled.torch.invalid/errors/")
             .and_then(|code| code.parse().ok())?;
         let title = self.title.clone()?;
         let user_facing_messages =

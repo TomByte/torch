@@ -271,7 +271,7 @@ fn test_should_add_command_to_history() {
     }
 }
 
-/// Regression test for https://github.com/warpdotdev/warp/issues/10474.
+/// Regression test for rendering `rc_file_paths` into a shell command.
 ///
 /// `rc_file_paths` is rendered into a shell command that runs on the *target*
 /// (e.g. an SSH remote, or a subshell during Auto-Warpify). The path separator

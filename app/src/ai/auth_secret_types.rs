@@ -37,11 +37,9 @@ pub fn learn_more_url_for_harness(harness: Harness) -> &'static str {
     }
 }
 
-const DEFAULT_LEARN_MORE_URL: &str = "https://docs.warp.dev/platform/harnesses/authentication/";
-const CODEX_LEARN_MORE_URL: &str =
-    "https://docs.warp.dev/platform/harnesses/authentication/#connecting-codex-credentials";
-const CLAUDE_LEARN_MORE_URL: &str =
-    "https://docs.warp.dev/platform/harnesses/authentication/#connecting-claude-code-credentials";
+const DEFAULT_LEARN_MORE_URL: &str = "https://cloud-disabled.torch.invalid";
+const CODEX_LEARN_MORE_URL: &str = "https://cloud-disabled.torch.invalid";
+const CLAUDE_LEARN_MORE_URL: &str = "https://cloud-disabled.torch.invalid";
 
 pub fn build_managed_secret_value(
     info: &AuthSecretTypeInfo,

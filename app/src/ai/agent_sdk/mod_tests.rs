@@ -377,23 +377,23 @@ fn driver_validation_uses_live_repository_membership() {
         AmbientAgentEnvironment::new(String::new(), None, vec![], String::new(), vec![]);
     environment.source_repos = Some(vec![SourceRepo::new(
         CodeForge::GitHub,
-        "warpdotdev".to_string(),
-        "warp".to_string(),
+        "acme".to_string(),
+        "app".to_string(),
     )]);
     let additional_source_repos = vec![SourceRepo::new(
         CodeForge::GitHub,
-        "warpdotdev".to_string(),
+        "acme".to_string(),
         "added-after-dispatch".to_string(),
     )];
     let repository_preparation_overrides = vec![RepositoryPreparationOverride {
         code_forge: RepositoryForge::GitHub,
-        repo_owner: "WarpDotDev".to_string(),
-        repo_name: "Warp".to_string(),
+        repo_owner: "Acme".to_string(),
+        repo_name: "App".to_string(),
         head: RepositoryHeadRef::CommitSha("0123456789abcdef0123456789abcdef01234567".to_string()),
         clone_from: Some(torch_cli::agent::RepositoryIdentity {
             code_forge: RepositoryForge::GitHub,
-            repo_owner: "warpdotdev".to_string(),
-            repo_name: "warp-for-benchmarks".to_string(),
+            repo_owner: "acme".to_string(),
+            repo_name: "acme-benchmarks".to_string(),
         }),
         preserve_origin: true,
     }];
@@ -409,14 +409,10 @@ fn driver_validation_uses_live_repository_membership() {
     assert_eq!(
         workspace.source_repos,
         vec![
+            SourceRepo::new(CodeForge::GitHub, "acme".to_string(), "app".to_string(),),
             SourceRepo::new(
                 CodeForge::GitHub,
-                "warpdotdev".to_string(),
-                "warp".to_string(),
-            ),
-            SourceRepo::new(
-                CodeForge::GitHub,
-                "warpdotdev".to_string(),
+                "acme".to_string(),
                 "added-after-dispatch".to_string(),
             ),
         ]

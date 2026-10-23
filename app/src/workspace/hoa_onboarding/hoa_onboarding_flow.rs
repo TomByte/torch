@@ -1,8 +1,6 @@
 use std::path::PathBuf;
 
-use markdown_parser::{
-    FormattedText, FormattedTextFragment, FormattedTextLine, FormattedTextStyles, Hyperlink,
-};
+use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
 use pathfinder_color::ColorU;
 use settings::Setting;
 use torch_core::ui::theme::Fill;
@@ -463,23 +461,10 @@ impl HoaOnboardingFlow {
         .with_style(Properties::default().weight(Weight::Bold))
         .finish();
 
-        // Build the description with an inline "Learn more" hyperlink.
-        let learn_more_fragment = FormattedTextFragment {
-            text: "Learn more".into(),
-            styles: FormattedTextStyles {
-                underline: true,
-                hyperlink: Some(Hyperlink::Url(
-                    "https://docs.warp.dev/agents/capabilities/agent-notifications".into(),
-                )),
-                ..Default::default()
-            },
-        };
-
         let formatted = FormattedText::new([FormattedTextLine::Line(vec![
             FormattedTextFragment::plain_text(
-                "Torch pipes through notifications from any CLI coding agent into a unified notification center that works across all coding agents and harnesses. ",
+                "Torch pipes through notifications from any CLI coding agent into a unified notification center that works across all coding agents and harnesses.",
             ),
-            learn_more_fragment,
         ])]);
 
         let description = FormattedTextElement::new(

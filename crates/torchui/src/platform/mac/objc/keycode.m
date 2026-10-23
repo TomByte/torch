@@ -13,8 +13,7 @@ BOOL IsUnicodeControl(unichar c) {
 }
 
 // Control character naming needs to be in sync with the corresponding rust definition in
-// `event.rs`: see
-// https://github.com/warpdotdev/warp-internal/blob/master/ui/src/platform/mac/utils.rs#L42
+// `event.rs`.
 // The list of control characters are referenced from chromium code here:
 // https://chromium.googlesource.com/chromium/src/+/lkgr/ui/events/keycodes/keyboard_code_conversion_mac.mm#329
 NSString* KeyFromControlKeyCode(unsigned short keyCode) {

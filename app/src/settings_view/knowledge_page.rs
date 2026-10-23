@@ -28,8 +28,6 @@ use crate::util::bindings;
 
 const PAGE_TITLE: &str = "Knowledge";
 
-const RULES_DOCS_URL: &str = "https://docs.warp.dev/agents/capabilities/rules";
-
 pub struct KnowledgePageView {
     page: PageType<Self>,
     local_only_icon_tooltip_states: RefCell<HashMap<String, MouseStateHandle>>,
@@ -224,12 +222,9 @@ impl SettingsWidget for RulesWidget {
             app,
         );
 
-        let rules_description = vec![
-            FormattedTextFragment::plain_text(
-                "Rules help the Torch Agent follow your conventions, whether for codebases or specific workflows. ",
-            ),
-            FormattedTextFragment::hyperlink("Learn more", RULES_DOCS_URL),
-        ];
+        let rules_description = vec![FormattedTextFragment::plain_text(
+            "Rules help the Torch Agent follow your conventions, whether for codebases or specific workflows.",
+        )];
         let description = Container::new(
             FormattedTextElement::new(
                 FormattedText::new([FormattedTextLine::Line(rules_description)]),

@@ -104,7 +104,7 @@ fn report_shutdown_abnormal_serializes_exit_code() {
 fn external_reference_artifact_serializes_to_expected_wire_format() {
     let artifact = Artifact::ExternalReference {
         reference_type: "LINEAR_ISSUE".to_string(),
-        url: "https://linear.app/warpdotdev/issue/REMOTE-2253".to_string(),
+        url: "https://tracker.example.com/issue/ABC-123".to_string(),
         title: None,
         metadata: None,
     };
@@ -115,7 +115,7 @@ fn external_reference_artifact_serializes_to_expected_wire_format() {
             "artifact_type": "EXTERNAL_REFERENCE",
             "data": {
                 "reference_type": "LINEAR_ISSUE",
-                "url": "https://linear.app/warpdotdev/issue/REMOTE-2253"
+                "url": "https://tracker.example.com/issue/ABC-123"
             }
         })
     );
@@ -126,7 +126,7 @@ fn external_reference_artifact_serializes_to_expected_wire_format() {
 fn external_reference_artifact_includes_optional_title_and_metadata() {
     let artifact = Artifact::ExternalReference {
         reference_type: "GITHUB_PR".to_string(),
-        url: "https://github.com/warpdotdev/warp/pull/1".to_string(),
+        url: "https://github.com/TomByte/torch/pull/1".to_string(),
         title: Some("My pull request".to_string()),
         metadata: Some(serde_json::json!({"key": "val"})),
     };
@@ -137,7 +137,7 @@ fn external_reference_artifact_includes_optional_title_and_metadata() {
             "artifact_type": "EXTERNAL_REFERENCE",
             "data": {
                 "reference_type": "GITHUB_PR",
-                "url": "https://github.com/warpdotdev/warp/pull/1",
+                "url": "https://github.com/TomByte/torch/pull/1",
                 "title": "My pull request",
                 "metadata": {"key": "val"}
             }
@@ -151,7 +151,7 @@ fn external_reference_artifact_includes_optional_title_and_metadata() {
 fn external_reference_artifact_round_trips() {
     let artifact = Artifact::ExternalReference {
         reference_type: "LINEAR_ISSUE".to_string(),
-        url: "https://linear.app/warpdotdev/issue/REMOTE-2253".to_string(),
+        url: "https://tracker.example.com/issue/ABC-123".to_string(),
         title: Some("Add report-external-reference CLI subcommand".to_string()),
         metadata: Some(serde_json::json!({"estimate": "S"})),
     };

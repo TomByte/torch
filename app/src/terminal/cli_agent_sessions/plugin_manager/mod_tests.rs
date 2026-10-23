@@ -1,54 +1,10 @@
 use std::cmp::Ordering;
 
-use super::{compare_versions, plugin_manager_for};
-use crate::terminal::CLIAgent;
-
-#[cfg(not(feature = "local_only"))]
-#[test]
-fn returns_manager_for_claude() {
-    assert!(plugin_manager_for(CLIAgent::Claude).is_some());
-}
-
-#[cfg(not(feature = "local_only"))]
-#[test]
-fn returns_manager_for_opencode() {
-    let _oc_guard = crate::features::FeatureFlag::OpenCodeNotifications.override_enabled(true);
-    let _hoa_guard = crate::features::FeatureFlag::HOANotifications.override_enabled(true);
-    assert!(plugin_manager_for(CLIAgent::OpenCode).is_some());
-}
-
-#[cfg(not(feature = "local_only"))]
-#[test]
-fn returns_manager_for_codex() {
-    let _codex_guard = crate::features::FeatureFlag::CodexNotifications.override_enabled(true);
-    let _hoa_guard = crate::features::FeatureFlag::HOANotifications.override_enabled(true);
-    assert!(plugin_manager_for(CLIAgent::Codex).is_some());
-}
-
-#[cfg(not(feature = "local_only"))]
-#[test]
-fn returns_manager_for_gemini() {
-    let _gemini_guard = crate::features::FeatureFlag::GeminiNotifications.override_enabled(true);
-    let _hoa_guard = crate::features::FeatureFlag::HOANotifications.override_enabled(true);
-    assert!(plugin_manager_for(CLIAgent::Gemini).is_some());
-}
-
-#[cfg(feature = "local_only")]
-#[test]
-fn local_only_never_offers_warp_plugins() {
-    for agent in enum_iterator::all::<CLIAgent>() {
-        assert!(plugin_manager_for(agent).is_none(), "{agent:?}");
-    }
-}
+use super::{compare_versions, plugin_manager};
 
 #[test]
-fn returns_none_for_unsupported_agents() {
-    assert!(plugin_manager_for(CLIAgent::Grok).is_none());
-    assert!(plugin_manager_for(CLIAgent::Muse).is_none());
-    assert!(plugin_manager_for(CLIAgent::Amp).is_none());
-    assert!(plugin_manager_for(CLIAgent::Droid).is_none());
-    assert!(plugin_manager_for(CLIAgent::Copilot).is_none());
-    assert!(plugin_manager_for(CLIAgent::Unknown).is_none());
+fn never_offers_a_plugin_manager() {
+    assert!(plugin_manager().is_none());
 }
 
 #[test]

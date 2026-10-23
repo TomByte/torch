@@ -66,7 +66,7 @@ maybe_define_setting!(EnableSshWarpification, group: WarpifySettings, {
 // `SshSettings::enable_ssh_wrapper` field for backward compatibility.
 //
 // It is deliberately NOT cloud-synced (`SyncToCloud::Never`) — this is the fix for
-// https://github.com/warpdotdev/Warp/issues/13228. The migration below reads this
+// a bug where the migration re-fired every launch. The migration below reads this
 // value and forwards an opt-out to `enable_ssh_warpification`. When it was synced,
 // a stale cloud value (from a user's pre-extension flow) was restored on every
 // launch, re-arming the "one-time" migration and repeatedly disabling
@@ -262,7 +262,6 @@ lazy_static! {
         // Matches commands that spawn a pipenv subshell.
         PIPENV_SUBSHELL_COMMAND_REGEX.clone(),
 
-        // https://github.com/warpdotdev/Warp/issues/2736
         Regex::new(r"^aws-vault\s+exec\b").expect("aws-vault regex invalid"),
 
         // https://flox.dev/docs/reference/command-reference/flox-activate/
@@ -362,7 +361,7 @@ impl WarpifySettings {
         //
         // `enable_ssh_wrapper` is not cloud-synced (see its definition), so this reset
         // persists locally and cannot be re-armed by a stale synced value — the fix for
-        // https://github.com/warpdotdev/Warp/issues/13228, where syncing the trigger caused
+        // a bug where syncing the trigger caused
         // the migration to re-fire every launch and repeatedly disable warpification.
         handle.update(ctx, |me, ctx| {
             if me.enable_ssh_wrapper.is_value_explicitly_set() && !*me.enable_ssh_wrapper.value() {

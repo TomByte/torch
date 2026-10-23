@@ -139,7 +139,7 @@ fn waiting_login_renders_copy_feedback() {
         app.add_singleton_model(|_| Appearance::mock());
         app.read(|app_ctx| {
             let browser_url =
-                "https://app.warp.dev/device?user_code=ABCD-EFGH&source=warp-agent-cli";
+                "https://acme.example/device?user_code=ABCD-EFGH&source=warp-agent-cli";
             for (message, tone) in [
                 ("Login URL copied to clipboard", TransientHintTone::Success),
                 ("Unable to copy login URL", TransientHintTone::Error),
@@ -268,7 +268,7 @@ fn signed_out_welcome_matches_designed_copy_and_layout() {
             assert!(
                 lines
                     .iter()
-                    .all(|line| !line.contains("https://app.warp.dev/login")),
+                    .all(|line| !line.contains("https://acme.example/login")),
                 "welcome must not render a URL before device authorization: {lines:?}"
             );
         });
@@ -344,7 +344,7 @@ fn waiting_login_generated_url_handles_click() {
             let activated = Rc::new(Cell::new(false));
             let activated_for_click = activated.clone();
             let browser_url =
-                "https://app.warp.dev/device?user_code=ABCD-EFGH&source=warp-agent-cli";
+                "https://acme.example/device?user_code=ABCD-EFGH&source=warp-agent-cli";
             let mut element = login_waiting(
                 AnimationClock::starting_at(Duration::ZERO),
                 Arc::new(ZeroStateAnimationConfig::default()),
@@ -378,10 +378,10 @@ fn waiting_login_generated_url_handles_click() {
             let lines = buffer.to_lines();
             let row = lines
                 .iter()
-                .position(|line| line.contains("https://app.warp.dev/device?user_code="))
+                .position(|line| line.contains("https://acme.example/device?user_code="))
                 .expect("generated URL renders") as u16;
             let col = lines[usize::from(row)]
-                .find("https://app.warp.dev/device?user_code=")
+                .find("https://acme.example/device?user_code=")
                 .expect("generated URL offset") as u16;
             let scene = Rc::new(paint_ctx.scene.clone());
             drop(paint_ctx);
@@ -414,7 +414,7 @@ fn waiting_login_copy_control_handles_click_and_key() {
             let copy_count = Rc::new(Cell::new(0));
             let copy_count_for_action = copy_count.clone();
             let browser_url =
-                "https://app.warp.dev/device?user_code=ABCD-EFGH&source=warp-agent-cli";
+                "https://acme.example/device?user_code=ABCD-EFGH&source=warp-agent-cli";
             let mut element = login_waiting(
                 AnimationClock::starting_at(Duration::ZERO),
                 Arc::new(ZeroStateAnimationConfig::default()),
@@ -602,7 +602,7 @@ fn browser_open_failure_renders_exact_fallback_and_handles_recovery_keys() {
         app.add_singleton_model(|_| Appearance::mock());
         app.read(|app_ctx| {
             let browser_url =
-                "https://app.warp.dev/device?user_code=ABCD-EFGH&source=warp-agent-cli";
+                "https://acme.example/device?user_code=ABCD-EFGH&source=warp-agent-cli";
             let mut presenter = TuiPresenter::new();
             let frame = presenter.present_element(
                 login_browser_open_failed(
@@ -626,7 +626,7 @@ fn browser_open_failure_renders_exact_fallback_and_handles_recovery_keys() {
             for expected in [
                 "We couldn’t open your browser.",
                 "Open this exact URL manually:",
-                "https://app.warp.dev/device?user_code=ABCD-EF",
+                "https://acme.example/device?user_code=ABCD-EF",
                 "GH&source=warp-agent-cli",
                 "Copy URL (c)",
                 "Retry opening browser (r)",
@@ -694,7 +694,7 @@ fn waiting_login_renders_actual_browser_url_and_requesting_fallback() {
         app.add_singleton_model(|_| Appearance::mock());
         app.read(|app_ctx| {
             let browser_url =
-                "https://app.warp.dev/device?user_code=ABCD-EFGH&source=warp-agent-cli";
+                "https://acme.example/device?user_code=ABCD-EFGH&source=warp-agent-cli";
             for url in [Some(browser_url), None] {
                 let mut presenter = TuiPresenter::new();
                 let frame = presenter.present_element(
@@ -728,7 +728,7 @@ fn waiting_login_renders_actual_browser_url_and_requesting_fallback() {
                     );
                     assert!(
                         lines.iter().any(|line| {
-                            line.contains("https://app.warp.dev/device?user_code=ABCD-EF")
+                            line.contains("https://acme.example/device?user_code=ABCD-EF")
                         }),
                         "waiting state should render the start of the real URL: {lines:?}"
                     );

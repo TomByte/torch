@@ -39,8 +39,6 @@ use crate::server::server_api::factory::FactoryClient;
 use crate::util::time_format::format_approx_duration_from_now_utc;
 use crate::workspaces::user_profiles::UserProfiles;
 
-const TORCH_DEV_ENVIRONMENTS_REPO: &str = "https://github.com/warpdotdev/warp-dev-environments";
-
 /// Parse repo strings in the format "owner/repo" into GithubRepo objects.
 fn parse_repos(repo_strings: Vec<String>) -> anyhow::Result<Vec<GithubRepo>> {
     repo_strings
@@ -171,10 +169,7 @@ impl EnvironmentCommandRunner {
                         global_options.output_format,
                         OutputFormat::Text | OutputFormat::Pretty
                     ) {
-                        println!(
-                            "All Torch dev images contain Python and Node. For more information, see: {}\n",
-                            TORCH_DEV_ENVIRONMENTS_REPO
-                        );
+                        println!("All Torch dev images contain Python and Node.\n");
                     }
                     output::print_list(image_infos, global_options.output_format);
                     ctx.terminate_app(torchui::platform::TerminationMode::ForceTerminate, None);
@@ -391,8 +386,7 @@ impl EnvironmentCommandRunner {
                         "No docker image provided, please select a base image.\n"
                     );
                     println!(
-                        "All warpdotdev images contain Python and Node, in addition to language-specific tooling. For more info: {}\n",
-                        TORCH_DEV_ENVIRONMENTS_REPO
+                        "All Torch dev images contain Python and Node, in addition to language-specific tooling.\n"
                     );
 
                     let mut image_choices: Vec<String> =

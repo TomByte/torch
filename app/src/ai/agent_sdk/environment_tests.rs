@@ -127,7 +127,7 @@ fn environment(server_id: ServerId) -> CloudAmbientAgentEnvironment {
         "docker_image": "ubuntu:latest",
         "code_forge": "GITHUB",
         "code_forges": ["GITHUB", "GITLAB"],
-        "github_repos": [{"owner": "warpdotdev", "repo": "warp"}],
+        "github_repos": [{"owner": "acme", "repo": "app"}],
         "source_repos": [{"code_forge": "GITLAB", "owner": "group", "repo": "repo"}],
         "setup_commands": ["make setup"],
         "providers": {

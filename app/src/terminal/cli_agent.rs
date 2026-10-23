@@ -27,7 +27,6 @@ use crate::ui_components::icons::Icon;
 use crate::workspaces::user_workspaces::UserWorkspaces;
 
 /// UID for the Uber team.
-/// See https://warp.metabaseapp.com/dashboard/1454?team_id=46347
 const UBER_TEAM_UID: &str = "BdVbYjy9LRZcZrYBemSfAF";
 
 /// Gemini brand blue color

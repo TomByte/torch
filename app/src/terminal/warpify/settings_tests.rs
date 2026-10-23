@@ -101,7 +101,6 @@ fn test_enable_ssh_wrapper_false_migrates_to_enable_ssh_warpification_false() {
 /// value would be restored on every launch and re-arm the migration, repeatedly
 /// clobbering the user's choice. Keeping them local means the migration's reset to
 /// the default persists and acts as the one-time, per-device marker.
-/// See https://github.com/warpdotdev/Warp/issues/13228.
 #[test]
 fn test_deprecated_ssh_wrapper_migration_triggers_are_not_synced() {
     assert_eq!(

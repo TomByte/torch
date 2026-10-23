@@ -103,7 +103,7 @@ Note that for `async_assert` to actually work, the `set_assertion` needs to **re
 
 ## How to add a sqlite snapshot?
 * You can copy over a warp.sqlite file from ~/Library/Application\ Support/{warp, dev.warp.Torch-(Dev|Preview|Stable)} directly
-* You may want to sanitize some info that is specific to you (i.e. cwd https://staging.warp.dev/block/FNBafyVtxvjmdNIx6HxUM5)
+* You may want to sanitize some info that is specific to you (e.g. your home directory path)
 
 
 ### How to run integration tests?

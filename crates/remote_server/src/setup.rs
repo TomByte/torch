@@ -600,8 +600,8 @@ pub fn install_script(staging_tarball_path: Option<&str>) -> String {
 
 /// Construct the download URL from the server root URL.
 ///
-/// For example, given `https://app.warp.dev`, returns
-/// `https://app.warp.dev/download/cli`.
+/// For example, given `https://cloud-disabled.torch.invalid`, returns
+/// `https://cloud-disabled.torch.invalid/download/cli`.
 fn download_url() -> String {
     let base = ChannelState::server_root_url();
     let base = base.trim_end_matches('/');

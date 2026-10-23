@@ -43,7 +43,7 @@ use crate::themes::theme::Fill as ThemeFill;
 use crate::util::bindings::CustomAction;
 use crate::{send_telemetry_from_ctx, send_telemetry_sync_from_ctx};
 
-const TOS_URL: &str = "https://www.warp.dev/terms-of-service";
+const TOS_URL: &str = "https://github.com/TomByte/torch";
 
 // ---------------------------------------------------------------------------
 // Init (keybindings)

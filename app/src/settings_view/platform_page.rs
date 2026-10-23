@@ -43,7 +43,6 @@ use crate::workspaces::user_workspaces::{TeamScope, UserWorkspaces};
 
 const MODAL_WIDTH: f32 = 460.;
 const MODAL_HEIGHT: f32 = 320.;
-const API_KEY_DOCS_URL: &str = "https://docs.warp.dev/reference/cli/api-keys";
 const API_KEY_NAME_COLUMN_DEFAULT_WIDTH: f32 = 220.;
 const API_KEY_NAME_COLUMN_MIN_WIDTH: f32 = 120.;
 const API_KEY_KEY_COLUMN_WIDTH: f32 = 120.;
@@ -499,12 +498,9 @@ impl PlatformPageWidget {
         view: &PlatformPageView,
         appearance: &Appearance,
     ) -> Box<dyn Element> {
-        let text = vec![
-            FormattedTextFragment::plain_text(
-                "Create and manage API keys to allow cloud agents to access your Torch account.\nFor more information, visit the ",
-            ),
-            FormattedTextFragment::hyperlink("Documentation.", API_KEY_DOCS_URL),
-        ];
+        let text = vec![FormattedTextFragment::plain_text(
+            "Create and manage API keys to allow cloud agents to access your Torch account.",
+        )];
 
         let text_element = FormattedTextElement::new(
             FormattedText::new([FormattedTextLine::Line(text)]),

@@ -9,19 +9,19 @@
         "repositories": [
           {
             "forge": "GITHUB",
-            "owner": "warpdotdev",
-            "name": "warp",
+            "owner": "acme",
+            "name": "app",
             "ref": { "type": "BRANCH", "value": "main" },
-            "cloneFrom": { "codeForge": "GITHUB", "owner": "warpdotdev", "repo": "warp-fork" },
+            "cloneFrom": { "codeForge": "GITHUB", "owner": "acme", "repo": "acme-fork" },
             "preserveOrigin": true
           }
         ],
         "deferredRepositories": [
-          { "codeForge": "GITHUB", "owner": "warpdotdev", "repo": "warp-server" }
+          { "codeForge": "GITHUB", "owner": "acme", "repo": "acme-server" }
         ],
         "setupCommands": ["./script/bootstrap"],
         "mcpServersJson": "{\"linear\":{\"warp_id\":\"7f1d2c3b-4a59-4e6f-8b70-1c2d3e4f5a6b\"}}",
-        "skills": ["warpdotdev/warp:review"],
+        "skills": ["acme/app:review"],
         "factorySkillDirs": [".agents/skills"],
         "computerUseEnabled": true
       },

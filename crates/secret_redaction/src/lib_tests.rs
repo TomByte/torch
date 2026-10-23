@@ -60,7 +60,7 @@ fn test_phone_number() {
 
 #[test]
 fn test_google_api_key() {
-    let google_api_key = "AIzaSyDaGmWKa4JsXZ-HjGw7ISLn_3namBGewQe";
+    let google_api_key = "AIzaSyFakeFakeFakeFakeFakeFakeFakeFakeF";
     assert_regex_match_found(regexes::GOOGLE_API_KEY, google_api_key);
 }
 

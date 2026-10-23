@@ -853,7 +853,7 @@ lazy_static! {
 const NOTIFICATION_CHECKBOX_MARGIN_RIGHT: f32 = 5.;
 const NOTIFICATION_EDITOR_MARGIN: f32 = 5.;
 
-const NOTIFICATIONS_DOCS_URL: &str = "https://docs.warp.dev/terminal/more-features/notifications";
+const NOTIFICATIONS_DOCS_URL: &str = "https://github.com/TomByte/torch";
 
 /// A help icon linking to Torch's hosted docs, which do not describe Torch's local-only build.
 fn docs_link_info(
@@ -4690,7 +4690,7 @@ impl SettingsWidget for SessionRestorationWidget {
             "Restore windows, sessions, and panes on startup".into(),
             docs_link_info(
                 &self.additional_info_link,
-                "https://docs.warp.dev/terminal/sessions/session-restoration",
+                "https://github.com/TomByte/torch",
             ),
             LocalOnlyIconState::for_setting(
                 RestoreSession::storage_key(),
@@ -4719,7 +4719,7 @@ impl SettingsWidget for SessionRestorationWidget {
             let link = ui_builder
                 .link(
                     "See docs.".to_owned(),
-                    Some("https://docs.warp.dev/terminal/sessions/session-restoration".to_owned()),
+                    Some("https://github.com/TomByte/torch".to_owned()),
                     None,
                     self.docs_link.clone(),
                 )
@@ -4771,7 +4771,7 @@ impl SettingsWidget for SnackbarHeaderWidget {
             "Show sticky command header".into(),
             docs_link_info(
                 &self.additional_info_link,
-                "https://docs.warp.dev/terminal/blocks/sticky-command-header",
+                "https://github.com/TomByte/torch",
             ),
             LocalOnlyIconState::for_setting(
                 SnackbarEnabled::storage_key(),
@@ -5666,10 +5666,7 @@ impl SettingsWidget for GlobalHotkeyWidget {
                         ui_builder
                             .link(
                                 "See docs.".to_owned(),
-                                Some(
-                                    "https://docs.warp.dev/terminal/windows/global-hotkey"
-                                        .to_owned(),
-                                ),
+                                Some("https://github.com/TomByte/torch".to_owned()),
                                 None,
                                 view.button_mouse_states.global_hotkey_link.clone(),
                             )
@@ -6972,7 +6969,7 @@ impl SettingsWidget for MouseReportingWidget {
             "Enable Mouse Reporting".into(),
             docs_link_info(
                 &self.additional_info_link,
-                "https://docs.warp.dev/terminal/more-features/full-screen-apps#mouse-and-scroll-reporting",
+                "https://github.com/TomByte/torch",
             ),
             LocalOnlyIconState::for_setting(
                 MouseReportingEnabled::storage_key(),
@@ -7232,7 +7229,7 @@ impl SettingsWidget for SmartSelectWidget {
             "Double-click smart selection".into(),
             docs_link_info(
                 &self.additional_info_link,
-                "https://docs.warp.dev/terminal/more-features/text-selection",
+                "https://github.com/TomByte/torch",
             ),
             LocalOnlyIconState::for_setting(
                 SmartSelectEnabled::storage_key(),
@@ -7517,7 +7514,7 @@ impl SettingsWidget for WorkflowsInCommandSearch {
             "Show Global Workflows in Command Search (ctrl-r)".into(),
             docs_link_info(
                 &self.additional_info_link,
-                "https://docs.warp.dev/terminal/entry/yaml-workflows",
+                "https://github.com/TomByte/torch",
             ),
             LocalOnlyIconState::for_setting(
                 ShowGlobalWorkflowsInUniversalSearch::storage_key(),

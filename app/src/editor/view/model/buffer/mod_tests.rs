@@ -4158,8 +4158,7 @@ fn test_merging_selections_with_remote_edits() {
     })
 }
 
-// See https://github.com/warpdotdev/warp-internal/pull/9249 for discussion
-// about possible strategies to address this.
+// Discussion of possible strategies to address this is pending.
 #[ignore = "The test points out an eventual consistency problem with selections."]
 #[test]
 fn test_merging_selections_with_concurrent_edits() {

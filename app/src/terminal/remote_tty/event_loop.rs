@@ -22,8 +22,8 @@ const CREATE_SESSION_ENDPOINT: &str = "ws://127.0.0.1:3030/create";
 /// Contains info needed to resize the SSH terminal session. Is serialized and
 /// sent over the websocket as text.
 ///
-/// The field names need to be kept the same as the `WindowSizeChange` struct in
-/// https://github.com/warpdotdev/ssh-proxy-server/blob/main/src/ssh/session.rs.
+/// The field names need to be kept the same as the `WindowSizeChange` struct in the
+/// ssh-proxy-server.
 #[derive(Serialize, Debug)]
 struct WindowSizeChange {
     width: u32,
@@ -167,8 +167,7 @@ impl EventLoop {
     }
 
     /// Writes the ZSH init shell script to the "PTY", mimicking how we send the init shell script
-    /// when there is a local pty:
-    /// <https://github.com/warpdotdev/warp-internal/blob/747da2df83f2caa97e781ce284ceb226fb97a66c/app/src/terminal/local_tty/unix.rs#L338-L347>.
+    /// when there is a local pty (see `terminal/local_tty/unix.rs`).
     async fn write_zsh_init_shell_script(
         sink: &mut impl Sink,
         terminal_model: &parking_lot::FairMutex<crate::terminal::TerminalModel>,

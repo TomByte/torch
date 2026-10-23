@@ -435,7 +435,6 @@ impl Args {
 
 <bold><underline>Learn more:</underline></bold>
 * Use <bold>{bin_name} help</bold> to learn more about each command
-* Read the documentation at https://docs.warp.dev/reference/cli
 "#
         ));
 

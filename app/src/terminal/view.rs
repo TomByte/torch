@@ -411,7 +411,7 @@ use crate::terminal::cli_agent_sessions::notification::{
     notification_text as cli_agent_notification_text,
 };
 #[cfg(not(target_family = "wasm"))]
-use crate::terminal::cli_agent_sessions::plugin_manager::{PluginModalKind, plugin_manager_for};
+use crate::terminal::cli_agent_sessions::plugin_manager::{PluginModalKind, plugin_manager};
 use crate::terminal::cli_agent_sessions::{
     CLIAgentInputEntrypoint, CLIAgentInputState, CLIAgentRichInputCloseReason, CLIAgentSession,
     CLIAgentSessionContext, CLIAgentSessionStatus, CLIAgentSessionsModel,
@@ -669,16 +669,13 @@ const ENV_VAR_BOOTSTRAP_FAILED_DURATION: Duration = Duration::from_secs(60);
 const SLOW_BOOTSTRAP_BANNER_AUTO_DISMISS_DURATION: Duration = Duration::from_secs(30);
 /// Covers the terminal manager's 10-second PTY stop and 60-second replacement bootstrap deadlines.
 const SHELL_REPLACEMENT_TIMEOUT: Duration = Duration::from_secs(75);
-const KNOWN_ISSUES_URL: &str =
-    "https://docs.warp.dev/support-and-community/troubleshooting-and-support/known-issues";
+const KNOWN_ISSUES_URL: &str = "https://github.com/TomByte/torch/issues";
 
 /// Link to supported custom prompts.
-const PROMPT_COMPATIBILITY_URL: &str =
-    "https://docs.warp.dev/terminal/appearance/prompt#custom-prompt-compatibility-table";
+const PROMPT_COMPATIBILITY_URL: &str = "https://github.com/TomByte/torch";
 
 /// Link to troubleshooting steps for ControlMaster errors.
-const CONTROLMASTER_ISSUES_URL: &str =
-    "https://docs.warp.dev/terminal/warpify/ssh-legacy#troubleshooting";
+const CONTROLMASTER_ISSUES_URL: &str = "https://github.com/TomByte/torch/issues";
 
 /// Link to instructions on how to update p10k.
 const P10K_UPDATE_INSTRUCTIONS_URL: &str =
@@ -693,10 +690,8 @@ const MIN_DELTA_FOR_TEXT_SELECTION: f32 = 0.5;
 
 /// Notifications-specific info
 /// TODO (suraj): add documentation for notifications in docs
-const NOTIFICATIONS_LEARN_MORE_URL: &str =
-    "https://docs.warp.dev/terminal/more-features/notifications";
-pub const NOTIFICATIONS_TROUBLESHOOT_URL: &str =
-    "https://docs.warp.dev/terminal/more-features/notifications#troubleshooting-notifications";
+const NOTIFICATIONS_LEARN_MORE_URL: &str = "https://github.com/TomByte/torch";
+pub const NOTIFICATIONS_TROUBLESHOOT_URL: &str = "https://github.com/TomByte/torch/issues";
 
 const DEBOUNCE_PERIOD: Duration = Duration::from_millis(40);
 
@@ -14225,7 +14220,7 @@ impl TerminalView {
             // No SessionStart event in this path (mid-session install/update).
             // Assume the just-installed plugin meets the minimum version for this agent
             // so the update chip doesn't flash before the user runs /reload-plugins.
-            plugin_manager_for(agent).map(|m| m.minimum_plugin_version().to_owned())
+            plugin_manager().map(|m| m.minimum_plugin_version().to_owned())
         };
         #[cfg(target_family = "wasm")]
         let plugin_version = None;
@@ -16018,7 +16013,6 @@ impl TerminalView {
         }
         session_metadata.set_git_branches(git_branches.iter().flatten().map(|s| s.as_str()));
 
-        // https://github.com/warpdotdev/command-corrections/blob/df7848d4fb3da7883623e959889a296a07d88053/src/rules/cd/mod.rs#L31-L36
         // We don't currently support dynamic rules over SSH, so we should not attempt to correct commands if
         // inside ssh session.
         let is_ssh_command = SshWarpifyCommand::matches(input).is_some();
@@ -21669,9 +21663,7 @@ impl TerminalView {
                 AIAgentCitation::WarpDriveObject { uid } => {
                     ctx.emit(Event::OpenWarpDriveObjectInPane(uid.clone()));
                 }
-                AIAgentCitation::WarpDocumentation { path } => {
-                    ctx.open_url(&format!("https://docs.warp.dev/{path}"));
-                }
+                AIAgentCitation::WarpDocumentation { .. } => {}
                 AIAgentCitation::WebPage { url } => {
                     ctx.open_url(url);
                 }
@@ -22180,8 +22172,6 @@ impl TerminalView {
     ///
     /// WARNING: this method takes a lock on the TerminalModel.
     /// Caller must ensure the model is not already locked!
-    ///
-    /// TODO: https://linear.app/warpdotdev/issue/CORE-277
     pub fn redetermine_global_focus(&mut self, ctx: &mut ViewContext<Self>) {
         self.redetermine_global_focus_with_policy(SelectionFocusPolicy::HoldsFocus, ctx);
     }

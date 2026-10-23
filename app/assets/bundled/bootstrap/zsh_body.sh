@@ -365,7 +365,6 @@ if [[ -z $TORCH_BOOTSTRAPPED ]]; then
       # bound to its default of up-history. If the active keymap when Torch sends its pre-command ^P
       # ends up being one we didn't rebind, the clear becomes a no-op and any leftover bootstrap bytes
       # still sitting in the line editor's buffer get echoed alongside the next command.
-      # See https://github.com/warpdotdev/warp/issues/7099.
       local warp_keymap
       for warp_keymap in main emacs viins vicmd; do
         bindkey -M "$warp_keymap" '^P' warp_kill_buffer_and_reset_insert_mode 2>/dev/null || :
@@ -780,29 +779,6 @@ if [[ -z $TORCH_BOOTSTRAPPED ]]; then
     warp_send_json_message "{ \"hook\": \"FinishUpdate\", \"value\": { \"update_id\": \"$update_id\", \"session_id\": $TORCH_SESSION_ID} }"
   }
 
-  # Check if the warp apt source file has been renamed to `warpdotdev.list.distUpgrade` due to an ubuntu version update.
-  # If this occurred, we want to rename the source file back to `warpdotdev.list` to ensure updates can proceed.
-  # We purposefully skip this if either the `warpdotdev.list` file already exists (indicating that the user has already
-  # done this themselves) _or_ if a `warpdotdev.sources` file exists (which is the new Deb822 format for source files).
-  # The `.sources` file could only exist if a user manually created it; Ubuntu doesn't create one automatically for the
-  # warp source file due to a bug in its update flow where it considers our source file to be "invalid" because it
-  # contains a `signed-by` key.
-  function warp_handle_dist_upgrade {
-      local source_file_name="$1"
-
-      eval "$(command apt-config shell APT_SOURCESDIR 'Dir::Etc::sourceparts/d')"
-
-      if [[ ! -e $APT_SOURCESDIR$source_file_name.list && \
-          ! -e $APT_SOURCESDIR$source_file_name.sources && \
-           -e $APT_SOURCESDIR$source_file_name.list.distUpgrade ]]; then
-        # DO NOT DO THIS. We should never run a command for user with `sudo`. The only reason this is safe here is because
-        # we insert this function into the input for the user to determine if they want to execute (we never run it on
-        # their behalf without their permission).  To be transparent about what is being executed with sudo, we echo out the
-        # command we're about to run.
-        echo "Executing: sudo cp \"$APT_SOURCESDIR$source_file_name.list.distUpgrade\" \"$APT_SOURCESDIR$source_file_name.list\""
-        sudo cp "$APT_SOURCESDIR$source_file_name.list.distUpgrade" "$APT_SOURCESDIR$source_file_name.list"
-      fi
-  }
 
   # Strips prompt constructs that zsh counts as visible "glitch" columns even
   # when they appear inside a %{...%} zero-width region, returning the result
@@ -1455,7 +1431,6 @@ esac
   # Restore the built-in bracketed-paste widget. This works around a buggy interaction we observed
   # with the bracketed-paste-magic plugin (included in oh-my-zsh by default), zsh's "allexport"
   # option (set -a), and Torch's bootstrapping code.
-  # https://github.com/warpdotdev/warp/issues/11520
   zle -A .bracketed-paste bracketed-paste
 
   precmd_functions+=(warp_precmd warp_update_prompt_vars)

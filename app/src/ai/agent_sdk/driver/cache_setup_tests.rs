@@ -35,13 +35,13 @@ fn gate_matrix_requires_namespace_and_nonempty_root() {
 fn substituted_remote_uses_target_cache_identity_and_source_checkout() {
     let remote = SourceRepo::new(
         CodeForge::GitHub,
-        "warpdotdev".to_owned(),
-        "warp-for-benchmarks".to_owned(),
+        "acme".to_owned(),
+        "acme-benchmarks".to_owned(),
     );
-    let mapped = repository_cache_source(&remote, "warp", Path::new("/work"));
-    assert_eq!(mapped.name, "warpdotdev/warp-for-benchmarks");
-    assert_eq!(mapped.identity.repo, "warp-for-benchmarks");
-    assert_eq!(mapped.cwd, Path::new("/work/warp"));
+    let mapped = repository_cache_source(&remote, "app", Path::new("/work"));
+    assert_eq!(mapped.name, "acme/acme-benchmarks");
+    assert_eq!(mapped.identity.repo, "acme-benchmarks");
+    assert_eq!(mapped.cwd, Path::new("/work/app"));
 }
 
 #[test]

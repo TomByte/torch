@@ -246,7 +246,7 @@ fn pending_copy_consumes_exact_generated_url_once() {
     App::test((), |mut app| async move {
         register_tui_session_view_test_singletons(&mut app);
         let browser_url =
-            "https://app.warp.dev/device?user_code=ABCD-EFGH&source=warp-agent-cli".to_owned();
+            "https://acme.example/device?user_code=ABCD-EFGH&source=warp-agent-cli".to_owned();
         app.add_singleton_model({
             let browser_url = browser_url.clone();
             move |_| TuiLoginModel::awaiting_login_for_test(Some(browser_url))

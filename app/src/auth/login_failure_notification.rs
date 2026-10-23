@@ -8,7 +8,7 @@ use torchui::{Action, AppContext, Element, SingletonEntity};
 
 use crate::appearance::Appearance;
 
-const LOGIN_TROUBLESHOOTING_DOCS_URL: &str = "https://docs.warp.dev/support-and-community/troubleshooting-and-support/troubleshooting-login-issues";
+const LOGIN_TROUBLESHOOTING_URL: &str = "https://github.com/TomByte/torch/issues";
 
 /// Represents reasons why login failed.
 pub enum LoginFailureReason {
@@ -26,11 +26,8 @@ impl LoginFailureReason {
             mut fragments: Vec<FormattedTextFragment>,
         ) -> Vec<FormattedTextFragment> {
             fragments.extend([
-                FormattedTextFragment::plain_text(" Not the first time? See our "),
-                FormattedTextFragment::hyperlink(
-                    "troubleshooting docs",
-                    LOGIN_TROUBLESHOOTING_DOCS_URL,
-                ),
+                FormattedTextFragment::plain_text(" Not the first time? Please "),
+                FormattedTextFragment::hyperlink("report an issue", LOGIN_TROUBLESHOOTING_URL),
                 FormattedTextFragment::plain_text("."),
             ]);
             fragments

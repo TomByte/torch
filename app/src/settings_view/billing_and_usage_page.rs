@@ -3360,7 +3360,7 @@ impl BillingAndUsagePageView {
             .filter(|s| !s.trim().is_empty())
             .unwrap_or_else(|| current_user_email.clone());
 
-        // TODO: move sorting once per initial load or sort option change https://github.com/warpdotdev/warp-internal/pull/18288/files#r2392139761
+        // TODO: move sorting once per initial load or sort option change
         sort_user_items_in_place(
             &mut user_information,
             &current_user_display_name,
@@ -3464,15 +3464,15 @@ impl BillingAndUsagePageView {
                 || billing_metadata.is_on_legacy_business_plan()
             {
                 vec![
-                    FormattedTextFragment::hyperlink(
-                        "Upgrade to Enterprise",
-                        "mailto:sales@warp.dev",
-                    ),
+                    FormattedTextFragment::plain_text("Upgrade to Enterprise"),
                     FormattedTextFragment::plain_text(" for custom limits and dedicated support."),
                 ]
             } else if !billing_metadata.is_usage_based_pricing_toggleable() {
                 vec![
-                    FormattedTextFragment::hyperlink("Contact support", "mailto:support@warp.dev"),
+                    FormattedTextFragment::hyperlink(
+                        "Contact support",
+                        "https://github.com/TomByte/torch/issues",
+                    ),
                     FormattedTextFragment::plain_text(" for more AI usage."),
                 ]
             } else {

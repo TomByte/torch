@@ -255,7 +255,6 @@ impl Workflow {
 }
 
 /// Create a warp-internal Workflow model from a public-facing workflow
-/// https://github.com/warpdotdev/workflows/blob/main/workflow-types/src/lib.rs
 impl From<warp_workflows::Workflow> for Workflow {
     fn from(workflow: warp_workflows::Workflow) -> Self {
         Workflow::Command {

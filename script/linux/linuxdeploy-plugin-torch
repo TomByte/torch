@@ -4,7 +4,7 @@
 # standard Linux install layout.
 #
 # By default, linuxdeploy places the executable at usr/bin/ inside the AppDir.
-# This plugin moves it to opt/warpdotdev/<package>/ (matching deb/rpm/arch
+# This plugin moves it to opt/torch/<package>/ (matching deb/rpm/arch
 # package layout), creates a symlink from usr/bin/ to the new location, and
 # copies bundled resources alongside the binary.
 #
@@ -61,12 +61,12 @@ fi
 OPT_DIR="$APPDIR/opt/torch/$TORCH_PACKAGE_NAME"
 mkdir -p "$OPT_DIR"
 
-# Move the binary from usr/bin/ to opt/warpdotdev/<package>/.
+# Move the binary from usr/bin/ to opt/torch/<package>/.
 echo "Relocating binary to $OPT_DIR/$TORCH_BINARY_NAME"
 mv "$SRC_BIN" "$OPT_DIR/$TORCH_BINARY_NAME"
 
 # Create a relative symlink so usr/bin/<name> still resolves to the binary.
-# From usr/bin/ to opt/warpdotdev/<package>/ is ../../opt/torch/<package>/.
+# From usr/bin/ to opt/torch/<package>/ is ../../opt/torch/<package>/.
 echo "Creating symlink at usr/bin/$TORCH_BINARY_NAME"
 ln -s "../../opt/torch/$TORCH_PACKAGE_NAME/$TORCH_BINARY_NAME" "$SRC_BIN"
 

@@ -35,8 +35,6 @@ pub(super) const IMPORT_FONT_SIZE: f32 = 14.;
 pub(super) const INDENT_MARGIN: f32 = 22.;
 pub(super) const BASE_INDENT: f32 = 30.;
 
-const FILE_TYPE_DOCS_URL: &str =
-    "https://docs.warp.dev/knowledge-and-collaboration/warp-drive#import-and-export";
 const SUPPORTED_FILE_TYPE_TEXT: &str = "md, yaml, yml";
 
 #[cfg(test)]
@@ -428,7 +426,7 @@ impl ImportModalBody {
             .ui_builder()
             .link(
                 "Learn about file support and formatting".to_string(),
-                Some(FILE_TYPE_DOCS_URL.to_string()),
+                None,
                 None,
                 self.link_mouse_state.clone(),
             )

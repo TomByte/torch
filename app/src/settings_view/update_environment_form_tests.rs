@@ -39,23 +39,23 @@ fn test_parse_repo_input_owner_repo() {
 
 #[test]
 fn test_parse_repo_input_github_url() {
-    let (owner, repo) = UpdateEnvironmentForm::parse_repo_input("https://github.com/warp/warp.git")
+    let (owner, repo) = UpdateEnvironmentForm::parse_repo_input("https://github.com/acme/app.git")
         .expect("expected github url to parse");
-    assert_eq!(owner, "warp");
-    assert_eq!(repo, "warp");
+    assert_eq!(owner, "acme");
+    assert_eq!(repo, "app");
 }
 
 #[test]
 fn test_parse_repo_inputs_multiple_entries() {
     let parsed = UpdateEnvironmentForm::parse_repo_inputs(
-        "https://github.com/warp/warp, warp/warp-internal\n git@github.com:warp/warp-server",
+        "https://github.com/acme/app, acme/acme-internal\n git@github.com:acme/acme-server",
     );
     assert_eq!(
         parsed,
         vec![
-            ("warp".to_string(), "warp".to_string()),
-            ("warp".to_string(), "warp-internal".to_string()),
-            ("warp".to_string(), "warp-server".to_string()),
+            ("acme".to_string(), "app".to_string()),
+            ("acme".to_string(), "acme-internal".to_string()),
+            ("acme".to_string(), "acme-server".to_string()),
         ]
     );
 }
@@ -615,14 +615,14 @@ fn test_repos_field_error_state_allows_manual_repo_entry() {
                     form,
                     GithubAuthCallState::error("Failed to load GitHub repositories"),
                 );
-                form.repos_input = "warpdotdev/warp-internal".to_string();
+                form.repos_input = "acme/acme-internal".to_string();
                 form.handle_action(&UpdateEnvironmentFormAction::AddRepo, ctx);
             });
 
             let form = view_handle.as_ref(ctx);
             assert_eq!(form.form_state.selected_repos.len(), 1);
-            assert_eq!(form.form_state.selected_repos[0].owner, "warpdotdev");
-            assert_eq!(form.form_state.selected_repos[0].repo, "warp-internal");
+            assert_eq!(form.form_state.selected_repos[0].owner, "acme");
+            assert_eq!(form.form_state.selected_repos[0].repo, "acme-internal");
             assert!(
                 form.github_dropdown_state.load_error_message.is_some(),
                 "Expected GitHub load error to remain visible after manually adding a repo"
@@ -644,7 +644,7 @@ fn test_render_repos_field_with_selected_repos() {
             view_handle.update(ctx, |form, _| {
                 set_github_auth_call_state(form, GithubAuthCallState::Authed);
                 form.form_state.selected_repos = vec![
-                    GithubRepo::new("warpdotdev".to_string(), "warp-internal".to_string()),
+                    GithubRepo::new("acme".to_string(), "acme-internal".to_string()),
                     GithubRepo::new("facebook".to_string(), "react".to_string()),
                 ];
                 form.remove_repo_mouse_states =
@@ -660,8 +660,8 @@ fn test_render_repos_field_with_selected_repos() {
                 "Expected 'Repo(s)' label in rendered content: {text_content}"
             );
             assert!(
-                text_content.contains("warpdotdev/warp-internal"),
-                "Expected 'warpdotdev/warp-internal' in rendered content: {text_content}"
+                text_content.contains("acme/acme-internal"),
+                "Expected 'acme/acme-internal' in rendered content: {text_content}"
             );
             assert!(
                 text_content.contains("facebook/react"),
@@ -716,7 +716,7 @@ fn test_selected_repos_as_remote_repo_args_formats_owner_repo_strings() {
             });
             view_handle.update(ctx, |form, _| {
                 form.form_state.selected_repos = vec![
-                    GithubRepo::new("warpdotdev".to_string(), "warp-internal".to_string()),
+                    GithubRepo::new("acme".to_string(), "acme-internal".to_string()),
                     GithubRepo::new("facebook".to_string(), "react".to_string()),
                 ];
             });
@@ -727,7 +727,7 @@ fn test_selected_repos_as_remote_repo_args_formats_owner_repo_strings() {
             assert_eq!(
                 args,
                 vec![
-                    "warpdotdev/warp-internal".to_string(),
+                    "acme/acme-internal".to_string(),
                     "facebook/react".to_string(),
                 ]
             );
@@ -746,8 +746,8 @@ fn test_can_suggest_image_for_edit_requires_repos_modified() {
             name: "Env".to_string(),
             description: "".to_string(),
             selected_repos: vec![GithubRepo::new(
-                "warpdotdev".to_string(),
-                "warp-internal".to_string(),
+                "acme".to_string(),
+                "acme-internal".to_string(),
             )],
             docker_image: "ubuntu:latest".to_string(),
             setup_commands: vec![],
@@ -797,8 +797,8 @@ fn test_can_suggest_image_for_create_does_not_require_repos_modified() {
             });
             view_handle.update(ctx, |form, _| {
                 form.form_state.selected_repos = vec![GithubRepo::new(
-                    "warpdotdev".to_string(),
-                    "warp-internal".to_string(),
+                    "acme".to_string(),
+                    "acme-internal".to_string(),
                 )];
                 form.edit_repos_modified = false;
                 form.suggest_image_last_attempt_key = None;
@@ -891,8 +891,8 @@ fn test_render_docker_image_field_shows_generating_state() {
             });
             view_handle.update(ctx, |form, _| {
                 form.form_state.selected_repos = vec![GithubRepo::new(
-                    "warpdotdev".to_string(),
-                    "warp-internal".to_string(),
+                    "acme".to_string(),
+                    "acme-internal".to_string(),
                 )];
                 let key = form
                     .selected_repos_key()
@@ -926,8 +926,8 @@ fn test_render_docker_image_field_shows_custom_image_warning() {
             });
             view_handle.update(ctx, |form, _| {
                 form.form_state.selected_repos = vec![GithubRepo::new(
-                    "warpdotdev".to_string(),
-                    "warp-internal".to_string(),
+                    "acme".to_string(),
+                    "acme-internal".to_string(),
                 )];
                 let key = form
                     .selected_repos_key()
@@ -973,8 +973,8 @@ fn test_render_docker_image_field_shows_github_auth_required_message() {
             });
             view_handle.update(ctx, |form, _| {
                 form.form_state.selected_repos = vec![GithubRepo::new(
-                    "warpdotdev".to_string(),
-                    "warp-internal".to_string(),
+                    "acme".to_string(),
+                    "acme-internal".to_string(),
                 )];
                 let key = form
                     .selected_repos_key()

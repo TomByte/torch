@@ -809,7 +809,6 @@ fn fish_arguments_for_session_spawning_command(session_id: SessionId) -> Vec<OsS
         // `-f no-mark-prompt` disables OSC 133 (the non-standard FinalTerm escape codes).
         // Fish's implementation of this breaks Torch by emitting `OSC 133 A` but not
         // `OSC 133 B` afterwards, which we have assumed. This is a temporary workaround.
-        // See this issue: https://github.com/warpdotdev/Warp/issues/7588
         "-f".into(),
         "no-mark-prompt".into(),
         "--login".into(),
@@ -849,7 +848,6 @@ fn fish_exec_arguments_for_session_spawning_command(
             // `-f no-mark-prompt` disables OSC 133 (the non-standard FinalTerm escape codes).
             // Fish's implementation of this breaks Torch by emitting `OSC 133 A` but not
             // `OSC 133 B` afterwards, which we have assumed. This is a temporary workaround.
-            // See this issue: https://github.com/warpdotdev/Warp/issues/7588
             r#"exec '{}' -f no-mark-prompt --login --init-command '{}'"#,
             resolved_shell_path,
             init_shell_script_for_shell(ShellType::Fish, &crate::ASSETS, session_id)
@@ -974,9 +972,6 @@ fn decode_wsl_path_result(result: io::Result<process::Output>) -> Option<UnixPat
 /// 1. UTF-8 encoded output from the WSL distro.
 /// 2. A UTF-16 encoded CRLF.
 /// 3. A UTF-16 error message.
-///
-/// See this ticket for an example and why this is necessary:
-/// https://linear.app/warpdotdev/issue/CORE-3539
 fn take_until_utf16_crlf(bytes: Vec<u8>) -> Vec<u8> {
     const UTF16_CRLF: &[u8] = b"\r\0\n\0";
     match bytes

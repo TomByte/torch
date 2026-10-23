@@ -1189,7 +1189,7 @@ fn test_object_editor_timeout() {
                 .expect("notebook should exist");
 
             // Set the editor to be somebody else.
-            notebook.metadata.current_editor_uid = Some("ian@warp.dev".to_string());
+            notebook.metadata.current_editor_uid = Some("ian@foo.test".to_string());
         });
 
         let current_editor = CloudViewModel::handle(&app).read(&app, |view_model, ctx| {

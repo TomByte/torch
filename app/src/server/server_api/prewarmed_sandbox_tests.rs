@@ -33,8 +33,8 @@ fn control_unavailable_recognizes_an_http_410() {
 fn control_socket_url_uses_websocket_schemes_and_binds_the_generation() {
     for (http_url, expected) in [
         (
-            "https://app.warp.dev/internal/prewarmed-sandboxes/sb/ws",
-            "wss://app.warp.dev/internal/prewarmed-sandboxes/sb/ws?generation=abc123",
+            "https://app.example.com/internal/prewarmed-sandboxes/sb/ws",
+            "wss://app.example.com/internal/prewarmed-sandboxes/sb/ws?generation=abc123",
         ),
         (
             "http://localhost:8080/internal/prewarmed-sandboxes/sb/ws",
@@ -43,7 +43,7 @@ fn control_socket_url_uses_websocket_schemes_and_binds_the_generation() {
     ] {
         assert_eq!(control_socket_url(http_url, "abc123").unwrap(), expected);
     }
-    assert!(control_socket_url("ftp://app.warp.dev/ws", "abc123").is_err());
+    assert!(control_socket_url("ftp://app.example.com/ws", "abc123").is_err());
 }
 
 #[test]
@@ -84,8 +84,8 @@ fn deserializes_a_server_configuration() {
 
     let repository = &config.preparation.repositories[0];
     assert_eq!(repository.forge, CodeForge::GitHub);
-    assert_eq!(repository.owner, "warpdotdev");
-    assert_eq!(repository.name, "warp");
+    assert_eq!(repository.owner, "acme");
+    assert_eq!(repository.name, "app");
     assert_eq!(
         repository.ref_.as_ref().unwrap().type_,
         ExecutionRepositoryRefType::Branch
@@ -96,18 +96,18 @@ fn deserializes_a_server_configuration() {
             .clone_from
             .as_ref()
             .map(|repo| repo.repo.as_str()),
-        Some("warp-fork")
+        Some("acme-fork")
     );
     assert!(repository.preserve_origin);
 
     let deferred = &config.preparation.deferred_repositories[0];
     assert_eq!(deferred.code_forge, CodeForge::GitHub);
-    assert_eq!(deferred.owner, "warpdotdev");
-    assert_eq!(deferred.repo, "warp-server");
+    assert_eq!(deferred.owner, "acme");
+    assert_eq!(deferred.repo, "acme-server");
 
     assert_eq!(config.preparation.setup_commands, ["./script/bootstrap"]);
     assert!(config.preparation.mcp_servers.contains_key("linear"));
-    assert_eq!(config.preparation.skills, ["warpdotdev/warp:review"]);
+    assert_eq!(config.preparation.skills, ["acme/app:review"]);
     assert_eq!(config.preparation.factory_skill_dirs, [".agents/skills"]);
     assert!(config.preparation.computer_use_enabled);
 

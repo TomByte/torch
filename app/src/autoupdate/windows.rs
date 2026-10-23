@@ -74,7 +74,7 @@ pub(super) async fn download_update_and_cleanup(
     Ok(DownloadReady::Yes)
 }
 
-const UPDATE_LOG_FILENAME: &str = "warp_update.log";
+const UPDATE_LOG_FILENAME: &str = "torch_update.log";
 
 fn autoupdate_log_file() -> Result<PathBuf> {
     torch_logging::log_directory().map(|dir| dir.join(UPDATE_LOG_FILENAME))
@@ -255,8 +255,8 @@ pub(super) fn relaunch() -> Result<()> {
 fn installer_file_name() -> Result<String> {
     let app_name_prefix = app_name_prefix(ChannelState::channel());
 
-    // For example, on arm64 this is WarpSetup-arm64.exe and on x64 this is
-    // WarpSetup.exe.
+    // For example, on arm64 this is TorchSetup-arm64.exe and on x64 this is
+    // TorchSetup.exe.
     if cfg!(target_arch = "aarch64") {
         Ok(format!("{app_name_prefix}Setup-arm64.exe"))
     } else if cfg!(target_arch = "x86_64") {
@@ -275,7 +275,7 @@ fn app_name_prefix(channel: Channel) -> &'static str {
         Channel::Local => "warp",
         Channel::Integration => "integration",
         Channel::Dev => "WarpDev",
-        Channel::Oss => "warp-oss",
+        Channel::Oss => "Torch",
     }
 }
 

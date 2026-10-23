@@ -460,7 +460,7 @@ fn display_optional_path(path: Option<PathBuf>) -> String {
 /// Builds the context map for bundled skill variable substitution.
 ///
 /// Supported variables:
-/// - `{{warp_server_url}}` - The server root URL (e.g., `https://api.warp.dev`)
+/// - `{{warp_server_url}}` - The server root URL (e.g., `https://cloud-disabled.torch.invalid`)
 /// - `{{warp_cli_binary_name}}` - The CLI binary name (e.g., `warp` or `warp-cli`)
 /// - `{{warpctrl_binary_name}}` - The channel-specific Torch Control command name
 /// - `{{warpctrl_wrapper_path}}` - Path to the bundled Torch Control wrapper

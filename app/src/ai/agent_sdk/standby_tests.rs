@@ -76,7 +76,7 @@ fn skill_checkout_collisions_fail_before_cloning_or_metadata_access() {
             app.background_executor(),
         );
         for specs in [
-            vec!["another-org/warp:review"],
+            vec!["another-org/app:review"],
             vec!["first-org/tools:review", "second-org/tools:review"],
         ] {
             let mut config = parse_configuration();
@@ -109,7 +109,7 @@ fn global_skill_checkout_collisions_fail_before_cloning_or_metadata_access() {
             app.background_executor(),
         );
         for (configured, global) in [
-            (vec![], vec!["another-org/warp:review"]),
+            (vec![], vec!["another-org/app:review"]),
             (
                 vec!["first-org/tools:review"],
                 vec!["second-org/tools:review"],

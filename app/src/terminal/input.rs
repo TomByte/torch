@@ -8877,8 +8877,6 @@ impl Input {
     /// if two background-highlighted runs are contiguous, they are merged into a single run.
     /// This is a short-term fix and should be addressed in a more comprehensive way that does
     /// not rely on the styling of the input.
-    ///
-    /// See [CLD-997](https://linear.app/warpdotdev/issue/CLD-997)
     fn build_text_run_ranges_for_workflows(
         &self,
         text_style_runs: &[TextRun],

@@ -63,20 +63,14 @@ pub fn sections(ctx: &mut ViewContext<ResourceCenterMainView>) -> Vec<Section> {
             ContentItem {
                 title: "Use your custom prompt",
                 description: "Set up Torch to honor your PS1 setting",
-                url: "https://docs.warp.dev/terminal/appearance/prompt",
+                url: "https://github.com/TomByte/torch",
                 button_label: "View documentation",
             },
             ContentItem {
                 title: "Integrate Torch with your IDE",
                 description: "Configure Torch to launch from your most used development tools",
-                url: "https://docs.warp.dev/terminal/integrations-and-plugins",
+                url: "https://github.com/TomByte/torch",
                 button_label: "View documentation",
-            },
-            ContentItem {
-                title: "How Torch uses Torch",
-                description: "Learn how Torch's engineering team uses their favorite features",
-                url: "https://www.warp.dev/blog/how-warp-uses-warp",
-                button_label: "Read article",
             },
         ],
     };

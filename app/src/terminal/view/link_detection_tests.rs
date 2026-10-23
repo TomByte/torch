@@ -67,7 +67,7 @@ fn strips_trailing_fullwidth_sentence_punctuation() {
     assert_eq!(trimmed.removed_width, 6);
 }
 
-// Regression test for https://github.com/warpdotdev/warp/issues/11477:
+// Regression test:
 // a `.md` path at the end of a sentence captured the trailing period, so the
 // resolved file and the highlight range ended in `.md.` and the file failed
 // markdown classification. The trailing period must be excluded from both.

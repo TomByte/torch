@@ -526,10 +526,7 @@ impl LaunchConfigSaveModal {
                     .ui_builder()
                     .link(
                         "Link to Documentation".to_string(),
-                        Some(
-                            "https://docs.warp.dev/terminal/sessions/launch-configurations"
-                                .to_string(),
-                        ),
+                        None,
                         None,
                         self.mouse_states.documentation_link_state.clone(),
                     )

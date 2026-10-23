@@ -28,12 +28,12 @@ fn repository_info_from_gh_output_parses_name_and_owner() {
     // No url in the output => host is absent.
     assert_eq!(
         super::repository_info_from_gh_output(
-            r#"{"name":"warp-internal","owner":{"login":"warpdotdev"}}"#
+            r#"{"name":"acme-internal","owner":{"login":"acme"}}"#
         )
         .unwrap(),
         RepositoryInfo {
-            name: "warp-internal".to_owned(),
-            owner: Some("warpdotdev".to_owned()),
+            name: "acme-internal".to_owned(),
+            owner: Some("acme".to_owned()),
             host: None,
         }
     );
@@ -44,12 +44,12 @@ fn repository_info_from_gh_output_parses_name_and_owner() {
 fn repository_info_from_gh_output_parses_host_from_url() {
     assert_eq!(
         super::repository_info_from_gh_output(
-            r#"{"name":"warp-internal","owner":{"login":"warpdotdev"},"url":"https://github.com/warpdotdev/warp-internal"}"#
+            r#"{"name":"acme-internal","owner":{"login":"acme"},"url":"https://github.com/acme/acme-internal"}"#
         )
         .unwrap(),
         RepositoryInfo {
-            name: "warp-internal".to_owned(),
-            owner: Some("warpdotdev".to_owned()),
+            name: "acme-internal".to_owned(),
+            owner: Some("acme".to_owned()),
             host: Some("github.com".to_owned()),
         }
     );
@@ -90,14 +90,14 @@ async fn get_repository_info_returns_none_when_gh_cannot_resolve_github_repo() {
 #[cfg(feature = "local_fs")]
 #[test]
 fn repository_info_from_gh_output_rejects_missing_name() {
-    assert!(super::repository_info_from_gh_output(r#"{"owner":{"login":"warpdotdev"}}"#).is_err());
+    assert!(super::repository_info_from_gh_output(r#"{"owner":{"login":"acme"}}"#).is_err());
 }
 
 #[cfg(feature = "local_fs")]
 #[test]
 fn repository_info_from_gh_output_rejects_missing_owner_login() {
     assert!(
-        super::repository_info_from_gh_output(r#"{"name":"warp-internal","owner":{}}"#).is_err()
+        super::repository_info_from_gh_output(r#"{"name":"acme-internal","owner":{}}"#).is_err()
     );
 }
 
@@ -105,11 +105,10 @@ fn repository_info_from_gh_output_rejects_missing_owner_login() {
 #[test]
 fn repository_info_from_gh_output_rejects_empty_fields() {
     assert!(
-        super::repository_info_from_gh_output(r#"{"name":"","owner":{"login":"warpdotdev"}}"#)
-            .is_err()
+        super::repository_info_from_gh_output(r#"{"name":"","owner":{"login":"acme"}}"#).is_err()
     );
     assert!(
-        super::repository_info_from_gh_output(r#"{"name":"warp-internal","owner":{"login":""}}"#)
+        super::repository_info_from_gh_output(r#"{"name":"acme-internal","owner":{"login":""}}"#)
             .is_err()
     );
 }
@@ -144,7 +143,7 @@ async fn get_repository_info_reads_gh_repo_view() {
     let gh_path = fake_bin.path().join("gh");
     fs::write(
         &gh_path,
-        "#!/bin/sh\nprintf '{\"name\":\"warp-internal\",\"owner\":{\"login\":\"warpdotdev\"}}\\n'\n",
+        "#!/bin/sh\nprintf '{\"name\":\"acme-internal\",\"owner\":{\"login\":\"acme\"}}\\n'\n",
     )
     .expect("failed to write fake gh");
     let mut permissions = fs::metadata(&gh_path).unwrap().permissions();
@@ -162,8 +161,8 @@ async fn get_repository_info_reads_gh_repo_view() {
             .await
             .unwrap(),
         Some(RepositoryInfo {
-            name: "warp-internal".to_owned(),
-            owner: Some("warpdotdev".to_owned()),
+            name: "acme-internal".to_owned(),
+            owner: Some("acme".to_owned()),
             host: None,
         })
     );
@@ -320,7 +319,7 @@ async fn get_pr_for_branch_does_not_require_origin_remote() {
     let gh_path = fake_bin.path().join("gh");
     fs::write(
         &gh_path,
-        "#!/bin/sh\nprintf '{\"number\":123,\"url\":\"https://github.com/warp/warp/pull/123\",\"state\":\"OPEN\",\"isDraft\":true,\"baseRefName\":\"main\"}\\n'\n",
+        "#!/bin/sh\nprintf '{\"number\":123,\"url\":\"https://github.com/acme/app/pull/123\",\"state\":\"OPEN\",\"isDraft\":true,\"baseRefName\":\"main\"}\\n'\n",
     )
     .expect("failed to write fake gh");
     let mut permissions = fs::metadata(&gh_path).unwrap().permissions();
@@ -337,7 +336,7 @@ async fn get_pr_for_branch_does_not_require_origin_remote() {
         get_pr_for_branch(&repo, Some(&path_env)).await.unwrap(),
         Some(PrInfo {
             number: 123,
-            url: "https://github.com/warp/warp/pull/123".to_string(),
+            url: "https://github.com/acme/app/pull/123".to_string(),
             state: "OPEN".to_string(),
             draft: true,
             base_branch: "main".to_string(),

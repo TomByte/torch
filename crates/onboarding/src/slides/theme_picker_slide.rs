@@ -52,8 +52,6 @@ pub enum ThemePickerSlideAction {
     PrivacySettingsClicked,
 }
 
-const TOS_URL: &str = "https://www.warp.dev/terms-of-service";
-
 #[derive(Debug, Clone)]
 struct ThemeOption {
     theme: WarpTheme,
@@ -594,7 +592,7 @@ impl ThemePickerSlide {
                 ui_builder
                     .link(
                         "Terms of Service".into(),
-                        Some(TOS_URL.into()),
+                        None,
                         None,
                         self.tos_mouse_state.clone(),
                     )

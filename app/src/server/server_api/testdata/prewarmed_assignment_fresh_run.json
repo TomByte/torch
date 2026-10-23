@@ -26,8 +26,8 @@
     "repositories": [
       {
         "forge": "GITHUB",
-        "owner": "warpdotdev",
-        "name": "warp",
+        "owner": "acme",
+        "name": "app",
         "ref": null,
         "cloneFrom": null,
         "preserveOrigin": false,

@@ -106,9 +106,9 @@ fn deserializes_configuration_response_with_shared_repository_types() {
         ExecutionRepositoryRefType::Branch
     );
     assert_eq!(repository.ref_.as_ref().unwrap().value, "main");
-    assert_eq!(repository.clone_from.as_ref().unwrap().repo, "warp-fork");
+    assert_eq!(repository.clone_from.as_ref().unwrap().repo, "acme-fork");
     assert!(repository.preserve_origin);
-    assert_eq!(config.spec.deferred_repositories[0].repo, "warp-server");
+    assert_eq!(config.spec.deferred_repositories[0].repo, "acme-server");
     assert!(serde_json::from_str::<serde_json::Value>(&config.spec.mcp_servers_json).is_ok());
     assert_eq!(
         config.environment_variables[0].name,

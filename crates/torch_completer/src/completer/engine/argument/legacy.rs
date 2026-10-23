@@ -595,8 +595,7 @@ async fn generate_suggestions_for_argument(
         };
     }
 
-    // These are processed in the order that argument.argument_types is defined
-    // (https://github.com/warpdotdev/command-signatures/blob/5e89fb22995cd5ca9f5609d75193018a2a194c59/completion-metadata/src/fig_types.rs#L288).
+    // These are processed in the order that argument.argument_types is defined.
     // That's why we can just flat map here without thinking about order.
     // Even if there are multiple generators, they will appear one after the other and we will
     // simply concatenate their results (extracting the non-default priorities).

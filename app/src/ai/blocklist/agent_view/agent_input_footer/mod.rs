@@ -89,16 +89,13 @@ use crate::settings_view::SettingsSection;
 use crate::terminal::ShellLaunchData;
 #[cfg(not(target_family = "wasm"))]
 use crate::terminal::cli_agent_sessions::plugin_manager::{
-    CliAgentPluginManager, PluginInstallError, PluginModalKind, compare_versions,
-    plugin_manager_for, plugin_manager_for_with_shell,
+    CliAgentPluginManager, PluginInstallError, PluginModalKind, compare_versions, plugin_manager,
 };
 use crate::terminal::cli_agent_sessions::{
     CLIAgentInputState, CLIAgentSessionsModel, CLIAgentSessionsModelEvent,
 };
 use crate::terminal::input::models::InlineModelSelectorTab;
 use crate::terminal::input::{HandoffComposeState, MenuPositioning, MenuPositioningProvider};
-#[cfg(not(target_family = "wasm"))]
-use crate::terminal::local_shell::LocalShellState;
 use crate::terminal::profile_model_selector::{ProfileModelSelector, ProfileModelSelectorEvent};
 use crate::terminal::session_settings::{
     SessionSettings, SessionSettingsChangedEvent, ToolbarChipSelection,
@@ -639,7 +636,7 @@ impl AgentInputFooter {
                     me.install_plugin_button.update(ctx, |button, ctx| {
                         button.set_label(label, ctx);
                     });
-                    if let Some(manager) = plugin_manager_for(agent)
+                    if let Some(manager) = plugin_manager()
                         && !manager.can_auto_install()
                     {
                         ctx.spawn(
@@ -1297,7 +1294,7 @@ impl AgentInputFooter {
 
             let session = CLIAgentSessionsModel::as_ref(app).session(self.terminal_view_id)?;
 
-            let manager = plugin_manager_for(session.agent)?;
+            let manager = plugin_manager()?;
             let min_version = manager.minimum_plugin_version();
             let chip_key = plugin_chip_key(session.agent.command_prefix(), &session.remote_host);
             // If a structured plugin is connected and this agent supports
@@ -1371,7 +1368,7 @@ impl AgentInputFooter {
         }
 
         #[cfg(not(target_family = "wasm"))]
-        if let Some(manager) = plugin_manager_for(session.agent)
+        if let Some(manager) = plugin_manager()
             && !manager.can_auto_install()
         {
             return true;
@@ -1446,44 +1443,9 @@ impl AgentInputFooter {
         let Some(agent) = self.cli_agent(ctx) else {
             return false;
         };
-        let shell_data = {
-            let model = self.terminal_model.lock();
-            model.active_shell_launch_data().cloned()
+        let Some(manager) = plugin_manager() else {
+            return false;
         };
-        let (shell_path, shell_type) = match shell_data {
-            Some(ShellLaunchData::Executable {
-                executable_path,
-                shell_type,
-            })
-            | Some(ShellLaunchData::MSYS2 {
-                executable_path,
-                shell_type,
-            }) => (Some(executable_path), Some(shell_type)),
-            // Shell not yet resolved (e.g. still bootstrapping).
-            None => (None, None),
-            // WSL is not supported for auto-install.
-            Some(ShellLaunchData::WSL { .. }) => return false,
-            // Auto-install isn't supported for Docker sandbox sessions — the
-            // install would run against the *host's* shell config, not the
-            // container's. `should_use_manual_mode` already routes sandbox
-            // sessions to the manual-instructions modal, so this arm is a
-            // defensive fallthrough; users can still install the plugin by
-            // pasting the command into the sandbox PTY themselves.
-            //
-            // TODO(advait): Add native auto-install support for sandboxes,
-            // e.g. by routing the install through the session's in-band
-            // executor so it runs inside the container and targets the
-            // container's shell / package layout. A common use case will be
-            // running a 3p harness (e.g. Claude Code) inside a sandbox and
-            // needing the Torch plugin to integrate with it.
-            Some(ShellLaunchData::DockerSandbox { .. }) => return false,
-        };
-
-        // Await the interactive PATH so nvm-installed tools like `claude`
-        // are on PATH, matching how LSP operations capture the PATH.
-        let path_future = LocalShellState::handle(ctx).update(ctx, |shell_state, ctx| {
-            shell_state.get_interactive_path_env_var(ctx)
-        });
 
         self.plugin_operation_in_progress = true;
         ctx.notify();
@@ -1505,19 +1467,6 @@ impl AgentInputFooter {
         let success_toast = success_toast.to_owned();
         ctx.spawn(
             async move {
-                let path_env_var = path_future.await;
-                let Some(manager) =
-                    plugin_manager_for_with_shell(agent, shell_path, shell_type, path_env_var)
-                else {
-                    return Err((
-                        PluginInstallError {
-                            message: "No plugin manager available".to_owned(),
-                            log: String::new(),
-                        },
-                        None,
-                    ));
-                };
-
                 match operation(manager).await {
                     Ok(()) => Ok(()),
                     Err(err) => {
@@ -1592,7 +1541,7 @@ impl AgentInputFooter {
     fn handle_install_plugin(&mut self, ctx: &mut ViewContext<Self>) -> bool {
         let success_msg = self
             .cli_agent(ctx)
-            .and_then(plugin_manager_for)
+            .and(plugin_manager())
             .map(|m| m.install_success_message())
             .unwrap_or("Torch plugin installed. Please restart the session to activate.");
         self.handle_plugin_operation(
@@ -1609,7 +1558,7 @@ impl AgentInputFooter {
     fn handle_update_plugin(&mut self, ctx: &mut ViewContext<Self>) -> bool {
         let success_msg = self
             .cli_agent(ctx)
-            .and_then(plugin_manager_for)
+            .and(plugin_manager())
             .map(|m| m.update_success_message())
             .unwrap_or("Torch plugin updated. Please restart the session to activate.");
         self.handle_plugin_operation(
@@ -2885,7 +2834,7 @@ impl TypedActionView for AgentInputFooter {
                         plugin_chip_key(session.agent.command_prefix(), &session.remote_host);
                     if is_update {
                         #[cfg(not(target_family = "wasm"))]
-                        if let Some(manager) = plugin_manager_for(session.agent) {
+                        if let Some(manager) = plugin_manager() {
                             let version = manager.minimum_plugin_version().to_owned();
                             AISettings::handle(ctx).update(ctx, |settings, ctx| {
                                 settings.dismiss_plugin_update_chip(&chip_key, version, ctx);

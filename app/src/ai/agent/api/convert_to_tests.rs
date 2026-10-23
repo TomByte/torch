@@ -21,8 +21,8 @@ fn git_context_converts_repository_and_pull_request_metadata() {
             branch: Some("feature/repo-pr".to_string()),
         },
         AIAgentContext::Repository {
-            name: "warp-internal".to_string(),
-            owner: Some("warpdotdev".to_string()),
+            name: "acme-internal".to_string(),
+            owner: Some("acme".to_string()),
             host: Some("github.com".to_string()),
         },
         AIAgentContext::PullRequest {
@@ -30,7 +30,7 @@ fn git_context_converts_repository_and_pull_request_metadata() {
             state: "OPEN".to_string(),
             draft: true,
             base_branch: "main".to_string(),
-            url: "https://github.com/warpdotdev/warp-internal/pull/42".to_string(),
+            url: "https://github.com/TomByte/torch/pull/42".to_string(),
         },
     ];
 
@@ -40,8 +40,8 @@ fn git_context_converts_repository_and_pull_request_metadata() {
     assert_eq!(git.branch, "feature/repo-pr");
 
     let repository = git.repository.expect("expected repository context");
-    assert_eq!(repository.name, "warp-internal");
-    assert_eq!(repository.owner, "warpdotdev");
+    assert_eq!(repository.name, "acme-internal");
+    assert_eq!(repository.owner, "acme");
     assert_eq!(repository.host, "github.com");
 
     let pull_request = git.pull_request.expect("expected pull request context");
@@ -51,10 +51,7 @@ fn git_context_converts_repository_and_pull_request_metadata() {
         api::input_context::git::pull_request::State::OpenDraft as i32
     );
     assert_eq!(pull_request.base_branch, "main");
-    assert_eq!(
-        pull_request.url,
-        "https://github.com/warpdotdev/warp-internal/pull/42"
-    );
+    assert_eq!(pull_request.url, "https://github.com/TomByte/torch/pull/42");
 }
 
 #[test]
@@ -70,7 +67,7 @@ fn git_context_skips_pull_request_metadata_with_invalid_number() {
                 state: "OPEN".to_string(),
                 draft: false,
                 base_branch: "main".to_string(),
-                url: "https://github.com/warpdotdev/warp-internal/pull/1".to_string(),
+                url: "https://github.com/TomByte/torch/pull/1".to_string(),
             },
         ];
 
@@ -94,7 +91,7 @@ fn git_context_skips_pull_request_metadata_with_unknown_state() {
             state: "SOMETHING_ELSE".to_string(),
             draft: false,
             base_branch: "main".to_string(),
-            url: "https://github.com/warpdotdev/warp-internal/pull/42".to_string(),
+            url: "https://github.com/TomByte/torch/pull/42".to_string(),
         },
     ];
 
@@ -284,7 +281,7 @@ fn local_user_query_converts_without_a_base() {
     assert_eq!(query.query, "hello");
     assert_eq!(query.mode, Some(normal_mode()));
     assert_eq!(query.intended_agent, 0);
-    // The fresh-local marker: warp-server resolves the author of a bare `WarpClient` origin
+    // The fresh-local marker: the server resolves the author of a bare `WarpClient` origin
     // to the authenticated caller, and leaves an origin-less input alone.
     assert_eq!(query.origin, Some(warp_client_origin()));
     assert!(query.author.is_none());

@@ -1100,15 +1100,15 @@ fn test_environments_page_edit_variant() {
 
 #[test]
 fn test_github_repo_new() {
-    let repo = GithubRepo::new("warpdotdev".to_string(), "warp-internal".to_string());
-    assert_eq!(repo.owner, "warpdotdev");
-    assert_eq!(repo.repo, "warp-internal");
+    let repo = GithubRepo::new("acme".to_string(), "acme-internal".to_string());
+    assert_eq!(repo.owner, "acme");
+    assert_eq!(repo.repo, "acme-internal");
 }
 
 #[test]
 fn test_github_repo_display() {
-    let repo = GithubRepo::new("warpdotdev".to_string(), "warp-internal".to_string());
-    assert_eq!(repo.to_string(), "warpdotdev/warp-internal");
+    let repo = GithubRepo::new("acme".to_string(), "acme-internal".to_string());
+    assert_eq!(repo.to_string(), "acme/acme-internal");
 }
 
 #[test]
@@ -1130,7 +1130,7 @@ fn test_environment_matches_search_query_empty_query_matches_all() {
     let environment = make_test_environment(
         "Searchable Environment",
         "ubuntu:latest",
-        vec![("warpdotdev".to_string(), "warp-internal".to_string())],
+        vec![("acme".to_string(), "acme-internal".to_string())],
         vec![],
     );
 
@@ -1141,19 +1141,19 @@ fn test_environment_matches_search_query_empty_query_matches_all() {
 #[test]
 fn test_environment_matches_search_query_name_description_image_repos() {
     let mut environment = make_test_environment(
-        "Warp Env",
+        "Sample Env",
         "node:20-alpine",
-        vec![("warpdotdev".to_string(), "warp-internal".to_string())],
+        vec![("acme".to_string(), "acme-internal".to_string())],
         vec![],
     );
     environment.description = Some("Front end focused agents".to_string());
 
-    assert!(environment.matches_search_query("warp"));
+    assert!(environment.matches_search_query("sample"));
     assert!(environment.matches_search_query("Front end"));
     assert!(environment.matches_search_query("node:20"));
-    assert!(environment.matches_search_query("warp-internal"));
-    assert!(environment.matches_search_query("warpdotdev"));
-    assert!(environment.matches_search_query("warpdotdev/warp"));
+    assert!(environment.matches_search_query("acme-internal"));
+    assert!(environment.matches_search_query("acme"));
+    assert!(environment.matches_search_query("acme/acme"));
 
     assert!(!environment.matches_search_query("definitely-not-present"));
 }
@@ -1172,16 +1172,16 @@ fn test_environment_matches_search_query_env_id_substring() {
 #[test]
 fn test_environment_matches_search_query_is_case_insensitive() {
     let mut environment = make_test_environment(
-        "warp-env",
+        "sample-env",
         "ubuntu:latest",
-        vec![("WarpDotDev".to_string(), "Warp-Internal".to_string())],
+        vec![("Acme".to_string(), "Acme-Internal".to_string())],
         vec![],
     );
     environment.description = Some("Some Description".to_string());
 
-    assert!(environment.matches_search_query("WARP"));
+    assert!(environment.matches_search_query("SAMPLE"));
     assert!(environment.matches_search_query("description"));
-    assert!(environment.matches_search_query("warp-internal"));
+    assert!(environment.matches_search_query("acme-internal"));
 }
 
 #[test]

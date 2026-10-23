@@ -192,12 +192,9 @@ impl FirstTimeCloudAgentSetupView {
         );
 
         // Description with "Visit docs" link
-        let description_fragments = vec![
-            FormattedTextFragment::plain_text(
-                "Use Oz cloud agents to run parallel agents, build agents that run autonomously, and check in on your agents from anywhere. ",
-            ),
-            FormattedTextFragment::hyperlink("Visit docs", "https://docs.warp.dev/platform/"),
-        ];
+        let description_fragments = vec![FormattedTextFragment::plain_text(
+            "Use Oz cloud agents to run parallel agents, build agents that run autonomously, and check in on your agents from anywhere.",
+        )];
         column.add_child(
             FormattedTextElement::new(
                 FormattedText::new([FormattedTextLine::Line(description_fragments)]),

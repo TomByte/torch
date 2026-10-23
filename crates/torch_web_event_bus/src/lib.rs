@@ -6,7 +6,7 @@ use wasm_bindgen::JsCast;
 
 /// Events emitted from Torch on Web to the host JavaScript app.
 ///
-/// These must stay in sync with the [`WarpEvent` TypeScript type](https://github.com/warpdotdev/warp-server/blob/develop/client/src/warp-client/index.ts).
+/// These must stay in sync with the `WarpEvent` TypeScript type in the host JavaScript app.
 #[derive(Debug, Clone, Serialize)]
 #[serde(tag = "kind", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum WarpEvent {

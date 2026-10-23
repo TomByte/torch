@@ -4,7 +4,7 @@ pub const USER_DOCS_URL: &str = "https://github.com/TomByte/torch#readme";
 #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 pub const GITHUB_ISSUES_URL: &str = "https://github.com/TomByte/torch/issues";
 pub const SLACK_URL: &str = "https://github.com/TomByte/torch";
-pub const PRIVACY_POLICY_URL: &str = "https://www.warp.dev/privacy";
+pub const PRIVACY_POLICY_URL: &str = "https://github.com/TomByte/torch";
 
 pub fn feedback_form_url() -> String {
     let mut url = url::Url::parse("https://github.com/TomByte/torch/issues/new")

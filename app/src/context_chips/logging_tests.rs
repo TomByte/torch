@@ -61,7 +61,7 @@ fn test_format_log_entry_uses_explicit_empty_and_missing_markers() {
 #[test]
 fn test_format_log_entry_preserves_stdout_and_stderr_sections() {
     let output = CommandOutput {
-        stdout: b"https://github.com/warpdotdev/warp-internal/pull/123\n".to_vec(),
+        stdout: b"https://github.com/TomByte/torch/pull/123\n".to_vec(),
         stderr: b"warning output\n".to_vec(),
         status: CommandExitStatus::Success,
         exit_code: Some(torch_core::command::ExitCode::from(0)),
@@ -82,8 +82,8 @@ fn test_format_log_entry_preserves_stdout_and_stderr_sections() {
     assert!(entry.contains("status: success"));
     assert!(entry.contains("working_directory: /tmp/project"));
     assert!(entry.contains("command:\n<<<COMMAND\ngh pr view --json url --jq .url\n>>>COMMAND"));
-    assert!(entry.contains(
-        "stdout:\n<<<STDOUT\nhttps://github.com/warpdotdev/warp-internal/pull/123\n>>>STDOUT"
-    ));
+    assert!(
+        entry.contains("stdout:\n<<<STDOUT\nhttps://github.com/TomByte/torch/pull/123\n>>>STDOUT")
+    );
     assert!(entry.contains("stderr:\n<<<STDERR\nwarning output\n>>>STDERR"));
 }

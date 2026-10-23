@@ -48,8 +48,6 @@ warp.pty.recording
 # Don't include CI configuration
 .github/
 
-# Don't include the warp-server checkout in SWE-bench runs.
-warp-server/
 
 # Ignore large directories that aren't required for any current Dockerfiles.
 app/assets/windows

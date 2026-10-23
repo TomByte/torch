@@ -19,9 +19,9 @@ fn request() -> AgentRunEnvironmentSnapshotRequest {
         captured_at: Utc::now(),
         repositories: vec![RepositoryRevision {
             code_forge: CodeForge::GitHub,
-            repo_owner: "warpdotdev".to_string(),
-            repo_name: "warp".to_string(),
-            checkout_path: "warp".to_string(),
+            repo_owner: "acme".to_string(),
+            repo_name: "app".to_string(),
+            checkout_path: "app".to_string(),
             requested_checkout_ref: Some("main".to_string()),
             resolved_head_sha: "0123456789abcdef0123456789abcdef01234567".to_string(),
         }],
@@ -43,8 +43,8 @@ fn request_conversion_uses_expected_wire_shape() {
     assert!(json.get("snapshot_uuid").is_none());
     assert!(json.get("unresolved_repository_count").is_none());
     assert_eq!(json["repositories"][0]["code_forge"], "GITHUB");
-    assert_eq!(json["repositories"][0]["repo_owner"], "warpdotdev");
-    assert_eq!(json["repositories"][0]["checkout_path"], "warp");
+    assert_eq!(json["repositories"][0]["repo_owner"], "acme");
+    assert_eq!(json["repositories"][0]["checkout_path"], "app");
     assert_eq!(json["repositories"][0]["requested_checkout_ref"], "main");
     assert_eq!(
         json["repositories"][0]["resolved_head_sha"],

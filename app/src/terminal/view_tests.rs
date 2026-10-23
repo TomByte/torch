@@ -6009,14 +6009,14 @@ fn test_link_at_range_trims_zero_width_spaces() {
         let terminal = add_window_with_terminal(&mut app, None);
 
         // NOTE: this has two zero-width spaces, one after the '(', and one before the ')'
-        let input_url = "(\u{200b}https://warp.dev\u{200b})";
+        let input_url = "(\u{200b}https://foo.test\u{200b})";
         // NOTE: the final character in this string is a zero-width space
-        let non_escaped_url = "https://warp.dev\u{200b}";
-        let escaped_url = "https://warp.dev";
+        let non_escaped_url = "https://foo.test\u{200b}";
+        let escaped_url = "https://foo.test";
 
         terminal.update(&mut app, |view, _ctx| {
             view.model.lock().simulate_block(
-                r"printf '(%bhttps://warp.dev%b)\n' '\U200b' '\U200b'",
+                r"printf '(%bhttps://foo.test%b)\n' '\U200b' '\U200b'",
                 input_url,
             );
         });
@@ -7560,7 +7560,7 @@ fn status_in_progress_auto_opens_rich_input_after_blocked() {
     })
 }
 
-// Regression test for https://github.com/warpdotdev/warp/issues/9059.
+// Regression test.
 // Codex's listener doesn't emit Blocked-state events (it only forwards opaque
 // OSC 9 notifications as Stop), so auto-toggling rich input would trap arrow
 // keys when Codex shows interactive option menus. Auto-toggle must not fire
@@ -8356,7 +8356,7 @@ fn linear_deeplink_via_default_entrypoint_does_not_auto_submit_in_fullscreen() {
     })
 }
 
-/// Regression test for https://github.com/warpdotdev/warp/issues/11212.
+/// Regression test.
 ///
 /// Closing the find bar must immediately clear find highlights on AI blocks.
 /// AI blocks are separate child views, so unless `close_find_bar` clears find

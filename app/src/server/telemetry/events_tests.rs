@@ -10,8 +10,7 @@ enum TelemetryEventPropertyError {
 
 /// Checks that all telemetry events have a non-empty name and description.
 ///
-/// The name and description are intended to be user-facing and are used to populate
-/// our [exhaustive telemetry table](https://docs.warp.dev/support-and-community/privacy-and-security/privacy#exhaustive-telemetry-table).
+/// The name and description are intended to be user-facing.
 #[test]
 #[cfg(not(target_family = "wasm"))]
 fn telemetry_events_have_nonempty_name_and_description() -> Result<(), TelemetryEventPropertyError>

@@ -9,7 +9,7 @@ use crate::util::git::RepositoryInfo;
 fn pr(number: u64) -> PrInfo {
     PrInfo {
         number,
-        url: format!("https://github.com/warp/warp/pull/{number}"),
+        url: format!("https://github.com/acme/app/pull/{number}"),
         state: "OPEN".to_string(),
         draft: false,
         base_branch: "main".to_string(),
@@ -18,8 +18,8 @@ fn pr(number: u64) -> PrInfo {
 
 fn repository_info() -> RepositoryInfo {
     RepositoryInfo {
-        name: "warp".to_string(),
-        owner: Some("warpdotdev".to_string()),
+        name: "app".to_string(),
+        owner: Some("acme".to_string()),
         host: Some("github.com".to_string()),
     }
 }

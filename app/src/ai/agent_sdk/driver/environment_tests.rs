@@ -176,8 +176,8 @@ fn reported_heads_are_keyed_by_checkout_name_and_omit_unresolved_heads() {
     assert!(!path.exists());
     assert_eq!(report.outcomes[0].duration_ms, 12);
     assert_eq!(
-        reported_resolved_heads(&report, &checkout_batch(["warp", "invalid"])),
-        ResolvedHeads::from([("warp".to_owned(), sha.to_owned())])
+        reported_resolved_heads(&report, &checkout_batch(["app", "invalid"])),
+        ResolvedHeads::from([("app".to_owned(), sha.to_owned())])
     );
 }
 
@@ -292,12 +292,12 @@ fn head_probe_timeout_preserves_later_snapshot_repositories() {
     );
     let requests = repository_clone_requests(
         &[
-            repo(CodeForge::GitHub, "warpdotdev", "before"),
-            repo(CodeForge::GitHub, "warpdotdev", "slow-1"),
-            repo(CodeForge::GitHub, "warpdotdev", "slow-2"),
-            repo(CodeForge::GitHub, "warpdotdev", "slow-3"),
-            repo(CodeForge::GitHub, "warpdotdev", "slow-4"),
-            repo(CodeForge::GitHub, "warpdotdev", "later"),
+            repo(CodeForge::GitHub, "acme", "before"),
+            repo(CodeForge::GitHub, "acme", "slow-1"),
+            repo(CodeForge::GitHub, "acme", "slow-2"),
+            repo(CodeForge::GitHub, "acme", "slow-3"),
+            repo(CodeForge::GitHub, "acme", "slow-4"),
+            repo(CodeForge::GitHub, "acme", "later"),
         ],
         &[],
         false,
@@ -331,7 +331,7 @@ fn checkout_batch<const COUNT: usize>(checkout_names: [&str; COUNT]) -> Checkout
 
                 source: RepositoryIdentity {
                     code_forge: RepositoryForge::GitHub,
-                    repo_owner: "warpdotdev".to_owned(),
+                    repo_owner: "acme".to_owned(),
                     repo_name: checkout_name.to_owned(),
                 },
                 checkout_name: checkout_name.to_owned(),
@@ -443,7 +443,7 @@ fn setup_timeout_stops_following_work_and_drops_the_pending_command() {
 #[test]
 fn clone_error_includes_short_output() {
     let error = PrepareEnvironmentError::CloneRepo {
-        repo_name: "warpdotdev/warp".to_string(),
+        repo_name: "acme/app".to_string(),
         output: Some("fatal: repository not found".to_string()),
         identity_diagnostics: CloneFailureIdentityDiagnostics {
             author: None,
@@ -453,7 +453,7 @@ fn clone_error_includes_short_output() {
 
     assert_eq!(
         error.to_string(),
-        "Failed to clone warpdotdev/warp: fatal: repository not found\nGit identity diagnostics:\n  Author: unset"
+        "Failed to clone acme/app: fatal: repository not found\nGit identity diagnostics:\n  Author: unset"
     );
 }
 
@@ -518,19 +518,19 @@ fn commit_head_override(
 fn substituted_branch_request_preserves_origin_without_affecting_other_repos() {
     let sha = "0123456789abcdef0123456789abcdef01234567";
     let mut override_for_warp =
-        substitution_override("source", "warp", sha, "copy", "warp-for-benchmarks");
+        substitution_override("source", "app", sha, "copy", "acme-benchmarks");
     override_for_warp.head = RepositoryHeadRef::Branch(format!("benchmark-base/{sha}"));
     let requests = repository_clone_requests(
         &[
-            repo(CodeForge::GitHub, "source", "warp"),
+            repo(CodeForge::GitHub, "source", "app"),
             repo(CodeForge::GitHub, "source", "other"),
         ],
         &[override_for_warp],
         true,
     )
     .unwrap();
-    assert_eq!(requests[0].remote.repo, "warp-for-benchmarks");
-    assert_eq!(requests[0].checkout_name, "warp");
+    assert_eq!(requests[0].remote.repo, "acme-benchmarks");
+    assert_eq!(requests[0].checkout_name, "app");
     assert!(requests[0].fetch_branch_only);
     assert!(!requests[0].remove_origin);
     assert!(!requests[1].fetch_branch_only);
@@ -579,7 +579,7 @@ fn parse_resolved_head_sha_accepts_trimmed_valid_object_ids() {
 fn environment_snapshot_matches_resolved_heads_to_requests_by_checkout_name() {
     let requests = vec![
         clone_request(
-            repo(CodeForge::GitHub, "warpdotdev", "warp"),
+            repo(CodeForge::GitHub, "acme", "app"),
             Some(RepositoryHeadRef::Branch("main".to_string())),
         ),
         clone_request(
@@ -597,13 +597,13 @@ fn environment_snapshot_matches_resolved_heads_to_requests_by_checkout_name() {
         Path::new("/workspace"),
         &ResolvedHeads::from([
             ("api".to_owned(), second_sha.to_owned()),
-            ("warp".to_owned(), first_sha.to_owned()),
+            ("app".to_owned(), first_sha.to_owned()),
         ]),
     );
 
     assert_eq!(snapshot.repositories.len(), 2);
-    assert_eq!(snapshot.repositories[0].repo_owner, "warpdotdev");
-    assert_eq!(snapshot.repositories[0].checkout_path, "warp");
+    assert_eq!(snapshot.repositories[0].repo_owner, "acme");
+    assert_eq!(snapshot.repositories[0].checkout_path, "app");
     assert_eq!(
         snapshot.repositories[0].requested_checkout_ref.as_deref(),
         Some("main")
@@ -678,11 +678,11 @@ fn environment_with_repos(repos: Vec<SourceRepo>) -> AmbientAgentEnvironment {
 fn single_repo_name_returns_repo_when_exactly_one_repo() {
     let repos = vec![SourceRepo::new(
         CodeForge::GitHub,
-        "warpdotdev".to_string(),
-        "warp-internal".to_string(),
+        "acme".to_string(),
+        "acme-internal".to_string(),
     )];
     let selected_repo = single_repo_name(&repos);
-    assert_eq!(selected_repo, Some("warp-internal".to_string()));
+    assert_eq!(selected_repo, Some("acme-internal".to_string()));
 }
 
 fn repo(forge: CodeForge, owner: &str, name: &str) -> SourceRepo {
@@ -691,17 +691,17 @@ fn repo(forge: CodeForge, owner: &str, name: &str) -> SourceRepo {
 
 #[test]
 fn merge_repos_dedupes_case_insensitively_and_preserves_environment_order() {
-    let environment = vec![repo(CodeForge::GitHub, "WarpDotDev", "Warp")];
+    let environment = vec![repo(CodeForge::GitHub, "Acme", "App")];
     let additional = vec![
-        repo(CodeForge::GitHub, "warpdotdev", "warp"),
-        repo(CodeForge::GitHub, "warpdotdev", "warp-server"),
+        repo(CodeForge::GitHub, "acme", "app"),
+        repo(CodeForge::GitHub, "acme", "acme-server"),
     ];
 
     assert_eq!(
         merge_repos_deduped(environment, additional).unwrap(),
         vec![
-            repo(CodeForge::GitHub, "WarpDotDev", "Warp"),
-            repo(CodeForge::GitHub, "warpdotdev", "warp-server"),
+            repo(CodeForge::GitHub, "Acme", "App"),
+            repo(CodeForge::GitHub, "acme", "acme-server"),
         ]
     );
 }
@@ -739,7 +739,7 @@ fn merge_repos_rejects_clone_directory_collisions() {
 
 #[test]
 fn merge_repos_supports_additional_only_and_empty_inputs() {
-    let additional = vec![repo(CodeForge::GitHub, "warpdotdev", "warp")];
+    let additional = vec![repo(CodeForge::GitHub, "acme", "app")];
     assert_eq!(
         merge_repos_deduped(Vec::new(), additional.clone()).unwrap(),
         additional
@@ -753,8 +753,8 @@ fn merge_repos_supports_additional_only_and_empty_inputs() {
 
 #[test]
 fn legacy_workspace_merges_environment_and_task_additions_without_deferred_inventory() {
-    let environment = environment_with_repos(vec![repo(CodeForge::GitHub, "WarpDotDev", "Warp")]);
-    let additional = vec![repo(CodeForge::GitHub, "warpdotdev", "warp-server")];
+    let environment = environment_with_repos(vec![repo(CodeForge::GitHub, "Acme", "App")]);
+    let additional = vec![repo(CodeForge::GitHub, "acme", "acme-server")];
 
     let workspace =
         WorkspaceConfiguration::from_legacy(Some(&environment), additional, Vec::new(), false)
@@ -762,8 +762,8 @@ fn legacy_workspace_merges_environment_and_task_additions_without_deferred_inven
     assert_eq!(
         workspace.source_repos,
         vec![
-            repo(CodeForge::GitHub, "WarpDotDev", "Warp"),
-            repo(CodeForge::GitHub, "warpdotdev", "warp-server"),
+            repo(CodeForge::GitHub, "Acme", "App"),
+            repo(CodeForge::GitHub, "acme", "acme-server"),
         ]
     );
     assert!(workspace.deferred_repos.is_empty());
@@ -846,13 +846,13 @@ fn single_repo_name_returns_none_for_zero_or_many_repos() {
     let two_repos = vec![
         SourceRepo::new(
             CodeForge::GitHub,
-            "warpdotdev".to_string(),
-            "warp-internal".to_string(),
+            "acme".to_string(),
+            "acme-internal".to_string(),
         ),
         SourceRepo::new(
             CodeForge::GitHub,
-            "warpdotdev".to_string(),
-            "warp-server".to_string(),
+            "acme".to_string(),
+            "acme-server".to_string(),
         ),
     ];
     assert_eq!(single_repo_name(&two_repos), None);
@@ -862,24 +862,24 @@ fn single_repo_name_returns_none_for_zero_or_many_repos() {
 fn sparse_substitution_uses_target_remote_and_preserves_source_checkout_name() {
     let source_sha = "0123456789abcdef0123456789abcdef01234567";
     let repos = vec![
-        repo(CodeForge::GitHub, "WarpDotDev", "Warp")
+        repo(CodeForge::GitHub, "Acme", "App")
             .with_checkout_ref(Some("source-default".to_string())),
-        repo(CodeForge::GitHub, "warpdotdev", "common-skills")
+        repo(CodeForge::GitHub, "acme", "common-skills")
             .with_checkout_ref(Some("main".to_string())),
     ];
     let overrides = vec![substitution_override(
-        "warpdotdev",
-        "warp",
+        "acme",
+        "app",
         source_sha,
-        "warpdotdev",
-        "warp-for-benchmarks",
+        "acme",
+        "acme-benchmarks",
     )];
 
     let prepared = repository_clone_requests(&repos, &overrides, true).unwrap();
 
-    assert_eq!(prepared[0].remote.owner, "warpdotdev");
-    assert_eq!(prepared[0].remote.repo, "warp-for-benchmarks");
-    assert_eq!(prepared[0].checkout_name, "Warp");
+    assert_eq!(prepared[0].remote.owner, "acme");
+    assert_eq!(prepared[0].remote.repo, "acme-benchmarks");
+    assert_eq!(prepared[0].checkout_name, "App");
     assert_eq!(
         prepared[0].checkout,
         Some(RepositoryHeadRef::CommitSha(source_sha.to_string()))
@@ -897,46 +897,42 @@ fn sparse_substitution_uses_target_remote_and_preserves_source_checkout_name() {
 #[test]
 fn substituted_request_uses_target_identity_and_source_checkout_path() {
     let source_sha = "0123456789abcdef0123456789abcdef01234567";
-    let repos = vec![repo(CodeForge::GitHub, "warpdotdev", "warp")];
+    let repos = vec![repo(CodeForge::GitHub, "acme", "app")];
     let overrides = vec![substitution_override(
-        "warpdotdev",
-        "warp",
+        "acme",
+        "app",
         source_sha,
-        "warpdotdev",
-        "warp-for-benchmarks",
+        "acme",
+        "acme-benchmarks",
     )];
     let requests = repository_clone_requests(&repos, &overrides, true).unwrap();
 
-    assert_eq!(requests[0].checkout_name, "warp");
+    assert_eq!(requests[0].checkout_name, "app");
     let snapshot = environment_snapshot(
         &requests,
         Path::new("/workspace"),
-        &ResolvedHeads::from([("warp".to_owned(), source_sha.to_owned())]),
+        &ResolvedHeads::from([("app".to_owned(), source_sha.to_owned())]),
     );
-    assert_eq!(snapshot.repositories[0].repo_name, "warp-for-benchmarks");
-    assert_eq!(snapshot.repositories[0].checkout_path, "warp");
+    assert_eq!(snapshot.repositories[0].repo_name, "acme-benchmarks");
+    assert_eq!(snapshot.repositories[0].checkout_path, "app");
 }
 
 #[test]
 fn preparation_overrides_replace_checkout_ref_only_for_matching_repos() {
     let repos = vec![
+        SourceRepo::new(CodeForge::GitHub, "acme".to_string(), "app".to_string())
+            .with_checkout_ref(Some("abc123".to_string())),
         SourceRepo::new(
             CodeForge::GitHub,
-            "warpdotdev".to_string(),
-            "warp".to_string(),
-        )
-        .with_checkout_ref(Some("abc123".to_string())),
-        SourceRepo::new(
-            CodeForge::GitHub,
-            "warpdotdev".to_string(),
-            "warp-server".to_string(),
+            "acme".to_string(),
+            "acme-server".to_string(),
         )
         .with_checkout_ref(Some("old-pin".to_string())),
     ];
     let overrides = vec![commit_head_override(
         RepositoryForge::GitHub,
-        "warpdotdev",
-        "warp",
+        "acme",
+        "app",
         "0123456789abcdef0123456789abcdef01234567",
     )];
 
@@ -957,11 +953,7 @@ fn preparation_overrides_replace_checkout_ref_only_for_matching_repos() {
 #[test]
 fn clone_requests_use_each_repository_host() {
     let repos = vec![
-        SourceRepo::new(
-            CodeForge::GitHub,
-            "warpdotdev".to_string(),
-            "warp".to_string(),
-        ),
+        SourceRepo::new(CodeForge::GitHub, "acme".to_string(), "app".to_string()),
         SourceRepo::new(
             CodeForge::GitLab,
             "platform/backend".to_string(),
@@ -973,7 +965,7 @@ fn clone_requests_use_each_repository_host() {
 
     assert_eq!(
         prepared[0].remote.https_clone_url(),
-        "https://github.com/warpdotdev/warp.git"
+        "https://github.com/acme/app.git"
     );
     assert_eq!(
         prepared[1].remote.https_clone_url(),
@@ -985,7 +977,7 @@ fn clone_requests_use_each_repository_host() {
 fn clone_requests_accept_azure_devops_repositories() {
     let repos = vec![SourceRepo::new(
         CodeForge::AzureDevOps,
-        "warpdotdev/test-project".to_string(),
+        "acme/test-project".to_string(),
         "test-project".to_string(),
     )];
 
@@ -993,7 +985,7 @@ fn clone_requests_accept_azure_devops_repositories() {
 
     assert_eq!(
         prepared[0].remote.https_clone_url(),
-        "https://dev.azure.com/warpdotdev/test-project/_git/test-project"
+        "https://dev.azure.com/acme/test-project/_git/test-project"
     );
 }
 
@@ -1006,11 +998,7 @@ fn clone_requests_reject_a_mixed_repository_missing_forge() {
         code_forges: Some(vec![CodeForge::GitHub, CodeForge::GitLab]),
         github_repos: vec![],
         source_repos: Some(vec![
-            SourceRepo::new(
-                CodeForge::GitHub,
-                "warpdotdev".to_string(),
-                "warp".to_string(),
-            ),
+            SourceRepo::new(CodeForge::GitHub, "acme".to_string(), "app".to_string()),
             SourceRepo {
                 code_forge: None,
                 owner: "platform/backend".to_string(),
@@ -1044,11 +1032,7 @@ fn clone_requests_reject_an_omitted_forge_when_github_is_paired_with_an_unknown_
         code_forges: Some(vec![CodeForge::GitHub, CodeForge::Unknown]),
         github_repos: vec![],
         source_repos: Some(vec![
-            SourceRepo::new(
-                CodeForge::GitHub,
-                "warpdotdev".to_string(),
-                "warp".to_string(),
-            ),
+            SourceRepo::new(CodeForge::GitHub, "acme".to_string(), "app".to_string()),
             SourceRepo {
                 code_forge: None,
                 owner: "acme".to_string(),
@@ -1082,8 +1066,8 @@ fn clone_requests_reject_a_repository_with_an_unrecognized_forge() {
     // than panic or silently attempt a clone with no host.
     let repos = vec![SourceRepo::new(
         CodeForge::Unknown,
-        "warpdotdev".to_string(),
-        "warp".to_string(),
+        "acme".to_string(),
+        "app".to_string(),
     )];
 
     let error = repository_clone_requests(&repos, &[], false).unwrap_err();
@@ -1091,7 +1075,7 @@ fn clone_requests_reject_a_repository_with_an_unrecognized_forge() {
     assert!(matches!(
         error,
         PrepareEnvironmentError::UnsupportedRepositoryForge { repo_name }
-            if repo_name == "warpdotdev/warp"
+            if repo_name == "acme/app"
     ));
 }
 
@@ -1101,21 +1085,17 @@ fn clone_requests_reject_an_unrecognized_forge_repository_even_with_unrelated_ov
     // not mask the unsupported repository elsewhere in the same environment:
     // every repository is checked, not just the ones an override names.
     let repos = vec![
-        SourceRepo::new(
-            CodeForge::GitHub,
-            "warpdotdev".to_string(),
-            "warp".to_string(),
-        ),
+        SourceRepo::new(CodeForge::GitHub, "acme".to_string(), "app".to_string()),
         SourceRepo::new(
             CodeForge::Unknown,
-            "warpdotdev".to_string(),
-            "warp-server".to_string(),
+            "acme".to_string(),
+            "acme-server".to_string(),
         ),
     ];
     let overrides = vec![commit_head_override(
         RepositoryForge::GitHub,
-        "warpdotdev",
-        "warp",
+        "acme",
+        "app",
         "0123456789abcdef0123456789abcdef01234567",
     )];
 
@@ -1124,7 +1104,7 @@ fn clone_requests_reject_an_unrecognized_forge_repository_even_with_unrelated_ov
     assert!(matches!(
         error,
         PrepareEnvironmentError::UnsupportedRepositoryForge { repo_name }
-            if repo_name == "warpdotdev/warp-server"
+            if repo_name == "acme/acme-server"
     ));
 }
 
@@ -1136,13 +1116,13 @@ fn head_override_validation_treats_an_unrecognized_forge_repository_as_never_mat
     // panicking while checking whether it matches.
     let environment = environment_with_repos(vec![SourceRepo::new(
         CodeForge::Unknown,
-        "warpdotdev".to_string(),
-        "warp".to_string(),
+        "acme".to_string(),
+        "app".to_string(),
     )]);
     let override_for_it = commit_head_override(
         RepositoryForge::GitHub,
-        "warpdotdev",
-        "warp",
+        "acme",
+        "app",
         "0123456789abcdef0123456789abcdef01234567",
     );
 
@@ -1158,13 +1138,13 @@ fn head_override_validation_treats_an_unrecognized_forge_repository_as_never_mat
 fn repository_head_override_validation_rejects_duplicates_and_mismatches() {
     let environment = environment_with_repos(vec![SourceRepo::new(
         CodeForge::GitHub,
-        "warpdotdev".to_string(),
-        "warp".to_string(),
+        "acme".to_string(),
+        "app".to_string(),
     )]);
     let github = commit_head_override(
         RepositoryForge::GitHub,
-        "warpdotdev",
-        "warp",
+        "acme",
+        "app",
         "0123456789abcdef0123456789abcdef01234567",
     );
 
@@ -1177,8 +1157,8 @@ fn repository_head_override_validation_rejects_duplicates_and_mismatches() {
 
     let forge_mismatch = commit_head_override(
         RepositoryForge::GitLab,
-        "warpdotdev",
-        "warp",
+        "acme",
+        "app",
         "0123456789abcdef0123456789abcdef01234567",
     );
     let mismatch_error = validate_repository_preparation_overrides(
@@ -1192,11 +1172,7 @@ fn repository_head_override_validation_rejects_duplicates_and_mismatches() {
 #[test]
 fn repository_head_override_validation_accepts_partial_multi_repo_sets() {
     let environment = environment_with_repos(vec![
-        SourceRepo::new(
-            CodeForge::GitHub,
-            "warpdotdev".to_string(),
-            "warp".to_string(),
-        ),
+        SourceRepo::new(CodeForge::GitHub, "acme".to_string(), "app".to_string()),
         SourceRepo::new(
             CodeForge::GitLab,
             "platform/backend".to_string(),
@@ -1205,8 +1181,8 @@ fn repository_head_override_validation_accepts_partial_multi_repo_sets() {
     ]);
     let partial_overrides = vec![commit_head_override(
         RepositoryForge::GitHub,
-        "warpdotdev",
-        "warp",
+        "acme",
+        "app",
         "0123456789abcdef0123456789abcdef01234567",
     )];
 
@@ -1273,23 +1249,23 @@ fn clone_failure_errors_preserve_the_original_failure_before_diagnostics() {
         credentials: Vec::new(),
     };
     let clone_error = PrepareEnvironmentError::CloneRepo {
-        repo_name: "warpdotdev/warp".to_string(),
+        repo_name: "acme/app".to_string(),
         output: None,
         identity_diagnostics: diagnostics.clone(),
     };
     let checkout_error = PrepareEnvironmentError::CheckoutFailed {
-        repo_name: "warpdotdev/warp".to_string(),
+        repo_name: "acme/app".to_string(),
         checkout_ref: "deadbeef".to_string(),
         identity_diagnostics: diagnostics,
     };
 
     assert_eq!(
         clone_error.to_string(),
-        "Failed to clone warpdotdev/warp\nGit identity diagnostics:\n  Author: unset"
+        "Failed to clone acme/app\nGit identity diagnostics:\n  Author: unset"
     );
     assert_eq!(
         checkout_error.to_string(),
-        "Failed to check out deadbeef in warpdotdev/warp\nGit identity diagnostics:\n  Author: unset"
+        "Failed to check out deadbeef in acme/app\nGit identity diagnostics:\n  Author: unset"
     );
 }
 

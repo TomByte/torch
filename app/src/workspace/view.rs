@@ -398,7 +398,7 @@ use crate::terminal::available_shells::AvailableShell;
 use crate::terminal::available_shells::AvailableShells;
 use crate::terminal::block_list_viewport::InputMode;
 #[cfg(not(target_family = "wasm"))]
-use crate::terminal::cli_agent_sessions::plugin_manager::{PluginModalKind, plugin_manager_for};
+use crate::terminal::cli_agent_sessions::plugin_manager::{PluginModalKind, plugin_manager};
 use crate::terminal::cli_agent_sessions::{CLIAgentSessionsModel, CLIAgentSessionsModelEvent};
 use crate::terminal::enable_auto_reload_modal::{
     EnableAutoReloadModal, EnableAutoReloadModalEvent,
@@ -7370,7 +7370,7 @@ impl Workspace {
                 },
             ),
             NewSessionMenuItem::OpenLaunchConfigDocs => {
-                ctx.open_url("https://docs.warp.dev/terminal/sessions/launch-configurations")
+                ctx.open_url("https://github.com/TomByte/torch")
             }
             #[cfg(feature = "local_fs")]
             NewSessionMenuItem::CreateNewTabConfig => {
@@ -9589,10 +9589,7 @@ impl Workspace {
         ctx.spawn(async { cli_install::install_oz() }, |view, result, ctx| {
             let command_name = ChannelState::channel().cli_command_name();
             let message = format!("Installed the Oz CLI globally. You can now run '{command_name}' from any terminal outside of Torch.");
-            let toast = DismissibleToast::success(message).with_link(
-                ToastLink::new("Learn more".to_string())
-                    .with_href("https://docs.warp.dev/reference/cli".to_string()),
-            );
+            let toast = DismissibleToast::success(message);
             view.handle_cli_command_result(result, toast, "Failed to install Oz command", ctx);
         });
     }
@@ -13028,9 +13025,7 @@ impl Workspace {
     }
 
     pub fn open_autoupdate_failure_link(&mut self, ctx: &mut ViewContext<Self>) {
-        ctx.open_url(
-            "https://docs.warp.dev/support-and-community/troubleshooting-and-support/updating-warp",
-        );
+        ctx.open_url("https://github.com/TomByte/torch");
     }
 
     pub fn add_terminal_tab(&mut self, hide_homepage: bool, ctx: &mut ViewContext<Self>) {
@@ -20089,7 +20084,7 @@ impl Workspace {
             RichContentInsertionPosition, RichContentMetadata,
         };
 
-        let Some(manager) = plugin_manager_for(agent) else {
+        let Some(manager) = plugin_manager() else {
             return;
         };
 
@@ -21610,7 +21605,7 @@ impl Workspace {
                 .with_main_axis_size(MainAxisSize::Max);
             let bg_color = blended_colors::neutral_1(appearance.theme());
 
-            // Left: Torch logo - clickable to link to warp.dev
+            // Left: Torch logo - clickable to link to the Torch repository
             let warp_logo = Hoverable::new(self.mouse_states.warp_logo.clone(), |_state| {
                 ConstrainedBox::new(
                     torch_core::ui::Icon::Warp
@@ -21622,7 +21617,9 @@ impl Workspace {
                 .finish()
             })
             .on_click(|ctx, _, _| {
-                ctx.dispatch_typed_action(WorkspaceAction::OpenLink("https://warp.dev".to_owned()));
+                ctx.dispatch_typed_action(WorkspaceAction::OpenLink(
+                    "https://github.com/TomByte/torch".to_owned(),
+                ));
             })
             .with_cursor(Cursor::PointingHand)
             .finish();
@@ -24536,7 +24533,7 @@ impl Workspace {
 
         if !is_app_installed {
             // App not installed - redirect to download page
-            ctx.open_url("https://warp.dev/download");
+            ctx.open_url("https://github.com/TomByte/torch");
             // In webapp code we cannot distinguish between
             // the localhost:9277/install_detection endpoint not running (not installed) vs
             // the browser blocking Local Network Access which results in CORS error;
@@ -26138,7 +26135,7 @@ impl TypedActionView for Workspace {
             #[cfg(all(enable_crash_recovery, target_os = "linux"))]
             DismissWaylandCrashRecoveryBannerAndOpenLink => {
                 self.dismiss_workspace_banner(ctx, &WorkspaceBanner::WaylandCrashRecovery);
-                ctx.open_url("https://docs.warp.dev/terminal/more-features/linux#native-wayland");
+                ctx.open_url("https://github.com/TomByte/torch");
             }
             FixInAgentMode { query } => {
                 self.active_tab_pane_group().update(ctx, |pane_group, ctx| {
@@ -26788,27 +26785,6 @@ impl TypedActionView for Workspace {
                     }
                 });
                 log::info!("Feature intro seen state has been reset");
-            }
-            #[cfg(debug_assertions)]
-            InstallOpenCodeWarpPlugin => {
-                let message = set_opencode_warp_plugin("github:warpdotdev/opencode-warp-internal");
-                self.toast_stack.update(ctx, |view, ctx| {
-                    view.add_ephemeral_toast(DismissibleToast::default(message), ctx);
-                });
-            }
-            #[cfg(debug_assertions)]
-            UseLocalOpenCodeWarpPlugin => {
-                let message = match dirs::home_dir() {
-                    Some(home) => {
-                        let plugin_path = home.join("opencode-warp/src/index.ts");
-                        let entry = format!("file://{}", plugin_path.display());
-                        set_opencode_warp_plugin(&entry)
-                    }
-                    None => "Failed to determine home directory".to_string(),
-                };
-                self.toast_stack.update(ctx, |view, ctx| {
-                    view.add_ephemeral_toast(DismissibleToast::default(message), ctx);
-                });
             }
             #[cfg(target_os = "macos")]
             SampleProcess => {
@@ -30439,62 +30415,5 @@ fn compute_default_panel_widths(
         (left, right)
     } else {
         (DEFAULT_LEFT_PANEL_WIDTH, DEFAULT_RIGHT_PANEL_WIDTH)
-    }
-}
-
-/// Idempotently sets the opencode-warp plugin entry in `~/.config/opencode/opencode.json`.
-/// Removes any existing opencode-warp plugin entries (both local file:// and github:) and adds
-/// the given `new_entry`. Creates the config file with a default structure if it doesn't exist.
-#[cfg(debug_assertions)]
-fn set_opencode_warp_plugin(new_entry: &str) -> String {
-    let Some(home) = dirs::home_dir() else {
-        return "Failed to determine home directory".to_string();
-    };
-
-    let config_dir = home.join(".config/opencode");
-    let config_path = config_dir.join("opencode.json");
-
-    let mut config: serde_json::Value = if config_path.exists() {
-        match std::fs::read_to_string(&config_path) {
-            Ok(contents) => match serde_json::from_str(&contents) {
-                Ok(val) => val,
-                Err(e) => return format!("Failed to parse opencode.json: {e}"),
-            },
-            Err(e) => return format!("Failed to read opencode.json: {e}"),
-        }
-    } else {
-        serde_json::json!({
-            "$schema": "https://opencode.ai/config.json"
-        })
-    };
-
-    let plugins = config.as_object_mut().and_then(|obj| {
-        obj.entry("plugin")
-            .or_insert_with(|| serde_json::json!([]))
-            .as_array_mut()
-    });
-
-    let Some(plugins) = plugins else {
-        return "opencode.json has unexpected structure (plugin is not an array)".to_string();
-    };
-
-    // Remove any existing opencode-warp entries
-    plugins.retain(|entry| {
-        let s = entry.as_str().unwrap_or("");
-        !s.contains("opencode-warp")
-    });
-
-    plugins.push(serde_json::Value::String(new_entry.to_string()));
-
-    if let Err(e) = std::fs::create_dir_all(&config_dir) {
-        return format!("Failed to create config directory: {e}");
-    }
-
-    match serde_json::to_string_pretty(&config) {
-        Ok(json_str) => match std::fs::write(&config_path, format!("{json_str}\n")) {
-            Ok(()) => format!("OpenCode plugin set to: {new_entry}"),
-            Err(e) => format!("Failed to write opencode.json: {e}"),
-        },
-        Err(e) => format!("Failed to serialize opencode.json: {e}"),
     }
 }

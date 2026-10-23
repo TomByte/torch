@@ -131,7 +131,6 @@ fn test_is_unsupported_intel_uhd_adapter() {
         transient_saves_memory: Some(false),
         limit_bucket: None,
     }));
-    // See https://github.com/warpdotdev/warp/issues/14577.
     assert!(is_older_vulkan_intel_uhd_adapter(&wgpu::AdapterInfo {
         name: String::from("Intel(R) Xe Graphics (TGL GT2)"),
         vendor: 0,

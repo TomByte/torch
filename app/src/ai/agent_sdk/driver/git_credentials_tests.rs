@@ -689,7 +689,7 @@ fn global_git_identity_reads_the_actual_global_config() -> Result<()> {
         );
 
         run_git_config("user.name", "Torch");
-        run_git_config("user.email", "agent@warp.dev");
+        run_git_config("user.email", "agent@torch.invalid");
 
         // This is the regression this test guards: `global_git_identity()` must
         // issue `git config --global --get <key>` (an option to the `config`
@@ -700,7 +700,7 @@ fn global_git_identity_reads_the_actual_global_config() -> Result<()> {
         // logic that depends on a real baseline.
         assert_eq!(
             global_git_identity(),
-            Some(("Torch".to_string(), "agent@warp.dev".to_string()))
+            Some(("Torch".to_string(), "agent@torch.invalid".to_string()))
         );
         Ok(())
     };
@@ -724,9 +724,9 @@ fn repository_identity_is_unchanged_when_it_matches_the_baseline() -> Result<()>
     let temp_dir = tempfile::tempdir()?;
     init_repo(temp_dir.path());
     run_repository_git_config(temp_dir.path(), "user.name", "Torch");
-    run_repository_git_config(temp_dir.path(), "user.email", "agent@warp.dev");
+    run_repository_git_config(temp_dir.path(), "user.email", "agent@torch.invalid");
 
-    let baseline = Some(("Torch".to_string(), "agent@warp.dev".to_string()));
+    let baseline = Some(("Torch".to_string(), "agent@torch.invalid".to_string()));
     assert!(!repository_identity_changed_since(
         temp_dir.path(),
         baseline
@@ -741,7 +741,7 @@ fn repository_identity_is_changed_when_a_setup_command_overrides_it() -> Result<
     run_repository_git_config(temp_dir.path(), "user.name", "Vercel Bot");
     run_repository_git_config(temp_dir.path(), "user.email", "vercel-bot@example.com");
 
-    let baseline = Some(("Torch".to_string(), "agent@warp.dev".to_string()));
+    let baseline = Some(("Torch".to_string(), "agent@torch.invalid".to_string()));
     assert!(repository_identity_changed_since(temp_dir.path(), baseline));
     Ok(())
 }
@@ -772,7 +772,7 @@ fn configure_repository_git_identity_if_unset_skips_a_repo_the_customer_already_
     configure_repository_git_identity_if_unset(
         temp_dir.path(),
         "github.com",
-        Some(("Torch".to_string(), "agent@warp.dev".to_string())),
+        Some(("Torch".to_string(), "agent@torch.invalid".to_string())),
     );
 
     assert_eq!(

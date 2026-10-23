@@ -338,8 +338,7 @@
          fi
 
  # Note: this method diverges from the bash_preexec script in that
- # we don't call __bp_adjust_histcontrol because of
- # https://linear.app/warpdotdev/issue/WAR-2592.
+ # we don't call __bp_adjust_histcontrol.
  # End of difference 3/4 between Torch and bash-preexec's original source.
 
          # Issue #25. Setting debug trap for subshells causes sessions to exit for

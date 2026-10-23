@@ -54,7 +54,6 @@ use crate::ui_components::icon_with_status::{
 };
 use crate::util::time_format::format_approx_duration_from_now_utc;
 
-const CLOUD_AGENT_DOCS_URL: &str = "https://docs.warp.dev/platform/";
 const OZ_UPDATES_SECTION_HEADER: &str = "Latest updates";
 
 // The maximum number of Torch Agent updates from the changelog rendered in-line in the 'Latest updates' section.
@@ -573,7 +572,7 @@ fn current_working_directory_for_zero_state(terminal_model: &TerminalModel) -> O
 enum AgentViewDescription {
     /// Plain text descriptions (used for local agent mode).
     PlainText(Vec<Cow<'static, str>>),
-    /// Cloud mode description with "Visit docs" hyperlink.
+    /// Cloud mode description.
     CloudModeWithDocsLink,
 }
 
@@ -663,12 +662,11 @@ fn render_title_and_description(props: HeaderProps, app: &AppContext) -> Vec<Box
                 .finish(),
             );
 
-            // Second line: text with "Visit docs" hyperlink.
+            // Second line: description text.
             let description_with_link = FormattedText::new([FormattedTextLine::Line(vec![
                 FormattedTextFragment::plain_text(
-                    "Use cloud agents to run parallel agents, build agents that run autonomously, and check in on your agents from anywhere. ",
+                    "Use cloud agents to run parallel agents, build agents that run autonomously, and check in on your agents from anywhere.",
                 ),
-                FormattedTextFragment::hyperlink("Visit docs", CLOUD_AGENT_DOCS_URL),
             ])]);
 
             items.push(
@@ -1149,7 +1147,7 @@ fn render_oz_updates(props: OzUpdatesProps<'_>, app: &AppContext) -> Option<Box<
                         })
                         .with_reset_cursor_after_click()
                         .on_click(|_, app, _| {
-                            const CHANGELOG_URL: &str = "https://docs.warp.dev/changelog";
+                            const CHANGELOG_URL: &str = "https://github.com/TomByte/torch/releases";
                             app.open_url(CHANGELOG_URL);
                         })
                         .with_cursor(Cursor::PointingHand)

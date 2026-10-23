@@ -6,8 +6,8 @@ fn batch() -> serde_json::Value {
     json!({
         "working_dir": std::env::current_dir().unwrap(),
         "repositories": [{
-            "source": {"code_forge": "GITHUB", "owner": "warpdotdev", "repo": "warp"},
-            "checkout_name": "warp",
+            "source": {"code_forge": "GITHUB", "owner": "acme", "repo": "app"},
+            "checkout_name": "app",
             "head": null,
             "fetch_branch_only": false
         }]
@@ -72,7 +72,7 @@ fn batch_rejects_malformed_and_untrusted_payloads() {
 fn duplicate_targets_are_rejected_before_any_checkout() {
     let mut batch = batch();
     let mut second = batch["repositories"][0].clone();
-    second["checkout_name"] = json!("WARP");
+    second["checkout_name"] = json!("APP");
     batch["repositories"].as_array_mut().unwrap().push(second);
     assert_eq!(
         CheckoutBatch::parse(&serde_json::to_vec(&batch).unwrap())

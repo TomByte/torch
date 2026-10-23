@@ -87,9 +87,8 @@ use crate::server::server_api::harness_support::{
 };
 use crate::server::server_api::managed_secrets::AppManagedSecretManager as ManagedSecretManager;
 use crate::server::team_scope::RequestTeamScope;
-use crate::terminal::ShellLaunchData;
 use crate::terminal::cli_agent_sessions::plugin_manager::{
-    CliAgentPluginManager, PluginInstallError, plugin_manager_for_with_shell,
+    CliAgentPluginManager, PluginInstallError, plugin_manager,
 };
 use crate::terminal::cli_agent_sessions::{
     CLIAgentSessionStatus, CLIAgentSessionsModel, CLIAgentSessionsModelEvent,
@@ -2850,39 +2849,18 @@ impl AgentDriver {
             .await?;
 
         // Install plugins before running the harness command.
-        Self::setup_harness_plugins(harness, foreground, events).await?;
+        Self::setup_harness_plugins(harness, events).await?;
 
         Ok(exit_rx)
     }
 
     async fn setup_harness_plugins(
         harness: &dyn ThirdPartyHarness,
-        foreground: &ModelSpawner<Self>,
         events: &SetupClientEventReporter,
     ) -> Result<(), AgentDriverError> {
         let harness_name = harness.cli_agent().command_prefix();
         let requires_platform_plugin = harness.requires_verified_platform_plugin();
-        let shell_launch_data = foreground
-            .spawn(|me, ctx| me.terminal_driver.as_ref(ctx).active_shell_launch_data(ctx))
-            .await?;
-        // Without an explicit shell the plugin manager falls back to a bare `bash`, which on
-        // Windows resolves to the WSL launcher in System32 rather than a usable shell.
-        let (shell_path, shell_type) = match shell_launch_data {
-            Some(ShellLaunchData::Executable {
-                executable_path,
-                shell_type,
-            })
-            | Some(ShellLaunchData::MSYS2 {
-                executable_path,
-                shell_type,
-            }) => (Some(executable_path), Some(shell_type)),
-            Some(ShellLaunchData::WSL { .. })
-            | Some(ShellLaunchData::DockerSandbox { .. })
-            | None => (None, None),
-        };
-        let Some(manager) =
-            plugin_manager_for_with_shell(harness.cli_agent(), shell_path, shell_type, None)
-        else {
+        let Some(manager) = plugin_manager() else {
             if requires_platform_plugin {
                 return Err(Self::required_platform_plugin_error(
                     harness_name,
@@ -4530,9 +4508,7 @@ impl AgentDriver {
                     tags.cloud_agent = true,
                     "slow bootstrap"
                 );
-                eprintln!(
-                    "Warning: Terminal session is slow to bootstrap. See https://docs.warp.dev/support-and-community/troubleshooting-and-support/known-issues#shells to troubleshoot."
-                );
+                eprintln!("Warning: Terminal session is slow to bootstrap.");
             }
             TerminalDriverEvent::EstablishedSharedSession {
                 session_id,

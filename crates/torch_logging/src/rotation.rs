@@ -12,8 +12,6 @@
 //! the startup `.old.N` slots, which log-bundle uploads and other UX depend
 //! on). When the configured number of `.in_session.N` slots is full, the
 //! oldest is discarded — matching `rotate_log_files`'s overflow semantics.
-//!
-//! See warpdotdev/warp#10879.
 
 use std::fs::{self, File, OpenOptions};
 use std::io::{self, Write};

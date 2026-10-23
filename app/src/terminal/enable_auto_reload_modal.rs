@@ -231,11 +231,7 @@ impl EnableAutoReloadModalBody {
             FormattedTextFragment::plain_text("When enabled, "),
             FormattedTextFragment::bold("auto-reload"),
             FormattedTextFragment::plain_text(
-                " will automatically purchase your selected package when you run out. ",
-            ),
-            FormattedTextFragment::hyperlink(
-                "Learn more",
-                "https://docs.warp.dev/support-and-community/plans-and-billing/add-on-credits#id-2.-enable-auto-reload",
+                " will automatically purchase your selected package when you run out.",
             ),
         ];
         let explanation_text = torchui::elements::FormattedTextElement::new(

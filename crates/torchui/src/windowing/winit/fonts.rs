@@ -492,7 +492,7 @@ impl TextLayoutSystem {
             families: Default::default(),
             font_store: RwLock::new(cosmic_text::FontSystem::new_with_locale_and_db(
                 // Locale is needed for font fallback. For now, we hardcode this to "en" to match
-                // our mac implementation https://github.com/warpdotdev/warp-internal/blob/bf33d651a9fcece70df8eac35f89b0393ca5189a/ui/src/platform/mac/fonts.rs#L383.
+                // our mac implementation.
                 "en".into(),
                 Default::default(),
             )),
@@ -962,7 +962,6 @@ impl TextLayoutSystem {
             }
 
             // TODO(alokedesai): Properly clip multi-line text using the same strategy we use on mac.
-            // See https://github.com/warpdotdev/warp-internal/blob/91dfe429074c6129a6b5c1c57c55c1daf6d274a9/ui/src/platform/mac/text_layout.rs#L318-L359.
             if total_height > max_height {
                 break;
             }

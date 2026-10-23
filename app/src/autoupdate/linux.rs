@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use anyhow::{Context as _, Result, bail};
 use channel_versions::VersionInfo;
 use instant::Duration;
-use torch_core::channel::{Channel, ChannelState};
+use torch_core::channel::ChannelState;
 use torch_terminal::shell::ShellType;
 use torchui::ViewContext;
 
@@ -221,21 +221,6 @@ mod package_manager {
                 ]));
             }
 
-            if self
-                .package_manager
-                .distribution_update_disabled_repository()
-            {
-                lines.push(FormattedTextLine::Line(vec![
-                    FormattedTextFragment::plain_text(
-                        "\nThe ",
-                    ),
-                    FormattedTextFragment::inline_code("warp_handle_dist_upgrade"),
-                    FormattedTextFragment::plain_text(
-                        " function ensures the Torch package repository is enabled, as we've detected you recently upgraded your distribution.",
-                    ),
-                ]));
-            }
-
             lines.push(FormattedTextLine::Line(vec![
                 FormattedTextFragment::plain_text("\nReview the command below, then "),
                 FormattedTextFragment::bold("press enter"),
@@ -281,7 +266,7 @@ mod package_manager {
         };
         log::info!("Relaunching using path: {program:?}");
         let mut command = command::blocking::Command::new(program);
-        // Add any arguments that were passed to warp, skipping the first
+        // Add any arguments that were passed to Torch, skipping the first
         // argument (the name of the executable) and dropping the flag for
         // finishing an update.
         let finish_update_flag = torch_cli::finish_update_flag();
@@ -333,9 +318,7 @@ impl UpdateMethod {
 /// for.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum PackageManager {
-    Apt {
-        distribution_update_disabled_repository: bool,
-    },
+    Apt,
     Yum,
     Dnf,
     Zypper,
@@ -350,30 +333,9 @@ impl PackageManager {
         let package_name = Self::package_name();
         let repo_name = Self::repo_name();
         let and = shell_type.and_combiner();
-        let or = shell_type.or_combiner();
 
         let base_command = match self {
-            PackageManager::Apt {
-                distribution_update_disabled_repository,
-            } => {
-                let dist_upgrade_fn = match shell_type {
-                    ShellType::Zsh | ShellType::Bash | ShellType::Fish => {
-                        "warp_handle_dist_upgrade"
-                    }
-                    ShellType::PowerShell => "Torch-Handle-DistUpgrade",
-                };
-                // If running with apt, attempt to handle a distribution update that may rename the
-                // warp source file to `{repo_name}.distUpgrade`.
-                // We explicitly use `or` here instead of `and` to limit the blast radius of this
-                // change, if handling a dist upgrade was unsuccessful we still want to try to
-                // install the new version.
-                let command = format!("sudo apt update{and}sudo apt install {package_name}");
-                if *distribution_update_disabled_repository {
-                    format!("{dist_upgrade_fn} {repo_name}{or}{command}")
-                } else {
-                    command
-                }
-            }
+            PackageManager::Apt => format!("sudo apt update{and}sudo apt install {package_name}"),
             PackageManager::Yum => {
                 format!("sudo yum --refresh --repo {repo_name} upgrade {package_name}")
             }
@@ -393,7 +355,7 @@ impl PackageManager {
                     // Back up the existing pacman.conf file just in case
                     // anything goes wrong, then add the repository config.
                     format!(
-                        "mkdir -p {cache_dir_str}{and}\\\ncp /etc/pacman.conf {cache_dir_str}{and}\\\nsudo sh -c \"echo '\n[{repo_name}]\nServer = https://releases.warp.dev/linux/pacman/\\$repo/\\$arch' >> /etc/pacman.conf\"{and}\\\n"
+                        "mkdir -p {cache_dir_str}{and}\\\ncp /etc/pacman.conf {cache_dir_str}{and}\\\nsudo sh -c \"echo '\n[{repo_name}]\nServer = https://cloud-disabled.torch.invalid/linux/pacman/\\$repo/\\$arch' >> /etc/pacman.conf\"{and}\\\n"
                     )
                 } else {
                     String::new()
@@ -403,7 +365,7 @@ impl PackageManager {
                     // it before retrieving the package repository and
                     // installing the updated package.
                     format!(
-                        "sudo pacman-key -r \"linux-maintainers@warp.dev\" --keyserver hkp://keys.openpgp.org:80{and}\\\nsudo pacman-key --lsign-key \"linux-maintainers@warp.dev\"{and}\\\n"
+                        "sudo pacman-key -r \"linux-maintainers@torch.invalid\" --keyserver hkp://keys.openpgp.org:80{and}\\\nsudo pacman-key --lsign-key \"linux-maintainers@torch.invalid\"{and}\\\n"
                     )
                 } else {
                     String::new()
@@ -420,11 +382,11 @@ impl PackageManager {
     }
 
     fn package_name() -> &'static str {
-        package_name(ChannelState::channel())
+        "torch"
     }
 
-    fn repo_name() -> String {
-        repo_name(ChannelState::channel())
+    fn repo_name() -> &'static str {
+        "torch"
     }
 
     fn detect() -> Result<Self> {
@@ -487,28 +449,13 @@ impl PackageManager {
                     "zypper" => Ok(Self::Zypper),
                     "dnf" => Ok(Self::Dnf),
                     "yum" => Ok(Self::Yum),
-                    "apt" => {
-                        let distribution_update_disabled_repository =
-                            is_apt_repository_disabled_due_to_version_update(&Self::repo_name());
-                        Ok(Self::Apt {
-                            distribution_update_disabled_repository,
-                        })
-                    }
+                    "apt" => Ok(Self::Apt),
                     _ => bail!(
                         "Received unexpected output from the package manager detection script"
                     ),
                 }
             }
             Err(err) => Err(err).context("Failed to run package manager detection script"),
-        }
-    }
-
-    fn distribution_update_disabled_repository(&self) -> bool {
-        match self {
-            PackageManager::Apt {
-                distribution_update_disabled_repository,
-            } => *distribution_update_disabled_repository,
-            _ => false,
         }
     }
 
@@ -520,7 +467,7 @@ impl PackageManager {
             } => !is_repo_configured || !is_signing_key_configured,
             // We only need to perform in-app post-installation repo configuration
             // when using pacman, and not with other package managers.
-            PackageManager::Apt { .. }
+            PackageManager::Apt
             | PackageManager::Yum
             | PackageManager::Dnf
             | PackageManager::Zypper => false,
@@ -531,57 +478,13 @@ impl PackageManager {
 impl std::fmt::Display for PackageManager {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            PackageManager::Apt { .. } => write!(f, "apt"),
+            PackageManager::Apt => write!(f, "apt"),
             PackageManager::Yum => write!(f, "yum"),
             PackageManager::Dnf => write!(f, "dnf"),
             PackageManager::Zypper => write!(f, "zypper"),
             PackageManager::Pacman { .. } => write!(f, "pacman"),
         }
     }
-}
-
-/// Returns whether the warp apt repository is disabled due to a version update.
-/// This occurs if there's a `warpdotdev.list.distUpgrade` file but no `warpdotdev.sources` or
-/// `warpdotdev.list` file.
-/// In a traditional Ubuntu distro update, Ubuntu renames each source file from `foo.list` to
-/// `foo.list.distUpgrade`. It then creates a new version of `foo.list` (or `foo.sources` if
-/// updating to Ubuntu 24+) with the repo disabled.
-///
-/// However, Ubuntu incorrectly thinks the Torch source file is invalid (due to the addition of the
-/// `signed-by` key) so it only leaves the `*.distUpgrade` source file. We use the existence of this
-/// file to determine whether we need to run the special `warp_handle_dist_upgrade` function to copy
-/// `warpdotdev.list.distUpgrade` back to `warpdotdev.list` to re-enable the repository.
-fn is_apt_repository_disabled_due_to_version_update(repo_name: &str) -> bool {
-    let apt_sources_directory = match get_apt_sources_directory() {
-        Ok(apt_sources_directory) => apt_sources_directory,
-        Err(err) => {
-            log::warn!("Failed to compute default apt source list directory: {err:#}");
-            log::warn!("Falling back to /etc/apt/sources.list.d/...");
-            PathBuf::from("/etc/apt/sources.list.d/")
-        }
-    };
-
-    !apt_sources_directory
-        .join(format!("{repo_name}.list"))
-        .exists()
-        && !apt_sources_directory
-            .join(format!("{repo_name}.sources"))
-            .exists()
-        && apt_sources_directory
-            .join(format!("{repo_name}.list.distUpgrade"))
-            .exists()
-}
-
-/// Returns the directory that contains apt sources.
-fn get_apt_sources_directory() -> Result<PathBuf> {
-    let output = command::blocking::Command::new("sh")
-        .arg("-c")
-        .arg("eval $(apt-config shell APT_SOURCESDIR \"Dir::Etc::sourceparts/d\"); echo $APT_SOURCESDIR")
-        .output()?;
-    let stdout = std::str::from_utf8(&output.stdout)
-        .context("FAiled to parse apt sources directory script output")?;
-
-    Ok(PathBuf::from(stdout.trim()))
 }
 
 fn is_pacman_repo_installed(package_name: &str) -> bool {
@@ -608,7 +511,7 @@ fn is_pacman_signing_key_installed() -> bool {
             "/etc/pacman.d/gnupg",
             "--list-keys",
             "--with-colons",
-            "linux-maintainers@warp.dev",
+            "linux-maintainers@torch.invalid",
         ])
         .output()
     {
@@ -665,25 +568,6 @@ fn is_pacman_signing_key_installed() -> bool {
     // If the key expires within 60 days, consider it as needing refresh.
     let sixty_days_from_now = chrono::Utc::now() + chrono::Duration::days(60);
     expiry_timestamp > sixty_days_from_now.timestamp()
-}
-
-fn package_name(channel: Channel) -> &'static str {
-    match channel {
-        Channel::Stable => "warp-terminal",
-        Channel::Preview => "warp-terminal-preview",
-        Channel::Dev => "warp-terminal-dev",
-        Channel::Integration => "warp-terminal-integration",
-        Channel::Local => "warp-terminal-local",
-        Channel::Oss => "warp-oss",
-    }
-}
-
-fn repo_name(channel: Channel) -> String {
-    let package_name = package_name(channel);
-    let channel_suffix = package_name
-        .strip_prefix("warp-terminal")
-        .unwrap_or_default();
-    format!("warpdotdev{channel_suffix}")
 }
 
 #[cfg(test)]

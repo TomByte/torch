@@ -215,7 +215,7 @@ fn execution_config_launch_ignores_legacy_failure_retention_env() {
 
 #[test]
 fn agent_run_accepts_git_valid_substituted_branch_override() {
-    let base = r#"{"code_forge":"GITHUB","repo_owner":"source","repo_name":"warp","head":{"type":"BRANCH","value":"frozen/prepare"},"clone_from":{"code_forge":"GITHUB","owner":"target","repo":"warp"},"preserve_origin":true}"#;
+    let base = r#"{"code_forge":"GITHUB","repo_owner":"source","repo_name":"app","head":{"type":"BRANCH","value":"frozen/prepare"},"clone_from":{"code_forge":"GITHUB","owner":"target","repo":"app"},"preserve_origin":true}"#;
     let valid = base.replace("frozen/prepare", "release+candidate");
     let args = Args::try_parse_from([
         "warp",
@@ -240,7 +240,7 @@ fn agent_run_accepts_git_valid_substituted_branch_override() {
 
     for invalid in [
         base.replace(
-            ",\"clone_from\":{\"code_forge\":\"GITHUB\",\"owner\":\"target\",\"repo\":\"warp\"}",
+            ",\"clone_from\":{\"code_forge\":\"GITHUB\",\"owner\":\"target\",\"repo\":\"app\"}",
             "",
         ),
         base.replace(
@@ -281,7 +281,7 @@ fn agent_run_parses_sparse_repository_substitution() {
         "--task-id",
         "550e8400-e29b-41d4-a716-446655440000",
         "--repository-head-override-json",
-        r#"{"code_forge":"GITHUB","repo_owner":"warpdotdev","repo_name":"warp","head":{"type":"COMMIT_SHA","value":"0123456789abcdef0123456789abcdef01234567"},"clone_from":{"code_forge":"GITHUB","owner":"warpdotdev","repo":"warp-for-benchmarks"},"preserve_origin":true}"#,
+        r#"{"code_forge":"GITHUB","repo_owner":"acme","repo_name":"app","head":{"type":"COMMIT_SHA","value":"0123456789abcdef0123456789abcdef01234567"},"clone_from":{"code_forge":"GITHUB","owner":"acme","repo":"acme-benchmarks"},"preserve_origin":true}"#,
     ])
     .unwrap();
 
@@ -298,7 +298,7 @@ fn agent_run_parses_sparse_repository_substitution() {
             .clone_from
             .as_ref()
             .map(|identity| identity.repo_name.as_str()),
-        Some("warp-for-benchmarks")
+        Some("acme-benchmarks")
     );
     assert!(mapped.preserve_origin);
     assert_eq!(
@@ -310,10 +310,10 @@ fn agent_run_parses_sparse_repository_substitution() {
 #[test]
 fn agent_run_rejects_malformed_sparse_repository_substitution_payloads() {
     for invalid_override in [
-        r#"{"code_forge":"GITHUB","repo_owner":"","repo_name":"warp","head":{"type":"BRANCH","value":"main"}}"#,
-        r#"{"code_forge":"GITHUB","repo_owner":"warpdotdev","repo_name":"warp","head":{"type":"COMMIT_SHA","value":"0123456789abcdef0123456789abcdef01234567"},"clone_from":{"code_forge":"GITHUB","owner":"","repo":"target"},"preserve_origin":true}"#,
-        r#"{"code_forge":"GITHUB","repo_owner":"warpdotdev","repo_name":"warp","head":{"type":"COMMIT_SHA","value":"0123456789abcdef0123456789abcdef01234567"},"clone_from":{"code_forge":"GITHUB","owner":"warpdotdev","repo":"target"}}"#,
-        r#"{"code_forge":"GITHUB","repo_owner":"warpdotdev","repo_name":"warp","head":{"type":"COMMIT_SHA","value":"0123456789abcdef0123456789abcdef01234567"},"preserve_origin":true}"#,
+        r#"{"code_forge":"GITHUB","repo_owner":"","repo_name":"app","head":{"type":"BRANCH","value":"main"}}"#,
+        r#"{"code_forge":"GITHUB","repo_owner":"acme","repo_name":"app","head":{"type":"COMMIT_SHA","value":"0123456789abcdef0123456789abcdef01234567"},"clone_from":{"code_forge":"GITHUB","owner":"","repo":"target"},"preserve_origin":true}"#,
+        r#"{"code_forge":"GITHUB","repo_owner":"acme","repo_name":"app","head":{"type":"COMMIT_SHA","value":"0123456789abcdef0123456789abcdef01234567"},"clone_from":{"code_forge":"GITHUB","owner":"acme","repo":"target"}}"#,
+        r#"{"code_forge":"GITHUB","repo_owner":"acme","repo_name":"app","head":{"type":"COMMIT_SHA","value":"0123456789abcdef0123456789abcdef01234567"},"preserve_origin":true}"#,
     ] {
         Args::try_parse_from([
             "warp",
@@ -438,7 +438,7 @@ fn parse_run_cloud(args: &[&str]) -> crate::agent::RunCloudArgs {
 fn agent_run_rejects_empty_or_padded_repository_head_branch() {
     for invalid_branch in ["", " main", "main "] {
         let head_override = format!(
-            r#"{{"code_forge":"GITHUB","repo_owner":"warpdotdev","repo_name":"warp","head":{{"type":"BRANCH","value":"{invalid_branch}"}}}}"#
+            r#"{{"code_forge":"GITHUB","repo_owner":"acme","repo_name":"app","head":{{"type":"BRANCH","value":"{invalid_branch}"}}}}"#
         );
 
         Args::try_parse_from([
@@ -869,7 +869,7 @@ fn agent_run_parses_repeated_repository_head_override_json() {
         "--task-id",
         "550e8400-e29b-41d4-a716-446655440000",
         "--repository-head-override-json",
-        r#"{"code_forge":"GITHUB","repo_owner":"warpdotdev","repo_name":"warp","head":{"type":"COMMIT_SHA","value":"0123456789abcdef0123456789abcdef01234567"}}"#,
+        r#"{"code_forge":"GITHUB","repo_owner":"acme","repo_name":"app","head":{"type":"COMMIT_SHA","value":"0123456789abcdef0123456789abcdef01234567"}}"#,
         "--repository-head-override-json",
         r#"{"code_forge":"GITLAB","repo_owner":"platform/backend","repo_name":"api","head":{"type":"BRANCH","value":"develop"}}"#,
     ])
@@ -936,7 +936,7 @@ fn agent_run_preserves_repository_origins_by_default() {
         "--task-id",
         "550e8400-e29b-41d4-a716-446655440000",
         "--repository-head-override-json",
-        r#"{"code_forge":"GITHUB","repo_owner":"warpdotdev","repo_name":"warp","head":{"type":"BRANCH","value":"main"}}"#,
+        r#"{"code_forge":"GITHUB","repo_owner":"acme","repo_name":"app","head":{"type":"BRANCH","value":"main"}}"#,
     ])
     .unwrap();
 
@@ -958,7 +958,7 @@ fn agent_run_rejects_invalid_exact_repository_sha() {
         "0123456789abcdef0123456789abcdef0123456A",
     ] {
         let head_override = format!(
-            r#"{{"code_forge":"GITHUB","repo_owner":"warpdotdev","repo_name":"warp","head":{{"type":"COMMIT_SHA","value":"{invalid_sha}"}}}}"#
+            r#"{{"code_forge":"GITHUB","repo_owner":"acme","repo_name":"app","head":{{"type":"COMMIT_SHA","value":"{invalid_sha}"}}}}"#
         );
         let err = Args::try_parse_from([
             "warp",
@@ -981,9 +981,9 @@ fn agent_run_rejects_invalid_exact_repository_sha() {
 #[test]
 fn agent_run_rejects_invalid_repository_head_override_shape() {
     for invalid_override in [
-        r#"{"code_forge":"github","repo_owner":"warpdotdev","repo_name":"warp","head":{"type":"COMMIT_SHA","value":"0123456789abcdef0123456789abcdef01234567"}}"#,
-        r#"{"code_forge":"GITHUB","repo_owner":"warpdotdev","repo_name":"warp","head":{"type":"NAMED_REF","value":"main"}}"#,
-        r#"{"code_forge":"GITHUB","repo_owner":"warpdotdev","repo_name":"warp","head":{"type":"BRANCH","value":"main"},"unexpected":true}"#,
+        r#"{"code_forge":"github","repo_owner":"acme","repo_name":"app","head":{"type":"COMMIT_SHA","value":"0123456789abcdef0123456789abcdef01234567"}}"#,
+        r#"{"code_forge":"GITHUB","repo_owner":"acme","repo_name":"app","head":{"type":"NAMED_REF","value":"main"}}"#,
+        r#"{"code_forge":"GITHUB","repo_owner":"acme","repo_name":"app","head":{"type":"BRANCH","value":"main"},"unexpected":true}"#,
     ] {
         Args::try_parse_from([
             "warp",
@@ -3488,11 +3488,14 @@ fn agent_run_cloud_standby_accepts_global_server_root_url() {
         "--standby-id",
         "550e8400-e29b-41d4-a716-446655440000",
         "--server-root-url",
-        "https://app.warp.dev",
+        "https://cloud-disabled.torch.invalid",
     ])
     .unwrap();
 
-    assert_eq!(args.server_root_url(), Some("https://app.warp.dev"));
+    assert_eq!(
+        args.server_root_url(),
+        Some("https://cloud-disabled.torch.invalid")
+    );
     let Some(Command::CommandLine(boxed_cmd)) = args.command else {
         panic!("Expected `torch agent run-cloud-standby` command");
     };
@@ -3972,7 +3975,7 @@ fn report_external_reference_required_args_parse() {
         "run-1",
         "report-external-reference",
         "--url",
-        "https://linear.app/warpdotdev/issue/REMOTE-2253",
+        "https://tracker.example.com/issue/ABC-123",
         "--reference-type",
         "LINEAR_ISSUE",
     ])
@@ -3988,10 +3991,7 @@ fn report_external_reference_required_args_parse() {
         panic!("Expected report-external-reference subcommand");
     };
 
-    assert_eq!(
-        report_args.url,
-        "https://linear.app/warpdotdev/issue/REMOTE-2253"
-    );
+    assert_eq!(report_args.url, "https://tracker.example.com/issue/ABC-123");
     assert_eq!(report_args.reference_type, "LINEAR_ISSUE");
     assert!(report_args.title.is_none());
     assert!(report_args.metadata.is_none());
@@ -4006,7 +4006,7 @@ fn report_external_reference_optional_title_parses() {
         "run-1",
         "report-external-reference",
         "--url",
-        "https://github.com/warpdotdev/warp/pull/1",
+        "https://github.com/TomByte/torch/pull/1",
         "--reference-type",
         "GITHUB_PR",
         "--title",
@@ -4026,7 +4026,7 @@ fn report_external_reference_optional_title_parses() {
         panic!("Expected report-external-reference subcommand");
     };
 
-    assert_eq!(report_args.url, "https://github.com/warpdotdev/warp/pull/1");
+    assert_eq!(report_args.url, "https://github.com/TomByte/torch/pull/1");
     assert_eq!(report_args.reference_type, "GITHUB_PR");
     assert_eq!(report_args.title.as_deref(), Some("My pull request"));
     assert_eq!(report_args.metadata.as_deref(), Some("{\"key\":\"val\"}"));
@@ -4055,7 +4055,7 @@ fn report_external_reference_missing_reference_type_fails() {
         "run-1",
         "report-external-reference",
         "--url",
-        "https://linear.app/warpdotdev/issue/REMOTE-2253",
+        "https://tracker.example.com/issue/ABC-123",
     ]);
     assert!(
         result.is_err(),

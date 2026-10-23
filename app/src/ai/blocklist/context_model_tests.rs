@@ -188,8 +188,8 @@ fn repository_context_reads_github_repo_model() {
         github_repo_model.update(&mut app, |model, ctx| {
             model.set_repository_info_for_test(
                 Some(RepositoryInfo {
-                    name: "warp-internal".to_owned(),
-                    owner: Some("warpdotdev".to_owned()),
+                    name: "acme-internal".to_owned(),
+                    owner: Some("acme".to_owned()),
                     host: Some("github.com".to_owned()),
                 }),
                 ctx,
@@ -204,8 +204,8 @@ fn repository_context_reads_github_repo_model() {
             assert_eq!(
                 model.repository_context(ctx),
                 Some(AIAgentContext::Repository {
-                    name: "warp-internal".to_owned(),
-                    owner: Some("warpdotdev".to_owned()),
+                    name: "acme-internal".to_owned(),
+                    owner: Some("acme".to_owned()),
                     host: Some("github.com".to_owned()),
                 })
             );
@@ -382,16 +382,16 @@ fn has_locking_attachment_is_false_with_only_pending_block_id() {
 #[test]
 fn repository_context_from_repository_info_converts_to_agent_context() {
     let repository_info = RepositoryInfo {
-        name: "warp-internal".to_owned(),
-        owner: Some("warpdotdev".to_owned()),
+        name: "acme-internal".to_owned(),
+        owner: Some("acme".to_owned()),
         host: Some("github.com".to_owned()),
     };
 
     assert_eq!(
         BlocklistAIContextModel::repository_context_from_repository_info(&repository_info),
         AIAgentContext::Repository {
-            name: "warp-internal".to_owned(),
-            owner: Some("warpdotdev".to_owned()),
+            name: "acme-internal".to_owned(),
+            owner: Some("acme".to_owned()),
             host: Some("github.com".to_owned()),
         }
     );
@@ -401,7 +401,7 @@ fn repository_context_from_repository_info_converts_to_agent_context() {
 fn pull_request_context_from_pr_info_includes_url() {
     let pr_info = PrInfo {
         number: 123,
-        url: "https://github.com/warpdotdev/warp/pull/123".to_owned(),
+        url: "https://github.com/TomByte/torch/pull/123".to_owned(),
         state: "OPEN".to_owned(),
         draft: true,
         base_branch: "main".to_owned(),
@@ -414,7 +414,7 @@ fn pull_request_context_from_pr_info_includes_url() {
             state: "OPEN".to_owned(),
             draft: true,
             base_branch: "main".to_owned(),
-            url: "https://github.com/warpdotdev/warp/pull/123".to_owned(),
+            url: "https://github.com/TomByte/torch/pull/123".to_owned(),
         })
     );
 }
@@ -423,7 +423,7 @@ fn pull_request_context_from_pr_info_includes_url() {
 fn pull_request_context_from_pr_info_rejects_numbers_that_do_not_fit_agent_context() {
     let pr_info = PrInfo {
         number: i32::MAX as u64 + 1,
-        url: "https://github.com/warpdotdev/warp/pull/2147483648".to_owned(),
+        url: "https://github.com/TomByte/torch/pull/2147483648".to_owned(),
         state: "OPEN".to_owned(),
         draft: false,
         base_branch: "main".to_owned(),
@@ -459,7 +459,7 @@ fn pull_request_context_reads_github_repo_model() {
             model.set_pr_info_for_test(
                 Some(PrInfo {
                     number: 123,
-                    url: "https://github.com/warpdotdev/warp/pull/123".to_owned(),
+                    url: "https://github.com/TomByte/torch/pull/123".to_owned(),
                     state: "OPEN".to_owned(),
                     draft: false,
                     base_branch: "main".to_owned(),
@@ -480,7 +480,7 @@ fn pull_request_context_reads_github_repo_model() {
                     state: "OPEN".to_owned(),
                     draft: false,
                     base_branch: "main".to_owned(),
-                    url: "https://github.com/warpdotdev/warp/pull/123".to_owned(),
+                    url: "https://github.com/TomByte/torch/pull/123".to_owned(),
                 })
             );
         });

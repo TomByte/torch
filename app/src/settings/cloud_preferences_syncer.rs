@@ -509,7 +509,6 @@ impl CloudPreferencesSyncer {
         });
     }
 
-    /// Fixes https://linear.app/warpdotdev/issue/CLD-2629/duplicate-prefs-for-users
     fn ensure_no_duplicate_cloud_prefs(&mut self, ctx: &mut ModelContext<Self>) {
         log::info!("Ensuring no duplicate cloud prefs");
         let ids_to_delete = CloudModel::handle(ctx).update(ctx, |cloud_model, ctx| {

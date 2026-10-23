@@ -6,8 +6,8 @@ fn additional_source_repos_round_trip_and_is_optional() {
     let snapshot = AgentConfigSnapshot {
         additional_source_repos: Some(vec![SourceRepo::new(
             CodeForge::GitHub,
-            "warpdotdev".to_string(),
-            "warp".to_string(),
+            "acme".to_string(),
+            "app".to_string(),
         )]),
         ..Default::default()
     };
@@ -16,8 +16,8 @@ fn additional_source_repos_round_trip_and_is_optional() {
         json["additional_source_repos"][0],
         serde_json::json!({
             "code_forge": "GITHUB",
-            "owner": "warpdotdev",
-            "repo": "warp"
+            "owner": "acme",
+            "repo": "app"
         })
     );
 
@@ -34,8 +34,8 @@ fn additional_source_repos_make_snapshot_non_empty() {
     let snapshot = AgentConfigSnapshot {
         additional_source_repos: Some(vec![SourceRepo::new(
             CodeForge::GitHub,
-            "warpdotdev".to_string(),
-            "warp".to_string(),
+            "acme".to_string(),
+            "app".to_string(),
         )]),
         ..Default::default()
     };

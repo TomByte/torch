@@ -128,8 +128,6 @@ const SHARED_BLOCK_TITLE_GENERATION_DESCRIPTION: &str =
 const GIT_OPERATIONS_AUTOGEN_DESCRIPTION: &str =
     "Let AI generate commit messages and pull request titles and descriptions.";
 const WISPR_FLOW_URL: &str = "https://wisprflow.ai/";
-const CUSTOM_INFERENCE_LEARN_MORE_URL: &str =
-    "https://docs.warp.dev/agents/inference/custom-inference-endpoint/";
 const CUSTOM_INFERENCE_INFO_TOOLTIP_MAX_WIDTH: f32 = 320.;
 const CUSTOM_ENDPOINT_MODAL_MAX_HEIGHT_PERCENTAGE: f32 = 0.8;
 
@@ -3982,7 +3980,7 @@ impl NaturalLanguageDetectionWidget {
                         FormattedTextFragment::plain_text("Encountered an incorrect detection? "),
                         FormattedTextFragment::hyperlink(
                             "Let us know",
-                            "https://warpdotdev.typeform.com/to/offrTIpq",
+                            "https://github.com/TomByte/torch/issues",
                         ),
                     ]
                 });
@@ -4041,7 +4039,7 @@ impl NaturalLanguageDetectionWidget {
                     ),
                     FormattedTextFragment::hyperlink(
                         "Let us know",
-                        "https://warpdotdev.typeform.com/to/offrTIpq",
+                        "https://github.com/TomByte/torch/issues",
                     ),
                 ]
             });
@@ -5478,10 +5476,6 @@ impl ApiKeysWidget {
             add_paragraph(vec![FormattedTextFragment::plain_text(
                 "API keys added here are stored only on this device, not on Torch's servers.",
             )]);
-            add_paragraph(vec![FormattedTextFragment::hyperlink(
-                "Learn more",
-                CUSTOM_INFERENCE_LEARN_MORE_URL,
-            )]);
         }
         let description = FormattedTextElement::new(
             FormattedText::new(lines),
@@ -6062,7 +6056,7 @@ impl SettingsWidget for ApiKeysWidget {
             {
                 if team.billing_metadata.customer_type == CustomerType::Enterprise {
                     vec![
-                        FormattedTextFragment::hyperlink("Contact sales", "mailto:sales@warp.dev"),
+                        FormattedTextFragment::plain_text("Contact sales"),
                         FormattedTextFragment::plain_text(
                             " to enable bringing your own API keys on your Enterprise plan.",
                         ),

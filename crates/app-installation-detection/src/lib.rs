@@ -32,13 +32,10 @@ pub fn make_router() -> Router {
             .on_failure(()),
     );
 
-    // We allow requests from localhost, warp.dev and any subdomain of warp.dev.
+    // We only allow requests from localhost.
     let allow_origin_predicate =
         AllowOrigin::predicate(|origin: &HeaderValue, _request_parts: &Parts| {
-            origin == "http://localhost:8080"
-                || origin == "http://localhost:8082"
-                || origin == "https://warp.dev"
-                || origin.as_bytes().ends_with(b".warp.dev")
+            origin == "http://localhost:8080" || origin == "http://localhost:8082"
         });
 
     let cors = CorsLayer::new()

@@ -170,7 +170,6 @@ impl Listener {
     // is finished is _not_ polled when the websocket is closed by the server and the CPU is asleep.
     // To get around this, we manually abort the future (effectively closing the websocket)
     // when the CPU goes to sleep and restart it when it's awakened.
-    // https://linear.app/warpdotdev/issue/CLD-172/websocket-hangs-when-closed-during-cpu-sleep
     fn handle_cpu_event(
         &mut self,
         _: ModelHandle<SystemStats>,

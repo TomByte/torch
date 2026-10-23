@@ -122,13 +122,13 @@ fn instructions_body_strips_front_matter_using_line_range() -> Result<()> {
 #[test]
 fn parse_org_from_git_url_supports_ssh_and_https() {
     assert_eq!(
-        parse_org_from_git_url("git@github.com:warpdotdev/warp-internal.git"),
-        Some("warpdotdev".to_string())
+        parse_org_from_git_url("git@github.com:TomByte/torch.git"),
+        Some("TomByte".to_string())
     );
 
     assert_eq!(
-        parse_org_from_git_url("https://github.com/warpdotdev/warp-internal.git"),
-        Some("warpdotdev".to_string())
+        parse_org_from_git_url("https://github.com/TomByte/torch.git"),
+        Some("TomByte".to_string())
     );
 }
 

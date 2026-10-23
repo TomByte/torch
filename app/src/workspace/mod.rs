@@ -289,18 +289,6 @@ pub fn init(app: &mut AppContext) {
                 )
                 .with_context_predicate(id!("Workspace")),
                 EditableBinding::new(
-                    "workspace:install_opencode_warp_plugin",
-                    "[Debug] Install OpenCode Torch plugin",
-                    WorkspaceAction::InstallOpenCodeWarpPlugin,
-                )
-                .with_context_predicate(id!("Workspace")),
-                EditableBinding::new(
-                    "workspace:use_local_opencode_warp_plugin",
-                    "[Debug] Use local OpenCode Torch plugin (testing only)",
-                    WorkspaceAction::UseLocalOpenCodeWarpPlugin,
-                )
-                .with_context_predicate(id!("Workspace")),
-                EditableBinding::new(
                     "workspace:open_session_config_modal",
                     "[Debug] Open Session Config Modal",
                     WorkspaceAction::ShowSessionConfigModal,

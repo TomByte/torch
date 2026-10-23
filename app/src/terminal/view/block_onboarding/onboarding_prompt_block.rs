@@ -66,8 +66,7 @@ impl OnboardingPromptBlock {
         const LINE_TWO: &str =
             "Torch works with many custom prompts like oh-my-zsh, Starship, Powerlevel10K. ";
         const LINK_TEXT: &str = "Learn more";
-        const LINK_DESTINATION: &str =
-            "https://docs.warp.dev/terminal/appearance/prompt#custom-prompt-compatibility-table";
+        const LINK_DESTINATION: &str = "https://github.com/TomByte/torch";
 
         Flex::column()
             .with_children([

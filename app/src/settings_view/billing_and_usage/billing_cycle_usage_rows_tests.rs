@@ -173,7 +173,7 @@ fn build_own_usage_row_local_filter_drops_cloud_entries() {
 fn member(uid: &str) -> WorkspaceMember {
     WorkspaceMember {
         uid: UserUid::new(uid),
-        email: format!("{uid}@warp.dev"),
+        email: format!("{uid}@example.com"),
         role: MembershipRole::User,
         is_disabled: false,
         usage_info: WorkspaceMemberUsageInfo {
@@ -213,7 +213,10 @@ fn per_member_rows_cover_exactly_the_supplied_roster() {
     );
 
     let named: Vec<_> = rows.iter().map(|r| r.display_name.as_str()).collect();
-    assert_eq!(named, vec!["viewer-uid@warp.dev", "other-uid@warp.dev"]);
+    assert_eq!(
+        named,
+        vec!["viewer-uid@example.com", "other-uid@example.com"]
+    );
     assert_eq!(rows[0].total_credits, 10.0);
     assert_eq!(rows[1].total_credits, 0.0, "zero-usage roster member");
 
@@ -222,7 +225,7 @@ fn per_member_rows_cover_exactly_the_supplied_roster() {
         rows.iter()
             .map(|r| r.display_name.as_str())
             .collect::<Vec<_>>(),
-        vec!["viewer-uid@warp.dev"],
+        vec!["viewer-uid@example.com"],
         "members outside the roster must not get a row"
     );
 }

@@ -176,9 +176,9 @@ fn artifact_round_trips_all_variants() {
             title: None,
         },
         Artifact::PullRequest {
-            url: "https://github.com/warpdotdev/warp/pull/123".to_string(),
+            url: "https://github.com/acme/app/pull/123".to_string(),
             branch: "feature-branch".to_string(),
-            repo: Some("warp".to_string()),
+            repo: Some("app".to_string()),
             number: Some(123),
         },
         Artifact::ExternalReference {
@@ -217,15 +217,15 @@ fn artifact_round_trips_all_variants() {
 #[test]
 fn artifact_pull_request_derives_repo_and_number_on_deserialize() {
     let artifact: Artifact = serde_json::from_str(
-        r#"{"artifact_type":"PULL_REQUEST","data":{"url":"https://github.com/warpdotdev/warp/pull/456","branch":"main"}}"#,
+        r#"{"artifact_type":"PULL_REQUEST","data":{"url":"https://github.com/acme/app/pull/456","branch":"main"}}"#,
     )
     .unwrap();
     assert_eq!(
         artifact,
         Artifact::PullRequest {
-            url: "https://github.com/warpdotdev/warp/pull/456".to_string(),
+            url: "https://github.com/acme/app/pull/456".to_string(),
             branch: "main".to_string(),
-            repo: Some("warp".to_string()),
+            repo: Some("app".to_string()),
             number: Some(456),
         }
     );

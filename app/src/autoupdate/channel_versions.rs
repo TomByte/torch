@@ -77,7 +77,6 @@ async fn fetch_channel_versions_from_github_release(
 // Synchronously fetches updated Torch [`ChannelVersions`] from GCP JSON storage. This will soon
 // be deprecated in favor of retrieving updated channel versions from the Torch Server.
 // Note, in order to run against a test file you can use the "channel_versions_test.json" file
-// and update the file using gsutil cp channel_versions_test.json gs://warp-releases/channel_versions_test.json
 async fn fetch_channel_versions_from_json_storage(
     client: &http_client::Client,
     nonce: &str,

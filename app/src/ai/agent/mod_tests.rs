@@ -585,8 +585,8 @@ fn ai_agent_context_round_trips_tagged_variants() {
             branch: Some("main".to_string()),
         },
         AIAgentContext::Repository {
-            name: "warp".to_string(),
-            owner: Some("warpdotdev".to_string()),
+            name: "app".to_string(),
+            owner: Some("acme".to_string()),
             host: Some("github.com".to_string()),
         },
         AIAgentContext::PullRequest {
@@ -594,7 +594,7 @@ fn ai_agent_context_round_trips_tagged_variants() {
             state: "OPEN".to_string(),
             draft: true,
             base_branch: "main".to_string(),
-            url: "https://github.com/warpdotdev/warp/pull/42".to_string(),
+            url: "https://github.com/TomByte/torch/pull/42".to_string(),
         },
         AIAgentContext::Skills { skills: vec![] },
     ];

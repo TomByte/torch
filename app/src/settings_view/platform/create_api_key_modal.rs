@@ -30,10 +30,6 @@ use crate::view_components::dropdown::{DROPDOWN_PADDING, TOP_MENU_BAR_HEIGHT};
 use crate::view_components::{Dropdown as DropdownView, DropdownItem, FilterableDropdown};
 use crate::workspaces::user_workspaces::{TeamScope, UserWorkspaces};
 
-const OZ_AGENTS_URL: &str = "https://oz.warp.dev/agents?new=true";
-const API_KEY_DOCS_URL: &str =
-    "https://docs.warp.dev/reference/cli/api-keys/#personal-vs-agent-keys";
-
 const LABEL_FONT_SIZE: f32 = 14.;
 const INPUT_WIDTH: f32 = 428.; // 460px - (2 * 16px) padding
 const AGENT_DROPDOWN_POSITION_ID: &str = "create_api_key_modal_agent_dropdown";
@@ -645,8 +641,6 @@ impl View for CreateApiKeyModal {
                     FormattedTextElement::new(
                         FormattedText::new([FormattedTextLine::Line(vec![
                             FormattedTextFragment::plain_text(selected_key_type.description()),
-                            FormattedTextFragment::plain_text(" "),
-                            FormattedTextFragment::hyperlink("Learn more", API_KEY_DOCS_URL),
                         ])]),
                         LABEL_FONT_SIZE,
                         appearance.ui_font_family(),
@@ -915,9 +909,7 @@ impl TypedActionView for CreateApiKeyModal {
                 self.selected_agent_uid = Some(uid.clone());
                 ctx.notify();
             }
-            CreateApiKeyModalAction::CreateNewAgent => {
-                ctx.open_url(OZ_AGENTS_URL);
-            }
+            CreateApiKeyModalAction::CreateNewAgent => {}
         }
     }
 }

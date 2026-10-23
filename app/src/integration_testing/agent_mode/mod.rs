@@ -203,10 +203,10 @@ pub fn output_conversation_debug_info(
                 // The debug link within the container will be using host.docker.internal, but we're opening
                 // from outside the container.
                 // The server is configured to always write debug data to GCS instead of locally when run for evals, so we replace
-                // with staging.warp.dev instead of localhost:8080.
+                // with the disabled cloud host instead of localhost:8080.
                 token
                     .debug_link()
-                    .replace("host.docker.internal:8080", "staging.warp.dev")
+                    .replace("host.docker.internal:8080", "cloud-disabled.torch.invalid")
             })
             .unwrap_or("unavailable".to_owned());
         write_to_debug_file(&format!("Conversation Debug Link: {debug_link}"));

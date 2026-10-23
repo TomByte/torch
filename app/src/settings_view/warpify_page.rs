@@ -493,10 +493,7 @@ impl TitleWidget {
                 "Configure whether Torch attempts to “Warpify” (add support for blocks, \
                     input modes, etc) certain shells. ",
             ),
-            FormattedTextFragment::hyperlink(
-                "Learn more",
-                "https://docs.warp.dev/terminal/warpify/subshells",
-            ),
+            FormattedTextFragment::hyperlink("Learn more", "https://github.com/TomByte/torch"),
         ];
 
         let warpify_description = FormattedTextElement::new(

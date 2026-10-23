@@ -1192,10 +1192,7 @@ impl<S> TerminalManager<S> {
         session_id: SessionId,
     ) -> Result<(), SendError<Message>> {
         let shell_type = shell_starter.shell_type();
-        if shell_type == crate::terminal::shell::ShellType::Zsh
-            // For more on why this is necessary on Git Bash, see https://linear.app/warpdotdev/issue/CORE-3202.
-            || shell_starter.is_msys2()
-        {
+        if shell_type == crate::terminal::shell::ShellType::Zsh || shell_starter.is_msys2() {
             let init_shell_script = crate::terminal::bootstrap::init_shell_script_for_shell(
                 shell_type,
                 &crate::ASSETS,

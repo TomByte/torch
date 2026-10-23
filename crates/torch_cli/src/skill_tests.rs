@@ -11,38 +11,38 @@ fn test_parse_simple_skill_name() {
 
 #[test]
 fn test_parse_repo_qualified() {
-    let spec: SkillSpec = "warp-internal:code-review".parse().unwrap();
+    let spec: SkillSpec = "acme-internal:code-review".parse().unwrap();
     assert_eq!(spec.org, None);
-    assert_eq!(spec.repo, Some("warp-internal".to_string()));
+    assert_eq!(spec.repo, Some("acme-internal".to_string()));
     assert_eq!(spec.skill_identifier, "code-review");
     assert!(!spec.is_full_path());
 }
 
 #[test]
 fn test_parse_org_repo_qualified() {
-    let spec: SkillSpec = "warpdotdev/warp-internal:code-review".parse().unwrap();
-    assert_eq!(spec.org, Some("warpdotdev".to_string()));
-    assert_eq!(spec.repo, Some("warp-internal".to_string()));
+    let spec: SkillSpec = "acme/acme-internal:code-review".parse().unwrap();
+    assert_eq!(spec.org, Some("acme".to_string()));
+    assert_eq!(spec.repo, Some("acme-internal".to_string()));
     assert_eq!(spec.skill_identifier, "code-review");
     assert!(!spec.is_full_path());
 }
 
 #[test]
 fn test_parse_full_path_with_org_repo() {
-    let spec: SkillSpec = "warpdotdev/warp-internal:.claude/skills/deploy/SKILL.md"
+    let spec: SkillSpec = "acme/acme-internal:.claude/skills/deploy/SKILL.md"
         .parse()
         .unwrap();
-    assert_eq!(spec.org, Some("warpdotdev".to_string()));
-    assert_eq!(spec.repo, Some("warp-internal".to_string()));
+    assert_eq!(spec.org, Some("acme".to_string()));
+    assert_eq!(spec.repo, Some("acme-internal".to_string()));
     assert_eq!(spec.skill_identifier, ".claude/skills/deploy/SKILL.md");
     assert!(spec.is_full_path());
 }
 
 #[test]
 fn test_parse_full_path_with_repo() {
-    let spec: SkillSpec = "warp-server:.agents/skills/test/SKILL.md".parse().unwrap();
+    let spec: SkillSpec = "acme-server:.agents/skills/test/SKILL.md".parse().unwrap();
     assert_eq!(spec.org, None);
-    assert_eq!(spec.repo, Some("warp-server".to_string()));
+    assert_eq!(spec.repo, Some("acme-server".to_string()));
     assert_eq!(spec.skill_identifier, ".agents/skills/test/SKILL.md");
     assert!(spec.is_full_path());
 }
@@ -55,30 +55,30 @@ fn test_display_simple_name() {
 
 #[test]
 fn test_display_repo_qualified() {
-    let spec = SkillSpec::with_repo("warp-internal".to_string(), "code-review".to_string());
-    assert_eq!(spec.to_string(), "warp-internal:code-review");
+    let spec = SkillSpec::with_repo("acme-internal".to_string(), "code-review".to_string());
+    assert_eq!(spec.to_string(), "acme-internal:code-review");
 }
 
 #[test]
 fn test_display_org_repo_qualified() {
     let spec = SkillSpec::with_org_and_repo(
-        "warpdotdev".to_string(),
-        "warp-internal".to_string(),
+        "acme".to_string(),
+        "acme-internal".to_string(),
         "code-review".to_string(),
     );
-    assert_eq!(spec.to_string(), "warpdotdev/warp-internal:code-review");
+    assert_eq!(spec.to_string(), "acme/acme-internal:code-review");
 }
 
 #[test]
 fn test_display_full_path() {
     let spec = SkillSpec::with_org_and_repo(
-        "warpdotdev".to_string(),
-        "warp-internal".to_string(),
+        "acme".to_string(),
+        "acme-internal".to_string(),
         ".claude/skills/deploy/SKILL.md".to_string(),
     );
     assert_eq!(
         spec.to_string(),
-        "warpdotdev/warp-internal:.claude/skills/deploy/SKILL.md"
+        "acme/acme-internal:.claude/skills/deploy/SKILL.md"
     );
 }
 
@@ -115,7 +115,7 @@ fn test_parse_empty_qualifier_fails() {
 
 #[test]
 fn test_parse_empty_path_fails() {
-    let result: Result<SkillSpec, _> = "warp-internal:".parse();
+    let result: Result<SkillSpec, _> = "acme-internal:".parse();
     assert!(result.is_err());
 }
 
@@ -127,7 +127,7 @@ fn test_skill_name_simple_name() {
 
 #[test]
 fn test_skill_name_repo_qualified_name() {
-    let spec: SkillSpec = "warpdotdev/feedback-triage-bot:feedback-triage-bot"
+    let spec: SkillSpec = "acme/feedback-triage-bot:feedback-triage-bot"
         .parse()
         .unwrap();
     assert_eq!(spec.skill_name(), "feedback-triage-bot");
@@ -135,7 +135,7 @@ fn test_skill_name_repo_qualified_name() {
 
 #[test]
 fn test_skill_name_repo_qualified_path() {
-    let spec: SkillSpec = "warpdotdev/feedback-triage-bot:.agents/skills/slack-triage/SKILL.md"
+    let spec: SkillSpec = "acme/feedback-triage-bot:.agents/skills/slack-triage/SKILL.md"
         .parse()
         .unwrap();
     assert_eq!(spec.skill_name(), "slack-triage");

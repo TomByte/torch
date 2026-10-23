@@ -23,9 +23,9 @@ pub(super) struct Problem {
 
 #[derive(Clone, Copy, Default, Deserialize)]
 pub(super) enum ProblemType {
-    #[serde(rename = "https://docs.warp.dev/errors/feature_not_available")]
+    #[serde(rename = "https://cloud-disabled.torch.invalid/errors/feature_not_available")]
     Disabled,
-    #[serde(rename = "https://docs.warp.dev/errors/operation_not_supported")]
+    #[serde(rename = "https://cloud-disabled.torch.invalid/errors/operation_not_supported")]
     Unsupported,
     #[default]
     #[serde(other)]

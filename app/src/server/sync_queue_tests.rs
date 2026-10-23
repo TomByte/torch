@@ -762,7 +762,7 @@ fn test_create_and_update_notebook() {
     });
 }
 
-// regression test for https://linear.app/warpdotdev/issue/CLD-571
+// Regression test for the initial queue items being processed properly.
 #[test]
 fn test_initial_queue_items_processed_properly() {
     App::test((), |mut app| async move {

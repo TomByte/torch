@@ -3,7 +3,7 @@ module.exports = {
     // Download the GraphQL schema from the staging server.
     staging: {
       schema: {
-        'https://staging.warp.dev/graphql/v2': {
+        'https://cloud-disabled.torch.invalid/graphql/v2': {
           loader: './api/client-schema.ts'
         }
       },

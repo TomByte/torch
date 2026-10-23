@@ -9,7 +9,7 @@ TODO: C.I. and remediation of failed migrations
 
 ## Step 1: One-time setup
 Make sure you have run `/script/bootstrap` at least once before. That installs our fork of
-`diesel_cli`. Our fork is an old version that [bundles](https://github.com/warpdotdev/diesel/blob/b2c58897c39c519a946314bd5b63765d3af56204/diesel_cli/Cargo.toml#L54)
+`diesel_cli`. Our fork is an old version that bundles
 SQLite in with the `diesel_cli`. We use these version of Diesel and SQLite instead of relying on
 the versions on our machines. So do not follow the official Diesel CLI installation instructions.
 

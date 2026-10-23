@@ -32,7 +32,7 @@ pub struct LogConfig {
     /// `warp.log.in_session.0` and a fresh active file is opened. Older `.in_session.N`
     /// files shift up and the oldest is discarded, matching the per-startup
     /// `rotate_log_files` behavior. `None` preserves the existing unbounded-within-session
-    /// growth (warpdotdev/warp#10879).
+    /// growth.
     pub max_file_size_bytes: Option<u64>,
 }
 

@@ -199,7 +199,7 @@ const PAYMENT_ISSUE_BANNER_LINE_2_ADMIN: &str =
     "Please update your payment information to restore access.";
 
 const PAYMENT_ISSUE_BANNER_LINE_2_ADMIN_ENTERPRISE: &str =
-    "Please contact support@warp.dev to restore access.";
+    "Please contact a team admin to restore access.";
 
 const PAYMENT_ISSUE_BANNER_LINE_2_NONADMIN: &str = "Please contact a team admin to restore access.";
 
@@ -1123,9 +1123,6 @@ impl DriveIndex {
             /* NOTE: Temporary fix for not being able to open folders due to event conflicts.
              * This fixes the above but re-introduces a bug where we don't auto-expand the
              * selected notebook folder in the drive.
-             * Follow:
-             * https://linear.app/warpdotdev/issue/CLD-1557/unable-to-open-folder-when-selected-notebook-resides-in-closed-folder
-             * for a proper fix.
             CloudModel::handle(ctx).update(ctx, |model, ctx| {
                 model.force_expand_object_and_ancestors_cloud_id(id, ctx);
             });

@@ -460,7 +460,6 @@ fn is_newer_nondx12_nvidia_adapter_on_windows(adapter_info: &wgpu::AdapterInfo) 
 
 /// Returns whether this adapter is the integrated OpenGL driver for Windows running in Parallels.
 /// It caused problems with theme background images.
-/// https://linear.app/warpdotdev/issue/CORE-3692/background-images-broken-in-parallels
 fn is_gl_to_metal_adapter_on_windows_in_parallels(adapter_info: &wgpu::AdapterInfo) -> bool {
     cfg!(windows)
         && adapter_info.backend == Backend::Gl
@@ -530,7 +529,6 @@ fn is_intel_uhd_620_adapter_on_windows_with_vulkan_backend(
 /// Public reports of latency/stutter bugs on Intel integrated GPU drivers (including the UHD 770):
 /// https://github.com/IGCIT/Intel-GPU-Community-Issue-Tracker-IGCIT/issues/1002
 /// https://github.com/libsdl-org/SDL/issues/5628
-/// See also https://github.com/warpdotdev/warp/issues/4856
 fn is_intel_uhd_770_adapter_on_windows(adapter_info: &wgpu::AdapterInfo) -> bool {
     cfg!(windows)
         && matches!(adapter_info.backend, Backend::Dx12 | Backend::Vulkan)
@@ -544,8 +542,6 @@ fn is_intel_uhd_770_adapter_on_windows(adapter_info: &wgpu::AdapterInfo) -> bool
 /// the window bounds when window decorations are disabled. The offset matches the size of the
 /// window decorations (e.g. title bar height). Enabling native window decorations fixes the
 /// alignment.
-///
-/// See: https://github.com/warpdotdev/Warp/issues/6120
 pub fn adapter_has_rendering_offset_bug(adapter_info: &wgpu::AdapterInfo) -> bool {
     if !cfg!(windows) {
         return false;
@@ -556,8 +552,7 @@ pub fn adapter_has_rendering_offset_bug(adapter_info: &wgpu::AdapterInfo) -> boo
         return false;
     }
 
-    // Known affected Intel integrated GPU models. This list is based on user reports from
-    // https://github.com/warpdotdev/Warp/issues/6120.
+    // Known affected Intel integrated GPU models, based on user reports.
     let affected_models = [
         "Intel(R) HD Graphics 2500",
         "Intel(R) HD Graphics 4000",
@@ -578,9 +573,7 @@ pub fn adapter_has_rendering_offset_bug(adapter_info: &wgpu::AdapterInfo) -> boo
 ///
 /// The V3D Vulkan driver on Raspberry Pi and similar ARM SBCs have panics and flickering issues.
 /// The logs have warnings about these drivers missing the `FULL_DRAW_INDEX_UINT32` downlevel flag
-/// but if it's unclear if that is the actual cause. See:
-/// https://github.com/warpdotdev/warp/issues/10618
-/// https://github.com/warpdotdev/warp/issues/4879
+/// but if it's unclear if that is the actual cause.
 fn is_v3d_vulkan_adapter(adapter_info: &wgpu::AdapterInfo) -> bool {
     cfg!(target_os = "linux")
         && adapter_info.backend == wgpu::Backend::Vulkan
@@ -805,9 +798,7 @@ fn adapter_stability_sort_func(
     // Same with Nvidia drivers, though this is only an issue with a Wayland window server.
     } else if window_server_is_wayland && is_older_nvidia_adapter(&adapter_info) {
         log::warn!(
-            "Deprioritizing Vulkan-backed Nvidia adapter due to version < {} (unsupported).\nSee \
-            the \"Graphics\" secion of our docs here: \
-            https://docs.warp.dev/help/known-issues#linux-1",
+            "Deprioritizing Vulkan-backed Nvidia adapter due to version < {} (unsupported).",
             *MIN_SUPPORTED_NVIDIA_VERSION
         );
         AdapterSupport::Unsupported

@@ -314,7 +314,6 @@ fn append_unmatched_line_suffix(search: &str, file_line: &str, insertion: &mut S
 }
 /// We told the model not to include line numbers for the replacement content. However, it can
 /// still happen. Try to remove them here.
-/// https://github.com/warpdotdev/warp-server/blob/d9c1b6d1443290f2355979ae552d41af01a63bde/logic/ai/prompt/tools/suggest_diff.yaml#L34-L34
 fn remove_extra_line_num_prefix(replace: String) -> String {
     static LINE_NUMBER_PATTERN: LazyLock<Regex> =
         LazyLock::new(|| Regex::new(r"^\d+\|").expect("line number regex must compile"));

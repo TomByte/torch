@@ -808,12 +808,6 @@ pub enum WorkspaceAction {
     /// Reset the free AI removal modal seen state (for debugging)
     #[cfg(debug_assertions)]
     ResetFreeAiRemovalModalState,
-    /// Install the opencode-warp plugin from GitHub into the global opencode config.
-    #[cfg(debug_assertions)]
-    InstallOpenCodeWarpPlugin,
-    /// Use a local checkout of the opencode-warp plugin (for testing/development).
-    #[cfg(debug_assertions)]
-    UseLocalOpenCodeWarpPlugin,
     /// Take a process sample of the app (equivalent to Activity Monitor > Sample Process).
     #[cfg(target_os = "macos")]
     SampleProcess,
@@ -1288,9 +1282,7 @@ impl WorkspaceAction {
             | ResetChatGPTPlanModalState
             | TriggerAutoHandoffToCloud
             | OpenFreeAiRemovalModal
-            | ResetFreeAiRemovalModalState
-            | InstallOpenCodeWarpPlugin
-            | UseLocalOpenCodeWarpPlugin => false,
+            | ResetFreeAiRemovalModalState => false,
             #[cfg(not(target_family = "wasm"))]
             ViewLogs => false,
             #[cfg(target_os = "macos")]

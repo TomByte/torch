@@ -2002,7 +2002,7 @@ enum HostEnablementSetting {
 
 """ImageTag represents a Docker image tag with repository information."""
 type ImageTag {
-  """Full image name with tag (e.g., "warpdotdev/dev-ubuntu:latest")"""
+  """Full image name with tag (e.g., "acme/dev-ubuntu:latest")"""
   image: String!
 
   """Languages label from the image (e.g., ["go", "golang"])"""
@@ -3456,7 +3456,7 @@ type RootQuery {
 
   """
   List available Torch development base images from Docker Hub.
-  Returns all images with the 'dev-' prefix from the warpdotdev organization.
+  Returns all images with the 'dev-' prefix from the configured organization.
   """
   listWarpDevImages: ListWarpDevImagesResult!
   managedSecrets(input: ManagedSecretsInput!, requestContext: RequestContext!): ManagedSecretsResult!
