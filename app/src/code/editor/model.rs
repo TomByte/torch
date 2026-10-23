@@ -16,18 +16,6 @@ use num_traits::SaturatingSub;
 use rangemap::{RangeMap, RangeSet};
 use string_offset::CharOffset;
 use syntax_tree::{ColorMap, DecorationStateEvent, SyntaxTreeState};
-use vec1::{Vec1, vec1};
-use vim::vim::{
-    BracketChar, CharacterMotion, Direction, FindCharMotion, FirstNonWhitespaceMotion,
-    InsertPosition, LineMotion, MotionType, TextObjectInclusion, TextObjectType, VimOperator,
-    VimTextObject, WordBound, WordMotion, WordType,
-};
-use vim::{
-    find_next_paragraph_end, find_previous_paragraph_start, vim_a_block, vim_a_paragraph,
-    vim_a_quote, vim_a_word, vim_all_lines, vim_find_char_on_line, vim_find_matching_bracket,
-    vim_inner_block, vim_inner_line, vim_inner_paragraph, vim_inner_quote, vim_inner_word,
-    vim_word_iterator_from_offset,
-};
 use torch_core::platform::SessionPlatform;
 use torch_core::semantic_selection::SemanticSelection;
 use torch_core::ui::theme::Fill;
@@ -63,6 +51,18 @@ use torchui::text::TextBuffer;
 use torchui::text::point::Point;
 use torchui::units::{IntoPixels, Pixels};
 use torchui::{AppContext, Entity, ModelAsRef, ModelContext, ModelHandle, SingletonEntity};
+use vec1::{Vec1, vec1};
+use vim::vim::{
+    BracketChar, CharacterMotion, Direction, FindCharMotion, FirstNonWhitespaceMotion,
+    InsertPosition, LineMotion, MotionType, TextObjectInclusion, TextObjectType, VimOperator,
+    VimTextObject, WordBound, WordMotion, WordType,
+};
+use vim::{
+    find_next_paragraph_end, find_previous_paragraph_start, vim_a_block, vim_a_paragraph,
+    vim_a_quote, vim_a_word, vim_all_lines, vim_find_char_on_line, vim_find_matching_bracket,
+    vim_inner_block, vim_inner_line, vim_inner_paragraph, vim_inner_quote, vim_inner_word,
+    vim_word_iterator_from_offset,
+};
 
 use super::super::DiffResult;
 use super::comments::{EditorCommentsModel, PendingComment, PendingCommentEvent};

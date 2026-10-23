@@ -1,6 +1,5 @@
-use crate::ai::agent::conversation::ConversationStatus;
-
 use super::*;
+use crate::ai::agent::conversation::ConversationStatus;
 
 #[test]
 fn listed_agents_show_their_latest_state_without_moving() {

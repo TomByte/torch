@@ -5,8 +5,8 @@ use torchui::AppContext;
 #[cfg(feature = "release_bundle")]
 use {
     service_impl::forward_uri_to_sole_running_instance,
-    single_instance_manager::SingleInstanceManager, thiserror::Error, url::Url,
-    torch_core::channel::ChannelState,
+    single_instance_manager::SingleInstanceManager, thiserror::Error,
+    torch_core::channel::ChannelState, url::Url,
 };
 
 mod registry;

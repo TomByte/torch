@@ -2,9 +2,9 @@ use base64::Engine as _;
 use base64::prelude::BASE64_URL_SAFE;
 use futures::StreamExt as _;
 use prost::Message as _;
-use tracing_futures::Instrument as _;
 use torch_core::channel::ChannelState;
 use torch_server_client::base_client::{AmbientHeaderPolicy, BaseClient, TEAM_UID_HEADER};
+use tracing_futures::Instrument as _;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {

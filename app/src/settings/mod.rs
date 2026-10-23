@@ -77,12 +77,12 @@ pub use select::*;
 pub use shared_object_limit_banner::*;
 pub use ssh::*;
 pub use theme::*;
+use torch_core::user_preferences::GetUserPreferences as _;
 pub use tui_autoupdate::*;
 pub use tui_theme::*;
 pub use tui_voice::*;
 pub use tui_zero_state::*;
 pub use vim_banner::*;
-use torch_core::user_preferences::GetUserPreferences as _;
 
 /// Describes errors encountered when loading settings from `settings.toml`.
 #[derive(Clone, Debug, PartialEq, Eq)]

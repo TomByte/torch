@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use session_sharing_protocol::common::{AgentAttachment, ParticipantId};
-use uuid::Uuid;
 use torchui::{AppContext, Entity, EntityId, ModelContext, SingletonEntity};
+use uuid::Uuid;
 
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent::{AIAgentAttachment, BaseUserQuery};

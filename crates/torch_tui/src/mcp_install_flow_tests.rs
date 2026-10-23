@@ -1,8 +1,8 @@
-use uuid::Uuid;
 use torch::appearance::Appearance;
 use torch::editor::CodeEditorModel;
 use torch::tui_export::{TuiMcpInstallRequest, TuiMcpServerId, TuiMcpTemplateVariable};
 use torchui_core::App;
+use uuid::Uuid;
 
 use super::{TuiMcpInstallFlowAction, TuiMcpInstallFlowModel, TuiMcpInstallStep};
 use crate::input_suggestions_mode::TuiInputSuggestionsModeModel;

@@ -134,8 +134,8 @@ fn pill_bar_scrollable_finite_under_capped_drag_preview() {
 #[test]
 fn pill_bar_data_layer_finds_restored_children_before_pane_creation() {
     use chrono::Utc;
-    use uuid::Uuid;
     use torchui::App;
+    use uuid::Uuid;
 
     use crate::ai::blocklist::BlocklistAIHistoryModel;
     use crate::ai::blocklist::orchestration_topology::descendant_conversation_ids_in_spawn_order;

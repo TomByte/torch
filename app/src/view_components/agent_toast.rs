@@ -3,7 +3,6 @@ use std::time::Duration;
 use instant::Instant;
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
-use uuid::Uuid;
 use torchui::r#async::{SpawnedFutureHandle, Timer};
 use torchui::elements::{
     ChildAnchor, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, DispatchEventResult,
@@ -17,6 +16,7 @@ use torchui::{
     AppContext, Element, Entity, EntityId, SingletonEntity, TypedActionView, View, ViewContext,
     WindowId,
 };
+use uuid::Uuid;
 
 use crate::appearance::Appearance;
 use crate::settings_view::keybindings::{KeybindingChangedEvent, KeybindingChangedNotifier};

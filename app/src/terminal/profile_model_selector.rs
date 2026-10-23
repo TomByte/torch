@@ -110,7 +110,9 @@ pub fn calculate_scaled_font_size(appearance: &torch_core::ui::appearance::Appea
 }
 
 /// Calculate the maximum width for profile name text (we will clip to this width)
-pub fn calculate_max_profile_name_width(appearance: &torch_core::ui::appearance::Appearance) -> f32 {
+pub fn calculate_max_profile_name_width(
+    appearance: &torch_core::ui::appearance::Appearance,
+) -> f32 {
     let scaled_font_size = calculate_scaled_font_size(appearance);
     scaled_font_size * MAX_PROFILE_NAME_WIDTH_SCALE_FACTOR
 }

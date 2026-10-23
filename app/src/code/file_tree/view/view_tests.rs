@@ -8,10 +8,10 @@ use repo_metadata::repositories::DetectedRepositories;
 use repo_metadata::watcher::DirectoryWatcher;
 use repo_metadata::{RepoMetadataModel, RepositoryIdentifier};
 use settings::Setting;
-use virtual_fs::{Stub, VirtualFS};
 use torch_core::ui::appearance::Appearance;
 use torchui::platform::WindowStyle;
 use torchui::{App, ModelHandle, SingletonEntity};
+use virtual_fs::{Stub, VirtualFS};
 
 use super::FileTreeView;
 use crate::auth::AuthStateProvider;
@@ -339,8 +339,10 @@ fn repo_transition_unregisters_lazy_loaded_path() {
                     )
                 );
                 let displayed_std =
-                    torch_util::standardized_path::StandardizedPath::try_from_local(&displayed_root)
-                        .unwrap();
+                    torch_util::standardized_path::StandardizedPath::try_from_local(
+                        &displayed_root,
+                    )
+                    .unwrap();
                 assert_eq!(
                     view.root_directories
                         .get(&displayed_std)
@@ -370,8 +372,10 @@ fn repo_transition_unregisters_lazy_loaded_path() {
 
             file_tree_view.read(&app, |view, _ctx| {
                 let displayed_std =
-                    torch_util::standardized_path::StandardizedPath::try_from_local(&displayed_root)
-                        .unwrap();
+                    torch_util::standardized_path::StandardizedPath::try_from_local(
+                        &displayed_root,
+                    )
+                    .unwrap();
                 let repo_std =
                     torch_util::standardized_path::StandardizedPath::try_from_local(&repo_root)
                         .unwrap();
@@ -533,8 +537,10 @@ fn repo_backed_unloaded_directory_loads_through_model() {
             repository_metadata_model.read(&app, |model, ctx| {
                 assert!(
                     !model.is_lazy_loaded_path(
-                        &torch_util::standardized_path::StandardizedPath::try_from_local(&repo_root)
-                            .unwrap(),
+                        &torch_util::standardized_path::StandardizedPath::try_from_local(
+                            &repo_root
+                        )
+                        .unwrap(),
                         ctx
                     )
                 );
@@ -604,16 +610,20 @@ fn pending_repository_root_does_not_register_lazy_loaded_path() {
             file_tree_view.read(&app, |view, _ctx| {
                 assert!(
                     !view.registered_lazy_loaded_paths.contains(
-                        &torch_util::standardized_path::StandardizedPath::try_from_local(&repo_root)
-                            .unwrap()
+                        &torch_util::standardized_path::StandardizedPath::try_from_local(
+                            &repo_root
+                        )
+                        .unwrap()
                     )
                 );
             });
             repository_metadata_model.read(&app, |model, ctx| {
                 assert!(
                     !model.is_lazy_loaded_path(
-                        &torch_util::standardized_path::StandardizedPath::try_from_local(&repo_root)
-                            .unwrap(),
+                        &torch_util::standardized_path::StandardizedPath::try_from_local(
+                            &repo_root
+                        )
+                        .unwrap(),
                         ctx
                     )
                 );

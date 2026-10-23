@@ -11,8 +11,8 @@ use markdown_parser::{Action, FormattedText, FormattedTextFragment, FormattedTex
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::{Vector2F, vec2f};
 use string_offset::{ByteOffset, CharOffset, StringRange};
-use vec1::vec1;
 use torch_errors::report_error;
+use vec1::vec1;
 
 use super::{Highlight, ListNumbering, Selection};
 use crate::elements::{

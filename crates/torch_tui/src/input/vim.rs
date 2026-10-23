@@ -14,16 +14,16 @@
 //! - Scroll helpers (`center_cursor_vertically`, `scroll_half_page_*`) — no-op.
 //!
 
-use vim::vim::{
-    BracketChar, CharacterMotion, Direction, FindCharMotion, FirstNonWhitespaceMotion,
-    InsertPosition, LineMotion, ModeTransition, MotionType, VimHandler, VimMode, VimMotion,
-    VimOperand, VimOperator, VimTextObject, WordMotion,
-};
 use torch::editor::{CodeEditorModel, LineBound};
 use torch_editor::content::buffer::AutoScrollBehavior;
 use torch_editor::model::{CoreEditorModel, PlainTextEditorModel};
 use torch_editor::selection::{TextDirection, TextUnit};
 use torchui_core::{ModelContext, ViewContext};
+use vim::vim::{
+    BracketChar, CharacterMotion, Direction, FindCharMotion, FirstNonWhitespaceMotion,
+    InsertPosition, LineMotion, ModeTransition, MotionType, VimHandler, VimMode, VimMotion,
+    VimOperand, VimOperator, VimTextObject, WordMotion,
+};
 
 use super::TuiInputView;
 const MAX_VIM_PASTE_BYTES: usize = 1024 * 1024;

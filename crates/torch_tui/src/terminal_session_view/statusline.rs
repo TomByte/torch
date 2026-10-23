@@ -3,7 +3,6 @@
 use std::time::Duration;
 
 use chrono::{Local, NaiveDateTime};
-use vim::vim::{MotionType, VimMode};
 use torch::settings::{AISettings, TuiStatuslineConfig, TuiStatuslineItem};
 use torch::tui_export::{
     ConversationUsageTotals, GitRepoModels, GitStatusMetadata, LLMPreferences, ResolvedTeamScope,
@@ -15,6 +14,7 @@ use torchui_core::elements::tui::{
     Modifier, TuiAnimated, TuiElement, TuiFlex, TuiHoverable, TuiStyle, TuiText,
 };
 use torchui_core::{AppContext, ViewContext};
+use vim::vim::{MotionType, VimMode};
 
 use super::{
     CTRL_C_EXIT_HINT, CTRL_C_KILL_CHILD_HINT, ConversationRestoreState, LOADING_CONVERSATION_HINT,

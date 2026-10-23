@@ -216,7 +216,12 @@ impl NewScrollableElement for ScrollableElement {
         }
     }
 
-    fn scroll(&mut self, delta: torchui::units::Pixels, axis: Axis, ctx: &mut torchui::EventContext) {
+    fn scroll(
+        &mut self,
+        delta: torchui::units::Pixels,
+        axis: Axis,
+        ctx: &mut torchui::EventContext,
+    ) {
         match axis {
             Axis::Horizontal => (),
             Axis::Vertical => {

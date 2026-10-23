@@ -23,14 +23,14 @@ use serde::{Deserialize, Serialize};
 use string_offset::{ByteOffset, CharOffset};
 use sum_tree::{self, Cursor, FilterCursor, SeekBias, SumTree};
 use time::{Global, Lamport};
-use undo::{LocalUndoStack, UndoHistory};
-use vec1::{Vec1, vec1};
 use torchui::color::ColorU;
 use torchui::text::point::Point;
 use torchui::text::words::is_default_word_boundary;
 use torchui::text::{BufferIndex, TextBuffer};
 use torchui::text_layout::TextStyle;
 use torchui::{Entity, ModelContext};
+use undo::{LocalUndoStack, UndoHistory};
+use vec1::{Vec1, vec1};
 /// The public interfaces that we expose to the model.
 /// This should be a very limited set of APIs and should
 /// not expose the internal details of the buffer.

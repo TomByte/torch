@@ -9,7 +9,6 @@ use itertools::Itertools;
 use pathfinder_geometry::rect::RectF;
 use pathfinder_geometry::vector::{Vector2F, vec2f};
 use smallvec::SmallVec;
-use vim::vim::{MotionType, VimMode};
 use torch_core::features::FeatureFlag;
 use torch_core::ui::appearance::DEFAULT_UI_FONT_SIZE;
 use torch_errors::report_error;
@@ -31,6 +30,7 @@ use torchui::text_selection_utils::{
 };
 use torchui::ui_components::components::UiComponent;
 use torchui::{AppContext, SingletonEntity, TaskId, ViewHandle};
+use vim::vim::{MotionType, VimMode};
 
 use super::super::soft_wrap::{
     ClampDirection, DisplayPointAndClampDirection, FrameLayouts, SoftWrapPoint, SoftWrapState,

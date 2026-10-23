@@ -20,9 +20,9 @@ pub use telemetry::{
     EditReceivedEvent, EditResolvedEvent, EditStats, RequestFileEditsFormatKind,
     RequestFileEditsTelemetryEvent,
 };
-use vec1::{Vec1, vec1};
 use torch_core::send_telemetry_from_ctx;
 use torchui::{Entity, EntityId, ModelContext, ModelHandle, SingletonEntity as _};
+use vec1::{Vec1, vec1};
 
 use super::{ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessActionInput};
 use crate::ai::agent::conversation::AIConversationId;

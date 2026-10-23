@@ -17,7 +17,9 @@ use torchui::elements::{
 use torchui::platform::Cursor;
 use torchui::ui_components::button::ButtonVariant;
 use torchui::ui_components::components::UiComponent;
-use torchui::{AppContext, Element, Entity, ModelAsRef, ModelContext, ModelHandle, SingletonEntity};
+use torchui::{
+    AppContext, Element, Entity, ModelAsRef, ModelContext, ModelHandle, SingletonEntity,
+};
 
 use super::embedded_item::EmbeddedWorkflow;
 use super::keys::{NotebookKeybindings, custom_action_to_display};

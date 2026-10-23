@@ -4,10 +4,10 @@ use std::sync::Arc;
 use anyhow::Result;
 use async_trait::async_trait;
 use smol_str::SmolStr;
-use typed_path::{TypedPath, TypedPathBuf};
 use torch_core::command::ExitCode;
 use torch_util::path::{EscapeChar, ShellFamily};
 use torchui_core::platform::OperatingSystem;
+use typed_path::{TypedPath, TypedPathBuf};
 
 use super::engine::EngineDirEntry;
 use crate::completer::TopLevelCommandCaseSensitivity;

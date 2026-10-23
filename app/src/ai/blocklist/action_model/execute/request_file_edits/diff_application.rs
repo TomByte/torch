@@ -12,8 +12,8 @@ use ai::diff_validation::{
     SearchAndReplace, V4AHunk, fuzzy_match_diffs, fuzzy_match_v4a_diffs,
 };
 use itertools::Itertools;
-use vec1::Vec1;
 use torchui::r#async::executor::Background;
+use vec1::Vec1;
 
 use super::telemetry::{
     DiffInvalidFileEvent, DiffMatchFailedEvent, MissingLineNumbersEvent,

@@ -11,7 +11,6 @@ use lsp::types::TextDocumentContentChangeEvent;
 use lsp::{LspManagerModel, LspServerLogLevel, LspServerModel};
 use remote_server::manager::RemoteServerManager;
 use string_offset::{ByteOffset, CharOffset};
-use vec1::vec1;
 use torch_core::features::FeatureFlag;
 use torch_core::safe_error;
 use torch_editor::content::buffer::{Buffer, ToBufferCharOffset};
@@ -25,6 +24,7 @@ use torch_util::remote_path::RemotePath;
 use torch_util::standardized_path::StandardizedPath;
 use torchui::r#async::Timer;
 use torchui::{Entity, ModelContext, ModelHandle, SingletonEntity, WeakModelHandle};
+use vec1::vec1;
 
 use super::buffer_location::{LocalOrRemotePath, SyncClock};
 

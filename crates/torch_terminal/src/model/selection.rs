@@ -11,10 +11,10 @@ use std::ops::RangeInclusive;
 pub use std::ops::{Range, RangeBounds};
 
 use pathfinder_geometry::vector::Vector2F;
-use vec1::Vec1;
 use torch_core::semantic_selection::SemanticSelection;
 use torchui_core::text::SelectionType;
 use torchui_core::units::Lines;
+use vec1::Vec1;
 
 use super::index::{Direction, VisibleRow};
 use crate::model::GridStorage;

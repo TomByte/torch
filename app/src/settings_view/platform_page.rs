@@ -15,7 +15,9 @@ use torchui::fonts::{Properties, Weight};
 use torchui::text_layout::ClipConfig;
 use torchui::ui_components::button::ButtonVariant;
 use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use torchui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
+use torchui::{
+    AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
+};
 
 use super::SettingsSection;
 use super::platform::{

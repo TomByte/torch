@@ -1,7 +1,7 @@
 use ai::api_keys::ApiKeyManager;
 use anyhow::Context as _;
-use uuid::Uuid;
 use torchui::{ModelContext, SingletonEntity as _};
+use uuid::Uuid;
 
 use crate::warp_managed_paths_watcher::{
     WarpManagedPathsWatcher, WarpManagedPathsWatcherEvent, repository_update_touches_path,

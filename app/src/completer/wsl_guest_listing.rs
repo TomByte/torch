@@ -2,9 +2,9 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 use instant::Instant;
-use typed_path::TypedPath;
 use torch_completer::completer::{CommandExitStatus, EngineDirEntry};
 use torchui::r#async::FutureExt as AsyncFutureExt;
+use typed_path::TypedPath;
 
 use crate::completer::SessionContext;
 use crate::terminal::model::session::ExecuteCommandOptions;

@@ -1,5 +1,5 @@
-use url::Url;
 use torch_errors::report_error;
+use url::Url;
 
 use super::browser_url_resolution::resolve_browser_url;
 

@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use anyhow::Context;
-use url::Url;
 use torchui::{AppContext, ModelHandle, SingletonEntity, ViewContext, ViewHandle};
+use url::Url;
 
 use super::{
     DetachType, PaneConfiguration, PaneContent, PaneGroup, PaneId, PaneView, ShareableLink,

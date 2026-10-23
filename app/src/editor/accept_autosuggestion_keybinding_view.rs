@@ -12,7 +12,9 @@ use torchui::keymap::Keystroke;
 use torchui::platform::Cursor;
 use torchui::ui_components::components::{UiComponent, UiComponentStyles};
 use torchui::ui_components::keyboard_shortcut::KeyboardShortcut;
-use torchui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
+use torchui::{
+    AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
+};
 
 use super::EditorElement;
 use crate::appearance::Appearance;

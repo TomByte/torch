@@ -11,7 +11,6 @@ use ai::skills::SkillReference;
 pub use cloud_mode_v2_view::{CloudModeV2SlashCommandView, Section as CloudModeV2Section};
 pub use data_source::*;
 pub use mixer::{SlashCommandMixer, build_slash_command_mixer, slash_command_query};
-pub use view::{CloseReason, InlineSlashCommandView, SlashCommandsEvent};
 #[cfg(not(target_family = "wasm"))]
 use torch_cli::agent::Harness;
 use torch_core::features::FeatureFlag;
@@ -23,6 +22,7 @@ use torch_errors::report_error;
 use torch_util::path::{CleanPathResult, LineAndColumnArg, expand_session_home};
 use torchui::clipboard::ClipboardContent;
 use torchui::{AppContext, SingletonEntity, ViewContext};
+pub use view::{CloseReason, InlineSlashCommandView, SlashCommandsEvent};
 
 use crate::TelemetryEvent;
 use crate::ai::agent::conversation::AIConversationId;

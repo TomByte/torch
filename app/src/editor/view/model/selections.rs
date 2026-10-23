@@ -5,9 +5,9 @@ use std::ops::Range;
 use pathfinder_geometry::vector::Vector2F;
 use serde::{Deserialize, Serialize};
 use string_offset::{ByteOffset, CharOffset};
-use vec1::Vec1;
 use torchui::AppContext;
 use torchui::text::point::Point;
+use vec1::Vec1;
 
 use super::buffer::{Anchor, Buffer, LamportValue, ToBufferOffset, ToCharOffset, ToPoint};
 use super::display_map::{DisplayMap, ToDisplayPoint};

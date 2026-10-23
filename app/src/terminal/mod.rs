@@ -7,12 +7,12 @@ mod package_installers;
 pub use history::{
     History, HistoryEntry, HistoryEvent, LinkedWorkflowData, ShellHost, UpArrowHistoryConfig,
 };
-pub use view::{Event, TerminalView};
 pub use torch_terminal::shell::{self, ShellLaunchData};
 pub use torch_terminal::{CellSizeAndWindowPadding, ClipboardType, SizeInfo};
 use torchui::geometry::vector::Vector2F;
 use torchui::units::Lines;
 use torchui::{AppContext, SingletonEntity, WindowId};
+pub use view::{Event, TerminalView};
 mod block_list_settings;
 
 mod alias;

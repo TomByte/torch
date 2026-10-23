@@ -5,7 +5,6 @@ use std::sync::mpsc::SyncSender;
 
 #[cfg(not(target_family = "wasm"))]
 use session_sharing_protocol::sharer::SessionSourceType;
-use url::Url;
 #[cfg(not(target_family = "wasm"))]
 use torch_cli::agent::Harness;
 use torch_core::execution_mode::AppExecutionMode;
@@ -14,6 +13,7 @@ use torchui::{
     AppContext, EntityId, ModelHandle, SingletonEntity, ViewContext, ViewHandle, WeakViewHandle,
     WindowId,
 };
+use url::Url;
 
 #[cfg(not(target_family = "wasm"))]
 use super::local_harness_launch::{PreparedLocalHarnessLaunch, prepare_local_harness_child_launch};

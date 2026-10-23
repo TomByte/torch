@@ -2,8 +2,8 @@ use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::path::PathBuf;
 
-use uuid::Uuid;
 use torchui::{Entity, ModelContext, SingletonEntity};
+use uuid::Uuid;
 
 use crate::ai::mcp::file_based_manager::FileBasedMCPServerScope;
 use crate::ai::mcp::gallery::MCPGalleryManagerEvent;

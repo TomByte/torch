@@ -1,5 +1,5 @@
-use warp_command_signatures::{Priority, Signature};
 use torch_core::channel::Channel;
+use warp_command_signatures::{Priority, Signature};
 
 use crate::completer::testing::FakeCompletionContext;
 use crate::completer::{CompletionContext, TopLevelCommandCaseSensitivity};

@@ -3,7 +3,6 @@ use std::collections::HashMap;
 
 use instant::{Duration, Instant};
 use log::debug;
-use url::Url;
 use torch_core::send_telemetry_from_ctx;
 use torch_editor::editor::NavigationKey;
 use torch_graphql::queries::user_github_info::UserGithubInfoResult;
@@ -25,6 +24,7 @@ use torchui::{
     AppContext, Entity, FocusContext, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle, WeakViewHandle,
 };
+use url::Url;
 
 use super::editor_text_colors;
 use super::settings_page::{InputListItem, render_input_list};

@@ -5,10 +5,10 @@ mod search_item;
 mod view;
 
 use pathfinder_color::ColorU;
-pub use view::{InlineConversationMenuEvent, InlineConversationMenuView};
 use torch_core::ui::appearance::Appearance;
 use torchui::SingletonEntity;
 use torchui::keymap::Keystroke;
+pub use view::{InlineConversationMenuEvent, InlineConversationMenuView};
 
 use crate::ai::agent_conversations_model::AgentConversationEntryId;
 use crate::terminal::input::inline_menu::{

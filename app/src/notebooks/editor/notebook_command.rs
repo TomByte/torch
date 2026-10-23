@@ -13,7 +13,6 @@ use syntect::easy::HighlightLines;
 use syntect::highlighting::{self, Theme, ThemeSet};
 use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
-use ui_components::lightbox::{LightboxImage, LightboxImageSource};
 use torch_completer::signatures::CommandRegistry;
 use torch_core::r#async::debounce;
 use torch_editor::content::anchor::Anchor;
@@ -39,6 +38,7 @@ use torchui::{
     AppContext, AssetProvider as _, Element, Entity, ModelAsRef, ModelContext, ModelHandle,
     SingletonEntity, ViewHandle, WeakModelHandle, WindowId,
 };
+use ui_components::lightbox::{LightboxImage, LightboxImageSource};
 
 use super::interaction_state_model::InteractionStateModel;
 use super::keys::{NotebookKeybindings, custom_action_to_display};

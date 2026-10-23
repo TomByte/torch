@@ -25,6 +25,13 @@ pub use selections::{
     SelectionMode,
 };
 use string_offset::{ByteOffset, CharOffset};
+use torch_errors::report_error;
+use torchui::accessibility::{AccessibilityContent, WarpA11yRole};
+use torchui::text::TextBuffer;
+use torchui::text::point::Point;
+use torchui::text::word_boundaries::WordBoundariesPolicy;
+use torchui::text_layout::TextStyle;
+use torchui::{AppContext, Entity, ModelAsRef, ModelContext, ModelHandle, SingletonEntity};
 use vec1::{Vec1, vec1};
 use vim::vim::{
     BracketChar, CharacterMotion, Direction, FindCharMotion, FirstNonWhitespaceMotion, LineMotion,
@@ -36,13 +43,6 @@ use vim::{
     vim_inner_block, vim_inner_line, vim_inner_paragraph, vim_inner_quote, vim_inner_word,
     vim_word_iterator_from_offset,
 };
-use torch_errors::report_error;
-use torchui::accessibility::{AccessibilityContent, WarpA11yRole};
-use torchui::text::TextBuffer;
-use torchui::text::point::Point;
-use torchui::text::word_boundaries::WordBoundariesPolicy;
-use torchui::text_layout::TextStyle;
-use torchui::{AppContext, Entity, ModelAsRef, ModelContext, ModelHandle, SingletonEntity};
 
 use self::buffer::Peer;
 use super::{PlainTextEditorViewAction, SelectionInsertion, ValidInputType, movement};

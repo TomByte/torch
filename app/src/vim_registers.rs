@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
 use settings::Setting as _;
-use vim::vim::MotionType;
 use torchui::clipboard::ClipboardContent;
 use torchui::{AppContext, Entity, ModelContext, SingletonEntity};
+use vim::vim::MotionType;
 
 use crate::settings::AppEditorSettings;
 

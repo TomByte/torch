@@ -27,8 +27,6 @@ use remote_server::manager::RemoteServerManager;
 #[cfg(feature = "local_fs")]
 use repo_metadata::repositories::DetectedRepositories;
 use string_offset::CharOffset;
-use vec1::Vec1;
-use vim::vim::{MotionType, VimMode};
 use torch_core::r#async::debounce;
 use torch_core::features::FeatureFlag;
 use torch_core::ui::appearance::Appearance;
@@ -58,6 +56,8 @@ use torchui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle, WindowId,
 };
+use vec1::Vec1;
+use vim::vim::{MotionType, VimMode};
 
 use crate::ai::persisted_workspace::{PersistedWorkspace, PersistedWorkspaceEvent};
 use crate::code::buffer_location::LocalOrRemotePath as BufferFileLocation;

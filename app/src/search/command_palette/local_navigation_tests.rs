@@ -1,5 +1,6 @@
-use super::*;
 use torchui::{EntityId, WindowId};
+
+use super::*;
 
 fn source(path: &std::path::Path) -> DataSource {
     let mut source = DataSource::default();

@@ -1,4 +1,3 @@
-use ui_components::Component;
 use torch_core::ui::appearance::Appearance;
 use torchui_core::elements::Empty;
 use torchui_core::keymap::macros::*;
@@ -7,6 +6,7 @@ use torchui_core::{
     AppContext, Element, Entity, EventContext, ModelHandle, SingletonEntity, TypedActionView, View,
     ViewContext,
 };
+use ui_components::Component;
 
 /// Display strings for keybindings shown in the onboarding callout.
 #[derive(Clone, Debug)]

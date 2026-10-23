@@ -3,10 +3,10 @@ use futures::future::BoxFuture;
 #[cfg(not(target_family = "wasm"))]
 use itertools::Itertools;
 #[cfg(not(target_family = "wasm"))]
-use uuid::Uuid;
-#[cfg(not(target_family = "wasm"))]
 use torchui::SingletonEntity;
 use torchui::{Entity, EntityId, ModelContext, ModelHandle};
+#[cfg(not(target_family = "wasm"))]
+use uuid::Uuid;
 
 #[cfg(not(target_family = "wasm"))]
 use super::get_server_output_id;

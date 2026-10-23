@@ -1,6 +1,7 @@
+use torchui::App;
+
 use super::*;
 use crate::settings::{SystemThemes, Theme, UseSystemTheme};
-use torchui::App;
 
 #[test]
 fn retired_preferences_keep_the_correct_theme_when_opening_the_picker() {

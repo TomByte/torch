@@ -7,10 +7,10 @@ use futures::executor::block_on;
 use futures::future::join;
 use futures::io::{AsyncBufReadExt as _, AsyncRead, AsyncWrite, AsyncWriteExt as _, BufReader};
 use serde_json::{Value, json};
+use torchui::r#async::executor::Background;
 use warp_multi_agent_api::client_action::Action;
 use warp_multi_agent_api::message::Message as MessageKind;
 use warp_multi_agent_api::response_event::StreamInit;
-use torchui::r#async::executor::Background;
 
 use super::super::connection::AgentRequestHandler;
 use super::*;

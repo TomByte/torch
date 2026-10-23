@@ -3,8 +3,6 @@ use std::future::Future;
 use std::path::{Path, PathBuf};
 
 use futures::future::{Either, ready};
-#[cfg(test)]
-use virtual_fs::{Stub, VirtualFS};
 use torch_util::host_id::HostId;
 use torch_util::local_or_remote_path::LocalOrRemotePath;
 use torch_util::remote_path::{RemoteNavigationResult, RemotePath};
@@ -12,6 +10,8 @@ use torch_util::standardized_path::StandardizedPath;
 #[cfg(test)]
 use torchui_core::r#async::FutureId;
 use torchui_core::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
+#[cfg(test)]
+use virtual_fs::{Stub, VirtualFS};
 
 use crate::{DirectoryWatcher, Repository};
 

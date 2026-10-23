@@ -11,10 +11,10 @@ use std::time::Duration;
 use futures::channel::oneshot;
 use futures::executor::block_on;
 use ignore::gitignore::Gitignore;
-use virtual_fs::{Stub, VirtualFS};
 use torch_util::standardized_path::StandardizedPath;
 use torchui_core::r#async::FutureExt as _;
 use torchui_core::{App, ModelHandle};
+use virtual_fs::{Stub, VirtualFS};
 #[cfg(feature = "local_fs")]
 use watcher::BulkFilesystemWatcherEvent;
 

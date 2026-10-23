@@ -13,7 +13,9 @@ use torchui::elements::{
     NewScrollable, ParentElement, Radius, Text,
 };
 use torchui::fonts::{Properties, Weight};
-use torchui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
+use torchui::{
+    AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
+};
 
 use crate::ai::ambient_agents::github_auth_url::{AuthSource, GithubAuthRedirectTarget};
 use crate::ai::blocklist::view_util::{format_dollars, usage_display_unit};

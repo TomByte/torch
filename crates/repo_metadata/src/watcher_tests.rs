@@ -7,10 +7,10 @@ use std::time::Duration;
 
 use futures::channel::mpsc;
 use futures::{FutureExt as _, StreamExt as _};
-use virtual_fs::{Stub, VirtualFS};
 use torch_util::standardized_path::StandardizedPath;
 use torchui_core::r#async::Timer;
 use torchui_core::{App, ModelContext, ModelHandle};
+use virtual_fs::{Stub, VirtualFS};
 
 use crate::repositories::stub_git_repository;
 use crate::repository::{RepositorySubscriber, RepositoryWatchMode, TrackedRemoteRef};

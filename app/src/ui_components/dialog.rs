@@ -39,7 +39,9 @@ pub fn dialog_styles(appearance: &Appearance) -> UiComponentStyles {
         font_weight: Some(torchui::fonts::Weight::Bold),
         background: Some(background.into()),
         border_color: Some(theme.surface_3().into()),
-        border_radius: Some(CornerRadius::with_all(torchui::elements::Radius::Pixels(8.))),
+        border_radius: Some(CornerRadius::with_all(torchui::elements::Radius::Pixels(
+            8.,
+        ))),
         border_width: Some(1.),
         ..Default::default()
     }

@@ -1,8 +1,8 @@
-use typed_path::TypedPathBuf;
 use torch_completer::meta::SpannedItem;
 use torch_completer::parsers::ParsedToken;
 use torch_completer::signatures::CommandRegistry;
 use torchui::App;
+use typed_path::TypedPathBuf;
 
 use super::*;
 use crate::completer::SessionContext;

@@ -4,8 +4,8 @@ use std::path::PathBuf;
 
 use chrono::{DateTime, Local};
 use instant::Instant;
-use uuid::Uuid;
 use torch_terminal::event::ObservedExitStatus;
+use uuid::Uuid;
 
 use crate::ai::agent::AIAgentActionId;
 use crate::terminal::model::block::BlockId;

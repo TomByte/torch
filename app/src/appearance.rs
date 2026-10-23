@@ -1,6 +1,8 @@
 use settings::Setting as _;
 use torchui::fonts::FamilyId;
-use torchui::{AddSingletonModel, AppContext, AssetProvider, Entity, ModelContext, SingletonEntity};
+use torchui::{
+    AddSingletonModel, AppContext, AssetProvider, Entity, ModelContext, SingletonEntity,
+};
 
 #[cfg(target_os = "macos")]
 mod macos_app_icon {

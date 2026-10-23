@@ -10,9 +10,9 @@
 
 use ai::diff_validation::AIRequestedCodeDiff;
 use futures::FutureExt;
-use vec1::Vec1;
 use torchui::r#async::BoxFuture;
 use torchui::{Entity, ModelContext, ModelHandle, SingletonEntity as _};
+use vec1::Vec1;
 
 use super::diff_application::{DiffApplicationError, FileReadResult, apply_edits};
 use crate::ai::agent::{AIIdentifiers, FileEdit};

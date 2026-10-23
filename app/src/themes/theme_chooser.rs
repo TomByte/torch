@@ -674,7 +674,8 @@ impl ThemeChooser {
             );
 
         // Custom themes are only supported on desktop platforms currently.
-        if cfg!(not(target_family = "wasm")) && !torch_core::channel::ChannelState::is_local_only() {
+        if cfg!(not(target_family = "wasm")) && !torch_core::channel::ChannelState::is_local_only()
+        {
             let create_theme_button = SavePosition::new(
                 icon_button(
                     appearance,

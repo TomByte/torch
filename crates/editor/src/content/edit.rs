@@ -12,8 +12,6 @@ use num_traits::SaturatingSub;
 use rangemap::RangeSet;
 use rayon::iter::{IndexedParallelIterator, IntoParallelIterator, ParallelIterator};
 use string_offset::{ByteOffset, CharOffset};
-use urlocator::{UrlLocation, UrlLocator};
-use vec1::Vec1;
 use torch_core::features::FeatureFlag;
 use torch_core::ui::theme::Fill as ThemeFill;
 use torch_errors::report_error;
@@ -25,6 +23,8 @@ use torchui_core::text::point::Point;
 use torchui_core::text_layout::{StyleAndFont, TextAlignment};
 use torchui_core::units::{IntoPixels, Pixels};
 use torchui_core::{AppContext, SingletonEntity};
+use urlocator::{UrlLocation, UrlLocator};
+use vec1::Vec1;
 
 use super::buffer::{StyledBufferBlock, StyledBufferRun, StyledTextBlock};
 use super::mermaid_diagram::{mermaid_asset_source, mermaid_diagram_layout};

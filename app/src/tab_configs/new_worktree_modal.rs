@@ -11,7 +11,9 @@ use torchui::platform::Cursor;
 use torchui::ui_components::button::ButtonVariant;
 use torchui::ui_components::checkbox::Checkbox;
 use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use torchui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
+use torchui::{
+    AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
+};
 
 /// Registers keybindings for the new-worktree modal (ESC to close).
 pub fn init(app: &mut AppContext) {

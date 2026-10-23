@@ -9,8 +9,8 @@
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use warp_multi_agent_api as api;
 use torchui::{App, ModelContext, ModelHandle};
+use warp_multi_agent_api as api;
 
 use super::*;
 use crate::ai::ambient_agents::{AmbientAgentTask, AmbientAgentTaskId, AmbientAgentTaskState};

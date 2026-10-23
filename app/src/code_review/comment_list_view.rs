@@ -4,7 +4,6 @@ use indexmap::IndexMap;
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use string_offset::CharOffset;
-use vec1::vec1;
 use torch_core::ui::color::blend::Blend;
 use torch_core::ui::theme::Fill;
 use torch_core::ui::theme::color::internal_colors::{
@@ -34,6 +33,7 @@ use torchui::{
     AppContext, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle, WeakViewHandle,
 };
+use vec1::vec1;
 
 use crate::ai::request_usage_model::{AIRequestUsageModel, AIRequestUsageModelEvent};
 use crate::appearance::Appearance;

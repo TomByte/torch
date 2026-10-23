@@ -3,9 +3,9 @@ use std::fmt::Display;
 
 use anyhow::{Result, anyhow};
 use regex::Regex;
-use url::Url;
 use torch_util::path::{ShellFamily, is_posix_portable_pathname};
 use torchui::AppContext;
+use url::Url;
 
 use crate::root_view::SubshellCommandArg;
 use crate::send_telemetry_from_app_ctx;

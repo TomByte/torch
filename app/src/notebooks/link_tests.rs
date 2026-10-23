@@ -6,9 +6,9 @@ use lazy_static::lazy_static;
 use parking_lot::Mutex;
 use settings::Setting as _;
 use tempfile::tempdir;
-use url::Url;
 use torch_util::path::LineAndColumnArg;
 use torchui::{App, ModelHandle, SingletonEntity, WindowId};
+use url::Url;
 
 use super::{LinkTarget, NotebookLinks, ResolveError, SessionSource};
 use crate::notebooks::file::is_markdown_file;

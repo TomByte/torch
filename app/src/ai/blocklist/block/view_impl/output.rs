@@ -20,7 +20,6 @@ use itertools::Itertools;
 use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
-use ui_components::{Component as _, Options as _, button};
 use torch_core::channel::ChannelState;
 use torch_core::ui::theme::color::internal_colors;
 use torch_errors::report_error;
@@ -39,6 +38,7 @@ use torchui::ui_components::radio_buttons::{RadioButtonItem, RadioButtonLayout};
 use torchui::{
     Action, AppContext, Element, EntityId, ModelHandle, SingletonEntity, View, ViewHandle,
 };
+use ui_components::{Component as _, Options as _, button};
 
 use super::common::{
     ChatGPTSubscriptionActionProps, DebugFooterProps, FailedOutputProps, FindContext,

@@ -9,8 +9,8 @@ use async_executor::LocalExecutor;
 use futures::future::{BoxFuture, LocalBoxFuture};
 use futures::{Future, FutureExt};
 use futures_util::future::{AbortHandle, Abortable};
-use tracing::Instrument as _;
 use torch_errors::report_error;
+use tracing::Instrument as _;
 
 use crate::r#async::executor::Error;
 use crate::platform;

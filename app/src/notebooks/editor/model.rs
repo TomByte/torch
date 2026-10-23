@@ -13,8 +13,6 @@ use mermaid_to_svg::MermaidTheme;
 use num_traits::SaturatingSub;
 use regex::Regex;
 use string_offset::CharOffset;
-use url::Url;
-use vec1::{Vec1, vec1};
 use torch_core::r#async::debounce;
 use torch_core::features::FeatureFlag;
 use torch_core::semantic_selection::SemanticSelection;
@@ -40,6 +38,8 @@ use torchui::elements::ListIndentLevel;
 use torchui::{
     AppContext, Entity, ModelAsRef, ModelContext, ModelHandle, SingletonEntity, WindowId,
 };
+use url::Url;
+use vec1::{Vec1, vec1};
 
 use super::super::telemetry::SelectionMode as TelemetrySelectionMode;
 use super::NotebookWorkflow;

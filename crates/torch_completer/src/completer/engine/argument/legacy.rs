@@ -5,12 +5,12 @@ use std::collections::HashMap;
 
 use itertools::Itertools;
 use smol_str::SmolStr;
+use torch_core::features::FeatureFlag;
+use torch_util::path::ShellFamily;
 use warp_command_signatures::{
     Argument, ArgumentType, DynamicCompletionData, Generator, GeneratorProcess, Signature,
     Template, TemplateFilter, TemplateType,
 };
-use torch_core::features::FeatureFlag;
-use torch_util::path::ShellFamily;
 
 use super::add_extra_positional;
 use crate::completer::context::CompletionContext;

@@ -13,8 +13,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Result, anyhow};
-use uuid::Uuid;
 use torch_cli::agent::Harness;
+use uuid::Uuid;
 
 use super::super::claude_transcript::{claude_config_dir, session_transcript_path};
 use super::super::codex_transcript::{codex_sessions_root, find_session_file};

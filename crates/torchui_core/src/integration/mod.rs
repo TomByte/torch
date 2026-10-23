@@ -20,8 +20,8 @@ pub use step::{
     AssertionCallback, AssertionOutcome, AssertionWithDataCallback, IntegrationTestEvent,
     PersistedDataMap, StepData, StepDataMap, TestStep,
 };
-pub use video_recorder::{VideoRecorder, save_captured_frame_as_png};
 use torch_errors::report_if_error;
+pub use video_recorder::{VideoRecorder, save_captured_frame_as_png};
 
 #[macro_export]
 macro_rules! async_assert {

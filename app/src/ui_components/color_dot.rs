@@ -1,7 +1,5 @@
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
-use ui_components::tooltip::{Params as TooltipParams, Tooltip as TooltipComponent};
-use ui_components::{Component as _, Options as ComponentOptions};
 use torch_core::ui::theme::{AnsiColorIdentifier, Fill as ThemeFill};
 use torchui::elements::{
     Border, ChildAnchor, ConstrainedBox, Container, CornerRadius, Element, Hoverable,
@@ -9,6 +7,8 @@ use torchui::elements::{
     Stack,
 };
 use torchui::platform::Cursor;
+use ui_components::tooltip::{Params as TooltipParams, Tooltip as TooltipComponent};
+use ui_components::{Component as _, Options as ComponentOptions};
 
 use crate::appearance::Appearance;
 use crate::ui_components::icons::Icon;

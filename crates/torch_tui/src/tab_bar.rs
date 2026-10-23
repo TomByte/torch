@@ -10,7 +10,6 @@ use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::fmt;
 
-use unicode_segmentation::UnicodeSegmentation;
 use torchui_core::elements::MouseStateHandle;
 use torchui_core::elements::tui::{
     Color, Modifier, TuiConstrainedBox, TuiContainer, TuiElement, TuiFlex, TuiHoverable,
@@ -18,6 +17,7 @@ use torchui_core::elements::tui::{
     text_width,
 };
 use torchui_core::{AppContext, Entity, TuiView, TypedActionView, ViewContext};
+use unicode_segmentation::UnicodeSegmentation;
 const DIVIDER: &str = "|";
 const DIVIDER_PADDING_LEFT: u16 = 1;
 const DIVIDER_PADDING_RIGHT: u16 = 2;

@@ -1,5 +1,5 @@
-use url::Url;
 use torchui::App;
+use url::Url;
 
 use super::*;
 use crate::ai::llms::{AvailableLLMs, LLMId, LLMInfo, LLMPreferences, ModelsByFeature};

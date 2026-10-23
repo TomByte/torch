@@ -7,7 +7,9 @@ use torchui::elements::{
     MainAxisAlignment, ParentElement as _, Radius, Shrinkable,
 };
 use torchui::fonts::Weight;
-use torchui::ui_components::components::{BorderStyle, Coords, UiComponent as _, UiComponentStyles};
+use torchui::ui_components::components::{
+    BorderStyle, Coords, UiComponent as _, UiComponentStyles,
+};
 use torchui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity as _, TypedActionView, View,
     ViewContext, ViewHandle,

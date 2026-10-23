@@ -15,8 +15,8 @@ use base64::Engine as _;
 use futures::io::AsyncReadExt as _;
 use mime_guess::mime;
 use session_sharing_protocol::common::AgentAttachment;
-use url::Url;
 use torch_core::safe_warn;
+use url::Url;
 
 use super::protocol::{ContentBlock, EmbeddedResource, PromptCapabilities};
 use crate::ai::ambient_agents::AmbientAgentTaskId;

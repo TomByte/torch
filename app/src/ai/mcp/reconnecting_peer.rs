@@ -3,8 +3,8 @@
 use std::future::Future;
 
 use mcp::tool_call::call_tool_with_deadline;
-use uuid::Uuid;
 use torchui::ModelSpawner;
+use uuid::Uuid;
 
 use super::TemplatableMCPServerManager;
 

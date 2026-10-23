@@ -1,8 +1,9 @@
-use super::*;
-use crate::settings::{ProjectDirectories, ProjectParentDirectories};
 use pathfinder_geometry::vector::vec2f;
 use torchui::platform::WindowStyle;
 use torchui::{App, Presenter, WindowInvalidation};
+
+use super::*;
+use crate::settings::{ProjectDirectories, ProjectParentDirectories};
 
 #[test]
 fn project_settings_layout_handles_empty_and_populated_lists() {

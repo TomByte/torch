@@ -5,8 +5,6 @@ use std::time::Duration;
 use anyhow::{Result, anyhow};
 use pathfinder_geometry::vector::Vector2F;
 use rust_embed::RustEmbed;
-use ui_components::lightbox::{self, LightboxImage, LightboxImageSource, NavigationDirection};
-use ui_components::{Component as _, Options, button, dialog, switch, tooltip};
 use torch_core::ui::Icon;
 use torch_core::ui::appearance::Appearance;
 use torch_core::ui::theme::color::internal_colors;
@@ -17,6 +15,8 @@ use torchui_core::image_cache::ImageType;
 use torchui_core::keymap::FixedBinding;
 use torchui_core::prelude::*;
 use torchui_core::{AssetProvider, SingletonEntity, Tracked, platform};
+use ui_components::lightbox::{self, LightboxImage, LightboxImageSource, NavigationDirection};
+use ui_components::{Component as _, Options, button, dialog, switch, tooltip};
 
 #[derive(Clone, Copy, RustEmbed)]
 #[folder = "../../app/assets"]

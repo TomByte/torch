@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use rangemap::RangeMap;
-use unindent::Unindent as _;
 use torch_editor::multiline::{MultilineStr, MultilineString};
+use unindent::Unindent as _;
 
 use super::{DiffModel, compute_unified_diff};
 use crate::code::editor::diff::ChangeType;

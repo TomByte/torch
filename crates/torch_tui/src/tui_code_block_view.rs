@@ -10,7 +10,9 @@ use torch::editor::{CodeEditorModel, CodeEditorModelEvent};
 use torch_editor::content::buffer::InitialBufferState;
 use torch_editor::content::version::BufferVersion;
 use torch_editor::model::CoreEditorModel;
-use torchui_core::elements::tui::{Color, TuiElement, TuiFlex, TuiParentElement, TuiStyle, TuiText};
+use torchui_core::elements::tui::{
+    Color, TuiElement, TuiFlex, TuiParentElement, TuiStyle, TuiText,
+};
 use torchui_core::{AppContext, Entity, ModelHandle, TuiView, ViewContext};
 
 use crate::editor_element::{TuiEditorElement, TuiEditorStyles};

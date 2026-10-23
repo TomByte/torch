@@ -3,9 +3,9 @@ use std::fs;
 use std::path::Path;
 
 use tempfile::TempDir;
-use uuid::Uuid;
 use torch_harness_usage::api::{CoverageStatus, HarnessUsageSnapshot};
 use torch_harness_usage::{ExtractionOutcome, JsonlReadStatus, extract_claude};
+use uuid::Uuid;
 
 use super::*;
 #[test]

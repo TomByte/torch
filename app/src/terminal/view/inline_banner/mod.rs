@@ -27,7 +27,6 @@ use pathfinder_color::ColorU;
 pub use session_state::*;
 pub use shared_sessions::*;
 pub use shell_process_terminated::*;
-pub use vim_mode::*;
 use torchui::Element;
 use torchui::elements::{
     Align, Clipped, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Flex, Icon,
@@ -37,6 +36,7 @@ use torchui::elements::{
 use torchui::fonts::{FamilyId, Properties, Weight};
 use torchui::ui_components::button::ButtonVariant;
 use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+pub use vim_mode::*;
 
 pub use self::prompt_suggestions::*;
 use crate::appearance::Appearance;

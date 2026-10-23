@@ -7,12 +7,12 @@ use itertools::Itertools;
 use num_traits::Float as _;
 use parking_lot::Mutex;
 use pathfinder_color::ColorU;
-use vec1::Vec1;
 use torch_core::semantic_selection::SemanticSelection;
 use torch_errors::report_error;
 use torch_terminal::model::{KeyboardModes, KeyboardModesApplyBehavior};
 use torchui::text::SelectionType;
 use torchui::units::Lines;
+use vec1::Vec1;
 
 use super::find::RegexDFAs;
 use super::grid::RespectDisplayedOutput;

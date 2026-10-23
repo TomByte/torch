@@ -7,7 +7,6 @@
 //! `EditorView` for the text input, which the onboarding crate doesn't
 //! depend on.
 use pathfinder_color::ColorU;
-use ui_components::{Component as _, Options as _, button};
 use torch_core::safe_error;
 use torch_core::ui::theme::color::internal_colors;
 use torchui::actions::StandardAction;
@@ -24,6 +23,7 @@ use torchui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };
+use ui_components::{Component as _, Options as _, button};
 
 use crate::appearance::Appearance;
 use crate::auth::auth_manager::{AuthManager, AuthManagerEvent};

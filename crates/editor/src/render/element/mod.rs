@@ -9,7 +9,6 @@ use instant::Instant;
 use parking_lot::Mutex;
 use string_offset::CharOffset;
 use temporary_block::RenderableTemporaryBlock;
-use vim::vim::VimMode;
 use torch_core::ui::theme::Fill as ThemeFill;
 use torch_errors::report_error;
 use torchui_core::color::ColorU;
@@ -26,6 +25,7 @@ use torchui_core::{
     AfterLayoutContext, AppContext, Element, Event, EventContext, LayoutContext, ModelHandle,
     PaintContext, SizeConstraint, WeakViewHandle,
 };
+use vim::vim::VimMode;
 
 use self::empty::Empty;
 use self::header::RenderableHeader;

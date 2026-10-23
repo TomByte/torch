@@ -79,7 +79,9 @@ impl View for RootView {
                 ),
             )
             .with_dragbar_side(DragBarSide::Bottom)
-            .with_dragbar_color(torchui::elements::Fill::Solid(ColorU::new(0, 255, 255, 200)))
+            .with_dragbar_color(torchui::elements::Fill::Solid(ColorU::new(
+                0, 255, 255, 200,
+            )))
             .on_resize(move |ctx, _| {
                 ctx.notify();
             })
@@ -113,7 +115,9 @@ impl View for RootView {
                 ),
             )
             .with_dragbar_side(DragBarSide::Right)
-            .with_dragbar_color(torchui::elements::Fill::Solid(ColorU::new(255, 255, 0, 200)))
+            .with_dragbar_color(torchui::elements::Fill::Solid(ColorU::new(
+                255, 255, 0, 200,
+            )))
             .on_resize(move |ctx, _| {
                 ctx.notify();
             })

@@ -2,8 +2,6 @@ use std::borrow::Cow;
 
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
-use ui_components::button::Button as ButtonComponent;
-use ui_components::{Component, MouseEventHandler, Options as _, button};
 use torch_core::ui::appearance::Appearance;
 use torch_core::ui::color::coloru_with_opacity;
 use torch_core::ui::color::contrast::relative_luminance;
@@ -18,6 +16,8 @@ use torchui_core::keymap::Keystroke;
 use torchui_core::prelude::*;
 use torchui_core::ui_components::checkbox::Checkbox as WarpCheckbox;
 use torchui_core::ui_components::components::{UiComponent as _, UiComponentStyles};
+use ui_components::button::Button as ButtonComponent;
+use ui_components::{Component, MouseEventHandler, Options as _, button};
 
 const CALLOUT_WIDTH: f32 = 480.;
 const CALLOUT_BORDER_WIDTH: f32 = 1.;

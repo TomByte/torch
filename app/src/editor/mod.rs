@@ -6,12 +6,12 @@ mod view;
 use std::cmp;
 use std::ops::Range;
 
+use torchui::AppContext;
+pub use torchui::text::point::Point;
 /// Consumers of the editor should only interface with the view.
 /// They should _not_ be able to interface with the internal
 /// details of the editor (e.g. the [`Buffer`]).
 pub use view::*;
-use torchui::AppContext;
-pub use torchui::text::point::Point;
 
 // Re-exported for use by the `torch_tui` TUI front-end, which needs to
 // construct and subscribe to `CodeEditorModel` in char-cell mode.

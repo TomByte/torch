@@ -7,9 +7,9 @@ use anyhow::{Result, anyhow};
 use async_trait::async_trait;
 use command::r#async::Command;
 use itertools::Itertools;
-use typed_path::{TypedPath, WindowsPath};
 use torch_completer::completer::CommandOutput;
 use torch_util::path::{convert_msys2_to_windows_native_path, msys2_exe_to_root};
+use typed_path::{TypedPath, WindowsPath};
 
 use super::{CommandExecutor, ExecuteCommandOptions};
 use crate::safe_warn;

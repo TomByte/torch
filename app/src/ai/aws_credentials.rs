@@ -10,10 +10,10 @@ use futures::channel::oneshot::channel;
 use futures::future::BoxFuture;
 use parking_lot::FairMutex;
 use tokio::sync::Mutex;
-use vec1::vec1;
 use torch_errors::report_error;
 use torch_managed_secrets::client::IdentityTokenOptions;
 use torchui::{ModelContext, ModelHandle, SingletonEntity};
+use vec1::vec1;
 
 use crate::server::server_api::managed_secrets::{
     AppManagedSecretManager as ManagedSecretManager, IdentityTokenUserFacingError,

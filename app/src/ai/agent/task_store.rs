@@ -2,8 +2,8 @@ use std::collections::HashSet;
 
 use hashbrown::HashMap;
 use indexmap::IndexMap;
-use warp_multi_agent_api as api;
 use torch_util::hashed::Hashed;
+use warp_multi_agent_api as api;
 
 use super::task::helper::{MessageExt, ToolCallExt};
 use super::task::{Task, TaskId};

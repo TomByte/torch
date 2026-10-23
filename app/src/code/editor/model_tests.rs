@@ -1,11 +1,11 @@
 use std::path::Path;
 
 use futures::channel::oneshot;
-use vec1::vec1;
 use torch_editor::content::buffer::{InitialBufferState, SelectionOffsets};
 use torch_editor::multiline::MultilineString;
 use torch_util::content_version::ContentVersion;
 use torchui::App;
+use vec1::vec1;
 
 use super::*;
 use crate::code::editor::line::EditorLineLocation;

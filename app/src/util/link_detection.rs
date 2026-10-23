@@ -2,11 +2,11 @@ use std::collections::HashMap;
 use std::ops::Range;
 
 use string_offset::ByteOffset;
-use urlocator::{UrlLocation, UrlLocator};
 use torchui::Action;
 use torchui::elements::{MouseStateHandle, PartialClickableElement};
 use torchui::platform::Cursor;
 use torchui::text::char_slice;
+use urlocator::{UrlLocation, UrlLocator};
 
 use crate::ai::agent::{AIAgentActionType, AIAgentOutput, AIAgentTextSection, ReadFilesRequest};
 use crate::ai::blocklist::block::TextLocation;

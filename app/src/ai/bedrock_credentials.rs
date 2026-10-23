@@ -13,10 +13,10 @@ use std::time::{Duration, SystemTime};
 
 use ai::api_keys::{ApiKeyManager, AwsCredentials, AwsCredentialsState};
 use anyhow::{Context as _, Result};
-use vec1::vec1;
 use torch_errors::report_error;
 use torch_managed_secrets::client::IdentityTokenOptions;
 use torchui::{ModelSpawner, SingletonEntity};
+use vec1::vec1;
 
 use super::agent_sdk::driver::AgentDriver;
 use super::aws_credentials::{

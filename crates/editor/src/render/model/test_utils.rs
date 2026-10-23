@@ -5,13 +5,13 @@ use std::sync::Arc;
 
 use ordered_float::OrderedFloat;
 use parking_lot::Once;
-use vec1::{Vec1, vec1};
 use torchui_core::color::ColorU;
 use torchui_core::elements::{Border, Fill, ListIndentLevel};
 use torchui_core::fonts::{FamilyId, Weight};
 use torchui_core::geometry::vector::vec2f;
 use torchui_core::text_layout::{CaretPosition, Glyph, Line, Run, TextFrame};
 use torchui_core::units::{IntoPixels, Pixels};
+use vec1::{Vec1, vec1};
 
 use super::{
     BlockItem, BrokenLinkStyle, CheckBoxStyle, DEFAULT_BLOCK_SPACINGS, HorizontalRuleStyle,

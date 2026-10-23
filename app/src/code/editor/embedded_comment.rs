@@ -5,7 +5,6 @@ use std::sync::Arc;
 
 use pathfinder_geometry::vector::{Vector2F, vec2f};
 use serde_yaml::Mapping;
-use uuid::Uuid;
 use torch_editor::content::markdown::MarkdownStyle;
 use torch_editor::editor::EmbeddedItemModel;
 use torch_editor::render::element::{RenderContext, RenderableBlock};
@@ -19,6 +18,7 @@ use torch_errors::report_error;
 use torchui::event::DispatchedEvent;
 use torchui::units::Pixels;
 use torchui::{AppContext, EntityId, EventContext, LayoutContext, ViewHandle, WindowId};
+use uuid::Uuid;
 
 use crate::code::editor::comment_editor::CommentEditor;
 use crate::code_review::comments::CommentId;

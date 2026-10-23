@@ -10,7 +10,6 @@ use diesel::SqliteConnection;
 use parking_lot::Mutex;
 use pathfinder_geometry::vector::vec2f;
 use settings::Setting as _;
-use uuid::Uuid;
 use torch_core::send_telemetry_from_ctx;
 use torch_core::ui::appearance::Appearance;
 use torch_core::ui::theme::color::internal_colors;
@@ -28,6 +27,7 @@ use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
     WeakViewHandle,
 };
+use uuid::Uuid;
 
 use crate::GlobalResourceHandlesProvider;
 use crate::ai::blocklist::secret_redaction::find_secrets_in_text;

@@ -11,8 +11,8 @@ use instant::Instant;
 use mockito::{Matcher, Server};
 use tempfile::TempDir;
 use tokio::sync::oneshot;
-use uuid::Uuid;
 use torch_cli::agent::Harness;
+use uuid::Uuid;
 
 use super::*;
 use crate::ai::agent::api::ServerConversationToken;

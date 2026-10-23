@@ -18,10 +18,6 @@ use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use string_offset::{CharOffset, impl_offset};
 use sum_tree::{SeekBias, SumTree};
-use unicode_segmentation::UnicodeSegmentation;
-use unicode_width::UnicodeWidthStr;
-use vec1::Vec1;
-use vim::vim::{MotionType, VimMode};
 use torch_core::channel::ChannelState;
 use torch_core::ui::Icon;
 use torch_core::ui::theme::Fill as ThemeFill;
@@ -42,6 +38,10 @@ use torchui_core::text_selection_utils::{
 };
 use torchui_core::units::{IntoPixels, Pixels};
 use torchui_core::{AppContext, Entity, EntityId, ModelContext, ModelHandle};
+use unicode_segmentation::UnicodeSegmentation;
+use unicode_width::UnicodeWidthStr;
+use vec1::Vec1;
+use vim::vim::{MotionType, VimMode};
 
 pub use self::char_cell_display::{DisplayLattice, DisplayRow, DisplayRowKind};
 use self::location::WrapDirection;

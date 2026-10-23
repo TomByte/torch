@@ -9,7 +9,6 @@ use itertools::Itertools;
 use torch_core::ui::builder::UiBuilder;
 use torch_core::ui::theme::color::internal_colors;
 use torch_editor::editor::NavigationKey;
-use warp_workflows::workflows as global_workflows;
 use torchui::accessibility::{AccessibilityContent, WarpA11yRole};
 use torchui::color::ColorU;
 use torchui::elements::{
@@ -25,6 +24,7 @@ use torchui::ui_components::components::{UiComponent, UiComponentStyles};
 use torchui::{
     AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, WeakViewHandle,
 };
+use warp_workflows::workflows as global_workflows;
 
 use super::WorkflowSource;
 use super::workflow::Workflow;

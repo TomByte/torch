@@ -3,13 +3,13 @@ use std::sync::Arc;
 
 use base64::engine::general_purpose::STANDARD as BASE64;
 use chrono::{DateTime, Local};
-use vec1::vec1;
 use torch_completer::completer::MatchedSuggestion;
 use torch_core::command::ExitCode;
 use torch_core::features::FeatureFlag;
 use torch_terminal::model::ansi::ClearMode;
 use torchui::r#async::executor::Background;
 use torchui::text::{SelectionType, str_to_byte_vec};
+use vec1::vec1;
 
 use super::*;
 use crate::ai::agent::conversation::AIConversationId;

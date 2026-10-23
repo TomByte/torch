@@ -5,13 +5,13 @@ use std::time::Duration;
 
 use chrono::{DateTime, Local, TimeDelta};
 use futures::channel::oneshot;
-use uuid::Uuid;
 use torch_errors::report_error;
+use torchui::r#async::Timer;
+use torchui::{Entity, ModelContext, SingletonEntity};
+use uuid::Uuid;
 #[cfg(not(target_family = "wasm"))]
 use warp_multi_agent_api as maa_api;
 use warp_multi_agent_api::response_event;
-use torchui::r#async::Timer;
-use torchui::{Entity, ModelContext, SingletonEntity};
 
 use crate::ai::agent::api::{self, ConvertToAPITypeError, generate_multi_agent_output};
 use crate::ai::agent::conversation::AIConversationId;

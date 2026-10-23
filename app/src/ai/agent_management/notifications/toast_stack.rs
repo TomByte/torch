@@ -14,7 +14,9 @@ use torchui::keymap::Keystroke;
 use torchui::platform::Cursor;
 use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use torchui::ui_components::keyboard_shortcut::KeyboardShortcut;
-use torchui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
+use torchui::{
+    AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
+};
 
 use crate::ai::agent_management::notifications::item_rendering::{
     NotificationRenderContext, OnExpandClick, create_notification_artifact_buttons_view,

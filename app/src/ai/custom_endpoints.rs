@@ -3,8 +3,8 @@ use ai::api_keys::{
     CustomEndpointModel, CustomEndpointParams,
 };
 use settings::Setting;
-use uuid::Uuid;
 use torchui::{AppContext, Entity, ModelContext, SingletonEntity};
+use uuid::Uuid;
 
 use crate::LaunchMode;
 use crate::global_resource_handles::GlobalResourceHandlesProvider;

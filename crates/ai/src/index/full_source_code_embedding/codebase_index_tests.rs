@@ -8,9 +8,9 @@ use chrono::Utc;
 use futures::executor::block_on;
 use repo_metadata::DirectoryWatcher;
 use string_offset::ByteOffset;
-use virtual_fs::{Stub, VirtualFS};
 use torch_util::standardized_path::StandardizedPath;
 use torchui_core::{App, SingletonEntity};
+use virtual_fs::{Stub, VirtualFS};
 
 use super::{
     CodebaseIndex, CodebaseIndexTimeStampMetadata, DEFAULT_INCREMENAL_SYNC_FLUSH_INTERVAL,

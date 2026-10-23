@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use std::sync::LazyLock;
 
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 use torch_core::features::FeatureFlag;
+use uuid::Uuid;
 
 use super::{Availability, SlashCommandKind, SlashCommandSurfaces};
 use crate::search::slash_command_menu::StaticCommand;

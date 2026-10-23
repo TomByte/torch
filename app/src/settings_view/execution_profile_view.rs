@@ -1,6 +1,5 @@
 use std::path::PathBuf;
 
-use uuid::Uuid;
 use torch_core::features::FeatureFlag;
 use torchui::elements::{
     ConstrainedBox, Container, CrossAxisAlignment, Flex, MainAxisAlignment, MainAxisSize,
@@ -11,6 +10,7 @@ use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
     WeakViewHandle,
 };
+use uuid::Uuid;
 
 use crate::ai::blocklist::BlocklistAIPermissions;
 use crate::ai::execution_profiles::profiles::{

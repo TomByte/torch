@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use uuid::Uuid;
 use torchui::{Entity, ModelContext, SingletonEntity};
+use uuid::Uuid;
 
 use crate::ai::mcp::templatable::{
     GalleryData, JsonTemplate, TemplatableMCPServer, TemplateVariable,

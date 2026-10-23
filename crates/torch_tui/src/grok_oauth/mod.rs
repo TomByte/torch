@@ -4,9 +4,9 @@ use ai::api_keys::ApiKeyManager;
 use ai::grok_subscription::oauth::{
     ManualCodeExchange, OauthAttempt, OauthCancellationHandle, TokenResponse,
 };
-use uuid::Uuid;
 use torchui::SingletonEntity as _;
 use torchui_core::{Entity, ModelContext};
+use uuid::Uuid;
 
 const CALLBACK_FAILURE_MESSAGE: &str =
     "Couldn't complete Grok authorization. Press Esc, then select Grok to try again.";

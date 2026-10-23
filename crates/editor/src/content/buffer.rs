@@ -19,7 +19,6 @@ use rand::distributions::Alphanumeric;
 use serde_yaml::Mapping;
 use string_offset::{ByteOffset, CharOffset};
 use sum_tree::{SeekBias, SumTree};
-use vec1::{Vec1, vec1};
 use torch_core::platform::SessionPlatform;
 use torch_core::safe_error;
 use torch_util::content_version::ContentVersion;
@@ -28,6 +27,7 @@ use torchui_core::fonts::Weight;
 use torchui_core::text::point::Point;
 use torchui_core::text::{TextBuffer, char_slice};
 use torchui_core::{AppContext, Entity, EntityId, ModelContext, ModelHandle};
+use vec1::{Vec1, vec1};
 
 use super::anchor::{Anchor, AnchorSide, Anchors};
 use super::cursor::BufferCursor;

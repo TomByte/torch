@@ -1,4 +1,3 @@
-use vec1::{Vec1, vec1};
 use torch_core::features::FeatureFlag;
 use torch_core::ui::builder::AnimatedButtonOptions;
 use torchui::elements::{
@@ -15,6 +14,7 @@ use torchui::{
     AppContext, Entity, EntityId, FocusContext, ModelHandle, SingletonEntity, TypedActionView,
     View, ViewContext, ViewHandle, WindowId,
 };
+use vec1::{Vec1, vec1};
 
 use super::keybindings_page::KeybindingsEvent;
 use super::section_views::{

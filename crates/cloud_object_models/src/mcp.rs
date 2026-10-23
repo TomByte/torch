@@ -7,8 +7,8 @@ use cloud_objects::cloud_object::{
 use cloud_objects::ids::GenericStringObjectId;
 use handlebars::get_arguments;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 use torch_errors::report_error;
+use uuid::Uuid;
 
 use crate::{JsonModel, JsonSerializer};
 

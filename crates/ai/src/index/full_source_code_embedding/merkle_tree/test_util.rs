@@ -32,7 +32,8 @@ pub async fn construct_test_merkle_tree(
     ]);
 
     let mut root_dir_entry = DirectoryEntry {
-        path: torch_util::standardized_path::StandardizedPath::try_from_local(dirs.tests()).unwrap(),
+        path: torch_util::standardized_path::StandardizedPath::try_from_local(dirs.tests())
+            .unwrap(),
         children: vec![],
         ignored: false,
         loaded: true,

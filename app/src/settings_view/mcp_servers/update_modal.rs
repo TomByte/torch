@@ -1,5 +1,4 @@
 use chrono::{Local, TimeZone};
-use uuid::Uuid;
 use torch_core::ui::external_product_icon::ExternalProductIcon;
 use torch_core::ui::icons::Icon;
 use torch_core::ui::theme::color::internal_colors;
@@ -15,6 +14,7 @@ use torchui::ui_components::components::{UiComponent, UiComponentStyles};
 use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
+use uuid::Uuid;
 
 use crate::ai::mcp::{Author, MCPServerUpdate};
 use crate::appearance::Appearance;

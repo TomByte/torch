@@ -1,5 +1,5 @@
-use uuid::Uuid;
 use torchui::{App, EntityId, ModelHandle};
+use uuid::Uuid;
 
 use super::*;
 use crate::ai::agent::conversation::{AIConversationId, ConversationStatus};

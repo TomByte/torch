@@ -8,8 +8,8 @@ use std::sync::atomic::Ordering;
 
 use frame::Frame;
 use pathfinder_geometry::vector::Vector2F;
-use util::with_error_scope;
 use torchui_core::platform::CapturedFrame;
+use util::with_error_scope;
 use wgpu::wgc::device::DeviceError;
 use wgpu::wgc::present::SurfaceError;
 

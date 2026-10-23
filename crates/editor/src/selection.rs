@@ -2,11 +2,11 @@ use std::ops::Range;
 
 use num_traits::SaturatingSub;
 use string_offset::CharOffset;
-use vec1::Vec1;
 use torchui_core::text::TextBuffer;
 use torchui_core::text::point::Point;
 use torchui_core::text::word_boundaries::WordBoundariesPolicy;
 use torchui_core::{AppContext, Entity, ModelAsRef, ModelContext, ModelHandle};
+use vec1::Vec1;
 
 use crate::content::buffer::{
     AutoScrollBehavior, Buffer, BufferEvent, BufferSelectAction, SelectionOffsets,

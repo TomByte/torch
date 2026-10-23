@@ -4,12 +4,12 @@ use std::mem;
 use std::ops::RangeInclusive;
 
 use sum_tree::SeekBias;
-use vec1::{Vec1, vec1};
 use torch_core::semantic_selection::SemanticSelection;
 use torch_terminal::model::grid::CellType;
 use torchui::text::{IsRect, SelectionType};
 use torchui::units::{IntoLines as _, Lines};
 use torchui::{AppContext, EntityId, ViewAsRef as _};
+use vec1::{Vec1, vec1};
 
 use super::{
     BlockHeight, BlockHeightItem, BlockHeightSummary, BlockList, BlockListPoint, RichContentItem,

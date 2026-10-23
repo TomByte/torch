@@ -11,7 +11,6 @@ use markdown_parser::{
 };
 use pathfinder_geometry::vector::Vector2F;
 use string_offset::CharOffset;
-use vec1::vec1;
 use torch_core::features::FeatureFlag;
 use torch_editor::content::buffer::{AutoScrollBehavior, BufferSelectAction, SelectionOffsets};
 use torch_editor::content::text::{BlockType, BufferBlockStyle, CodeBlockType, TextStyles};
@@ -28,6 +27,7 @@ use torchui::{
     AddSingletonModel, App, AppContext, Element, Entity, ModelHandle, SingletonEntity,
     TypedActionView, View, ViewHandle,
 };
+use vec1::vec1;
 
 use super::super::rich_text_styles;
 use super::NotebooksEditorModel;

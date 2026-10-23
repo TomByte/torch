@@ -66,7 +66,9 @@ pub fn open_cli_agent_rich_input(tab_index: usize) -> TestStep {
 }
 
 /// Asserts that the Rich Input buffer text for `tab_index` is empty.
-pub fn rich_input_buffer_text_is_empty(tab_index: usize) -> torchui::integration::AssertionCallback {
+pub fn rich_input_buffer_text_is_empty(
+    tab_index: usize,
+) -> torchui::integration::AssertionCallback {
     Box::new(move |app, window_id| {
         let input_view = single_input_view_for_tab(app, window_id, tab_index);
         input_view.read(app, |view, ctx| {

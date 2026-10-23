@@ -1,11 +1,11 @@
 use markdown_parser::{FormattedTable, FormattedTextInline, Hyperlink, TableAlignment};
-use unicode_width::UnicodeWidthStr;
 use torchui_core::AppContext;
 use torchui_core::elements::tui::{
     TuiConstraint, TuiElement, TuiFlex, TuiLayoutContext, TuiPaintContext, TuiPaintSurface,
     TuiParentElement, TuiPresentationContext, TuiScreenPoint, TuiScreenPosition, TuiSize, TuiStyle,
     TuiText,
 };
+use unicode_width::UnicodeWidthStr;
 
 use super::{
     TuiFixedWidth, TuiMarkdownPalette, TuiMarkdownRule, blank_row, inline_spans, push_span,

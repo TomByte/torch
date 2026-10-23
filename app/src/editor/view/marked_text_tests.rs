@@ -1,8 +1,8 @@
-use vim::vim::VimMode;
 use torch_core::features::FeatureFlag;
 use torchui::App;
 use torchui::keymap::Keystroke;
 use torchui::platform::WindowStyle;
+use vim::vim::VimMode;
 
 use super::initialize_app;
 use crate::editor::{DisplayPoint, EditorOptions, EditorView};

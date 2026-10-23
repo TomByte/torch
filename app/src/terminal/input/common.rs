@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use pathfinder_geometry::vector::vec2f;
-use vim::vim::{VimMode, VimState};
 use torch_completer::completer::Description;
 use torch_core::features::FeatureFlag;
 use torchui::elements::{
@@ -14,6 +13,7 @@ use torchui::fonts::Weight;
 use torchui::presenter::ChildView;
 use torchui::ui_components::components::{UiComponent, UiComponentStyles};
 use torchui::{AppContext, EntityId, SingletonEntity, ViewHandle};
+use vim::vim::{VimMode, VimState};
 
 use crate::ai::blocklist::BlocklistAIHistoryModel;
 use crate::ai::llms::{LLMPreferences, should_show_key_icon_for_model};

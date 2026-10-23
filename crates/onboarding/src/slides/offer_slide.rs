@@ -1,4 +1,3 @@
-use ui_components::{Component as _, Options as _, button};
 use torch_core::send_telemetry_from_ctx;
 use torch_core::ui::appearance::Appearance;
 use torch_core::ui::icons::Icon;
@@ -19,6 +18,7 @@ use torchui_core::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity as _, TypedActionView, View,
     ViewContext,
 };
+use ui_components::{Component as _, Options as _, button};
 
 use super::OnboardingSlide;
 use super::upgrade_auth_prompt::render_upgrade_auth_prompt_bar;

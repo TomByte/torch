@@ -1,11 +1,11 @@
 use std::borrow::Cow;
 
 use async_channel::Sender;
-use uuid::Uuid;
 use torch_completer::meta::Span;
 #[cfg(unix)]
 use torchui::AppContext;
 use torchui::{Entity, ViewContext};
+use uuid::Uuid;
 
 use crate::ai::agent::AIAgentPtyWriteMode;
 use crate::server::telemetry::CloudAgentShellRecoveryFailureClass;

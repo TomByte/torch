@@ -6,8 +6,8 @@ use opentelemetry::baggage::BaggageExt as _;
 use opentelemetry::trace::{TraceContextExt as _, TraceState, TracerProvider as _};
 use opentelemetry_sdk::error::OTelSdkResult;
 use opentelemetry_sdk::trace::{SdkTracerProvider, SpanData, SpanExporter};
-use tracing_subscriber::layer::SubscriberExt as _;
 use torch_cli::environment_checkout::EnvironmentCheckoutArgs;
+use tracing_subscriber::layer::SubscriberExt as _;
 
 use super::*;
 use crate::tracing::cloud_agent_auth::AuthContext;

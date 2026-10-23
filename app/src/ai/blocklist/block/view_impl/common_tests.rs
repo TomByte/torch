@@ -4,12 +4,12 @@ use std::sync::Arc;
 
 use ai::skills::{ParsedSkill, SkillProvider, SkillScope};
 use itertools::Itertools;
-use ui_components::lightbox::{LightboxImage, LightboxImageSource};
 use torch_util::local_or_remote_path::LocalOrRemotePath;
 #[cfg(feature = "local_fs")]
 use torchui::assets::asset_cache::AssetSource;
 use torchui::elements::{Empty, MouseStateHandle};
 use torchui::{App, Element};
+use ui_components::lightbox::{LightboxImage, LightboxImageSource};
 
 use super::{
     CollapsibleElementState, CollapsibleExpansionState, LOAD_OUTPUT_MESSAGE,

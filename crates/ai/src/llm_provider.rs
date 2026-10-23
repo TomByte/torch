@@ -99,7 +99,9 @@ impl From<torch_graphql::queries::get_feature_model_choices::LlmProvider> for LL
             }
             torch_graphql::queries::get_feature_model_choices::LlmProvider::Google => Self::Google,
             torch_graphql::queries::get_feature_model_choices::LlmProvider::Xai => Self::Xai,
-            torch_graphql::queries::get_feature_model_choices::LlmProvider::Unknown => Self::Unknown,
+            torch_graphql::queries::get_feature_model_choices::LlmProvider::Unknown => {
+                Self::Unknown
+            }
             torch_graphql::queries::get_feature_model_choices::LlmProvider::Other(value) => {
                 report_error!(
                     "Invalid LlmProvider; update client GraphQL types",

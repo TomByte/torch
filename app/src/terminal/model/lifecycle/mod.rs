@@ -11,11 +11,11 @@ mod transition;
 pub use telemetry::LifecycleRecoveryRecord;
 pub(in crate::terminal) use telemetry::LifecycleTelemetryEvent;
 use telemetry::LifecycleTelemetryLimiter;
+use torch_core::features::FeatureFlag;
 pub(in crate::terminal) use transition::{
     CommandStartKind, IgnoreReason, LifecycleAction, LifecycleInput, LifecyclePhase,
     LifecycleSnapshot, LifecycleTransition, NextBlockIdDisposition, PreexecObservation,
 };
-use torch_core::features::FeatureFlag;
 
 use super::block::BlockState;
 

@@ -2,13 +2,13 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use async_channel::unbounded;
-use uuid::Uuid;
 use torch_core::command::ExitCode;
+use torchui::{App, ModelContext};
+use uuid::Uuid;
 use warp_multi_agent_api::request::input::UserQuery as ApiUserQuery;
 use warp_multi_agent_api::response_event::{StreamFinished, stream_finished};
 use warp_multi_agent_api::user_query_origin::Variant as UserQueryOriginVariant;
 use warp_multi_agent_api::{AgentType, ResponseEvent, UserQueryOrigin, response_event};
-use torchui::{App, ModelContext};
 
 use super::*;
 use crate::ai::agent::base_user_query::warp_client_origin;

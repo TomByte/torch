@@ -649,7 +649,9 @@ impl RuleView {
                 .finish(),
         )
         .with_background(appearance.theme().accent_overlay())
-        .with_corner_radius(CornerRadius::with_all(torchui::elements::Radius::Pixels(4.)))
+        .with_corner_radius(CornerRadius::with_all(torchui::elements::Radius::Pixels(
+            4.,
+        )))
         .with_uniform_padding(style::BANNER_PADDING)
         .with_margin_bottom(style::ITEM_BOTTOM_MARGIN)
         .finish()
@@ -745,7 +747,9 @@ impl RuleView {
         Some(
             Container::new(row.finish())
                 .with_background(internal_colors::neutral_1(appearance.theme()))
-                .with_corner_radius(CornerRadius::with_all(torchui::elements::Radius::Pixels(4.)))
+                .with_corner_radius(CornerRadius::with_all(torchui::elements::Radius::Pixels(
+                    4.,
+                )))
                 .with_border(
                     Border::all(1.)
                         .with_border_color(internal_colors::neutral_2(appearance.theme())),
@@ -826,7 +830,9 @@ impl RuleView {
 
             Container::new(row.finish())
                 .with_background(bg_color)
-                .with_corner_radius(CornerRadius::with_all(torchui::elements::Radius::Pixels(4.)))
+                .with_corner_radius(CornerRadius::with_all(torchui::elements::Radius::Pixels(
+                    4.,
+                )))
                 .with_border(
                     Border::all(1.)
                         .with_border_color(internal_colors::neutral_2(appearance.theme())),

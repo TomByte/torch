@@ -4,8 +4,8 @@ mod search_item;
 mod view;
 
 use ai::document::AIDocumentId;
-pub use view::{InlinePlanMenuEvent, InlinePlanMenuView};
 use torchui::keymap::Keystroke;
+pub use view::{InlinePlanMenuEvent, InlinePlanMenuView};
 
 use crate::ai::document::ai_document_model::AIDocumentVersion;
 use crate::terminal::input::inline_menu::{

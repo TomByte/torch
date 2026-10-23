@@ -11,8 +11,6 @@ use num_traits::SaturatingSub;
 use pathfinder_geometry::vector::vec2f;
 use settings::Setting as _;
 use string_offset::CharOffset;
-use vec1::{Vec1, vec1};
-use vim::vim::{Direction, InsertPosition, VimMode, VimModel, VimState, VimSubscriber};
 use torch_core::platform::SessionPlatform;
 use torch_editor::content::buffer::{
     Buffer, BufferEditAction, EditOrigin, InitialBufferState, ToBufferCharOffset as _,
@@ -51,6 +49,8 @@ use torchui::{
     AppContext, BlurContext, CursorInfo, Element, Entity, FocusContext, ModelHandle,
     SingletonEntity, View, ViewContext, ViewHandle, WeakViewHandle, WindowId,
 };
+use vec1::{Vec1, vec1};
+use vim::vim::{Direction, InsertPosition, VimMode, VimModel, VimState, VimSubscriber};
 
 use crate::appearance::Appearance;
 use crate::code::editor::EditorReviewComment;

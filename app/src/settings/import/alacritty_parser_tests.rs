@@ -1,7 +1,7 @@
 use async_io::block_on;
-use virtual_fs::{Stub, VirtualFS};
 use torch_core::ui::color::hex_color::coloru_from_hex_string;
 use torch_core::ui::theme::AnsiColor;
+use virtual_fs::{Stub, VirtualFS};
 
 use super::{
     AlacrittyColors, AlacrittyConfig, AlacrittyTheme, PrimaryAlacrittyColors, RecursivelyParseable,

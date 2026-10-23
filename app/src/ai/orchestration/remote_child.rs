@@ -12,10 +12,10 @@ use prost::Message as _;
 use torch_cli::agent::Harness;
 #[cfg(not(target_family = "wasm"))]
 use torch_cli::skill::SkillSpec;
-use warp_multi_agent_api as multi_agent_api;
 #[cfg(not(target_family = "wasm"))]
 use torch_util::local_or_remote_path::LocalOrRemotePath;
 use torchui::{AppContext, SingletonEntity as _};
+use warp_multi_agent_api as multi_agent_api;
 
 use crate::ChannelState;
 use crate::ai::agent::UserQueryMode;

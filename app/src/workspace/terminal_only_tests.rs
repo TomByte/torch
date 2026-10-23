@@ -1,5 +1,6 @@
-use super::*;
 use torchui::{App, TypedActionView};
+
+use super::*;
 
 #[test]
 fn terminal_only_restoration_replaces_legacy_file_tabs_with_a_terminal() {

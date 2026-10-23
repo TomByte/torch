@@ -28,7 +28,9 @@ use torchui::fonts::{Properties, Weight};
 use torchui::platform::FilePickerConfiguration;
 use torchui::platform::file_picker::FilePickerError;
 use torchui::ui_components::components::UiComponent;
-use torchui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
+use torchui::{
+    AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
+};
 
 use crate::appearance::Appearance;
 use crate::modal::MODAL_BACKDROP_OPACITY;

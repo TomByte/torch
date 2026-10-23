@@ -1,6 +1,8 @@
 use pathfinder_geometry::vector::vec2f;
 use torch_core::ui::theme::Fill;
-use torchui::elements::{Align, Container, CrossAxisAlignment, Dismiss, Flex, ParentElement, Stack};
+use torchui::elements::{
+    Align, Container, CrossAxisAlignment, Dismiss, Flex, ParentElement, Stack,
+};
 use torchui::fonts::Weight;
 use torchui::keymap::FixedBinding;
 use torchui::platform::Cursor;

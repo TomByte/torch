@@ -8,7 +8,6 @@ use chrono::{DateTime, Local};
 use fuzzy_match::match_indices;
 use itertools::Itertools;
 use pathfinder_geometry::vector::vec2f;
-use warp_command_signatures::IconType;
 use torch_completer::completer::{
     MatchType, PathSeparators, PreparedSuggestion, Suggestion, SuggestionResults, SuggestionType,
 };
@@ -29,6 +28,7 @@ use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles}
 use torchui::{
     AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, WeakViewHandle,
 };
+use warp_command_signatures::IconType;
 
 use crate::ai::blocklist::{AIQueryHistory, AIQueryHistoryOutputStatus, render_ai_agent_mode_icon};
 use crate::appearance::Appearance;

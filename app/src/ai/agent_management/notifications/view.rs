@@ -13,7 +13,9 @@ use torchui::keymap::FixedBinding;
 use torchui::keymap::macros::id;
 use torchui::platform::Cursor;
 use torchui::ui_components::components::{UiComponent, UiComponentStyles};
-use torchui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
+use torchui::{
+    AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
+};
 
 use crate::ai::agent_management::notifications::item::NotificationFilter;
 use crate::ai::agent_management::notifications::item_rendering::{

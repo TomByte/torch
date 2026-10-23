@@ -2,12 +2,12 @@ use std::sync::Arc;
 
 pub use lightbox::LightboxImage;
 use pathfinder_geometry::vector::Vector2F;
-use ui_components::{Component as _, lightbox};
 use torchui::assets::asset_cache::{AssetCache, AssetSource, AssetState};
 use torchui::image_cache::ImageType;
 use torchui::keymap::{FixedBinding, Keystroke};
 use torchui::prelude::*;
 use torchui::{AppContext, BlurContext, Element, Entity, SingletonEntity, View, ViewContext};
+use ui_components::{Component as _, lightbox};
 
 use crate::appearance::Appearance;
 

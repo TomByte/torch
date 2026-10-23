@@ -18,10 +18,10 @@ use torch::integration_testing::terminal::{
 };
 use torch::integration_testing::view_getters::single_terminal_view_for_tab;
 use torch::settings::SelectionSettings;
-use warp_multi_agent_api as api;
 use torchui_core::integration::TestStep;
 use torchui_core::text::SelectionType;
 use torchui_core::{Event, SingletonEntity, async_assert};
+use warp_multi_agent_api as api;
 
 use super::new_builder;
 use crate::Builder;

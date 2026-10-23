@@ -1,10 +1,10 @@
-use uuid::Uuid;
 use torch_errors::report_error;
 use torchui::r#async::SpawnedFutureHandle;
 use torchui::{
     AppContext, ClosedWindowData, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity,
     ViewHandle, WeakViewHandle, WindowId,
 };
+use uuid::Uuid;
 
 use super::UndoCloseSettings;
 use super::settings::UndoCloseSettingsChangedEvent;

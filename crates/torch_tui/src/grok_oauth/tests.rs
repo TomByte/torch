@@ -1,5 +1,5 @@
-use uuid::Uuid;
 use torchui_core::App;
+use uuid::Uuid;
 
 use super::{
     CALLBACK_FAILURE_MESSAGE, MANUAL_FAILURE_MESSAGE, TuiGrokOAuthController, TuiGrokOAuthPhase,

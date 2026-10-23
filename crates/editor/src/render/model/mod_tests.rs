@@ -5,7 +5,6 @@ use markdown_parser::{FormattedTextStyles, Hyperlink};
 use rangemap::RangeSet;
 use string_offset::CharOffset;
 use sum_tree::SumTree;
-use vec1::{Vec1, vec1};
 use torchui_core::assets::asset_cache::AssetSource;
 use torchui_core::color::ColorU;
 use torchui_core::elements::ListIndentLevel;
@@ -14,6 +13,7 @@ use torchui_core::geometry::rect::RectF;
 use torchui_core::geometry::vector::vec2f;
 use torchui_core::text_layout::TextFrame;
 use torchui_core::units::{IntoPixels, Pixels};
+use vec1::{Vec1, vec1};
 
 use super::debug::Describe;
 use super::test_utils::{layout_paragraph, layout_paragraphs};

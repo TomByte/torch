@@ -1,7 +1,7 @@
 use enum_iterator::Sequence;
 use instant::Instant;
-use uuid::Uuid;
 use torchui::EntityId;
+use uuid::Uuid;
 
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::artifacts::Artifact;

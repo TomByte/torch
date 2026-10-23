@@ -71,9 +71,6 @@ use stop_recording::StopRecordingExecutor;
 pub use suggest_new_conversation::NewConversationDecision;
 use suggest_new_conversation::SuggestNewConversationExecutor;
 pub use suggest_prompt::PromptSuggestionExecutor;
-use upload_artifact::UploadArtifactExecutor;
-use use_computer::UseComputerExecutor;
-use wait_for_events::WaitForEventsExecutor;
 use torch_core::execution_mode::AppExecutionMode;
 #[cfg(feature = "local_fs")]
 use torch_files::{FileModel, TextFileReadResult};
@@ -83,6 +80,9 @@ use torch_util::file::FileLoadError;
 use torch_util::file_type::is_buffer_binary;
 use torchui::r#async::{Spawnable, SpawnableOutput};
 use torchui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
+use upload_artifact::UploadArtifactExecutor;
+use use_computer::UseComputerExecutor;
+use wait_for_events::WaitForEventsExecutor;
 
 use self::search_codebase::SearchCodebaseExecutor;
 use crate::BlocklistAIHistoryModel;

@@ -6,7 +6,6 @@ use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::Vector2F;
 use thiserror::Error;
-use validator::ValidateEmail;
 use torch_errors::report_error;
 use torchui::clipboard::ClipboardContent;
 use torchui::elements::{
@@ -21,6 +20,7 @@ use torchui::{
     AppContext, Entity, EventContext, FocusContext, SingletonEntity, TypedActionView, View,
     ViewContext, ViewHandle,
 };
+use validator::ValidateEmail;
 
 use super::SettingsSection;
 use super::settings_page::{

@@ -21,9 +21,9 @@ use futures::future::FusedFuture;
 use futures::{FutureExt, future, pin_mut, select};
 use parking_lot::Mutex;
 use session_sharing_protocol::common::ParticipantId;
+use torchui::r#async::Timer;
 use warp_multi_agent_api::ClientAction;
 use warp_multi_agent_api::response_event::{StreamFinished, stream_finished};
-use torchui::r#async::Timer;
 
 use super::super::SavePoint;
 use super::attachments::AttachmentResolver;

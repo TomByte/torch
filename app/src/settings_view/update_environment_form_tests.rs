@@ -1,4 +1,3 @@
-use url::Url;
 use torch_core::ui::appearance::Appearance;
 use torchui::elements::{Empty, MouseStateHandle};
 use torchui::platform::WindowStyle;
@@ -6,6 +5,7 @@ use torchui::{
     AddSingletonModel, App, AppContext, Element, Entity, SingletonEntity, TypedActionView, View,
     WindowId,
 };
+use url::Url;
 
 use super::{
     EnvironmentFormCopy, EnvironmentFormInitArgs, EnvironmentFormValues, SuggestImageState,

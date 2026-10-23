@@ -3,10 +3,10 @@ use std::ops::Range;
 use itertools::{Either, Itertools};
 use line_ending::LineEnding;
 use string_offset::{ByteOffset, CharOffset};
-use vec1::{Vec1, vec1};
 use torchui_core::clipboard::ClipboardContent;
 use torchui_core::elements::ListIndentLevel;
 use torchui_core::{AppContext, Entity, ModelAsRef, ModelContext, ModelHandle};
+use vec1::{Vec1, vec1};
 
 use crate::content::anchor::Anchor;
 use crate::content::buffer::{

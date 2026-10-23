@@ -1,4 +1,3 @@
-use ui_components::{Component as _, Options as _, button};
 use torch_core::ui::appearance::Appearance;
 use torch_core::ui::theme::color::internal_colors;
 use torchui_core::elements::{
@@ -14,6 +13,7 @@ use torchui_core::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity as _, TypedActionView, View,
     ViewContext,
 };
+use ui_components::{Component as _, Options as _, button};
 
 use super::OnboardingSlide;
 use super::toggle_card::{ToggleCardSpec, render_toggle_card};

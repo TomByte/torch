@@ -6,8 +6,8 @@ mod view;
 
 use std::path::PathBuf;
 
-pub use view::{InlineReposMenuEvent, InlineReposMenuView};
 use torchui::keymap::Keystroke;
+pub use view::{InlineReposMenuEvent, InlineReposMenuView};
 
 use crate::terminal::input::inline_menu::{
     InlineMenuAction, InlineMenuMessageArgs, InlineMenuRowAction, InlineMenuType,
