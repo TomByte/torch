@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::fmt::Write;
 
 use anyhow::{Context, Result};
-use chrono::{DateTime, FixedOffset, NaiveDateTime};
+use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime};
 use lazy_static::lazy_static;
 use memo_map::MemoMap;
 use overrides::*;
@@ -33,6 +33,11 @@ impl std::fmt::Display for ChannelVersions {
 lazy_static! {
     static ref VERSION_RE: Regex = Regex::new(r"v(\d+)\.(.+)\.(.+)_(\d+)").unwrap();
 
+    /// Torch's calendar release tags: `vYYYY.MM.DD`, then `vYYYY.MM.DD.2` and so on for further
+    /// releases that day.
+    static ref CALENDAR_VERSION_RE: Regex =
+        Regex::new(r"^v(\d{4})\.(\d{1,2})\.(\d{1,2})(?:\.(\d+))?$").unwrap();
+
     // Cached mapping of version strings to semantic versions.
     static ref PARSED_VERSIONS_CACHE: MemoMap<String, ParsedVersion> = Default::default();
 }
@@ -50,22 +55,42 @@ impl TryFrom<&str> for ParsedVersion {
     fn try_from(value: &str) -> Result<Self> {
         PARSED_VERSIONS_CACHE
             .get_or_try_insert(value, || {
-                VERSION_RE
-                    .captures(value)
-                    .and_then(|captures| {
-                        let date_str = captures.get(2)?.as_str();
-                        let date =
-                            NaiveDateTime::parse_from_str(date_str, "%Y.%m.%d.%H.%M").ok()?;
-                        Some(ParsedVersion {
-                            major: captures.get(1)?.as_str().parse().ok()?,
-                            date,
-                            patch: captures.get(4)?.as_str().parse().ok()?,
-                        })
-                    })
+                parse_calendar_version(value)
+                    .or_else(|| parse_dated_build_version(value))
                     .context("Can't parse string into Version")
             })
             .cloned()
     }
+}
+
+/// A calendar release sorts at midnight on its date, so it orders after the timestamped builds
+/// of earlier days. Its first release of the day counts as release 1.
+fn parse_calendar_version(value: &str) -> Option<ParsedVersion> {
+    let captures = CALENDAR_VERSION_RE.captures(value)?;
+    let date = NaiveDate::from_ymd_opt(
+        captures.get(1)?.as_str().parse().ok()?,
+        captures.get(2)?.as_str().parse().ok()?,
+        captures.get(3)?.as_str().parse().ok()?,
+    )?;
+    let release = match captures.get(4) {
+        Some(release) => release.as_str().parse().ok()?,
+        None => 1,
+    };
+    Some(ParsedVersion {
+        major: 0,
+        date: date.and_hms_opt(0, 0, 0)?,
+        patch: release,
+    })
+}
+
+fn parse_dated_build_version(value: &str) -> Option<ParsedVersion> {
+    let captures = VERSION_RE.captures(value)?;
+    let date = NaiveDateTime::parse_from_str(captures.get(2)?.as_str(), "%Y.%m.%d.%H.%M").ok()?;
+    Some(ParsedVersion {
+        major: captures.get(1)?.as_str().parse().ok()?,
+        date,
+        patch: captures.get(4)?.as_str().parse().ok()?,
+    })
 }
 
 impl Ord for ParsedVersion {
@@ -140,10 +165,6 @@ pub struct VersionInfo {
     /// The version to use for TUI downloads, falling back to `version` if not set.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tui_version: Option<String>,
-    /// The tag of the GitHub release that holds this version's downloads, when it differs from
-    /// `version`.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub release_tag: Option<String>,
 }
 
 impl VersionInfo {
@@ -157,7 +178,6 @@ impl VersionInfo {
             is_rollback: None,
             cli_version: None,
             tui_version: None,
-            release_tag: None,
         }
     }
 
@@ -169,11 +189,6 @@ impl VersionInfo {
     /// Returns the TUI version, falling back to the app version if not set.
     pub fn tui_version(&self) -> &str {
         self.tui_version.as_deref().unwrap_or(&self.version)
-    }
-
-    /// Returns the release tag, falling back to the app version if not set.
-    pub fn release_tag(&self) -> &str {
-        self.release_tag.as_deref().unwrap_or(&self.version)
     }
 }
 

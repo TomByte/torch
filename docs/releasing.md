@@ -4,12 +4,16 @@ Publishing a GitHub release builds Torch for macOS, signs and notarizes it, and 
 
 ## How it works
 
-1. You publish a release on GitHub, for example tagged `v0.1.0`.
+1. You publish a release on GitHub tagged with the date, for example `v2026.10.23`.
 2. [`.github/workflows/release.yml`](../.github/workflows/release.yml) builds a universal `Torch.app` on a GitHub macOS runner, signs it with your Developer ID certificate, notarizes it with Apple and packs it into `Torch.dmg`.
 3. The workflow attaches three files to the release: `Torch.dmg`, `SHA256SUMS` and `channel_versions.json`. The JSON file goes up last, so the update is only announced once the download exists.
 4. Torch reads `https://github.com/TomByte/torch/releases/latest/download/channel_versions.json`. When the version there is newer than its own, it downloads `Torch.dmg` from that release, checks that it's signed by your Apple team (`8M65369K4Z`, set in `crates/torch_core/src/macos.rs`), and offers to restart into it.
 
-The release tag is just a name. The workflow stamps each build with its own dated version (such as `v0.2026.10.23.14.05.oss_00`), which is what Torch compares.
+## Versions
+
+Torch uses calendar versions: the tag is the release date, `vYYYY.MM.DD`. A second release on the same day adds a number, `v2026.10.23.2`, then `.3` and so on. The version says when a build was released, not what changed in it.
+
+The tag is the version Torch shows in Settings (Finder shows it without the `v`), and the one it compares to find updates. The workflow refuses any other tag format before it starts building.
 
 Prereleases and drafts are never offered as updates, because GitHub's "latest" release skips them. Use a prerelease to try a build before releasing it to everyone.
 
@@ -94,13 +98,15 @@ You should see all five: `MACOS_CERTIFICATE_P12`, `MACOS_CERTIFICATE_PASSWORD`, 
 
 ## Publishing a release
 
-From the GitHub website: **Releases → Draft a new release**, create a tag such as `v0.1.0`, write the notes and click **Publish release**.
+From the GitHub website: **Releases → Draft a new release**, create a tag with today's date, such as `v2026.10.23`, write the notes and click **Publish release**.
 
 Or from the terminal:
 
 ```bash
-gh release create v0.1.0 --generate-notes
+gh release create "v$(date +%Y.%m.%d)" --generate-notes
 ```
+
+If you've already released today, add the next number yourself, for example `gh release create v2026.10.23.2 --generate-notes`.
 
 Follow the build under **Actions → Release**, or with:
 
@@ -113,7 +119,7 @@ The first build takes longest, because nothing is cached yet. When it finishes, 
 To rebuild a release, for example after a failed run, start the workflow by hand with the release's tag. It replaces that release's files:
 
 ```bash
-gh workflow run release.yml --repo TomByte/torch -f tag=v0.1.0
+gh workflow run release.yml --repo TomByte/torch -f tag=v2026.10.23
 ```
 
 ## The first updater-enabled release

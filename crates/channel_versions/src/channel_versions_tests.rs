@@ -104,18 +104,24 @@ fn changelog_tui_updates_are_backward_compatible() {
 }
 
 #[test]
-fn release_manifest_parses_with_and_without_release_tag() {
-    let payload = r#"{
-        "dev": { "version": "v0.2026.10.23.14.05.oss_00", "release_tag": "v0.1.0" },
-        "preview": { "version": "v0.2026.10.23.14.05.oss_00", "release_tag": "v0.1.0" },
-        "stable": { "version": "v0.2026.10.23.14.05.oss_00", "release_tag": "v0.1.0" }
-    }"#;
-    let versions: ChannelVersions =
-        serde_json::from_str(payload).expect("release manifest should deserialize");
-    let stable = versions.stable.version_info();
-    assert_eq!(stable.release_tag(), "v0.1.0");
-    assert!(ParsedVersion::try_from(stable.version.as_str()).is_ok());
+fn calendar_versions_parse_and_order_by_date_then_release_number() {
+    let first: ParsedVersion = "v2026.10.23".try_into().expect("first release is parsable");
+    let second: ParsedVersion = "v2026.10.23.2"
+        .try_into()
+        .expect("second release is parsable");
+    let next_day: ParsedVersion = "v2026.10.24".try_into().expect("next day is parsable");
+    assert_eq!(
+        first.date,
+        NaiveDate::from_ymd_opt(2026, 10, 23)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap()
+    );
+    assert!(first < second);
+    assert!(second < next_day);
 
-    let untagged = VersionInfo::new("v0.2026.10.23.14.05.oss_00".to_owned());
-    assert_eq!(untagged.release_tag(), "v0.2026.10.23.14.05.oss_00");
+    let earlier_build: ParsedVersion = "v0.2026.10.22.14.05.oss_00"
+        .try_into()
+        .expect("earlier dated build is parsable");
+    assert!(earlier_build < first);
 }

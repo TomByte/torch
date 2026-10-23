@@ -32,11 +32,13 @@ jobs:
           ref: ${{ env.RELEASE_TAG }}
           lfs: true
 
-      - name: Choose the build version
-        # Torch's updater compares versions in this dated form, so the release tag itself can be
-        # anything. Prereleases get the same treatment but are never offered as updates.
+      - name: Check the release tag
+        # The tag is the version Torch shows and compares, so it must be a calendar version.
         run: |
-          echo "TORCH_VERSION=v0.$(date -u +%Y.%m.%d.%H.%M).oss_00" >> "$GITHUB_ENV"
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]{4}\.[0-9]{2}\.[0-9]{2}(\.[0-9]+)?$ ]]; then
+            echo "::error::Release tag '$RELEASE_TAG' must look like v2026.10.23, or v2026.10.23.2 for another release that day."
+            exit 1
+          fi
           echo "KEYCHAIN_PATH=$RUNNER_TEMP/torch-release.keychain-db" >> "$GITHUB_ENV"
 
       - name: Install build tools
@@ -82,7 +84,7 @@ jobs:
           rm "$RUNNER_TEMP/AuthKey.p8"
 
       - name: Build, sign and notarize
-        run: ./script/macos/bundle --channel oss --release-tag "$TORCH_VERSION"
+        run: ./script/macos/bundle --channel oss --release-tag "$RELEASE_TAG"
 
       - name: Upload to the release
         env:
@@ -92,9 +94,9 @@ jobs:
           cp target/release-lto/bundle/osx/Torch.dmg upload/Torch.dmg
           cat > upload/channel_versions.json <<EOF
           {
-            "dev": { "version": "$TORCH_VERSION", "release_tag": "$RELEASE_TAG" },
-            "preview": { "version": "$TORCH_VERSION", "release_tag": "$RELEASE_TAG" },
-            "stable": { "version": "$TORCH_VERSION", "release_tag": "$RELEASE_TAG" }
+            "dev": { "version": "$RELEASE_TAG" },
+            "preview": { "version": "$RELEASE_TAG" },
+            "stable": { "version": "$RELEASE_TAG" }
           }
           EOF
           (cd upload && shasum -a 256 Torch.dmg > SHA256SUMS)

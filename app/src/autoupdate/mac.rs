@@ -694,17 +694,9 @@ async fn mount_dmg(dmg_dir: &Path, update_id: &str) -> Result<PathBuf> {
 }
 
 fn update_url(channel: Channel, version_info: &VersionInfo) -> String {
-    let directory = match channel {
-        Channel::Oss => version_info.release_tag(),
-        Channel::Stable
-        | Channel::Preview
-        | Channel::Dev
-        | Channel::Local
-        | Channel::Integration => &version_info.version,
-    };
     format!(
         "{}/{}",
-        release_assets_directory_url(channel, directory),
+        release_assets_directory_url(channel, &version_info.version),
         dmg_name(channel)
     )
 }
