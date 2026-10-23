@@ -1,5 +1,5 @@
 [package]
-authors = ["Warp Team <dev@warp.dev>"]
+authors.workspace = true
 default-run = "torch"
 description = "A local terminal with tab completion and command history"
 edition = "2024"
@@ -1024,7 +1024,7 @@ cloud_agent_shell_respawn = []
 
 [package.metadata.bundle.bin.torch]
 category = "public.app-category.developer-tools"
-copyright = "© 2025, Denver Technologies, Inc"
+copyright = "© 2026 C10UD Ltd. Portions © 2020–2026 Denver Technologies, Inc."
 identifier = "dev.tombyte.Torch"
 name = "Torch"
 resources = ["assets/onboarding"]

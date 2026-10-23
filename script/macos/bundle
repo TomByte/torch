@@ -12,26 +12,22 @@
 # the steps are:
 #
 # 1) Create the binary or mac bundle by running `cargo`.
-# 2) Create a keychain based on our distribution cert.
-# 3) Codesign the built artifact using the keychain.
+# 2) Codesign the built artifact with the Developer ID cert in the login keychain.
 #
 # Additionally, for an app, we create a dmg:
-# 4) Create the dmg using `hdiutil create`.
-# 5) Codesign our dmg using the keychain.
-# 6) Upload the app to Apple for it to be notarized - this is async, and we
-#    poll until it is done.
-# 7) "Staple" the notarization to the dmg.
+# 3) Create the dmg using `create-dmg`, and codesign it.
+# 4) Upload the dmg to Apple for it to be notarized - this is async, and we
+#    poll until it is done - then "staple" the notarization to the dmg and app.
+# 5) Zip the stapled app.
 #
 # Once the stapling is done, the app can be shared.
 #
-# Three passwords are read from GCP Secret Manager (or from env if --read-passwords-from-env is set) if you are codesigning.
-# 1) WARP_NOTARIZATION_PASSWORD:  This is an "app-specific password" that
-#    is tied to the zach@warp.dev account.  See https://support.apple.com/en-us/HT204397
-# 2) WARP_DEVELOPER_ID_CERT_PASSWORD: This is a password tied to the private key
-#    of our cert - it is needed to use the cert to sign our binary.
-# 3) WARP_CODESIGN_KEYCHAIN_PASSWORD: This is an arbitrary password only used
-#    in the lifetime of this app for creating the keychain used to sign.  Can
-#    be anything.
+# Codesigning needs two things on the building Mac, checked before the build starts:
+# 1) The CODESIGN_IDENTITY Developer ID Application cert, with its private key, in the
+#    login keychain.
+# 2) A notarytool keychain profile named NOTARY_PROFILE, created once with
+#    `xcrun notarytool store-credentials torch` using an app-specific password or an
+#    App Store Connect API key.
 #
 # See
 # https://github.com/burtonageo/cargo-bundle
@@ -60,6 +56,10 @@ INTEL_TARGET="$INTEL_ARCH-apple-darwin"
 ARM_ARCH="aarch64"
 ARM_TARGET="$ARM_ARCH-apple-darwin"
 DEFAULT_ARCH="$(rustc --print cfg | grep target_arch)"
+# Keep in sync with `APPLE_TEAM_ID` in crates/warp_core/src/macos.rs.
+APPLE_TEAM_ID="8M65369K4Z"
+CODESIGN_IDENTITY="Developer ID Application: C10UD LTD ($APPLE_TEAM_ID)"
+NOTARY_PROFILE="torch"
 
 # Function to clean up temporary DMG files
 cleanup_dmg_files() {
@@ -76,16 +76,8 @@ cleanup_dmg_files() {
     done
 }
 
-# Clean up the temporary codesigning keychain.
-cleanup_codesign_keychain() {
-    if [[ "${CODESIGN:-false}" = true && -n "${CODESIGN_KEYCHAIN_NAME:-}" ]]; then
-        echo "Cleaning up by deleting $CODESIGN_KEYCHAIN_NAME keychain."
-        security delete-keychain "$CODESIGN_KEYCHAIN_NAME" || echo "No keychain to delete or already deleted."
-    fi
-}
-
 # Set up cleanup trap
-trap 'cleanup_dmg_files "$DMG_DIR"; cleanup_codesign_keychain' EXIT
+trap 'cleanup_dmg_files "$DMG_DIR"' EXIT
 
 # Define a helper function that uses Python to compute a relative path.
 function relpath() {
@@ -123,11 +115,7 @@ function codesign_with_retry() {
 # instead of uploading a duplicate artifact.
 function notarize_artifact() {
   local artifact="$1"
-  local auth_args=(
-    --apple-id "$WARP_NOTARIZATION_APPLE_ID"
-    --password "$WARP_NOTARIZATION_PASSWORD"
-    --team-id "$APPLE_TEAM_ID"
-  )
+  local auth_args=(--keychain-profile "$NOTARY_PROFILE")
 
   local submission_output
   if ! submission_output="$(
@@ -221,7 +209,6 @@ ARTIFACT="app"
 CODESIGN=true
 SELFSIGN=false
 OPEN_AFTER_BUNDLE=false
-READ_PASSWORDS_FROM_ENV=false
 
 PARAMS=""
 while (( "$#" )); do
@@ -251,8 +238,8 @@ while (( "$#" )); do
       SELFSIGN=false
       shift
       ;;
-    # Sign with a local Apple Development cert instead of the official Warp cert.
-    # Useful for local debug builds when you don't have access to the company signing key.
+    # Sign with a local Apple Development cert instead of the Developer ID cert.
+    # Useful for local debug builds when the Developer ID cert isn't installed.
     # Falls back to ad-hoc signing if no Apple Development cert is found.
     --selfsign)
       echo "Self-signing enabled."
@@ -320,12 +307,6 @@ while (( "$#" )); do
         exit 1
       fi
       ;;
-    # Read codesigning passwords from environment variables instead of GCP secret manager
-    --read-passwords-from-env)
-        echo "Reading codesigning passwords from env."
-        READ_PASSWORDS_FROM_ENV=true
-        shift
-        ;;
     --features)
       if [ -n "$2" ] && [ "${2:0:1}" != "-" ]; then
         echo "Adding Cargo features: $2"
@@ -432,7 +413,7 @@ elif [[ $RELEASE_CHANNEL = "oss" ]]; then
     BUNDLE_ID="dev.tombyte.Torch"
     WARP_APP_NAME="Torch"
     WARP_SCHEME_NAME="torch"
-    FEATURES="release_bundle,extern_plist"
+    FEATURES="release_bundle,extern_plist,local_only"
 fi
 
 OUT_DIR="target/$TARGET_PROFILE_DIR/bundle/osx"
@@ -551,10 +532,24 @@ else
   FINAL_DMG_NAME="$WARP_APP_NAME.dmg"
 fi
 
+# Check signing credentials up front so a missing cert or profile doesn't surface only after a
+# full release build.
+if [[ $CODESIGN = true ]]; then
+  if ! security find-identity -v -p codesigning | grep -qF "\"$CODESIGN_IDENTITY\""; then
+    echo "Codesigning identity \"$CODESIGN_IDENTITY\" not found in the keychain. Install it, or pass --nosign or --selfsign." >&2
+    exit 1
+  fi
+  if ! xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" > /dev/null; then
+    echo "Notarization profile \"$NOTARY_PROFILE\" not found. Create it with \`xcrun notarytool store-credentials $NOTARY_PROFILE\`, or pass --nosign or --selfsign." >&2
+    exit 1
+  fi
+fi
+
 # First clean up and prep the outdir
 mkdir -p "$OUT_DIR"
 rm -R "$OUT_DIR/$WARP_APP_NAME.app" || echo "No old app to remove"
 rm -R "$OUT_DIR/$FINAL_DMG_NAME" || echo "No old dmg to remove"
+rm "$OUT_DIR/$WARP_APP_NAME.zip" || echo "No old zip to remove"
 
 ###########################
 ## Step 1: Build the app ##
@@ -845,54 +840,8 @@ else
   exit 1
 fi
 
-##########################################
-## Step 2: Create code-signing keychain ##
-##########################################
-
-if [[ $READ_PASSWORDS_FROM_ENV != true ]]; then
-  echo "Skipping code-signing because passwords are not available in environment."
-  CODESIGN=false
-fi
-
-if [[ $CODESIGN = true ]]; then
-  # TODO - does this need to change per user?  Seems like it's tied to the WARP_NOTARIZATION_PASSWORD password.
-  APPLE_TEAM_ID="2BBY89MBSN"
-  CODESIGN_KEYCHAIN_NAME="warp-codesign-keychain"
-
-  echo "Starting codesigning..."
-
-  if [[ $READ_PASSWORDS_FROM_ENV = true ]]; then
-    if [ -z "$WARP_NOTARIZATION_PASSWORD" ] ; then
-      echo "WARP_NOTARIZATION_PASSWORD must be set for code signing"
-      exit 1
-    fi
-
-    if [ -z "$WARP_DEVELOPER_ID_CERT_PASSWORD" ] ; then
-      echo "WARP_DEVELOPER_ID_CERT_PASSWORD must be set for code signing"
-      exit 1
-    fi
-
-    if [ -z "$WARP_CODESIGN_KEYCHAIN_PASSWORD" ] ; then
-      echo "WARP_CODESIGN_KEYCHAIN_PASSWORD must be set for code signing"
-      exit 1
-    fi
-  fi
-
-  security delete-keychain $CODESIGN_KEYCHAIN_NAME || echo "No existing keychain to clean up".
-
-  echo "Creating $CODESIGN_KEYCHAIN_NAME keychain."
-  security create-keychain -p "$WARP_CODESIGN_KEYCHAIN_PASSWORD" $CODESIGN_KEYCHAIN_NAME
-  security list-keychains -s $CODESIGN_KEYCHAIN_NAME
-  security set-keychain-settings -t 3600 -u $CODESIGN_KEYCHAIN_NAME
-
-  echo "Unlocking keychain and setting cert."
-  security unlock-keychain -p "$WARP_CODESIGN_KEYCHAIN_PASSWORD" $CODESIGN_KEYCHAIN_NAME
-  security import <(echo "$WARP_DEVELOPER_ID_CERT" | base64 -d) -f pkcs12 -P "$WARP_DEVELOPER_ID_CERT_PASSWORD" -k $CODESIGN_KEYCHAIN_NAME -T /usr/bin/codesign
-  security set-key-partition-list -S "apple-tool:,apple:" -s -k "$WARP_CODESIGN_KEYCHAIN_PASSWORD" $CODESIGN_KEYCHAIN_NAME
-fi
-
 ##############################
-## Step 3: Codesign the app ##
+## Step 2: Codesign the app ##
 ##############################
 
 if [[ $SELFSIGN = true ]]; then
@@ -914,10 +863,10 @@ elif [[ $CODESIGN = true ]]; then
   if [[ "$ARTIFACT" == app ]]; then
     echo "Codesigning $BUNDLE_DIR/$WARP_APP_NAME.app..."
     # Use --deep so we sign bundled frameworks as well
-    codesign_with_retry --deep -f -o runtime --timestamp -s "$APPLE_TEAM_ID" "$BUNDLE_DIR/$WARP_APP_NAME.app" --entitlements script/Entitlements.plist
+    codesign_with_retry --deep -f -o runtime --timestamp -s "$CODESIGN_IDENTITY" "$BUNDLE_DIR/$WARP_APP_NAME.app" --entitlements script/Entitlements.plist
   elif [[ "$ARTIFACT" == cli || "$ARTIFACT" == warpctrl || "$ARTIFACT" == tui ]]; then
     echo "Codesigning $OUT_DIR/$WARP_BIN..."
-    codesign_with_retry -f -o runtime --timestamp -s "$APPLE_TEAM_ID" "$OUT_DIR/$WARP_BIN" --entitlements script/Entitlements.plist
+    codesign_with_retry -f -o runtime --timestamp -s "$CODESIGN_IDENTITY" "$OUT_DIR/$WARP_BIN" --entitlements script/Entitlements.plist
 
     # Create the .zip for notarization in a separate location - otherwise, Apple's codesigning
     # tools decide that it's a sealed resource that belongs to the binary and needs to also be signed.
@@ -937,7 +886,7 @@ elif [[ $CODESIGN = true ]]; then
 fi
 
 ########################
-## Step 4: Create DMG ##
+## Step 3: Create DMG ##
 ########################
 
 if [[ "$ARTIFACT" = app ]]; then
@@ -947,10 +896,9 @@ if [[ "$ARTIFACT" = app ]]; then
     local source_folder="$1"
 
     local args=(
-      --volname Warp
+      --volname "$WARP_APP_NAME"
       # For --no-internet-enable, see https://github.com/create-dmg/create-dmg/issues/179
       --no-internet-enable
-      --background app/assets/resources/mac/warp_install_image.png
       --icon-size 128
       --window-size 700 500
       --format UDZO
@@ -989,7 +937,7 @@ if [[ "$ARTIFACT" = app ]]; then
     create_warp_dmg "$DMG_DIR"
 
     echo "Codesigning $DMG_DIR/$DMG_NAME..."
-    codesign_with_retry -f -s "$APPLE_TEAM_ID" --timestamp "$DMG_DIR/$DMG_NAME"
+    codesign_with_retry -f -s "$CODESIGN_IDENTITY" --timestamp "$DMG_DIR/$DMG_NAME"
 
     NOTARIZATION_ARTIFACT="$DMG_DIR/$DMG_NAME"
     STAPLE_TICKET=true
@@ -1005,7 +953,7 @@ if [[ "$ARTIFACT" = app ]]; then
 fi
 
 ##############################
-## Step 5: Notarize the app ##
+## Step 4: Notarize the app ##
 ##############################
 
 if [[ $CODESIGN = true ]]; then
@@ -1015,12 +963,18 @@ if [[ $CODESIGN = true ]]; then
   if [[ $STAPLE_TICKET = true ]]; then
     echo "Attempting to staple the notarization ticket to $NOTARIZATION_ARTIFACT..."
     xcrun stapler staple "$NOTARIZATION_ARTIFACT"
+    if [[ "$ARTIFACT" = app ]]; then
+      # Notarizing the dmg also notarizes the app inside it, so the app can carry its own
+      # ticket and pass Gatekeeper offline when shared without the dmg.
+      xcrun stapler staple "$BUNDLE_DIR/$WARP_APP_NAME.app"
+    fi
   fi
 
   # Verify the notarization results (this is format-dependent)
   echo "Verifying notarization ticket..."
   if [[ "$ARTIFACT" = app ]]; then
     xcrun stapler validate "$DMG_DIR/$DMG_NAME"
+    spctl -a -t exec -vv "$BUNDLE_DIR/$WARP_APP_NAME.app"
   elif [[ "$ARTIFACT" = cli || "$ARTIFACT" = warpctrl || "$ARTIFACT" = tui ]]; then
     spctl -a -t open --context context:primary-signature -vv "$OUT_DIR/$WARP_BIN"
   fi
@@ -1028,13 +982,19 @@ fi
 
 
 #######################################
-## Step 6: Copy and output artifacts ##
+## Step 5: Copy and output artifacts ##
 #######################################
 
 if [[ "$ARTIFACT" = app ]]; then
   echo "Copying dmg and app to $OUT_DIR"
   cp -R "$BUNDLE_DIR/$WARP_APP_NAME.app" "$OUT_DIR"
   cp "$DMG_DIR/$DMG_NAME" "$OUT_DIR/$FINAL_DMG_NAME"
+
+  if [[ $CODESIGN = true ]]; then
+    echo "Zipping $OUT_DIR/$WARP_APP_NAME.app"
+    # ditto preserves the code signature and stapled ticket, which `zip` can break.
+    ditto -c -k --keepParent "$OUT_DIR/$WARP_APP_NAME.app" "$OUT_DIR/$WARP_APP_NAME.zip"
+  fi
 fi
 
 # If this is being run within a GitHub action, set an output variable with the
