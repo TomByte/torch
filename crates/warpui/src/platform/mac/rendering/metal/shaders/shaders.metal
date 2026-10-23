@@ -61,9 +61,17 @@ float distance_from_rect(vector_float2 pixel_pos, vector_float2 rect_center, vec
 }
 
 float4 derive_color(float2 pixel_pos, float2 start, float2 end, float4 start_color, float4 end_color) {
+    if (all(start_color == end_color)) {
+        return start_color;
+    }
     float2 adjusted_end = end - start;
     float h = dot(pixel_pos - start, adjusted_end) / dot(adjusted_end, adjusted_end);
-    return mix(start_color, end_color, h);
+    float4 color = mix(start_color, end_color, h);
+    // A gradient between close colours spans only a few 8-bit steps, which show as flat bands with
+    // visible edges. Half a step of interleaved gradient noise dithers those edges away.
+    float noise = fract(52.9829189 * fract(dot(pixel_pos, float2(0.06711056, 0.00583715))));
+    color.rgb += (noise - 0.5) / 255.0;
+    return color;
 }
 
 vertex RectFragmentData

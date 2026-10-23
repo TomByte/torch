@@ -217,9 +217,17 @@ fn derive_color(
     start_color: vec4<f32>,
     end_color: vec4<f32>
 ) -> vec4<f32> {
+    if (all(start_color == end_color)) {
+        return start_color;
+    }
     var adjusted_end: vec2<f32> = end - start;
     var h: f32 = dot(position - start, adjusted_end) / dot(adjusted_end, adjusted_end);
-    return mix(start_color, end_color, h);
+    var color: vec4<f32> = mix(start_color, end_color, h);
+    // A gradient between close colours spans only a few 8-bit steps, which show as flat bands with
+    // visible edges. Half a step of interleaved gradient noise dithers those edges away.
+    let noise = fract(52.9829189 * fract(dot(position, vec2<f32>(0.06711056, 0.00583715))));
+    color = vec4<f32>(color.rgb + (noise - 0.5) / 255.0, color.a);
+    return color;
 }
 
 // Based on the fragement position and the center of the quad, select one of the 4 radi.
