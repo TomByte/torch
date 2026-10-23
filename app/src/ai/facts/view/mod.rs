@@ -55,7 +55,6 @@ impl std::fmt::Display for AIFactPage {
 #[derive(Debug, Clone)]
 pub enum AIFactViewEvent {
     Pane(PaneEvent),
-    OpenSettings,
     OpenFile(LocalOrRemotePath),
     InitializeProject(PathBuf),
 }
@@ -126,9 +125,6 @@ impl AIFactView {
                     },
                     ctx,
                 );
-            }
-            RuleViewEvent::OpenSettings => {
-                ctx.emit(AIFactViewEvent::OpenSettings);
             }
             RuleViewEvent::OpenFile(path) => {
                 ctx.emit(AIFactViewEvent::OpenFile(path.clone()));

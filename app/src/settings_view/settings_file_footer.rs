@@ -33,12 +33,9 @@ const FOOTER_FONT_SIZE: f32 = 12.;
 const OPEN_BUTTON_HEIGHT: f32 = 32.;
 /// Height of action buttons inside the error alert.
 const ALERT_ACTION_BUTTON_HEIGHT: f32 = 24.;
-/// Size of the leading icons (search-sm, code-02, alert-circle, oz).
+/// Size of the leading icons (search-sm, code-02, alert-circle).
 const FOOTER_ICON_SIZE: f32 = 16.;
-/// Size of the Torch Agent brand mark inside the "Fix with Torch Agent" button. Matches the
-/// Figma spec and the workspace banner's secondary-button icon sizing.
-const ALERT_OZ_ICON_SIZE: f32 = 14.;
-/// Horizontal padding inside the "Open file" / "Fix with Torch Agent" action buttons.
+/// Horizontal padding inside the "Open file" action button.
 /// Matches the workspace banner's secondary button pad.
 const ALERT_BUTTON_HORIZONTAL_PADDING: f32 = 8.;
 /// Spacing between the two action buttons when they fit on one row.
@@ -87,7 +84,6 @@ impl SettingsFooterKind {
 pub struct SettingsFooterMouseStates {
     pub open_settings_file_button: MouseStateHandle,
     pub alert_open_file_button: MouseStateHandle,
-    pub alert_fix_with_oz_button: MouseStateHandle,
     /// Scroll state for the error alert's text region (heading +
     /// description), so scroll position survives renders.
     pub alert_text_scroll_state: ClippedScrollStateHandle,
@@ -157,7 +153,6 @@ pub fn render_open_settings_file_button(
 pub fn render_settings_error_alert(
     appearance: &Appearance,
     error: &SettingsFileError,
-    ai_enabled: bool,
     mouse_states: &SettingsFooterMouseStates,
 ) -> Box<dyn Element> {
     let theme = appearance.theme();
@@ -229,7 +224,6 @@ pub fn render_settings_error_alert(
         text_color,
         mouse_states.alert_open_file_button.clone(),
         "Open file",
-        /*icon=*/ None,
         /*bordered=*/ true,
         WorkspaceAction::OpenSettingsFile,
     );
@@ -237,26 +231,12 @@ pub fn render_settings_error_alert(
     // Use a `Wrap` flex as a graceful fallback: if the sidebar is narrower
     // than the buttons' combined natural width, they wrap onto a second
     // row instead of pushing the alert container wider than the sidebar.
-    let mut buttons_row = Wrap::row()
+    let buttons_row = Wrap::row()
         .with_cross_axis_alignment(CrossAxisAlignment::Center)
         .with_main_axis_size(MainAxisSize::Min)
         .with_spacing(ALERT_BUTTON_SPACING)
         .with_run_spacing(ALERT_BUTTON_SPACING)
         .with_child(open_file_button);
-
-    if ai_enabled {
-        let error_description = error.to_string();
-        let fix_with_oz_button = render_alert_action_button(
-            ui_font_family,
-            text_color,
-            mouse_states.alert_fix_with_oz_button.clone(),
-            "Fix with Torch Agent",
-            Some(Icon::Agent),
-            /*bordered=*/ false,
-            WorkspaceAction::FixSettingsWithOz { error_description },
-        );
-        buttons_row.add_child(fix_with_oz_button);
-    }
 
     // ── Assemble ─────────────────────────────────────────────────────────
     // Left-align the buttons with the start of the text (past the icon + gap).
@@ -287,7 +267,6 @@ pub fn render_footer(
     kind: SettingsFooterKind,
     appearance: &Appearance,
     error: Option<&SettingsFileError>,
-    ai_enabled: bool,
     mouse_states: &SettingsFooterMouseStates,
 ) -> Box<dyn Element> {
     let inner: Box<dyn Element> = match kind {
@@ -297,7 +276,7 @@ pub fn render_footer(
             mouse_states.open_settings_file_button.clone(),
         ),
         SettingsFooterKind::ErrorAlert => match error {
-            Some(error) => render_settings_error_alert(appearance, error, ai_enabled, mouse_states),
+            Some(error) => render_settings_error_alert(appearance, error, mouse_states),
             // Defensive fallback: if the error disappears between `choose` and
             // `render_footer`, fall back to the plain button rather than
             // rendering an empty alert shell.
@@ -321,36 +300,23 @@ fn render_alert_action_button(
     text_color: ColorU,
     mouse_state: MouseStateHandle,
     text: &'static str,
-    icon: Option<Icon>,
     bordered: bool,
     action: WorkspaceAction,
 ) -> Box<dyn Element> {
     Hoverable::new(mouse_state, move |state| {
-        let mut row = Flex::row()
+        let row = Flex::row()
             .with_cross_axis_alignment(CrossAxisAlignment::Center)
             .with_main_axis_alignment(MainAxisAlignment::Center)
-            .with_main_axis_size(MainAxisSize::Min);
-        if let Some(icon) = icon {
-            row.add_child(
-                Container::new(
-                    ConstrainedBox::new(icon.to_warpui_icon(Fill::Solid(text_color)).finish())
-                        .with_width(ALERT_OZ_ICON_SIZE)
-                        .with_height(ALERT_OZ_ICON_SIZE)
-                        .finish(),
-                )
-                .with_margin_right(4.)
-                .finish(),
+            .with_main_axis_size(MainAxisSize::Min)
+            .with_child(
+                Text::new_inline(text.to_owned(), ui_font_family, FOOTER_FONT_SIZE)
+                    .with_color(text_color)
+                    .with_style(Properties {
+                        weight: Weight::Semibold,
+                        ..Default::default()
+                    })
+                    .finish(),
             );
-        }
-        row.add_child(
-            Text::new_inline(text.to_owned(), ui_font_family, FOOTER_FONT_SIZE)
-                .with_color(text_color)
-                .with_style(Properties {
-                    weight: Weight::Semibold,
-                    ..Default::default()
-                })
-                .finish(),
-        );
 
         let mut container = Container::new(row.finish())
             .with_corner_radius(CornerRadius::with_all(Radius::Pixels(4.)))

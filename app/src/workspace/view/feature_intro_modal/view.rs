@@ -13,7 +13,6 @@ use torchui::{
 };
 
 use crate::appearance::Appearance;
-use crate::settings_view::{SettingsSection, custom_model_routers_widget_id};
 use crate::ui_components::icons::Icon;
 use crate::view_components::action_button::{
     ActionButton, ActionButtonTheme, ButtonSize, NakedTheme, PrimaryTheme,
@@ -39,13 +38,6 @@ impl FeatureIntroId {
     }
 }
 
-#[derive(Clone, Copy)]
-pub enum FeatureIntroCtaTarget {
-    SettingsWidget {
-        page: SettingsSection,
-        widget_id: fn() -> &'static str,
-    },
-}
 /// A data-driven description of a single feature-intro popover. New feature
 /// announcements are added by appending an entry to [`FEATURE_INTROS`]; no new
 /// view, model, settings, or workspace wiring is required.
@@ -62,9 +54,6 @@ pub struct FeatureIntro {
     pub description_icon: Option<Icon>,
     /// Label for the primary call-to-action button.
     pub cta_label: &'static str,
-    /// Destination opened when the user clicks the call-to-action. `None`
-    /// simply dismisses the popover.
-    pub cta_target: Option<FeatureIntroCtaTarget>,
 }
 
 /// The registry of feature-intro popovers, in priority order. On startup the
@@ -77,10 +66,6 @@ pub const FEATURE_INTROS: &[FeatureIntro] = &[FeatureIntro {
     description: "Custom routers can be complexity-based, where tasks are routed based on how difficult they are, or rule-based, where they are routed based on a set of natural language prompts.",
     description_icon: Some(Icon::Compass),
     cta_label: "Get started",
-    cta_target: Some(FeatureIntroCtaTarget::SettingsWidget {
-        page: SettingsSection::WarpAgent,
-        widget_id: custom_model_routers_widget_id,
-    }),
 }];
 
 /// Looks up a feature-intro descriptor by its id.
@@ -137,10 +122,8 @@ pub enum FeatureIntroModalAction {
 
 #[derive(Clone, Debug)]
 pub enum FeatureIntroModalEvent {
-    /// The user dismissed the popover (close button or escape).
-    Close(FeatureIntroId),
-    /// The user clicked the primary call-to-action.
-    GetStarted(FeatureIntroId),
+    /// The user dismissed the popover or clicked its call-to-action.
+    Dismissed,
 }
 
 /// A single, reusable popover for introducing new features. The popover is a
@@ -352,15 +335,9 @@ impl TypedActionView for FeatureIntroModal {
     type Action = FeatureIntroModalAction;
 
     fn handle_action(&mut self, action: &Self::Action, ctx: &mut ViewContext<Self>) {
-        let Some(intro) = self.current else {
-            return;
-        };
         match action {
-            FeatureIntroModalAction::Close => {
-                ctx.emit(FeatureIntroModalEvent::Close(intro.id));
-            }
-            FeatureIntroModalAction::GetStarted => {
-                ctx.emit(FeatureIntroModalEvent::GetStarted(intro.id));
+            FeatureIntroModalAction::Close | FeatureIntroModalAction::GetStarted => {
+                ctx.emit(FeatureIntroModalEvent::Dismissed);
             }
         }
     }

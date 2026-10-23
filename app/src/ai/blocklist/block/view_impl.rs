@@ -43,10 +43,9 @@ use torch_core::ui::color::contrast::{
 };
 use torch_core::ui::theme::{Fill, WarpTheme};
 use torchui::elements::{
-    Align, Border, Clipped, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Empty,
-    Expanded, Flex, FormattedTextElement, Highlight, HighlightedRange, Hoverable,
-    MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, SavePosition,
-    SelectableArea, Text,
+    Border, Clipped, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Empty, Expanded,
+    Flex, FormattedTextElement, Highlight, HighlightedRange, Hoverable, MainAxisAlignment,
+    MainAxisSize, MouseStateHandle, ParentElement, Radius, SavePosition, SelectableArea, Text,
 };
 use torchui::fonts::Properties;
 use torchui::platform::Cursor;
@@ -71,7 +70,6 @@ use crate::ai::blocklist::model::AIBlockModelHelper;
 use crate::appearance::Appearance;
 use crate::cloud_object::model::persistence::CloudModel;
 use crate::settings::{AISettings, InputModeSettings, InputSettings};
-use crate::settings_view::SettingsSection;
 use crate::terminal::TerminalView;
 use crate::terminal::block_list_element::BlockListMenuSource;
 use crate::terminal::grid_renderer::URL_COLOR;
@@ -86,7 +84,6 @@ use crate::ui_components::icons::Icon;
 use crate::util::link_detection::DetectedLinkType;
 use crate::util::truncation::truncate_from_end;
 use crate::view_components::dropdown::DropdownItemAction;
-use crate::workspace::WorkspaceAction;
 
 /// Helper function to create gray strikethrough highlight for secrets
 fn create_secret_gray_highlight() -> Highlight {
@@ -723,13 +720,11 @@ pub fn render_citation(
 }
 
 /// Renders the Ask-User-Question speedbump footer: a short description label, a
-/// dropdown for the `ask_user_question` permission, and a right-aligned
-/// "Manage AI Autonomy permissions" link. Matches the visual rhythm of
+/// dropdown for the `ask_user_question` permission. Matches the visual rhythm of
 /// [`render_autonomy_checkbox_setting_speedbump_footer`].
 pub fn render_autonomy_dropdown_setting_speedbump_footer<A>(
     description: &'static str,
     dropdown: &torchui::ViewHandle<crate::view_components::dropdown::Dropdown<A>>,
-    settings_link_handle: MouseStateHandle,
     app: &AppContext,
 ) -> Box<dyn Element>
 where
@@ -760,33 +755,6 @@ where
                     .with_margin_right(8.)
                     .finish(),
             )
-            .with_child(
-                Expanded::new(
-                    1.,
-                    Align::new(
-                        appearance
-                            .ui_builder()
-                            .link(
-                                "Manage AI Autonomy permissions".into(),
-                                None,
-                                Some(Box::new(move |ctx| {
-                                    ctx.dispatch_typed_action(
-                                        WorkspaceAction::ShowSettingsPageWithSearch {
-                                            search_query: "Autonomy".to_string(),
-                                            section: Some(SettingsSection::WarpAgent),
-                                        },
-                                    );
-                                })),
-                                settings_link_handle,
-                            )
-                            .build()
-                            .finish(),
-                    )
-                    .right()
-                    .finish(),
-                )
-                .finish(),
-            )
             .finish(),
     )
     .finish()
@@ -800,7 +768,6 @@ pub fn render_autonomy_checkbox_setting_speedbump_footer(
     checked: bool,
     on_toggled_action: AIBlockAction,
     checkbox_handle: MouseStateHandle,
-    settings_link_handle: MouseStateHandle,
     app: &AppContext,
 ) -> Box<dyn Element> {
     let appearance = Appearance::as_ref(app);
@@ -833,33 +800,6 @@ pub fn render_autonomy_checkbox_setting_speedbump_footer(
                 .finish(),
             )
             .with_margin_left(4.)
-            .finish(),
-        )
-        .with_child(
-            Expanded::new(
-                1.,
-                Align::new(
-                    appearance
-                        .ui_builder()
-                        .link(
-                            "Manage AI Autonomy permissions".into(),
-                            None,
-                            Some(Box::new(move |ctx| {
-                                ctx.dispatch_typed_action(
-                                    WorkspaceAction::ShowSettingsPageWithSearch {
-                                        search_query: "Autonomy".to_string(),
-                                        section: Some(SettingsSection::WarpAgent),
-                                    },
-                                );
-                            })),
-                            settings_link_handle,
-                        )
-                        .build()
-                        .finish(),
-                )
-                .right()
-                .finish(),
-            )
             .finish(),
         )
         .finish()

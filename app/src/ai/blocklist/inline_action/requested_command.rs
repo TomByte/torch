@@ -345,7 +345,7 @@ pub struct RequestedCommandView {
     citation_state_handles: HashMap<AIAgentCitation, MouseStateHandle>,
 
     autoexecute_readonly_commands_speedbump_checkbox_handle: MouseStateHandle,
-    manage_autonomy_settings_link_handle: MouseStateHandle,
+    manage_command_execution_link_handle: MouseStateHandle,
 
     // Selection support for MCP tool call detail text
     mcp_content_selection_handle: SelectionHandle,
@@ -387,7 +387,6 @@ impl RequestedCommandView {
         action_model: &ModelHandle<BlocklistAIActionModel>,
         terminal_model: Arc<FairMutex<TerminalModel>>,
         autonomy_setting_speedbump: AutonomySettingSpeedbump,
-        manage_autonomy_settings_link_handle: MouseStateHandle,
         ai_block_view_id: EntityId,
         ctx: &mut ViewContext<Self>,
     ) -> Self {
@@ -614,7 +613,7 @@ impl RequestedCommandView {
             derived_from_citations: Default::default(),
             citation_state_handles: Default::default(),
             autoexecute_readonly_commands_speedbump_checkbox_handle: Default::default(),
-            manage_autonomy_settings_link_handle,
+            manage_command_execution_link_handle: Default::default(),
             block_model,
             action_model: action_model.clone(),
             position_id_prefix,
@@ -887,7 +886,6 @@ impl RequestedCommandView {
                     AIBlockAction::ToggleAutoexecuteReadonlyCommandsSpeedbumpCheckbox,
                     self.autoexecute_readonly_commands_speedbump_checkbox_handle
                         .clone(),
-                    self.manage_autonomy_settings_link_handle.clone(),
                     app,
                 ))
             }
@@ -900,7 +898,7 @@ impl RequestedCommandView {
             ) if show_for_action_id == &self.action_id => {
                 *shown.lock() = true;
                 Some(Self::render_profile_autoexecution_info_footer(
-                    self.manage_autonomy_settings_link_handle.clone(),
+                    self.manage_command_execution_link_handle.clone(),
                     app,
                 ))
             }

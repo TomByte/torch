@@ -91,7 +91,6 @@ use crate::code::editor_management::CodeSource;
 use crate::notebooks::editor::{markdown_table_appearance, rich_text_styles};
 use crate::search::slash_command_menu::static_commands::commands;
 use crate::settings::{FontSettings, InputSettings};
-use crate::settings_view::SettingsSection;
 use crate::terminal::find::TerminalFindModel;
 use crate::terminal::grid_renderer::{FOCUSED_MATCH_COLOR, MATCH_COLOR};
 use crate::terminal::safe_mode_settings::get_secret_obfuscation_mode;
@@ -3077,7 +3076,6 @@ pub struct ChatGPTSubscriptionActionProps<'a> {
 
 pub struct FailedOutputProps<'a> {
     pub error: &'a RenderableAIError,
-    pub invalid_api_key_button_handle: &'a MouseStateHandle,
     pub subscribe_button_handle: &'a MouseStateHandle,
     pub aws_bedrock_credentials_error_view: Option<&'a ViewHandle<AwsBedrockCredentialsErrorView>>,
     pub gemini_enterprise_credentials_error_view:
@@ -3110,12 +3108,7 @@ pub fn render_failed_output(props: FailedOutputProps, app: &AppContext) -> Box<d
             );
         }
         FailedOutputPresentation::InvalidApiKey { title, detail } => {
-            return render_invalid_api_key_error(
-                title,
-                &detail,
-                props.invalid_api_key_button_handle,
-                app,
-            );
+            return render_invalid_api_key_error(title, &detail, app);
         }
         FailedOutputPresentation::ContextWindowExceeded { message } => {
             // This is rendered in a different way, like a failed action.
@@ -3332,14 +3325,8 @@ fn render_out_of_credits_error(
         .finish()
 }
 
-fn render_invalid_api_key_error(
-    title: &str,
-    detail: &str,
-    state_handle: &MouseStateHandle,
-    app: &AppContext,
-) -> Box<dyn Element> {
+fn render_invalid_api_key_error(title: &str, detail: &str, app: &AppContext) -> Box<dyn Element> {
     let appearance = Appearance::as_ref(app);
-    let theme = appearance.theme();
 
     let alert_icon = ConstrainedBox::new(
         Icon::AlertTriangle
@@ -3363,35 +3350,6 @@ fn render_invalid_api_key_error(
         .with_selectable(false)
         .finish();
 
-    let settings_button = appearance
-        .ui_builder()
-        .button(
-            torchui::ui_components::button::ButtonVariant::Outlined,
-            state_handle.clone(),
-        )
-        .with_style(UiComponentStyles {
-            border_color: Some(internal_colors::neutral_4(theme).into()),
-            ..Default::default()
-        })
-        .with_hovered_styles(UiComponentStyles {
-            background: Some(internal_colors::fg_overlay_2(theme).into()),
-            ..Default::default()
-        })
-        .with_clicked_styles(UiComponentStyles {
-            background: Some(internal_colors::fg_overlay_3(theme).into()),
-            ..Default::default()
-        })
-        .with_text_label("Edit API Keys".to_string())
-        .with_cursor(Some(Cursor::PointingHand))
-        .build()
-        .on_click(move |ctx, _, _| {
-            ctx.dispatch_typed_action(WorkspaceAction::ShowSettingsPageWithSearch {
-                search_query: "api keys".to_string(),
-                section: Some(SettingsSection::WarpAgent),
-            });
-        })
-        .finish();
-
     Flex::column()
         .with_spacing(16.)
         .with_child(
@@ -3409,7 +3367,6 @@ fn render_invalid_api_key_error(
                 .with_main_axis_alignment(MainAxisAlignment::SpaceBetween)
                 .with_cross_axis_alignment(CrossAxisAlignment::Center)
                 .with_child(Shrinkable::new(1., detail_text).finish())
-                .with_child(settings_button)
                 .finish(),
         )
         .finish()

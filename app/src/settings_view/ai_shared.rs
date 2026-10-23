@@ -7,33 +7,26 @@
 //! `Setting` parameter, and an anonymous argument-position parameter keeps
 //! those call sites working untouched.
 
-use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::HashMap;
 
 use settings::Setting;
-use torch_core::context_flag::ContextFlag;
-use torch_core::features::FeatureFlag;
 use torch_core::ui::theme::color::internal_colors;
 use torchui::elements::{
     ChildView, Container, Element, Fill, Flex, MouseStateHandle, ParentElement,
 };
-use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
 use torchui::ui_components::switch::SwitchStateHandle;
 use torchui::{Action, AppContext, SingletonEntity, View, ViewContext, ViewHandle};
 
 use super::SettingsAction;
 use super::settings_page::{
-    CONTENT_FONT_SIZE, HEADER_PADDING, LocalOnlyIconState, ToggleState, build_toggle_element,
+    CONTENT_FONT_SIZE, LocalOnlyIconState, ToggleState, build_toggle_element,
     render_body_item_label,
 };
 use crate::ai::blocklist::agent_view::agent_input_footer::editor::AgentToolbarInlineEditor;
 use crate::appearance::Appearance;
 use crate::editor::{EditorView, InteractionState};
-
-pub fn should_show_mcp_servers() -> bool {
-    FeatureFlag::McpServer.is_enabled() && ContextFlag::ShowMCPServers.is_enabled()
-}
 
 pub fn update_editor_interaction_state<V: View>(
     editor: ViewHandle<EditorView>,
@@ -103,23 +96,6 @@ pub fn render_ai_setting_toggle<S: Setting>(
     )
 }
 
-/// A standalone settings label, for rows whose control is not a switch.
-pub fn render_ai_setting_label<S: Setting>(
-    label: impl Into<String>,
-    is_setting_toggleable: bool,
-    tooltip_states: &RefCell<HashMap<String, MouseStateHandle>>,
-    app: &AppContext,
-) -> Box<dyn Element> {
-    Container::new(setting_label_element::<S>(
-        label,
-        is_setting_toggleable,
-        tooltip_states,
-        app,
-    ))
-    .with_margin_bottom(HEADER_PADDING)
-    .finish()
-}
-
 /// `render_body_item_label` is generic over an action type only to type its
 /// optional click target. Settings labels never have one, so the parameter is
 /// pinned here instead of being threaded through every caller.
@@ -142,44 +118,6 @@ fn setting_label_element<S: Setting>(
         ToggleState::Enabled,
         Appearance::as_ref(app),
     )
-}
-
-pub fn render_ai_setting_description(
-    description: impl Into<Cow<'static, str>>,
-    is_setting_toggleable: bool,
-    app: &AppContext,
-) -> Box<dyn Element> {
-    let default_font_size = Appearance::as_ref(app).ui_font_size();
-    render_ai_setting_description_with_font_size(
-        description,
-        default_font_size,
-        is_setting_toggleable,
-        app,
-    )
-}
-
-pub fn render_ai_setting_description_with_font_size(
-    description: impl Into<Cow<'static, str>>,
-    font_size: f32,
-    is_setting_toggleable: bool,
-    app: &AppContext,
-) -> Box<dyn Element> {
-    let ui_builder = Appearance::as_ref(app).ui_builder();
-    ui_builder
-        .paragraph(description)
-        .with_style(UiComponentStyles {
-            font_size: Some(font_size),
-            font_color: Some(styles::description_font_color(is_setting_toggleable, app).into()),
-            margin: Some(
-                Coords::default()
-                    .top(styles::DESCRIPTION_NEGATIVE_MARGIN_OFFSET)
-                    .bottom(styles::DESCRIPTION_MARGIN_BOTTOM)
-                    .right(styles::TOGGLE_WIDTH_MARGIN),
-            ),
-            ..Default::default()
-        })
-        .build()
-        .finish()
 }
 
 pub fn render_ai_feature_switch(

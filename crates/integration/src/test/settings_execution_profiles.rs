@@ -1,18 +1,13 @@
 //! Integration tests for file-backed AI execution profiles.
 
 use std::path::PathBuf;
-use std::time::Duration;
 
 use torch::features::FeatureFlag;
 use torch::integration_testing::settings::{
-    active_execution_profile_id, create_and_select_execution_profile, default_execution_profile,
-    execution_profile, has_multiple_execution_profiles,
+    default_execution_profile, execution_profile, has_multiple_execution_profiles,
 };
-use torch::integration_testing::step::new_step_with_default_assertions;
 use torch::integration_testing::terminal::wait_until_bootstrapped_single_pane_for_tab;
-use torch::integration_testing::view_getters::single_terminal_view_for_tab;
 use torchui_core::async_assert;
-use torchui_core::integration::TestStep;
 
 use super::{Builder, new_builder};
 
@@ -31,17 +26,6 @@ read_files = "always_ask"
 command_denylist = ["rm .*"]
 directory_allowlist = ["/repo"]
 web_search_enabled = true
-"#;
-
-const RELOADED_PROFILES: &str = r#"
-[agents.execution_profiles.default]
-name = "Reloaded Default"
-read_files = "always_ask"
-
-[agents.execution_profiles.reloaded]
-name = "Reloaded Profile"
-read_files = "always_allow"
-directory_allowlist = ["/reloaded"]
 "#;
 
 fn settings_file_path() -> PathBuf {
@@ -90,103 +74,5 @@ pub fn test_execution_profiles_load_from_settings_file() -> Builder {
                     )
                 },
             ),
-        )
-}
-
-pub fn test_execution_profile_model_persists_and_hot_reloads_settings_file() -> Builder {
-    enable_file_backed_profiles();
-
-    new_builder()
-        .with_setup(|utils| {
-            utils.set_env("TORCH_CONFIG_WATCHER_DELAY_MS", Some("10".to_string()));
-            write_settings_file(INITIAL_PROFILES);
-        })
-        .with_step(wait_until_bootstrapped_single_pane_for_tab(0))
-        .with_step(
-            TestStep::new("Create and select a file-backed execution profile").with_action(
-                |app, window_id, step_data| {
-                    let terminal_view_id = single_terminal_view_for_tab(app, window_id, 0).id();
-                    let profile_id = create_and_select_execution_profile(
-                        app,
-                        terminal_view_id,
-                        "Persisted Profile",
-                        PathBuf::from("/tmp/profile-readable"),
-                    );
-                    step_data.insert("created_profile_id", profile_id);
-                },
-            ),
-        )
-        .with_step(
-            new_step_with_default_assertions("Profile mutation should persist to settings.toml")
-                .add_named_assertion_with_data_from_prior_step(
-                    "Execution profile model should expose the persisted profile",
-                    |app, window_id, step_data| {
-                        let profile_id = step_data
-                            .get::<_, String>("created_profile_id")
-                            .expect("created profile ID should be available");
-                        let terminal_view_id =
-                            single_terminal_view_for_tab(app, window_id, 0).id();
-                        let profile = execution_profile(app, profile_id);
-
-                        async_assert!(
-                            profile.as_ref().is_some_and(|profile| {
-                                profile.name == "Persisted Profile"
-                                    && profile.read_files_always_allow
-                                    && profile.directory_allowlist
-                                        == [PathBuf::from("/tmp/profile-readable")]
-                            }) && active_execution_profile_id(app, terminal_view_id) == *profile_id,
-                            "Expected the created execution profile to be readable and active"
-                        )
-                    },
-                )
-                .add_named_assertion_with_data_from_prior_step(
-                    "Generated profile key and values should be written to settings.toml",
-                    |_app, _window_id, step_data| {
-                        let profile_id = step_data
-                            .get::<_, String>("created_profile_id")
-                            .expect("created profile ID should be available");
-                        let contents =
-                            std::fs::read_to_string(settings_file_path()).unwrap_or_default();
-                        let expected_table =
-                            format!("[agents.execution_profiles.{profile_id}]");
-
-                        async_assert!(
-                            profile_id.starts_with("profile-")
-                                && contents.contains(&expected_table)
-                                && contents.contains("name = \"Persisted Profile\"")
-                                && contents.contains("read_files = \"always_allow\"")
-                                && contents.contains("\"/tmp/profile-readable\""),
-                            "Expected settings.toml to contain the generated profile table and edited values, got:\n{contents}"
-                        )
-                    },
-                ),
-        )
-        .with_step(
-            TestStep::new("Replace execution profiles through settings.toml")
-                .set_timeout(Duration::from_secs(30))
-                .with_setup(|_utils| write_settings_file(RELOADED_PROFILES))
-                .add_named_assertion_with_data_from_prior_step(
-                    "Hot reload should replace profiles and clear a stale active selection",
-                    |app, window_id, step_data| {
-                        let created_profile_id = step_data
-                            .get::<_, String>("created_profile_id")
-                            .expect("created profile ID should be available");
-                        let terminal_view_id =
-                            single_terminal_view_for_tab(app, window_id, 0).id();
-                        let default = default_execution_profile(app);
-                        let reloaded_profile = execution_profile(app, "reloaded");
-
-                        async_assert!(
-                            execution_profile(app, created_profile_id).is_none()
-                                && default.name == "Reloaded Default"
-                                && reloaded_profile.as_ref().is_some_and(|profile| {
-                                    profile.name == "Reloaded Profile"
-                                        && profile.read_files_always_allow
-                                })
-                                && active_execution_profile_id(app, terminal_view_id) == "default",
-                            "Expected hot reload to replace the collection and fall back to the default profile"
-                        )
-                    },
-                ),
         )
 }

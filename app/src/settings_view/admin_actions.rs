@@ -1,5 +1,3 @@
-use torchui::AppContext;
-
 use crate::channel::ChannelState;
 use crate::server::ids::ServerId;
 
@@ -14,29 +12,5 @@ impl AdminActions {
 
     pub fn admin_panel_link_for_workspace() -> String {
         format!("{}/admin", ChannelState::server_root_url())
-    }
-    pub fn workspace_teams_admin_panel_link() -> String {
-        format!("{}/admin/workspace/teams", ChannelState::server_root_url())
-    }
-
-    /// Open the admin panel for a specific team
-    pub fn open_admin_panel(team_uid: ServerId, ctx: &mut AppContext) {
-        let url = Self::admin_panel_link_for_team(team_uid);
-        ctx.open_url(&url);
-    }
-
-    pub fn open_workspace_admin_panel(ctx: &mut AppContext) {
-        let url = Self::admin_panel_link_for_workspace();
-        ctx.open_url(&url);
-    }
-
-    /// Open the issue tracker
-    pub fn contact_support(ctx: &mut AppContext) {
-        ctx.open_url("https://github.com/TomByte/torch/issues");
-    }
-
-    /// Open the issue tracker; there is no separate sales contact.
-    pub fn contact_sales(ctx: &mut AppContext) {
-        Self::contact_support(ctx);
     }
 }

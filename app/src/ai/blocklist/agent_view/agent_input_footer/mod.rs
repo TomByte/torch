@@ -1844,9 +1844,6 @@ impl AgentInputFooter {
                     ctx.emit(AgentInputFooterEvent::ModelSelectorClosed);
                 }
             }
-            ProfileModelSelectorEvent::OpenSettings(section) => {
-                ctx.emit(AgentInputFooterEvent::OpenSettings(*section));
-            }
             ProfileModelSelectorEvent::ToggleInlineModelSelector => {
                 let initial_tab = if self
                     .terminal_model
@@ -2936,7 +2933,6 @@ pub enum AgentInputFooterEvent {
     ToggleInlineModelSelector {
         initial_tab: InlineModelSelectorTab,
     },
-    OpenSettings(SettingsSection),
     OpenCodeReview,
     OpenAIDocument {
         document_id: AIDocumentId,

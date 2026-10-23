@@ -19,9 +19,7 @@ use torchui::ui_components::components::{UiComponent, UiComponentStyles};
 use torchui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
 
 use crate::auth::AuthStateProvider;
-use crate::settings_view::SettingsSection;
 use crate::ui_components::blended_colors;
-use crate::workspace::WorkspaceAction;
 use crate::workspaces::user_workspaces::UserWorkspaces;
 
 const MODAL_WIDTH: f32 = 480.;
@@ -96,7 +94,6 @@ pub fn init(app: &mut AppContext) {
 #[derive(Clone, Debug)]
 pub enum FreeAiRemovalModalAction {
     Close,
-    SetUpByok,
     Upgrade,
 }
 
@@ -108,7 +105,6 @@ pub enum FreeAiRemovalModalEvent {
 #[derive(Default)]
 struct StateHandles {
     close_button: MouseStateHandle,
-    byok_button: MouseStateHandle,
     upgrade_button: MouseStateHandle,
 }
 
@@ -141,25 +137,6 @@ impl FreeAiRemovalModal {
     }
 
     fn render_buttons(&self, appearance: &Appearance) -> Box<dyn Element> {
-        let byok_button = appearance
-            .ui_builder()
-            .button(
-                ButtonVariant::Secondary,
-                self.state_handles.byok_button.clone(),
-            )
-            .with_style(UiComponentStyles {
-                font_size: Some(14.),
-                height: Some(32.),
-                ..Default::default()
-            })
-            .with_centered_text_label("Bring your own AI".to_string())
-            .build()
-            .with_cursor(Cursor::PointingHand)
-            .on_click(|ctx, _, _| {
-                ctx.dispatch_typed_action(FreeAiRemovalModalAction::SetUpByok);
-            })
-            .finish();
-
         let upgrade_button = appearance
             .ui_builder()
             .button(
@@ -184,7 +161,6 @@ impl FreeAiRemovalModal {
             .with_main_axis_alignment(MainAxisAlignment::End)
             .with_cross_axis_alignment(CrossAxisAlignment::Center)
             .with_spacing(8.)
-            .with_child(byok_button)
             .with_child(upgrade_button)
             .finish()
     }
@@ -308,22 +284,6 @@ impl TypedActionView for FreeAiRemovalModal {
                 );
                 ctx.emit(FreeAiRemovalModalEvent::Close);
             }
-            FreeAiRemovalModalAction::SetUpByok => {
-                send_telemetry_from_ctx!(
-                    FreeAiRemovalModalTelemetryEvent::CtaClicked {
-                        variant: self.variant,
-                        cta: FreeAiRemovalModalCta::SetUpByok,
-                    },
-                    ctx
-                );
-                // Deferred so the close-driven refocus below doesn't steal focus from
-                // the settings page this opens.
-                ctx.dispatch_typed_action_deferred(WorkspaceAction::ShowSettingsPageWithSearch {
-                    search_query: "api".to_string(),
-                    section: Some(SettingsSection::WarpAgent),
-                });
-                ctx.emit(FreeAiRemovalModalEvent::Close);
-            }
             FreeAiRemovalModalAction::Upgrade => {
                 send_telemetry_from_ctx!(
                     FreeAiRemovalModalTelemetryEvent::CtaClicked {
@@ -342,14 +302,12 @@ impl TypedActionView for FreeAiRemovalModal {
 
 #[derive(Debug, Clone, Copy)]
 pub enum FreeAiRemovalModalCta {
-    SetUpByok,
     Upgrade,
 }
 
 impl FreeAiRemovalModalCta {
     fn as_str(&self) -> &'static str {
         match self {
-            Self::SetUpByok => "set_up_byok",
             Self::Upgrade => "upgrade",
         }
     }

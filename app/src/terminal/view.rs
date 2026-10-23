@@ -377,7 +377,6 @@ use crate::settings::{
     PrivacySettingsSnapshot, SelectionSettings, VimBannerSettings,
 };
 use crate::settings_view::keybindings::KeybindingChangedNotifier;
-use crate::settings_view::mcp_servers_page::MCPServersSettingsPage;
 use crate::settings_view::{SettingsSection, flags};
 use crate::shell_indicator::ShellIndicatorType;
 use crate::terminal::alias::{AliasedCommand, check_for_alias_async};
@@ -1984,9 +1983,6 @@ pub enum Event {
 
     OpenThemeChooser,
     OpenConversationHistory,
-    OpenMCPSettingsPage {
-        page: Option<MCPServersSettingsPage>,
-    },
     OpenAddRulePane,
     OpenRulesPane,
     OpenAddPromptPane {
@@ -4266,9 +4262,6 @@ impl TerminalView {
 
         let cloud_agent_team_required_view =
             ctx.add_typed_action_view(ambient_agent::CloudAgentTeamRequiredView::new);
-        ctx.subscribe_to_view(&cloud_agent_team_required_view, |me, _, event, ctx| {
-            me.handle_cloud_agent_team_required_view_event(event, ctx);
-        });
 
         let environment_setup_mode_selector =
             ctx.add_typed_action_view(EnvironmentSetupModeSelector::new);
@@ -5025,18 +5018,6 @@ impl TerminalView {
             self.agent_view_controller.update(ctx, |controller, ctx| {
                 controller.exit_agent_view(ctx);
             });
-        }
-    }
-
-    fn handle_cloud_agent_team_required_view_event(
-        &mut self,
-        event: &ambient_agent::CloudAgentTeamRequiredViewEvent,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        match event {
-            ambient_agent::CloudAgentTeamRequiredViewEvent::OpenTeamsSettings => {
-                ctx.emit(Event::OpenSettings(SettingsSection::Teams));
-            }
         }
     }
 
@@ -10446,7 +10427,7 @@ impl TerminalView {
     ) {
         match event {
             WarpifySuccessBlockEvent::OpenWarpifySettings => {
-                ctx.emit(Event::OpenSettings(SettingsSection::Warpify));
+                ctx.emit(Event::OpenSettings(SettingsSection::Appearance));
             }
         }
     }
@@ -11087,9 +11068,6 @@ impl TerminalView {
                         .remove_inline_banner(banner_state.id);
                 }
                 ctx.notify();
-            }
-            CodebaseIndexSpeedbumpBannerAction::ViewStatus => {
-                ctx.emit(Event::OpenSettings(SettingsSection::CodeIndexing));
             }
             CodebaseIndexSpeedbumpBannerAction::DismissForever => {
                 AISettings::handle(ctx).update(ctx, |ai_settings, ctx| {
@@ -13810,7 +13788,7 @@ impl TerminalView {
                 ctx.emit(Event::RemoteServerSkipRequested { session_id });
             }
             SshRemoteServerChoiceViewEvent::OpenWarpifySettings => {
-                ctx.emit(Event::OpenSettings(SettingsSection::Warpify));
+                ctx.emit(Event::OpenSettings(SettingsSection::Appearance));
             }
         });
 
@@ -15062,9 +15040,6 @@ impl TerminalView {
                     });
                     // Clicking this button doesn't mark the step as running, so we don't need to
                     // register anything to mark the step as complete.
-                }
-                InitProjectModelEvent::ViewCodebaseContextStatus => {
-                    ctx.emit(Event::OpenSettings(SettingsSection::CodeIndexing));
                 }
                 InitProjectModelEvent::LanguageServerInstalledAndEnabled => {
                     #[cfg(feature = "local_fs")]
@@ -21762,9 +21737,6 @@ impl TerminalView {
                     ctx,
                 );
             }
-            AIBlockEvent::OpenSettings => {
-                ctx.emit(Event::OpenSettings(SettingsSection::WarpAgent));
-            }
             #[cfg(feature = "local_fs")]
             AIBlockEvent::OpenCodeInWarp { source, layout } => {
                 ctx.emit(Event::OpenCodeInWarp {
@@ -23082,9 +23054,6 @@ impl TerminalView {
                     entrypoint: *entrypoint,
                 });
             }
-            InputEvent::OpenSettings(section) => {
-                ctx.emit(Event::OpenSettings(*section));
-            }
             #[cfg(feature = "local_fs")]
             InputEvent::OpenCodeInWarp { source, layout } => {
                 ctx.emit(Event::OpenCodeInWarp {
@@ -23113,12 +23082,6 @@ impl TerminalView {
             }
             InputEvent::OpenProjectRulesPane => {
                 self.handle_action(&TerminalAction::OpenProjectRulesPane, ctx);
-            }
-            InputEvent::OpenViewMCPPane => {
-                self.handle_action(&TerminalAction::OpenViewMCPPane, ctx);
-            }
-            InputEvent::OpenAddMCPPane => {
-                self.handle_action(&TerminalAction::OpenAddMCPPane, ctx);
             }
             InputEvent::OpenEnvironmentManagementPane => {
                 self.open_environment_management_pane(ctx);
@@ -27955,7 +27918,6 @@ impl TypedActionView for TerminalView {
             | StartFileDropTarget
             | StopFileDropTarget
             | RunNativeShellCompletions { .. }
-            | OpenTeamSettingsPage
             | HideTelemetryBannerPermanently
             | GenerateCodebaseIndex
             | LoadAgentModeConversation
@@ -27971,9 +27933,6 @@ impl TypedActionView for TerminalView {
             | OpenProjectRulesPane
             | InitProject
             | IndexProjectSpeedbump
-            | OpenViewMCPPane
-            | OpenAddMCPPane
-            | OpenBillingAndUsagePane
             | OpenAddRulePane
             | OpenRulesPane
             | OpenEditSkillPane { .. }
@@ -28601,9 +28560,6 @@ impl TypedActionView for TerminalView {
                     results_tx: results_tx.clone(),
                 });
             }
-            OpenTeamSettingsPage => {
-                ctx.emit(Event::OpenSettings(SettingsSection::Teams));
-            }
             SetMarkedText {
                 marked_text,
                 selected_range,
@@ -28617,7 +28573,7 @@ impl TypedActionView for TerminalView {
             LoadAgentModeConversation => {
                 self.load_agent_mode_conversation(ctx);
             }
-            ShowWarpifySettings => ctx.emit(Event::OpenSettings(SettingsSection::Warpify)),
+            ShowWarpifySettings => ctx.emit(Event::OpenSettings(SettingsSection::Appearance)),
             DeleteAttachment { index } => {
                 self.ai_context_model.update(ctx, |context_model, ctx| {
                     context_model.remove_pending_attachment(*index, ctx);
@@ -28920,19 +28876,6 @@ impl TypedActionView for TerminalView {
                             .value(),
                     });
                 }
-            }
-            OpenViewMCPPane => {
-                ctx.emit(Event::OpenMCPSettingsPage {
-                    page: Some(MCPServersSettingsPage::List),
-                });
-            }
-            OpenAddMCPPane => {
-                ctx.emit(Event::OpenMCPSettingsPage {
-                    page: Some(MCPServersSettingsPage::Edit { item_id: None }),
-                });
-            }
-            OpenBillingAndUsagePane => {
-                ctx.emit(Event::OpenSettings(SettingsSection::BillingAndUsage));
             }
             OpenAddRulePane => {
                 ctx.emit(Event::OpenAddRulePane);

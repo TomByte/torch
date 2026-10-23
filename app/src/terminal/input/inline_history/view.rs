@@ -1,10 +1,6 @@
 //! Inline history menu view for up-arrow history with conversations, commands and prompts.
 use std::collections::HashSet;
 
-use pathfinder_color::ColorU;
-use torch_core::ui::appearance::Appearance;
-use torch_core::ui::theme::Fill;
-use torch_core::ui::theme::color::internal_colors;
 use torchui::elements::ChildView;
 use torchui::{AppContext, Element, Entity, EntityId, ModelHandle, View, ViewContext, ViewHandle};
 
@@ -13,7 +9,6 @@ use crate::ai::blocklist::agent_view::{AgentViewController, AgentViewControllerE
 use crate::features::FeatureFlag;
 use crate::search::data_source::{Query, QueryFilter};
 use crate::search::mixer::{SearchMixer, SearchMixerEvent};
-use crate::settings_view::SettingsSection;
 use crate::terminal::history::LinkedWorkflowData;
 use crate::terminal::input::buffer_model::{InputBufferModel, InputBufferUpdateEvent};
 use crate::terminal::input::inline_history::data_source::{
@@ -27,9 +22,6 @@ use crate::terminal::input::suggestions_mode_model::{
     InputSuggestionsModeEvent, InputSuggestionsModeModel,
 };
 use crate::terminal::model::session::active_session::ActiveSession;
-use crate::ui_components::icons::Icon;
-use crate::view_components::action_button::{ActionButton, ActionButtonTheme, ButtonSize};
-use crate::workspace::WorkspaceAction;
 
 #[derive(Debug, Clone)]
 pub enum InlineHistoryMenuEvent {
@@ -94,28 +86,6 @@ impl HistoryItemIdentity {
                 expected_query == query_text
             }
             _ => false,
-        }
-    }
-}
-
-struct ConfigureButtonTheme;
-
-impl ActionButtonTheme for ConfigureButtonTheme {
-    fn background(&self, _hovered: bool, _appearance: &Appearance) -> Option<Fill> {
-        None
-    }
-
-    fn text_color(
-        &self,
-        hovered: bool,
-        _background: Option<Fill>,
-        appearance: &Appearance,
-    ) -> ColorU {
-        let theme = appearance.theme();
-        if hovered {
-            internal_colors::text_main(theme, theme.background())
-        } else {
-            internal_colors::text_sub(theme, theme.background())
         }
     }
 }
@@ -261,22 +231,9 @@ impl InlineHistoryMenuView {
         });
 
         let menu_view = if FeatureFlag::InlineMenuHeaders.is_enabled() {
-            let configure_button = ctx.add_view(|_| {
-                ActionButton::new("Configure", ConfigureButtonTheme)
-                    .with_icon(Icon::Settings)
-                    .with_size(ButtonSize::Small)
-                    .on_click(|ctx| {
-                        ctx.dispatch_typed_action(WorkspaceAction::ShowSettingsPageWithSearch {
-                            search_query: "commands history".into(),
-                            section: Some(SettingsSection::WarpAgent),
-                        });
-                    })
-            });
             let header_config = InlineMenuHeaderConfig {
                 label: "History".to_string(),
-                trailing_element: Some(Box::new(move |_app: &AppContext| {
-                    ChildView::new(&configure_button).finish()
-                })),
+                trailing_element: None,
             };
             ctx.add_typed_action_view(|ctx| {
                 InlineMenuView::new_with_tabs(

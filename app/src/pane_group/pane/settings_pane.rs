@@ -142,7 +142,6 @@ fn handle_settings_event(
     event: &SettingsViewEvent,
     ctx: &mut ViewContext<PaneGroup>,
 ) {
-    if let SettingsViewEvent::Pane(pane_event) = event {
-        group.handle_pane_event(pane_id, pane_event, ctx);
-    }
+    let SettingsViewEvent::Pane(pane_event) = event;
+    group.handle_pane_event(pane_id, pane_event, ctx);
 }

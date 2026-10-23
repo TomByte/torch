@@ -17,7 +17,6 @@ pub(crate) mod menu_button;
 pub(crate) mod motion;
 pub(crate) mod red_notification_dot;
 pub(crate) mod render_file_search_row;
-pub mod tab_selector;
 pub(crate) mod window_focus_dimming;
 
 pub use torch_core::ui::icons;

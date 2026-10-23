@@ -12,23 +12,20 @@ use super::inline_action_icons::icon_size;
 use crate::Appearance;
 use crate::ai::blocklist::view_util::error_color;
 use crate::ui_components::blended_colors;
-use crate::view_components::action_button::{ActionButton, ButtonSize, NakedTheme, PrimaryTheme};
+use crate::view_components::action_button::{ActionButton, ButtonSize, PrimaryTheme};
 
 #[derive(Clone, Debug)]
 pub enum GeminiEnterpriseCredentialsErrorAction {
     RefreshCredentials,
-    OpenSettings,
 }
 
 #[derive(Clone, Debug)]
 pub enum GeminiEnterpriseCredentialsErrorEvent {
     RefreshCredentials,
-    OpenSettings,
 }
 
 pub struct GeminiEnterpriseCredentialsErrorView {
     refresh_button: ViewHandle<ActionButton>,
-    manage_button: ViewHandle<ActionButton>,
     refresh_requested: bool,
     refresh_succeeded: bool,
 }
@@ -72,17 +69,8 @@ impl GeminiEnterpriseCredentialsErrorView {
             }
             ctx.notify();
         });
-        let manage_button = ctx.add_typed_action_view(|_| {
-            ActionButton::new("Manage", NakedTheme)
-                .with_size(ButtonSize::InlineActionHeader)
-                .on_click(|ctx| {
-                    ctx.dispatch_typed_action(GeminiEnterpriseCredentialsErrorAction::OpenSettings)
-                })
-        });
-
         Self {
             refresh_button,
-            manage_button,
             refresh_requested: false,
             refresh_succeeded: false,
         }
@@ -177,7 +165,6 @@ impl View for GeminiEnterpriseCredentialsErrorView {
             Flex::row()
                 .with_spacing(8.)
                 .with_cross_axis_alignment(CrossAxisAlignment::Center)
-                .with_child(ChildView::new(&self.manage_button).finish())
                 .with_child(ChildView::new(&self.refresh_button).finish())
                 .finish()
         };
@@ -232,9 +219,6 @@ impl TypedActionView for GeminiEnterpriseCredentialsErrorView {
                 self.update_refresh_button("Refreshing...", true, ctx);
                 ctx.emit(GeminiEnterpriseCredentialsErrorEvent::RefreshCredentials);
                 ctx.notify();
-            }
-            GeminiEnterpriseCredentialsErrorAction::OpenSettings => {
-                ctx.emit(GeminiEnterpriseCredentialsErrorEvent::OpenSettings);
             }
         }
     }

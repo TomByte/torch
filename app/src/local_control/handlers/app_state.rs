@@ -698,19 +698,12 @@ fn surface_settings_open(
 }
 
 fn settings_section(page: String) -> Result<SettingsSection, ControlError> {
-    let section = SettingsSection::from_slug(&page).ok_or_else(|| {
+    SettingsSection::from_slug(&page).ok_or_else(|| {
         ControlError::new(
             ErrorCode::InvalidParams,
             format!("surface.settings.open cannot resolve settings page {page:?}"),
         )
-    })?;
-    if section == SettingsSection::WarpDrive {
-        return Err(ControlError::new(
-            ErrorCode::UnsupportedAction,
-            "surface.settings.open does not open Torch Drive settings",
-        ));
-    }
-    Ok(section)
+    })
 }
 
 fn surface_palette_open(

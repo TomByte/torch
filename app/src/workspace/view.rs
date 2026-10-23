@@ -334,7 +334,6 @@ use crate::search::command_palette::view::{
 use crate::search::command_search::searcher::{
     AcceptedHistoryItem, AcceptedWorkflow, CommandSearchItemAction,
 };
-use crate::search::command_search::settings::CommandSearchSettings;
 use crate::search::command_search::view::{CommandSearchEvent, CommandSearchView};
 #[cfg(target_family = "wasm")]
 use crate::search::slash_command_menu::static_commands::commands;
@@ -348,12 +347,11 @@ use crate::server::server_api::ai::AIClient;
 use crate::server::server_api::{ServerApi, ServerApiProvider, ServerTime};
 use crate::server::telemetry::{
     AddTabWithShellSource, AnonymousUserSignupEntrypoint, CloseTarget, EnvVarTelemetryMetadata,
-    FileTreeSource, KnowledgePaneEntrypoint, LaunchConfigUiLocation,
-    MCPServerCollectionPaneEntrypoint, NotificationsTurnedOnSource, OpenedWarpAISource,
-    PaletteSource, SharingDialogSource, TabRenameEvent, TierLimitHitEvent, WarpDriveSource,
+    FileTreeSource, KnowledgePaneEntrypoint, LaunchConfigUiLocation, NotificationsTurnedOnSource,
+    OpenedWarpAISource, PaletteSource, SharingDialogSource, TabRenameEvent, TierLimitHitEvent,
+    WarpDriveSource,
 };
 use crate::session_management::{SessionNavigationData, SessionSource, TabNavigationData};
-use crate::settings::cloud_preferences::CloudPreferencesSettings;
 use crate::settings::{
     AISettings, AISettingsChangedEvent, AccessibilitySettings, AliasExpansionSettings,
     AppEditorSettings, BlockVisibilitySettings, ChangelogSettings, CodeSettings,
@@ -367,9 +365,8 @@ use crate::settings_view::handoff_environment_creation_modal::{
     HandoffEnvironmentCreationModal, HandoffEnvironmentCreationModalEvent,
 };
 use crate::settings_view::keybindings::{KeybindingChangedEvent, KeybindingChangedNotifier};
-use crate::settings_view::mcp_servers_page::MCPServersSettingsPage;
 use crate::settings_view::pane_manager::SettingsPaneManager;
-use crate::settings_view::{SettingsSection, SettingsView, SettingsViewEvent, flags};
+use crate::settings_view::{SettingsSection, SettingsView, flags};
 #[cfg(all(target_os = "windows", feature = "local_tty"))]
 use crate::shell_indicator::ShellIndicatorType;
 use crate::tab::{
@@ -480,9 +477,7 @@ use crate::util::file::external_editor::settings::OpenConversationPreference;
 use crate::util::links;
 use crate::util::openable_file_type::FileTarget;
 #[cfg(feature = "local_fs")]
-use crate::util::openable_file_type::{
-    EditorLayout, resolve_file_target_to_open_in_warp, resolve_file_target_with_editor_choice,
-};
+use crate::util::openable_file_type::{EditorLayout, resolve_file_target_with_editor_choice};
 use crate::util::traffic_lights::{TrafficLightMouseStates, TrafficLightSide, traffic_light_data};
 use crate::util::truncation::truncate_from_end;
 #[cfg(target_family = "wasm")]
@@ -533,8 +528,7 @@ use crate::workspace::view::cloud_agent_capacity_modal::{
 };
 use crate::workspace::view::codex_modal::{CodexModal, CodexModalEvent};
 use crate::workspace::view::feature_intro_modal::{
-    FeatureIntroCtaTarget, FeatureIntroId, FeatureIntroModal, FeatureIntroModalEvent,
-    feature_intro_by_id,
+    FeatureIntroId, FeatureIntroModal, FeatureIntroModalEvent, feature_intro_by_id,
 };
 use crate::workspace::view::free_ai_removal_modal::{
     FreeAiRemovalModal, FreeAiRemovalModalEvent, FreeAiRemovalModalTelemetryEvent,
@@ -555,7 +549,6 @@ use crate::workspace::view::right_panel::{RightPanelEvent, RightPanelView};
 use crate::workspace::{ForkFromExchange, ForkedConversationDestination};
 use crate::workspaces::update_manager::TeamUpdateManager;
 use crate::workspaces::user_workspaces::{ResolvedTeamScope, UserWorkspaces};
-use crate::workspaces::workspace::AdminEnablementSetting;
 use crate::{
     AgentNotificationsModel, BlocklistAIHistoryModel, GlobalResourceHandles, TelemetryEvent,
     autoupdate, send_telemetry_from_ctx, settings,
@@ -616,20 +609,16 @@ const TEAM_SWITCHER_DOT_ALPHA: u8 = 204;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum TeamNavigationMode {
     Hidden,
-    BrowseTeams,
     TeamSwitcher,
 }
 
 fn team_navigation_mode(
     has_current_team: bool,
-    has_teams: bool,
     can_switch_teams: bool,
     has_joinable_teams: bool,
 ) -> TeamNavigationMode {
     if has_current_team && (can_switch_teams || has_joinable_teams) {
         TeamNavigationMode::TeamSwitcher
-    } else if !has_teams && has_joinable_teams {
-        TeamNavigationMode::BrowseTeams
     } else {
         TeamNavigationMode::Hidden
     }
@@ -1845,9 +1834,6 @@ impl Workspace {
         });
 
         let settings_pane = ctx.add_typed_action_view(move |ctx| SettingsView::new(None, ctx));
-        ctx.subscribe_to_view(&settings_pane, move |me, _, event, ctx| {
-            me.handle_settings_pane_event(event, ctx);
-        });
 
         let window_id = ctx.window_id();
         SettingsPaneManager::handle(ctx).update(ctx, |manager, _| {
@@ -3108,9 +3094,12 @@ impl Workspace {
         });
 
         let feature_intro_view = ctx.add_typed_action_view(FeatureIntroModal::new);
-        ctx.subscribe_to_view(&feature_intro_view, |me, _, event, ctx| {
-            me.handle_feature_intro_modal_event(event, ctx);
-        });
+        ctx.subscribe_to_view(
+            &feature_intro_view,
+            |me, _, FeatureIntroModalEvent::Dismissed, ctx| {
+                me.handle_feature_intro_modal_dismissed(ctx);
+            },
+        );
 
         let auto_handoff_sleep_view = ctx.add_typed_action_view(AutoHandoffSleepModal::new);
         ctx.subscribe_to_view(&auto_handoff_sleep_view, |me, _, event, ctx| {
@@ -3396,12 +3385,6 @@ impl Workspace {
             &shared_objects_creation_denied_modal,
             |me, _, event, ctx| match event {
                 SharedObjectsCreationDeniedModalEvent::Close => {
-                    me.current_workspace_state
-                        .is_shared_objects_creation_denied_modal_open = false;
-                    ctx.notify();
-                }
-                SharedObjectsCreationDeniedModalEvent::TeamSettings => {
-                    me.show_settings_with_section(Some(SettingsSection::Teams), ctx);
                     me.current_workspace_state
                         .is_shared_objects_creation_denied_modal_open = false;
                     ctx.notify();
@@ -6403,20 +6386,7 @@ impl Workspace {
             return;
         }
         let current_team_uid = user_workspaces.team_uid_for_window(window_id);
-        let mut items = team_switcher_menu_items(&workspace.teams, current_team_uid);
-        if joinable_team_count > 0 {
-            items.push(MenuItem::Separator);
-            items.push(
-                MenuItemFields::new("Browse teams")
-                    .with_icon(icons::Icon::Search)
-                    .with_right_side_label(
-                        format!("{joinable_team_count} available"),
-                        Properties::default(),
-                    )
-                    .with_on_select_action(WorkspaceAction::BrowseTeams)
-                    .into_item(),
-            );
-        }
+        let items = team_switcher_menu_items(&workspace.teams, current_team_uid);
         self.team_switcher_menu
             .update(ctx, |menu, ctx| menu.set_items(items, ctx));
         self.show_team_switcher_menu = true;
@@ -6439,7 +6409,6 @@ impl Workspace {
             });
         let mode = team_navigation_mode(
             current_team.is_some(),
-            user_workspaces.has_teams(),
             user_workspaces.can_switch_teams(),
             has_joinable_teams,
         );
@@ -6449,11 +6418,6 @@ impl Workspace {
         let pill_bg_hover = internal_colors::fg_overlay_2(theme);
         let (label, dot_color, action) = match mode {
             TeamNavigationMode::Hidden => return None,
-            TeamNavigationMode::BrowseTeams => (
-                "Browse teams".to_string(),
-                None,
-                WorkspaceAction::BrowseTeams,
-            ),
             TeamNavigationMode::TeamSwitcher => {
                 let current_team = current_team?;
                 let mut dot_color = current_team
@@ -6559,9 +6523,6 @@ impl Workspace {
 
     fn handle_ai_fact_view_event(&mut self, event: &AIFactViewEvent, ctx: &mut ViewContext<Self>) {
         match event {
-            AIFactViewEvent::OpenSettings => {
-                self.show_settings_with_section(Some(SettingsSection::WarpAgent), ctx);
-            }
             #[allow(unused_variables)]
             AIFactViewEvent::OpenFile(location) => {
                 #[cfg(feature = "local_fs")]
@@ -10343,31 +10304,9 @@ impl Workspace {
             );
         }
 
-        // Check if the user is on any paid plan to determine whether to show "Billing and Usage" or "Upgrade"
-        let is_on_paid_plan = UserWorkspaces::as_ref(app)
-            .current_workspace()
-            .map(|workspace| workspace.billing_metadata.is_user_on_paid_plan())
-            .unwrap_or(false);
-
-        if is_on_paid_plan {
-            items.push(
-                MenuItemFields::new("Billing and usage")
-                    .with_on_select_action(WorkspaceAction::ShowSettingsPage(
-                        SettingsSection::BillingAndUsage,
-                    ))
-                    .into_item(),
-            );
-        } else {
-            items.push(
-                MenuItemFields::new("Upgrade")
-                    .with_on_select_action(WorkspaceAction::ShowUpgrade)
-                    .into_item(),
-            );
-        }
-
         items.push(
-            MenuItemFields::new("Invite a friend")
-                .with_on_select_action(WorkspaceAction::ShowReferralSettingsPage)
+            MenuItemFields::new("Upgrade")
+                .with_on_select_action(WorkspaceAction::ShowUpgrade)
                 .into_item(),
         );
 
@@ -15830,91 +15769,6 @@ impl Workspace {
         })
     }
 
-    fn handle_settings_pane_event(
-        &mut self,
-        event: &SettingsViewEvent,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        match event {
-            SettingsViewEvent::CheckForUpdate => {
-                self.manual_check_for_update(ctx);
-            }
-            SettingsViewEvent::LaunchNetworkLogging => {
-                self.open_network_log_pane(ctx);
-            }
-            SettingsViewEvent::OpenWarpDrive => {
-                self.close_all_overlays(ctx);
-                self.open_or_toggle_warp_drive(
-                    false, /* toggle */
-                    false, /* explicit_user_action */
-                    ctx,
-                );
-                ctx.notify();
-            }
-            SettingsViewEvent::SignupAnonymousUser => {
-                self.initiate_user_signup(AnonymousUserSignupEntrypoint::SignUpButton, ctx);
-            }
-            SettingsViewEvent::Pane(_) | SettingsViewEvent::StartResize => {}
-            SettingsViewEvent::ShowToast { message, flavor } => {
-                self.toast_stack.update(ctx, |toast_stack, ctx| {
-                    toast_stack
-                        .add_ephemeral_toast(DismissibleToast::new(message.clone(), *flavor), ctx);
-                });
-            }
-            SettingsViewEvent::OpenAIFactCollection => {
-                self.open_ai_fact_collection_pane(Some(Direction::Right), None, ctx);
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::KnowledgePaneOpened {
-                        entrypoint: KnowledgePaneEntrypoint::Settings,
-                    },
-                    ctx
-                );
-            }
-            SettingsViewEvent::OpenMCPServerCollection => {
-                self.show_settings_with_section(Some(SettingsSection::AgentMCPServers), ctx);
-
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::MCPServerCollectionPaneOpened {
-                        entrypoint: MCPServerCollectionPaneEntrypoint::Settings,
-                    },
-                    ctx
-                );
-            }
-            SettingsViewEvent::OpenCustomRouterEditor(router) => {
-                self.open_custom_router_editor_pane(None, router.clone(), ctx);
-            }
-            SettingsViewEvent::OpenExecutionProfileEditor(profile_id) => {
-                self.open_execution_profile_editor_pane(None, profile_id.clone(), ctx);
-            }
-            SettingsViewEvent::OpenLspLogs { log_path } => {
-                self.open_lsp_logs(log_path, ctx);
-            }
-            SettingsViewEvent::OpenProjectRulesPane { rule_paths } => {
-                #[cfg(feature = "local_fs")]
-                if let Some((first, rest)) = rule_paths.split_first() {
-                    self.open_code(
-                        CodeSource::ProjectRules {
-                            location: LocalOrRemotePath::Local(first.clone()),
-                        },
-                        EditorLayout::SplitPane,
-                        None,
-                        false,
-                        rest,
-                        ctx,
-                    );
-                }
-                #[cfg(not(feature = "local_fs"))]
-                let _ = rule_paths;
-            }
-            SettingsViewEvent::OpenCustomRouterFile(path) => {
-                #[cfg(feature = "local_fs")]
-                self.open_custom_router_file(path, ctx);
-                #[cfg(not(feature = "local_fs"))]
-                let _ = path;
-            }
-        }
-    }
-
     fn refresh_working_directories_for_pane_group(
         &mut self,
         pane_group: &ViewHandle<PaneGroup>,
@@ -16903,10 +16757,6 @@ impl Workspace {
             }
             pane_group::Event::OpenCLIAgentToolbarEditor => {
                 self.open_agent_toolbar_editor(AgentToolbarEditorMode::CLIAgent, ctx);
-            }
-            pane_group::Event::OpenMCPSettingsPage { page } => {
-                // Open the MCP servers settings page to the list page
-                self.open_mcp_servers_page(page.unwrap_or_default(), None, ctx);
             }
             pane_group::Event::OpenAddRulePane => {
                 // Open the AI Fact Collection pane directly with the Rule Editor page for adding a new rule
@@ -18346,9 +18196,6 @@ impl Workspace {
                     ctx,
                 );
             }
-            DrivePanelEvent::OpenTeamSettingsPage => {
-                self.show_settings_with_section(Some(SettingsSection::Teams), ctx);
-            }
             DrivePanelEvent::OpenImportModal {
                 owner,
                 initial_folder_id,
@@ -18395,16 +18242,7 @@ impl Workspace {
                     ctx
                 );
             }
-            DrivePanelEvent::OpenMCPServerCollection => {
-                self.show_settings_with_section(Some(SettingsSection::AgentMCPServers), ctx);
-
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::MCPServerCollectionPaneOpened {
-                        entrypoint: MCPServerCollectionPaneEntrypoint::WarpDrive,
-                    },
-                    ctx
-                );
-            }
+            DrivePanelEvent::OpenTeamSettingsPage | DrivePanelEvent::OpenMCPServerCollection => {}
             DrivePanelEvent::FocusWarpDrive => {
                 ctx.focus(&self.left_panel_view);
             }
@@ -18576,28 +18414,6 @@ impl Workspace {
             let tail_command = tail_command_for_shell(shell_family, log_path);
             terminal.set_pending_command(&tail_command, ctx);
         });
-    }
-
-    /// Opens a custom model router's YAML config file in Torch's own editor.
-    ///
-    /// Unlike most "open file" flows, this always uses the Torch code editor
-    /// rather than honoring the user's external/system editor preference, since
-    /// the button is specifically for editing the router config inside Torch.
-    #[cfg(feature = "local_fs")]
-    fn open_custom_router_file(&mut self, path: &Path, ctx: &mut ViewContext<Self>) {
-        let settings = EditorSettings::as_ref(ctx);
-        let target = resolve_file_target_to_open_in_warp(path, settings, None);
-        self.open_file_with_target(
-            path.to_path_buf(),
-            target,
-            None,
-            CodeSource::Link {
-                path: path.to_path_buf(),
-                range_start: None,
-                range_end: None,
-            },
-            ctx,
-        );
     }
 
     fn run_tab_config_skill(&mut self, path: &Path, ctx: &mut ViewContext<Self>) {
@@ -19388,46 +19204,6 @@ impl Workspace {
         self.close_all_overlays(ctx);
         self.open_settings_pane(section, Some(search_query), ctx);
     }
-    fn browse_teams(&mut self, ctx: &mut ViewContext<Self>) {
-        let show_join_modal = UserWorkspaces::as_ref(ctx)
-            .team_for_window(self.window_id)
-            .is_some();
-        self.show_settings_with_section(Some(SettingsSection::Teams), ctx);
-        if show_join_modal {
-            self.settings_pane.update(ctx, |view, ctx| {
-                view.open_teams_page_join_modal(ctx);
-            });
-        }
-    }
-
-    /// Opens the team settings page and fills the invite field with the given email. This is used when linking directing to
-    /// settings with the intent of inviting a user.
-    pub fn show_team_settings_page_with_email_invite(
-        &mut self,
-        email_invite: Option<&String>,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        self.show_settings_with_section(Some(SettingsSection::Teams), ctx);
-
-        self.settings_pane.update(ctx, |view, ctx| {
-            view.open_teams_page_email_invite(email_invite, ctx);
-        });
-    }
-
-    /// Opens the MCP servers settings page, optionally triggering auto-install of a gallery MCP.
-    pub fn open_mcp_servers_page(
-        &mut self,
-        page: MCPServersSettingsPage,
-        autoinstall_gallery_title: Option<&str>,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        self.show_settings_with_section(Some(SettingsSection::AgentMCPServers), ctx);
-
-        self.settings_pane.update(ctx, |view, ctx| {
-            view.open_mcp_servers_page(page, autoinstall_gallery_title, ctx);
-        });
-    }
-
     /// Shows the theme chooser so the user can change the active theme.
     pub fn show_theme_chooser_for_active_theme(&mut self, ctx: &mut ViewContext<Self>) {
         self.show_theme_chooser(Some(ThemeChooserMode::for_active_theme(ctx)), ctx)
@@ -19821,32 +19597,12 @@ impl Workspace {
         }
     }
 
-    fn handle_feature_intro_modal_event(
-        &mut self,
-        event: &FeatureIntroModalEvent,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        let cta_target = if let FeatureIntroModalEvent::GetStarted(id) = event {
-            feature_intro_by_id(*id).and_then(|intro| intro.cta_target)
-        } else {
-            None
-        };
+    fn handle_feature_intro_modal_dismissed(&mut self, ctx: &mut ViewContext<Self>) {
         OneTimeModalModel::handle(ctx).update(ctx, |model, ctx| {
             model.mark_feature_intro_dismissed(ctx);
         });
         self.feature_intro_tab_pane_group_id = None;
         self.focus_active_tab(ctx);
-
-        if let Some(cta_target) = cta_target {
-            match cta_target {
-                FeatureIntroCtaTarget::SettingsWidget { page, widget_id } => {
-                    self.open_settings_pane(Some(page), None, ctx);
-                    self.settings_pane.update(ctx, |settings, ctx| {
-                        settings.scroll_to_settings_widget(page, widget_id(), ctx);
-                    });
-                }
-            }
-        }
         ctx.notify();
     }
 
@@ -23652,7 +23408,6 @@ impl Workspace {
     }
 
     fn add_toggle_setting_context_flags(&self, app: &AppContext, context: &mut Context) {
-        let privacy_settings = PrivacySettings::as_ref(app);
         let editor_settings = AppEditorSettings::as_ref(app);
         let semantic_selection_settings = SemanticSelection::as_ref(app);
         let selection_settings = SelectionSettings::as_ref(app);
@@ -23672,7 +23427,6 @@ impl Workspace {
         let window_settings = WindowSettings::as_ref(app);
         let pane_settings = PaneSettings::as_ref(app);
         let keys_settings = KeysSettings::as_ref(app);
-        let command_search_settings = CommandSearchSettings::as_ref(app);
         let ssh_settings = SshSettings::as_ref(app);
 
         let is_compact_mode =
@@ -23806,11 +23560,6 @@ impl Workspace {
             context.set.insert(flags::SYNTAX_HIGHLIGHTING_FLAG);
         }
 
-        let cloud_preferences_settings = CloudPreferencesSettings::as_ref(app);
-        if *cloud_preferences_settings.settings_sync_enabled.value() {
-            context.set.insert(flags::SETTINGS_SYNC_FLAG);
-        }
-
         if *block_list_settings
             .show_jump_to_bottom_of_block_button
             .value()
@@ -23826,19 +23575,6 @@ impl Workspace {
 
         if *safe_mode_settings.safe_mode_enabled.value() {
             context.set.insert(flags::SAFE_MODE_FLAG);
-        }
-        if !privacy_settings.is_telemetry_force_enabled()
-            && matches!(
-                UserWorkspaces::as_ref(app).get_cloud_conversation_storage_enablement_setting(),
-                AdminEnablementSetting::RespectUserSetting
-            )
-        {
-            context
-                .set
-                .insert(flags::CLOUD_CONVERSATION_STORAGE_EDITABLE_FLAG);
-        }
-        if privacy_settings.is_cloud_conversation_storage_enabled {
-            context.set.insert(flags::CLOUD_CONVERSATION_STORAGE_FLAG);
         }
 
         if editor_settings.cursor_blink.value() == &CursorBlink::Enabled {
@@ -23866,12 +23602,6 @@ impl Workspace {
             context
                 .set
                 .insert(flags::LEFT_PANEL_VISIBILITY_ACROSS_TABS_FLAG);
-        }
-
-        if *font_settings.match_ai_font_to_terminal_font {
-            context
-                .set
-                .insert(flags::MATCH_AI_FONT_TO_TERMINAL_FONT_FLAG);
         }
 
         if *font_settings.match_notebook_to_monospace_font_size {
@@ -23925,14 +23655,6 @@ impl Workspace {
                 .set
                 .insert(flags::SHOW_VERTICAL_TAB_PANEL_IN_RESTORED_WINDOWS_FLAG);
         }
-        if *tab_settings
-            .use_latest_user_prompt_as_conversation_title_in_tab_names
-            .value()
-        {
-            context
-                .set
-                .insert(flags::USE_LATEST_USER_PROMPT_AS_CONVERSATION_TITLE_IN_TAB_NAMES_FLAG);
-        }
         if self.should_show_session_config_tab_config_chip() {
             context
                 .set
@@ -23964,21 +23686,10 @@ impl Workspace {
             context.set.insert(flags::CODE_AS_DEFAULT_EDITOR);
         }
 
-        if *code_settings.codebase_context_enabled.value() {
-            context.set.insert(flags::IS_CODEBASE_INDEXING_ENABLED);
-        }
-
-        if *code_settings.auto_indexing_enabled.value() {
-            context.set.insert(flags::IS_AUTOINDEXING_ENABLED);
-        }
-
         if *input_settings.show_hint_text.value() {
             context.set.insert(flags::SHOW_INPUT_HINT_TEXT_CONTEXT_FLAG);
         }
 
-        if *input_settings.show_agent_tips.value() {
-            context.set.insert(flags::SHOW_AGENT_TIPS_FLAG);
-        }
         if *editor_settings.enable_autosuggestions {
             context.set.insert(flags::AUTOSUGGESTIONS_ENABLED_FLAG);
         }
@@ -24009,11 +23720,6 @@ impl Workspace {
         if *terminal_settings.use_audible_bell {
             context.set.insert(flags::USE_AUDIBLE_BELL_CONTEXT_FLAG);
         }
-        if *terminal_settings.show_terminal_zero_state_block.value() {
-            context
-                .set
-                .insert(flags::SHOW_TERMINAL_ZERO_STATE_BLOCK_FLAG);
-        }
         if matches!(
             terminal_settings.alt_screen_padding.value(),
             crate::terminal::settings::AltScreenPaddingMode::Custom { .. }
@@ -24027,73 +23733,10 @@ impl Workspace {
         }
 
         let ai_settings = AISettings::as_ref(app);
-        if ai_settings.is_ai_autodetection_enabled(app) {
-            context.set.insert(flags::AI_INPUT_AUTODETECTION_FLAG);
-        }
-        if ai_settings.is_nld_in_terminal_enabled(app) {
-            context.set.insert(flags::NLD_IN_TERMINAL_FLAG);
-        }
-        if ai_settings.is_intelligent_autosuggestions_enabled(app) {
-            context.set.insert(flags::INTELLIGENT_AUTOSUGGESTIONS_FLAG);
-        }
-        if ai_settings.is_prompt_suggestions_enabled(app) {
-            context.set.insert(flags::PROMPT_SUGGESTIONS_FLAG);
-        }
         if ai_settings.is_code_suggestions_enabled(app) {
             context.set.insert(flags::CODE_SUGGESTIONS_FLAG);
         }
-        if ai_settings.is_natural_language_autosuggestions_enabled(app) {
-            context
-                .set
-                .insert(flags::NATURAL_LANGUAGE_AUTOSUGGESTIONS_FLAG);
-        }
 
-        if ai_settings.is_shared_block_title_generation_enabled(app) {
-            context
-                .set
-                .insert(flags::SHARED_BLOCK_TITLE_GENERATION_FLAG);
-        }
-
-        if *ai_settings.should_show_oz_updates_in_zero_state.value() {
-            context
-                .set
-                .insert(flags::SHOW_OZ_UPDATES_IN_ZERO_STATE_FLAG);
-        }
-        if *ai_settings.git_operations_autogen_enabled_internal.value() {
-            context.set.insert(flags::GIT_OPERATIONS_AUTOGEN_FLAG);
-        }
-        if *ai_settings.include_agent_commands_in_history.value() {
-            context
-                .set
-                .insert(flags::INCLUDE_AGENT_COMMANDS_IN_HISTORY_FLAG);
-        }
-
-        if *ai_settings.auto_approve_bypasses_command_denylist.value() {
-            context
-                .set
-                .insert(flags::AUTO_APPROVE_BYPASSES_COMMAND_DENYLIST_FLAG);
-        }
-
-        if *ai_settings.memory_enabled.value() {
-            context.set.insert(flags::AI_RULES_FLAG);
-        }
-        if *ai_settings.rule_suggestions_enabled_internal.value() {
-            context.set.insert(flags::SUGGESTED_RULES_FLAG);
-        }
-        if *ai_settings.warp_drive_context_enabled.value() {
-            context.set.insert(flags::TORCH_DRIVE_CONTEXT_FLAG);
-        }
-        if *ai_settings.file_based_mcp_enabled.value() {
-            context.set.insert(flags::FILE_BASED_MCP_FLAG);
-        }
-        if *ai_settings.can_use_warp_credits_for_fallback.value() {
-            context.set.insert(flags::TORCH_CREDIT_FALLBACK_FLAG);
-        }
-        if *session_settings.show_model_selectors_in_prompt.value() {
-            context
-                .set
-                .insert(flags::SHOW_BASE_MODEL_PICKER_IN_PROMPT_FLAG);
-        }
         if *ai_settings.should_render_cli_agent_footer.value() {
             context.set.insert(flags::CLI_AGENT_FOOTER_ENABLED);
         }
@@ -24114,98 +23757,8 @@ impl Workspace {
             context.set.insert(flags::AGENT_IN_APP_NOTIFICATIONS_FLAG);
         }
 
-        if *ai_settings
-            .should_render_use_agent_footer_for_user_commands
-            .value()
-        {
-            context.set.insert(flags::USE_AGENT_FOOTER_FLAG);
-        }
-
-        match ai_settings.thinking_display_mode {
-            crate::settings::ThinkingDisplayMode::ShowAndCollapse => {
-                context
-                    .set
-                    .insert(flags::THINKING_DISPLAY_SHOW_AND_COLLAPSE);
-            }
-            crate::settings::ThinkingDisplayMode::AlwaysShow => {
-                context.set.insert(flags::THINKING_DISPLAY_ALWAYS_SHOW);
-            }
-            crate::settings::ThinkingDisplayMode::NeverShow => {
-                context.set.insert(flags::THINKING_DISPLAY_NEVER_SHOW);
-            }
-        }
-
-        match ai_settings.orchestration_message_display_mode {
-            crate::settings::OrchestrationMessageDisplayMode::ShowAndCollapse => {
-                context
-                    .set
-                    .insert(flags::ORCHESTRATION_MESSAGE_DISPLAY_SHOW_AND_COLLAPSE);
-            }
-            crate::settings::OrchestrationMessageDisplayMode::AlwaysShow => {
-                context
-                    .set
-                    .insert(flags::ORCHESTRATION_MESSAGE_DISPLAY_ALWAYS_SHOW);
-            }
-            crate::settings::OrchestrationMessageDisplayMode::AlwaysCollapse => {
-                context
-                    .set
-                    .insert(flags::ORCHESTRATION_MESSAGE_DISPLAY_ALWAYS_COLLAPSE);
-            }
-        }
-
-        match ai_settings.default_prompt_submission_mode {
-            crate::settings::PromptSubmissionMode::Interrupt => {
-                context.set.insert(flags::PROMPT_SUBMISSION_INTERRUPT);
-            }
-            crate::settings::PromptSubmissionMode::Queue => {
-                context.set.insert(flags::PROMPT_SUBMISSION_QUEUE);
-            }
-        }
-
-        match ai_settings.long_running_command_submission_mode {
-            crate::settings::LongRunningCommandSubmissionMode::SendImmediately => {
-                context.set.insert(flags::LRC_SUBMISSION_SEND_IMMEDIATELY);
-            }
-            crate::settings::LongRunningCommandSubmissionMode::QueueUntilCommandCompletes => {
-                context
-                    .set
-                    .insert(flags::LRC_SUBMISSION_QUEUE_UNTIL_COMMAND_COMPLETES);
-            }
-        }
-
-        if input_settings.is_terminal_input_message_bar_enabled() {
-            context
-                .set
-                .insert(flags::SHOW_TERMINAL_INPUT_MESSAGE_LINE_FLAG);
-        }
-
         if *input_settings.enable_slash_commands_in_terminal.value() {
             context.set.insert(flags::SLASH_COMMANDS_IN_TERMINAL_FLAG);
-        }
-        if *input_settings.at_context_menu_in_terminal_mode.value() {
-            context.set.insert(flags::AT_CONTEXT_MENU_IN_TERMINAL_FLAG);
-        }
-        if *input_settings.enable_ai_command_search_hash_trigger.value() {
-            context
-                .set
-                .insert(flags::AI_COMMAND_SEARCH_HASH_TRIGGER_FLAG);
-        }
-
-        if *input_settings
-            .outline_codebase_symbols_for_at_context_menu
-            .value()
-        {
-            context
-                .set
-                .insert(flags::OUTLINE_CODEBASE_SYMBOLS_FOR_AT_CONTEXT_MENU_FLAG);
-        }
-        if *command_search_settings
-            .show_global_workflows_in_universal_search
-            .value()
-        {
-            context
-                .set
-                .insert(flags::GLOBAL_WORKFLOWS_IN_COMMAND_SEARCH_FLAG);
         }
 
         if ChannelState::enable_debug_features() {
@@ -25203,9 +24756,6 @@ impl TypedActionView for Workspace {
 
                 ctx.open_url(&upgrade_url);
             }
-            ShowReferralSettingsPage => {
-                self.show_settings_with_section(Some(SettingsSection::Referrals), ctx);
-            }
             JoinSlack => self.join_slack(ctx),
             ViewUserDocs => self.view_user_docs(ctx),
             ViewLatestChangelog => self.view_latest_changelog(ctx),
@@ -26167,16 +25717,6 @@ impl TypedActionView for Workspace {
                     ctx
                 );
             }
-            OpenMCPServerCollection => {
-                self.show_settings_with_section(Some(SettingsSection::AgentMCPServers), ctx);
-
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::MCPServerCollectionPaneOpened {
-                        entrypoint: MCPServerCollectionPaneEntrypoint::Global,
-                    },
-                    ctx
-                );
-            }
             OpenEnvironmentManagementPane => {
                 self.open_environment_management_pane(None, EnvironmentsPage::Create, ctx);
             }
@@ -27125,9 +26665,6 @@ impl TypedActionView for Workspace {
                     }
                 }
             }
-            BrowseTeams => {
-                self.browse_teams(ctx);
-            }
             ShowTeamSwitcherMenu => {
                 self.show_team_switcher_dropdown(ctx);
             }
@@ -27160,11 +26697,6 @@ impl View for Workspace {
 
         if AISettings::as_ref(app).is_active_ai_enabled(app) {
             context.set.insert(flags::IS_ACTIVE_AI_ENABLED);
-        }
-        if AISettings::as_ref(app).is_voice_input_enabled(app)
-            && UserWorkspaces::as_ref(app).is_voice_enabled()
-        {
-            context.set.insert(flags::IS_VOICE_INPUT_ENABLED);
         }
 
         if self

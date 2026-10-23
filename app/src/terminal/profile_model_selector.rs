@@ -57,7 +57,6 @@ use crate::cloud_object::model::generic_string_model::StringModel;
 use crate::context_chips::display_chip::{udi_font_size, udi_icon_size};
 use crate::context_chips::spacing;
 use crate::menu::{Event as MenuEvent, Menu, MenuItem, MenuItemFields};
-use crate::settings_view::SettingsSection;
 use crate::terminal::TerminalModel;
 use crate::terminal::input::{MenuPositioning, MenuPositioningProvider};
 use crate::terminal::view::ambient_agent::{AmbientAgentViewModel, AmbientAgentViewModelEvent};
@@ -196,14 +195,12 @@ pub struct ProfileModelSelector {
     ambient_agent_view_model: Option<ModelHandle<AmbientAgentViewModel>>,
     render_compact: bool,
     hovered_llm_info: Option<LLMInfo>,
-    manage_api_key_button: ViewHandle<ActionButton>,
     manage_chatgpt_usage_button: ViewHandle<ActionButton>,
     terminal_model: Arc<FairMutex<TerminalModel>>,
     all_model_choices: Vec<LLMInfo>,
 }
 
 pub enum ProfileModelSelectorEvent {
-    OpenSettings(SettingsSection),
     MenuVisibilityChanged { open: bool },
     ToggleInlineModelSelector,
 }
@@ -218,7 +215,6 @@ pub enum ProfileModelSelectorAction {
         model_id: String,
         reasoning_level: Option<String>,
     },
-    ManageProfiles,
     ToggleProfileMenu,
     ToggleModelMenu,
 }
@@ -562,18 +558,6 @@ impl ProfileModelSelector {
             },
         );
 
-        let manage_api_key_button = ctx.add_typed_action_view(|_ctx| {
-            ActionButton::new("Manage", SecondaryTheme)
-                .with_tooltip("Manage API keys")
-                .with_size(ButtonSize::XSmall)
-                .on_click(|ctx| {
-                    ctx.dispatch_typed_action(WorkspaceAction::ShowSettingsPageWithSearch {
-                        search_query: "api".to_string(),
-                        section: Some(SettingsSection::WarpAgent),
-                    });
-                })
-        });
-
         let manage_chatgpt_usage_button = ctx.add_typed_action_view(|_ctx| {
             let source = ByoKeySource::ChatGPTSubscription;
             ActionButton::new(source.manage_button_label(), SecondaryTheme)
@@ -611,7 +595,6 @@ impl ProfileModelSelector {
             ambient_agent_view_model: None,
             render_compact: false,
             hovered_llm_info: None,
-            manage_api_key_button,
             manage_chatgpt_usage_button,
             terminal_model,
             all_model_choices: Vec::new(),
@@ -927,13 +910,6 @@ impl ProfileModelSelector {
                 )));
             }
         }
-
-        menu_items.push(MenuItem::Separator);
-        menu_items.push(MenuItem::Item(
-            MenuItemFields::new("Manage profiles")
-                .with_icon(Icon::Gear)
-                .with_on_select_action(ProfileModelSelectorAction::ManageProfiles),
-        ));
 
         self.profile_dropdown.update(ctx, |menu, ctx| {
             menu.set_items(menu_items, ctx);
@@ -2074,8 +2050,8 @@ impl ProfileModelSelector {
         let appearance = Appearance::as_ref(app);
         let theme = appearance.theme();
         let manage_button = match byo_key_source {
-            ByoKeySource::UserProvided | ByoKeySource::TeamProvided => &self.manage_api_key_button,
-            ByoKeySource::ChatGPTSubscription => &self.manage_chatgpt_usage_button,
+            ByoKeySource::UserProvided | ByoKeySource::TeamProvided => None,
+            ByoKeySource::ChatGPTSubscription => Some(&self.manage_chatgpt_usage_button),
         };
 
         Container::new(
@@ -2102,11 +2078,11 @@ impl ProfileModelSelector {
                                 )
                                 .finish(),
                             )
-                            .with_child(
-                                Container::new(ChildView::new(manage_button).finish())
+                            .with_children(manage_button.map(|button| {
+                                Container::new(ChildView::new(button).finish())
                                     .with_margin_left(8.)
-                                    .finish(),
-                            )
+                                    .finish()
+                            }))
                             .finish(),
                     )
                     .finish(),
@@ -2314,12 +2290,6 @@ impl TypedActionView for ProfileModelSelector {
                     });
                 }
                 self.set_model_menu_visibility(false, ctx);
-            }
-            ProfileModelSelectorAction::ManageProfiles => {
-                self.set_profile_menu_visibility(false, ctx);
-                ctx.emit(ProfileModelSelectorEvent::OpenSettings(
-                    SettingsSection::AgentProfiles,
-                ));
             }
             ProfileModelSelectorAction::ToggleProfileMenu => {
                 self.set_profile_menu_visibility(!self.is_profile_menu_open, ctx);

@@ -204,18 +204,6 @@ impl<T: View> Modal<T> {
         self.background_opacity = opacity;
         self
     }
-    /// Caps the modal height at a percentage of the containing window height.
-    pub fn with_max_height_percentage(mut self, percentage: f32) -> Self {
-        self.max_height_percentage = Some(percentage.clamp(0., 1.));
-        self
-    }
-
-    /// Set the keystroke to display alongside the close button.
-    pub fn with_dismiss_keystroke(mut self, keystroke: Keystroke) -> Self {
-        self.dismiss_keystroke = Some(keystroke);
-        self
-    }
-
     pub fn set_title(&mut self, title: Option<String>) {
         self.title = title;
     }

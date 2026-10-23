@@ -2,7 +2,6 @@ use std::sync::Arc;
 
 use enclose::enclose;
 use itertools::Itertools as _;
-use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use torch_core::ui::Icon;
@@ -11,10 +10,10 @@ use torch_graphql::billing::AddonCreditsOption;
 use torch_graphql::error::BudgetExceededError;
 use torchui::elements::{
     Align, Border, ChildAnchor, ChildView, ConstrainedBox, Container, CornerRadius,
-    CrossAxisAlignment, DropShadow, Expanded, Flex, FormattedTextElement, HighlightedHyperlink,
-    Hoverable, Icon as WarpUiIcon, MainAxisAlignment, MainAxisSize, MouseStateHandle,
-    OffsetPositioning, ParentAnchor, ParentElement as _, ParentOffsetBounds, Radius, Shrinkable,
-    SizeConstraintCondition, SizeConstraintSwitch, Stack, Text,
+    CrossAxisAlignment, DropShadow, Empty, Expanded, Flex, Hoverable, Icon as WarpUiIcon,
+    MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning, ParentAnchor,
+    ParentElement as _, ParentOffsetBounds, Radius, Shrinkable, SizeConstraintCondition,
+    SizeConstraintSwitch, Stack, Text,
 };
 use torchui::fonts::Weight;
 use torchui::ui_components::button::ButtonVariant;
@@ -37,15 +36,33 @@ use crate::send_telemetry_from_ctx;
 use crate::server::ids::ServerId;
 use crate::server::telemetry::{OutOfCreditsBannerAction, TelemetryEvent};
 use crate::settings::{AISettings, AISettingsChangedEvent, UsageDisplayUnit};
-use crate::settings_view::create_discount_badge;
+use crate::themes::theme::Fill;
 use crate::view_components::{Dropdown, DropdownAction};
 use crate::workspaces::user_workspaces::{UserWorkspaces, UserWorkspacesEvent};
+
+pub(super) fn create_discount_badge(discount: u32, appearance: &Appearance) -> Box<dyn Element> {
+    if discount == 0 {
+        return Empty::new().finish();
+    }
+
+    let theme = appearance.theme();
+    let bg_color: Fill = theme.terminal_colors().normal.green.into();
+
+    Container::new(
+        Text::new_inline(format!("{discount}% off"), appearance.ui_font_family(), 10.)
+            .with_color(theme.main_text_color(bg_color).into())
+            .finish(),
+    )
+    .with_corner_radius(CornerRadius::with_all(Radius::Pixels(4.)))
+    .with_background(bg_color)
+    .with_uniform_padding(4.)
+    .finish()
+}
 
 #[derive(Default)]
 struct MouseStates {
     buy_button: MouseStateHandle,
     close_button: MouseStateHandle,
-    manage_billing_button: MouseStateHandle,
     auto_reload_checkbox: MouseStateHandle,
     auto_reload_info_icon: MouseStateHandle,
 }
@@ -58,7 +75,6 @@ pub struct BuyCreditsBanner {
     selected_denomination_index: usize,
     purchase_addon_credits_loading: bool,
     should_display_banner: bool,
-    billing_settings_hyperlink: HighlightedHyperlink,
     is_denomination_dropdown_open: bool,
     auto_reload_enabled: bool,
     banner_auto_reload_update_in_flight: bool,
@@ -148,7 +164,6 @@ impl BuyCreditsBanner {
             selected_denomination_index: 0,
             purchase_addon_credits_loading: false,
             should_display_banner: false,
-            billing_settings_hyperlink: HighlightedHyperlink::default(),
             is_denomination_dropdown_open: false,
             auto_reload_enabled: false,
             banner_auto_reload_update_in_flight: false,
@@ -545,38 +560,6 @@ impl BuyCreditsBanner {
                 Shrinkable::new(1., Align::new(banner_text).left().finish()).finish(),
             ]);
 
-        // Only show manage billing button for admins
-        if has_admin_permissions {
-            let manage_billing_button = appearance
-                .ui_builder()
-                .button(
-                    ButtonVariant::Accent,
-                    self.mouse_states.manage_billing_button.clone(),
-                )
-                .with_style(UiComponentStyles {
-                    font_weight: Some(Weight::Semibold),
-                    padding: Some(Coords {
-                        top: 6.,
-                        bottom: 6.,
-                        left: 8.,
-                        right: 8.,
-                    }),
-                    ..Default::default()
-                })
-                .with_text_label("Manage billing".to_string())
-                .build()
-                .on_click(|ctx, _, _| {
-                    ctx.dispatch_typed_action(Action::ManageBilling);
-                })
-                .finish();
-
-            content.add_child(
-                Container::new(manage_billing_button)
-                    .with_margin_right(8.)
-                    .finish(),
-            );
-        }
-
         content.add_child(close_button);
 
         Container::new(content.finish())
@@ -760,35 +743,17 @@ impl BuyCreditsBanner {
 
             // Show different message based on whether purchase would exceed limit
             if is_at_monthly_limit || would_purchase_exceed_limit {
-                // Create formatted text with clickable hyperlink
-                let warning_text_fragments = vec![
-                    FormattedTextFragment::plain_text(exceeds_limit_text),
-                    FormattedTextFragment::hyperlink_action("Increase it", Action::ManageBilling),
-                    FormattedTextFragment::plain_text(" to continue."),
-                ];
-
-                let formatted_warning = FormattedTextElement::new(
-                    FormattedText::new([FormattedTextLine::Line(warning_text_fragments)]),
-                    appearance.ui_font_size(),
-                    appearance.ui_font_family(),
-                    appearance.ui_font_family(),
-                    theme.sub_text_color(theme.surface_1()).into(),
-                    self.billing_settings_hyperlink.clone(),
-                )
-                .with_hyperlink_font_color(theme.accent().into_solid())
-                .register_default_click_handlers_with_action_support(
-                    |hyperlink_lens, event, _ctx| match hyperlink_lens {
-                        torchui::elements::HyperlinkLens::Url(_url) => {}
-                        torchui::elements::HyperlinkLens::Action(action_ref) => {
-                            if let Some(action) = action_ref.as_any().downcast_ref::<Action>() {
-                                event.dispatch_typed_action(action.clone());
-                            }
-                        }
-                    },
-                )
-                .finish();
-
-                banner_text_children.push(formatted_warning);
+                banner_text_children.push(
+                    appearance
+                        .ui_builder()
+                        .paragraph(exceeds_limit_text.trim_end())
+                        .with_style(UiComponentStyles {
+                            font_color: Some(theme.sub_text_color(theme.surface_1()).into()),
+                            ..Default::default()
+                        })
+                        .build()
+                        .finish(),
+                );
             } else {
                 // Default message when not at limit
                 let banner_description = if has_admin_permissions {
@@ -987,7 +952,6 @@ impl BuyCreditsBanner {
 
 #[derive(Clone, Debug)]
 pub enum BuyCreditsBannerEvent {
-    OpenBillingAndUsage,
     RefocusInput,
     OpenAutoReloadModal { purchased_credits: i32 },
     ShowAutoReloadError { error_message: &'static str },
@@ -1038,7 +1002,6 @@ pub enum Action {
     SelectDenomination(usize),
     Close,
     PurchaseAddonCredits { team_uid: Option<ServerId> },
-    ManageBilling,
     ToggleAutoReload,
 }
 
@@ -1066,14 +1029,6 @@ impl torchui::TypedActionView for BuyCreditsBanner {
                 );
 
                 self.checkout_pending = false;
-                self.should_display_banner = false;
-                AIRequestUsageModel::handle(ctx).update(ctx, |model, ctx| {
-                    model.dismiss_buy_credits_banner(ctx);
-                });
-                ctx.notify();
-            }
-            Action::ManageBilling => {
-                ctx.emit(BuyCreditsBannerEvent::OpenBillingAndUsage);
                 self.should_display_banner = false;
                 AIRequestUsageModel::handle(ctx).update(ctx, |model, ctx| {
                     model.dismiss_buy_credits_banner(ctx);

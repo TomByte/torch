@@ -1,48 +1,42 @@
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
-use std::sync::LazyLock;
 use std::time::Duration;
 
 use pathfinder_geometry::vector::vec2f;
 use regex::Regex;
 use settings::Setting as _;
-use torch_core::context_flag::ContextFlag;
-use torch_core::features::FeatureFlag;
 use torch_core::ui::theme::WarpTheme;
 use torch_core::ui::theme::color::internal_colors;
 use torch_errors::{report_error, report_if_error};
 use torchui::r#async::{SpawnedFutureHandle, Timer};
 use torchui::elements::{
-    Align, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Empty, Expanded,
-    Flex, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius,
-    Rect, Shrinkable, Text,
+    ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Empty, Expanded, Flex,
+    Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, Rect,
+    Shrinkable, Text,
 };
 use torchui::fonts::Weight;
 use torchui::keymap::ContextPredicate;
 use torchui::platform::Cursor;
 use torchui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
 use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use torchui::ui_components::switch::{SwitchStateHandle, TooltipConfig};
+use torchui::ui_components::switch::SwitchStateHandle;
 use torchui::{
     Action, AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView,
-    UpdateModel, View, ViewContext, ViewHandle, id,
+    UpdateModel, View, ViewContext, ViewHandle,
 };
 
 use super::privacy::{AddRegexModal, AddRegexModalEvent};
 use super::settings_page::{
-    HEADER_PADDING, LocalOnlyIconState, MatchData, PageTitle, PageType, SettingsPageMeta,
-    SettingsPageViewHandle, SettingsWidget, TOGGLE_BUTTON_RIGHT_PADDING, ToggleState,
-    render_body_item, render_sub_header,
+    HEADER_PADDING, LocalOnlyIconState, MatchData, PageType, SettingsPageMeta,
+    SettingsPageViewHandle, SettingsWidget, TOGGLE_BUTTON_RIGHT_PADDING, render_sub_header,
 };
 use super::{SettingsAction, SettingsSection, ToggleSettingActionPair, flags};
 use crate::appearance::Appearance;
-use crate::auth::auth_manager::AuthManager;
-use crate::channel::ChannelState;
 use crate::modal::{Modal, ModalEvent, ModalViewState};
 use crate::send_telemetry_from_ctx;
 use crate::server::telemetry::TelemetryEvent;
-use crate::settings::{AISettings, CustomSecretRegex, PrivacySettings, RegexDisplayInfo};
+use crate::settings::{CustomSecretRegex, PrivacySettings, RegexDisplayInfo};
 use crate::settings_view::privacy::AddRegexModalViewState;
 use crate::terminal::safe_mode_settings::{
     SafeModeEnabled, SafeModeSettings, SecretDisplayMode, SecretDisplayModeSetting,
@@ -50,48 +44,19 @@ use crate::terminal::safe_mode_settings::{
 };
 use crate::ui_components::buttons::icon_button;
 use crate::ui_components::icons::Icon;
-use crate::util::links::PRIVACY_POLICY_URL;
 use crate::view_components::{Dropdown, DropdownItem};
 use crate::workspaces::user_workspaces::UserWorkspaces;
-use crate::workspaces::workspace::AdminEnablementSetting;
 
 const FONT_SIZE: f32 = 12.;
 
 const SAFE_MODE_TITLE: &str = "Secret redaction";
-static SAFE_MODE_DESCRIPTION: LazyLock<&'static str> = LazyLock::new(|| {
-    if ChannelState::is_local_only() {
-        "When this setting is enabled, Torch scans command output for likely secrets, such as \
-            API keys and passwords, and marks or hides them on screen. You can customize this \
-            list via regexes."
-    } else {
-        "When this setting is enabled, Torch will scan blocks, the contents of \
-            Torch Drive objects, and Oz prompts for potential sensitive \
-            information and prevent saving or sending this data to any \
-            servers. You can customize this list via regexes."
-    }
-});
+const SAFE_MODE_DESCRIPTION: &str = "When this setting is enabled, Torch scans command output for likely secrets, such as \
+    API keys and passwords, and marks or hides them on screen. You can customize this \
+    list via regexes.";
 const USER_SECRET_REGEX_TITLE: &str = "Custom secret redaction";
 const USER_SECRET_REGEX_DESCRIPTION: &str = "Use regex to define additional secrets or data you'd like to redact. This will take effect \
     when the next command runs. You can use the inline (?i) flag as a prefix to your regex \
     to make it case-insensitive.";
-const DATA_MANAGEMENT_TITLE: &str = "Manage your data";
-const DATA_MANAGEMENT_DESCRIPTION: &str = "At any time, you may choose to delete your Torch account permanently. \
-    You will no longer be able to use Torch.";
-const DATA_MANAGEMENT_LINK_TEXT: &str = "Visit the data management page";
-
-const PRIVACY_POLICY_TITLE: &str = "Privacy policy";
-const PRIVACY_POLICY_LINK_TEXT: &str = "Read Torch's privacy policy";
-
-pub fn data_management_url(custom_token: Option<&str>) -> String {
-    match custom_token {
-        Some(token) => format!(
-            "{}/data_management?customToken={}",
-            ChannelState::server_root_url(),
-            token
-        ),
-        None => format!("{}/data_management", ChannelState::server_root_url(),),
-    }
-}
 
 pub struct PrivacyPageView {
     page: PageType<Self>,
@@ -112,7 +77,6 @@ pub struct PrivacyPageView {
 
 #[derive(Clone, Copy)]
 pub enum PrivacyPageViewEvent {
-    LaunchNetworkLogging,
     ShowAddRegexModal,
     HideAddRegexModal,
 }
@@ -213,19 +177,9 @@ impl PrivacyPageView {
     }
 
     fn build_page() -> PageType<Self> {
-        let mut widgets: Vec<Box<dyn SettingsWidget<View = Self>>> = vec![
-            Box::new(SecretRedactionWidget::default()),
-            Box::new(CloudConversationStorageWidget::default()),
-        ];
-        if ChannelState::is_local_only() {
-            return PageType::new_uncategorized(widgets, None);
-        }
-        if ContextFlag::NetworkLogConsole.is_enabled() {
-            widgets.push(Box::new(NetworkLogWidget::default()));
-        }
-        widgets.push(Box::new(DataManagementWidget::default()));
-        widgets.push(Box::new(PrivacyPolicyWidget::default()));
-        PageType::new_uncategorized(widgets, Some(PageTitle::new("Privacy")))
+        let widgets: Vec<Box<dyn SettingsWidget<View = Self>>> =
+            vec![Box::new(SecretRedactionWidget::default())];
+        PageType::new_uncategorized(widgets, None)
     }
 
     fn update_button_states(
@@ -284,17 +238,6 @@ impl PrivacyPageView {
 
         ctx.update_model(&safe_mode_settings, move |safe_mode_settings, ctx| {
             report_if_error!(safe_mode_settings.secret_display_mode.set_value(mode, ctx));
-        });
-        ctx.notify();
-    }
-
-    fn toggle_cloud_conversation_storage(&mut self, ctx: &mut ViewContext<Self>) {
-        let privacy_settings_handle = PrivacySettings::handle(ctx);
-        let old_value = privacy_settings_handle
-            .as_ref(ctx)
-            .is_cloud_conversation_storage_enabled;
-        ctx.update_model(&privacy_settings_handle, |privacy_settings, ctx| {
-            privacy_settings.set_is_cloud_conversation_storage_enabled(!old_value, ctx);
         });
         ctx.notify();
     }
@@ -361,10 +304,6 @@ impl PrivacyPageView {
 
         self.pending_regex_removals.clear();
         ctx.notify();
-    }
-
-    fn launch_network_logging(&mut self, ctx: &mut ViewContext<Self>) {
-        ctx.emit(PrivacyPageViewEvent::LaunchNetworkLogging);
     }
 
     fn show_add_regex_modal(&mut self, ctx: &mut ViewContext<Self>) {
@@ -469,10 +408,7 @@ pub enum PrivacyPageAction {
     ToggleSafeMode,
     ToggleHideSecretsInBlockList,
     SetSecretDisplayMode(SecretDisplayMode),
-    ToggleCloudConversationStorage,
-    LaunchNetworkLogging,
     RemoveCustomRegex(usize),
-    OpenDataManagementWebpage,
     AddAllRecommendedRegexes,
     ShowAddRegexModal,
     AddRecommendedRegex(usize),
@@ -548,18 +484,8 @@ impl TypedActionView for PrivacyPageView {
             PrivacyPageAction::SetSecretDisplayMode(mode) => {
                 self.set_secret_display_mode(*mode, ctx)
             }
-            PrivacyPageAction::ToggleCloudConversationStorage => {
-                self.toggle_cloud_conversation_storage(ctx)
-            }
-            PrivacyPageAction::LaunchNetworkLogging => self.launch_network_logging(ctx),
             PrivacyPageAction::RemoveCustomRegex(idx) => {
                 self.queue_regex_removal(*idx, ctx);
-            }
-            PrivacyPageAction::OpenDataManagementWebpage => {
-                AuthManager::handle(ctx).update(ctx, |auth_manager, ctx| {
-                    auth_manager
-                        .open_url_maybe_with_anonymous_token(ctx, Box::new(data_management_url));
-                });
             }
             PrivacyPageAction::AddAllRecommendedRegexes => {
                 // First process any pending removals
@@ -1185,7 +1111,7 @@ impl SettingsWidget for SecretRedactionWidget {
             .with_child(secret_redaction_title_row)
             .with_child(
                 ui_builder
-                    .paragraph((*SAFE_MODE_DESCRIPTION).to_owned())
+                    .paragraph(SAFE_MODE_DESCRIPTION.to_owned())
                     .with_style(UiComponentStyles {
                         font_color: Some(description_text_color),
                         font_size: Some(FONT_SIZE + 1.), // One size up from current 12px to 13px
@@ -1341,331 +1267,12 @@ impl SettingsWidget for SecretRedactionWidget {
     }
 }
 
-#[derive(Default)]
-struct CloudConversationStorageWidget {
-    switch_state: SwitchStateHandle,
-}
-
-impl SettingsWidget for CloudConversationStorageWidget {
-    type View = PrivacyPageView;
-
-    fn search_terms(&self) -> &str {
-        "sync cloud conversation store storage ai agent"
-    }
-
-    fn should_render(&self, app: &AppContext) -> bool {
-        if !FeatureFlag::CloudConversations.is_enabled() {
-            return false;
-        }
-
-        // Hide the toggle entirely when AI is disabled: the setting has no
-        // effect without AI (no agent conversations are produced), so showing
-        // it is confusing.
-        if !AISettings::as_ref(app).is_any_ai_enabled(app) {
-            return false;
-        }
-
-        let privacy_settings = PrivacySettings::as_ref(app);
-        !privacy_settings.is_telemetry_force_enabled()
-    }
-
-    fn render(
-        &self,
-        _view: &Self::View,
-        appearance: &Appearance,
-        app: &AppContext,
-    ) -> Box<dyn Element> {
-        let ui_builder = appearance.ui_builder();
-        let privacy_settings = PrivacySettings::as_ref(app);
-        let org_setting =
-            UserWorkspaces::as_ref(app).get_cloud_conversation_storage_enablement_setting();
-
-        let (toggle_state, is_checked) = match org_setting {
-            AdminEnablementSetting::Enable => (ToggleState::Disabled, true),
-            AdminEnablementSetting::Disable => (ToggleState::Disabled, false),
-            AdminEnablementSetting::RespectUserSetting => (
-                ToggleState::Enabled,
-                privacy_settings.is_cloud_conversation_storage_enabled,
-            ),
-        };
-
-        let switch = ui_builder
-            .switch(self.switch_state.clone())
-            .check(is_checked);
-        let switch = if matches!(toggle_state, ToggleState::Enabled) {
-            switch
-                .build()
-                .on_click(move |ctx, _, _| {
-                    ctx.dispatch_typed_action(PrivacyPageAction::ToggleCloudConversationStorage)
-                })
-                .finish()
-        } else {
-            switch
-                .with_tooltip(TooltipConfig {
-                    text: "This setting is managed by your organization.".to_string(),
-                    styles: ui_builder.default_tool_tip_styles(),
-                })
-                .disable()
-                .build()
-                .finish()
-        };
-
-        Flex::column()
-            .with_child(render_body_item::<PrivacyPageAction>(
-                "Store AI conversations in the cloud".into(),
-                None,
-                LocalOnlyIconState::Hidden,
-                toggle_state,
-                appearance,
-                switch,
-                None,
-            ))
-            .with_child(
-                ui_builder
-                    .paragraph(
-                        if is_checked {
-                            "Agent conversations can be shared with others and are retained \
-                            when you log in on different devices. This data is only stored \
-                            for product functionality, and Torch will not use it for analytics."
-                        } else {
-                            "Agent conversations are only stored locally on your machine, are \
-                            lost upon logout, and cannot be shared. Note: conversation data \
-                            for ambient agents are still stored in the cloud."
-                        }
-                        .to_owned(),
-                    )
-                    .with_style(UiComponentStyles {
-                        font_color: Some(
-                            appearance
-                                .theme()
-                                .sub_text_color(appearance.theme().surface_2())
-                                .into_solid(),
-                        ),
-                        margin: Some(
-                            Coords::default()
-                                .top(styles::DESCRIPTION_NEGATIVE_MARGIN_OFFSET)
-                                .bottom(styles::DESCRIPTION_MARGIN_BOTTOM),
-                        ),
-                        ..Default::default()
-                    })
-                    .build()
-                    .finish(),
-            )
-            .finish()
-    }
-}
-
-#[derive(Default)]
-struct NetworkLogWidget {
-    link_mouse_state: MouseStateHandle,
-}
-
-impl SettingsWidget for NetworkLogWidget {
-    type View = PrivacyPageView;
-
-    fn search_terms(&self) -> &str {
-        "network log audit console data collection"
-    }
-
-    fn render(
-        &self,
-        _view: &Self::View,
-        appearance: &Appearance,
-        _app: &AppContext,
-    ) -> Box<dyn Element> {
-        let ui_builder = appearance.ui_builder();
-        Flex::column()
-            .with_child(render_body_item::<PrivacyPageAction>(
-                "Network log console".into(),
-                None,
-                // Not rendering a setting, so no need to show local only icon state.
-                LocalOnlyIconState::Hidden,
-                ToggleState::Enabled,
-                appearance,
-                Empty::new().finish(),
-                None,
-            ))
-            .with_child(
-                ui_builder
-                    .paragraph(
-                        "We've built a native console that allows you to view all communications \
-                        from Torch to external servers to ensure you feel comfortable that your \
-                        work is always kept safe."
-                            .to_owned(),
-                    )
-                    .with_style(UiComponentStyles {
-                        font_color: Some(
-                            appearance
-                                .theme()
-                                .sub_text_color(appearance.theme().surface_2())
-                                .into_solid(),
-                        ),
-                        margin: Some(
-                            Coords::default()
-                                .top(styles::DESCRIPTION_NEGATIVE_MARGIN_OFFSET)
-                                .bottom(styles::DESCRIPTION_LINE_MARGIN_BOTTOM),
-                        ),
-                        ..Default::default()
-                    })
-                    .build()
-                    .finish(),
-            )
-            .with_child(
-                Align::new(
-                    ui_builder
-                        .link(
-                            "View network logging".to_owned(),
-                            None,
-                            Some(Box::new(|ctx| {
-                                ctx.dispatch_typed_action(PrivacyPageAction::LaunchNetworkLogging);
-                            })),
-                            self.link_mouse_state.clone(),
-                        )
-                        .soft_wrap(false)
-                        .build()
-                        .with_margin_bottom(styles::DESCRIPTION_MARGIN_BOTTOM)
-                        .finish(),
-                )
-                .left()
-                .finish(),
-            )
-            .finish()
-    }
-}
-
-#[derive(Default)]
-struct DataManagementWidget {
-    link_mouse_state: MouseStateHandle,
-}
-
-impl SettingsWidget for DataManagementWidget {
-    type View = PrivacyPageView;
-
-    fn search_terms(&self) -> &str {
-        "data management delete account"
-    }
-
-    fn render(
-        &self,
-        _view: &Self::View,
-        appearance: &Appearance,
-        _app: &AppContext,
-    ) -> Box<dyn Element> {
-        let ui_builder = appearance.ui_builder();
-        Flex::column()
-            .with_child(render_body_item::<PrivacyPageAction>(
-                DATA_MANAGEMENT_TITLE.into(),
-                None,
-                // Not rendering a setting, so no need to show local only icon state.
-                LocalOnlyIconState::Hidden,
-                ToggleState::Enabled,
-                appearance,
-                Empty::new().finish(),
-                None,
-            ))
-            .with_child(
-                ui_builder
-                    .paragraph(DATA_MANAGEMENT_DESCRIPTION)
-                    .with_style(UiComponentStyles {
-                        font_color: Some(
-                            appearance
-                                .theme()
-                                .sub_text_color(appearance.theme().surface_2())
-                                .into_solid(),
-                        ),
-                        margin: Some(
-                            Coords::default()
-                                .top(styles::DESCRIPTION_NEGATIVE_MARGIN_OFFSET)
-                                .bottom(styles::DESCRIPTION_LINE_MARGIN_BOTTOM),
-                        ),
-                        ..Default::default()
-                    })
-                    .build()
-                    .finish(),
-            )
-            .with_child(
-                Align::new(
-                    appearance
-                        .ui_builder()
-                        .link(
-                            DATA_MANAGEMENT_LINK_TEXT.into(),
-                            None,
-                            Some(Box::new(|ctx| {
-                                ctx.dispatch_typed_action(
-                                    PrivacyPageAction::OpenDataManagementWebpage,
-                                );
-                            })),
-                            self.link_mouse_state.clone(),
-                        )
-                        .soft_wrap(false)
-                        .build()
-                        .with_margin_bottom(styles::DESCRIPTION_MARGIN_BOTTOM)
-                        .finish(),
-                )
-                .left()
-                .finish(),
-            )
-            .finish()
-    }
-}
-
-#[derive(Default)]
-struct PrivacyPolicyWidget {
-    link_mouse_state: MouseStateHandle,
-}
-
-impl SettingsWidget for PrivacyPolicyWidget {
-    type View = PrivacyPageView;
-
-    fn search_terms(&self) -> &str {
-        "privacy policy terms"
-    }
-
-    fn render(
-        &self,
-        _view: &Self::View,
-        appearance: &Appearance,
-        _app: &AppContext,
-    ) -> Box<dyn Element> {
-        Flex::column()
-            .with_child(render_body_item::<PrivacyPageAction>(
-                PRIVACY_POLICY_TITLE.into(),
-                None,
-                // Not rendering a setting, so no need to show local only icon state.
-                LocalOnlyIconState::Hidden,
-                ToggleState::Enabled,
-                appearance,
-                Empty::new().finish(),
-                None,
-            ))
-            .with_child(
-                Align::new(
-                    appearance
-                        .ui_builder()
-                        .link(
-                            PRIVACY_POLICY_LINK_TEXT.into(),
-                            Some(PRIVACY_POLICY_URL.into()),
-                            None,
-                            self.link_mouse_state.clone(),
-                        )
-                        .soft_wrap(false)
-                        .build()
-                        .with_margin_bottom(styles::DESCRIPTION_MARGIN_BOTTOM)
-                        .finish(),
-                )
-                .left()
-                .finish(),
-            )
-            .finish()
-    }
-}
-
 pub fn init_actions_from_parent_view<T: Action + Clone>(
     app: &mut AppContext,
     context: &ContextPredicate,
     builder: fn(SettingsAction) -> T,
 ) {
-    let mut toggle_binding_pairs = vec![ToggleSettingActionPair::new(
+    let toggle_binding_pairs = vec![ToggleSettingActionPair::new(
         "secret redaction",
         builder(SettingsAction::PrivacyPageToggle(
             PrivacyPageAction::ToggleSafeMode,
@@ -1674,28 +1281,12 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
         flags::SAFE_MODE_FLAG,
     )];
 
-    toggle_binding_pairs.push(
-        ToggleSettingActionPair::new(
-            "cloud AI conversation storage",
-            builder(SettingsAction::PrivacyPageToggle(
-                PrivacyPageAction::ToggleCloudConversationStorage,
-            )),
-            &(context.clone()
-                & id!(flags::IS_ANY_AI_ENABLED)
-                & id!(flags::CLOUD_CONVERSATION_STORAGE_EDITABLE_FLAG)),
-            flags::CLOUD_CONVERSATION_STORAGE_FLAG,
-        )
-        .with_enabled(|| FeatureFlag::CloudConversations.is_enabled()),
-    );
-
     ToggleSettingActionPair::add_toggle_setting_action_pairs_as_bindings(toggle_binding_pairs, app);
 }
 
 mod styles {
     // Apply a negative margin to the description text so it appears closer to the main
     // settings option text.
-    pub const DESCRIPTION_NEGATIVE_MARGIN_OFFSET: f32 = -8.;
-
     /// The space between a description and the next toggle.
     pub const DESCRIPTION_MARGIN_BOTTOM: f32 = 12.;
 

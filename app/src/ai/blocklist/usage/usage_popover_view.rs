@@ -36,9 +36,7 @@ use crate::persistence::model::{
 };
 use crate::settings::UsageDisplayUnit;
 use crate::settings::ai::{AISettings, AISettingsChangedEvent};
-use crate::settings_view::SettingsSection;
 use crate::ui_components::blended_colors;
-use crate::workspace::WorkspaceAction;
 
 /// Fixed popover width: the Figma reference (`336px`) widened by 15% so long
 /// model names and their values fit on one row.
@@ -133,7 +131,6 @@ pub struct UsagePopoverView {
     view_id: EntityId,
     model_usage_toggle_mouse_state: MouseStateHandle,
     tool_call_summary_toggle_mouse_state: MouseStateHandle,
-    view_account_usage_mouse_state: MouseStateHandle,
     /// Number of times this view rendered. Notification has no observable
     /// state, so tests observe the render pass it should trigger instead.
     #[cfg(test)]
@@ -184,7 +181,6 @@ impl UsagePopoverView {
             view_id: ctx.view_id(),
             model_usage_toggle_mouse_state: MouseStateHandle::default(),
             tool_call_summary_toggle_mouse_state: MouseStateHandle::default(),
-            view_account_usage_mouse_state: MouseStateHandle::default(),
             #[cfg(test)]
             render_count_for_test: Cell::new(0),
         }
@@ -236,34 +232,12 @@ impl UsagePopoverView {
         )
         .with_color(blended_colors::text_sub(theme, background))
         .finish();
-        let title = Flex::row()
+        Flex::row()
             .with_cross_axis_alignment(CrossAxisAlignment::Center)
             .with_main_axis_size(MainAxisSize::Min)
             .with_spacing(8.)
             .with_child(title)
             .with_child(total)
-            .finish();
-
-        let link_color = blended_colors::text_sub(theme, background);
-        let font_family = appearance.ui_font_family();
-        let font_size = appearance.ui_font_size();
-        let link = Hoverable::new(self.view_account_usage_mouse_state.clone(), move |_state| {
-            Text::new("View account usage".to_string(), font_family, font_size)
-                .with_color(link_color)
-                .with_selectable(false)
-                .finish()
-        })
-        .with_cursor(Cursor::PointingHand)
-        .on_click(|ctx, _, _| {
-            ctx.dispatch_typed_action(WorkspaceAction::ShowSettingsPage(
-                SettingsSection::BillingAndUsage,
-            ));
-        })
-        .finish();
-
-        space_between_row()
-            .with_child(title)
-            .with_child(link)
             .finish()
     }
 

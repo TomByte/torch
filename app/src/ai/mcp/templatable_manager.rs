@@ -294,13 +294,6 @@ impl TemplatableMCPServerManager {
             })
     }
 
-    pub fn tools_for_server(&self, uuid: Uuid) -> Vec<rmcp::model::Tool> {
-        self.active_servers
-            .get(&uuid)
-            .map(|server| server.tools().clone())
-            .unwrap_or_default()
-    }
-
     /// Returns the JSON Schema `input_schema` for a named tool across active MCP servers.
     ///
     /// If `installation_id` is `Some`, only that server is considered; otherwise, the

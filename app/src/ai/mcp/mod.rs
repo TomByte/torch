@@ -439,27 +439,6 @@ impl MCPServerExt for MCPServer {
     }
 }
 
-#[derive(Debug, Clone)]
-pub enum Author {
-    CurrentUser,
-    OtherUser { name: String },
-    Unknown,
-}
-
-#[derive(Debug, Clone)]
-pub enum MCPServerUpdate {
-    CloudTemplate {
-        publisher: Author,
-        new_version_ts: i64,
-        json_template: JsonTemplate,
-    },
-    Gallery {
-        name: String,
-        new_version: i32,
-        json_template: JsonTemplate,
-    },
-}
-
 /// The home directory that global (non-Torch) provider configs are resolved against. Tests
 /// redirect it through `HOME`; `dirs::home_dir()` ignores that variable on Windows.
 pub(crate) fn home_dir() -> Option<PathBuf> {

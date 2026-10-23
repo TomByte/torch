@@ -279,7 +279,7 @@ use crate::settings::{
     AppEditorSettingsChangedEvent, InputModeSettings, InputSettings, InputSettingsChangedEvent,
     MAX_TIMES_TO_SHOW_AUTOSUGGESTION_HINT, PrivacySettings,
 };
-use crate::settings_view::{SettingsSection, flags};
+use crate::settings_view::flags;
 use crate::suggestions::ignored_suggestions_model::{
     IgnoredSuggestionsModel, IgnoredSuggestionsModelEvent, SuggestionType,
 };
@@ -1101,7 +1101,6 @@ pub enum Event {
     SignupAnonymousUser {
         entrypoint: AnonymousUserSignupEntrypoint,
     },
-    OpenSettings(SettingsSection),
     #[cfg(feature = "local_fs")]
     OpenCodeInWarp {
         source: CodeSource,
@@ -1113,8 +1112,6 @@ pub enum Event {
         diff_mode: DiffMode,
     },
     OpenConversationHistory,
-    OpenViewMCPPane,
-    OpenAddMCPPane,
     OpenProjectRulesPane,
     OpenEnvironmentManagementPane,
     OpenFilesPalette {
@@ -3029,9 +3026,6 @@ impl Input {
                 AgentInputFooterEvent::ToggleInlineModelSelector { initial_tab } => {
                     me.toggle_inline_model_selector_from_chip(*initial_tab, ctx);
                 }
-                AgentInputFooterEvent::OpenSettings(section) => {
-                    ctx.emit(Event::OpenSettings(*section));
-                }
                 AgentInputFooterEvent::OpenCodeReview => {
                     ctx.emit(Event::OpenCodeReviewPane);
                 }
@@ -4064,9 +4058,6 @@ impl Input {
 
         let buy_credits_banner = ctx.add_typed_action_view(BuyCreditsBanner::new);
         ctx.subscribe_to_view(&buy_credits_banner, |me, _, event, ctx| match event {
-            BuyCreditsBannerEvent::OpenBillingAndUsage => {
-                ctx.emit(Event::OpenSettings(SettingsSection::BillingAndUsage));
-            }
             BuyCreditsBannerEvent::RefocusInput => {
                 ctx.focus(&me.editor);
             }
@@ -5553,9 +5544,6 @@ impl Input {
                 LLMPreferences::handle(ctx).update(ctx, |llm_prefs, ctx| {
                     llm_prefs.remove_llm_override(self.terminal_view_id, ctx);
                 });
-            }
-            InlineProfileSelectorEvent::ManageProfiles => {
-                ctx.emit(Event::OpenSettings(SettingsSection::AgentProfiles));
             }
             InlineProfileSelectorEvent::Dismissed => {
                 if self
@@ -7109,9 +7097,6 @@ impl Input {
                     entrypoint: AnonymousUserSignupEntrypoint::SignUpAIPrompt,
                 });
             }
-            PromptAlertEvent::OpenBillingAndUsagePage => {
-                ctx.emit(Event::OpenSettings(SettingsSection::BillingAndUsage));
-            }
             PromptAlertEvent::OpenBillingPortal { team_uid } => {
                 UserWorkspaces::handle(ctx).update(ctx, |user_workspaces, ctx| {
                     user_workspaces.generate_stripe_billing_portal_link(*team_uid, ctx);
@@ -7262,9 +7247,6 @@ impl Input {
             UniversalDeveloperInputButtonBarEvent::ModelSelectorClosed => {
                 // When the model selector menu closes (model was selected), focus the input field
                 self.focus_input_box(ctx);
-            }
-            UniversalDeveloperInputButtonBarEvent::OpenSettings(section) => {
-                ctx.emit(Event::OpenSettings(*section));
             }
             UniversalDeveloperInputButtonBarEvent::OpenSlashCommandMenu => {
                 self.focus_input_box(ctx);
@@ -16706,9 +16688,6 @@ impl Input {
             PromptSuggestionsEvent::SignupAnonymousUser => ctx.emit(Event::SignupAnonymousUser {
                 entrypoint: AnonymousUserSignupEntrypoint::SignUpAIPrompt,
             }),
-            PromptSuggestionsEvent::OpenBillingAndUsagePage => {
-                ctx.emit(Event::OpenSettings(SettingsSection::BillingAndUsage))
-            }
             PromptSuggestionsEvent::OpenBillingPortal { team_uid } => {
                 UserWorkspaces::handle(ctx).update(ctx, |user_workspaces, ctx| {
                     user_workspaces.generate_stripe_billing_portal_link(*team_uid, ctx);
@@ -17048,10 +17027,6 @@ impl View for Input {
             .value()
         {
             ctx.set.insert(flags::SLASH_COMMANDS_IN_TERMINAL_FLAG);
-        }
-
-        if ai_settings.is_ai_autodetection_enabled(app) {
-            ctx.set.insert(flags::AI_INPUT_AUTODETECTION_FLAG);
         }
 
         if ai_settings.is_code_suggestions_enabled(app) {

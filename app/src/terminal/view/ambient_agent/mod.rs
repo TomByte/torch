@@ -36,7 +36,7 @@ pub use model_selector::{
 };
 pub use progress::{ProgressProps, ProgressStep, ProgressStepState, render_progress};
 pub use progress_ui_state::AmbientAgentProgressUIState;
-pub use team_required::{CloudAgentTeamRequiredView, CloudAgentTeamRequiredViewEvent};
+pub use team_required::CloudAgentTeamRequiredView;
 pub(crate) use team_required::{
     should_render as should_render_cloud_agent_team_required_view,
     toast_message as cloud_agent_team_required_toast_message,

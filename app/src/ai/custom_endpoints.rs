@@ -1,10 +1,6 @@
-use ai::api_keys::{
-    ApiKeyManager, CustomEndpointDefinition, CustomEndpointDefinitions, CustomEndpointId,
-    CustomEndpointModel, CustomEndpointParams,
-};
+use ai::api_keys::{ApiKeyManager, CustomEndpointDefinitions};
 use settings::Setting;
 use torchui::{AppContext, Entity, ModelContext, SingletonEntity};
-use uuid::Uuid;
 
 use crate::LaunchMode;
 use crate::global_resource_handles::GlobalResourceHandlesProvider;
@@ -121,85 +117,6 @@ impl SingletonEntity for CustomEndpointSettingsModel {}
 
 pub(crate) fn init(launch_mode: &LaunchMode, ctx: &mut AppContext) {
     ctx.add_singleton_model(|ctx| CustomEndpointSettingsModel::new(launch_mode, ctx));
-}
-
-pub(crate) fn add(params: CustomEndpointParams, ctx: &mut AppContext) -> anyhow::Result<usize> {
-    let mut definitions = AISettings::as_ref(ctx).custom_endpoints.value().clone();
-    let id = CustomEndpointId::generated();
-    let key = params.api_key.clone();
-    definitions.insert(id.clone(), definition_from_params(params))?;
-    ApiKeyManager::handle(ctx).update(ctx, |manager, ctx| {
-        manager.persist_custom_endpoint_key(id.clone(), Some(key), ctx)
-    })?;
-    if let Err(error) = write_definitions(definitions.clone(), ctx) {
-        let _ = ApiKeyManager::handle(ctx).update(ctx, |manager, ctx| {
-            manager.persist_custom_endpoint_key(id, None, ctx)
-        });
-        return Err(error);
-    }
-    set_active_definitions(definitions, ctx);
-    Ok(AISettings::as_ref(ctx).custom_endpoints.value().len() - 1)
-}
-
-pub(crate) fn save(
-    index: usize,
-    params: CustomEndpointParams,
-    ctx: &mut AppContext,
-) -> anyhow::Result<()> {
-    let mut definitions = AISettings::as_ref(ctx).custom_endpoints.value().clone();
-    let id = definitions
-        .id_at(index)
-        .cloned()
-        .ok_or_else(|| anyhow::anyhow!("custom endpoint index is out of bounds"))?;
-    definitions.insert(id.clone(), definition_from_params(params.clone()))?;
-    let old_key = ApiKeyManager::as_ref(ctx)
-        .custom_endpoint_key(&id)
-        .map(ToOwned::to_owned);
-    ApiKeyManager::handle(ctx).update(ctx, |manager, ctx| {
-        manager.persist_custom_endpoint_key(id.clone(), Some(params.api_key), ctx)
-    })?;
-    if let Err(error) = write_definitions(definitions.clone(), ctx) {
-        let _ = ApiKeyManager::handle(ctx).update(ctx, |manager, ctx| {
-            manager.persist_custom_endpoint_key(id, old_key, ctx)
-        });
-        return Err(error);
-    }
-    set_active_definitions(definitions, ctx);
-    Ok(())
-}
-
-pub(crate) fn remove(index: usize, ctx: &mut AppContext) -> anyhow::Result<()> {
-    let mut definitions = AISettings::as_ref(ctx).custom_endpoints.value().clone();
-    let id = definitions
-        .id_at(index)
-        .cloned()
-        .ok_or_else(|| anyhow::anyhow!("custom endpoint index is out of bounds"))?;
-    definitions.remove(&id);
-    write_definitions(definitions.clone(), ctx)?;
-    set_active_definitions(definitions, ctx);
-    let _ = ApiKeyManager::handle(ctx).update(ctx, |manager, ctx| {
-        manager.persist_custom_endpoint_key(id, None, ctx)
-    });
-    Ok(())
-}
-
-fn definition_from_params(params: CustomEndpointParams) -> CustomEndpointDefinition {
-    CustomEndpointDefinition {
-        name: params.name,
-        base_url: params.url,
-        schema: params.schema,
-        models: params
-            .models
-            .into_iter()
-            .map(|(name, alias, config_key)| CustomEndpointModel {
-                name,
-                alias,
-                config_key: config_key
-                    .filter(|key| !key.trim().is_empty())
-                    .unwrap_or_else(|| Uuid::new_v4().to_string()),
-            })
-            .collect(),
-    }
 }
 
 fn write_definitions(

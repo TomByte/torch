@@ -37,12 +37,6 @@ use crate::persistence::model::{
 use crate::settings::{AISettings, AISettingsChangedEvent, UsageDisplayUnit};
 use crate::ui_components::blended_colors;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum DisplayMode {
-    Settings,
-    Footer,
-}
-
 pub struct ConversationUsageInfo {
     pub credits_spent: f32,
     pub platform_credits_spent: f32,
@@ -97,11 +91,9 @@ pub enum ConversationUsageViewAction {
 }
 
 /// View to hold a conversation usage info block.
-/// This is used for both the usage footer and the usage history page in settings.
+/// This is used for the usage footer.
 pub struct ConversationUsageView {
     pub usage_info: ConversationUsageInfo,
-    /// The display mode for this view.
-    pub display_mode: DisplayMode,
     /// Optional timing information for the last set of responses (only shown in the footer version of this view).
     pub timing_info: Option<TimingInfo>,
     full_terminal_use_tooltip_mouse_state: MouseStateHandle,
@@ -135,29 +127,7 @@ pub struct ConversationUsageView {
 }
 
 impl ConversationUsageView {
-    pub fn new(
-        usage_info: ConversationUsageInfo,
-        display_mode: DisplayMode,
-        timing_info: Option<TimingInfo>,
-        full_terminal_use_tooltip_mouse_state: MouseStateHandle,
-    ) -> Self {
-        Self {
-            usage_info,
-            display_mode,
-            timing_info,
-            full_terminal_use_tooltip_mouse_state,
-            parent_conversation_id: None,
-            details_expanded: false,
-            show_all_clicked: false,
-            details_toggle_mouse_state: MouseStateHandle::default(),
-            show_more_mouse_state: MouseStateHandle::default(),
-            context_window_expanded: false,
-            context_window_toggle_mouse_state: MouseStateHandle::default(),
-            context_window_other_tooltip_mouse_state: MouseStateHandle::default(),
-        }
-    }
-
-    /// Constructs the view in `DisplayMode::Footer` with orchestration
+    /// Constructs the view with orchestration
     /// credit rollup wired in. The view subscribes to
     /// [`BlocklistAIHistoryEvent::ConversationUsageMetadataUpdated`] so it
     /// re-renders whenever any contributing conversation's usage metadata
@@ -223,7 +193,6 @@ impl ConversationUsageView {
 
         Self {
             usage_info,
-            display_mode: DisplayMode::Footer,
             timing_info,
             full_terminal_use_tooltip_mouse_state,
             parent_conversation_id: Some(parent_conversation_id),
@@ -238,15 +207,11 @@ impl ConversationUsageView {
     }
 
     /// Returns the current orchestration rollup for this view, or `None`
-    /// when the view is in settings mode, the parent conversation isn't
-    /// known, or the orchestrator has no locally-loaded descendants with
-    /// non-zero credits. The feature is self-gating: settings-mode views
-    /// and conversations without descendants short-circuit before any
-    /// rollup-specific UI is built, so no feature flag is needed.
+    /// when the parent conversation isn't known, or the orchestrator has no
+    /// locally-loaded descendants with non-zero credits. The feature is
+    /// self-gating: conversations without descendants short-circuit before
+    /// any rollup-specific UI is built, so no feature flag is needed.
     fn rollup(&self, app: &AppContext) -> Option<OrchestrationCreditRollup> {
-        if self.display_mode != DisplayMode::Footer {
-            return None;
-        }
         let parent_id = self.parent_conversation_id?;
         let history = BlocklistAIHistoryModel::as_ref(app);
         compute_orchestration_rollup(parent_id, history)
@@ -349,9 +314,7 @@ impl ConversationUsageView {
             .unwrap_or(self.usage_info.total_cost_in_cents);
         let total_usage_display_unit = effective_usage_unit(total_cost_in_cents_value, app);
 
-        if self.display_mode == DisplayMode::Footer
-            && self.usage_info.credits_spent_for_last_block.is_some()
-        {
+        if self.usage_info.credits_spent_for_last_block.is_some() {
             let last_block_credits = self.usage_info.credits_spent_for_last_block.unwrap();
             let last_block_usage_display_unit =
                 effective_usage_unit(self.usage_info.cost_in_cents_for_last_block, app);
@@ -623,8 +586,7 @@ impl ConversationUsageView {
         ));
 
         // Last response time
-        if self.display_mode == DisplayMode::Footer
-            && let Some(timing) = &self.timing_info
+        if let Some(timing) = &self.timing_info
             && (timing.time_to_first_token_ms != 0
                 || timing.total_agent_response_time_ms != 0
                 || timing.wall_to_wall_response_time_ms.is_some())
@@ -926,33 +888,24 @@ impl ConversationUsageView {
         appearance: &Appearance,
     ) -> Box<dyn Element> {
         let theme = appearance.theme();
-        let mut card_container = Container::new(content).with_background(theme.surface_2());
+        let card_container = Container::new(content)
+            .with_background(theme.surface_2())
+            .with_corner_radius(CornerRadius::with_all(Radius::Pixels(8.)))
+            .with_border(Border::all(1.0).with_border_fill(theme.outline()))
+            .with_uniform_margin(16.);
 
-        if let DisplayMode::Footer = self.display_mode {
-            card_container = card_container
-                .with_corner_radius(CornerRadius::with_all(Radius::Pixels(8.)))
-                .with_border(Border::all(1.0).with_border_fill(theme.outline()))
-                .with_uniform_margin(16.);
-        } else {
-            card_container =
-                card_container.with_corner_radius(CornerRadius::with_bottom(Radius::Pixels(6.)));
-        }
-
-        let mut res = Flex::column()
+        Flex::column()
             .with_main_axis_size(MainAxisSize::Min)
-            .with_cross_axis_alignment(CrossAxisAlignment::Stretch);
-
-        if let DisplayMode::Footer = self.display_mode {
-            res = res.with_child(
+            .with_cross_axis_alignment(CrossAxisAlignment::Stretch)
+            .with_child(
                 // Top divider
                 Container::new(Empty::new().finish())
                     .with_border(Border::top(2.0).with_border_fill(theme.outline()))
                     .with_overdraw_bottom(0.)
                     .finish(),
-            );
-        }
-
-        res.with_child(card_container.finish()).finish()
+            )
+            .with_child(card_container.finish())
+            .finish()
     }
 }
 

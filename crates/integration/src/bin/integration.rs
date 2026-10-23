@@ -419,7 +419,6 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
 
     register_test!(test_pass_control_sequences_to_long_running_block);
     register_test!(test_execution_profiles_load_from_settings_file);
-    register_test!(test_execution_profile_model_persists_and_hot_reloads_settings_file);
     register_test!(test_settings_file_migration_from_native_store);
     register_test!(test_settings_file_hot_reload_applies_new_values);
 
@@ -429,16 +428,13 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
     register_test!(test_settings_error_banner_on_reload_with_invalid_value);
 
     // Settings sidebar navigation and search
-    register_test!(test_settings_mouse_navigation_through_umbrella);
-    register_test!(test_settings_keyboard_navigation_down_into_collapsed_umbrella);
-    register_test!(test_settings_keyboard_navigation_up_into_collapsed_umbrella);
-    register_test!(test_settings_keyboard_navigation_after_manual_collapse);
-    register_test!(test_settings_search_filters_top_level_pages);
-    register_test!(test_settings_search_filters_subpages);
-    register_test!(test_settings_search_subpage_still_renders_content);
-    register_test!(test_settings_search_clear_restores_umbrella_state);
-    register_test!(test_settings_search_preserved_on_sidebar_click);
-    register_test!(test_settings_agent_mcp_servers_renders_standalone_page);
+    register_test!(test_settings_mouse_navigation);
+    register_test!(test_settings_keyboard_navigation_down);
+    register_test!(test_settings_keyboard_navigation_up);
+    register_test!(test_settings_keyboard_navigation_wraps);
+    register_test!(test_settings_search_filters_pages);
+    register_test!(test_settings_search_page_still_renders_content);
+    register_test!(test_settings_search_clear_restores_rows);
 
     register_test!(test_middle_click_paste);
 

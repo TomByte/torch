@@ -204,15 +204,6 @@ impl super::WarpConfig {
         Ok(path)
     }
 
-    /// Deletes a custom model router file from disk.
-    /// The filesystem watcher in [`Self::handle_warp_managed_paths_event`] will
-    /// pick up the deletion and reload `custom_model_routers`.
-    #[cfg(feature = "local_fs")]
-    pub fn delete_custom_model_router(source_path: &std::path::Path) -> anyhow::Result<()> {
-        std::fs::remove_file(source_path)
-            .map_err(|e| anyhow::anyhow!("could not delete router file: {e}"))
-    }
-
     /// This method takes a file name candidate (appends .yaml if missing) and a LaunchConfig as
     /// arguments. It saves the file and returns the filename used if successful.
     #[cfg(feature = "local_fs")]

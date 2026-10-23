@@ -14,7 +14,6 @@ use crate::terminal::input::profiles::search_item::ProfileSearchItem;
 #[derive(Clone, Debug)]
 pub enum SelectProfileMenuItem {
     Profile { profile_id: ExecutionProfileId },
-    ManageProfiles,
 }
 
 impl InlineMenuAction for SelectProfileMenuItem {
@@ -46,20 +45,6 @@ impl SyncDataSource for ProfileSelectorDataSource {
             .clone();
         let query_text = query.text.trim().to_lowercase();
         let mut results = Vec::new();
-        if query_text.is_empty() {
-            results.push(QueryResult::from(
-                ProfileSearchItem::new_manage_profiles_item(),
-            ));
-        } else if let Some(match_result) =
-            match_indices_case_insensitive("manage profiles", &query_text)
-        {
-            let score = match_result.score;
-            results.push(QueryResult::from(
-                ProfileSearchItem::new_manage_profiles_item()
-                    .with_match_result(match_result)
-                    .with_score(OrderedFloat(score as f64)),
-            ));
-        }
 
         let mut profiles: Vec<(ExecutionProfileId, String)> = profiles_model
             .get_all_profile_ids()

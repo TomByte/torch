@@ -825,7 +825,7 @@ impl CodeReviewView {
             }
             CodeFooterViewEvent::ManageServers => {
                 ctx.dispatch_typed_action(&WorkspaceAction::ShowSettingsPage(
-                    SettingsSection::EditorAndCodeReview,
+                    SettingsSection::Appearance,
                 ));
             }
             CodeFooterViewEvent::RestartServer { server } => {

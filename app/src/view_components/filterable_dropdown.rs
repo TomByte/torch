@@ -766,13 +766,6 @@ where
         self.dropdown.as_ref(ctx).items_len()
     }
 
-    pub fn clear_filter(&mut self, ctx: &mut ViewContext<Self>) {
-        self.filter_editor.update(ctx, |editor, ctx| {
-            editor.clear_buffer(ctx);
-            ctx.notify();
-        });
-    }
-
     pub fn set_menu_header_to_static(&mut self, header: &'static str) {
         self.static_menu_header = Some(header);
     }

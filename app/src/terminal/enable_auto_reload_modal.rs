@@ -14,6 +14,7 @@ use torchui::ui_components::button::ButtonVariant;
 use torchui::ui_components::components::{Coords, UiComponent as _, UiComponentStyles};
 use torchui::{AppContext, Element, Entity, SingletonEntity as _, View, ViewContext, ViewHandle};
 
+use super::buy_credits_banner::create_discount_badge;
 use crate::ai::blocklist::view_util::usage_display_unit;
 use crate::features::FeatureFlag;
 use crate::menu::MenuItemFields;
@@ -23,7 +24,6 @@ use crate::pricing::{PricingInfoModel, PricingInfoModelEvent};
 use crate::send_telemetry_from_ctx;
 use crate::server::telemetry::{AutoReloadModalAction, TelemetryEvent};
 use crate::settings::{AISettings, AISettingsChangedEvent};
-use crate::settings_view::create_discount_badge;
 use crate::ui_components::blended_colors;
 use crate::view_components::{Dropdown, DropdownAction, ToastFlavor};
 use crate::workspaces::user_workspaces::{UserWorkspaces, UserWorkspacesEvent};

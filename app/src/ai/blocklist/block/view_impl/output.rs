@@ -120,7 +120,6 @@ use crate::ai::skills::{
 use crate::appearance::Appearance;
 use crate::code::diff_viewer::DisplayMode;
 use crate::code::editor_management::CodeSource;
-use crate::settings_view::SettingsSection;
 use crate::terminal::ShellLaunchData;
 #[cfg(not(target_family = "wasm"))]
 use crate::terminal::input::slash_commands::fork_button_action;
@@ -136,7 +135,6 @@ use crate::view_components::action_button::ActionButton;
 use crate::view_components::compactible_action_button::{
     CompactibleActionButton, RenderCompactibleActionButton, SMALL_SIZE_SWITCH_THRESHOLD,
 };
-use crate::workspace::WorkspaceAction;
 use crate::workspaces::user_workspaces::UserWorkspaces;
 use crate::workspaces::workspace::ChargeUnit;
 use crate::{AIAgentTodoList, FeatureFlag};
@@ -1230,9 +1228,6 @@ pub(super) fn render(props: Props, app: &AppContext) -> Box<dyn Element> {
                     FailedOutputProps {
                         error,
                         is_ai_input_enabled: props.is_ai_input_enabled,
-                        invalid_api_key_button_handle: &props
-                            .state_handles
-                            .invalid_api_key_button_handle,
                         subscribe_button_handle: &props.state_handles.subscribe_button_handle,
                         aws_bedrock_credentials_error_view: props
                             .aws_bedrock_credentials_error_view,
@@ -1474,36 +1469,6 @@ fn render_search_codebase(
                             .supports_unselected_state()
                             .build()
                             .finish(),
-                    )
-                    .with_child(
-                        Expanded::new(
-                            1.,
-                            Align::new(
-                                appearance
-                                    .ui_builder()
-                                    .link(
-                                        "Manage AI Autonomy permissions".into(),
-                                        None,
-                                        Some(Box::new(move |ctx| {
-                                            ctx.dispatch_typed_action(
-                                                WorkspaceAction::ShowSettingsPageWithSearch {
-                                                    search_query: "Autonomy".to_string(),
-                                                    section: Some(SettingsSection::WarpAgent),
-                                                },
-                                            );
-                                        })),
-                                        props
-                                            .state_handles
-                                            .manage_autonomy_settings_link_handle
-                                            .clone(),
-                                    )
-                                    .build()
-                                    .finish(),
-                            )
-                            .right()
-                            .finish(),
-                        )
-                        .finish(),
                     )
                     .finish(),
             )
@@ -2094,10 +2059,6 @@ fn render_read_files(
                     props
                         .state_handles
                         .autoread_files_speedbump_checkbox_handle
-                        .clone(),
-                    props
-                        .state_handles
-                        .manage_autonomy_settings_link_handle
                         .clone(),
                     app,
                 ));
@@ -2823,10 +2784,6 @@ fn render_file_retrieval_tool(
                 props
                     .state_handles
                     .autoread_files_speedbump_checkbox_handle
-                    .clone(),
-                props
-                    .state_handles
-                    .manage_autonomy_settings_link_handle
                     .clone(),
                 app,
             ));

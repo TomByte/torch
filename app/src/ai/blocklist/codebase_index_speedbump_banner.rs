@@ -24,7 +24,6 @@ const ALLOW_SETTINGS_TEXT: &str = "Allow automatic indexing";
 const DISMISS_FOREVER_BUTTON_TEXT: &str = "Don't show again";
 
 const INDEXING_HEADER: &str = "Indexing codebase";
-const VIEW_STATUS_BUTTON_TEXT: &str = "View status";
 
 #[derive(PartialEq, Clone)]
 pub enum VisibilityState {
@@ -37,7 +36,6 @@ pub enum CodebaseIndexSpeedbumpBannerAction {
     ToggleAlwaysAllow,
     AllowIndexing,
     Close,
-    ViewStatus,
     DismissForever,
 }
 
@@ -54,7 +52,6 @@ pub struct CodebaseIndexSpeedbumpBannerState {
     // Mouse state for the close button that dismisses the banner without executing indexing.
     pub close_button_mouse_state: MouseStateHandle,
     // Mouse state for the view status button that shows the code indexing settings page.
-    pub view_status_button_mouse_state: MouseStateHandle,
     // Mouse state for the "Don't show again" button that globally dismisses the banner.
     pub dont_show_again_mouse_state: MouseStateHandle,
     // Whether the "Always allow" checkbox is checked.
@@ -75,7 +72,6 @@ impl CodebaseIndexSpeedbumpBannerState {
             checkbox_mouse_state: Default::default(),
             allow_button_mouse_state: Default::default(),
             close_button_mouse_state: Default::default(),
-            view_status_button_mouse_state: Default::default(),
             dont_show_again_mouse_state: Default::default(),
             always_allow_checked: true,
             visibility_state: VisibilityState::Speedbump,
@@ -289,43 +285,7 @@ impl CodebaseIndexSpeedbumpBannerState {
                     .finish(),
                 );
             }
-            VisibilityState::Indexing => {
-                banner.add_child(
-                    Container::new(
-                        Align::new(
-                            ui_builder
-                                .button(
-                                    ButtonVariant::Outlined,
-                                    self.view_status_button_mouse_state.clone(),
-                                )
-                                .with_text_label(VIEW_STATUS_BUTTON_TEXT.to_string())
-                                .with_style(UiComponentStyles {
-                                    font_color: Some(appearance.theme().foreground().into_solid()),
-                                    font_size: Some(appearance.ui_font_size()),
-                                    padding: Some(Coords {
-                                        top: 5.0,
-                                        bottom: 5.0,
-                                        left: 8.0,
-                                        right: 8.0,
-                                    }),
-                                    ..Default::default()
-                                })
-                                .build()
-                                .on_click(|ctx, _, _| {
-                                    ctx.dispatch_typed_action(
-                                        TerminalAction::CodebaseIndexSpeedbumpBanner(
-                                            CodebaseIndexSpeedbumpBannerAction::ViewStatus,
-                                        ),
-                                    );
-                                })
-                                .finish(),
-                        )
-                        .finish(),
-                    )
-                    .with_horizontal_padding(4.)
-                    .finish(),
-                );
-            }
+            VisibilityState::Indexing => {}
         }
 
         // Add the close button

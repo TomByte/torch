@@ -554,11 +554,6 @@ impl FileBasedMCPManager {
             .map(|(hash, _)| *hash)
     }
 
-    /// Returns all detected file-based MCP server installations.
-    pub fn file_based_servers(&self) -> Vec<&TemplatableMCPServerInstallation> {
-        self.file_based_servers.values().collect()
-    }
-
     /// Returns the installation with the given UUID, if any.
     pub fn get_installation_by_uuid(
         &self,
@@ -567,27 +562,6 @@ impl FileBasedMCPManager {
         self.file_based_servers
             .values()
             .find(|server| server.uuid() == uuid)
-    }
-
-    /// Returns all root paths for the given installation scoped to a specific provider.
-    pub fn directory_paths_for_installation_and_provider(
-        &self,
-        uuid: Uuid,
-        provider: MCPProvider,
-    ) -> Vec<PathBuf> {
-        let Some(hash) = self.get_hash_by_uuid(uuid) else {
-            return vec![];
-        };
-        self.file_based_servers_by_root
-            .iter()
-            .filter(|(_, provider_map)| {
-                provider_map
-                    .get(&provider)
-                    .is_some_and(|hashes| hashes.contains(&hash))
-            })
-            .map(|(root, _)| root.clone())
-            .sorted()
-            .collect()
     }
 
     /// Returns the directory a file-based MCP installation should be spawned from

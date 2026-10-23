@@ -9,7 +9,6 @@ use itertools::Itertools;
 use settings::Setting as _;
 use settings::manager::SettingsManager;
 use torch_core::channel::ChannelState;
-use torch_core::context_flag::ContextFlag;
 use torch_errors::{report_error, report_if_error};
 use torch_util::path::user_friendly_path;
 use torchui::actions::StandardAction;
@@ -152,14 +151,6 @@ fn make_new_app_menu(ctx: &AppContext) -> Menu {
             CustomAction::ToggleResourceCenter,
             ctx,
         ))
-    }
-
-    if !ChannelState::is_local_only() {
-        menu_items.extend([
-            MenuItem::Separator,
-            updateable_custom_item_without_checkmark(CustomAction::ReferAFriend, ctx),
-            MenuItem::Separator,
-        ]);
     }
 
     let preferences_menu_items = vec![
@@ -608,13 +599,6 @@ fn make_new_ai_menu(ctx: &AppContext) -> Menu {
         ]);
     }
 
-    if FeatureFlag::McpServer.is_enabled() && ContextFlag::ShowMCPServers.is_enabled() {
-        items.push(updateable_custom_item_without_checkmark(
-            CustomAction::OpenMCPServerCollection,
-            ctx,
-        ));
-    }
-
     Menu::new("AI", items)
 }
 
@@ -648,10 +632,6 @@ fn make_new_blocks_menu(ctx: &AppContext) -> Menu {
     if !ChannelState::is_local_only() {
         items.push(updateable_custom_item_without_checkmark(
             CustomAction::CreateBlockPermalink,
-            ctx,
-        ));
-        items.push(non_updateable_custom_item(
-            CustomAction::ViewSharedBlocks,
             ctx,
         ));
     }
@@ -688,9 +668,7 @@ fn make_new_drive_menu(ctx: &AppContext) -> Menu {
         MenuItem::Separator,
         updateable_custom_item_without_checkmark(CustomAction::ToggleWarpDrive, ctx),
         updateable_custom_item_without_checkmark(CustomAction::SearchDrive, ctx),
-        updateable_custom_item_without_checkmark(CustomAction::OpenTeamSettings, ctx),
         updateable_custom_item_without_checkmark(CustomAction::OpenAIFactCollection, ctx),
-        updateable_custom_item_without_checkmark(CustomAction::OpenMCPServerCollection, ctx),
     ]);
 
     items.push(updateable_custom_item_without_checkmark(

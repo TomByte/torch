@@ -1542,21 +1542,6 @@ pub fn init(app: &mut AppContext) {
     ]);
 
     app.register_editable_bindings([EditableBinding::new(
-        "workspace:open_mcp_servers",
-        BindingDescription::new("Open MCP Servers")
-            .with_custom_description(bindings::MAC_MENUS_CONTEXT, "Open MCP Servers"),
-        WorkspaceAction::OpenMCPServerCollection,
-    )
-    .with_enabled(|| {
-        FeatureFlag::McpServer.is_enabled()
-            && ContextFlag::ShowMCPServers.is_enabled()
-            && has_cloud_surfaces()
-    })
-    .with_custom_action(CustomAction::OpenMCPServerCollection)
-    .with_context_predicate(id!("Workspace") & id!(flags::IS_ANY_AI_ENABLED))
-    .with_group(bindings::BindingGroup::WarpAi.as_str())]);
-
-    app.register_editable_bindings([EditableBinding::new(
         "workspace:jump_to_latest_toast",
         "Jump to latest agent task",
         WorkspaceAction::JumpToLatestToast,
@@ -1608,15 +1593,6 @@ fn add_open_setting_pages_as_editable_binding(app: &mut AppContext) {
         .with_group(bindings::BindingGroup::Settings.as_str())
         .with_custom_action(CustomAction::ShowSettings),
         EditableBinding::new(
-            "workspace:show_settings_account_page",
-            "Open Settings: Account",
-            WorkspaceAction::ShowSettingsPage(SettingsSection::Account),
-        )
-        .with_enabled(has_cloud_surfaces)
-        .with_context_predicate(id!("Workspace"))
-        .with_group(bindings::BindingGroup::Settings.as_str())
-        .with_custom_action(CustomAction::ShowAccount),
-        EditableBinding::new(
             "workspace:show_settings_appearance_page",
             BindingDescription::new("Open Settings: Appearance")
                 .with_custom_description(bindings::MAC_MENUS_CONTEXT, "Appearance..."),
@@ -1632,16 +1608,6 @@ fn add_open_setting_pages_as_editable_binding(app: &mut AppContext) {
         )
         .with_group(bindings::BindingGroup::Settings.as_str())
         .with_context_predicate(id!("Workspace")),
-        EditableBinding::new(
-            "workspace:show_settings_shared_blocks_page",
-            BindingDescription::new("Open Settings: Shared Blocks")
-                .with_custom_description(bindings::MAC_MENUS_CONTEXT, "View Shared Blocks..."),
-            WorkspaceAction::ShowSettingsPage(SettingsSection::SharedBlocks),
-        )
-        .with_enabled(has_cloud_surfaces)
-        .with_group(bindings::BindingGroup::Settings.as_str())
-        .with_context_predicate(id!("Workspace"))
-        .with_custom_action(CustomAction::ViewSharedBlocks),
         EditableBinding::new(
             "workspace:show_settings_keyboard_shortcuts_page",
             BindingDescription::new("Open Settings: Keyboard Shortcuts").with_custom_description(
@@ -1663,77 +1629,10 @@ fn add_open_setting_pages_as_editable_binding(app: &mut AppContext) {
         .with_context_predicate(id!("Workspace"))
         .with_custom_action(CustomAction::ShowAboutWarp),
         EditableBinding::new(
-            "workspace:show_settings_teams_page",
-            BindingDescription::new("Open Settings: Teams")
-                .with_custom_description(bindings::MAC_MENUS_CONTEXT, "Open Team Settings"),
-            WorkspaceAction::ShowSettingsPage(SettingsSection::Teams),
-        )
-        .with_enabled(has_cloud_surfaces)
-        .with_group(bindings::BindingGroup::Settings.as_str())
-        .with_custom_action(CustomAction::OpenTeamSettings)
-        .with_context_predicate(id!("Workspace")),
-        EditableBinding::new(
             "workspace:show_settings_privacy_page",
             BindingDescription::new(format!("Open Settings: {}", SettingsSection::Privacy)),
             WorkspaceAction::ShowSettingsPage(SettingsSection::Privacy),
         )
-        .with_group(bindings::BindingGroup::Settings.as_str())
-        .with_context_predicate(id!("Workspace")),
-        EditableBinding::new(
-            "workspace:show_settings_warpify_page",
-            BindingDescription::new("Open Settings: Warpify")
-                .with_custom_description(bindings::MAC_MENUS_CONTEXT, "Configure Warpify..."),
-            WorkspaceAction::ShowSettingsPage(SettingsSection::Warpify),
-        )
-        .with_enabled(has_cloud_surfaces)
-        .with_group(bindings::BindingGroup::Settings.as_str())
-        .with_context_predicate(id!("Workspace")),
-        EditableBinding::new(
-            "workspace:show_ai_settings_page",
-            BindingDescription::new("Open Settings: AI"),
-            WorkspaceAction::ShowSettingsPage(SettingsSection::WarpAgent),
-        )
-        .with_enabled(|| FeatureFlag::AgentMode.is_enabled())
-        .with_group(bindings::BindingGroup::Settings.as_str())
-        .with_context_predicate(id!("Workspace")),
-        EditableBinding::new(
-            "workspace:show_settings_billing_and_usage_page",
-            BindingDescription::new("Open Settings: Billing and usage"),
-            WorkspaceAction::ShowSettingsPage(SettingsSection::BillingAndUsage),
-        )
-        .with_enabled(has_cloud_surfaces)
-        .with_group(bindings::BindingGroup::Settings.as_str())
-        .with_context_predicate(id!("Workspace")),
-        EditableBinding::new(
-            "workspace:show_settings_code_page",
-            BindingDescription::new("Open Settings: Code"),
-            WorkspaceAction::ShowSettingsPage(SettingsSection::CodeIndexing),
-        )
-        .with_enabled(code::editor_available)
-        .with_group(bindings::BindingGroup::Settings.as_str())
-        .with_context_predicate(id!("Workspace")),
-        EditableBinding::new(
-            "workspace:show_settings_referrals_page",
-            BindingDescription::new("Open Settings: Referrals"),
-            WorkspaceAction::ShowSettingsPage(SettingsSection::Referrals),
-        )
-        .with_enabled(has_cloud_surfaces)
-        .with_group(bindings::BindingGroup::Settings.as_str())
-        .with_context_predicate(id!("Workspace")),
-        EditableBinding::new(
-            "workspace:show_settings_environments_page",
-            BindingDescription::new("Open Settings: Environments"),
-            WorkspaceAction::ShowSettingsPage(SettingsSection::CloudEnvironments),
-        )
-        .with_enabled(has_cloud_surfaces)
-        .with_group(bindings::BindingGroup::Settings.as_str())
-        .with_context_predicate(id!("Workspace")),
-        EditableBinding::new(
-            "workspace:show_mcp_servers_settings_page",
-            BindingDescription::new("Open Settings: MCP Servers"),
-            WorkspaceAction::ShowSettingsPage(SettingsSection::AgentMCPServers),
-        )
-        .with_enabled(has_cloud_surfaces)
         .with_group(bindings::BindingGroup::Settings.as_str())
         .with_context_predicate(id!("Workspace")),
         EditableBinding::new(
@@ -1766,14 +1665,6 @@ fn add_overflow_menu_items_as_editable_binding(app: &mut AppContext) {
 
     // Add the ability to open all overflow menu items to the command palette.
     app.register_editable_bindings([
-        EditableBinding::new(
-            "workspace:show_invite_modal",
-            "Invite People...",
-            WorkspaceAction::ShowReferralSettingsPage,
-        )
-        .with_enabled(has_cloud_surfaces)
-        .with_context_predicate(id!("Workspace"))
-        .with_custom_action(CustomAction::ReferAFriend),
         EditableBinding::new(
             "workspace:link_to_slack",
             if ChannelState::is_local_only() {

@@ -29,15 +29,12 @@ use super::agent_assisted_environment_modal::{
 use super::delete_environment_confirmation_dialog::{
     DeleteEnvironmentConfirmationDialog, DeleteEnvironmentConfirmationDialogEvent,
 };
-use super::settings_page::{
-    CONTENT_FONT_SIZE, MatchData, PageType, SettingsPageEvent, SettingsPageMeta,
-    SettingsPageViewHandle, SettingsWidget,
-};
+use super::editor_text_colors;
+use super::settings_page::{CONTENT_FONT_SIZE, PageType, SettingsPageEvent, SettingsWidget};
 use super::update_environment_form::{
     EnvironmentFormInitArgs, EnvironmentFormValues, UpdateEnvironmentForm,
     UpdateEnvironmentFormEvent,
 };
-use super::{SettingsSection, editor_text_colors};
 use crate::ai::ambient_agents::github_auth_url::GithubAuthRedirectTarget;
 use crate::ai::cloud_environments::{self, CloudAmbientAgentEnvironment};
 use crate::appearance::Appearance;
@@ -2007,39 +2004,6 @@ impl EnvironmentsPageWidget {
     }
 }
 
-impl SettingsPageMeta for EnvironmentsPageView {
-    fn section() -> SettingsSection {
-        SettingsSection::CloudEnvironments
-    }
-    fn on_page_selected(&mut self, _allow_steal_focus: bool, ctx: &mut ViewContext<Self>) {
-        self.environment_form.update(ctx, |form, ctx| {
-            form.fetch_github_repos(ctx);
-        });
-        // Refresh cloud objects so the environments list reflects recent changes (e.g. a newly
-        // created environment from the terminal flow) without waiting for the next poll.
-        #[cfg(not(any(test, feature = "integration_tests")))]
-        UpdateManager::handle(ctx).update(ctx, |manager, ctx| {
-            manager.refresh_updated_objects(ctx);
-        });
-    }
-
-    fn should_render(&self, _ctx: &AppContext) -> bool {
-        true
-    }
-
-    fn update_filter(&mut self, query: &str, ctx: &mut ViewContext<Self>) -> MatchData {
-        self.page.update_filter(query, ctx)
-    }
-
-    fn scroll_to_widget(&mut self, widget_id: &'static str) {
-        self.page.scroll_to_widget(widget_id)
-    }
-
-    fn clear_highlighted_widget(&mut self) {
-        self.page.clear_highlighted_widget();
-    }
-}
-
 use crate::pane_group::focus_state::PaneFocusHandle;
 use crate::pane_group::pane::BackingView;
 use crate::pane_group::pane::view::{HeaderContent, HeaderRenderContext};
@@ -2080,11 +2044,5 @@ impl BackingView for EnvironmentsPageView {
         // Use a lower minimum width when used as a pane to allow narrow layouts.
         // This affects when the SettingsPage switches into horizontal-scroll mode.
         self.page.set_min_page_width(260.);
-    }
-}
-
-impl From<ViewHandle<EnvironmentsPageView>> for SettingsPageViewHandle {
-    fn from(view_handle: ViewHandle<EnvironmentsPageView>) -> Self {
-        SettingsPageViewHandle::CloudEnvironments(view_handle)
     }
 }

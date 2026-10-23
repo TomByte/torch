@@ -894,10 +894,6 @@ pub trait CloudObjectMetadataExt {
     /// Returns None if the revision and last_editor are None.
     fn semantic_editing_history(&self, app: &AppContext) -> Option<String>;
 
-    /// Returns a semantic summary of the object's creator. For example, "Alice" or "joan@example.com".
-    #[cfg_attr(target_family = "wasm", expect(dead_code))]
-    fn semantic_creator(&self, app: &AppContext) -> Option<String>;
-
     /// Returns semantic summary of countdown of days until permadeletion.
     /// Ex: "27 days until permanent deletion"
     fn semantic_permadeletion_countdown(&self, app: &AppContext) -> Option<String>;
@@ -927,14 +923,6 @@ impl CloudObjectMetadataExt for CloudObjectMetadata {
         };
 
         Some(full_string)
-    }
-
-    fn semantic_creator(&self, app: &AppContext) -> Option<String> {
-        // Todo(Jack): add creation ts.
-        let user_profiles = UserProfiles::as_ref(app);
-        self.creator_uid
-            .as_ref()
-            .and_then(|uid| user_profiles.displayable_identifier_for_uid(UserUid::new(uid)))
     }
 
     fn semantic_permadeletion_countdown(&self, app: &AppContext) -> Option<String> {

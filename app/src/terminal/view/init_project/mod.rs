@@ -106,7 +106,6 @@ pub enum ProjectScopedRulesResult {
 struct CodebaseContextMouseStateHandles {
     index_button: MouseStateHandle,
     skip_button: MouseStateHandle,
-    view_status_button: MouseStateHandle,
 }
 
 struct ProjectRulesMouseStateHandles {
@@ -149,7 +148,6 @@ pub enum InitProjectBlockAction {
     GenerateRules,
     RegenerateRules,
     SkipRules,
-    ViewCodebaseContextStatus,
     StartCreateEnvironment,
     SkipCreateEnvironment,
 }
@@ -666,30 +664,10 @@ impl InitStepBlock {
             return Empty::new().finish();
         };
 
-        let StepState::CodebaseContext { mouse_states, .. } = &self.state else {
-            return Empty::new().finish();
-        };
-
         match indexing_result {
             CodebaseIndexingResult::Accepted => {
                 RenderableAction::new("Codebase index started", app)
                     .with_icon(Icon::Check.to_warpui_icon(Fill::success()).finish())
-                    .with_action_button(
-                        Appearance::as_ref(app)
-                            .ui_builder()
-                            .button(
-                                ButtonVariant::Outlined,
-                                mouse_states.view_status_button.clone(),
-                            )
-                            .with_text_label("View index status".to_string())
-                            .build()
-                            .on_click(|ctx, _, _| {
-                                ctx.dispatch_typed_action(
-                                    InitProjectBlockAction::ViewCodebaseContextStatus,
-                                );
-                            })
-                            .finish(),
-                    )
                     .with_content_item_spacing()
                     .render(app)
                     .finish()
@@ -1257,17 +1235,6 @@ impl TypedActionView for InitStepBlock {
                         InitActionResult::ProjectScopedRules(ProjectScopedRulesResult::Skipped),
                         ctx,
                     );
-                });
-            }
-            InitProjectBlockAction::ViewCodebaseContextStatus => {
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::AgentModeSetupCodebaseContextAction {
-                        action: AgentModeSetupCodebaseContextActionType::ViewIndexStatus,
-                    },
-                    ctx
-                );
-                self.model.update(ctx, |_, ctx| {
-                    ctx.emit(InitProjectModelEvent::ViewCodebaseContextStatus);
                 });
             }
             InitProjectBlockAction::StartCreateEnvironment => {

@@ -47,7 +47,6 @@ use crate::server::telemetry::TelemetryEvent;
 use crate::settings::{
     AISettings, EnforceMinimumContrast, FontSettings, FontSettingsChangedEvent, PrivacySettings,
 };
-use crate::settings_view::SettingsSection;
 use crate::terminal::TerminalModel;
 use crate::terminal::grid_renderer::{self};
 use crate::terminal::ligature_settings::{LigatureSettings, should_use_ligature_rendering};
@@ -58,7 +57,6 @@ use crate::themes::theme::WarpTheme;
 use crate::ui_components::icons::Icon;
 use crate::util::bindings::CustomAction;
 use crate::view_components::ToastFlavor;
-use crate::workspace::WorkspaceAction;
 use crate::workspaces::user_workspaces::UserWorkspaces;
 
 const PADDING: f32 = 30.;
@@ -111,7 +109,6 @@ struct MouseStateHandles {
     get_embed_button_mouse_state: MouseStateHandle,
     create_link_button_mouse_state: MouseStateHandle,
     copy_button_mouse_state: MouseStateHandle,
-    manage_permalinks_mouse_state: MouseStateHandle,
     redact_secrets_mouse_state: MouseStateHandle,
 }
 
@@ -755,40 +752,6 @@ impl ShareBlockModal {
         col.finish()
     }
 
-    fn render_manage_permalinks_button(&self, appearance: &Appearance) -> Box<dyn Element> {
-        let mut button = appearance
-            .ui_builder()
-            .button(
-                ButtonVariant::Text,
-                self.mouse_state_handles
-                    .manage_permalinks_mouse_state
-                    .clone(),
-            )
-            .with_centered_text_label("Manage shared blocks".to_string())
-            .with_style(
-                self.button_style_overrides(appearance)
-                    .set_font_size(12.)
-                    .set_padding(Coords {
-                        top: 7.,
-                        bottom: 7.,
-                        left: 12.,
-                        right: 12.,
-                    })
-                    .set_width(170.),
-            )
-            .build()
-            .on_click(|ctx, _, _| {
-                ctx.dispatch_typed_action(ShareBlockModalAction::Close);
-                ctx.dispatch_typed_action(WorkspaceAction::ShowSettingsPage(
-                    SettingsSection::SharedBlocks,
-                ));
-            });
-        if matches!(self.request_state, ShareRequestState::Pending(_)) {
-            button = button.disable();
-        }
-        button.finish()
-    }
-
     fn render_copy_button(
         &self,
         action: ShareBlockModalAction,
@@ -889,7 +852,6 @@ impl ShareBlockModal {
                 Shrinkable::new(1., Align::new(modal_title_or_block_title).left().finish())
                     .finish(),
             )
-            .with_child(self.render_manage_permalinks_button(appearance))
             .with_child(self.render_close_modal_button(appearance))
             .finish();
         column.add_child(

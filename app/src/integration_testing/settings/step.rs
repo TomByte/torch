@@ -7,7 +7,6 @@ use crate::integration_testing::step::new_step_with_default_assertions;
 use crate::integration_testing::view_getters::{settings_view, theme_chooser_view};
 use crate::settings_view::{
     SEARCH_EDITOR_POSITION_ID, SettingsAction, SettingsSection, nav_page_position_id,
-    nav_subpage_position_id, nav_umbrella_position_id,
 };
 use crate::window_settings::WindowSettings;
 use crate::workspace::{Workspace, WorkspaceAction};
@@ -48,22 +47,10 @@ pub fn open_settings_page(section: SettingsSection) -> TestStep {
         )
 }
 
-/// Clicks a top-level sidebar row.
+/// Clicks a sidebar row.
 pub fn click_settings_nav_page(section: SettingsSection) -> TestStep {
     new_step_with_default_assertions(&format!("Click settings nav row {section:?}"))
         .with_click_on_saved_position(nav_page_position_id(section))
-}
-
-/// Clicks an umbrella header row, toggling it open or closed.
-pub fn click_settings_umbrella(label: &'static str) -> TestStep {
-    new_step_with_default_assertions(&format!("Click settings umbrella \"{label}\""))
-        .with_click_on_saved_position(nav_umbrella_position_id(label))
-}
-
-/// Clicks a subpage row nested under an expanded umbrella.
-pub fn click_settings_nav_subpage(section: SettingsSection) -> TestStep {
-    new_step_with_default_assertions(&format!("Click settings subpage row {section:?}"))
-        .with_click_on_saved_position(nav_subpage_position_id(section))
 }
 
 /// Types `query` into the settings search input, focusing it first.
@@ -143,29 +130,11 @@ fn assert_row_painted(position_id: String, description: String, visible: bool) -
     )
 }
 
-/// Asserts whether a top-level sidebar row is currently rendered.
+/// Asserts whether a sidebar row is currently rendered.
 pub fn assert_settings_nav_page_visible(section: SettingsSection, visible: bool) -> TestStep {
     assert_row_painted(
         nav_page_position_id(section),
         format!("nav row {section:?}"),
-        visible,
-    )
-}
-
-/// Asserts whether a subpage row nested under an umbrella is currently rendered.
-pub fn assert_settings_nav_subpage_visible(section: SettingsSection, visible: bool) -> TestStep {
-    assert_row_painted(
-        nav_subpage_position_id(section),
-        format!("subpage row {section:?}"),
-        visible,
-    )
-}
-
-/// Asserts whether an umbrella header row is currently rendered.
-pub fn assert_settings_umbrella_visible(label: &'static str, visible: bool) -> TestStep {
-    assert_row_painted(
-        nav_umbrella_position_id(label),
-        format!("umbrella header \"{label}\""),
         visible,
     )
 }
@@ -182,24 +151,6 @@ pub fn assert_settings_widget_rendered(widget_id: &'static str, rendered: bool) 
         widget_id.to_string(),
         format!("settings widget {widget_id}"),
         rendered,
-    )
-}
-
-/// Asserts whether the umbrella labelled `label` is expanded.
-pub fn assert_umbrella_expanded(label: &'static str, expanded: bool) -> TestStep {
-    TestStep::new(&format!(
-        "Assert umbrella \"{label}\" expanded is {expanded}"
-    ))
-    .add_named_assertion(
-        format!("Umbrella \"{label}\" expanded is {expanded}"),
-        move |app, window_id| {
-            let actual =
-                settings_view(app, window_id).read(app, |view, _| view.is_umbrella_expanded(label));
-            async_assert!(
-                actual == Some(expanded),
-                "Umbrella \"{label}\" expanded should be {expanded}, was {actual:?}"
-            )
-        },
     )
 }
 

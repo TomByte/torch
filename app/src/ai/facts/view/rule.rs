@@ -2,15 +2,13 @@ use std::fmt::Debug;
 use std::path::PathBuf;
 
 use ai::project_context::model::{ProjectContextModel, ProjectContextModelEvent};
-use markdown_parser::weight::CustomWeight;
-use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
 use torch_core::ui::appearance::{Appearance, AppearanceEvent};
 use torch_core::ui::theme::color::internal_colors;
 use torch_util::local_or_remote_path::LocalOrRemotePath;
 use torchui::elements::{
     Align, Border, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
-    Expanded, Flex, FormattedTextElement, HighlightedHyperlink, Hoverable, MainAxisAlignment,
-    MainAxisSize, MouseStateHandle, ParentElement, Shrinkable,
+    Expanded, Flex, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement,
+    Shrinkable,
 };
 use torchui::platform::{Cursor, FilePickerConfiguration};
 use torchui::ui_components::button::ButtonVariant;
@@ -54,11 +52,6 @@ const ZERO_STATE_TEXT: &str =
 const ZERO_STATE_TEXT_PROJECT: &str =
     "Once you generate a WARP.md rules file for a project, it will appear here.";
 
-const DISABLED_BANNER_TEXT: &str =
-    "Your rules are disabled and won't be used as context in sessions. You can ";
-const DISABLED_BANNER_LINK_TEXT: &str = "turn it back on";
-const DISABLED_BANNER_TEXT_2: &str = " anytime.";
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RuleScope {
     Global,
@@ -69,7 +62,6 @@ pub enum RuleScope {
 pub enum RuleViewEvent {
     AddRule,
     Edit(SyncId),
-    OpenSettings,
     OpenFile(LocalOrRemotePath),
     InitializeProject(PathBuf),
 }
@@ -79,7 +71,6 @@ pub enum RuleViewAction {
     AddRule,
     InitializeProject,
     Edit(SyncId),
-    OpenSettings,
     SelectScope(RuleScope),
     OpenFile(LocalOrRemotePath),
 }
@@ -159,7 +150,6 @@ pub struct RuleView {
     search_bar: ViewHandle<SearchBar>,
     add_button: ViewHandle<ActionButton>,
     initialize_button: ViewHandle<ActionButton>,
-    disabled_banner_highlight_index: HighlightedHyperlink,
     current_scope: RuleScope,
     global_tab_mouse_state: MouseStateHandle,
     project_tab_mouse_state: MouseStateHandle,
@@ -313,7 +303,6 @@ impl RuleView {
             search_bar,
             add_button,
             initialize_button,
-            disabled_banner_highlight_index: Default::default(),
             current_scope: RuleScope::Global,
             global_tab_mouse_state: Default::default(),
             project_tab_mouse_state: Default::default(),
@@ -597,63 +586,6 @@ impl RuleView {
             .finish(),
         )
         .with_margin_left(style::SECTION_MARGIN)
-        .finish()
-    }
-
-    fn render_disabled_banner(&self, appearance: &Appearance) -> Box<dyn Element> {
-        let mut link = FormattedTextFragment::hyperlink(DISABLED_BANNER_LINK_TEXT, "Settings > AI");
-        link.styles.weight = Some(CustomWeight::Bold);
-
-        let formatted_text = FormattedTextElement::new(
-            FormattedText::new([FormattedTextLine::Line(vec![
-                FormattedTextFragment::bold(DISABLED_BANNER_TEXT),
-                link,
-                FormattedTextFragment::bold(DISABLED_BANNER_TEXT_2),
-            ])]),
-            style::SUBTEXT_FONT_SIZE,
-            appearance.ui_font_family(),
-            appearance.ui_font_family(),
-            appearance
-                .theme()
-                .sub_text_color(appearance.theme().background())
-                .into(),
-            self.disabled_banner_highlight_index.clone(),
-        )
-        .with_hyperlink_font_color(internal_colors::accent_fg_strong(appearance.theme()).into())
-        .register_default_click_handlers(|_, ctx, _| {
-            ctx.dispatch_typed_action(RuleViewAction::OpenSettings);
-        });
-
-        Container::new(
-            Flex::row()
-                .with_cross_axis_alignment(CrossAxisAlignment::Center)
-                .with_child(
-                    Container::new(
-                        ConstrainedBox::new(
-                            Icon::Info
-                                .to_warpui_icon(
-                                    appearance
-                                        .theme()
-                                        .sub_text_color(appearance.theme().background()),
-                                )
-                                .finish(),
-                        )
-                        .with_width(style::BANNER_ICON_SIZE)
-                        .with_height(style::BANNER_ICON_SIZE)
-                        .finish(),
-                    )
-                    .with_margin_right(style::ROW_ICON_MARGIN)
-                    .finish(),
-                )
-                .with_child(Expanded::new(1., formatted_text.finish()).finish())
-                .finish(),
-        )
-        .with_background(appearance.theme().accent_overlay())
-        .with_corner_radius(CornerRadius::with_all(torchui::elements::Radius::Pixels(
-            4.,
-        )))
-        .with_uniform_padding(style::BANNER_PADDING)
-        .with_margin_bottom(style::ITEM_BOTTOM_MARGIN)
         .finish()
     }
 
@@ -968,11 +900,6 @@ impl View for RuleView {
 
         col.add_child(self.render_scope_tabs(appearance));
 
-        let ai_settings = AISettings::as_ref(app);
-        if !ai_settings.is_memory_enabled(app) {
-            col.add_child(self.render_disabled_banner(appearance));
-        }
-
         let filtered_rules = self.get_filtered_rules();
         if filtered_rules.is_empty() {
             col.add_child(self.render_zero_state(appearance));
@@ -993,9 +920,6 @@ impl TypedActionView for RuleView {
             }
             RuleViewAction::Edit(sync_id) => {
                 ctx.emit(RuleViewEvent::Edit(*sync_id));
-            }
-            RuleViewAction::OpenSettings => {
-                ctx.emit(RuleViewEvent::OpenSettings);
             }
             RuleViewAction::SelectScope(scope) => {
                 self.select_scope(*scope, ctx);

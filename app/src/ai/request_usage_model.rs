@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use ai::api_keys::{ApiKeyManager, AwsCredentialsState};
 use anyhow::Context as _;
-use chrono::{DateTime, Local, Utc};
+use chrono::{DateTime, Utc};
 use futures::channel::oneshot::{self, Receiver};
 use instant::Instant;
 use serde::{Deserialize, Serialize};
@@ -669,38 +669,8 @@ impl AIRequestUsageModel {
         self.request_limit_info.next_refresh_time.utc()
     }
 
-    pub fn next_refresh_time_local(&self) -> DateTime<Local> {
-        self.next_refresh_time().with_timezone(&Local)
-    }
-
     pub fn is_unlimited(&self) -> bool {
         self.request_limit_info.is_unlimited
-    }
-
-    /// The dollar value of the included allowance, in cents, when the server supplied one.
-    pub fn included_usage_cents(&self) -> Option<f64> {
-        self.request_limit_info.included_usage_cents
-    }
-
-    /// The dollar value of the included allowance used since the last refresh, in cents, when
-    /// the server supplied one. Reads as zero once the refresh time has passed, mirroring
-    /// [`Self::requests_used`].
-    pub fn usage_cents_used(&self) -> Option<f64> {
-        let used = self
-            .request_limit_info
-            .usage_cents_used_since_last_refresh?;
-        if self.next_refresh_time() <= Utc::now() {
-            return Some(0.);
-        }
-        Some(used)
-    }
-
-    pub fn refresh_duration_to_string(&self) -> String {
-        match self.request_limit_info.request_limit_refresh_duration {
-            RequestLimitRefreshDuration::Weekly => "weekly".to_string(),
-            RequestLimitRefreshDuration::Monthly => "monthly".to_string(),
-            RequestLimitRefreshDuration::EveryTwoWeeks => "biweekly".to_string(),
-        }
     }
 
     pub fn bonus_grants(&self) -> &[BonusGrant] {
@@ -759,27 +729,6 @@ impl AIRequestUsageModel {
             .sum()
     }
 
-    /// The dollar value of [`Self::total_workspace_and_team_bonus_credits_remaining`], in cents.
-    /// `None` unless every counted grant carries a dollar value.
-    pub fn total_workspace_and_team_bonus_usage_cents_remaining(
-        &self,
-        uid: WorkspaceUid,
-    ) -> Option<f64> {
-        self.workspace_and_team_bonus_grants(uid)
-            .map(|grant| grant.usage_cents_remaining)
-            .sum()
-    }
-
-    pub fn total_current_workspace_and_team_bonus_credits_remaining(
-        &self,
-        ctx: &AppContext,
-    ) -> i32 {
-        UserWorkspaces::as_ref(ctx)
-            .current_workspace()
-            .map(|workspace| self.total_workspace_and_team_bonus_credits_remaining(workspace.uid))
-            .unwrap_or(0)
-    }
-
     fn user_interactive_bonus_grants(&self) -> impl Iterator<Item = &BonusGrant> {
         let now = Utc::now();
         self.bonus_grants
@@ -792,14 +741,6 @@ impl AIRequestUsageModel {
     pub fn total_user_interactive_bonus_credits_remaining(&self) -> i32 {
         self.user_interactive_bonus_grants()
             .map(|grant| grant.request_credits_remaining)
-            .sum()
-    }
-
-    /// The dollar value of [`Self::total_user_interactive_bonus_credits_remaining`], in cents.
-    /// `None` unless every counted grant carries a dollar value.
-    pub fn total_user_interactive_bonus_usage_cents_remaining(&self) -> Option<f64> {
-        self.user_interactive_bonus_grants()
-            .map(|grant| grant.usage_cents_remaining)
             .sum()
     }
 

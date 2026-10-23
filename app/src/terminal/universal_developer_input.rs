@@ -47,7 +47,6 @@ use crate::server::ids::ServerId;
 #[cfg(not(target_family = "wasm"))]
 use crate::settings::InputSettings;
 use crate::settings::{AISettings, AISettingsChangedEvent};
-use crate::settings_view::SettingsSection;
 use crate::terminal::input::MenuPositioningProvider;
 use crate::terminal::keys::TerminalKeybindings;
 use crate::terminal::model::block::BlockMetadata;
@@ -326,7 +325,6 @@ pub enum UniversalDeveloperInputButtonBarEvent {
     PromptAlert(PromptAlertEvent),
     ModelSelectorOpened,
     ModelSelectorClosed,
-    OpenSettings(SettingsSection),
     OpenSlashCommandMenu,
 }
 
@@ -644,11 +642,6 @@ impl UniversalDeveloperInputButtonBar {
         ctx: &mut ViewContext<Self>,
     ) {
         match event {
-            ProfileModelSelectorEvent::OpenSettings(settings_section) => {
-                ctx.emit(UniversalDeveloperInputButtonBarEvent::OpenSettings(
-                    *settings_section,
-                ));
-            }
             ProfileModelSelectorEvent::MenuVisibilityChanged { open } => {
                 if *open {
                     // When model selector menu opens, close other overlays

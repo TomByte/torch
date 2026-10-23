@@ -583,8 +583,6 @@ pub enum InitProjectModelEvent {
     GenerateProjectRules,
     /// Trigger AGENTS.md regeneration
     RegenerateProjectRules,
-    /// View codebase context status
-    ViewCodebaseContextStatus,
     /// Language server installed and enabled
     LanguageServerInstalledAndEnabled,
     /// Trigger create environment slash command

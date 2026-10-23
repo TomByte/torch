@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use torchui::{App, EntityId, SingletonEntity};
+use torchui::{App, SingletonEntity};
 
 use crate::ai::execution_profiles::profiles::AIExecutionProfilesModel;
 use crate::ai::execution_profiles::{AIExecutionProfile, ActionPermission, ExecutionProfileId};
@@ -55,33 +55,4 @@ pub fn execution_profile(app: &App, profile_id: &str) -> Option<ExecutionProfile
 
 pub fn has_multiple_execution_profiles(app: &App) -> bool {
     app.read(|ctx| AIExecutionProfilesModel::as_ref(ctx).has_multiple_profiles())
-}
-
-pub fn create_and_select_execution_profile(
-    app: &mut App,
-    terminal_view_id: EntityId,
-    name: &str,
-    readable_directory: PathBuf,
-) -> String {
-    AIExecutionProfilesModel::handle(app)
-        .update(app, |profiles, ctx| {
-            let profile_id = profiles
-                .create_profile(ctx)
-                .expect("settings-backed profile should be created");
-            profiles.set_profile_name(&profile_id, name, ctx);
-            profiles.set_read_files(&profile_id, &ActionPermission::AlwaysAllow, ctx);
-            profiles.add_to_directory_allowlist(&profile_id, &readable_directory, ctx);
-            profiles.set_active_profile(terminal_view_id, profile_id.clone(), ctx);
-            profile_id
-        })
-        .to_string()
-}
-
-pub fn active_execution_profile_id(app: &App, terminal_view_id: EntityId) -> String {
-    app.read(|ctx| {
-        AIExecutionProfilesModel::as_ref(ctx)
-            .active_profile(Some(terminal_view_id), ctx)
-            .id()
-            .to_string()
-    })
 }

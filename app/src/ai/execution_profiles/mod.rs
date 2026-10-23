@@ -36,12 +36,9 @@ pub mod profiles;
 pub use config::{ExecutionProfileId, ExecutionProfilesConfig};
 
 /// Result of resolving the cloud agent computer use setting.
-/// Contains both the effective value and whether it's forced by organization policy.
 pub struct CloudAgentComputerUseState {
     /// Whether computer use is enabled for cloud agents.
     pub enabled: bool,
-    /// Whether this value is forced by organization settings (true = user cannot change it).
-    pub is_forced_by_org: bool,
 }
 fn effective_base_model<'a>(profile: &AIExecutionProfile, app: &'a AppContext) -> &'a LLMInfo {
     let prefs = LLMPreferences::as_ref(app);
@@ -60,10 +57,7 @@ pub fn resolve_cloud_agent_computer_use_state(
     ctx: &AppContext,
 ) -> CloudAgentComputerUseState {
     if !FeatureFlag::AgentModeComputerUse.is_enabled() {
-        return CloudAgentComputerUseState {
-            enabled: false,
-            is_forced_by_org: false,
-        };
+        return CloudAgentComputerUseState { enabled: false };
     }
 
     let autonomy_setting = UserWorkspaces::as_ref(ctx)
@@ -72,25 +66,15 @@ pub fn resolve_cloud_agent_computer_use_state(
     let user_preference = *AISettings::as_ref(ctx).cloud_agent_computer_use_enabled;
 
     match autonomy_setting {
-        Some(ComputerUsePermission::Never) => CloudAgentComputerUseState {
-            enabled: false,
-            is_forced_by_org: true,
-        },
-        Some(ComputerUsePermission::AlwaysAllow) => CloudAgentComputerUseState {
-            enabled: true,
-            is_forced_by_org: true,
-        },
+        Some(ComputerUsePermission::Never) => CloudAgentComputerUseState { enabled: false },
+        Some(ComputerUsePermission::AlwaysAllow) => CloudAgentComputerUseState { enabled: true },
         // TODO(QUALITY-297): Currently this case should never be hit because the
         // AlwaysAsk variant isn't accessible in the admin console. We need to figure
         // out how to handle it when it eventually becomes available. For now, I'm
         // treating this conservatively and marking computer use as disabled.
-        Some(ComputerUsePermission::AlwaysAsk) => CloudAgentComputerUseState {
-            enabled: false,
-            is_forced_by_org: true,
-        },
+        Some(ComputerUsePermission::AlwaysAsk) => CloudAgentComputerUseState { enabled: false },
         Some(ComputerUsePermission::Unknown) | None => CloudAgentComputerUseState {
             enabled: user_preference,
-            is_forced_by_org: false,
         },
     }
 }

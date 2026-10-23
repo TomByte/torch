@@ -194,7 +194,6 @@ pub(crate) struct AskUserQuestionView {
     next_button: CompactibleActionButton,
     /// Settings link handle for the Ask-User-Question autonomy speedbump footer,
     /// set by `AIBlock` when the speedbump is seeded for this action.
-    speedbump_settings_link_handle: Option<MouseStateHandle>,
     /// Lazily created dropdown for the speedbump footer; owned here so the
     /// view handle (and its event subscription) survives re-renders.
     speedbump_dropdown: Option<ViewHandle<Dropdown<AskUserQuestionViewAction>>>,
@@ -257,7 +256,6 @@ impl AskUserQuestionView {
             toggle_mouse_state: MouseStateHandle::default(),
             skip_button,
             next_button,
-            speedbump_settings_link_handle: None,
             speedbump_dropdown: None,
         };
 
@@ -284,17 +282,6 @@ impl AskUserQuestionView {
 
     pub fn is_editing(&self) -> bool {
         self.session.is_editing()
-    }
-
-    /// Sets the settings-link mouse handle used in the speedbump footer.
-    /// The footer is only actually drawn during the completed/finished render paths.
-    pub fn set_speedbump_settings_link(
-        &mut self,
-        settings_link_handle: Option<MouseStateHandle>,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        self.speedbump_settings_link_handle = settings_link_handle;
-        ctx.notify();
     }
 
     /// Creates the dropdown view for the speedbump footer. No-op if already initialized.
@@ -870,11 +857,7 @@ impl AskUserQuestionView {
         appearance: &Appearance,
         app: &AppContext,
     ) -> Box<dyn Element> {
-        let speedbump_footer = self
-            .speedbump_settings_link_handle
-            .clone()
-            .filter(|_| self.speedbump_dropdown.is_some())
-            .and_then(|handle| self.render_speedbump_footer(handle, appearance, app));
+        let speedbump_footer = self.render_speedbump_footer(appearance, app);
         let has_speedbump_footer = speedbump_footer.is_some();
 
         let mut header_config = HeaderConfig::new(label, app)
@@ -924,7 +907,6 @@ impl AskUserQuestionView {
 
     fn render_speedbump_footer(
         &self,
-        settings_link_handle: MouseStateHandle,
         appearance: &Appearance,
         app: &AppContext,
     ) -> Option<Box<dyn Element>> {
@@ -933,7 +915,6 @@ impl AskUserQuestionView {
         let row = render_autonomy_dropdown_setting_speedbump_footer(
             "Allow the agent to ask questions:",
             dropdown,
-            settings_link_handle,
             app,
         );
         Some(

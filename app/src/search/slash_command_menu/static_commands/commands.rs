@@ -34,17 +34,6 @@ pub static CLOUD_AGENT: LazyLock<StaticCommand> = LazyLock::new(|| StaticCommand
     argument: Some(Argument::optional().with_execute_on_selection()),
 });
 
-pub const ADD_MCP: StaticCommand = StaticCommand {
-    name: "/add-mcp",
-    description: "Add a new MCP server via the MCP settings page",
-    kind: SlashCommandKind::AddMcp,
-    supported_surfaces: SlashCommandSurfaces::GuiOnly {
-        icon_path: "bundled/svg/dataflow.svg",
-    },
-    availability: Availability::AI_ENABLED,
-    auto_enter_ai_mode: false,
-    argument: None,
-};
 pub const RESET_STATUSLINE: StaticCommand = StaticCommand {
     name: "/reset-statusline",
     description: "Reset the statusline to its default items and ordering",
@@ -73,16 +62,6 @@ pub const AUTO_APPROVE: StaticCommand = StaticCommand {
         .union(Availability::ACTIVE_CONVERSATION)
         .union(Availability::AI_ENABLED)
         .union(Availability::NOT_CLOUD_AGENT),
-    auto_enter_ai_mode: false,
-    argument: None,
-};
-
-pub const MCP: StaticCommand = StaticCommand {
-    name: "/mcp",
-    description: "View and manage MCP servers",
-    kind: SlashCommandKind::Mcp,
-    supported_surfaces: SlashCommandSurfaces::TuiOnly,
-    availability: Availability::AI_ENABLED,
     auto_enter_ai_mode: false,
     argument: None,
 };
@@ -443,18 +422,6 @@ pub const OPEN_PROJECT_RULES: StaticCommand = StaticCommand {
     argument: None,
 };
 
-pub const OPEN_MCP_SERVERS: StaticCommand = StaticCommand {
-    name: "/open-mcp-servers",
-    description: "Open MCP servers",
-    kind: SlashCommandKind::OpenMcpServers,
-    supported_surfaces: SlashCommandSurfaces::GuiOnly {
-        icon_path: "bundled/svg/dataflow.svg",
-    },
-    availability: Availability::AI_ENABLED,
-    auto_enter_ai_mode: false,
-    argument: None,
-};
-
 pub const OPEN_SETTINGS_FILE: StaticCommand = StaticCommand {
     name: "/open-settings-file",
     description: "Open settings file (TOML)",
@@ -767,18 +734,6 @@ pub static CONTINUE_LOCALLY: LazyLock<StaticCommand> = LazyLock::new(|| {
     }
 });
 
-pub const USAGE: StaticCommand = StaticCommand {
-    name: "/usage",
-    description: "View account and credit usage",
-    kind: SlashCommandKind::Usage,
-    supported_surfaces: SlashCommandSurfaces::GuiAndTui {
-        icon_path: "bundled/svg/bar-chart-04.svg",
-    },
-    availability: Availability::AI_ENABLED,
-    auto_enter_ai_mode: false,
-    argument: None,
-};
-
 pub const REMOTE_CONTROL: StaticCommand = StaticCommand {
     name: "/remote-control",
     description: "Start remote control for this session",
@@ -972,7 +927,6 @@ fn all_commands(settings_mode: settings::SettingsMode) -> Vec<StaticCommand> {
 
 fn all_commands_for_all_surfaces() -> Vec<StaticCommand> {
     let mut commands = vec![
-        ADD_MCP,
         ADD_PROMPT.clone(),
         ADD_RULE,
         AUTO_APPROVE,
@@ -986,9 +940,7 @@ fn all_commands_for_all_surfaces() -> Vec<StaticCommand> {
         UPGRADE,
         MANAGE_BILLING,
         LOGOUT,
-        MCP,
         OPEN_PROJECT_RULES,
-        OPEN_MCP_SERVERS,
         OPEN_RULES,
         AGENT.clone(),
         CLEAR,
@@ -1002,7 +954,6 @@ fn all_commands_for_all_surfaces() -> Vec<StaticCommand> {
         NATURAL_LANGUAGE_DETECTION,
         THEME,
         VIM_MODE,
-        USAGE,
         CONVERSATIONS,
         EXPORT_TO_CLIPBOARD,
         COPY_DEBUGGING_ID,

@@ -488,29 +488,6 @@ impl PersistedWorkspace {
         })
     }
 
-    /// Returns LSP servers for a given workspace path.
-    ///
-    /// When `include_suggested` is `false`, only persisted entries (`Yes`/`No`)
-    /// are returned.  When `true`, in-memory `Suggested` entries are included as
-    /// well (useful for showing available-for-download servers in the UI).
-    pub fn all_lsp_servers(
-        &self,
-        path: &Path,
-        include_suggested: bool,
-    ) -> Option<impl Iterator<Item = (LSPServerType, EnablementState)> + use<'_>> {
-        let root = self.root_for_workspace(path)?;
-
-        self.workspaces.get(root).map(move |workspace| {
-            workspace
-                .language_servers
-                .iter()
-                .filter(move |(_, state)| {
-                    include_suggested || **state != EnablementState::Suggested
-                })
-                .map(|(server_type, state)| (*server_type, *state))
-        })
-    }
-
     /// Asynchronously detects which LSP server types are relevant for the given workspaces
     /// by calling `should_suggest_for_repo` on each `LSPServerType`. Results are stored
     /// as `Suggested` entries in the workspaces map and emitted via `AvailableServersDetected`.
@@ -609,23 +586,6 @@ impl PersistedWorkspace {
                 }
             },
         );
-    }
-
-    /// Returns the total count of LSP servers across all workspaces.
-    ///
-    /// When `include_suggested` is `false`, only persisted entries (`Yes`/`No`)
-    /// are counted.  When `true`, in-memory `Suggested` entries are counted too.
-    pub fn total_lsp_server_count(&self, include_suggested: bool) -> usize {
-        self.workspaces
-            .values()
-            .map(|workspace| {
-                workspace
-                    .language_servers
-                    .values()
-                    .filter(|state| include_suggested || **state != EnablementState::Suggested)
-                    .count()
-            })
-            .sum()
     }
 
     fn on_settings_changed(&mut self, ctx: &mut ModelContext<Self>) {

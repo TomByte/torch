@@ -17,19 +17,17 @@ use crate::Appearance;
 use crate::ai::blocklist::view_util::error_color;
 use crate::settings::{AISettings, AISettingsChangedEvent};
 use crate::ui_components::blended_colors;
-use crate::view_components::action_button::{ActionButton, ButtonSize, NakedTheme, PrimaryTheme};
+use crate::view_components::action_button::{ActionButton, ButtonSize, PrimaryTheme};
 
 #[derive(Clone, Debug)]
 pub enum AwsBedrockCredentialsErrorAction {
     RunLoginCommand,
-    Configure,
     ToggleAutoLogin,
 }
 
 #[derive(Clone, Debug)]
 pub enum AwsBedrockCredentialsErrorEvent {
     RunLoginCommand,
-    ConfigureLoginCommand,
 }
 
 pub struct AwsBedrockCredentialsErrorView {
@@ -41,9 +39,6 @@ pub struct AwsBedrockCredentialsErrorView {
 
     // Run button
     run_button: ViewHandle<ActionButton>,
-
-    // Configure button
-    configure_button: ViewHandle<ActionButton>,
 
     // Auto-login checkbox
     auto_login_checkbox_handle: MouseStateHandle,
@@ -65,15 +60,6 @@ impl AwsBedrockCredentialsErrorView {
                 })
         });
 
-        // Configure button
-        let configure_button = ctx.add_typed_action_view(|_ctx| {
-            ActionButton::new("Configure", NakedTheme)
-                .with_size(ButtonSize::InlineActionHeader)
-                .on_click(|ctx| {
-                    ctx.dispatch_typed_action(AwsBedrockCredentialsErrorAction::Configure)
-                })
-        });
-
         // Subscribe to AISettings changes to update checkbox state
         ctx.subscribe_to_model(&AISettings::handle(ctx), |_me, _, event, ctx| {
             if matches!(event, AISettingsChangedEvent::AwsBedrockAutoLogin { .. }) {
@@ -86,7 +72,6 @@ impl AwsBedrockCredentialsErrorView {
             login_command,
             auto_login_triggered,
             run_button,
-            configure_button,
             auto_login_checkbox_handle: MouseStateHandle::default(),
         }
     }
@@ -167,7 +152,6 @@ impl View for AwsBedrockCredentialsErrorView {
             Flex::row()
                 .with_spacing(8.)
                 .with_cross_axis_alignment(CrossAxisAlignment::Center)
-                .with_child(ChildView::new(&self.configure_button).finish())
                 .with_child(ChildView::new(&self.run_button).finish())
                 .finish()
         };
@@ -272,9 +256,6 @@ impl TypedActionView for AwsBedrockCredentialsErrorView {
         match action {
             AwsBedrockCredentialsErrorAction::RunLoginCommand => {
                 ctx.emit(AwsBedrockCredentialsErrorEvent::RunLoginCommand);
-            }
-            AwsBedrockCredentialsErrorAction::Configure => {
-                ctx.emit(AwsBedrockCredentialsErrorEvent::ConfigureLoginCommand);
             }
             AwsBedrockCredentialsErrorAction::ToggleAutoLogin => {
                 AISettings::handle(ctx).update(ctx, |settings, ctx| {

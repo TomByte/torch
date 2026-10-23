@@ -22,7 +22,6 @@ use crate::terminal::input::suggestions_mode_model::{
 #[derive(Debug, Clone)]
 pub enum InlineProfileSelectorEvent {
     SelectedProfile { profile_id: ExecutionProfileId },
-    ManageProfiles,
     Dismissed,
 }
 
@@ -67,9 +66,6 @@ impl InlineProfileSelectorView {
                     ctx.emit(InlineProfileSelectorEvent::SelectedProfile {
                         profile_id: profile_id.clone(),
                     });
-                }
-                SelectProfileMenuItem::ManageProfiles => {
-                    ctx.emit(InlineProfileSelectorEvent::ManageProfiles);
                 }
             },
             InlineMenuEvent::Dismissed => {

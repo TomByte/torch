@@ -31,9 +31,7 @@ pub enum CustomAction {
     ShowAboutWarp,
     ShowSettings,
     ConfigureKeybindings,
-    ShowAccount,
     ShowAppearance,
-    ReferAFriend,
     ViewChangelog,
     FocusInput,
     ClearBlocks,
@@ -83,7 +81,6 @@ pub enum CustomAction {
     CopyBlock,
     CopyBlockCommand,
     CopyBlockOutput,
-    ViewSharedBlocks,
     CloseTab,
     CloseOtherTabs,
     CloseTabsRight,
@@ -111,7 +108,6 @@ pub enum CustomAction {
     NewTeamNotebook,
     NewTeamEnvVars,
     SearchDrive,
-    OpenTeamSettings,
     ShareCurrentSession,
     SharePaneContents,
     #[cfg(windows)]
@@ -123,7 +119,6 @@ pub enum CustomAction {
     /// Also applies to legacy Torch AI (attaches the selection to the panel editor)
     AttachSelectionAsAgentModeContext,
     OpenAIFactCollection,
-    OpenMCPServerCollection,
     ToggleProjectExplorer,
     NewPersonalAIPrompt,
     NewTeamAIPrompt,
@@ -459,9 +454,6 @@ pub fn custom_tag_to_keystroke(custom: CustomTag) -> Option<Keystroke> {
         | CustomAction::CloseTab
         | CustomAction::CloseOtherTabs
         | CustomAction::CloseTabsRight
-        | CustomAction::ReferAFriend
-        | CustomAction::ViewSharedBlocks
-        | CustomAction::ShowAccount
         | CustomAction::ShowAppearance
         | CustomAction::SaveCurrentConfig
         | CustomAction::TriggerWelcomeBlock
@@ -475,11 +467,9 @@ pub fn custom_tag_to_keystroke(custom: CustomTag) -> Option<Keystroke> {
         | CustomAction::NewTeamNotebook
         | CustomAction::NewTeamEnvVars
         | CustomAction::SearchDrive
-        | CustomAction::OpenTeamSettings
         | CustomAction::ShareCurrentSession
         | CustomAction::SharePaneContents
         | CustomAction::OpenAIFactCollection
-        | CustomAction::OpenMCPServerCollection
         | CustomAction::NewPersonalAIPrompt
         | CustomAction::NewTeamAIPrompt
         | CustomAction::NewAgentTab => None,

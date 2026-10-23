@@ -14,8 +14,6 @@ use crate::search::{ItemHighlightState, SearchItem};
 use crate::terminal::input::inline_menu::styles as inline_styles;
 use crate::terminal::input::profiles::data_source::SelectProfileMenuItem;
 
-const MANAGE_PROFILES_LABEL: &str = "Manage profiles";
-
 #[derive(Debug, Clone)]
 enum ProfileSearchItemKind {
     Profile {
@@ -23,7 +21,6 @@ enum ProfileSearchItemKind {
         profile_name: String,
         is_selected: bool,
     },
-    ManageProfiles,
 }
 
 #[derive(Debug, Clone)]
@@ -50,14 +47,6 @@ impl ProfileSearchItem {
         }
     }
 
-    pub fn new_manage_profiles_item() -> Self {
-        Self {
-            kind: ProfileSearchItemKind::ManageProfiles,
-            match_result: None,
-            score: OrderedFloat(0.0),
-        }
-    }
-
     pub fn with_match_result(mut self, match_result: FuzzyMatchResult) -> Self {
         self.match_result = Some(match_result);
         self
@@ -79,7 +68,6 @@ impl SearchItem for ProfileSearchItem {
     ) -> Box<dyn Element> {
         let icon = match self.kind {
             ProfileSearchItemKind::Profile { .. } => Icon::Psychology,
-            ProfileSearchItemKind::ManageProfiles => Icon::Gear,
         }
         .to_warpui_icon(inline_styles::icon_color(appearance));
 
@@ -108,7 +96,6 @@ impl SearchItem for ProfileSearchItem {
                 is_selected,
                 ..
             } => (profile_name.clone(), *is_selected),
-            ProfileSearchItemKind::ManageProfiles => (MANAGE_PROFILES_LABEL.to_owned(), false),
         };
 
         let mut label = Text::new_inline(label_text, appearance.ui_font_family(), font_size)
@@ -170,7 +157,6 @@ impl SearchItem for ProfileSearchItem {
             ProfileSearchItemKind::Profile { profile_id, .. } => SelectProfileMenuItem::Profile {
                 profile_id: profile_id.clone(),
             },
-            ProfileSearchItemKind::ManageProfiles => SelectProfileMenuItem::ManageProfiles,
         }
     }
 
@@ -183,7 +169,6 @@ impl SearchItem for ProfileSearchItem {
             ProfileSearchItemKind::Profile { profile_name, .. } => {
                 format!("Profile: {profile_name}")
             }
-            ProfileSearchItemKind::ManageProfiles => MANAGE_PROFILES_LABEL.to_string(),
         }
     }
 }

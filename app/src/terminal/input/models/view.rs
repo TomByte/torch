@@ -2,14 +2,10 @@ use std::collections::HashSet;
 use std::sync::LazyLock;
 
 use ai::api_keys::{ApiKeyManager, ApiKeyManagerEvent};
-use pathfinder_color::ColorU;
 use torch_core::ui::appearance::Appearance;
-use torch_core::ui::theme::Fill;
-use torch_core::ui::theme::color::internal_colors;
 use torchui::elements::{ChildView, MainAxisSize};
 use torchui::{
-    AppContext, Element, Entity, EntityId, ModelHandle, SingletonEntity as _, View, ViewContext,
-    ViewHandle,
+    Element, Entity, EntityId, ModelHandle, SingletonEntity as _, View, ViewContext, ViewHandle,
 };
 
 use crate::ai::blocklist::agent_view::AgentViewController;
@@ -19,7 +15,6 @@ use crate::ai::llms::{LLMId, LLMPreferences, LLMPreferencesEvent};
 use crate::features::FeatureFlag;
 use crate::search::data_source::{Query, QueryFilter};
 use crate::search::mixer::{SearchMixer, SearchMixerEvent};
-use crate::settings_view::SettingsSection;
 use crate::terminal::input::buffer_model::InputBufferModel;
 use crate::terminal::input::inline_menu::{
     InlineMenuEvent, InlineMenuHeaderConfig, InlineMenuModel, InlineMenuPositioner,
@@ -30,33 +25,8 @@ use crate::terminal::input::suggestions_mode_model::{
     InputSuggestionsModeEvent, InputSuggestionsModeModel,
 };
 use crate::terminal::view::ambient_agent::AmbientAgentViewModel;
-use crate::ui_components::icons::Icon;
-use crate::view_components::action_button::{ActionButton, ActionButtonTheme, ButtonSize};
 use crate::view_components::alert::{Alert, AlertConfig};
-use crate::workspace::WorkspaceAction;
 use crate::workspaces::user_workspaces::{ResolvedTeamScope, UserWorkspaces};
-
-struct ManageDefaultsTheme;
-
-impl ActionButtonTheme for ManageDefaultsTheme {
-    fn background(&self, _hovered: bool, _appearance: &Appearance) -> Option<Fill> {
-        None
-    }
-
-    fn text_color(
-        &self,
-        hovered: bool,
-        _background: Option<Fill>,
-        appearance: &Appearance,
-    ) -> ColorU {
-        let theme = appearance.theme();
-        if hovered {
-            internal_colors::text_main(theme, theme.background())
-        } else {
-            internal_colors::text_sub(theme, theme.background())
-        }
-    }
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum InlineModelSelectorTab {
@@ -159,22 +129,9 @@ impl InlineModelSelectorView {
         });
 
         let menu_view = if FeatureFlag::InlineMenuHeaders.is_enabled() {
-            let manage_defaults_button = ctx.add_view(|_| {
-                ActionButton::new("Manage defaults", ManageDefaultsTheme)
-                    .with_icon(Icon::Settings)
-                    .with_size(ButtonSize::Small)
-                    .on_click(|ctx| {
-                        ctx.dispatch_typed_action(WorkspaceAction::ShowSettingsPageWithSearch {
-                            search_query: String::new(),
-                            section: Some(SettingsSection::WarpAgent),
-                        });
-                    })
-            });
             let header_config = InlineMenuHeaderConfig {
                 label: "/model".to_string(),
-                trailing_element: Some(Box::new(move |_app: &AppContext| {
-                    ChildView::new(&manage_defaults_button).finish()
-                })),
+                trailing_element: None,
             };
 
             ctx.add_typed_action_view(|ctx| {

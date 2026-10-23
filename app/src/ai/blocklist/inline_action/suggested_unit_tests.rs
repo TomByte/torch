@@ -1,14 +1,13 @@
 use std::sync::Arc;
 
-use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
 use rand::distributions::Alphanumeric;
 use rand::{Rng as _, thread_rng};
 use torch_core::settings::ToggleableSetting;
 use torch_core::ui::appearance::Appearance;
 use torchui::elements::{
-    Align, ConstrainedBox, Container, CrossAxisAlignment, Expanded, Flex, FormattedTextElement,
-    HighlightedHyperlink, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement,
-    SavePosition, Shrinkable, SizeConstraintCondition, SizeConstraintSwitch, Text,
+    Align, ConstrainedBox, Container, CrossAxisAlignment, Expanded, Flex, MainAxisAlignment,
+    MainAxisSize, MouseStateHandle, ParentElement, SavePosition, Shrinkable,
+    SizeConstraintCondition, SizeConstraintSwitch, Text,
 };
 use torchui::platform::Cursor;
 use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
@@ -22,7 +21,6 @@ use crate::ai::predict::prompt_suggestions::{
 };
 use crate::server::telemetry::ToggleCodeSuggestionsSettingSource;
 use crate::settings::AISettings;
-use crate::ui_components::blended_colors;
 use crate::ui_components::icons::Icon;
 use crate::view_components::action_button::{
     ButtonSize, KeystrokeSource, NakedTheme, PrimaryTheme,
@@ -40,7 +38,6 @@ pub enum SuggestedUnitTestsEvent {
     Accept,
     Cancel,
     Blur,
-    OpenSettings,
 }
 
 #[derive(Debug, Clone)]
@@ -48,7 +45,6 @@ pub enum SuggestedUnitTestsAction {
     Accept,
     Cancel,
     ToggleSetting,
-    OpenSettings,
 }
 
 pub struct SuggestedUnitTestsView {
@@ -65,7 +61,6 @@ pub struct SuggestedUnitTestsView {
     accept_button: CompactibleActionButton,
     cancel_button: CompactibleActionButton,
     speedbump_mouse_state: MouseStateHandle,
-    ai_settings_link_highlight_index: HighlightedHyperlink,
 
     /// A randomly-generated string prefix to ensure the [`SavePosition`]s in this view are unique.
     position_id_prefix: String,
@@ -123,7 +118,6 @@ impl SuggestedUnitTestsView {
             accept_button,
             cancel_button,
             speedbump_mouse_state: Default::default(),
-            ai_settings_link_highlight_index: Default::default(),
             position_id_prefix: random_str,
         }
     }
@@ -290,7 +284,6 @@ impl SuggestedUnitTestsView {
     fn render_speedbump(&self, appearance: &Appearance, app: &AppContext) -> Box<dyn Element> {
         let theme = appearance.theme();
         let font_color = theme.sub_text_color(theme.background()).into_solid();
-        let font_family = appearance.ui_font_family();
         let font_size = 12.;
 
         let checked = AISettings::as_ref(app).is_code_suggestions_enabled(app);
@@ -322,25 +315,6 @@ impl SuggestedUnitTestsView {
             .build()
             .finish();
 
-        let formatted_text = FormattedTextElement::new(
-            FormattedText::new([FormattedTextLine::Line(vec![
-                FormattedTextFragment::hyperlink(
-                    "Manage suggested code banner settings",
-                    "Settings > AI",
-                ),
-            ])]),
-            font_size,
-            font_family,
-            font_family,
-            font_color,
-            self.ai_settings_link_highlight_index.clone(),
-        )
-        .with_hyperlink_font_color(blended_colors::accent_fg_strong(theme).into())
-        .register_default_click_handlers(|_, ctx, _| {
-            ctx.dispatch_typed_action(SuggestedUnitTestsAction::OpenSettings);
-        })
-        .finish();
-
         let container = Container::new(
             Flex::row()
                 .with_main_axis_size(MainAxisSize::Max)
@@ -352,7 +326,6 @@ impl SuggestedUnitTestsView {
                         .with_children([checkbox, checkbox_text])
                         .finish(),
                 )
-                .with_child(formatted_text)
                 .finish(),
         )
         .with_padding_top(4.)
@@ -420,9 +393,6 @@ impl TypedActionView for SuggestedUnitTestsView {
                         ctx
                     );
                 }
-            }
-            SuggestedUnitTestsAction::OpenSettings => {
-                ctx.emit(SuggestedUnitTestsEvent::OpenSettings)
             }
         }
     }

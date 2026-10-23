@@ -9,9 +9,6 @@ pub const TEXT_FONT_SIZE: f32 = 14.;
 pub const SUBTEXT_FONT_SIZE: f32 = 12.;
 pub const ICON_SIZE: f32 = 16.;
 
-pub const BANNER_ICON_SIZE: f32 = 14.;
-pub const BANNER_PADDING: f32 = 12.;
-
 pub const ICON_MARGIN: f32 = 8.;
 pub const ROW_ICON_MARGIN: f32 = 4.;
 

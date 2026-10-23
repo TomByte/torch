@@ -30,7 +30,7 @@ pub enum CostRow {
     },
     BilledToProvider {
         label: &'static str,
-        manage_button: Box<dyn Element>,
+        manage_button: Option<Box<dyn Element>>,
     },
 }
 
@@ -99,7 +99,7 @@ enum ScoreRowKind {
     },
     BilledToProvider {
         label: &'static str,
-        manage_button: Box<dyn Element>,
+        manage_button: Option<Box<dyn Element>>,
     },
 }
 
@@ -192,17 +192,17 @@ fn render_score_row(
         ScoreRowKind::BilledToProvider {
             label,
             manage_button,
-        } => Expanded::new(
-            1.,
-            Flex::row()
+        } => {
+            let mut provider_row = Flex::row()
                 .with_main_axis_size(MainAxisSize::Max)
                 .with_main_axis_alignment(MainAxisAlignment::SpaceBetween)
                 .with_cross_axis_alignment(CrossAxisAlignment::Center)
-                .with_child(render_provider_label(label, appearance))
-                .with_child(Container::new(manage_button).with_margin_left(8.).finish())
-                .finish(),
-        )
-        .finish(),
+                .with_child(render_provider_label(label, appearance));
+            if let Some(manage_button) = manage_button {
+                provider_row.add_child(Container::new(manage_button).with_margin_left(8.).finish());
+            }
+            Expanded::new(1., provider_row.finish()).finish()
+        }
     };
 
     Flex::row()
