@@ -433,7 +433,6 @@ embed-resource = "3.0"
 
 # Note that we support channel-specific enables for these features
 [features]
-tui = ["torch_terminal/tui", "torchui_core/tui"]
 ai_resume_button = []
 autoupdate = []
 figma_detection = []

@@ -33,13 +33,6 @@ pub(crate) const AUTH_SECRET_INHERIT_LABEL: &str = "Skip (advanced)";
 const CUSTOM_HOST_LABEL: &str = "Custom host…";
 const AUTH_SECRETS_LOAD_FAILED_MESSAGE: &str = "Unable to load secrets";
 
-/// Row id for the Cloud location option.
-#[cfg_attr(not(feature = "tui"), allow(dead_code))]
-pub const LOCATION_CLOUD_ID: &str = "cloud";
-/// Row id for the Local location option.
-#[cfg_attr(not(feature = "tui"), allow(dead_code))]
-pub const LOCATION_LOCAL_ID: &str = "local";
-
 /// One selectable row in an option snapshot. Carries no GUI types.
 #[derive(Debug, Clone, PartialEq)]
 pub struct OptionRow {
@@ -71,13 +64,6 @@ pub enum OptionBadge {
     Default,
     Recent,
     Connected,
-    /// Constructed by `torch_tui` (the TUI ask-question card). The variant
-    /// lives here so both frontends share a single `OptionBadge` type.
-    /// The lint is suppressed because the construction site is in the
-    /// downstream `torch_tui` crate, which is invisible to clippy when
-    /// linting `warp` in isolation.
-    #[allow(dead_code)]
-    Recommended,
 }
 
 /// Load state of the catalog backing a snapshot.
@@ -118,25 +104,6 @@ impl OptionSnapshot {
             footer: None,
         }
     }
-}
-
-// ── Location ────────────────────────────────────────────────────────
-
-/// Builds the Cloud/Local location options with the current mode selected.
-// Only the TUI renders a location page (via `tui_export`); the GUI has
-// its own Cloud/Local mode toggle.
-#[cfg_attr(not(feature = "tui"), allow(dead_code))]
-pub fn location_snapshot(state: &OrchestrationConfigState, _ctx: &AppContext) -> OptionSnapshot {
-    let rows = vec![
-        OptionRow::new(LOCATION_CLOUD_ID, "Cloud"),
-        OptionRow::new(LOCATION_LOCAL_ID, "Local"),
-    ];
-    let selected = if state.execution_mode.is_remote() {
-        LOCATION_CLOUD_ID
-    } else {
-        LOCATION_LOCAL_ID
-    };
-    OptionSnapshot::ready(rows, Some(selected.to_string()))
 }
 
 // ── Harness ─────────────────────────────────────────────────────────

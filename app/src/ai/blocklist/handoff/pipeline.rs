@@ -49,8 +49,8 @@ use crate::ai::execution_profiles::resolve_cloud_agent_computer_use_state;
 use crate::ai::llms::{LLMId, LLMPreferences};
 use crate::ai::orchestration::{
     CloudAgentStartupBlocker, CloudAgentStartupFailure, CloudAgentStartupIssue,
-    classify_cloud_agent_startup_error, oz_run_url, resolve_default_environment_id,
-    resolve_default_host_slug, should_disable_snapshot,
+    classify_cloud_agent_startup_error, resolve_default_environment_id, resolve_default_host_slug,
+    should_disable_snapshot,
 };
 use crate::cloud_object::CloudObjectLookup as _;
 use crate::server::ids::{ServerId, SyncId};
@@ -169,12 +169,6 @@ impl HandoffPrepareInput {
         self
     }
 
-    #[cfg_attr(not(feature = "tui"), allow(dead_code))]
-    pub fn with_environment_required(mut self, environment_required: bool) -> Self {
-        self.environment_required = environment_required;
-        self
-    }
-
     pub fn with_cancellation_reason(mut self, cancellation_reason: CancellationReason) -> Self {
         self.cancellation_reason = cancellation_reason;
         self
@@ -283,10 +277,8 @@ pub struct PendingHandoff {
     restoration: Option<HandoffRestoration>,
     selected_environment_id: Option<SyncId>,
     environment_required: bool,
-    environment_selection_is_explicit: bool,
     valid_environment_ids: HashSet<SyncId>,
     selected_model_id: String,
-    model_selection_is_explicit: bool,
     model_is_cloud_runnable: bool,
     config: AgentConfigSnapshot,
     snapshot_target: SnapshotUploadTarget,
@@ -304,43 +296,6 @@ impl PendingHandoff {
             model_id: self.selected_model_id.clone(),
             forked_existing_conversation: self.source_conversation.is_some(),
         }
-    }
-
-    /// Applies an environment selection to the final agent configuration.
-    ///
-    /// Once a frontend records an explicit user selection, later implicit
-    /// defaults cannot replace it.
-    #[cfg_attr(not(feature = "tui"), allow(dead_code))]
-    pub fn set_environment_id(&mut self, environment_id: Option<SyncId>, is_explicit: bool) {
-        if !is_explicit && self.environment_selection_is_explicit {
-            return;
-        }
-        self.selected_environment_id = environment_id;
-        self.environment_selection_is_explicit |= is_explicit;
-        self.config.environment_id = environment_id.map(|id| id.to_string());
-    }
-
-    /// Applies a model selection and records whether it is cloud-runnable.
-    ///
-    /// Once a frontend records an explicit user selection, later implicit
-    /// defaults cannot replace it.
-    #[cfg_attr(not(feature = "tui"), allow(dead_code))]
-    pub fn set_model_id(&mut self, model_id: String, is_explicit: bool, ctx: &AppContext) {
-        if !is_explicit && self.model_selection_is_explicit {
-            return;
-        }
-        let preferences = LLMPreferences::as_ref(ctx);
-        let model_id = if is_explicit {
-            model_id
-        } else {
-            preferences.cloud_runnable_oz_model_id_or_fallback(&LLMId::from(model_id.as_str()))
-        };
-
-        self.model_is_cloud_runnable =
-            preferences.is_cloud_runnable_oz_model_id(&LLMId::from(model_id.as_str()));
-        self.selected_model_id = model_id.clone();
-        self.model_selection_is_explicit |= is_explicit;
-        self.config.model_id = Some(model_id);
     }
 
     /// Replaces the environment catalog used by [`Self::validate`].
@@ -533,7 +488,6 @@ pub fn prepare_handoff(
         });
     }
 
-    let environment_selection_is_explicit = selected_environment_id.is_some();
     let environment_id = selected_environment_id.or_else(|| {
         resolve_default_environment_id(ctx)
             .and_then(|id| ServerId::try_from(id.as_str()).ok())
@@ -591,10 +545,8 @@ pub fn prepare_handoff(
         restoration,
         selected_environment_id: environment_id,
         environment_required,
-        environment_selection_is_explicit,
         valid_environment_ids,
         selected_model_id: model_id,
-        model_selection_is_explicit: false,
         model_is_cloud_runnable,
         config,
         snapshot_target,
@@ -611,8 +563,6 @@ pub fn prepare_handoff(
 pub struct HandoffCreated {
     pub task_id: AmbientAgentTaskId,
     pub run_id: String,
-    #[cfg_attr(not(feature = "tui"), allow(dead_code))]
-    pub url: String,
     pub at_capacity: bool,
     pub request: SpawnAgentRequest,
     pub derived_workspace_had_content: bool,
@@ -840,7 +790,6 @@ async fn execute_validated_handoff(
     HandoffCommitOutcome::Created(HandoffCreated {
         task_id: response.task_id,
         run_id: response.run_id.clone(),
-        url: oz_run_url(&response.run_id),
         at_capacity: response.at_capacity,
         request,
         derived_workspace_had_content: settled.derived_workspace_had_content,
@@ -903,10 +852,8 @@ async fn prepare_snapshot_for_spawn(forked: ForkedHandoff) -> SnapshotSettledHan
         restoration,
         selected_environment_id: _,
         environment_required: _,
-        environment_selection_is_explicit: _,
         valid_environment_ids: _,
         selected_model_id: _,
-        model_selection_is_explicit: _,
         model_is_cloud_runnable: _,
         config,
         snapshot_target,

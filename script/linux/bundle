@@ -85,8 +85,8 @@ while (( "$#" )); do
       ;;
     --artifact)
       if [ -n "$2" ] && [ "${2:0:1}" != "-" ]; then
-        if [[ "$2" != "app" && "$2" != "cli" && "$2" != "warpctrl" && "$2" != "tui" ]]; then
-          echo "Error: --artifact must be 'app', 'cli', 'warpctrl', or 'tui', got '$2'" >&2
+        if [[ "$2" != "app" && "$2" != "cli" && "$2" != "warpctrl" ]]; then
+          echo "Error: --artifact must be 'app', 'cli', or 'warpctrl', got '$2'" >&2
           exit 1
         fi
         ARTIFACT="$2"
@@ -127,8 +127,7 @@ fi
 
 # Linux has no transparent cross-arch execution (unlike macOS's Rosetta), so a
 # binary built for a different architecture than the host can never be run
-# here. Resolve the host architecture once and reuse it both for the TUI
-# native-build restriction below and for deciding whether the just-built
+# here. Resolve the host architecture once to decide whether the just-built
 # binary can stand in for a settings-schema executable further down.
 case "$(uname -m)" in
   arm64|aarch64) HOST_ARCH="aarch64" ;;
@@ -138,15 +137,6 @@ case "$(uname -m)" in
     exit 1
     ;;
 esac
-
-# TUI Linux bundles use the native GNU target because their clipboard backends
-# link against host Wayland/X11 libraries. Refuse to compile on a different
-# architecture so an x86 binary can never be published under an ARM filename
-# (or vice versa). Packaging-only runs may still stage a prebuilt native binary.
-if [[ "$ARTIFACT" == "tui" && "$BUILD" == "true" && "$BUILD_ARCH" != "$HOST_ARCH" ]]; then
-  echo "Error: TUI bundles must be built natively; requested '$BUILD_ARCH' on '$HOST_ARCH'." >&2
-  exit 1
-fi
 
 # Statically compile the CLI and warpctrl artifacts so they can run on older Linux distros.
 if [[ "$ARTIFACT" == "cli" || "$ARTIFACT" == "warpctrl" ]]; then
@@ -169,7 +159,7 @@ DIST_DIR="$CARGO_TARGET_OUTPUT_ROOT/dist"
 if [[ $DEBUG = true ]]; then
   CARGO_PROFILE="dev"
 else
-  if [[ "$ARTIFACT" == "cli" || "$ARTIFACT" == "warpctrl" || "$ARTIFACT" == "tui" ]]; then
+  if [[ "$ARTIFACT" == "cli" || "$ARTIFACT" == "warpctrl" ]]; then
     CARGO_PROFILE="release-cli"
   else
     CARGO_PROFILE="release-lto"
@@ -208,10 +198,6 @@ if [[ "$ARTIFACT" == "cli" ]]; then
 elif [[ "$ARTIFACT" == "warpctrl" ]]; then
   BINARY_NAME="torchctrl"
   PACKAGES=()
-elif [[ "$ARTIFACT" == "tui" ]]; then
-  TORCH_BIN="torch-tui"
-  BINARY_NAME="$TORCH_BIN"
-  PACKAGES=()
 fi
 
 # Artifact-specific configuration
@@ -220,22 +206,12 @@ if [[ "$ARTIFACT" == "cli" || "$ARTIFACT" == "warpctrl" ]]; then
   if [[ "$ARTIFACT" == "warpctrl" ]]; then
     FEATURES="$FEATURES,warp_control_cli"
   fi
-elif [[ "$ARTIFACT" == "tui" ]]; then
-  # The TUI is a separate console crate with its own per-channel bins and a
-  # minimal feature set. It uses the native GNU target so the Linux clipboard
-  # backends can link against the host's Wayland/X11 libraries. Deliberately
-  # omit `voice_input` so portable bundles do not require the host ALSA runtime.
-  TORCH_TUI_FEATURES="release_bundle,standalone"
 elif [[ "$ARTIFACT" == "app" ]]; then
   # All channels ship the v3 classifier and v2 heuristic.
   FEATURES="$FEATURES,gui,nld_classifier_v3,nld_heuristic_v2"
 fi
 if [[ -n "$EXTRA_FEATURES" ]]; then
-  if [[ "$ARTIFACT" == "tui" ]]; then
-    TORCH_TUI_FEATURES="$TORCH_TUI_FEATURES,$EXTRA_FEATURES"
-  else
-    FEATURES="$FEATURES,$EXTRA_FEATURES"
-  fi
+  FEATURES="$FEATURES,$EXTRA_FEATURES"
 fi
 
 BUNDLE_ID="dev.tombyte.Torch"
@@ -251,22 +227,14 @@ export APPIMAGE_NAME="$APP_NAME-$BUILD_ARCH.AppImage"
 # then exit.  We use this script to invoke `cargo check` to ensure that we are
 # using the same feature flags and profile that we would be using in production.
 if [[ "$CHECK_ONLY" == "true" ]]; then
-  if [[ "$ARTIFACT" == "tui" ]]; then
-    cargo check -p torch_tui --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --features "$TORCH_TUI_FEATURES"
-  else
-    cargo check -p torch --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --features "$FEATURES" ${TARGET_TRIPLE:+--target $TARGET_TRIPLE}
-  fi
+  cargo check -p torch --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --features "$FEATURES" ${TARGET_TRIPLE:+--target $TARGET_TRIPLE}
   exit 0
 fi
 
 # Build the binary.
 if [[ "$BUILD" == "true" ]]; then
   echo "Building and bundling Torch for channel $RELEASE_CHANNEL and bundle id $BUNDLE_ID"
-  if [[ "$ARTIFACT" == "tui" ]]; then
-    cargo build -p torch_tui --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --features "$TORCH_TUI_FEATURES"
-  else
-    cargo build -p torch --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --features "$FEATURES" ${TARGET_TRIPLE:+--target $TARGET_TRIPLE}
-  fi
+  cargo build -p torch --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --features "$FEATURES" ${TARGET_TRIPLE:+--target $TARGET_TRIPLE}
 
   echo "Making debug copy of '$EXECUTABLE_PATH' at '$DEBUG_EXECUTABLE_PATH'"
   cp "$EXECUTABLE_PATH" "$DEBUG_EXECUTABLE_PATH"
@@ -292,17 +260,10 @@ fi
 BINARY_PATH="$EXECUTABLE_PATH"
 if [[ "$ARTIFACT" == "warpctrl" ]]; then
   BINARY_PATH="$WARPCTRL_SCRIPT_PATH"
-elif [[ "$ARTIFACT" == "tui" ]]; then
-  echo "Copying TUI binary into $OUT_DIR/$TORCH_BIN"
-  cp "$EXECUTABLE_PATH" "$OUT_DIR/$TORCH_BIN"
-  BINARY_PATH="$OUT_DIR/$TORCH_BIN"
 fi
 
 if [[ "${SKIP_SETTINGS_SCHEMA:-}" != "1" && -z "${SETTINGS_SCHEMA_EXECUTABLE:-}" && -z "${SETTINGS_SCHEMA_SOURCE:-}" ]]; then
-  if [[ "$ARTIFACT" == "tui" ]]; then
-    echo "Error: TUI bundles require SETTINGS_SCHEMA_SOURCE or SETTINGS_SCHEMA_EXECUTABLE." >&2
-    exit 1
-  elif [[ "$BUILD" != "true" ]]; then
+  if [[ "$BUILD" != "true" ]]; then
     echo "Error: --skip-build requires SETTINGS_SCHEMA_SOURCE or SETTINGS_SCHEMA_EXECUTABLE." >&2
     exit 1
   elif [[ "$BUILD_ARCH" != "$HOST_ARCH" ]]; then
@@ -331,7 +292,7 @@ if [[ "${SKIP_SETTINGS_SCHEMA:-}" != "1" && -n "${SETTINGS_SCHEMA_EXECUTABLE:-}"
 fi
 
 # Prepare bundled resources for standalone builds.
-if [[ "$ARTIFACT" == "cli" || "$ARTIFACT" == "warpctrl" || "$ARTIFACT" == "tui" ]]; then
+if [[ "$ARTIFACT" == "cli" || "$ARTIFACT" == "warpctrl" ]]; then
   echo "Preparing standalone resources directory"
   BUNDLED_RESOURCES_DIR="$OUT_DIR/resources"
   "$WORKSPACE_ROOT_DIR/script/prepare_bundled_resources" "$BUNDLED_RESOURCES_DIR" "$RELEASE_CHANNEL"

@@ -19,7 +19,6 @@ use super::{
     FontSettings, FontSettingsChangedEvent, GPUSettings, InputBoxType, InputModeSettings,
     InputSettings, LocalControlSettings, PaneSettings, SameLinePromptBlockSettings, ScrollSettings,
     SelectionSettings, SharedObjectLimitBannerSettings, SshSettings, ThemeSettings,
-    TuiAutoupdateSettings, TuiThemeSettings, TuiVoiceSettings, TuiZeroStateSettings,
     VimBannerSettings, WarpDrivePrivacySettings,
 };
 use crate::ai::cloud_agent_settings::CloudAgentSettings;
@@ -81,10 +80,6 @@ pub fn register_all_settings(ctx: &mut AppContext) {
     SelectionSettings::register(ctx);
     InputModeSettings::register(ctx);
     ThemeSettings::register(ctx);
-    TuiAutoupdateSettings::register(ctx);
-    TuiThemeSettings::register(ctx);
-    TuiVoiceSettings::register(ctx);
-    TuiZeroStateSettings::register(ctx);
     AccessibilitySettings::register(ctx);
     NativePreferenceSettings::register(ctx);
     CloudPreferencesSettings::register(ctx);
@@ -397,13 +392,6 @@ fn apply_torch_defaults_for_new_profile(ctx: &mut AppContext) {
 }
 
 fn needs_settings_file_migration(ctx: &AppContext) -> bool {
-    // Migration only applies to the GUI surface, which is the one with legacy
-    // native-store settings to move into its TOML file. Other surfaces (e.g.
-    // the TUI) have nothing to migrate and must never run migration or touch
-    // the shared migration-complete marker.
-    if !settings::settings_mode().should_migrate_native_settings() {
-        return false;
-    }
     needs_settings_file_migration_for_path(ctx, &super::user_preferences_toml_file_path())
 }
 
@@ -493,7 +481,7 @@ fn migrate_native_settings_to_settings_file(ctx: &mut AppContext) {
     );
 }
 
-#[cfg(any(test, all(feature = "tui", feature = "test-util")))]
+#[cfg(test)]
 pub fn init_and_register_user_preferences(ctx: &mut AppContext) {
     let public_prefs = Box::<user_preferences::in_memory::InMemoryPreferences>::default();
     let private_prefs = settings::PrivatePreferences::new(Box::<

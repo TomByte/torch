@@ -777,23 +777,6 @@ impl ApiKeyManager {
         Ok(())
     }
 
-    /// Reloads API keys after another process updates the active secure-storage namespace.
-    ///
-    /// GUI edits mutate this manager directly before persisting, so they do not
-    /// need to reload. TUI setup commands run in a separate process and notify
-    /// the live TUI to refresh its cached keys after a successful write.
-    pub fn reload_keys_from_secure_storage(&mut self, ctx: &mut ModelContext<Self>) {
-        let keys = Self::load_keys_from_secure_storage(ctx);
-        let custom_endpoint_keys = Self::load_custom_endpoint_keys_from_secure_storage(ctx);
-        if self.keys == keys && self.custom_endpoints.keys == custom_endpoint_keys {
-            return;
-        }
-        self.keys = keys;
-        self.custom_endpoints.keys = custom_endpoint_keys;
-        self.rebuild_custom_endpoints();
-        ctx.emit(ApiKeyManagerEvent::KeysUpdated);
-    }
-
     /// Persists a provider API key before publishing the updated in-memory value.
     pub fn persist_provider_key(
         &mut self,

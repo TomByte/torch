@@ -139,7 +139,6 @@ fn rich_input_submit_strategy(agent: CLIAgent) -> RichInputSubmitStrategy {
         | CLIAgent::Kiro
         | CLIAgent::Goose
         | CLIAgent::Vibe
-        | CLIAgent::WarpTui
         | CLIAgent::Unknown => RichInputSubmitStrategy::Inline,
     }
 }
@@ -316,10 +315,7 @@ impl TerminalView {
             .map(|s| s.agent);
 
         // Check the appropriate setting based on whether this is a CLI agent command.
-        if let Some(cli_agent) = cli_agent {
-            if !cli_agent.supports_cli_agent_footer() {
-                return false;
-            }
+        if cli_agent.is_some() {
             // For CLI agent commands, only check the CLI agent footer setting.
             // This is independent of the global AI toggle so that users who
             // disable Torch AI still get the footer for third-party coding agents.
@@ -399,25 +395,6 @@ impl TerminalView {
             let prefix = command.split_whitespace().next().map(str::to_owned);
             (agent, prefix)
         })
-    }
-
-    /// Returns whether the active long-running command in this terminal is
-    /// Torch's own headless TUI (`torch_tui`).
-    pub(super) fn is_running_warp_tui(&self, model: &TerminalModel, ctx: &AppContext) -> bool {
-        let active_block = model.block_list().active_block();
-        if !active_block.is_active_and_long_running() {
-            return false;
-        }
-
-        let command = active_block.command_with_secrets_obfuscated(false);
-        let escape_char = self.active_block_session_id().and_then(|session_id| {
-            self.sessions.read(ctx, |sessions, _| {
-                sessions
-                    .get(session_id)
-                    .map(|session| session.shell_family().escape_char())
-            })
-        });
-        CLIAgent::WarpTui.matches_command(&command, escape_char)
     }
 
     /// Updates the UI during a long running command to agent "tagged-in state".
@@ -1412,10 +1389,7 @@ impl View for UseAgentToolbar {
         // If a CLI agent is detected, delegate rendering to the CLI agent footer view.
         // Wrap with horizontal padding matching the terminal view padding so the footer
         // aligns consistently with the input context (which inherits terminal padding).
-        if let Some(cli_agent) = self.cli_agent(app) {
-            if !cli_agent.supports_cli_agent_footer() {
-                return Empty::new().finish();
-            }
+        if self.cli_agent(app).is_some() {
             let mut container = Container::new(ChildView::new(&self.agent_input_footer).finish())
                 .with_horizontal_padding(*super::PADDING_LEFT);
 

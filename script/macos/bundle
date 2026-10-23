@@ -319,8 +319,8 @@ while (( "$#" )); do
       ;;
     --artifact)
       if [ -n "$2" ] && [ "${2:0:1}" != "-" ]; then
-        if [[ "$2" != "app" && "$2" != "cli" && "$2" != "warpctrl" && "$2" != "tui" ]]; then
-          echo "Error: --artifact must be 'app', 'cli', 'warpctrl', or 'tui', got '$2'" >&2
+        if [[ "$2" != "app" && "$2" != "cli" && "$2" != "warpctrl" ]]; then
+          echo "Error: --artifact must be 'app', 'cli', or 'warpctrl', got '$2'" >&2
           exit 1
         fi
         ARTIFACT="$2"
@@ -348,9 +348,7 @@ fi
 if [[ $DEBUG = true ]]; then
   CARGO_PROFILE="dev"
 else
-  if [[ "$ARTIFACT" == "tui" ]]; then
-    CARGO_PROFILE="release-tui"
-  elif [[ "$ARTIFACT" == "cli" || "$ARTIFACT" == "warpctrl" ]]; then
+  if [[ "$ARTIFACT" == "cli" || "$ARTIFACT" == "warpctrl" ]]; then
     CARGO_PROFILE="release-cli"
   else
     CARGO_PROFILE="release-lto"
@@ -429,17 +427,6 @@ if [[ "$ARTIFACT" == cli || "$ARTIFACT" == warpctrl ]]; then
   UNIVERSAL_BINARY=false
   OPEN_AFTER_BUNDLE=false
   FEATURES="$FEATURES,standalone"
-elif [[ "$ARTIFACT" == tui ]]; then
-  # The TUI is a separate console crate (`torch_tui`) with its own per-channel
-  # bins and a minimal feature set, so it does NOT reuse the app's accumulated
-  # FEATURES. It is inherently headless (via `warp`'s `tui` feature). It needs
-  # `release_bundle` to embed the channel config, plus `standalone` so
-  # `bundled_resources_dir()` resolves the sibling `resources/` dir next to the
-  # binary (the TUI is not shipped inside a `.app` bundle).
-  UNIVERSAL_BINARY=false
-  OPEN_AFTER_BUNDLE=false
-  TORCH_BIN="torch-tui"
-  TORCH_TUI_FEATURES="release_bundle,standalone,voice_input"
 elif [[ "$ARTIFACT" == app ]]; then
   # All channels ship the v3 classifier and v2 heuristic.
   FEATURES="$FEATURES,gui,nld_classifier_v3,nld_heuristic_v2"
@@ -448,7 +435,7 @@ fi
 # A universal binary always has a native slice, so it is unaffected by the
 # host/target mismatch below. This must run after the artifact-specific
 # configuration above, since that's what gives UNIVERSAL_BINARY its final
-# value (e.g. cli/warpctrl/tui always force it to false).
+# value (e.g. cli/warpctrl always force it to false).
 CAN_EXECUTE_DEFAULT_TARGET=true
 if [[ "$UNIVERSAL_BINARY" != true && "$HOST_ARCH" == "x86_64" && "$DEFAULT_TARGET" == "$ARM_TARGET" ]]; then
   CAN_EXECUTE_DEFAULT_TARGET=false
@@ -463,13 +450,9 @@ fi
 # then exit.  We use this script to invoke `cargo check` to ensure that we are
 # using the same feature flags and profile that we would be using in production.
 if [[ "$CHECK_ONLY" == "true" ]]; then
-  if [[ "$ARTIFACT" == "tui" ]]; then
-    cargo check -p torch_tui --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --target "$DEFAULT_TARGET" --features "$TORCH_TUI_FEATURES"
-  else
-    cargo check --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --target "$DEFAULT_TARGET" --features "$FEATURES"
-    if [[ $UNIVERSAL_BINARY = true && "$ARTIFACT" != "cli" && "$ARTIFACT" != "warpctrl" ]]; then
-      cargo check --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --target "$ADDITIONAL_TARGET" --features "$FEATURES"
-    fi
+  cargo check --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --target "$DEFAULT_TARGET" --features "$FEATURES"
+  if [[ $UNIVERSAL_BINARY = true && "$ARTIFACT" != "cli" && "$ARTIFACT" != "warpctrl" ]]; then
+    cargo check --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --target "$ADDITIONAL_TARGET" --features "$FEATURES"
   fi
   exit 0
 fi
@@ -744,34 +727,6 @@ elif [[ "$ARTIFACT" == "cli" || "$ARTIFACT" == "warpctrl" ]]; then
   else
     BINARY_PATH="$OUT_DIR/$TORCH_BIN"
   fi
-elif [[ "$ARTIFACT" == "tui" ]]; then
-  if [[ $BUILD_BINARY == true ]]; then
-    echo "Building $TORCH_BIN ($DEFAULT_TARGET) for channel $RELEASE_CHANNEL with profile $CARGO_PROFILE"
-    cargo build -p torch_tui --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --target "$DEFAULT_TARGET" --features "$TORCH_TUI_FEATURES"
-  else
-    echo "Skipping binary build due to --skip-build flag"
-  fi
-
-  echo "Copying binary into $OUT_DIR/$TORCH_BIN"
-  cp "target/$DEFAULT_TARGET/$TARGET_PROFILE_DIR/$TORCH_BIN" "$OUT_DIR/$TORCH_BIN"
-
-  if [[ -n "$TARGET_ARCH" && -e "target/$DEFAULT_TARGET/$TARGET_PROFILE_DIR/$TORCH_BIN.dSYM" ]]; then
-    echo "Copying .dSYM into $OUT_DIR/$TORCH_BIN.dSYM"
-    cp -HR "target/$DEFAULT_TARGET/$TARGET_PROFILE_DIR/$TORCH_BIN.dSYM" "$OUT_DIR/"
-  fi
-
-  # Ship bundled skills + settings schema next to the binary. The standalone TUI
-  # resolves this `resources/` dir relative to its own executable at runtime.
-  # Fonts are compiled into the binary, so they are intentionally absent here.
-  echo "Preparing TUI resources directory"
-  BUNDLED_RESOURCES_DIR="$OUT_DIR/resources"
-  if [[ "${SKIP_SETTINGS_SCHEMA:-}" != "1" && -z "${SETTINGS_SCHEMA_EXECUTABLE:-}" && -z "${SETTINGS_SCHEMA_SOURCE:-}" ]]; then
-    echo "Error: TUI bundles require SETTINGS_SCHEMA_SOURCE or SETTINGS_SCHEMA_EXECUTABLE." >&2
-    exit 1
-  fi
-  "$WORKSPACE_ROOT_DIR/script/prepare_bundled_resources" "$BUNDLED_RESOURCES_DIR" "$RELEASE_CHANNEL"
-
-  BINARY_PATH="$OUT_DIR/$TORCH_BIN"
 else
   echo "Unsupported artifact: $ARTIFACT" >&2
   exit 1
@@ -792,7 +747,7 @@ if [[ $SELFSIGN = true ]]; then
   if [[ "$ARTIFACT" == app ]]; then
     echo "Self-signing $BUNDLE_DIR/$TORCH_APP_NAME.app with ${SIGNING_CERT}..."
     codesign --force --deep --options runtime --sign "$SIGNING_CERT" "$BUNDLE_DIR/$TORCH_APP_NAME.app" --entitlements script/Debug-Entitlements.plist
-  elif [[ "$ARTIFACT" == cli || "$ARTIFACT" == warpctrl || "$ARTIFACT" == tui ]]; then
+  elif [[ "$ARTIFACT" == cli || "$ARTIFACT" == warpctrl ]]; then
     echo "Self-signing $OUT_DIR/$TORCH_BIN with ${SIGNING_CERT}..."
     codesign --force --options runtime --sign "$SIGNING_CERT" "$OUT_DIR/$TORCH_BIN" --entitlements script/Debug-Entitlements.plist
   fi
@@ -801,7 +756,7 @@ elif [[ $CODESIGN = true ]]; then
     echo "Codesigning $BUNDLE_DIR/$TORCH_APP_NAME.app..."
     # Use --deep so we sign bundled frameworks as well
     codesign_with_retry --deep -f -o runtime --timestamp -s "$CODESIGN_IDENTITY" "$BUNDLE_DIR/$TORCH_APP_NAME.app" --entitlements script/Entitlements.plist
-  elif [[ "$ARTIFACT" == cli || "$ARTIFACT" == warpctrl || "$ARTIFACT" == tui ]]; then
+  elif [[ "$ARTIFACT" == cli || "$ARTIFACT" == warpctrl ]]; then
     echo "Codesigning $OUT_DIR/$TORCH_BIN..."
     codesign_with_retry -f -o runtime --timestamp -s "$CODESIGN_IDENTITY" "$OUT_DIR/$TORCH_BIN" --entitlements script/Entitlements.plist
 
@@ -913,7 +868,7 @@ if [[ $CODESIGN = true ]]; then
   if [[ "$ARTIFACT" = app ]]; then
     xcrun stapler validate "$DMG_DIR/$DMG_NAME"
     spctl -a -t exec -vv "$BUNDLE_DIR/$TORCH_APP_NAME.app"
-  elif [[ "$ARTIFACT" = cli || "$ARTIFACT" = warpctrl || "$ARTIFACT" = tui ]]; then
+  elif [[ "$ARTIFACT" = cli || "$ARTIFACT" = warpctrl ]]; then
     spctl -a -t open --context context:primary-signature -vv "$OUT_DIR/$TORCH_BIN"
   fi
 fi

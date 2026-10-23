@@ -4,14 +4,12 @@
 use std::future::Future;
 use std::ops::Range;
 use std::path::Path;
-use std::rc::Rc;
 use std::sync::Arc;
 use std::{cmp, mem};
 
 use ai::diff_validation::DiffDelta;
 use itertools::Itertools;
 use languages::{Language, language_by_filename, language_by_local_filename, language_by_name};
-use line_ending::LineEnding;
 use num_traits::SaturatingSub;
 use rangemap::{RangeMap, RangeSet};
 use string_offset::CharOffset;
@@ -36,9 +34,8 @@ use torch_editor::editor::TextDecoration;
 use torch_editor::model::{CoreEditorModel, PlainTextEditorModel};
 use torch_editor::multiline::{AnyMultilineString, LF, MultilineString};
 use torch_editor::render::model::{
-    AutoScrollMode, BlockItem, BlockSpacings, BrokenLinkStyle, CheckBoxStyle, ColumnUnit,
-    Decoration, HorizontalRuleStyle, InlineCodeStyle, LineCount, LineDecoration, ParagraphStyles,
-    RenderEvent, RenderLineLocation, RenderState, RichTextStyles, StyleUpdateAction, TableStyle,
+    AutoScrollMode, BlockItem, ColumnUnit, Decoration, LineCount, LineDecoration, RenderEvent,
+    RenderLineLocation, RenderState, RichTextStyles, StyleUpdateAction,
     UpdateDecorationAfterLayout, WidthSetting,
 };
 use torch_editor::selection::{SelectionMode, SelectionModel, TextDirection, TextUnit};
@@ -50,7 +47,7 @@ use torchui::elements::{
 use torchui::text::TextBuffer;
 use torchui::text::point::Point;
 use torchui::units::{IntoPixels, Pixels};
-use torchui::{AppContext, Entity, ModelAsRef, ModelContext, ModelHandle, SingletonEntity};
+use torchui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
 use vec1::{Vec1, vec1};
 use vim::vim::{
     BracketChar, CharacterMotion, Direction, FindCharMotion, FirstNonWhitespaceMotion,
@@ -64,7 +61,6 @@ use vim::{
     vim_word_iterator_from_offset,
 };
 
-use super::super::DiffResult;
 use super::comments::{EditorCommentsModel, PendingComment, PendingCommentEvent};
 use super::diff::{
     DiffModel, DiffModelEvent, DiffStatus, RenderableDiffHunk, add_inline_overlay_color,
@@ -203,7 +199,6 @@ pub enum CodeEditorModelEvent {
         origin: EditOrigin,
     },
     SelectionChanged,
-    UnifiedDiffComputed(Rc<DiffResult>),
     ViewportUpdated(BufferVersion),
     InteractionStateChanged,
     DelayedRenderingFlushed,
@@ -352,52 +347,12 @@ impl CodeEditorModel {
         )
     }
 
-    /// Constructs a `CodeEditorModel` in TUI char-cell mode.
-    ///
-    /// Identical to `new` but creates the `RenderState` with
-    /// [`LayoutMode::CharCell`] so all soft-wrap positions use monospace
-    /// character-count arithmetic rather than font-aware pixel layout.
-    /// `TuiEditorModel` (in `torch_tui`) is a type alias for this type;
-    /// constructing via this method is what gives the TUI editor all of
-    /// `CodeEditorModel`'s features (vim, syntax, diff, hidden lines) for free
-    /// while sharing no GUI-rendering infrastructure.
-    ///
-    /// Like `new`, this reads syntax-highlight colors from the `Appearance`
-    /// singleton, so callers must register `Appearance` (a real one for the
-    /// runtime, `Appearance::mock()` for tests) before constructing the model.
-    pub fn new_tui(terminal_width: u16, ctx: &mut ModelContext<Self>) -> Self {
-        let content = ctx.add_model(|_| Buffer::new(Box::new(|_, _| IndentBehavior::Ignore)));
-
-        Self::from_content(
-            content,
-            false, // show_current_line_highlights: no GPU rendering in TUI
-            false, // lazy_layout_enabled: no lazy layout in TUI
-            true,  // lazy_layout_initialized: no lazy layout in TUI
-            ctx,
-            |hidden_lines, ctx| {
-                let hidden_lines = hidden_lines.clone();
-                // CharCell layout consumes the configured tab size; RenderState
-                // retains the remaining styles for API compatibility with pixel layout.
-                ctx.add_model(|ctx| {
-                    RenderState::new_tui(
-                        terminal_width,
-                        Self::tui_stub_text_styles(),
-                        hidden_lines,
-                        ctx,
-                    )
-                })
-            },
-        )
-    }
-
-    /// Shared construction for [`Self::new`] and [`Self::new_tui`]. The two modes
-    /// differ only in how the backing `content` buffer and the `RenderState` are
-    /// built (GUI pixel layout vs. TUI char-cell layout) plus a few flags; all
-    /// other sub-models (selection, syntax tree, diff, hidden lines, comments)
-    /// and event subscriptions are identical and wired up here.
+    /// Shared construction wiring up the sub-models (selection, syntax tree, diff,
+    /// hidden lines, comments) and event subscriptions around the backing `content`
+    /// buffer.
     ///
     /// `build_render_state` receives the freshly-created `hidden_lines` handle so
-    /// both paths can attach it to their `RenderState`.
+    /// it can attach it to the `RenderState`.
     fn from_content(
         content: ModelHandle<Buffer>,
         show_current_line_highlights: bool,
@@ -471,84 +426,6 @@ impl CodeEditorModel {
             lazy_layout_enabled,
             lazy_layout_initialized,
             pending_syntax_tree_bootstrap: false,
-        }
-    }
-
-    /// A minimal [`RichTextStyles`] for the TUI char-cell editor.
-    ///
-    /// [`RenderState::new_tui`] consumes the base paragraph's tab size and
-    /// retains the remaining styles for API compatibility. This stub lives here
-    /// so the core editor crate doesn't carry a TUI-specific dependency.
-    fn tui_stub_text_styles() -> RichTextStyles {
-        use torchui::elements::{Border, Fill};
-        use torchui::fonts::{FamilyId, Weight};
-
-        const TRANSPARENT: torchui::color::ColorU = torchui::color::ColorU {
-            r: 0,
-            g: 0,
-            b: 0,
-            a: 0,
-        };
-        let paragraph = |fixed_width_tab_size| ParagraphStyles {
-            font_family: FamilyId(0),
-            font_size: 10.,
-            font_weight: Weight::Normal,
-            line_height_ratio: 1.,
-            text_color: TRANSPARENT,
-            baseline_ratio: 0.7,
-            fixed_width_tab_size,
-        };
-        RichTextStyles {
-            base_text: paragraph(Some(4)),
-            code_text: paragraph(Some(4)),
-            code_background: Fill::None,
-            embedding_background: Fill::None,
-            embedding_text: paragraph(None),
-            code_border: Border::new(0.),
-            placeholder_color: TRANSPARENT,
-            selection_fill: Fill::None,
-            cursor_fill: Fill::None,
-            inline_code_style: InlineCodeStyle {
-                font_family: FamilyId(0),
-                background: TRANSPARENT,
-                font_color: TRANSPARENT,
-            },
-            check_box_style: CheckBoxStyle {
-                border_width: 0.,
-                border_color: TRANSPARENT,
-                icon_path: "",
-                background: TRANSPARENT,
-                hover_background: TRANSPARENT,
-            },
-            horizontal_rule_style: HorizontalRuleStyle {
-                rule_height: 0.,
-                color: TRANSPARENT,
-            },
-            broken_link_style: BrokenLinkStyle {
-                icon_path: "",
-                icon_color: TRANSPARENT,
-            },
-            block_spacings: BlockSpacings::default(),
-            minimum_paragraph_height: None,
-            show_placeholder_text_on_empty_block: false,
-            cursor_width: 0.,
-            highlight_urls: false,
-            table_style: TableStyle {
-                border_color: TRANSPARENT,
-                header_background: TRANSPARENT,
-                cell_background: TRANSPARENT,
-                alternate_row_background: None,
-                text_color: TRANSPARENT,
-                header_text_color: TRANSPARENT,
-                scrollbar_nonactive_thumb_color: TRANSPARENT,
-                scrollbar_active_thumb_color: TRANSPARENT,
-                font_family: FamilyId(0),
-                font_size: 10.,
-                cell_padding: 0.,
-                outer_border: false,
-                column_dividers: false,
-                row_dividers: false,
-            },
         }
     }
 
@@ -1544,11 +1421,6 @@ impl CodeEditorModel {
 
                 ctx.emit(CodeEditorModelEvent::DiffUpdated);
             }
-            DiffModelEvent::UnifiedDiffComputed(unified_diff) => {
-                ctx.emit(CodeEditorModelEvent::UnifiedDiffComputed(
-                    unified_diff.clone(),
-                ));
-            }
         }
     }
 
@@ -1938,88 +1810,6 @@ impl CodeEditorModel {
         self.backspace(ctx);
     }
 
-    // ── Char-cell (TUI) visual-row kill ──────────────────────────────────────
-
-    /// Deletes from the primary cursor to the end of its soft-wrapped visual
-    /// row, returning the deleted text; `None` when the cursor is already at
-    /// the row end. Char-cell (TUI) mode only — visual rows follow the
-    /// terminal-width wrap math.
-    pub fn kill_to_char_cell_visual_row_end(
-        &mut self,
-        ctx: &mut ModelContext<Self>,
-    ) -> Option<String> {
-        // `cursor_gap` is a 1-indexed gap position (gap 1 sits before the
-        // first character); `text_in_range` / `Delete` use those same
-        // coordinates, so the kill range starts exactly at `cursor_gap`.
-        let cursor_gap = self.primary_cursor_gap(ctx);
-        let cursor_offset = CharOffset::from(cursor_gap.as_usize().saturating_sub(1));
-        let row = self.char_cell_visual_row_range(cursor_offset, ctx)?;
-        if row.end <= cursor_offset {
-            return None;
-        }
-        // `text[i]` lives at gap `i + 1`, so the exclusive end gap is `row.end + 1`.
-        Some(self.delete_range_returning_text(cursor_gap..row.end + 1, ctx))
-    }
-
-    /// Deletes from the start of the primary cursor's soft-wrapped visual row
-    /// up to the cursor, returning the deleted text; `None` when the cursor
-    /// is already at the row start. Char-cell (TUI) mode only.
-    pub fn kill_to_char_cell_visual_row_start(
-        &mut self,
-        ctx: &mut ModelContext<Self>,
-    ) -> Option<String> {
-        let cursor_gap = self.primary_cursor_gap(ctx);
-        let cursor_offset = CharOffset::from(cursor_gap.as_usize().saturating_sub(1));
-        let row = self.char_cell_visual_row_range(cursor_offset, ctx)?;
-        if row.start >= cursor_offset {
-            return None;
-        }
-        Some(self.delete_range_returning_text(row.start + 1..cursor_gap, ctx))
-    }
-
-    /// The primary cursor as a 1-indexed gap offset.
-    fn primary_cursor_gap(&self, ctx: &impl ModelAsRef) -> CharOffset {
-        *self.selection.as_ref(ctx).cursors(ctx).first()
-    }
-
-    /// The soft-wrapped visual row containing 0-based `cursor_offset`, as
-    /// 0-based character offsets; `None` outside char-cell (TUI) mode.
-    fn char_cell_visual_row_range(
-        &self,
-        cursor_offset: CharOffset,
-        ctx: &impl ModelAsRef,
-    ) -> Option<Range<CharOffset>> {
-        let render = self.render_state.as_ref(ctx);
-        Some(render.char_cell()?.visual_row_char_range(cursor_offset))
-    }
-
-    /// Deletes `range` (1-indexed gap offsets) as a user edit, returning the
-    /// deleted text.
-    fn delete_range_returning_text(
-        &mut self,
-        range: Range<CharOffset>,
-        ctx: &mut ModelContext<Self>,
-    ) -> String {
-        let deleted = self
-            .content
-            .as_ref(ctx)
-            .text_in_range(range.clone())
-            .into_string();
-        let selection_model = self.selection_model.clone();
-        self.update_content(
-            |mut content, ctx| {
-                content.apply_edit(
-                    BufferEditAction::Delete(vec1![range]),
-                    EditOrigin::UserInitiated,
-                    selection_model,
-                    ctx,
-                );
-            },
-            ctx,
-        );
-        deleted
-    }
-
     pub fn reset_content(&mut self, state: InitialBufferState, ctx: &mut ModelContext<Self>) {
         self.set_base(state.text, false, ctx);
         // Line ending is now inferred automatically by Buffer::reset.
@@ -2144,51 +1934,6 @@ impl CodeEditorModel {
 
     pub fn vim_visual_tails(&self) -> &Vec<CharOffset> {
         &self.vim_visual_tails
-    }
-
-    /// Return the ranges represented by the current Vim visual tails and
-    /// selection heads without consuming the tails.
-    pub fn vim_visual_selection_ranges(
-        &self,
-        motion_type: MotionType,
-        ctx: &AppContext,
-    ) -> Vec<Range<CharOffset>> {
-        let selection_model = self.selection_model.as_ref(ctx);
-        let buffer = self.content().as_ref(ctx);
-
-        selection_model
-            .selection_offsets()
-            .iter()
-            .zip(self.vim_visual_tails.iter())
-            .map(|(selection, visual_tail)| {
-                let mut start = *visual_tail;
-                let mut end = selection.head;
-                if start > end {
-                    mem::swap(&mut start, &mut end);
-                }
-
-                let max_offset = buffer.max_charoffset();
-                if end < max_offset
-                    && (motion_type != MotionType::Linewise
-                        || buffer.char_at(end).is_some_and(|c| c != '\n'))
-                {
-                    end += 1;
-                }
-
-                if motion_type == MotionType::Linewise {
-                    let start_point = start.to_buffer_point(buffer);
-                    start = Point::new(start_point.row, 0).to_buffer_char_offset(buffer);
-
-                    let end_point = end.to_buffer_point(buffer);
-                    if end_point.column != 0 {
-                        end = Point::new(end_point.row, buffer.line_len(end_point.row))
-                            .to_buffer_char_offset(buffer);
-                    }
-                }
-
-                start..end
-            })
-            .collect()
     }
 
     /// Expand the current selection(s) for a visual-mode operation using stored visual tails.
@@ -2337,18 +2082,6 @@ impl CodeEditorModel {
         bracket_pairs
             .iter()
             .any(|(start, end)| *start == opening_char && *end == ending_char)
-    }
-
-    pub fn retrieve_unified_diff(&self, file_name: String, ctx: &mut ModelContext<Self>) {
-        // Use the buffer's text with normalized line endings, for consistency with how we calculate diffs.
-        let content = self
-            .content()
-            .as_ref(ctx)
-            .text_with_line_ending_mode(LineEnding::LF);
-
-        self.diff.update(ctx, move |diff, ctx| {
-            diff.retrieve_unified_diff(content, file_name, ctx)
-        });
     }
 
     pub fn interaction_state(&self) -> InteractionState {

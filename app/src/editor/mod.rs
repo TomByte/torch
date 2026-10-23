@@ -13,10 +13,6 @@ pub use torchui::text::point::Point;
 /// details of the editor (e.g. the [`Buffer`]).
 pub use view::*;
 
-// Re-exported for use by the `torch_tui` TUI front-end, which needs to
-// construct and subscribe to `CodeEditorModel` in char-cell mode.
-pub use crate::code::editor::model::{CodeEditorModel, CodeEditorModelEvent, LineBound};
-
 pub fn init(app: &mut AppContext) {
     view::init(app);
 }

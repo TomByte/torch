@@ -4,8 +4,6 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use serde::{Deserialize, Serialize};
 
-#[cfg(feature = "tui")]
-use crate::core::view::AnyTuiView;
 use crate::core::view::AnyViewHandle;
 use crate::core::{AnyView, BlurContext, FocusContext};
 use crate::{AccessibilityData, AppContext, CursorInfo, EntityId, EntityIdMap, keymap};
@@ -52,42 +50,26 @@ pub(super) struct Window {
 }
 
 /// A type-erased view stored in a window's view registry.
-///
-/// GUI views ([`AnyView`]) and TUI views ([`AnyTuiView`], additive behind the
-/// `tui` feature) share the same registry, keyed by the same [`EntityId`]s, so
-/// all of the neutral machinery (handles + ref counts, focus, the responder
-/// chain, typed actions, subscriptions/observations, drop/transfer) flows
-/// through the same paths for both. The inherent methods below delegate the
-/// neutral hook subset; render and the GUI-only hooks are matched exhaustively
-/// at their call sites.
 pub(crate) enum StoredView {
     Gui(Box<dyn AnyView>),
-    #[cfg(feature = "tui")]
-    Tui(Box<dyn AnyTuiView>),
 }
 
 impl StoredView {
     pub fn as_any(&self) -> &dyn Any {
         match self {
             StoredView::Gui(view) => view.as_any(),
-            #[cfg(feature = "tui")]
-            StoredView::Tui(view) => view.as_any(),
         }
     }
 
     pub fn as_any_mut(&mut self) -> &mut dyn Any {
         match self {
             StoredView::Gui(view) => view.as_any_mut(),
-            #[cfg(feature = "tui")]
-            StoredView::Tui(view) => view.as_any_mut(),
         }
     }
 
     pub fn ui_name(&self) -> &'static str {
         match self {
             StoredView::Gui(view) => view.ui_name(),
-            #[cfg(feature = "tui")]
-            StoredView::Tui(view) => view.ui_name(),
         }
     }
 
@@ -100,8 +82,6 @@ impl StoredView {
     ) {
         match self {
             StoredView::Gui(view) => view.on_focus(focus_ctx, app, window_id, view_id),
-            #[cfg(feature = "tui")]
-            StoredView::Tui(view) => view.on_focus(focus_ctx, app, window_id, view_id),
         }
     }
 
@@ -114,16 +94,12 @@ impl StoredView {
     ) {
         match self {
             StoredView::Gui(view) => view.on_blur(blur_ctx, app, window_id, view_id),
-            #[cfg(feature = "tui")]
-            StoredView::Tui(view) => view.on_blur(blur_ctx, app, window_id, view_id),
         }
     }
 
     pub fn keymap_context(&self, app: &AppContext) -> keymap::Context {
         match self {
             StoredView::Gui(view) => view.keymap_context(app),
-            #[cfg(feature = "tui")]
-            StoredView::Tui(view) => view.keymap_context(app),
         }
     }
 
@@ -135,8 +111,6 @@ impl StoredView {
     ) -> Option<CursorInfo> {
         match self {
             StoredView::Gui(view) => view.active_cursor_position(app, window_id, view_id),
-            #[cfg(feature = "tui")]
-            StoredView::Tui(_) => None,
         }
     }
 
@@ -148,8 +122,6 @@ impl StoredView {
     ) {
         match self {
             StoredView::Gui(view) => view.on_window_closed(app, window_id, view_id),
-            #[cfg(feature = "tui")]
-            StoredView::Tui(_) => {}
         }
     }
 
@@ -164,8 +136,6 @@ impl StoredView {
             StoredView::Gui(view) => {
                 view.on_window_transferred(source_window_id, target_window_id, app, view_id)
             }
-            #[cfg(feature = "tui")]
-            StoredView::Tui(_) => {}
         }
     }
 
@@ -177,8 +147,6 @@ impl StoredView {
     ) {
         match self {
             StoredView::Gui(view) => view.self_or_child_interacted_with(app, window_id, view_id),
-            #[cfg(feature = "tui")]
-            StoredView::Tui(_) => {}
         }
     }
 
@@ -190,16 +158,12 @@ impl StoredView {
     ) -> Option<AccessibilityData> {
         match self {
             StoredView::Gui(view) => view.accessibility_data(app, window_id, view_id),
-            #[cfg(feature = "tui")]
-            StoredView::Tui(_) => None,
         }
     }
 
     pub fn child_view_ids(&self, app: &AppContext) -> Vec<EntityId> {
         match self {
             StoredView::Gui(view) => view.child_view_ids(app),
-            #[cfg(feature = "tui")]
-            StoredView::Tui(view) => view.child_view_ids(app),
         }
     }
 }

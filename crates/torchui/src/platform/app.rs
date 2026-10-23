@@ -10,7 +10,7 @@ use super::AsInnerMut;
 /// implementations:
 /// * The platform-native GUI backend (e.g. Cocoa on macOS, or Winit+X11/Wayland on Linux)
 /// * A windowless backend that drives an event loop without native windows or rendering, used
-///   by both headless processes and the terminal-rendered TUI
+///   by headless processes
 pub enum AppBackend {
     CurrentPlatform(Box<super::current::App>),
     Windowless(Box<super::headless::App>),

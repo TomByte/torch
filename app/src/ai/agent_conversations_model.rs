@@ -752,12 +752,6 @@ impl AgentConversationsModel {
         self.initial_load_state.is_loading_local()
     }
 
-    /// Returns whether cloud conversation metadata failed to load.
-    #[cfg_attr(not(feature = "tui"), allow(dead_code))]
-    pub(crate) fn cloud_conversation_metadata_load_failed(&self) -> bool {
-        self.initial_load_state == InitialConversationLoadState::CloudFailed
-    }
-
     fn handle_network_status_changed(
         &mut self,
         _: ModelHandle<NetworkStatus>,

@@ -336,9 +336,6 @@ impl LocalCodeEditorView {
         });
 
         ctx.subscribe_to_view(&editor, |me, _, event, ctx| match event {
-            CodeEditorEvent::UnifiedDiffComputed => {
-                ctx.emit(LocalCodeEditorEvent::DiffAccepted);
-            }
             CodeEditorEvent::ContentChanged { origin, .. } => {
                 me.update_diff_hunk_gutter_buttons(ctx);
 
@@ -1923,22 +1920,9 @@ impl LocalCodeEditorView {
         self.editor.as_ref(ctx).scroll_fraction(ctx)
     }
 
-    /// Accept the diff that is currently in the editor. For local files, this can only be called after the file contents
-    /// have been loaded into the editor.
-    /// If it is a local file, the diff content will be retrieved and the pending diff will be marked as completed.
-    /// If it is not a local file, the pending diff will be marked as completed with an empty diff.
+    /// Marks the pending diff as accepted.
     pub fn accept_diff(&mut self, ctx: &mut ViewContext<Self>) {
-        match self.file_path() {
-            Some(file) => {
-                // Begin calculating the diff that will be saved.  When the result comes back, the diff will be marked completed.
-                self.editor.update(ctx, |view, ctx| {
-                    view.retrieve_unified_diff(file.display().to_string(), ctx)
-                });
-            }
-            None => {
-                ctx.emit(LocalCodeEditorEvent::DiffAccepted);
-            }
-        };
+        ctx.emit(LocalCodeEditorEvent::DiffAccepted);
     }
 
     pub fn close_find_bar(&mut self, should_focus_editor: bool, ctx: &mut ViewContext<Self>) {

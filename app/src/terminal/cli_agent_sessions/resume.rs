@@ -42,7 +42,6 @@ impl ResumableAgentSession {
             | CLIAgent::Grok
             | CLIAgent::Kiro
             | CLIAgent::Muse
-            | CLIAgent::WarpTui
             | CLIAgent::Unknown => return None,
         };
         let is_token = !session_id.is_empty()

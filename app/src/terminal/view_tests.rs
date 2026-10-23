@@ -18,8 +18,7 @@ use crate::terminal::alt_screen::should_intercept_mouse;
 use crate::terminal::block_list_element::{SnackbarPoint, SnackbarTranslationMode};
 use crate::terminal::block_list_viewport::{ClampingMode, ScrollLines};
 use crate::terminal::cli_agent_sessions::event::{
-    CLI_AGENT_NOTIFICATION_SENTINEL, CLIAgentEvent, CLIAgentEventPayload, CLIAgentEventSource,
-    CLIAgentEventType,
+    CLIAgentEvent, CLIAgentEventPayload, CLIAgentEventSource, CLIAgentEventType,
 };
 use crate::terminal::cli_agent_sessions::listener::CLIAgentSessionListener;
 use crate::terminal::cli_agent_sessions::{
@@ -4907,87 +4906,6 @@ fn copy_does_not_forward_on_normal_screen() {
             "Copy must not write anything to the PTY on the normal screen with no selection"
         );
     })
-}
-
-fn set_warp_tui_session(view: &mut TerminalView, ctx: &mut ViewContext<TerminalView>) {
-    view.model.lock().simulate_long_running_block("warp", "");
-    assert_eq!(
-        CLIAgent::detect("warp", None, None, ctx),
-        Some(CLIAgent::WarpTui)
-    );
-
-    CLIAgentSessionsModel::handle(ctx).update(ctx, |sessions, ctx| {
-        sessions.set_session(
-            view.view_id,
-            CLIAgentSession {
-                agent: CLIAgent::WarpTui,
-                status: CLIAgentSessionStatus::InProgress,
-                session_context: CLIAgentSessionContext::default(),
-                input_state: CLIAgentInputState::Closed,
-                should_auto_toggle_input: false,
-                listener: None,
-                remote_host: None,
-                plugin_version: None,
-                draft_text: None,
-                custom_command_prefix: None,
-                received_rich_notification: false,
-            },
-            ctx,
-        );
-    });
-}
-
-#[test]
-fn warp_tui_listener_does_not_auto_open_rich_input() {
-    App::test((), |mut app| async move {
-        initialize_app_for_terminal_view(&mut app);
-        AISettings::handle(&app).update(&mut app, |settings, ctx| {
-            let _ = settings
-                .auto_open_rich_input_on_cli_agent_start
-                .set_value(true, ctx);
-        });
-
-        let terminal = add_window_with_terminal(&mut app, None);
-        terminal.update(&mut app, |view, ctx| {
-            view.handle_cli_agent_notification(
-                Some(CLI_AGENT_NOTIFICATION_SENTINEL),
-                r#"{"v":1,"agent":"warp-tui","event":"session_start"}"#,
-                ctx,
-            );
-        });
-
-        terminal.read(&app, |view, ctx| {
-            let session = CLIAgentSessionsModel::as_ref(ctx)
-                .session(view.view_id)
-                .expect("Torch TUI session should be registered");
-            assert!(session.listener.is_some());
-            assert!(!session.should_auto_toggle_input);
-            assert!(!view.has_active_cli_agent_input_session(ctx));
-        });
-    });
-}
-
-/// `active_cli_agent` must return `None` for the Torch TUI when `HoaCodeReview`
-/// is disabled, preserving the pre-feature behavior (no review destination).
-#[test]
-fn active_cli_agent_ignores_warp_tui_when_hoa_code_review_disabled() {
-    App::test((), |mut app| async move {
-        initialize_app_for_terminal_view(&mut app);
-        let _hoa_code_review = FeatureFlag::HoaCodeReview.override_enabled(false);
-
-        let terminal = add_window_with_terminal(&mut app, None);
-        terminal.update(&mut app, |view, ctx| {
-            set_warp_tui_session(view, ctx);
-        });
-
-        terminal.read(&app, |view, ctx| {
-            assert_eq!(
-                view.active_cli_agent(ctx),
-                None,
-                "Torch TUI should not be a review destination when HoaCodeReview is disabled"
-            );
-        });
-    });
 }
 
 #[test]

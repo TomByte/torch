@@ -100,8 +100,6 @@ pub enum CodeEditorEvent {
     ContentChanged {
         origin: EditOrigin,
     },
-    /// Emitted when a unified diff computation completes.
-    UnifiedDiffComputed,
     SelectionChanged,
     SelectionStart,
     SelectionEnd,
@@ -1304,9 +1302,6 @@ impl CodeEditorView {
                 }
                 ctx.emit(CodeEditorEvent::ContentChanged { origin: *origin });
             }
-            CodeEditorModelEvent::UnifiedDiffComputed(_) => {
-                ctx.emit(CodeEditorEvent::UnifiedDiffComputed);
-            }
             CodeEditorModelEvent::ViewportUpdated(version) => {
                 if let Some(trigger) = self
                     .pending_scroll
@@ -1570,12 +1565,6 @@ impl CodeEditorView {
     pub fn truncate(&self, len: usize, ctx: &mut ViewContext<Self>) {
         self.model.update(ctx, |model, ctx| {
             model.truncate(len, ctx);
-        });
-    }
-
-    pub fn retrieve_unified_diff(&self, file_name: String, ctx: &mut ViewContext<Self>) {
-        self.model.update(ctx, |model, ctx| {
-            model.retrieve_unified_diff(file_name, ctx);
         });
     }
 

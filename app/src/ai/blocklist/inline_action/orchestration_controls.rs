@@ -604,7 +604,7 @@ pub fn populate_host_picker<V: View>(
             Some(OptionBadge::Connected) => connected_hosts.push(row.id),
             // The unbadged "warp" row is built into the HostPicker itself.
             // Recommended is not applicable to host rows.
-            Some(OptionBadge::Recommended) | None => {}
+            None => {}
         }
     }
     picker.update(ctx, |picker, picker_ctx| {

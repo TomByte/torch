@@ -25,8 +25,6 @@ pub enum CloudModeEntryPoint {
 pub enum HandoffSurface {
     #[cfg_attr(target_family = "wasm", allow(dead_code))]
     Gui,
-    #[cfg_attr(not(feature = "tui"), allow(dead_code))]
-    Tui,
 }
 
 /// The entry point through which a local-to-cloud handoff was initiated.

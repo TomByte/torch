@@ -23,19 +23,6 @@ use crate::terminal::event::{
 };
 use crate::terminal::model::session::Sessions;
 use crate::terminal::shell::ShellType;
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) enum SshRemoteServerSupport {
-    Enabled,
-    #[cfg_attr(target_family = "wasm", allow(dead_code))]
-    Disabled,
-}
-
-impl SshRemoteServerSupport {
-    fn should_use_remote_server(self, feature_enabled: bool, is_ssh_wrapper_session: bool) -> bool {
-        matches!(self, Self::Enabled) && feature_enabled && is_ssh_wrapper_session
-    }
-}
-
 /// Model that dispatches events that have been emitted by the [`crate::terminal::TerminalModel`],
 /// allowing other models/views to subscribe to `TerminalModel` events like it would any other
 /// entity within the UI framework.
@@ -43,27 +30,12 @@ pub struct ModelEventDispatcher {
     last_start_prompt_marker: Option<PromptKind>,
     active_session_id: Option<SessionId>,
     sessions: ModelHandle<Sessions>,
-    ssh_remote_server_support: SshRemoteServerSupport,
 }
 
 impl ModelEventDispatcher {
     pub fn new(
         model_events_rx: Receiver<Event>,
         sessions: ModelHandle<Sessions>,
-        ctx: &mut ModelContext<Self>,
-    ) -> Self {
-        Self::new_with_ssh_remote_server_support(
-            model_events_rx,
-            sessions,
-            SshRemoteServerSupport::Enabled,
-            ctx,
-        )
-    }
-
-    pub(crate) fn new_with_ssh_remote_server_support(
-        model_events_rx: Receiver<Event>,
-        sessions: ModelHandle<Sessions>,
-        ssh_remote_server_support: SshRemoteServerSupport,
         ctx: &mut ModelContext<Self>,
     ) -> Self {
         ctx.spawn_stream_local(
@@ -75,14 +47,10 @@ impl ModelEventDispatcher {
             active_session_id: None,
             last_start_prompt_marker: None,
             sessions,
-            ssh_remote_server_support,
         }
     }
     fn should_use_ssh_remote_server(&self, is_ssh_wrapper_session: bool) -> bool {
-        self.ssh_remote_server_support.should_use_remote_server(
-            FeatureFlag::SshRemoteServer.is_enabled(),
-            is_ssh_wrapper_session,
-        )
+        FeatureFlag::SshRemoteServer.is_enabled() && is_ssh_wrapper_session
     }
 
     /// Returns the active session to which the PTY is currently attached.
@@ -534,7 +502,3 @@ pub enum AnsiHandlerEvent {
 impl Entity for ModelEventDispatcher {
     type Event = ModelEvent;
 }
-
-#[cfg(test)]
-#[path = "model_events_tests.rs"]
-mod tests;

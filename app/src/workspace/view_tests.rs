@@ -153,7 +153,6 @@ pub(crate) fn initialize_app_with_team_client(app: &mut App, team_client: Arc<dy
         CloudPreferencesSyncer::new(
             false,                     // force_local_wins_on_startup
             std::path::PathBuf::new(), // unused in tests that don't exercise the hash path
-            true,                      // sync_enabled: cloud sync active in tests
             ctx,
         )
     });

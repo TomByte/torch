@@ -4,7 +4,6 @@ use std::path::{Path, PathBuf};
 use ai::skills::{ParsedSkill, SkillPathOrigin, SkillReference, parse_bundled_skill};
 use futures::TryStreamExt;
 use torch_core::channel::ChannelState;
-use torch_core::execution_mode::AppExecutionMode;
 use torch_core::features::FeatureFlag;
 use torch_core::safe_warn;
 use torch_core::ui::icons::Icon;
@@ -24,8 +23,6 @@ use crate::settings::user_preferences_toml_file_path;
 pub enum BundledSkillActivation {
     /// Always active.
     Always,
-    /// Active only in the TUI frontend.
-    TuiOnly,
     /// Active only when a specific Torch feature is enabled.
     RequiresFeature(FeatureFlag),
     /// Active only when a specific MCP server is running.
@@ -48,7 +45,6 @@ impl BundledSkillActivation {
     pub fn is_enabled(&self, ctx: &AppContext) -> bool {
         match self {
             Self::Always => true,
-            Self::TuiOnly => AppExecutionMode::as_ref(ctx).is_tui(),
             Self::RequiresFeature(feature) => feature.is_enabled(),
             Self::RequiresMcp(integration) => {
                 TemplatableMCPServerManager::as_ref(ctx).is_mcp_server_running(*integration)
@@ -150,30 +146,6 @@ impl BundledSkills {
             SkillPathOrigin::Remote { host_id } => self.remote(host_id),
             SkillPathOrigin::Unavailable => None,
         }
-    }
-
-    #[cfg(test)]
-    pub fn insert_local_for_testing(
-        &mut self,
-        id: impl Into<String>,
-        skill: ParsedSkill,
-        activation: BundledSkillActivation,
-    ) {
-        self.local.insert_for_testing(id, skill, activation);
-    }
-
-    #[cfg(test)]
-    pub fn insert_remote_for_testing(
-        &mut self,
-        host_id: HostId,
-        id: impl Into<String>,
-        skill: ParsedSkill,
-        activation: BundledSkillActivation,
-    ) {
-        self.remote_by_host
-            .entry(host_id)
-            .or_default()
-            .insert_for_testing(id, skill, activation);
     }
 }
 
@@ -305,7 +277,6 @@ impl BundledSkill {
                 let icon = match &activation {
                     BundledSkillActivation::RequiresMcp(McpIntegration::Figma) => Icon::Figma,
                     BundledSkillActivation::Always
-                    | BundledSkillActivation::TuiOnly
                     | BundledSkillActivation::RequiresFeature(_)
                     | BundledSkillActivation::RequiresFile(_) => icon_for_bundled_skill(&id),
                 };
@@ -331,24 +302,6 @@ impl BundledSkill {
         self.definitions
             .iter()
             .map(|(id, definition)| (id.as_str(), &definition.skill, &definition.activation))
-    }
-
-    #[cfg(test)]
-    pub fn insert_for_testing(
-        &mut self,
-        id: impl Into<String>,
-        skill: ParsedSkill,
-        activation: BundledSkillActivation,
-    ) {
-        let id = id.into();
-        self.definitions.insert(
-            id.clone(),
-            BundledSkillDefinition {
-                skill,
-                activation,
-                icon: icon_for_bundled_skill(&id),
-            },
-        );
     }
 }
 
@@ -470,9 +423,7 @@ fn display_optional_path(path: Option<PathBuf>) -> String {
 /// - `{{settings_file_path}}` - Path to the user's settings TOML file
 /// - `{{keybindings_file_path}}` - Path to the user's keybindings YAML file
 /// - `{{gui_settings_file_path}}` - Path to the GUI settings TOML file
-/// - `{{tui_settings_file_path}}` - Path to the TUI settings TOML file
 /// - `{{gui_mcp_config_file_path}}` - Path to the GUI global MCP config
-/// - `{{tui_mcp_config_file_path}}` - Path to the TUI global MCP config
 pub(crate) fn build_bundled_skill_context(
     resources_dir: &Path,
     skill_dir: &Path,
@@ -518,21 +469,8 @@ pub(crate) fn build_bundled_skill_context(
             ),
         ),
         (
-            "tui_settings_file_path".to_owned(),
-            torch_core::paths::tui_config_local_dir()
-                .join("settings.toml")
-                .display()
-                .to_string(),
-        ),
-        (
             "gui_mcp_config_file_path".to_owned(),
             display_optional_path(torch_core::paths::gui_mcp_config_file_path()),
-        ),
-        (
-            "tui_mcp_config_file_path".to_owned(),
-            torch_core::paths::tui_mcp_config_file_path()
-                .display()
-                .to_string(),
         ),
         (
             "settings_schema_path".to_owned(),
@@ -569,7 +507,6 @@ pub(crate) fn activation_for_bundled_skill(
         "modify-settings" => {
             BundledSkillActivation::RequiresFile(resources_dir.join("settings_schema.json"))
         }
-        "tui-migrate-setup" => BundledSkillActivation::TuiOnly,
         "warpctrl" => BundledSkillActivation::RequiresFeature(FeatureFlag::WarpControlCli),
         // Gate the Factory MCP skill on the same flag that attaches the
         // Factory MCP server, so the skill and the server it documents roll

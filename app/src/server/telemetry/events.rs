@@ -892,7 +892,7 @@ pub enum AgentModeAutoDetectionSettingOrigin {
     #[serde(rename = "settings_page")]
     SettingsPage,
 
-    /// A TUI slash command (`/enable-natural-language-detection` or
+    /// A slash command (`/enable-natural-language-detection` or
     /// `/disable-natural-language-detection`).
     #[serde(rename = "slash_command")]
     SlashCommand,
@@ -1047,7 +1047,6 @@ pub enum TelemetryAgentViewEntryOrigin {
     InlineCodeReview,
     AmbientAgent,
     Cli,
-    Tui,
     ImageAdded,
     SlashCommand,
     CodeReviewContext,
@@ -1100,7 +1099,6 @@ impl From<AgentViewEntryOrigin> for TelemetryAgentViewEntryOrigin {
             AgentViewEntryOrigin::CloudAgent => Self::AmbientAgent,
             AgentViewEntryOrigin::ThirdPartyCloudAgent => Self::ThirdPartyCloudAgent,
             AgentViewEntryOrigin::Cli => Self::Cli,
-            AgentViewEntryOrigin::Tui => Self::Tui,
             AgentViewEntryOrigin::ImageAdded => Self::ImageAdded,
             AgentViewEntryOrigin::SlashCommand { .. } => Self::SlashCommand,
             AgentViewEntryOrigin::CodeReviewContext => Self::CodeReviewContext,

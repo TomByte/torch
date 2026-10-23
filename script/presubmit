@@ -24,9 +24,6 @@ echo "Inline Rust test module check succeeded..."
 echo "Running clippy..."
 # TODO(vorporeal): Re-enable the `all-features` flag once we've fixed things.
 cargo clippy --workspace --all-targets --tests -- -D warnings
-# Workspace feature unification enables `warp/tui` through the `torch_tui` package.
-# Also lint the default GUI configuration used by `cargo run` and `./script/run`.
-cargo clippy -p torch --all-targets --tests -- -D warnings
 echo "clippy succeeded..."
 
 echo "Running clang-format..."

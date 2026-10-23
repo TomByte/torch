@@ -135,32 +135,6 @@ impl ConnectedSelfHostedWorkersModel {
     }
 }
 
-#[cfg(test)]
-impl ConnectedSelfHostedWorkersModel {
-    /// Test hook: set the connected workers and emit `Changed`.
-    pub fn set_workers_for_test(
-        &mut self,
-        scope: &impl TeamScope,
-        worker_hosts: &[&str],
-        ctx: &mut ModelContext<Self>,
-    ) {
-        let Some(team_uid) = scope.team_uid() else {
-            return;
-        };
-        let workers = worker_hosts
-            .iter()
-            .map(|host| ConnectedSelfHostedWorker {
-                worker_host: (*host).to_string(),
-                connection_count: 1,
-                connected_at: String::new(),
-                last_seen_at: String::new(),
-            })
-            .collect();
-        self.workers_by_team.insert(team_uid, workers);
-        ctx.emit(ConnectedSelfHostedWorkersEvent::Changed);
-    }
-}
-
 impl Entity for ConnectedSelfHostedWorkersModel {
     type Event = ConnectedSelfHostedWorkersEvent;
 }

@@ -3,7 +3,6 @@
 
 use std::collections::HashMap;
 use std::ops::Range;
-use std::rc::Rc;
 use std::sync::Arc;
 
 use futures::stream::AbortHandle;
@@ -15,7 +14,9 @@ use string_offset::CharOffset;
 use torch_core::ui::theme::{AnsiColorIdentifier, Fill};
 use torch_editor::content::edit::TemporaryBlock;
 use torch_editor::content::version::BufferVersion;
-use torch_editor::multiline::{AnyMultilineString, LF, MultilineStr, MultilineString};
+#[cfg(test)]
+use torch_editor::multiline::AnyMultilineString;
+use torch_editor::multiline::{LF, MultilineStr, MultilineString};
 use torch_editor::render::model::{Decoration, LineCount, LineDecoration};
 use torchui::{Entity, ModelContext};
 
@@ -86,7 +87,6 @@ pub(crate) fn remove_inline_overlay_color(appearance: &Appearance) -> ColorU {
 
 pub enum DiffModelEvent {
     DiffUpdated { version: BufferVersion },
-    UnifiedDiffComputed(Rc<DiffResult>),
 }
 
 /// Computes the unified diff (3 context lines, git style) and line stats
@@ -630,27 +630,6 @@ impl DiffModel {
             Self::compute_diff_internal(&base_text, new.to_format().as_ref()).await;
         self.status.change_mapping = change_mapping;
         self.status.deletion_mapping = deletion_mapping;
-    }
-
-    pub fn retrieve_unified_diff(
-        &mut self,
-        new: AnyMultilineString,
-        file_name: String,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        let Some(base_text) = self.base.clone() else {
-            return;
-        };
-
-        ctx.spawn(
-            async move {
-                let new = new.to_format();
-                compute_unified_diff(&base_text, new.as_ref(), file_name.as_str()).await
-            },
-            |_, unified_diff, ctx| {
-                ctx.emit(DiffModelEvent::UnifiedDiffComputed(Rc::new(unified_diff)));
-            },
-        );
     }
 
     async fn compute_diff_internal(

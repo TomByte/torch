@@ -129,10 +129,7 @@ pub fn data_dir() -> PathBuf {
 }
 
 /// Returns the GUI application ID for the current channel.
-///
-/// Most TUI channel binaries use the same application ID as the GUI. Torch's TUI is the
-/// exception: it uses `TorchTui`, while the GUI uses `Torch`.
-#[cfg(any(not(target_os = "macos"), test))]
+#[cfg(not(target_os = "macos"))]
 fn gui_app_id_for_channel(channel: Channel, current_app_id: AppId) -> AppId {
     match channel {
         Channel::Oss => AppId::new("dev", "tombyte", "Torch"),
@@ -202,48 +199,6 @@ pub fn gui_mcp_config_file_path() -> Option<PathBuf> {
     warp_home_mcp_config_file_path()
 }
 
-/// Returns the macOS config directory name for the TUI front-end (`warp-tui`)
-/// for the current channel.
-///
-/// This mirrors [`macos_config_dir_name`] but under a `.torch_cli*` directory so
-/// the TUI keeps its settings separate from the GUI's `.warp*` directory. Like
-/// the GUI names, these are persisted on disk as directory names and must not be
-/// changed once established.
-#[cfg(target_os = "macos")]
-fn macos_tui_config_dir_name() -> String {
-    macos_config_dir_name()
-        .replacen(TORCH_CONFIG_DIR, ".torch_cli", 1)
-        .replacen(".torch", ".torch_cli", 1)
-}
-
-/// Returns the path to the directory where non-portable configuration files for
-/// the TUI front-end (`warp-tui`) should be stored.
-///
-/// This is intentionally distinct from [`config_local_dir`] so the GUI and the
-/// TUI never share (and clobber) a settings file. On macOS it is a sibling
-/// `.torch_cli*` directory (mirroring the GUI's `.warp*`); on other platforms —
-/// whose config dirs are already app-id based — it nests under a `cli`
-/// subdirectory of the standard config dir.
-pub fn tui_config_local_dir() -> PathBuf {
-    cfg_if! {
-        if #[cfg(target_os = "macos")] {
-            dirs::home_dir()
-                .unwrap_or_default()
-                .join(macos_tui_config_dir_name())
-        } else {
-            config_local_dir().join("cli")
-        }
-    }
-}
-
-/// Returns the path to the TUI front-end's global MCP configuration file.
-///
-/// This is intentionally distinct from [`warp_home_mcp_config_file_path`] so
-/// the GUI and TUI can run different MCP configurations and versions without
-/// reading or modifying each other's files.
-pub fn tui_mcp_config_file_path() -> PathBuf {
-    tui_config_local_dir().join(".mcp.json")
-}
 /// Returns the base directory for general config files. Useful for accessing the config files for
 /// other programs.
 pub fn base_config_dir() -> PathBuf {
@@ -293,19 +248,6 @@ pub fn secure_state_dir() -> Option<PathBuf> {
     }
 
     None
-}
-
-/// Returns the path to the directory where non-portable application state
-/// data for the TUI front-end (`warp-tui`) should be stored.
-///
-/// This is intentionally distinct from the GUI's state directory (see
-/// [`state_dir`] / [`secure_state_dir`]) so the two front-ends never share a
-/// SQLite database: they can be on different versions with different
-/// persistence schemas, and whichever binary is newer would otherwise migrate
-/// the shared database out from under the older one. Like other on-disk
-/// names, the `tui` directory name must not be changed once established.
-pub fn tui_state_dir() -> PathBuf {
-    secure_state_dir().unwrap_or_else(state_dir).join("tui")
 }
 
 /// Returns the path to the directory containing the user's custom themes.

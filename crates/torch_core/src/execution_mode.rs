@@ -10,8 +10,6 @@ static GLOBAL_EXECUTION_MODE: OnceLock<ExecutionMode> = OnceLock::new();
 pub enum ExecutionMode {
     /// Torch is running as a normal desktop app.
     App,
-    /// Torch is running as the headless terminal UI.
-    Tui,
     /// Torch is running as a CLI.
     Sdk,
     /// Torch is running as the remote server daemon.
@@ -24,7 +22,6 @@ impl ExecutionMode {
     pub fn client_id(&self) -> &'static str {
         match self {
             ExecutionMode::App => "warp-app",
-            ExecutionMode::Tui => "warp-tui",
             ExecutionMode::Sdk => "warp-cli",
             ExecutionMode::RemoteServerDaemon => "warp-remote-server-daemon",
         }
@@ -35,7 +32,7 @@ impl ExecutionMode {
     ///
     /// The desktop app keeps requiring a shell-derived path, so a failed MCP spawn surfaces
     /// as an actionable toast instead of silently launching with the wrong PATH. The SDK CLI
-    /// and the TUI receive an authoritative PATH from their own launcher (an interactive shell
+    /// receives an authoritative PATH from its launcher (an interactive shell
     /// or a CLI invocation) before Torch starts, so inheriting it is safe and is the only PATH
     /// available to a fresh SDK process before terminal bootstrap populates
     /// `mcp_execution_path`. The remote server daemon is headless and long-lived with no user
@@ -46,7 +43,7 @@ impl ExecutionMode {
     pub fn can_inherit_process_path_for_mcp(&self) -> bool {
         match self {
             ExecutionMode::App => false,
-            ExecutionMode::Tui | ExecutionMode::Sdk | ExecutionMode::RemoteServerDaemon => true,
+            ExecutionMode::Sdk | ExecutionMode::RemoteServerDaemon => true,
         }
     }
 }
@@ -69,11 +66,7 @@ impl AppExecutionMode {
 
     /// True if running as an interactive app client.
     fn is_app(&self) -> bool {
-        matches!(self.mode, ExecutionMode::App | ExecutionMode::Tui)
-    }
-    /// Whether Torch is running as the headless terminal UI.
-    pub fn is_tui(&self) -> bool {
-        matches!(self.mode, ExecutionMode::Tui)
+        matches!(self.mode, ExecutionMode::App)
     }
 
     /// Whether Active AI features are allowed in this execution mode.
@@ -119,12 +112,12 @@ impl AppExecutionMode {
     }
 
     /// Whether telemetry should be sent synchronously at shutdown.
-    /// In TUI, CLI, and daemon modes, we synchronously send events at shutdown because there's
+    /// In CLI and daemon modes, we synchronously send events at shutdown because there's
     /// a higher likelihood that they will be lost otherwise.
     pub fn send_telemetry_at_shutdown(&self) -> bool {
         matches!(
             self.mode,
-            ExecutionMode::Tui | ExecutionMode::Sdk | ExecutionMode::RemoteServerDaemon
+            ExecutionMode::Sdk | ExecutionMode::RemoteServerDaemon
         )
     }
 

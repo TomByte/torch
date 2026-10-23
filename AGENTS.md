@@ -12,7 +12,6 @@ This file provides guidance when working with code in this repository.
 
 ### Build and Run
 - `cargo run` / `./script/run` - Build and run the GUI desktop app locally
-- `./script/run-tui` - Build and run the headless TUI front-end (`crates/torch_tui`)
 - `cargo bundle --bin torch` - Bundle the main (GUI) app
 - `./script/release` - Build a signed, notarized, universal Torch release into `dist/` as a DMG and an optional zip; `--help` lists its options
 
@@ -48,29 +47,19 @@ Run the full presubmit only when the user, task, or approved spec explicitly req
 
 ## Architecture Overview
 
-This is a Rust-based terminal emulator with a custom UI framework called **TorchUI**, inherited from Warp. It has **two front-ends** that share a common core.
-
-### Front-ends: GUI and TUI
-
-Torch has two front-ends that share the `torch_core`/`torchui` Entity/model core (App/Entity/`AppContext`, actions, `Appearance`, `FeatureFlag`, telemetry, logging) but differ in UI framework, rendering, input, and verification:
-- **GUI desktop app** — the `app/` crate on the TorchUI pixel/GPU framework (`torchui`, `crates/torchui_core`): `Element`/`View` layout, GPU/WGSL rendering, mouse input, `.app` bundles. Run with `cargo run` / `./script/run`; verify visually with `computer_use` or the real-display integration framework (`crates/integration`).
-- **Headless TUI** — the `crates/torch_tui` crate: a console app (run with `./script/run-tui`; no `.app`/GPU) rendered with a parallel cell-grid element library at `crates/torchui_core/src/elements/tui` (the `TuiElement` trait), behind the `tui` cargo feature. Verify by running it in a real terminal and observing output; test with render-to-lines unit tests.
+This is a Rust-based terminal emulator with a custom UI framework called **TorchUI**, inherited from Warp. Its single front-end is the GUI desktop app in `app/`.
 
 ### Key Components
 
-**Shared UI core** (`crates/torchui`, `crates/torchui_core`) — used by **both** front-ends:
+**UI core** (`crates/torchui`, `crates/torchui_core`):
 - Entity-Component-Handle pattern: a global `App` object owns all views/models (entities); views hold `ViewHandle<T>` references to other views; `AppContext` provides temporary access to handles during render/events.
 - Actions system for event handling.
-- `crates/torchui_core` also hosts the TUI cell-grid element library under `src/elements/tui` (behind the `tui` feature).
 
-**GUI rendering** (TorchUI GUI elements — GUI-specific):
+**GUI rendering** (TorchUI GUI elements):
 - `Element`s describe visual layout (Flutter-inspired), rendered on the GPU (WGSL).
-- Mouse input uses `MouseStateHandle`: create it once during construction and reference/clone it wherever mouse input is tracked. An inline `MouseStateHandle::default()` while rendering means no mouse interactions work. (The TUI's hover/click elements — `TuiHoverable`, `tui_collapsible` — also build on `MouseStateHandle`, so the same ownership rule applies there.)
+- Mouse input uses `MouseStateHandle`: create it once during construction and reference/clone it wherever mouse input is tracked. An inline `MouseStateHandle::default()` while rendering means no mouse interactions work.
 
-**TUI rendering** (`crates/torch_tui` + `crates/torchui_core/src/elements/tui` — TUI-specific):
-- Headless console front-end. The `TuiElement` trait lays out and paints into a cell-grid `TuiBuffer`; crossterm input is converted to `TuiEvent`. No GPU/WGSL, pixel geometry, or `.app` bundle.
-
-**Main app / shared surfaces** (`app/`) — the GUI desktop app plus feature surfaces the TUI reuses:
+**Main app** (`app/`):
 - Terminal emulation and shell management (`terminal/`)
 - AI integration including Agent Mode (`ai/`)
 - Cloud synchronization and Drive features (`drive/`)
@@ -79,10 +68,9 @@ Torch has two front-ends that share the `torch_core`/`torchui` Entity/model core
 - Workspace and session management (`workspace/`)
 
 **Core Libraries**:
-- `crates/torch_core/` - Core utilities and platform abstractions (shared)
-- `crates/torch_tui/` - Headless TUI front-end
+- `crates/torch_core/` - Core utilities and platform abstractions
 - `crates/editor/` - Text editing functionality
-- `crates/torchui/` and `crates/torchui_core/` - Custom UI framework (shared core plus the GUI and TUI element libraries)
+- `crates/torchui/` and `crates/torchui_core/` - Custom UI framework (core plus the GUI element library)
 - `crates/ipc/` - Inter-process communication
 - `crates/graphql/` - GraphQL client and schema
 
@@ -160,7 +148,7 @@ for itself.
 
 **Testing**:
 - Use `cargo nextest` for parallel test execution
-- Integration tests use the custom framework in `crates/integration/` — this is **GUI-only**. TUI elements/screens are covered by render-to-lines unit tests instead.
+- Integration tests use the custom framework in `crates/integration/`.
 - Follow the Implementation Validation Order above; do not add a full presubmit run after targeted tests unless it was explicitly required.
 - Unit tests should be placed in separate files using the naming convention `${filename}_tests.rs` or `mod_test.rs`
 - Test files should be included at the end of their corresponding module with:

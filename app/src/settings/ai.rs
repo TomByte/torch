@@ -639,42 +639,6 @@ settings::macros::implement_setting_for_enum!(
     description: "Controls how child-agent messages are displayed.",
 );
 
-/// Which unit the usage entry displays in Torch Agent CLI.
-#[derive(
-    Default,
-    Debug,
-    serde::Serialize,
-    serde::Deserialize,
-    PartialEq,
-    Copy,
-    Clone,
-    EnumIter,
-    schemars::JsonSchema,
-    settings_value::SettingsValue,
-)]
-#[schemars(
-    description = "Which unit the usage entry displays in Torch Agent CLI.",
-    rename_all = "snake_case"
-)]
-pub enum TuiUsageDisplayMode {
-    /// Credits spent — the same number the GUI's usage footer shows (default).
-    #[default]
-    Credits,
-    /// Billed dollar cost.
-    Cost,
-}
-
-settings::macros::implement_setting_for_enum!(
-    TuiUsageDisplayMode,
-    AISettings,
-    SupportedPlatforms::ALL,
-    SyncToCloud::Never,
-    surface: settings::SettingSurfaces::TUI,
-    private: false,
-    toml_path: "agents.usage_display_mode",
-    description: "Which unit the usage entry displays in Torch Agent CLI: credits or dollars.",
-);
-
 /// Unit for GUI usage and spend displays.
 #[derive(
     Default,
@@ -714,159 +678,6 @@ impl UsageDisplayUnit {
         match self {
             UsageDisplayUnit::Credits => "Credits",
             UsageDisplayUnit::Dollars => "Dollars",
-        }
-    }
-}
-
-/// One configurable item in the Torch Agent CLI statusline.
-#[derive(
-    Debug,
-    serde::Serialize,
-    serde::Deserialize,
-    PartialEq,
-    Eq,
-    Copy,
-    Clone,
-    Hash,
-    schemars::JsonSchema,
-    settings_value::SettingsValue,
-)]
-#[schemars(
-    description = "A configurable item in the Torch Agent CLI statusline.",
-    rename_all = "snake_case"
-)]
-#[serde(rename_all = "snake_case")]
-pub enum TuiStatuslineItem {
-    AutoApprove,
-    /// Vim mode indicator (NOR/INS/VIS/V-L/REP); hidden when vim mode is disabled.
-    VimModeIndicator,
-    Model,
-    Team,
-    WorkingDirectory,
-    GitBranch,
-    GitBranchStatus,
-    GitDiffStatus,
-    GitHubPullRequest,
-    CreditUsage,
-    ContextWindowUsage,
-    Date,
-    #[schemars(rename = "time_12_hour")]
-    Time12Hour,
-    #[schemars(rename = "time_24_hour")]
-    Time24Hour,
-    AgentTodoList,
-    VoiceInput,
-}
-
-impl TuiStatuslineItem {
-    pub const ALL: [Self; 16] = [
-        Self::AutoApprove,
-        Self::VimModeIndicator,
-        Self::Model,
-        Self::Team,
-        Self::WorkingDirectory,
-        Self::GitBranch,
-        Self::GitBranchStatus,
-        Self::GitDiffStatus,
-        Self::GitHubPullRequest,
-        Self::CreditUsage,
-        Self::ContextWindowUsage,
-        Self::Date,
-        Self::Time12Hour,
-        Self::Time24Hour,
-        Self::AgentTodoList,
-        Self::VoiceInput,
-    ];
-
-    pub fn label(self) -> &'static str {
-        match self {
-            Self::AutoApprove => "Auto-approve indicator",
-            Self::VimModeIndicator => "Vim mode indicator",
-            Self::Model => "Model",
-            Self::Team => "Team",
-            Self::WorkingDirectory => "Working directory",
-            Self::GitBranch => "Git branch",
-            Self::GitBranchStatus => "Git branch status",
-            Self::GitDiffStatus => "Git diff status",
-            Self::GitHubPullRequest => "GitHub pull request",
-            Self::CreditUsage => "Credit usage",
-            Self::ContextWindowUsage => "Context window usage",
-            Self::Date => "Date",
-            Self::Time12Hour => "Time (12 hour format)",
-            Self::Time24Hour => "Time (24 hour format)",
-            Self::AgentTodoList => "Agent to-do list",
-            Self::VoiceInput => "Voice input",
-        }
-    }
-}
-
-/// Ordered and enabled items in the Torch Agent CLI statusline.
-#[derive(
-    Debug,
-    serde::Serialize,
-    serde::Deserialize,
-    PartialEq,
-    Eq,
-    Clone,
-    schemars::JsonSchema,
-    settings_value::SettingsValue,
-)]
-pub struct TuiStatuslineConfig {
-    pub order: Vec<TuiStatuslineItem>,
-    pub enabled: Vec<TuiStatuslineItem>,
-}
-
-impl Default for TuiStatuslineConfig {
-    fn default() -> Self {
-        Self {
-            order: TuiStatuslineItem::ALL.to_vec(),
-            enabled: vec![
-                TuiStatuslineItem::AutoApprove,
-                TuiStatuslineItem::VimModeIndicator,
-                TuiStatuslineItem::Model,
-                TuiStatuslineItem::WorkingDirectory,
-                TuiStatuslineItem::GitBranch,
-                TuiStatuslineItem::GitDiffStatus,
-            ],
-        }
-    }
-}
-
-impl TuiStatuslineConfig {
-    /// Returns a complete, duplicate-free catalog and a valid enabled subset.
-    pub fn normalized(&self) -> Self {
-        let is_legacy_config = !self.order.contains(&TuiStatuslineItem::VimModeIndicator);
-        let mut order = Vec::with_capacity(TuiStatuslineItem::ALL.len());
-        for item in self.order.iter().copied().chain(TuiStatuslineItem::ALL) {
-            if TuiStatuslineItem::ALL.contains(&item) && !order.contains(&item) {
-                order.push(item);
-            }
-        }
-
-        let mut enabled = Vec::with_capacity(self.enabled.len());
-        for item in self.enabled.iter().copied() {
-            if order.contains(&item) && !enabled.contains(&item) {
-                enabled.push(item);
-            }
-        }
-        if is_legacy_config {
-            enabled.insert(0, TuiStatuslineItem::VimModeIndicator);
-        }
-
-        Self { order, enabled }
-    }
-
-    pub fn is_enabled(&self, item: TuiStatuslineItem) -> bool {
-        self.enabled.contains(&item)
-    }
-}
-
-impl TuiUsageDisplayMode {
-    /// The other unit — clicking the usage entry flips to this.
-    pub fn toggled(self) -> Self {
-        match self {
-            TuiUsageDisplayMode::Credits => TuiUsageDisplayMode::Cost,
-            TuiUsageDisplayMode::Cost => TuiUsageDisplayMode::Credits,
         }
     }
 }
@@ -1499,9 +1310,8 @@ define_settings_group!(AISettings, settings: [
         toml_path: "agents.profiles.agent_mode_coding_file_read_allowlist",
         description: "File paths the agent can read without asking for permission.",
     }
-    // The complete execution-profile collection shared by GUI and TUI.
-    // GUI cloud synchronization respects the user's settings-sync preference;
-    // TUI settings mode keeps this value local.
+    // The complete execution-profile collection. Cloud synchronization respects
+    // the user's settings-sync preference.
     execution_profiles: ExecutionProfiles {
         type: ExecutionProfilesConfig,
         default: ExecutionProfilesConfig::default(),
@@ -1526,24 +1336,7 @@ define_settings_group!(AISettings, settings: [
         max_table_depth: 2,
         description: "Custom inference endpoint definitions.",
     }
-    // Which unit the TUI footer's usage entry displays (credits or provider
-    // cost), flipped by clicking the entry.
-    //
-    // TUI-only and file-backed so the choice persists across TUI sessions.
-    usage_display_mode: TuiUsageDisplayMode,
     usage_display_unit: UsageDisplayUnit,
-    // Ordered visibility configuration for the TUI's bottom statusline.
-    // TUI-only and local so separate devices can use different terminal layouts.
-    tui_statusline: TuiStatusline {
-        type: TuiStatuslineConfig,
-        default: TuiStatuslineConfig::default(),
-        supported_platforms: SupportedPlatforms::ALL,
-        sync_to_cloud: SyncToCloud::Never,
-        surface: settings::SettingSurfaces::TUI,
-        private: false,
-        toml_path: "agents.statusline",
-        description: "Controls the order and visibility of Torch Agent CLI statusline items.",
-    },
     // Whether or not the profile-level command autoexecution speedbump has been shown.
     //
     // Not a user-visible setting - we model it as a setting so we can track how often

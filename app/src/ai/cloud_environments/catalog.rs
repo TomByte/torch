@@ -9,8 +9,6 @@ use crate::ai::cloud_agent_settings::CloudAgentSettings;
 use crate::cloud_object::CloudObjectLookup as _;
 use crate::cloud_object::model::generic_string_model::StringModel as _;
 use crate::cloud_object::model::persistence::{CloudModel, CloudModelEvent};
-#[cfg(feature = "tui")]
-use crate::server::cloud_objects::update_manager::UpdateManager;
 use crate::server::ids::SyncId;
 
 /// Environment identity and display data consumed by frontend selectors.
@@ -118,12 +116,6 @@ impl CloudEnvironmentCatalog {
     }
 
     /// Requests an out-of-band refresh of cloud objects from the server.
-    #[cfg(feature = "tui")]
-    pub fn refresh_from_server(&self, ctx: &mut ModelContext<Self>) {
-        UpdateManager::handle(ctx).update(ctx, |manager, ctx| {
-            manager.refresh_updated_objects(ctx);
-        });
-    }
 
     fn refresh(&mut self, ctx: &mut ModelContext<Self>) {
         let (environments, orchestration_default_environment_id) = Self::current_environments(ctx);

@@ -8,7 +8,7 @@
 //! per-generator registration list to keep in sync.
 //!
 //! Usage:
-//!   cargo run --example generate_default_settings -- --surface gui|tui [--channel dev|preview|stable] <output_path>
+//!   cargo run --example generate_default_settings -- --surface gui [--channel dev|preview|stable] <output_path>
 //!
 //! Example:
 //!   cargo run --example generate_default_settings -- --surface gui ./default_settings.toml
@@ -77,7 +77,7 @@ fn main() {
                 if i < args.len() {
                     surface = Some(&args[i]);
                 } else {
-                    eprintln!("Missing value for --surface (expected 'gui' or 'tui')");
+                    eprintln!("Missing value for --surface (expected 'gui')");
                     std::process::exit(1);
                 }
             }
@@ -94,25 +94,24 @@ fn main() {
 
     let Some(output_path) = output_path else {
         eprintln!(
-            "Usage: generate_default_settings --surface gui|tui [--channel dev|preview|stable] <output_path>"
+            "Usage: generate_default_settings --surface gui [--channel dev|preview|stable] <output_path>"
         );
         std::process::exit(1);
     };
 
     let active_flags = active_flags_for_channel(channel);
 
-    // Only emit settings that apply to the target surface, so e.g. the TUI
-    // file excludes GUI-only keys. Required (with no default) so a typo or a
-    // missing value never silently generates the wrong surface's file.
+    // Only emit settings that apply to the target surface. Required (with no
+    // default) so a typo or a missing value never silently generates the wrong
+    // surface's file.
     let surface_mode = match surface {
         Some("gui") => SettingsMode::Gui,
-        Some("tui") => SettingsMode::Tui,
         Some(other) => {
-            eprintln!("Unknown surface '{other}' (expected 'gui' or 'tui')");
+            eprintln!("Unknown surface '{other}' (expected 'gui')");
             std::process::exit(1);
         }
         None => {
-            eprintln!("Missing required --surface (expected 'gui' or 'tui')");
+            eprintln!("Missing required --surface (expected 'gui')");
             std::process::exit(1);
         }
     };

@@ -109,7 +109,7 @@ fn settings_schema_json(is_flag_enabled: impl Fn(FeatureFlag) -> bool) -> Result
 }
 
 fn setting_surface_names(surfaces: SettingSurfaces) -> Vec<Value> {
-    [(SettingsMode::Gui, "gui"), (SettingsMode::Tui, "tui")]
+    [(SettingsMode::Gui, "gui")]
         .into_iter()
         .filter(|(mode, _)| surfaces.includes(*mode))
         .map(|(_, name)| Value::String(name.to_owned()))

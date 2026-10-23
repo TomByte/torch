@@ -14,8 +14,6 @@ use torch_util::host_id::HostId;
 use torch_util::local_or_remote_path::LocalOrRemotePath;
 use torchui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
 
-#[cfg(test)]
-use super::bundled::BundledSkillActivation;
 use super::bundled::{BundledSkill, BundledSkills};
 use super::{ActiveSkillLookupError, SkillDescriptor, SkillManagerEvent, SkillPathQuery};
 use crate::ai::skills::skill_utils::SkillDeduplicator;
@@ -633,39 +631,6 @@ impl SkillManager {
                 }
             }
         }
-    }
-
-    /// Adds a skill to the skill manager for testing purposes.
-    #[cfg(test)]
-    pub fn add_skill_for_testing(&mut self, skill: ParsedSkill) {
-        let path = skill.path.clone();
-        let name = skill.name.clone();
-        self.skills_by_path.insert(path.clone(), skill);
-        self.skills_by_name.entry(name).or_default().insert(path);
-    }
-
-    /// Adds a bundled skill to the skill manager for testing purposes.
-    #[cfg(test)]
-    pub fn add_bundled_skill_for_testing(
-        &mut self,
-        id: impl Into<String>,
-        skill: ParsedSkill,
-        activation: BundledSkillActivation,
-    ) {
-        self.bundled_skills
-            .insert_local_for_testing(id, skill, activation);
-    }
-
-    #[cfg(test)]
-    pub fn add_remote_bundled_skill_for_testing(
-        &mut self,
-        host_id: HostId,
-        id: impl Into<String>,
-        skill: ParsedSkill,
-        activation: BundledSkillActivation,
-    ) {
-        self.bundled_skills
-            .insert_remote_for_testing(host_id, id, skill, activation);
     }
 }
 impl Entity for SkillManager {

@@ -1,6 +1,3 @@
-#[cfg(feature = "tui")]
-mod tui;
-
 use std::any::Any;
 use std::marker::PhantomData;
 use std::rc::Rc;
@@ -31,8 +28,7 @@ use crate::{
 };
 
 impl<'a, T: View> ViewContext<'a, T> {
-    /// The layout-position cache is only populated by the GUI presenter; in
-    /// TUI mode this method returns `None` because there is no presenter.
+    /// Returns the cached element position, if the GUI presenter has laid it out.
     pub fn element_position_by_id<S>(&self, id: S) -> Option<pathfinder_geometry::rect::RectF>
     where
         S: AsRef<str>,

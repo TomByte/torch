@@ -212,11 +212,9 @@ fn footer_model_token_usage(
         .collect()
 }
 
-/// Conversation usage totals for compact displays (e.g. the TUI footer's
-/// usage entry).
+/// Conversation usage totals for compact displays.
 ///
-/// A projection computed on demand from existing conversation state — named
-/// so the underlying types don't leak through `tui_export`.
+/// A projection computed on demand from existing conversation state.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct ConversationUsageTotals {
     /// Total credits spent (inference + platform), from the server's

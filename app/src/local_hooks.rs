@@ -71,7 +71,6 @@ impl StatusAgent {
             | CLIAgent::Kiro
             | CLIAgent::Goose
             | CLIAgent::Vibe
-            | CLIAgent::WarpTui
             | CLIAgent::Antigravity
             | CLIAgent::Unknown => None,
         }

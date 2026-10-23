@@ -31,9 +31,8 @@ pub use execute::{
     ReadFileContextResult, RequestFileEditsExecutor, RequestFileEditsFormatKind,
     RequestFileEditsTelemetryEvent, RunAgentsExecutor, RunAgentsExecutorEvent,
     RunAgentsSpawningSnapshot, ShellCommandExecutor, ShellCommandExecutorEvent,
-    ShellRecoveryResult, StartAgentExecutor, StartAgentExecutorEvent, StartAgentOutcome,
-    StartAgentRequest, StartAgentRequestId, TEAM_CHANGED_DURING_CHILD_LAUNCH_ERROR,
-    read_local_file_context,
+    ShellRecoveryResult, StartAgentExecutor, StartAgentExecutorEvent, StartAgentRequest,
+    StartAgentRequestId, TEAM_CHANGED_DURING_CHILD_LAUNCH_ERROR, read_local_file_context,
 };
 pub(crate) use execute::{
     FileReadResult, MalformedFinalLineProxyEvent, apply_edits, coerce_integer_args,
@@ -997,23 +996,6 @@ impl BlocklistAIActionModel {
     }
 
     /// Installs a front-of-queue confirmation action without preprocessing.
-    #[cfg(all(feature = "tui", any(test, feature = "test-util")))]
-    pub fn queue_confirmation_action(
-        &mut self,
-        action: AIAgentAction,
-        conversation_id: AIConversationId,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        let action_id = action.id.clone();
-        self.pending_actions
-            .entry(conversation_id)
-            .or_default()
-            .push_back(action);
-        ctx.emit(BlocklistAIActionEvent::QueuedAction(action_id.clone()));
-        ctx.emit(BlocklistAIActionEvent::ActionBlockedOnUserConfirmation(
-            action_id,
-        ));
-    }
 
     fn handle_preprocess_actions_results(
         &mut self,

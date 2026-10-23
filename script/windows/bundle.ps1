@@ -8,7 +8,7 @@ Param (
 
     [Alias('check-only')]
     [Switch]$CHECK_ONLY,
-    [ValidateSet('app', 'tui', 'cli')]
+    [ValidateSet('app', 'cli')]
     [String]$ARTIFACT = 'app',
 
     # Torch ships a single channel.
@@ -105,12 +105,11 @@ function Assert-ValidSignature {
 $WORKSPACE_ROOT_DIR = $PWD.Path
 $CARGO_TARGET_DIR = $WORKSPACE_ROOT_DIR + '\target'
 $WINDOWS_INSTALLER_DIR = $WORKSPACE_ROOT_DIR + '\script\windows'
-$IS_TUI = $ARTIFACT -eq 'tui'
 $IS_CLI = $ARTIFACT -eq 'cli'
 
 if ($DEBUG_BUILD) {
     $CARGO_PROFILE = 'dev'
-} elseif ($IS_TUI -or $IS_CLI) {
+} elseif ($IS_CLI) {
     $CARGO_PROFILE = 'rcli'
 } else {
     $CARGO_PROFILE = 'rlto'
@@ -132,14 +131,7 @@ $TORCH_BIN = 'torch'
 $BINARY_NAME = 'torch.exe'
 $APP_NAME = 'Torch'
 
-if ($IS_TUI) {
-    $TORCH_BIN = 'torch-tui'
-    $BINARY_NAME = "$TORCH_BIN.exe"
-    $APP_NAME = 'TorchTUI'
-    $CLI_NAME = 'torch'
-    $INSTALL_DIR_NAME = 'tui'
-    $FEATURES = 'release_bundle,standalone,voice_input'
-} elseif ($IS_CLI) {
+if ($IS_CLI) {
     # The CLI ships the same binary target as the app (no separate bin), with the app's `gui`
     # feature swapped for `standalone`, mirroring the macOS and Linux `--artifact cli` builds.
     $BINARY_NAME = "$TORCH_BIN.exe"
@@ -155,21 +147,8 @@ $BUNDLE_ID = 'dev.tombyte.Torch'
 $INSTALLER_OUTPUT_DIR = "$WINDOWS_INSTALLER_DIR\Output"
 $INSTALLER_NAME = "$($APP_NAME)$($FILE_ENDING)"
 $INSTALLER_PATH = "$($INSTALLER_OUTPUT_DIR)\$($INSTALLER_NAME).exe"
-$PDB_BASENAME = if ($IS_TUI) {
-    # rustc normalizes hyphens to underscores in crate names, and MSVC uses
-    # that normalized crate name for the PDB even though Cargo exposes the
-    # executable under its original hyphenated target name.
-    $TORCH_BIN.Replace('-', '_')
-} else {
-    $TORCH_BIN
-}
-$PDB_PATH = "$CARGO_TARGET_OUTPUT_DIR\$PDB_BASENAME.pdb"
-$CARGO_PACKAGE = if ($IS_TUI) { 'torch_tui' } else { 'torch' }
-$INSTALLER_SCRIPT = if ($IS_TUI) {
-    "$WINDOWS_INSTALLER_DIR\tui-installer.iss"
-} else {
-    "$WINDOWS_INSTALLER_DIR\windows-installer.iss"
-}
+$PDB_PATH = "$CARGO_TARGET_OUTPUT_DIR\$TORCH_BIN.pdb"
+$INSTALLER_SCRIPT = "$WINDOWS_INSTALLER_DIR\windows-installer.iss"
 
 # The CARGO_FULL_PROFILE environment variable is read by the `cargo` build
 # script (`app/build.rs`) to determine where to place `conpty.dll`.
@@ -183,7 +162,7 @@ if ($DEBUG_BUILD) {
 # then exit.  We use this script to invoke `cargo check` to ensure that we are
 # using the same feature flags and profile that we would be using in production.
 if ($CHECK_ONLY) {
-    cargo check -p $CARGO_PACKAGE --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --features "$FEATURES" --target $PLATFORM_TARGET
+    cargo check -p torch --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --features "$FEATURES" --target $PLATFORM_TARGET
     if (-Not $?) {
         Write-Error "Failed to verify Torch $TORCH_BIN compilation with profile $CARGO_PROFILE"
         exit 1
@@ -195,7 +174,7 @@ if (-Not $SKIP_BUILD_BINARY) {
     Write-Output "Building Torch for channel $CHANNEL and bundle id $BUNDLE_ID"
     $env:CARGO_BIN_NAME = $CHANNEL
     $env:TORCH_APP_NAME = $APP_NAME
-    cargo build -p $CARGO_PACKAGE --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --features "$FEATURES" --target $PLATFORM_TARGET
+    cargo build -p torch --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --features "$FEATURES" --target $PLATFORM_TARGET
     if (-Not $?) {
         Write-Error "Failed to build Torch $TORCH_BIN binary with profile $CARGO_PROFILE"
         exit 1
@@ -226,8 +205,8 @@ Write-Output "Built for $ARCH with executable at $BINARY_PATH"
 
 # Prepare bundled resources
 if ($env:SKIP_SETTINGS_SCHEMA -ne '1' -and -not $env:SETTINGS_SCHEMA_EXECUTABLE -and -not $env:SETTINGS_SCHEMA_SOURCE) {
-    if ($IS_TUI -or $IS_CLI) {
-        Write-Error 'TUI and CLI bundles require SETTINGS_SCHEMA_SOURCE or SETTINGS_SCHEMA_EXECUTABLE.'
+    if ($IS_CLI) {
+        Write-Error 'CLI bundles require SETTINGS_SCHEMA_SOURCE or SETTINGS_SCHEMA_EXECUTABLE.'
         exit 1
     } elseif ($SKIP_BUILD_BINARY) {
         Write-Error '-skip_build_binary requires SETTINGS_SCHEMA_SOURCE or SETTINGS_SCHEMA_EXECUTABLE.'
@@ -245,12 +224,11 @@ if (-Not $?) {
     Write-Error 'Failed to prepare bundled resources'
     exit 1
 }
-if ($IS_TUI -or $IS_CLI) {
-    # Both the TUI and CLI ship the ConPTY/OpenConsole payload and MSVC redistributable DLLs
-    # alongside the binary (see the packaging step in create_release.yml for the CLI, and the
-    # Inno Setup script for the TUI). Verify the files exist, and -- when requested -- are
-    # signed, before the CLI branch below hands off to the workflow's own packaging step,
-    # which otherwise has no way to detect a missing or unsigned sidecar file.
+if ($IS_CLI) {
+    # The CLI ships the ConPTY/OpenConsole payload and MSVC redistributable DLLs alongside the
+    # binary (see the packaging step in create_release.yml). Verify the files exist, and -- when
+    # requested -- are signed, before the CLI branch below hands off to the workflow's own
+    # packaging step, which otherwise has no way to detect a missing or unsigned sidecar file.
     $WINDOWS_ASSETS_DIR = "$WORKSPACE_ROOT_DIR\app\assets\windows\$ARCH"
     $requiredPayloadFiles = @(
         $BINARY_PATH,
@@ -294,13 +272,6 @@ $ISCC_ARGS = @(
     "/DArch=$ARCH",
     "/DOutputName=$INSTALLER_NAME"
 )
-if ($IS_TUI) {
-    $ISCC_ARGS += @(
-        "/DWindowsAssetsDir=$WINDOWS_ASSETS_DIR",
-        "/DCLIName=$CLI_NAME",
-        "/DInstallDirName=$INSTALL_DIR_NAME"
-    )
-}
 # Also accept the sign tool command via env var
 if (-not $SIGN_TOOL_CMD -and $env:SIGN_TOOL_CMD) {
     $SIGN_TOOL_CMD = $env:SIGN_TOOL_CMD
@@ -323,8 +294,4 @@ if ($env:GITHUB_ACTIONS -eq 'true') {
     "installer_path=$INSTALLER_PATH" >> "$env:GITHUB_OUTPUT"
     "pdb_file_path=$PDB_PATH" >> "$env:GITHUB_OUTPUT"
     Write-Output '::echo::off'
-}
-
-if ($IS_TUI) {
-    Write-Output "Application installer: $INSTALLER_PATH"
 }

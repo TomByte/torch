@@ -61,16 +61,12 @@ use crate::{
     assets, rendering,
 };
 
-#[cfg(feature = "tui")]
-mod tui;
-
 #[derive(Clone)]
 pub struct App(Rc<RefCell<AppContext>>);
 
 /// A weak handle to the owning [`App`], obtained via [`AppContext::weak_app`].
 /// Upgrade it to a strong [`App`] to re-enter the shared core from a spawned
-/// task (for example, the TUI runtime's input loop) without keeping the app
-/// alive past termination.
+/// task without keeping the app alive past termination.
 #[derive(Clone)]
 pub struct WeakApp(rc::Weak<RefCell<AppContext>>);
 
@@ -1018,8 +1014,7 @@ impl AppContext {
     ///
     /// This operation is destructive: it will clear the caches for both manual
     /// and autotracked invalidations. Drained by the GUI presenter's
-    /// `build_scene` and (with the `tui` feature) by the TUI runtime's draw
-    /// loop.
+    /// `build_scene`.
     pub(crate) fn take_all_invalidations_for_window(
         &mut self,
         window_id: WindowId,
@@ -1104,12 +1099,10 @@ impl AppContext {
             });
     }
 
-    /// Subscribes to a GUI or TUI [`ViewHandle`] for emitted events.
+    /// Subscribes to a [`ViewHandle`] for emitted events.
     ///
     /// The [`ViewHandle`] parameter is the proof that `S` is a view: callers can
-    /// only obtain one through GUI or TUI view creation APIs. The generic bound
-    /// stays at [`Entity`] so this can accept both GUI [`View`](crate::View) and
-    /// TUI [`TuiView`](crate::TuiView) instances while still accessing `S::Event`.
+    /// only obtain one through view creation APIs.
     pub fn subscribe_to_view<S, F>(&mut self, handle: &ViewHandle<S>, mut callback: F)
     where
         S: Entity,
@@ -2074,11 +2067,6 @@ impl AppContext {
     /// Dispatches a custom action through the focused view's responder chain,
     /// falling back to replaying the bound keystroke when key-binding dispatch
     /// is disabled (i.e. while the user is editing their keybindings).
-    ///
-    /// Custom actions themselves are backend-neutral (the matcher/registry
-    /// machinery lives in `app.rs`); this entry point is GUI-only solely
-    /// because the keystroke-replay fallback drives the presenter-backed event
-    /// loop, which doesn't exist under the `tui` backend.
     pub fn dispatch_custom_action<Action>(&mut self, action: Action, window_id: WindowId)
     where
         Action: Into<CustomTag> + Debug + Copy,
@@ -3091,9 +3079,8 @@ impl AppContext {
         self.register_typed_action_view_internal::<V>(window_id, view_id, parent_view_id)
     }
 
-    /// Shared post-insert registration for typed-action views — both GUI and
-    /// (with the `tui` feature) TUI: records the view-to-window mapping and
-    /// optional structural parentage, registers the view type's action handler,
+    /// Shared post-insert registration for typed-action views: records the view-to-window mapping
+    /// and optional structural parentage, registers the view type's action handler,
     /// marks the view for redraw, and produces its handle.
     fn register_typed_action_view_internal<V>(
         &mut self,
@@ -3490,8 +3477,7 @@ impl AppContext {
     /// Fires each invalidated window's [`Self::on_window_invalidated`] callback.
     /// Normally run at the end of [`Self::flush_effects`], but also called
     /// directly to imperatively trigger a redraw after work that doesn't flush
-    /// app effects (e.g. the repaint tasks in this file, and the TUI driver's
-    /// input handling).
+    /// app effects (e.g. the repaint tasks in this file).
     fn update_windows(&mut self) {
         let invalidated_window_ids = self
             .window_invalidations
@@ -4829,28 +4815,18 @@ impl AppContext {
                     view.render(self)
                 }))
             }
-            #[cfg(feature = "tui")]
-            Some(StoredView::Tui(_)) => Err(anyhow!("view is not a GUI view")),
             None => Err(anyhow!("view not found")),
         }
     }
 
-    // This feeds the GUI presenter, so TUI views in the shared registry are
-    // skipped: they are rendered by the TUI presenter via `render_tui_view`
-    // instead. Revisit if a window ever mixes rendered worlds. The clippy
-    // allow is needed because the filter half of `filter_map` is only
-    // exercised when the additive `tui` feature adds the non-GUI variant.
-    #[allow(clippy::unnecessary_filter_map)]
     pub fn render_views(&self, window_id: WindowId) -> Result<EntityIdMap<Box<dyn Element>>> {
         self.windows
             .get(&window_id)
             .map(|w| {
                 w.views
                     .iter()
-                    .filter_map(|(id, view)| match view {
-                        StoredView::Gui(view) => Some((*id, view.render(self))),
-                        #[cfg(feature = "tui")]
-                        StoredView::Tui(_) => None,
+                    .map(|(id, view)| match view {
+                        StoredView::Gui(view) => (*id, view.render(self)),
                     })
                     .collect::<EntityIdMap<_>>()
             })

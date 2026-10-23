@@ -2,8 +2,7 @@
 //!
 //! For non-bundled builds the internal `warp-channel-config` generator is
 //! invoked at runtime; for `release_bundle` builds the config is embedded at
-//! compile time via the consuming crate's build script. Shared by the GUI app
-//! binaries and the `torch_tui` binaries so the loading logic lives in one place.
+//! compile time via the consuming crate's build script.
 //!
 //! The `release_bundle` cfg inside [`load_config!`] is evaluated in the
 //! *consuming* crate, so each binary crate opts into embedding by defining its

@@ -83,27 +83,6 @@ fn test_ignores_unknown_channels() {
 }
 
 #[test]
-fn changelog_tui_updates_are_backward_compatible() {
-    let old_payload = r#"{
-        "date": "2026-07-30T12:00:00+00:00",
-        "sections": [],
-        "oz_updates": []
-    }"#;
-    let changelog: Changelog =
-        serde_json::from_str(old_payload).expect("old changelog payload should deserialize");
-    assert!(changelog.tui_updates.is_empty());
-
-    let new_payload = r#"{
-        "date": "2026-07-30T12:00:00+00:00",
-        "sections": [],
-        "tui_updates": ["Added inline TUI menus"]
-    }"#;
-    let changelog: Changelog =
-        serde_json::from_str(new_payload).expect("new changelog payload should deserialize");
-    assert_eq!(changelog.tui_updates, ["Added inline TUI menus"]);
-}
-
-#[test]
 fn calendar_versions_parse_and_order_by_date_then_release_number() {
     let first: ParsedVersion = "v2026.10.23".try_into().expect("first release is parsable");
     let second: ParsedVersion = "v2026.10.23.2"

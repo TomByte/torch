@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use ai::skills::SkillProvider;
 use chrono::Local;
-use pathfinder_color::ColorU;
 use smol_str::SmolStr;
 use torch_editor::render::model::LineCount;
 use torch_util::path::EscapeChar;
@@ -264,9 +263,6 @@ fn test_detect_known_agents() {
                 ("omp", CLIAgent::OhMyPi),
                 ("grok", CLIAgent::Grok),
                 ("muse", CLIAgent::Muse),
-                ("warp", CLIAgent::WarpTui),
-                ("warp-dev", CLIAgent::WarpTui),
-                ("./script/run-tui", CLIAgent::WarpTui),
             ] {
                 assert_eq!(
                     CLIAgent::detect(command, None, None, ctx),
@@ -499,81 +495,4 @@ fn test_from_serialized_name_falls_back_to_unknown() {
 #[test]
 fn test_oh_my_pi_supports_bash_mode() {
     assert!(CLIAgent::OhMyPi.supports_bash_mode());
-}
-
-#[test]
-fn test_warp_tui_matches_binaries_and_launchers() {
-    // Direct binary names.
-    assert!(CLIAgent::WarpTui.matches_command("warp", None));
-    assert!(CLIAgent::WarpTui.matches_command("warp-preview", None));
-    assert!(CLIAgent::WarpTui.matches_command("warp-dev", None));
-    assert!(CLIAgent::WarpTui.matches_command("warp-tui", None));
-    assert!(CLIAgent::WarpTui.matches_command("torch-tui", None));
-    // The dev launcher script.
-    assert!(CLIAgent::WarpTui.matches_command("./script/run-tui", None));
-    assert!(CLIAgent::WarpTui.matches_command("script/run-tui", None));
-    // Absolute / relative paths to the binary.
-    assert!(CLIAgent::WarpTui.matches_command("/workspace/warp/target/debug/warp-tui", None,));
-    assert!(CLIAgent::WarpTui.matches_command("./target/debug/warp-tui", None));
-    assert!(CLIAgent::WarpTui.matches_command(
-        "/Applications/WarpPreview.app/Contents/MacOS/warp-preview --resume abc",
-        None,
-    ));
-    // With arguments and leading whitespace.
-    assert!(CLIAgent::WarpTui.matches_command("  warp --resume abc", None));
-}
-
-#[test]
-fn test_warp_tui_matches_with_env_var_prefix() {
-    // Env-var assignments before the command are skipped when an escape char is
-    // provided (mirrors `CLIAgent::detect`).
-    assert!(
-        CLIAgent::WarpTui
-            .matches_command("TORCH_API_KEY=secret warp", Some(EscapeChar::Backslash),)
-    );
-}
-
-#[test]
-fn test_warp_tui_does_not_match_other_commands() {
-    assert!(!CLIAgent::WarpTui.matches_command("vim", None));
-    assert!(!CLIAgent::WarpTui.matches_command("htop", None));
-    assert!(!CLIAgent::WarpTui.matches_command("claude", None));
-    // Lookalikes / substrings should not match.
-    assert!(!CLIAgent::WarpTui.matches_command("warp-preview-wrapper", None));
-    assert!(!CLIAgent::WarpTui.matches_command("mywarp-dev", None));
-    assert!(!CLIAgent::WarpTui.matches_command("warp-tui-wrapper", None));
-    assert!(!CLIAgent::WarpTui.matches_command("mywarp-tui", None));
-    assert!(!CLIAgent::WarpTui.matches_command("", None));
-    // `cargo run` is a known non-match (the first token is `cargo`).
-    assert!(!CLIAgent::WarpTui.matches_command("cargo run -p torch_tui", None));
-}
-
-#[test]
-fn test_warp_tui_variant_properties() {
-    assert!(CLIAgent::Claude.supports_cli_agent_footer());
-    assert_eq!(CLIAgent::WarpTui.command_prefix(), "warp");
-    assert_eq!(
-        CLIAgent::WarpTui.command_prefixes(),
-        &[
-            "warp",
-            "warp-preview",
-            "warp-dev",
-            "warp-tui",
-            "torch-tui",
-            "run-tui",
-        ]
-    );
-    assert_eq!(CLIAgent::WarpTui.display_name(), "Torch TUI");
-    assert_eq!(CLIAgent::WarpTui.brand_color(), Some(ColorU::black()));
-    assert_eq!(CLIAgent::WarpTui.icon(), Some(Icon::Warp));
-    assert_eq!(CLIAgent::WarpTui.brand_icon_color(), ColorU::white());
-    assert!(CLIAgent::WarpTui.supported_skill_providers().is_empty());
-    assert!(!CLIAgent::WarpTui.supports_bash_mode());
-    assert!(!CLIAgent::WarpTui.supports_cli_agent_footer());
-    // Serialized name round-trips (also covered by
-    // `test_serialized_name_round_trips_known_agents`, asserted explicitly here).
-    assert_eq!(
-        CLIAgent::from_serialized_name(&CLIAgent::WarpTui.to_serialized_name()),
-        CLIAgent::WarpTui
-    );
 }

@@ -97,15 +97,7 @@ pub fn initialize_cloud_preferences_syncer(
     let force_local_wins_on_startup =
         file_has_unsynced_changes && startup_toml_parse_error.is_none();
 
-    // The settings surface decides whether this process participates in cloud
-    // sync at all (e.g. the TUI keeps its config local).
-    let sync_enabled = settings::settings_mode().should_sync_to_cloud();
-    CloudPreferencesSyncer::new(
-        force_local_wins_on_startup,
-        toml_file_path,
-        sync_enabled,
-        ctx,
-    )
+    CloudPreferencesSyncer::new(force_local_wins_on_startup, toml_file_path, ctx)
 }
 
 /// Handles syncing CloudPreferences (the Torch Drive objects) and local Settings models that
@@ -136,14 +128,6 @@ pub struct CloudPreferencesSyncer {
     /// `update_stored_settings_hash` to compute the hash persisted
     /// after every successful cloud sync reconciliation.
     toml_file_path: PathBuf,
-
-    /// Whether cloud sync is active for the current settings surface. Derived
-    /// from [`settings::SettingsMode::should_sync_to_cloud`]; when `false` (e.g.
-    /// the TUI surface) the syncer is inert — it never reads from or writes to
-    /// the cloud, so a surface with its own local settings file cannot clobber
-    /// shared cloud state. The singleton is still registered so callers that
-    /// reach for it (e.g. on login) don't panic.
-    sync_enabled: bool,
 }
 
 /// Event fired by the CloudPreferencesSyncer when a cloud preference has changed.
@@ -198,26 +182,17 @@ impl CloudPreferencesSyncer {
         // `None` and `update_stored_settings_hash` becomes a no-op.
         // End-to-end tests that care about the hash path construct
         // the syncer via `initialize_cloud_preferences_syncer`.
-        Self::new_internal(ctx, client_id_provider, PathBuf::new(), true)
+        Self::new_internal(ctx, client_id_provider, PathBuf::new())
     }
 
     pub fn new(
         force_local_wins_on_startup: bool,
         toml_file_path: PathBuf,
-        sync_enabled: bool,
         ctx: &mut ModelContext<Self>,
     ) -> Self {
-        let mut me = Self::new_internal(
-            ctx,
-            Arc::new(DefaultClientIdProvider),
-            toml_file_path,
-            sync_enabled,
-        );
+        let mut me = Self::new_internal(ctx, Arc::new(DefaultClientIdProvider), toml_file_path);
         me.force_local_wins_on_startup = force_local_wins_on_startup;
-        // Only poll to retry failed cloud syncs when cloud sync is active.
-        if sync_enabled {
-            me.retry_failed_settings(ctx);
-        }
+        me.retry_failed_settings(ctx);
         me
     }
 
@@ -230,7 +205,6 @@ impl CloudPreferencesSyncer {
         ctx: &mut ModelContext<Self>,
         client_id_provider: Arc<dyn ClientIdProvider>,
         toml_file_path: PathBuf,
-        sync_enabled: bool,
     ) -> Self {
         // Set up event syncing in both directions (local -> cloud and cloud -> local).
         // We only apply cloud->local updates AFTER the initial load has been processed by
@@ -313,7 +287,6 @@ impl CloudPreferencesSyncer {
             has_completed_initial_load: false,
             force_local_wins_on_startup: false,
             toml_file_path,
-            sync_enabled,
         }
     }
 
@@ -433,11 +406,6 @@ impl CloudPreferencesSyncer {
         auth_state: Arc<AuthState>,
         ctx: &mut ModelContext<Self>,
     ) {
-        // Inert when cloud sync is disabled for this surface (e.g. the TUI).
-        if !self.sync_enabled {
-            return;
-        }
-
         let is_onboarded = auth_state.is_onboarded();
 
         // Reset the initial load flag so that we re-evaluate sync direction
@@ -485,11 +453,6 @@ impl CloudPreferencesSyncer {
         force_cloud_to_match_local: ForceCloudToMatchLocal,
         ctx: &mut ModelContext<Self>,
     ) {
-        // Inert when cloud sync is disabled for this surface (e.g. the TUI).
-        if !self.sync_enabled {
-            return;
-        }
-
         let update_manager = UpdateManager::as_ref(ctx);
 
         // We wait for the cloud objects to load because we need to know if there are any cloud preferences
@@ -680,11 +643,6 @@ impl CloudPreferencesSyncer {
         keys_to_sync: Vec<String>,
         ctx: &mut ModelContext<Self>,
     ) {
-        // Inert when cloud sync is disabled for this surface (e.g. the TUI).
-        if !self.sync_enabled {
-            return;
-        }
-
         if !AppExecutionMode::as_ref(ctx).can_sync_preferences() {
             // Early exit if the app can't sync preferences.
             return;

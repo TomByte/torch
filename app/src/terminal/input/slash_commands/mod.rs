@@ -98,10 +98,9 @@ pub enum SlashCommandSelectionBehavior {
 
 /// Shared menu-selection policy for static slash commands.
 ///
-/// GUI and TUI both first decide whether accepting a menu row should insert the
-/// slash command text for further argument entry, or execute the command
-/// immediately. Surface-specific execution remains in `Input::execute_slash_command`
-/// for GUI and in `TuiTerminalSessionView::execute_tui_slash_command` for TUI.
+/// Decides whether accepting a menu row should insert the slash command text for
+/// further argument entry, or execute the command immediately. Execution itself
+/// remains in `Input::execute_slash_command`.
 pub fn slash_command_selection_behavior(command: &StaticCommand) -> SlashCommandSelectionBehavior {
     if command
         .argument
