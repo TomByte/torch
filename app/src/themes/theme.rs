@@ -56,6 +56,14 @@ pub enum ThemeKind {
     Kanagawa,
     #[schemars(description = "Ayu (Mirage)")]
     Ayu,
+    #[schemars(description = "Catppuccin Latte")]
+    CatppuccinLatte,
+    #[schemars(description = "Catppuccin Frappé")]
+    CatppuccinFrappe,
+    #[schemars(description = "Catppuccin Macchiato")]
+    CatppuccinMacchiato,
+    #[schemars(description = "Catppuccin Mocha")]
+    CatppuccinMocha,
     #[schemars(description = "Dracula")]
     Dracula,
     #[schemars(description = "Fancy Dracula")]
@@ -118,6 +126,10 @@ impl std::fmt::Display for ThemeKind {
             ThemeKind::Dark => "Dark",
             ThemeKind::Kanagawa => "Kanagawa",
             ThemeKind::Ayu => "Ayu",
+            ThemeKind::CatppuccinLatte => "Catppuccin Latte",
+            ThemeKind::CatppuccinFrappe => "Catppuccin Frappé",
+            ThemeKind::CatppuccinMacchiato => "Catppuccin Macchiato",
+            ThemeKind::CatppuccinMocha => "Catppuccin Mocha",
             ThemeKind::Dracula => "Dracula",
             ThemeKind::SolarizedDark => "Solarized Dark",
             ThemeKind::SolarizedLight => "Solarized Light",
@@ -149,7 +161,17 @@ impl std::fmt::Display for ThemeKind {
 
 impl ThemeKind {
     pub fn is_torch_builtin(&self) -> bool {
-        matches!(self, Self::Light | Self::Dark | Self::Kanagawa | Self::Ayu)
+        matches!(
+            self,
+            Self::Light
+                | Self::Dark
+                | Self::Kanagawa
+                | Self::Ayu
+                | Self::CatppuccinLatte
+                | Self::CatppuccinFrappe
+                | Self::CatppuccinMacchiato
+                | Self::CatppuccinMocha
+        )
     }
 
     pub fn torch_compatible(&self) -> Self {
@@ -158,6 +180,10 @@ impl ThemeKind {
             | Self::Dark
             | Self::Kanagawa
             | Self::Ayu
+            | Self::CatppuccinLatte
+            | Self::CatppuccinFrappe
+            | Self::CatppuccinMacchiato
+            | Self::CatppuccinMocha
             | Self::Custom(_)
             | Self::CustomBase16(_)
             | Self::InMemory(_) => self.clone(),
@@ -514,6 +540,10 @@ impl WarpThemeConfig {
                     (ThemeKind::Dark, dark_theme()),
                     (ThemeKind::Kanagawa, kanagawa()),
                     (ThemeKind::Ayu, ayu()),
+                    (ThemeKind::CatppuccinLatte, catppuccin_latte()),
+                    (ThemeKind::CatppuccinFrappe, catppuccin_frappe()),
+                    (ThemeKind::CatppuccinMacchiato, catppuccin_macchiato()),
+                    (ThemeKind::CatppuccinMocha, catppuccin_mocha()),
                 ]),
             };
         }

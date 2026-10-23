@@ -433,13 +433,7 @@ pub fn custom_tag_to_keystroke(custom: CustomTag) -> Option<Keystroke> {
         }
         CustomAction::GoToLine => Keystroke::parse("ctrl-g").ok(),
         CustomAction::ToggleSidebar => Keystroke::parse(cmd_or_ctrl_shift("b")).ok(),
-        CustomAction::AgentsPalette => {
-            if OperatingSystem::get().is_mac() {
-                Keystroke::parse("cmd-shift-J").ok()
-            } else {
-                Keystroke::parse("ctrl-alt-j").ok()
-            }
-        }
+        CustomAction::AgentsPalette => Keystroke::parse("cmdorctrl-shift-A").ok(),
         CustomAction::ToggleGlobalSearch => {
             if OperatingSystem::get().is_mac() {
                 Keystroke::parse("ctrl-3").ok()

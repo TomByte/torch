@@ -214,3 +214,33 @@ fn test_markdown_display_mode_toggle_is_rebound_in_both_directions() {
         });
     });
 }
+
+#[cfg(feature = "local_only")]
+#[test]
+fn show_agents_defaults_to_cmd_shift_a_and_can_be_reassigned() {
+    App::test((), |mut app| async move {
+        crate::workspace::view::tests::initialize_app(&mut app);
+
+        app.update(|ctx| {
+            const SHOW_AGENTS: &str = "workspace:toggle_agents_palette";
+            let show_agents = |ctx: &warpui::AppContext| {
+                ctx.editable_bindings()
+                    .find(|binding| binding.name == SHOW_AGENTS)
+                    .and_then(|binding| trigger_to_keystroke(binding.trigger))
+            };
+
+            let default = if OperatingSystem::get().is_mac() {
+                "cmd-shift-A"
+            } else {
+                "ctrl-shift-A"
+            };
+            assert_eq!(show_agents(ctx), Keystroke::parse(default).ok());
+
+            ctx.set_custom_trigger(
+                SHOW_AGENTS.to_owned(),
+                Trigger::Keystrokes(vec![Keystroke::parse("cmd-shift-K").unwrap()]),
+            );
+            assert_eq!(show_agents(ctx), Keystroke::parse("cmd-shift-K").ok());
+        });
+    });
+}

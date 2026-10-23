@@ -1,7 +1,10 @@
 //! Torch's Agents palette: every pane running a coding agent, most in need of the user first.
+use std::sync::Arc;
+
 use fuzzy_match::match_indices_case_insensitive;
 use instant::Instant;
 use ordered_float::OrderedFloat;
+use parking_lot::Mutex;
 use warp_core::ui::color::blend::Blend;
 use warp_core::ui::theme::Fill;
 use warpui::elements::{ConstrainedBox, Container, Flex, ParentElement, Text};
@@ -18,14 +21,25 @@ use crate::workspace::view::AgentPane;
 
 #[derive(Default)]
 pub struct DataSource {
-    panes: Vec<AgentPane>,
+    /// Shared with the listed items, which read their pane whenever they render.
+    panes: Arc<Mutex<Vec<AgentPane>>>,
 }
 
 impl DataSource {
     pub fn set_panes(&mut self, mut panes: Vec<AgentPane>) {
         // Stable, so panes in the same state keep sidebar order.
         panes.sort_by_key(AgentPane::state);
-        self.panes = panes;
+        *self.panes.lock() = panes;
+    }
+
+    /// Brings the listed panes up to date without reordering them, so a row never moves out from
+    /// under the selection. Agents that start meanwhile are listed the next time the palette opens.
+    pub fn refresh_panes(&mut self, current: &[AgentPane]) {
+        for pane in self.panes.lock().iter_mut() {
+            if let Some(update) = current.iter().find(|update| update.locator == pane.locator) {
+                *pane = update.clone();
+            }
+        }
     }
 }
 
@@ -39,19 +53,26 @@ impl SyncDataSource for DataSource {
     ) -> Result<Vec<QueryResult<Self::Action>>, DataSourceRunErrorWrapper> {
         let text = query.text.trim();
         let now = Instant::now();
-        Ok(self
-            .panes
+        let panes = self.panes.lock();
+        Ok(panes
             .iter()
             .enumerate()
             .filter_map(|(rank, pane)| {
-                let item = Item::new(pane, now);
                 let score = if text.is_empty() {
                     // Results are shown highest score first.
-                    (self.panes.len() - rank) as f64
+                    (panes.len() - rank) as f64
                 } else {
-                    match_indices_case_insensitive(&item.searchable_text(), text)?.score as f64
+                    let searchable_text = format!("{} {}", title(pane), detail(pane, now));
+                    match_indices_case_insensitive(&searchable_text, text)?.score as f64
                 };
-                Some(Item { score, ..item }.into())
+                Some(
+                    Item {
+                        panes: self.panes.clone(),
+                        pane: pane.clone(),
+                        score,
+                    }
+                    .into(),
+                )
             })
             .collect())
     }
@@ -62,33 +83,41 @@ impl Entity for DataSource {
 }
 
 struct Item {
+    /// The palette's panes, so the row shows its agent as it is now rather than when the query ran.
+    panes: Arc<Mutex<Vec<AgentPane>>>,
+    /// The pane as the query found it.
     pane: AgentPane,
-    title: String,
-    detail: String,
     score: f64,
 }
 
 impl Item {
-    fn new(pane: &AgentPane, now: Instant) -> Self {
-        let state = pane.state();
-        let mut detail = format!("{} · {} · {}", pane.agent, pane.project, state.label());
-        if let Some(time) = pane.time_in_state(now) {
-            detail.push_str(&format!(" {time}"));
-        }
-        Self {
-            pane: pane.clone(),
-            title: pane
-                .task
-                .clone()
-                .unwrap_or_else(|| format!("{} session", pane.agent)),
-            detail,
-            score: 0.,
-        }
+    fn current_pane(&self) -> AgentPane {
+        self.panes
+            .lock()
+            .iter()
+            .find(|pane| pane.locator == self.pane.locator)
+            .unwrap_or(&self.pane)
+            .clone()
     }
+}
 
-    fn searchable_text(&self) -> String {
-        format!("{} {}", self.title, self.detail)
+fn title(pane: &AgentPane) -> String {
+    pane.task
+        .clone()
+        .unwrap_or_else(|| format!("{} session", pane.agent))
+}
+
+fn detail(pane: &AgentPane, now: Instant) -> String {
+    let mut detail = format!(
+        "{} · {} · {}",
+        pane.agent,
+        pane.project,
+        pane.state().label()
+    );
+    if let Some(time) = pane.time_in_state(now) {
+        detail.push_str(&format!(" {time}"));
     }
+    detail
 }
 
 impl SearchItem for Item {
@@ -100,7 +129,7 @@ impl SearchItem for Item {
 
     fn render_icon(&self, _: ItemHighlightState, appearance: &Appearance) -> Box<dyn Element> {
         Container::new(
-            ConstrainedBox::new(self.pane.render_status_icon(appearance))
+            ConstrainedBox::new(self.current_pane().render_status_icon(appearance))
                 .with_width(16.)
                 .with_height(16.)
                 .finish(),
@@ -123,19 +152,24 @@ impl SearchItem for Item {
     fn render_item(&self, _: ItemHighlightState, app: &AppContext) -> Box<dyn Element> {
         let appearance = Appearance::as_ref(app);
         let theme = appearance.theme();
+        let pane = self.current_pane();
         Flex::column()
             .with_child(
-                Text::new_inline(self.title.clone(), appearance.ui_font_family(), 14.)
+                Text::new_inline(title(&pane), appearance.ui_font_family(), 14.)
                     .with_color(theme.foreground().into_solid())
                     .with_clip(ClipConfig::ellipsis())
                     .finish(),
             )
             .with_child(
                 Container::new(
-                    Text::new_inline(self.detail.clone(), appearance.ui_font_family(), 12.)
-                        .with_clip(ClipConfig::ellipsis())
-                        .with_color(self.pane.state_color(appearance))
-                        .finish(),
+                    Text::new_inline(
+                        detail(&pane, Instant::now()),
+                        appearance.ui_font_family(),
+                        12.,
+                    )
+                    .with_clip(ClipConfig::ellipsis())
+                    .with_color(pane.state_color(appearance))
+                    .finish(),
                 )
                 .with_padding_top(3.)
                 .finish(),
@@ -159,6 +193,11 @@ impl SearchItem for Item {
     }
 
     fn accessibility_label(&self) -> String {
-        format!("{}. {}", self.title, self.detail)
+        let pane = self.current_pane();
+        format!("{}. {}", title(&pane), detail(&pane, Instant::now()))
     }
 }
+
+#[cfg(test)]
+#[path = "agents_tests.rs"]
+mod tests;

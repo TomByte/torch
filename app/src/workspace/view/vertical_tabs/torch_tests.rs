@@ -236,12 +236,22 @@ fn quiet_command_surfaces_preserve_text_contrast_in_both_themes() {
 }
 
 #[test]
-fn kanagawa_and_ayu_keep_sidebar_and_command_text_readable() {
+fn themed_sidebars_keep_sidebar_and_command_text_readable() {
     for theme in [
         crate::themes::default_themes::kanagawa(),
         crate::themes::default_themes::ayu(),
+        crate::themes::default_themes::catppuccin_latte(),
+        crate::themes::default_themes::catppuccin_frappe(),
+        crate::themes::default_themes::catppuccin_macchiato(),
+        crate::themes::default_themes::catppuccin_mocha(),
     ] {
         let palette = Palette::new(&theme);
+        assert_eq!(
+            palette.text,
+            theme.foreground().into_solid(),
+            "{:?}",
+            theme.name()
+        );
         for background in [
             palette.sidebar_top,
             palette.sidebar_bottom,
@@ -508,6 +518,10 @@ fn working_dot_stands_out_from_every_sidebar_background() {
         crate::themes::default_themes::light_theme(),
         crate::themes::default_themes::kanagawa(),
         crate::themes::default_themes::ayu(),
+        crate::themes::default_themes::catppuccin_latte(),
+        crate::themes::default_themes::catppuccin_frappe(),
+        crate::themes::default_themes::catppuccin_macchiato(),
+        crate::themes::default_themes::catppuccin_mocha(),
     ] {
         let palette = Palette::new(&theme);
         for background in [
@@ -873,50 +887,17 @@ fn time_in_state_stays_compact() {
     }
 }
 
-fn agent_pane(
-    status: Option<ConversationStatus>,
-    requested_tool: Option<&str>,
-    branch: Option<&str>,
-) -> AgentPane {
-    AgentPane {
-        window_id: WindowId::from_usize(1),
-        locator: PaneViewLocator {
-            pane_group_id: EntityId::new(),
-            pane_id: crate::pane_group::PaneId::dummy_pane_id(),
-        },
-        terminal_view_id: EntityId::new(),
-        agent: "Claude Code",
-        task: Some("Fix login redirect".to_owned()),
-        project: "blipp-ai".to_owned(),
-        branch: branch.map(str::to_owned),
-        requested_tool: requested_tool.map(str::to_owned),
-        status_since: None,
-        session: Session {
-            index: 0,
-            title: String::new(),
-            directory: String::new(),
-            group_key: String::new(),
-            group_label: String::new(),
-            project_directory: None,
-            status,
-            agent_status_unavailable: false,
-            age: String::new(),
-            unread: false,
-        },
-    }
-}
-
 #[test]
 fn agent_rows_say_what_a_blocked_agent_wants_otherwise_where_it_runs() {
     let blocked = Some(ConversationStatus::Blocked {
         blocked_action: String::new(),
     });
     assert_eq!(
-        agent_context(&agent_pane(blocked, Some("Bash"), Some("main"))),
+        agent_context(&AgentPane::for_test(blocked, Some("Bash"), Some("main"))),
         "Claude Code wants to use Bash"
     );
     assert_eq!(
-        agent_context(&agent_pane(
+        agent_context(&AgentPane::for_test(
             Some(ConversationStatus::InProgress),
             None,
             Some("fix/login")
@@ -924,7 +905,7 @@ fn agent_rows_say_what_a_blocked_agent_wants_otherwise_where_it_runs() {
         "Claude Code · blipp-ai · fix/login"
     );
     assert_eq!(
-        agent_context(&agent_pane(None, None, None)),
+        agent_context(&AgentPane::for_test(None, None, None)),
         "Claude Code · blipp-ai"
     );
 }
@@ -932,7 +913,7 @@ fn agent_rows_say_what_a_blocked_agent_wants_otherwise_where_it_runs() {
 #[test]
 fn agents_header_leads_with_agents_waiting_on_the_user() {
     let blocked = || {
-        agent_pane(
+        AgentPane::for_test(
             Some(ConversationStatus::Blocked {
                 blocked_action: String::new(),
             }),
@@ -940,8 +921,8 @@ fn agents_header_leads_with_agents_waiting_on_the_user() {
             None,
         )
     };
-    let working = || agent_pane(Some(ConversationStatus::InProgress), None, None);
-    let idle = || agent_pane(None, None, None);
+    let working = || AgentPane::for_test(Some(ConversationStatus::InProgress), None, None);
+    let idle = || AgentPane::for_test(None, None, None);
     assert_eq!(
         agents_summary(&[working(), blocked()]),
         ("1 needs you".to_owned(), true)

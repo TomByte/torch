@@ -196,6 +196,10 @@ fn theme_chooser_items(
             ThemeKind::Dark,
             ThemeKind::Kanagawa,
             ThemeKind::Ayu,
+            ThemeKind::CatppuccinLatte,
+            ThemeKind::CatppuccinFrappe,
+            ThemeKind::CatppuccinMacchiato,
+            ThemeKind::CatppuccinMocha,
         ];
         theme_items.sort_by_key(|item| order.iter().position(|kind| kind == &item.kind));
     } else {

@@ -487,7 +487,7 @@ fn in_memory_theme_generation_test() {
 }
 
 #[test]
-fn torch_catalog_contains_only_the_four_supported_builtins() {
+fn torch_catalog_contains_only_the_supported_builtins() {
     if !warp_core::channel::ChannelState::is_local_only() {
         return;
     }
@@ -500,12 +500,23 @@ fn torch_catalog_contains_only_the_four_supported_builtins() {
             ThemeKind::Light,
             ThemeKind::Dark,
             ThemeKind::Kanagawa,
-            ThemeKind::Ayu
+            ThemeKind::Ayu,
+            ThemeKind::CatppuccinLatte,
+            ThemeKind::CatppuccinFrappe,
+            ThemeKind::CatppuccinMacchiato,
+            ThemeKind::CatppuccinMocha,
         ]
         .into_iter()
         .collect()
     );
-    for kind in [ThemeKind::Kanagawa, ThemeKind::Ayu] {
+    for kind in [
+        ThemeKind::Kanagawa,
+        ThemeKind::Ayu,
+        ThemeKind::CatppuccinLatte,
+        ThemeKind::CatppuccinFrappe,
+        ThemeKind::CatppuccinMacchiato,
+        ThemeKind::CatppuccinMocha,
+    ] {
         let value = kind.to_file_value();
         assert_eq!(ThemeKind::from_file_value(&value), Some(kind.clone()));
         assert_eq!(config.theme(&kind).name(), Some(kind.to_string()));
@@ -533,6 +544,10 @@ fn retired_theme_preferences_resolve_to_the_matching_default() {
         ThemeKind::Dark,
         ThemeKind::Kanagawa,
         ThemeKind::Ayu,
+        ThemeKind::CatppuccinLatte,
+        ThemeKind::CatppuccinFrappe,
+        ThemeKind::CatppuccinMacchiato,
+        ThemeKind::CatppuccinMocha,
     ] {
         assert_eq!(kind.torch_compatible(), kind);
     }

@@ -34,6 +34,15 @@ use crate::workspace::tab_settings::DirectoryTabColor;
 use crate::workspace::view::PanelPosition;
 
 pub(super) const SIDEBAR_WIDTH: f32 = 272.;
+/// Built-in themes whose sidebar is drawn from their own colours rather than Torch's Light or Dark.
+const THEMED_SIDEBARS: [&str; 6] = [
+    "Kanagawa",
+    "Ayu",
+    "Catppuccin Latte",
+    "Catppuccin Frappé",
+    "Catppuccin Macchiato",
+    "Catppuccin Mocha",
+];
 const HEADER_HEIGHT: f32 = 48.;
 const ROW_HEIGHT: f32 = 28.;
 const SCROLL_FOLLOW_INTERVAL: Duration = Duration::from_millis(16);
@@ -70,8 +79,12 @@ struct Palette {
 
 impl Palette {
     fn new(theme: &WarpTheme) -> Self {
-        if theme.inferred_color_scheme() == ColorScheme::DarkOnLight {
-            Self {
+        let follows_theme = theme
+            .name()
+            .is_some_and(|name| THEMED_SIDEBARS.contains(&name.as_str()));
+        match (theme.inferred_color_scheme(), follows_theme) {
+            (ColorScheme::DarkOnLight, true) => Self::themed_light(theme),
+            (ColorScheme::DarkOnLight, false) => Self {
                 sidebar_top: ColorU::from_u32(0xE6ECF4FF),
                 sidebar_bottom: ColorU::from_u32(0xEEE9F4FF),
                 text: ColorU::from_u32(0x202124FF),
@@ -87,29 +100,9 @@ impl Palette {
                 contact_shadow: ColorU::from_u32(0x1A1F3612),
                 card_edge: ColorU::from_u32(0x0000000A),
                 card_shadow: ColorU::from_u32(0x1A1F3626),
-            }
-        } else if matches!(theme.name().as_deref(), Some("Kanagawa" | "Ayu")) {
-            let background = theme.background();
-            let foreground = theme.foreground();
-            Self {
-                sidebar_top: background.blend(&foreground.with_opacity(4)).into_solid(),
-                sidebar_bottom: background.blend(&foreground.with_opacity(2)).into_solid(),
-                text: foreground.into_solid(),
-                secondary: background.blend(&foreground.with_opacity(85)).into_solid(),
-                muted: background.blend(&foreground.with_opacity(80)).into_solid(),
-                selection: background.blend(&foreground.with_opacity(10)).into_solid(),
-                hover: foreground.with_opacity(5).into_solid(),
-                rule: background.blend(&foreground.with_opacity(18)).into_solid(),
-                attention: theme.terminal_colors().bright.yellow.into(),
-                working: ColorU::from_u32(0xD97757FF),
-                header_rule: foreground.with_opacity(7).into_solid(),
-                shadow: ColorU::from_u32(0x00000059),
-                contact_shadow: ColorU::from_u32(0x00000047),
-                card_edge: foreground.with_opacity(8).into_solid(),
-                card_shadow: ColorU::from_u32(0x00000033),
-            }
-        } else {
-            Self {
+            },
+            (ColorScheme::LightOnDark, true) => Self::themed_dark(theme),
+            (ColorScheme::LightOnDark, false) => Self {
                 sidebar_top: ColorU::from_u32(0x2B2B2BFF),
                 sidebar_bottom: ColorU::from_u32(0x282828FF),
                 text: ColorU::from_u32(0xE6E6E6FF),
@@ -123,9 +116,58 @@ impl Palette {
                 header_rule: ColorU::from_u32(0xFFFFFF12),
                 shadow: ColorU::from_u32(0x00000059),
                 contact_shadow: ColorU::from_u32(0x00000047),
-                card_edge: ColorU::from_u32(0xFFFFFF10),
+                card_edge: ColorU::from_u32(0xFFFFFF0B),
                 card_shadow: ColorU::from_u32(0x00000033),
-            }
+            },
+        }
+    }
+
+    fn themed_dark(theme: &WarpTheme) -> Self {
+        let background = theme.background();
+        let foreground = theme.foreground();
+        Self {
+            sidebar_top: background.blend(&foreground.with_opacity(4)).into_solid(),
+            sidebar_bottom: background.blend(&foreground.with_opacity(2)).into_solid(),
+            text: foreground.into_solid(),
+            secondary: background.blend(&foreground.with_opacity(85)).into_solid(),
+            muted: background.blend(&foreground.with_opacity(80)).into_solid(),
+            selection: background.blend(&foreground.with_opacity(10)).into_solid(),
+            hover: foreground.with_opacity(5).into_solid(),
+            rule: background.blend(&foreground.with_opacity(18)).into_solid(),
+            attention: theme.terminal_colors().bright.yellow.into(),
+            working: ColorU::from_u32(0xD97757FF),
+            header_rule: foreground.with_opacity(7).into_solid(),
+            shadow: ColorU::from_u32(0x00000059),
+            contact_shadow: ColorU::from_u32(0x00000047),
+            card_edge: foreground.with_opacity(5).into_solid(),
+            card_shadow: ColorU::from_u32(0x00000033),
+        }
+    }
+
+    /// Light themes need deeper text blends than dark ones to stay readable, and a darkened yellow
+    /// for attention, since a light theme's own yellow is drawn for a light-on-dark terminal cell.
+    fn themed_light(theme: &WarpTheme) -> Self {
+        let background = theme.background();
+        let foreground = theme.foreground();
+        let yellow: ColorU = theme.terminal_colors().normal.yellow.into();
+        Self {
+            sidebar_top: background.blend(&foreground.with_opacity(5)).into_solid(),
+            sidebar_bottom: background.blend(&foreground.with_opacity(3)).into_solid(),
+            text: foreground.into_solid(),
+            secondary: background.blend(&foreground.with_opacity(90)).into_solid(),
+            muted: background.blend(&foreground.with_opacity(85)).into_solid(),
+            selection: background
+                .into_solid()
+                .blend(&coloru_with_opacity(ColorU::white(), 70)),
+            hover: ColorU::from_u32(0xFFFFFF70),
+            rule: background.blend(&foreground.with_opacity(15)).into_solid(),
+            attention: yellow.blend(&coloru_with_opacity(ColorU::black(), 40)),
+            working: ColorU::from_u32(0xC15F3CFF),
+            header_rule: foreground.with_opacity(8).into_solid(),
+            shadow: ColorU::from_u32(0x1A1F361C),
+            contact_shadow: ColorU::from_u32(0x1A1F3612),
+            card_edge: ColorU::from_u32(0x0000000A),
+            card_shadow: ColorU::from_u32(0x1A1F3626),
         }
     }
 
@@ -1156,6 +1198,40 @@ impl AgentState {
 }
 
 impl AgentPane {
+    #[cfg(test)]
+    pub(crate) fn for_test(
+        status: Option<ConversationStatus>,
+        requested_tool: Option<&str>,
+        branch: Option<&str>,
+    ) -> Self {
+        Self {
+            window_id: WindowId::from_usize(1),
+            locator: PaneViewLocator {
+                pane_group_id: EntityId::new(),
+                pane_id: crate::pane_group::PaneId::dummy_pane_id(),
+            },
+            terminal_view_id: EntityId::new(),
+            agent: "Claude Code",
+            task: Some("Fix login redirect".to_owned()),
+            project: "blipp-ai".to_owned(),
+            branch: branch.map(str::to_owned),
+            requested_tool: requested_tool.map(str::to_owned),
+            status_since: None,
+            session: Session {
+                index: 0,
+                title: String::new(),
+                directory: String::new(),
+                group_key: String::new(),
+                group_label: String::new(),
+                project_directory: None,
+                status,
+                agent_status_unavailable: false,
+                age: String::new(),
+                unread: false,
+            },
+        }
+    }
+
     pub(crate) fn state(&self) -> AgentState {
         agent_state(session_indicator(
             self.session.status.as_ref(),
@@ -1198,7 +1274,10 @@ fn elapsed_label(elapsed: Duration) -> String {
 }
 
 /// Agent panes in every window, this window's first, most in need of the user first.
-fn all_agent_panes(workspace: &Workspace, app: &AppContext) -> Vec<AgentPane> {
+pub(in crate::workspace::view) fn all_agent_panes(
+    workspace: &Workspace,
+    app: &AppContext,
+) -> Vec<AgentPane> {
     let cache = &workspace.vertical_tabs_panel.torch_sessions.agents;
     if let Some((captured, panes)) = &*cache.borrow()
         && captured.elapsed() < SNAPSHOT_LIFETIME
@@ -1237,11 +1316,7 @@ fn agent_state(indicator: SessionIndicator) -> AgentState {
 }
 
 /// Every pane in `workspace` running a coding agent, in sidebar tab order.
-pub(in crate::workspace::view) fn agent_panes(
-    workspace: &Workspace,
-    window_id: WindowId,
-    app: &AppContext,
-) -> Vec<AgentPane> {
+fn agent_panes(workspace: &Workspace, window_id: WindowId, app: &AppContext) -> Vec<AgentPane> {
     let agents = CLIAgentSessionsModel::as_ref(app);
     let mut panes = Vec::new();
     for (index, tab) in workspace.tabs.iter().enumerate() {

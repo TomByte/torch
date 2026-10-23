@@ -744,3 +744,141 @@ pub fn ayu() -> WarpTheme {
         Some("Ayu".into()),
     )
 }
+
+/// Catppuccin Latte, Frappé, Macchiato and Mocha; see docs/design/theme-sources.md for palette
+/// provenance.
+pub fn catppuccin_latte() -> WarpTheme {
+    WarpTheme::new(
+        ColorU::from_u32(0xEFF1F5FF).into(),
+        ColorU::from_u32(0x4C4F69FF),
+        ColorU::from_u32(0x8839EFFF).into(),
+        Some(ColorU::from_u32(0xDC8A78FF).into()),
+        Some(Details::Lighter),
+        TerminalColors::new(
+            AnsiColors::new(
+                AnsiColor::from_u32(0x5C5F77FF),
+                AnsiColor::from_u32(0xD20F39FF),
+                AnsiColor::from_u32(0x40A02BFF),
+                AnsiColor::from_u32(0xDF8E1DFF),
+                AnsiColor::from_u32(0x1E66F5FF),
+                AnsiColor::from_u32(0xEA76CBFF),
+                AnsiColor::from_u32(0x179299FF),
+                AnsiColor::from_u32(0xACB0BEFF),
+            ),
+            AnsiColors::new(
+                AnsiColor::from_u32(0x6C6F85FF),
+                AnsiColor::from_u32(0xDE293EFF),
+                AnsiColor::from_u32(0x49AF3DFF),
+                AnsiColor::from_u32(0xEEA02DFF),
+                AnsiColor::from_u32(0x456EFFFF),
+                AnsiColor::from_u32(0xFE85D8FF),
+                AnsiColor::from_u32(0x2D9FA8FF),
+                AnsiColor::from_u32(0xBCC0CCFF),
+            ),
+        ),
+        None,
+        Some("Catppuccin Latte".into()),
+    )
+}
+
+pub fn catppuccin_frappe() -> WarpTheme {
+    WarpTheme::new(
+        ColorU::from_u32(0x303446FF).into(),
+        ColorU::from_u32(0xC6D0F5FF),
+        ColorU::from_u32(0xCA9EE6FF).into(),
+        Some(ColorU::from_u32(0xF2D5CFFF).into()),
+        Some(Details::Darker),
+        TerminalColors::new(
+            AnsiColors::new(
+                AnsiColor::from_u32(0x51576DFF),
+                AnsiColor::from_u32(0xE78284FF),
+                AnsiColor::from_u32(0xA6D189FF),
+                AnsiColor::from_u32(0xE5C890FF),
+                AnsiColor::from_u32(0x8CAAEEFF),
+                AnsiColor::from_u32(0xF4B8E4FF),
+                AnsiColor::from_u32(0x81C8BEFF),
+                AnsiColor::from_u32(0xA5ADCEFF),
+            ),
+            AnsiColors::new(
+                AnsiColor::from_u32(0x626880FF),
+                AnsiColor::from_u32(0xE67172FF),
+                AnsiColor::from_u32(0x8EC772FF),
+                AnsiColor::from_u32(0xD9BA73FF),
+                AnsiColor::from_u32(0x7B9EF0FF),
+                AnsiColor::from_u32(0xF2A4DBFF),
+                AnsiColor::from_u32(0x5ABFB5FF),
+                AnsiColor::from_u32(0xB5BFE2FF),
+            ),
+        ),
+        None,
+        Some("Catppuccin Frappé".into()),
+    )
+}
+
+pub fn catppuccin_macchiato() -> WarpTheme {
+    WarpTheme::new(
+        ColorU::from_u32(0x24273AFF).into(),
+        ColorU::from_u32(0xCAD3F5FF),
+        ColorU::from_u32(0xC6A0F6FF).into(),
+        Some(ColorU::from_u32(0xF4DBD6FF).into()),
+        Some(Details::Darker),
+        TerminalColors::new(
+            AnsiColors::new(
+                AnsiColor::from_u32(0x494D64FF),
+                AnsiColor::from_u32(0xED8796FF),
+                AnsiColor::from_u32(0xA6DA95FF),
+                AnsiColor::from_u32(0xEED49FFF),
+                AnsiColor::from_u32(0x8AADF4FF),
+                AnsiColor::from_u32(0xF5BDE6FF),
+                AnsiColor::from_u32(0x8BD5CAFF),
+                AnsiColor::from_u32(0xA5ADCBFF),
+            ),
+            AnsiColors::new(
+                AnsiColor::from_u32(0x5B6078FF),
+                AnsiColor::from_u32(0xEC7486FF),
+                AnsiColor::from_u32(0x8CCF7FFF),
+                AnsiColor::from_u32(0xE1C682FF),
+                AnsiColor::from_u32(0x78A1F6FF),
+                AnsiColor::from_u32(0xF2A9DDFF),
+                AnsiColor::from_u32(0x63CBC0FF),
+                AnsiColor::from_u32(0xB8C0E0FF),
+            ),
+        ),
+        None,
+        Some("Catppuccin Macchiato".into()),
+    )
+}
+
+pub fn catppuccin_mocha() -> WarpTheme {
+    WarpTheme::new(
+        ColorU::from_u32(0x1E1E2EFF).into(),
+        ColorU::from_u32(0xCDD6F4FF),
+        ColorU::from_u32(0xCBA6F7FF).into(),
+        Some(ColorU::from_u32(0xF5E0DCFF).into()),
+        Some(Details::Darker),
+        TerminalColors::new(
+            AnsiColors::new(
+                AnsiColor::from_u32(0x45475AFF),
+                AnsiColor::from_u32(0xF38BA8FF),
+                AnsiColor::from_u32(0xA6E3A1FF),
+                AnsiColor::from_u32(0xF9E2AFFF),
+                AnsiColor::from_u32(0x89B4FAFF),
+                AnsiColor::from_u32(0xF5C2E7FF),
+                AnsiColor::from_u32(0x94E2D5FF),
+                AnsiColor::from_u32(0xA6ADC8FF),
+            ),
+            AnsiColors::new(
+                AnsiColor::from_u32(0x585B70FF),
+                AnsiColor::from_u32(0xF37799FF),
+                AnsiColor::from_u32(0x89D88BFF),
+                AnsiColor::from_u32(0xEBD391FF),
+                AnsiColor::from_u32(0x74A8FCFF),
+                AnsiColor::from_u32(0xF2AEDEFF),
+                AnsiColor::from_u32(0x6BD7CAFF),
+                AnsiColor::from_u32(0xBAC2DEFF),
+            ),
+        ),
+        None,
+        Some("Catppuccin Mocha".into()),
+    )
+}

@@ -230,7 +230,8 @@ logical pixels, not screenshot pixels. The tokens describe the current implement
 Default terminal colors come from `app/src/themes/default_themes.rs`; derived command fills come
 from `app/src/themes/mod.rs`. UI font loading comes from `app/src/appearance.rs`. Local palette
 behavior comes from `app/src/search/command_palette/local_navigation.rs` and its workspace actions.
-The four built-in choices are Light, Dark, Kanagawa, and Ayu. Existing custom theme references and
+The built-in choices are Light, Dark, Kanagawa, Ayu, and the four Catppuccin flavours (Latte,
+Frappé, Macchiato, Mocha). Existing custom theme references and
 font preferences remain readable; retired built-in names follow the compatibility mapping described
 below. The theme variants share the established layout and component geometry.
 
@@ -301,7 +302,9 @@ foreground, blue accent, and a separate warm cursor. Ayu uses the official npm `
 palette: blue-gray background, soft foreground, and amber accent/cursor. Ayu's bright-black ANSI
 slot deliberately uses Mirage's UI gray for legibility instead of its near-black terminal value.
 The `kanagawa-*` and `ayu-*` tokens capture these two variants; the existing Light and Dark tokens
-remain unchanged. [Palette sources and licences](docs/design/theme-sources.md) record upstream
+remain unchanged. Catppuccin uses the official palette (`catppuccin/palette` v1.8.0) for all four
+flavours: base background, text foreground, mauve accent, rosewater cursor, and the palette's own
+normal and bright ANSI colours. Latte is the only light flavour. [Palette sources and licences](docs/design/theme-sources.md) record upstream
 provenance and the Ayu adjustment. Terminal text selection keeps Torch's theme-engine behavior.
 
 ### Secondary
@@ -322,11 +325,16 @@ theme; existing custom terminal themes keep their own colors. The faint `header-
 invented activity, sample project progress, or presumed CLI success.
 
 The sidebar first follows `theme.inferred_color_scheme()`: `DarkOnLight` selects the light palette.
-For dark schemes named Kanagawa or Ayu, it derives surfaces from that theme's background and
-foreground: foreground blends at 4% for sidebar top, 2% for bottom, 10% for selected rows, and 18%
-for rules. Secondary text uses an 85% foreground blend; muted text uses 80%. Hover uses foreground
-at 5% opacity, the header rule uses 7%, attention uses the theme's bright-yellow ANSI slot, and the
-shadow retains the dark shadow token. Other dark schemes use the neutral Dark sidebar palette.
+For dark schemes named Kanagawa, Ayu, or Catppuccin Frappé, Macchiato, or Mocha, it derives surfaces
+from that theme's background and foreground: foreground blends at 4% for sidebar top, 2% for bottom,
+10% for selected rows, and 18% for rules. Secondary text uses an 85% foreground blend; muted text
+uses 80%. Hover uses foreground at 5% opacity, the header rule uses 7%, the card edge 5%, attention
+uses the theme's bright-yellow ANSI slot, and the shadow retains the dark shadow token. Catppuccin
+Latte derives a light sidebar the same way: foreground at 5% (top) and 3% (bottom), the selected
+card 70% white over the background, rules at 15%, and deeper 90% and 85% blends for secondary and
+muted text so they stay readable on light surfaces. Its attention colour is the theme's yellow
+darkened by 40% black, and it keeps the light hover, card edge, and shadows. Other schemes use the
+neutral Light or Dark sidebar palette.
 These theme-relative colors preserve the existing hierarchy without importing a new layout.
 
 Measured dark token contrasts are body text on the terminal (12.59:1), muted text on selection
@@ -381,7 +389,7 @@ establish an untested minimum window size.
 ## Elevation & Depth
 
 The sidebar is tonal; only the active session rises from it, on a card: the selection fill, a
-hairline edge (4% black in light mode, 6% white in dark), and a soft shadow 1 logical pixel down with
+hairline edge (4% black in light mode, 4% white in dark), and a soft shadow 1 logical pixel down with
 a 2-pixel blur. Other rows stay flat, and hover changes fill. The main pane pairs a thin rule with two
 shadows, a tight one 1 pixel down and a broad one 6 pixels down with a 10-pixel blur, faint
 blue-black in light mode and translucent black in dark. Floating surfaces, the command palette and
@@ -545,12 +553,13 @@ status icon, task and time in state, then agent · project · branch, or “Clau
 Bash” in the attention color while a permission request waits. A final “N more…” row opens Show
 Agents. Clicking a row focuses that pane, in whichever window it is.
 
-Show Agents (Cmd+Shift+J on macOS, also in View and the command palette) opens the palette on every
+Show Agents (Cmd+Shift+A on macOS, also in View and the command palette) opens the palette on every
 pane running a coding agent across all windows, ordered needs you, finished, failed, working, idle,
 then agents that report no status; ties keep sidebar order. Each row shows the sidebar's status
 icon, what the agent is working on (its terminal title), and agent · project · state with time in
 that state. Typing filters by any of them, so “working” or a project name narrows the list. Enter
-focuses that pane.
+focuses that pane. While the palette is open its rows follow each agent's state live but keep
+their order, so the selection never jumps; agents started meanwhile appear when it next opens.
 
 ### Projects settings
 
@@ -603,14 +612,14 @@ inside the rounded corners. Preview browser focus outlines are illustrative only
 ### Theme controls
 
 Use the existing native Settings → Appearance controls. Current theme opens the native picker
-with exactly four entries, ordered Light, Dark, Kanagawa, and Ayu. Kanagawa is the Wave variant;
-Ayu is Mirage. A new local-only profile syncs with the OS using Light and Dark; a profile that
+ordered Light, Dark, Kanagawa, Ayu, Catppuccin Latte, Catppuccin Frappé, Catppuccin Macchiato,
+and Catppuccin Mocha. Kanagawa is the Wave variant; Ayu is Mirage. A new local-only profile syncs with the OS using Light and Dark; a profile that
 already chose a theme keeps it. Sync with OS uses the configured light and dark appearance choices,
-with the same four-theme catalog.
+with the same theme catalog.
 
 Retired built-in preferences resolve to Light or Dark through the compatibility mapping, including
 preferences stored for OS appearance modes. Existing custom theme files and references are retained,
-but custom entries and creation controls are hidden from the four-choice picker and Settings.
+but custom entries and creation controls are hidden from the picker and Settings.
 The previously verified Dark selection persists across restart; final validation for newly added
 themes is recorded separately. Theme switching preserves the sidebar layout and terminal behavior.
 

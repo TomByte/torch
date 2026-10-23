@@ -3847,6 +3847,17 @@ impl Workspace {
             || self.workspace_contains_terminal_view(event.terminal_view_id(), ctx))
         {
             ctx.notify();
+            if self.current_workspace_state.is_palette_open
+                && self
+                    .palette
+                    .as_ref(ctx)
+                    .is_mode_enabled(PaletteMode::Agents, ctx)
+            {
+                let panes = vertical_tabs::torch::all_agent_panes(self, ctx);
+                self.palette.update(ctx, |palette, ctx| {
+                    palette.refresh_agent_panes(&panes, ctx);
+                });
+            }
         }
     }
 
@@ -15130,19 +15141,7 @@ impl Workspace {
     }
 
     fn open_agents_palette(&mut self, ctx: &mut ViewContext<Self>) {
-        let mut panes = Vec::new();
-        for window_id in ctx.window_ids() {
-            for workspace in ctx
-                .views_of_type::<Workspace>(window_id)
-                .unwrap_or_default()
-            {
-                panes.extend(vertical_tabs::torch::agent_panes(
-                    workspace.as_ref(ctx),
-                    window_id,
-                    ctx,
-                ));
-            }
-        }
+        let panes = vertical_tabs::torch::all_agent_panes(self, ctx);
         self.palette.update(ctx, |view, ctx| {
             view.data_source_store.update(ctx, |store, ctx| {
                 store.set_agent_panes(panes, ctx);

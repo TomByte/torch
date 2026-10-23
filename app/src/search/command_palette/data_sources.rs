@@ -98,6 +98,15 @@ impl DataSourceStore {
         });
     }
 
+    pub(crate) fn refresh_agent_panes(
+        &self,
+        panes: &[crate::workspace::view::AgentPane],
+        ctx: &mut ModelContext<Self>,
+    ) {
+        self.agents
+            .update(ctx, |source, _| source.refresh_panes(panes));
+    }
+
     pub fn set_local_projects(
         &self,
         projects: Vec<crate::settings::LocalProject>,

@@ -711,6 +711,17 @@ impl View {
             .update(ctx, |search, ctx| search.run_query(ctx));
     }
 
+    /// Shows the listed agents' latest states in place, keeping the query, order and selection.
+    pub(crate) fn refresh_agent_panes(
+        &mut self,
+        panes: &[crate::workspace::view::AgentPane],
+        ctx: &mut ViewContext<Self>,
+    ) {
+        self.data_source_store
+            .update(ctx, |store, ctx| store.refresh_agent_panes(panes, ctx));
+        ctx.notify();
+    }
+
     /// Clears the query and scroll position. Every way of opening the palette calls this, so
     /// closing leaves them in place while the palette fades away.
     pub fn reset(&mut self, ctx: &mut ViewContext<Self>) {
