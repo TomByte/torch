@@ -1,8 +1,8 @@
 use enum_iterator::Sequence;
 use serde::{Deserialize, Serialize};
-use warp_core::channel::{Channel, ChannelState};
-use warp_core::settings::macros::define_settings_group;
-use warp_core::settings::{SupportedPlatforms, SyncToCloud};
+use torch_core::channel::{Channel, ChannelState};
+use torch_core::settings::macros::define_settings_group;
+use torch_core::settings::{SupportedPlatforms, SyncToCloud};
 
 /// The app icon to use (mac-only).
 #[derive(

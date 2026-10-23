@@ -1,5 +1,5 @@
-use warpui::Element;
-use warpui::elements::Text;
+use torchui::Element;
+use torchui::elements::Text;
 
 use super::{
     InlineBannerContent, InlineBannerIcon, InlineBannerStyle, render_inline_block_list_banner,

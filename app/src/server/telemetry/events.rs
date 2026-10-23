@@ -5,16 +5,16 @@ use serde_json::{Value, json};
 use session_sharing_protocol::common::{ParticipantId, Role, SessionId as SharedSessionId};
 use session_sharing_protocol::sharer::{SessionEndedReason, SessionSourceType};
 use strum_macros::{EnumDiscriminants, EnumIter};
-use warp_completer::completer::MatchType;
-use warp_core::command::ExitCode;
-use warp_core::interval_timer::TimingDataPoint;
-use warp_core::telemetry::{
+use torch_completer::completer::MatchType;
+use torch_core::command::ExitCode;
+use torch_core::interval_timer::TimingDataPoint;
+use torch_core::telemetry::{
     EnablementState, TelemetryEvent as TelemetryEventTrait, TelemetryEventDesc,
 };
-pub use warp_terminal::ImageProtocol;
-use warpui::keymap::Keystroke;
-use warpui::notification::{NotificationSendError, RequestPermissionsOutcome};
-use warpui::rendering::ThinStrokes;
+pub use torch_terminal::ImageProtocol;
+use torchui::keymap::Keystroke;
+use torchui::notification::{NotificationSendError, RequestPermissionsOutcome};
+use torchui::rendering::ThinStrokes;
 
 use crate::ai::agent::api::ServerConversationToken;
 use crate::ai::agent::conversation::AIConversationId;
@@ -2625,7 +2625,7 @@ pub enum TelemetryEvent {
     AgentManagementViewCopiedSessionLink,
     /// Detected that Warp is running in an isolated sandbox.
     DetectedIsolationPlatform {
-        platform: warp_isolation_platform::IsolationPlatformType,
+        platform: torch_isolation_platform::IsolationPlatformType,
     },
 
     AgentTipShown {
@@ -2880,7 +2880,7 @@ pub enum TelemetryEvent {
     /// daemon process on the remote host.  Only emitted on success — if
     /// the daemon crashes before binding, no event is sent.
     RemoteServerDaemonStartup {
-        timing_data: Vec<warp_core::interval_timer::TimingDataPoint>,
+        timing_data: Vec<torch_core::interval_timer::TimingDataPoint>,
     },
     /// Emitted when all reconnection attempts are exhausted.
     RemoteServerReconnectExhausted {
@@ -2960,7 +2960,7 @@ impl TelemetryEventTrait for TelemetryEvent {
     }
 
     fn event_descs() -> impl Iterator<Item = Box<dyn TelemetryEventDesc>> {
-        warp_core::telemetry::enum_events::<Self>()
+        torch_core::telemetry::enum_events::<Self>()
     }
 }
 
@@ -5220,7 +5220,7 @@ impl TelemetryEvent {
         // We initialize the feature flags so that we can determine which telemetry events to print.
         crate::features::init_feature_flags();
 
-        let events: serde_json::Map<String, Value> = warp_core::telemetry::all_events()
+        let events: serde_json::Map<String, Value> = torch_core::telemetry::all_events()
             .filter_map(|event| {
                 if !event.enablement_state().is_enabled() {
                     return None;
@@ -6830,7 +6830,7 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::ObjectLinkCopied => "The web link to an object has been copied.",
             Self::FileTreeToggled => "Opened the file tree/project explorer",
             Self::GlobalSearchOpened => "Opened the global search view",
-            Self::GlobalSearchQueryStarted => "Started a global search (warp_ripgrep) search",
+            Self::GlobalSearchQueryStarted => "Started a global search (torch_ripgrep) search",
             Self::GlobalSearchQueryCompleted => {
                 "Completed a global search across local and remote sources"
             }
@@ -7171,7 +7171,7 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
     }
 }
 
-warp_core::register_telemetry_event!(TelemetryEvent);
+torch_core::register_telemetry_event!(TelemetryEvent);
 
 #[cfg(test)]
 #[path = "events_tests.rs"]

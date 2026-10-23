@@ -3,18 +3,18 @@ use markdown_parser::{
 };
 use pathfinder_geometry::vector::vec2f;
 use serde::{Deserialize, Serialize};
-use warp_core::paths::home_relative_path;
-use warp_core::ui::theme::Fill;
-use warpui::accessibility::{AccessibilityContent, WarpA11yRole};
-use warpui::elements::{
+use torch_core::paths::home_relative_path;
+use torch_core::ui::theme::Fill;
+use torchui::accessibility::{AccessibilityContent, WarpA11yRole};
+use torchui::elements::{
     Align, Border, ChildAnchor, ChildView, Clipped, ConstrainedBox, Container, CornerRadius,
     Element, Empty, Flex, FormattedTextElement, MouseStateHandle, OffsetPositioning, ParentAnchor,
     ParentElement, ParentOffsetBounds, Radius, SavePosition, Shrinkable, Stack, Text,
 };
-use warpui::keymap::FixedBinding;
-use warpui::ui_components::button::{Button, ButtonVariant};
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::keymap::FixedBinding;
+use torchui::ui_components::button::{Button, ButtonVariant};
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Entity, FocusContext, ModelHandle, SingletonEntity, TypedActionView, View,
     ViewContext, ViewHandle,
 };
@@ -42,7 +42,7 @@ const SAVE_CONFIG_BUTTON_LABEL: &str = "Save Configuration";
 const OPEN_FILE_BUTTON_LABEL: &str = "Open YAML File";
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings([FixedBinding::new(
         "escape",
@@ -161,7 +161,7 @@ pub enum LaunchConfigModalEvent {
     OpenFileWithTarget {
         path: std::path::PathBuf,
         target: FileTarget,
-        line_col: Option<warp_util::path::LineAndColumnArg>,
+        line_col: Option<torch_util::path::LineAndColumnArg>,
     },
     Close,
 }

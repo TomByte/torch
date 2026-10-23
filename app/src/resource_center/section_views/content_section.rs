@@ -1,9 +1,9 @@
 use pathfinder_color::ColorU;
-use warpui::elements::{
+use torchui::elements::{
     ConstrainedBox, Container, Element, Empty, Flex, MouseStateHandle, ParentElement, Shrinkable,
 };
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext};
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext};
 
 use super::{
     CHEVRON_ICON_SIZE, DESCRIPTION_FONT_SIZE, ICON_PADDING, ITEM_PADDING_BOTTOM, SECTION_SPACING,

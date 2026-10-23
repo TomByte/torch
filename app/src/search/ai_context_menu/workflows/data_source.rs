@@ -1,5 +1,5 @@
 use fuzzy_match::FuzzyMatchResult;
-use warpui::{AppContext, SingletonEntity};
+use torchui::{AppContext, SingletonEntity};
 
 use super::search_item::WorkflowSearchItem;
 use crate::cloud_object::CloudModelType;
@@ -132,6 +132,6 @@ impl SyncDataSource for WorkflowDataSource {
     }
 }
 
-impl warpui::Entity for WorkflowDataSource {
+impl torchui::Entity for WorkflowDataSource {
     type Event = ();
 }

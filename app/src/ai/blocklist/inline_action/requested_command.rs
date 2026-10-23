@@ -9,22 +9,22 @@ use parking_lot::FairMutex;
 use pathfinder_geometry::vector::vec2f;
 use settings::Setting as _;
 use uuid::Uuid;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::Icon;
-use warp_core::ui::appearance::Appearance;
-use warp_editor::render::element::VerticalExpansionBehavior;
-use warpui::clipboard::ClipboardContent;
-use warpui::elements::new_scrollable::{NewScrollable, ScrollableAppearance, SingleAxisConfig};
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::ui::Icon;
+use torch_core::ui::appearance::Appearance;
+use torch_editor::render::element::VerticalExpansionBehavior;
+use torchui::clipboard::ClipboardContent;
+use torchui::elements::new_scrollable::{NewScrollable, ScrollableAppearance, SingleAxisConfig};
+use torchui::elements::{
     Align, Border, ChildAnchor, ChildView, Clipped, ClippedScrollStateHandle, ConstrainedBox,
     Container, CornerRadius, CrossAxisAlignment, Dismiss, Empty, Expanded, Flex, MainAxisSize,
     MouseStateHandle, OffsetPositioning, ParentElement, PositionedElementAnchor,
     PositionedElementOffsetBounds, Radius, ScrollbarWidth, SelectableArea, SelectionHandle, Stack,
     Text,
 };
-use warpui::keymap::{Context, EditableBinding, FixedBinding, Keystroke};
-use warpui::ui_components::components::UiComponent as _;
-use warpui::{
+use torchui::keymap::{Context, EditableBinding, FixedBinding, Keystroke};
+use torchui::ui_components::components::UiComponent as _;
+use torchui::{
     AppContext, Element, Entity, EntityId, EventContext, ModelHandle, SingletonEntity,
     TypedActionView, UpdateView, View, ViewContext, ViewHandle,
 };
@@ -127,7 +127,7 @@ lazy_static! {
 }
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings([
         FixedBinding::new(
@@ -1865,7 +1865,7 @@ impl View for RequestedCommandView {
                     },
                     theme.nonactive_ui_detail().into(),
                     theme.active_ui_detail().into(),
-                    warpui::elements::Fill::None,
+                    torchui::elements::Fill::None,
                 )
                 .with_vertical_scrollbar(ScrollableAppearance::new(ScrollbarWidth::Auto, false))
                 .with_propagate_mousewheel_if_not_handled(true)

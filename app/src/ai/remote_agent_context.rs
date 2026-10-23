@@ -6,13 +6,13 @@ use remote_server::manager::{RemoteServerManager, RemoteServerManagerEvent};
 use remote_server::proto::{
     RemoteAgentContextSnapshot, RemoteContextFileProto, RemoteSkillProto, remote_skill_proto,
 };
-use warp_core::features::FeatureFlag;
-use warp_core::safe_warn;
-use warp_util::host_id::HostId;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warp_util::remote_path::RemotePath;
-use warp_util::standardized_path::StandardizedPath;
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torch_core::safe_warn;
+use torch_util::host_id::HostId;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torch_util::remote_path::RemotePath;
+use torch_util::standardized_path::StandardizedPath;
+use torchui::{Entity, ModelContext, SingletonEntity};
 
 use super::mcp::McpIntegration;
 use super::skills::{BundledSkill, BundledSkillActivation, SkillManager};

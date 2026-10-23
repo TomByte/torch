@@ -1,17 +1,17 @@
 use ai::skills::{SkillProvider, SkillReference, SkillScope};
 use fuzzy_match::FuzzyMatchResult;
 use ordered_float::OrderedFloat;
-use warp_core::ui::icons::Icon;
-use warp_core::ui::theme::Fill;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warpui::elements::{
+use torch_core::ui::icons::Icon;
+use torch_core::ui::theme::Fill;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torchui::elements::{
     ConstrainedBox, Container, CrossAxisAlignment, Flex, Highlight, ParentElement, Shrinkable, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::keymap::Keystroke;
-use warpui::scene::{CornerRadius, Radius};
-use warpui::text_layout::ClipConfig;
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::keymap::Keystroke;
+use torchui::scene::{CornerRadius, Radius};
+use torchui::text_layout::ClipConfig;
+use torchui::{
     AppContext, Element, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity as _,
 };
 

@@ -17,7 +17,7 @@ use remote_server::proto::{
     ReadFileContextRequest, ReadFileContextResponse, file_context_proto,
 };
 use string_offset::ByteOffset;
-use warpui::{AppContext, ModelContext, SingletonEntity};
+use torchui::{AppContext, ModelContext, SingletonEntity};
 
 use crate::ai::agent::{
     AnyFileContent, FileContext, SearchCodebaseFailureReason, SearchCodebaseResult,

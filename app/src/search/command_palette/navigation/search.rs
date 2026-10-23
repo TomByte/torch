@@ -2,7 +2,7 @@ use std::ops::Range;
 
 use fuzzy_match::match_indices_case_insensitive;
 use itertools::Itertools;
-use warpui::{AppContext, ModelHandle};
+use torchui::{AppContext, ModelHandle};
 
 use crate::pane_group::PaneId;
 use crate::search::SyncDataSource;
@@ -247,8 +247,8 @@ mod full_text_searcher {
     use std::collections::HashMap;
 
     use itertools::Itertools;
-    use warp_search_core::define_search_schema;
-    use warpui::{AppContext, ModelHandle};
+    use torch_search_core::define_search_schema;
+    use torchui::{AppContext, ModelHandle};
 
     use crate::pane_group::PaneId;
     use crate::search::command_palette::navigation::search::{

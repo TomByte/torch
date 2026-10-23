@@ -11,7 +11,7 @@ use std::time::Duration;
 use instant::Instant;
 use serde_json::{Value, json};
 use strum_macros::{EnumDiscriminants, EnumIter};
-use warp_core::telemetry::{EnablementState, TelemetryEvent, TelemetryEventDesc};
+use torch_core::telemetry::{EnablementState, TelemetryEvent, TelemetryEventDesc};
 
 use super::transition::{LifecycleAction, LifecycleInputKind, LifecyclePhase, LifecycleSnapshot};
 use crate::terminal::model::block::BlockState;
@@ -191,7 +191,7 @@ impl TelemetryEvent for LifecycleTelemetryEvent {
     }
 
     fn event_descs() -> impl Iterator<Item = Box<dyn TelemetryEventDesc>> {
-        warp_core::telemetry::enum_events::<Self>()
+        torch_core::telemetry::enum_events::<Self>()
     }
 }
 
@@ -215,4 +215,4 @@ impl TelemetryEventDesc for LifecycleTelemetryEventDiscriminants {
     }
 }
 
-warp_core::register_telemetry_event!(LifecycleTelemetryEvent);
+torch_core::register_telemetry_event!(LifecycleTelemetryEvent);

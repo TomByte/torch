@@ -8,24 +8,24 @@ use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::{Vector2F, vec2f};
 use serde_yaml::Mapping;
 use string_offset::ByteOffset;
-use warp_core::ui::appearance::Appearance;
-use warp_editor::content::markdown::MarkdownStyle;
-use warp_editor::content::text::TextStylesWithMetadata;
-use warp_editor::editor::EmbeddedItemModel;
-use warp_editor::extract_block;
-use warp_editor::render::BLOCK_FOOTER_HEIGHT;
-use warp_editor::render::element::{CursorData, CursorDisplayType, RenderContext, RenderableBlock};
-use warp_editor::render::layout::TextLayout;
-use warp_editor::render::model::viewport::ViewportItem;
-use warp_editor::render::model::{
+use torch_core::ui::appearance::Appearance;
+use torch_editor::content::markdown::MarkdownStyle;
+use torch_editor::content::text::TextStylesWithMetadata;
+use torch_editor::editor::EmbeddedItemModel;
+use torch_editor::extract_block;
+use torch_editor::render::BLOCK_FOOTER_HEIGHT;
+use torch_editor::render::element::{CursorData, CursorDisplayType, RenderContext, RenderableBlock};
+use torch_editor::render::layout::TextLayout;
+use torch_editor::render::model::viewport::ViewportItem;
+use torch_editor::render::model::{
     BlockItem, BlockSpacing, BrokenBlockEmbedding, EMBEDDED_ITEM_FIRST_LINE_HEIGHT, EmbeddedItem,
     EmbeddedItemHTMLRepresentation, EmbeddedItemRichFormat, LaidOutEmbeddedItem, ParagraphStyles,
     RenderState,
 };
-use warpui::elements::{Border, ConstrainedBox, CornerRadius, Empty, Margin, Padding, Radius};
-use warpui::text_layout::TextFrame;
-use warpui::units::{IntoPixels, Pixels};
-use warpui::{AppContext, Element, LayoutContext, SingletonEntity, SizeConstraint};
+use torchui::elements::{Border, ConstrainedBox, CornerRadius, Empty, Margin, Padding, Radius};
+use torchui::text_layout::TextFrame;
+use torchui::units::{IntoPixels, Pixels};
+use torchui::{AppContext, Element, LayoutContext, SingletonEntity, SizeConstraint};
 
 use crate::cloud_object::CloudObject;
 use crate::cloud_object::model::persistence::CloudModel;
@@ -611,7 +611,7 @@ impl RenderableBlock for RenderableEmbeddedWorkflow {
             );
         }
 
-        ctx.paint.scene.start_layer(warpui::ClipBounds::ActiveLayer);
+        ctx.paint.scene.start_layer(torchui::ClipBounds::ActiveLayer);
 
         // Position the block footer right below the content area, flush with its right-hand edge.
         // This gives the footer some padding relative to the visible area with a background.
@@ -626,15 +626,15 @@ impl RenderableBlock for RenderableEmbeddedWorkflow {
         ctx.paint.scene.stop_layer();
     }
 
-    fn after_layout(&mut self, ctx: &mut warpui::AfterLayoutContext, app: &warpui::AppContext) {
+    fn after_layout(&mut self, ctx: &mut torchui::AfterLayoutContext, app: &torchui::AppContext) {
         self.footer.after_layout(ctx, app);
     }
 
     fn dispatch_event(
         &mut self,
-        _model: &warp_editor::render::model::RenderState,
-        event: &warpui::event::DispatchedEvent,
-        ctx: &mut warpui::EventContext,
+        _model: &torch_editor::render::model::RenderState,
+        event: &torchui::event::DispatchedEvent,
+        ctx: &mut torchui::EventContext,
         app: &AppContext,
     ) -> bool {
         self.footer.dispatch_event(event, ctx, app)

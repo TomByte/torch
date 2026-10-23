@@ -5,9 +5,9 @@ use std::sync::Arc;
 use channel_versions::{Changelog, MarkdownSection};
 use itertools::Itertools;
 use markdown_parser::{FormattedText, parse_markdown};
-use warpui::assets::asset_cache::{AssetCache, AssetSource};
-use warpui::image_cache::ImageType;
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torchui::assets::asset_cache::{AssetCache, AssetSource};
+use torchui::image_cache::ImageType;
+use torchui::{Entity, ModelContext, SingletonEntity};
 
 use crate::autoupdate::{self};
 use crate::channel::{Channel, ChannelState};

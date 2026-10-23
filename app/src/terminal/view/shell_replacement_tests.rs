@@ -1,7 +1,7 @@
 use super::*;
 use crate::test_util::terminal::{add_window_with_terminal, initialize_app_for_terminal_view};
 
-fn idle_terminal(app: &mut warpui::App) -> ViewHandle<TerminalView> {
+fn idle_terminal(app: &mut torchui::App) -> ViewHandle<TerminalView> {
     initialize_app_for_terminal_view(app);
     let terminal = add_window_with_terminal(app, None);
     terminal.update(app, |view, _| {
@@ -13,7 +13,7 @@ fn idle_terminal(app: &mut warpui::App) -> ViewHandle<TerminalView> {
 
 #[test]
 fn planned_replacement_completes_without_sharing_or_an_ai_action() {
-    warpui::App::test((), |mut app| async move {
+    torchui::App::test((), |mut app| async move {
         let _respawn_disabled = FeatureFlag::CloudAgentShellRespawn.override_enabled(false);
         let terminal = idle_terminal(&mut app);
         let original_model = terminal.read(&app, |view, _| view.model.clone());
@@ -37,7 +37,7 @@ fn planned_replacement_completes_without_sharing_or_an_ai_action() {
 
 #[test]
 fn planned_replacement_rejects_a_running_command() {
-    warpui::App::test((), |mut app| async move {
+    torchui::App::test((), |mut app| async move {
         let terminal = idle_terminal(&mut app);
         let receiver = terminal.update(&mut app, |view, ctx| {
             view.model
@@ -55,7 +55,7 @@ fn planned_replacement_rejects_a_running_command() {
 
 #[test]
 fn stale_completion_does_not_finish_a_second_replacement() {
-    warpui::App::test((), |mut app| async move {
+    torchui::App::test((), |mut app| async move {
         let terminal = idle_terminal(&mut app);
         let (first, first_id) = terminal.update(&mut app, |view, ctx| {
             let receiver = view.replace_shell("/run".into(), HashMap::new(), ctx);
@@ -81,7 +81,7 @@ fn stale_completion_does_not_finish_a_second_replacement() {
 
 #[test]
 fn replacement_exit_returns_error_without_recovery_guidance() {
-    warpui::App::test((), |mut app| async move {
+    torchui::App::test((), |mut app| async move {
         let terminal = idle_terminal(&mut app);
         let receiver = terminal.update(&mut app, |view, ctx| {
             let receiver = view.replace_shell("/run".into(), HashMap::new(), ctx);

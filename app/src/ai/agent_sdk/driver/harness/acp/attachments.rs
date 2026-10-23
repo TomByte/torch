@@ -16,7 +16,7 @@ use futures::io::AsyncReadExt as _;
 use mime_guess::mime;
 use session_sharing_protocol::common::AgentAttachment;
 use url::Url;
-use warp_core::safe_warn;
+use torch_core::safe_warn;
 
 use super::protocol::{ContentBlock, EmbeddedResource, PromptCapabilities};
 use crate::ai::ambient_agents::AmbientAgentTaskId;

@@ -430,7 +430,7 @@ fn in_memory_theme_generation_test() {
     .iter()
     .collect();
 
-    let mut in_memory_theme = warpui::r#async::block_on(InMemoryThemeOptions::new(
+    let mut in_memory_theme = torchui::r#async::block_on(InMemoryThemeOptions::new(
         "mountains".to_string(),
         mountains_bg_path.clone(),
     ))
@@ -488,7 +488,7 @@ fn in_memory_theme_generation_test() {
 
 #[test]
 fn torch_catalog_contains_only_the_supported_builtins() {
-    if !warp_core::channel::ChannelState::is_local_only() {
+    if !torch_core::channel::ChannelState::is_local_only() {
         return;
     }
     let config = WarpThemeConfig::new();

@@ -29,24 +29,24 @@ use settings_page::{
 use show_blocks_view::{ShowBlocksEvent, ShowBlocksView};
 use teams_page::{TeamsPageAction, TeamsPageView, TeamsPageViewEvent};
 use warp_agent_page::{WarpAgentPageAction, WarpAgentPageEvent, WarpAgentPageView};
-use warp_core::channel::ChannelState;
-use warp_core::context_flag::ContextFlag;
-use warp_core::features::FeatureFlag;
-use warp_core::send_telemetry_from_ctx;
-use warp_core::settings::ToggleableSetting as _;
-use warp_core::ui::theme::color::internal_colors;
-use warp_editor::editor::NavigationKey;
+use torch_core::channel::ChannelState;
+use torch_core::context_flag::ContextFlag;
+use torch_core::features::FeatureFlag;
+use torch_core::send_telemetry_from_ctx;
+use torch_core::settings::ToggleableSetting as _;
+use torch_core::ui::theme::color::internal_colors;
+use torch_editor::editor::NavigationKey;
 use warpify_page::{WarpifyPageAction, WarpifyPageView};
-use warpui::elements::{
+use torchui::elements::{
     Align, Border, ChildAnchor, ChildView, Clipped, ClippedScrollStateHandle, ClippedScrollable,
     ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, DispatchEventResult, Empty,
     EventHandler, Expanded, Fill, Flex, MainAxisSize, OffsetPositioning, ParentAnchor,
     ParentElement, ParentOffsetBounds, Radius, SavePosition, ScrollbarWidth, Shrinkable, Stack,
     Text, Wrap,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::keymap::{ContextPredicate, EnabledPredicate, FixedBinding};
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::keymap::{ContextPredicate, EnabledPredicate, FixedBinding};
+use torchui::{
     Action, AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView,
     UpdateView as _, View, ViewContext, ViewHandle, id,
 };
@@ -259,10 +259,10 @@ pub(super) fn render_beta_chip(appearance: &Appearance) -> Box<dyn Element> {
 pub(super) fn render_model_chips(
     labels: impl IntoIterator<Item = String>,
     appearance: &Appearance,
-    text_color: warp_core::ui::theme::Fill,
+    text_color: torch_core::ui::theme::Fill,
 ) -> Box<dyn Element> {
-    use warpui::ui_components::chip::Chip;
-    use warpui::ui_components::components::{UiComponent, UiComponentStyles};
+    use torchui::ui_components::chip::Chip;
+    use torchui::ui_components::components::{UiComponent, UiComponentStyles};
 
     let theme = appearance.theme();
     let chip_border = internal_colors::neutral_4(theme).into();
@@ -870,7 +870,7 @@ impl<T: Action + Clone> ToggleSettingActionPair<T> {
         context_prefix: &ContextPredicate,
         context_boolean_flag: &'static str,
     ) -> Self {
-        use warpui::keymap::macros::id;
+        use torchui::keymap::macros::id;
 
         ToggleSettingActionPair {
             descriptions: SettingActionPairDescriptions {
@@ -2924,16 +2924,16 @@ impl BackingView for SettingsView {
     fn handle_pane_header_overflow_menu_action(
         &mut self,
         action: &Self::PaneHeaderOverflowMenuAction,
-        ctx: &mut warpui::ViewContext<Self>,
+        ctx: &mut torchui::ViewContext<Self>,
     ) {
         self.handle_action(action, ctx)
     }
 
-    fn close(&mut self, ctx: &mut warpui::ViewContext<Self>) {
+    fn close(&mut self, ctx: &mut torchui::ViewContext<Self>) {
         ctx.emit(SettingsViewEvent::Pane(PaneEvent::Close));
     }
 
-    fn focus_contents(&mut self, ctx: &mut warpui::ViewContext<Self>) {
+    fn focus_contents(&mut self, ctx: &mut torchui::ViewContext<Self>) {
         ctx.focus(&self.search_editor)
     }
 

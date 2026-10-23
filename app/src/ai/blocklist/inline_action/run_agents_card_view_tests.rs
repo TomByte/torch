@@ -6,7 +6,7 @@ use ai::agent::action_result::{
     RunAgentsResult,
 };
 use ai::skills::SkillReference;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
 
 use super::{RunAgentsCardFields, RunAgentsEditState};
 use crate::ai::blocklist::inline_action::orchestration_controls::OrchestrationConfigState;

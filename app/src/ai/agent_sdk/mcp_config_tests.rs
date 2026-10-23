@@ -1,6 +1,6 @@
 use serde_json::{Map, Value, json};
-use warp_cli::mcp::MCPSpec;
-use warp_core::features::FeatureFlag;
+use torch_cli::mcp::MCPSpec;
+use torch_core::features::FeatureFlag;
 
 use super::build_mcp_servers_from_specs;
 

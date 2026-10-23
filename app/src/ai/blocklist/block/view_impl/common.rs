@@ -16,18 +16,18 @@ use itertools::Itertools;
 use markdown_parser::{FormattedText, FormattedTextInline, TableAlignment};
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
-use warp_core::channel::ChannelState;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::color::blend::Blend;
-use warp_core::ui::theme::color::internal_colors;
-use warp_editor::content::edit::resolve_asset_source_relative_to_directory;
-use warp_editor::content::mermaid_diagram::mermaid_asset_source;
-use warp_util::path::to_relative_path;
-use warpui::assets::asset_cache::{AssetCache, AssetSource, AssetState};
-use warpui::elements::new_scrollable::{ScrollableAppearance, SingleAxisConfig};
-use warpui::elements::shimmering_text::ShimmeringTextStateHandle;
-use warpui::elements::{
+use torch_core::channel::ChannelState;
+use torch_core::features::FeatureFlag;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::color::blend::Blend;
+use torch_core::ui::theme::color::internal_colors;
+use torch_editor::content::edit::resolve_asset_source_relative_to_directory;
+use torch_editor::content::mermaid_diagram::mermaid_asset_source;
+use torch_util::path::to_relative_path;
+use torchui::assets::asset_cache::{AssetCache, AssetSource, AssetState};
+use torchui::elements::new_scrollable::{ScrollableAppearance, SingleAxisConfig};
+use torchui::elements::shimmering_text::ShimmeringTextStateHandle;
+use torchui::elements::{
     Align, Axis, Border, ChildAnchor, ChildView, Clipped, ClippedScrollStateHandle, ConstrainedBox,
     Container, CornerRadius, CrossAxisAlignment, DispatchEventResult, Empty, EventHandler,
     Expanded, Fill, Flex, FormattedTextElement, HeadingFontSizeMultipliers, Highlight,
@@ -37,14 +37,14 @@ use warpui::elements::{
     Shrinkable, Stack, Table, TableColumnWidth, TableConfig, TableHeader, TableVerticalSizing,
     Text, Wrap,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::image_cache::{CacheOption, ImageType};
-use warpui::keymap::Keystroke;
-use warpui::platform::Cursor;
-use warpui::text_layout::{ClipConfig, TextAlignment, TextStyle};
-use warpui::ui_components::button::Button;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{Action, AppContext, Element, EventContext, SingletonEntity, View, ViewHandle};
+use torchui::fonts::{Properties, Weight};
+use torchui::image_cache::{CacheOption, ImageType};
+use torchui::keymap::Keystroke;
+use torchui::platform::Cursor;
+use torchui::text_layout::{ClipConfig, TextAlignment, TextStyle};
+use torchui::ui_components::button::Button;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{Action, AppContext, Element, EventContext, SingletonEntity, View, ViewHandle};
 
 use super::output::LinkActionConstructors;
 use super::{add_highlights_to_rich_text, add_highlights_to_text};
@@ -1062,7 +1062,7 @@ where
         .with_child(content)
         .with_spacing(4.0);
 
-    if !warpui::platform::is_mobile_device() {
+    if !torchui::platform::is_mobile_device() {
         let keybinding_string = keybinding.map(|k| k.displayed()).unwrap_or_default();
         let keybinding_label = Text::new_inline(
             keybinding_string,
@@ -2310,8 +2310,8 @@ fn render_visual_markdown_block<A: Action>(
             tooltip,
             mouse_state,
             content,
-            warpui::elements::ParentAnchor::TopMiddle,
-            warpui::elements::ChildAnchor::BottomMiddle,
+            torchui::elements::ParentAnchor::TopMiddle,
+            torchui::elements::ChildAnchor::BottomMiddle,
             // Small negative Y offset keeps a hairline gap between the
             // tooltip's bottom edge and the image's top edge without
             // floating noticeably above the image.
@@ -2578,7 +2578,7 @@ fn render_table_section(
             row_dividers: table_appearance.row_dividers,
             cell_padding,
             header_background: table_appearance.header_background,
-            row_background: warpui::elements::RowBackground {
+            row_background: torchui::elements::RowBackground {
                 primary: table_appearance.cell_background,
                 alternating: table_appearance.alternate_row_background,
             },
@@ -2682,7 +2682,7 @@ fn render_table_cell(props: TableCellProps, app: &AppContext) -> Box<dyn Element
 struct TableCellProps {
     cell: FormattedTextInline,
     alignment: TableAlignment,
-    font_family: warpui::fonts::FamilyId,
+    font_family: torchui::fonts::FamilyId,
     font_size: f32,
     font_weight: Weight,
     text_color: ColorU,
@@ -3040,7 +3040,7 @@ pub(crate) fn resolve_absolute_file_path(
     shell_launch_data: Option<&ShellLaunchData>,
     home_dir: PathBuf,
 ) -> Option<PathBuf> {
-    use warp_util::path::CleanPathResult;
+    use torch_util::path::CleanPathResult;
 
     use crate::util::file::{ShellPathType, absolute_path_if_valid};
 
@@ -3165,7 +3165,7 @@ pub fn render_failed_output(props: FailedOutputProps, app: &AppContext) -> Box<d
         .with_child(
             Container::new(
                 ConstrainedBox::new(
-                    warpui::elements::Icon::new(
+                    torchui::elements::Icon::new(
                         Icon::AlertTriangle.into(),
                         error_color(appearance.theme()),
                     )
@@ -3216,7 +3216,7 @@ fn out_of_credits_cta_button(
     appearance
         .ui_builder()
         .button(
-            warpui::ui_components::button::ButtonVariant::Outlined,
+            torchui::ui_components::button::ButtonVariant::Outlined,
             state_handle.clone(),
         )
         .with_style(UiComponentStyles {
@@ -3246,7 +3246,7 @@ fn error_primary_cta_button(
     Appearance::as_ref(app)
         .ui_builder()
         .button(
-            warpui::ui_components::button::ButtonVariant::Basic,
+            torchui::ui_components::button::ButtonVariant::Basic,
             state_handle.clone(),
         )
         .with_style(UiComponentStyles {
@@ -3269,7 +3269,7 @@ fn render_out_of_credits_error(
 
     let icon = Container::new(
         ConstrainedBox::new(
-            warpui::elements::Icon::new(
+            torchui::elements::Icon::new(
                 Icon::AlertTriangle.into(),
                 error_color(appearance.theme()),
             )
@@ -3366,7 +3366,7 @@ fn render_invalid_api_key_error(
     let settings_button = appearance
         .ui_builder()
         .button(
-            warpui::ui_components::button::ButtonVariant::Outlined,
+            torchui::ui_components::button::ButtonVariant::Outlined,
             state_handle.clone(),
         )
         .with_style(UiComponentStyles {
@@ -3606,7 +3606,7 @@ pub(crate) fn render_debug_footer<V: View>(
             appearance
                 .ui_builder()
                 .button(
-                    warpui::ui_components::button::ButtonVariant::Text,
+                    torchui::ui_components::button::ButtonVariant::Text,
                     props.submit_issue_button_handle,
                 )
                 .with_centered_text_label("Send Feedback".to_string())
@@ -3672,8 +3672,8 @@ pub(crate) fn render_debug_footer<V: View>(
         "Copy debug ID".to_string(),
         props.debug_copy_button_handle,
         copy_button,
-        warpui::elements::ParentAnchor::TopRight,
-        warpui::elements::ChildAnchor::BottomRight,
+        torchui::elements::ParentAnchor::TopRight,
+        torchui::elements::ChildAnchor::BottomRight,
         vec2f(0., -8.),
     );
 

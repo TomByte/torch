@@ -3,12 +3,12 @@ use std::sync::Arc;
 
 use repo_metadata::repositories::DetectedRepositories;
 use string_offset::CharOffset;
-use warp_core::ui::appearance::Appearance;
-use warp_editor::content::buffer::InitialBufferState;
-use warp_editor::render::element::VerticalExpansionBehavior;
-use warpui::elements::Empty;
-use warpui::platform::WindowStyle;
-use warpui::{App, Element as _, ModelHandle, SingletonEntity, ViewHandle};
+use torch_core::ui::appearance::Appearance;
+use torch_editor::content::buffer::InitialBufferState;
+use torch_editor::render::element::VerticalExpansionBehavior;
+use torchui::elements::Empty;
+use torchui::platform::WindowStyle;
+use torchui::{App, Element as _, ModelHandle, SingletonEntity, ViewHandle};
 
 use super::*;
 use crate::NotebookKeybindings;
@@ -36,12 +36,12 @@ use crate::workspaces::user_workspaces::UserWorkspaces;
 #[derive(Default)]
 struct TestView;
 
-impl warpui::Entity for TestView {
+impl torchui::Entity for TestView {
     type Event = ();
 }
 
-impl warpui::View for TestView {
-    fn render(&self, _: &warpui::AppContext) -> Box<dyn warpui::Element> {
+impl torchui::View for TestView {
+    fn render(&self, _: &torchui::AppContext) -> Box<dyn torchui::Element> {
         Empty::new().finish()
     }
 
@@ -50,7 +50,7 @@ impl warpui::View for TestView {
     }
 }
 
-impl warpui::TypedActionView for TestView {
+impl torchui::TypedActionView for TestView {
     type Action = ();
 }
 

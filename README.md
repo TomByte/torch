@@ -74,6 +74,6 @@ Torch is an independent project and isn't affiliated with or endorsed by Warp (D
 
 ## Licence
 
-Torch keeps Warp's licences and copyright notices. Most of the code is [AGPL-3.0](LICENSE-AGPL); the `warpui` and `warpui_core` UI crates are [MIT](LICENSE-MIT). The source was imported from [warpdotdev/warp](https://github.com/warpdotdev/warp) at commit `cd4b970`. Internal crate names, protocol identifiers and some technical docs still say Warp, for compatibility and attribution.
+Torch keeps Warp's licences and copyright notices. Most of the code is [AGPL-3.0](LICENSE-AGPL); the `torchui` and `torchui_core` UI crates are [MIT](LICENSE-MIT). The source was imported from [warpdotdev/warp](https://github.com/warpdotdev/warp) at commit `cd4b970`. Internal crate names, protocol identifiers and some technical docs still say Warp, for compatibility and attribution.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) to contribute and [SECURITY.md](SECURITY.md) to report a vulnerability.

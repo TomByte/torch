@@ -49,7 +49,7 @@ fn manual_code_exchange_rejects_blank_code() {
     let exchange = ManualCodeExchange {
         verifier: "verifier".to_string(),
     };
-    let result = warpui_core::r#async::block_on(exchange.exchange("   "));
+    let result = torchui_core::r#async::block_on(exchange.exchange("   "));
     assert!(result.is_err());
 }
 
@@ -98,7 +98,7 @@ fn cancelling_loopback_wait_releases_listener() {
         cancellation.cancel();
 
         let (release_tx, _release_rx) = async_channel::bounded(1);
-        let result = warpui_core::r#async::block_on(run_oauth_flow(
+        let result = torchui_core::r#async::block_on(run_oauth_flow(
             listener,
             PkceParams::generate(),
             cancellation,
@@ -142,7 +142,7 @@ fn release_signal_lets_a_caller_rebind_without_joining_the_result() {
     });
 
     let result_thread = std::thread::spawn(move || {
-        warpui_core::r#async::block_on(run_oauth_flow(
+        torchui_core::r#async::block_on(run_oauth_flow(
             listener,
             PkceParams::generate(),
             cancellation,
@@ -150,7 +150,7 @@ fn release_signal_lets_a_caller_rebind_without_joining_the_result() {
         ))
     });
 
-    warpui_core::r#async::block_on(release_rx.recv())
+    torchui_core::r#async::block_on(release_rx.recv())
         .expect("release signal should fire once the listener is dropped");
     TcpListener::bind(address).expect("released listener should free its port immediately");
 
@@ -189,7 +189,7 @@ fn loopback_callback_is_delivered_after_the_listener_closes() {
     });
 
     let (release_tx, _release_rx) = async_channel::bounded(1);
-    let result = warpui_core::r#async::block_on(run_oauth_flow(
+    let result = torchui_core::r#async::block_on(run_oauth_flow(
         listener,
         PkceParams::generate(),
         cancellation,

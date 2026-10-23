@@ -5,10 +5,10 @@ use anyhow::Context;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use vec1::{Vec1, vec1};
-use warpui::AppContext;
-use warpui::keymap::Keystroke;
+use torchui::AppContext;
+use torchui::keymap::Keystroke;
 #[cfg(not(test))]
-use warpui::keymap::Trigger;
+use torchui::keymap::Trigger;
 
 /// Environment variable to disable saving keybindings to file (used in integration tests)
 pub const DISABLE_SAVE_ENV_VAR: &str = "WARP_TEST_DISABLE_KEYBINDING_SAVE";
@@ -93,7 +93,7 @@ where
 }
 
 pub fn keybinding_file_path() -> std::path::PathBuf {
-    warp_core::paths::config_local_dir().join(KEYBINDINGS_FILE_NAME)
+    torch_core::paths::config_local_dir().join(KEYBINDINGS_FILE_NAME)
 }
 
 /// Save the custom keybindings map to disk.

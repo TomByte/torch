@@ -1,4 +1,4 @@
-use warpui::{Entity, ModelContext, ModelHandle};
+use torchui::{Entity, ModelContext, ModelHandle};
 
 use crate::search::SyncDataSource;
 use crate::search::data_source::{Query, QueryFilter};

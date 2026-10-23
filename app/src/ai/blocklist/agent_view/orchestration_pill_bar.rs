@@ -9,16 +9,16 @@ use std::hash::{Hash, Hasher};
 
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
-use warp_cli::agent::Harness;
-use warp_core::channel::ChannelState;
-use warp_core::send_telemetry_from_ctx;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::color::blend::Blend;
-use warp_core::ui::color::coloru_with_opacity;
-use warp_core::ui::theme::color::internal_colors;
-use warp_core::ui::theme::{Fill, WarpTheme};
-use warpui::elements::new_scrollable::{NewScrollable, ScrollableAppearance, SingleAxisConfig};
-use warpui::elements::{
+use torch_cli::agent::Harness;
+use torch_core::channel::ChannelState;
+use torch_core::send_telemetry_from_ctx;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::color::blend::Blend;
+use torch_core::ui::color::coloru_with_opacity;
+use torch_core::ui::theme::color::internal_colors;
+use torch_core::ui::theme::{Fill, WarpTheme};
+use torchui::elements::new_scrollable::{NewScrollable, ScrollableAppearance, SingleAxisConfig};
+use torchui::elements::{
     Align, AnchorPair, ChildAnchor, ChildView, ClippedScrollStateHandle, ConstrainedBox, Container,
     CornerRadius, CrossAxisAlignment, DEFAULT_UI_LINE_HEIGHT_RATIO, Element, Empty,
     Fill as ElementFill, Flex, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle,
@@ -26,12 +26,12 @@ use warpui::elements::{
     PositionedElementOffsetBounds, PositioningAxis, Radius, SavePosition, ScrollbarWidth, Stack,
     Text, XAxisAnchor, YAxisAnchor,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::platform::{Cursor, LineStyle};
-use warpui::text_layout::{
+use torchui::fonts::{Properties, Weight};
+use torchui::platform::{Cursor, LineStyle};
+use torchui::text_layout::{
     ClipConfig, ClipDirection, ClipStyle, DEFAULT_TOP_BOTTOM_RATIO, StyleAndFont, TextStyle,
 };
-use warpui::{
+use torchui::{
     AppContext, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };
@@ -1518,7 +1518,7 @@ fn render_hover_card(
     //
     // Use `dirs::home_dir()` (cross-platform: `$HOME` on unix,
     // `%USERPROFILE%` on Windows) to find the home prefix, then defer to
-    // the shared `warp_util::path::user_friendly_path` helper so the cwd
+    // the shared `torch_util::path::user_friendly_path` helper so the cwd
     // displays as `~/foo` regardless of OS — and matches the same
     // tilde-substitution behaviour used by the tab title, prompt header,
     // and pwd chip.
@@ -1530,7 +1530,7 @@ fn render_hover_card(
         .filter(|s| !s.is_empty())
         .map(|cwd| {
             Text::new(
-                warp_util::path::user_friendly_path(&cwd, home_dir_str).into_owned(),
+                torch_util::path::user_friendly_path(&cwd, home_dir_str).into_owned(),
                 appearance.ui_font_family(),
                 appearance.monospace_font_size() - 1.,
             )
@@ -1657,7 +1657,7 @@ fn render_hover_card(
         .with_padding_top(HOVER_CARD_VERTICAL_PADDING)
         .with_padding_bottom(HOVER_CARD_VERTICAL_PADDING)
         .with_background(bg)
-        .with_border(warpui::elements::Border::all(1.).with_border_fill(outline))
+        .with_border(torchui::elements::Border::all(1.).with_border_fill(outline))
         .with_corner_radius(CornerRadius::with_all(Radius::Pixels(8.)))
         .finish();
 
@@ -1997,7 +1997,7 @@ fn render_pill(
     overflow_mouse_state: MouseStateHandle,
     pin_button_mouse_state: MouseStateHandle,
     menu_is_open_for_this: bool,
-    self_terminal_view_id: warpui::EntityId,
+    self_terminal_view_id: torchui::EntityId,
     app: &AppContext,
 ) -> Box<dyn Element> {
     let appearance = Appearance::as_ref(app);
@@ -2042,7 +2042,7 @@ fn render_pill(
     let pill_text_color = internal_colors::fg_overlay_6(theme).into_solid();
 
     // `Hoverable::new`'s build closure is `FnOnce` (see
-    // `crates/warpui_core/src/elements/hoverable.rs`). We can therefore move
+    // `crates/torchui_core/src/elements/hoverable.rs`). We can therefore move
     // `label` into the closure by value rather than cloning it on every
     // build.
     let pill_body = Hoverable::new(mouse_state, move |hover_state| {

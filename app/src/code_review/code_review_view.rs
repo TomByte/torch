@@ -16,24 +16,24 @@ use rand::Rng;
 use rand::distributions::Alphanumeric;
 use string_offset::CharOffset;
 use vec1::Vec1;
-use warp_core::channel::{Channel, ChannelState};
-use warp_core::features::FeatureFlag;
-use warp_core::ui::theme::color::internal_colors;
-use warp_core::{SessionId, safe_error, safe_info};
-use warp_editor::content::buffer::{AutoScrollBehavior, InitialBufferState, SelectionOffsets};
-use warp_editor::model::CoreEditorModel;
-use warp_editor::render::element::VerticalExpansionBehavior;
+use torch_core::channel::{Channel, ChannelState};
+use torch_core::features::FeatureFlag;
+use torch_core::ui::theme::color::internal_colors;
+use torch_core::{SessionId, safe_error, safe_info};
+use torch_editor::content::buffer::{AutoScrollBehavior, InitialBufferState, SelectionOffsets};
+use torch_editor::model::CoreEditorModel;
+use torch_editor::render::element::VerticalExpansionBehavior;
 #[cfg(not(target_family = "wasm"))]
-use warp_editor::render::model::AutoScrollMode;
-use warp_editor::render::model::LineCount;
-use warp_util::content_version::ContentVersion;
-use warp_util::path::LineAndColumnArg;
-use warp_util::standardized_path::StandardizedPath;
-use warpui::clipboard::ClipboardContent;
-use warpui::elements::new_scrollable::{
+use torch_editor::render::model::AutoScrollMode;
+use torch_editor::render::model::LineCount;
+use torch_util::content_version::ContentVersion;
+use torch_util::path::LineAndColumnArg;
+use torch_util::standardized_path::StandardizedPath;
+use torchui::clipboard::ClipboardContent;
+use torchui::elements::new_scrollable::{
     NewScrollable, NewScrollableElement, ScrollableAppearance, SingleAxisConfig,
 };
-use warpui::elements::{
+use torchui::elements::{
     Align, Border, ChildAnchor, ChildView, Clipped, ClippedScrollStateHandle, ConstrainedBox,
     Container, CornerRadius, CrossAxisAlignment, DEFAULT_UI_LINE_HEIGHT_RATIO, DispatchEventResult,
     DragBarSide, Element, Empty, EventHandler, Flex, Hoverable, List, ListState, MainAxisAlignment,
@@ -42,14 +42,14 @@ use warpui::elements::{
     Rect, Resizable, ResizableStateHandle, SavePosition, ScrollOffset, ScrollStateHandle,
     ScrollbarWidth, Shrinkable, Stack, Text, resizable_state_handle,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::keymap::Keystroke;
-use warpui::platform::Cursor;
-use warpui::text_layout::{ClipConfig, default_compute_baseline_position};
-use warpui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::units::Pixels;
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::keymap::Keystroke;
+use torchui::platform::Cursor;
+use torchui::text_layout::{ClipConfig, default_compute_baseline_position};
+use torchui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::units::Pixels;
+use torchui::{
     AppContext, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle, WeakViewHandle, WindowId,
 };
@@ -184,7 +184,7 @@ pub fn render_file_navigation_button<F>(
     on_click: F,
 ) -> Box<dyn Element>
 where
-    F: Fn(&mut warpui::EventContext<'_>) + 'static,
+    F: Fn(&mut torchui::EventContext<'_>) + 'static,
 {
     let ui_builder = appearance.ui_builder().clone();
     let icon_color = appearance
@@ -211,9 +211,9 @@ where
             .build()
             .finish()
     })
-    .with_tooltip_position(warpui::ui_components::button::ButtonTooltipPosition::BelowLeft)
+    .with_tooltip_position(torchui::ui_components::button::ButtonTooltipPosition::BelowLeft)
     .build()
-    .on_click(move |ctx: &mut warpui::EventContext<'_>, _, _| {
+    .on_click(move |ctx: &mut torchui::EventContext<'_>, _, _| {
         on_click(ctx);
     });
 
@@ -888,7 +888,7 @@ impl CodeReviewView {
             .map(|p| p.to_path_buf())
             .or_else(|| {
                 repo_metadata::repositories::DetectedRepositories::as_ref(ctx)
-                    .get_root_for_path(&warp_util::local_or_remote_path::LocalOrRemotePath::Local(
+                    .get_root_for_path(&torch_util::local_or_remote_path::LocalOrRemotePath::Local(
                         path.to_path_buf(),
                     ))
                     .and_then(|r| r.to_local_path().map(std::path::Path::to_path_buf))
@@ -933,7 +933,7 @@ impl CodeReviewView {
             .map(|p| p.to_path_buf())
             .or_else(|| {
                 repo_metadata::repositories::DetectedRepositories::as_ref(ctx)
-                    .get_root_for_path(&warp_util::local_or_remote_path::LocalOrRemotePath::Local(
+                    .get_root_for_path(&torch_util::local_or_remote_path::LocalOrRemotePath::Local(
                         path.to_path_buf(),
                     ))
                     .and_then(|r| r.to_local_path().map(std::path::Path::to_path_buf))
@@ -3687,7 +3687,7 @@ impl CodeReviewView {
 
         let header_text = "Loading open changes...";
         let loading_icon = Icon::Loading
-            .to_warpui_icon(warp_core::ui::theme::Fill::Solid(
+            .to_warpui_icon(torch_core::ui::theme::Fill::Solid(
                 internal_colors::neutral_6(theme),
             ))
             .finish();
@@ -3825,7 +3825,7 @@ impl CodeReviewView {
                 Container::new(
                     ConstrainedBox::new(
                         Icon::AlertTriangle
-                            .to_warpui_icon(warp_core::ui::theme::Fill::Solid(
+                            .to_warpui_icon(torch_core::ui::theme::Fill::Solid(
                                 internal_colors::neutral_6(theme),
                             ))
                             .finish(),
@@ -3883,7 +3883,7 @@ impl CodeReviewView {
                         .with_text_and_icon_label(TextAndIcon::new(
                             TextAndIconAlignment::IconFirst,
                             " Retry".to_string(),
-                            Icon::Refresh.to_warpui_icon(warp_core::ui::theme::Fill::Solid(
+                            Icon::Refresh.to_warpui_icon(torch_core::ui::theme::Fill::Solid(
                                 theme.main_text_color(theme.background()).into(),
                             )),
                             MainAxisSize::Min,
@@ -3933,7 +3933,7 @@ impl CodeReviewView {
                 Container::new(
                     ConstrainedBox::new(
                         Icon::FolderClosed
-                            .to_warpui_icon(warp_core::ui::theme::Fill::Solid(
+                            .to_warpui_icon(torch_core::ui::theme::Fill::Solid(
                                 internal_colors::neutral_6(theme),
                             ))
                             .finish(),
@@ -4010,7 +4010,7 @@ impl CodeReviewView {
         state: &LoadedState,
         appearance: &Appearance,
         is_in_split_pane: bool,
-        app: &warpui::AppContext,
+        app: &torchui::AppContext,
     ) -> Box<dyn Element> {
         let top_section = Flex::column()
             .with_cross_axis_alignment(CrossAxisAlignment::Start)
@@ -4075,7 +4075,7 @@ impl CodeReviewView {
                 Container::new(
                     ConstrainedBox::new(
                         Icon::Diff
-                            .to_warpui_icon(warp_core::ui::theme::Fill::Solid(
+                            .to_warpui_icon(torch_core::ui::theme::Fill::Solid(
                                 internal_colors::neutral_6(theme),
                             ))
                             .finish(),
@@ -4410,7 +4410,7 @@ impl CodeReviewView {
 
         // Add file icon
         let file_icon = Icon::File
-            .to_warpui_icon(warp_core::ui::theme::Fill::Solid(
+            .to_warpui_icon(torch_core::ui::theme::Fill::Solid(
                 internal_colors::neutral_6(theme),
             ))
             .finish();
@@ -4434,7 +4434,7 @@ impl CodeReviewView {
                     appearance.ui_font_size(),
                 )
                 .with_color(
-                    warp_core::ui::theme::Fill::Solid(internal_colors::neutral_6(theme)).into(),
+                    torch_core::ui::theme::Fill::Solid(internal_colors::neutral_6(theme)).into(),
                 )
                 .with_line_height_ratio(appearance.line_height_ratio())
                 .with_style(Properties::default().weight(Weight::Semibold))
@@ -4458,7 +4458,7 @@ impl CodeReviewView {
                 )
                 .with_style(Properties::default().weight(Weight::Bold))
                 .with_color(
-                    warp_core::ui::theme::Fill::Solid(internal_colors::neutral_6(theme)).into(),
+                    torch_core::ui::theme::Fill::Solid(internal_colors::neutral_6(theme)).into(),
                 )
                 .finish(),
             )
@@ -4513,7 +4513,7 @@ impl CodeReviewView {
             axis_config,
             appearance.theme().nonactive_ui_detail().into(),
             appearance.theme().active_ui_detail().into(),
-            warpui::elements::Fill::None,
+            torchui::elements::Fill::None,
         )
         .with_vertical_scrollbar(ScrollableAppearance::new(ScrollbarWidth::Auto, false))
         .with_propagate_mousewheel_if_not_handled(true)
@@ -4572,7 +4572,7 @@ impl CodeReviewView {
                         .with_corner_radius(CornerRadius::with_all(Radius::Pixels(4.)));
 
                     if mouse_state.is_hovered() {
-                        container = container.with_background(warp_core::ui::theme::Fill::Solid(
+                        container = container.with_background(torch_core::ui::theme::Fill::Solid(
                             internal_colors::neutral_3(appearance.theme()),
                         ))
                     }
@@ -4593,7 +4593,7 @@ impl CodeReviewView {
             },
             appearance.theme().nonactive_ui_detail().into(),
             appearance.theme().active_ui_detail().into(),
-            warpui::elements::Fill::None,
+            torchui::elements::Fill::None,
         )
         .with_vertical_scrollbar(ScrollableAppearance::new(ScrollbarWidth::Auto, false))
         .finish();
@@ -4850,9 +4850,9 @@ impl CodeReviewView {
                     // We effectively make this an absolutely positioned header.
                     OffsetPositioning::offset_from_parent(
                         vec2f(0., scroll_offset_from_top.offset_from_start().as_f32()),
-                        warpui::elements::ParentOffsetBounds::ParentByPosition,
-                        warpui::elements::ParentAnchor::TopMiddle,
-                        warpui::elements::ChildAnchor::TopMiddle,
+                        torchui::elements::ParentOffsetBounds::ParentByPosition,
+                        torchui::elements::ParentAnchor::TopMiddle,
+                        torchui::elements::ChildAnchor::TopMiddle,
                     ),
                 );
             }
@@ -5150,7 +5150,7 @@ impl CodeReviewView {
                     Text::new("•", appearance.ui_font_family(), appearance.ui_font_size())
                         .with_style(Properties::default().weight(Weight::Bold))
                         .with_color(
-                            warp_core::ui::theme::Fill::Solid(internal_colors::neutral_6(
+                            torch_core::ui::theme::Fill::Solid(internal_colors::neutral_6(
                                 appearance.theme(),
                             ))
                             .into(),
@@ -5178,7 +5178,7 @@ impl CodeReviewView {
             .with_horizontal_padding(8.)
             .with_vertical_padding(4.)
             .with_border(
-                Border::all(1.).with_border_fill(warp_core::ui::theme::Fill::Solid(
+                Border::all(1.).with_border_fill(torch_core::ui::theme::Fill::Solid(
                     internal_colors::neutral_4(appearance.theme()),
                 )),
             )
@@ -5475,7 +5475,7 @@ impl CodeReviewView {
             },
             appearance.theme().nonactive_ui_detail().into(),
             appearance.theme().active_ui_detail().into(),
-            warpui::elements::Fill::None,
+            torchui::elements::Fill::None,
         )
         .with_vertical_scrollbar(ScrollableAppearance::new(ScrollbarWidth::Auto, false))
         .finish();
@@ -6024,7 +6024,7 @@ impl CodeReviewView {
     fn insert_diff_hunk_as_context(
         &mut self,
         file_path: String,
-        line_range: Range<warp_editor::render::model::LineCount>,
+        line_range: Range<torch_editor::render::model::LineCount>,
         ctx: &mut ViewContext<Self>,
     ) {
         let Some(repo_path) = self.repo_path().map(LocalOrRemotePath::path_component) else {
@@ -6190,7 +6190,7 @@ impl CodeReviewView {
     fn extract_diff_hunk_data(
         &self,
         repo_relative_path: &str,
-        line_range: &Range<warp_editor::render::model::LineCount>,
+        line_range: &Range<torch_editor::render::model::LineCount>,
     ) -> Option<(DiffHunk, u32, u32)> {
         if let CodeReviewViewState::Loaded(state) = self.state() {
             // Find the file state that matches the given file path
@@ -6337,7 +6337,7 @@ impl CodeReviewView {
     fn restore_cursor_position(
         editor: &CodeEditorView,
         selections: Vec<SelectionOffsets>,
-        ctx: &mut warpui::ViewContext<CodeEditorView>,
+        ctx: &mut torchui::ViewContext<CodeEditorView>,
     ) {
         if let Ok(selections_vec1) = Vec1::try_from_vec(selections) {
             editor.model.update(ctx, |model, ctx| {
@@ -7150,7 +7150,7 @@ impl View for CodeReviewView {
         "CodeReviewView"
     }
 
-    fn keymap_context(&self, ctx: &AppContext) -> warpui::keymap::Context {
+    fn keymap_context(&self, ctx: &AppContext) -> torchui::keymap::Context {
         let mut context = Self::default_keymap_context();
 
         // Suppress pane-level shortcuts (e.g. `F`) when a descendant text editor
@@ -7751,7 +7751,7 @@ mod code_review_view_integration;
 
 #[cfg(feature = "integration_tests")]
 pub use code_review_view_integration::CodeReviewVisibleAnchorForTest;
-use warp_errors::report_error;
+use torch_errors::report_error;
 
 #[cfg(test)]
 #[path = "code_review_view_tests.rs"]

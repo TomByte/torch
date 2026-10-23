@@ -8,8 +8,8 @@ use ai::agent::action_result::StopRecordingResult;
 use futures::channel::oneshot;
 use instant::Instant;
 use thiserror::Error;
-use warp_core::features::FeatureFlag;
-use warpui::{Entity, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torchui::{Entity, SingletonEntity};
 
 use crate::ai::agent::conversation::AIConversationId;
 

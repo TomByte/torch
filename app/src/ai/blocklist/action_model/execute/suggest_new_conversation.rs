@@ -1,6 +1,6 @@
 use futures::FutureExt;
 use futures::future::BoxFuture;
-use warpui::{Entity, ModelContext};
+use torchui::{Entity, ModelContext};
 
 use super::{ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessActionInput};
 use crate::ai::agent::{

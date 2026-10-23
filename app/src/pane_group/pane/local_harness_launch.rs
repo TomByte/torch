@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use shell_words::quote as shell_quote;
 use uuid::Uuid;
-use warp_cli::agent::{Harness, HarnessTransport};
+use torch_cli::agent::{Harness, HarnessTransport};
 
 use crate::ai::agent_sdk::driver::AgentDriverError;
 use crate::ai::agent_sdk::driver::harness::claude_code::prepare_claude_environment_config;

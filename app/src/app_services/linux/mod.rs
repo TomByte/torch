@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use futures_util::FutureExt as _;
 use itertools::Itertools as _;
-use warp_errors::report_if_error;
-use warpui::r#async::executor::BackgroundTask;
-use warpui::{AppContext, SingletonEntity};
+use torch_errors::report_if_error;
+use torchui::r#async::executor::BackgroundTask;
+use torchui::{AppContext, SingletonEntity};
 use zbus::{interface, proxy, zvariant};
 
 use crate::channel::ChannelState;
@@ -27,7 +27,7 @@ pub fn teardown(ctx: &mut AppContext) {
 /// Returns Ok if an existing instance exists and was reachable.
 #[cfg(feature = "release_bundle")]
 pub fn pass_startup_args_to_existing_instance(
-    args: &warp_cli::AppArgs,
+    args: &torch_cli::AppArgs,
 ) -> Result<(), StartupArgsForwardingError> {
     if args.finish_update {
         return Err(StartupArgsForwardingError::IgnoredAfterAutoUpdate);
@@ -39,7 +39,7 @@ pub fn pass_startup_args_to_existing_instance(
         return Err(StartupArgsForwardingError::IgnoredForCrashRecoveryProcess);
     }
 
-    warpui::r#async::block_on(async {
+    torchui::r#async::block_on(async {
         let conn = zbus::Connection::session().await?;
         let proxy = ExistingApplicationProxy::builder(&conn)
             .destination(DBusServiceHost::well_known_name())?
@@ -190,7 +190,7 @@ struct DBusServiceHost {
 }
 
 impl DBusServiceHost {
-    fn new(ctx: &mut warpui::ModelContext<Self>) -> Self {
+    fn new(ctx: &mut torchui::ModelContext<Self>) -> Self {
         let (tx, rx) = async_channel::unbounded();
 
         // Spawn a background task for the D-Bus server.
@@ -241,7 +241,7 @@ impl DBusServiceHost {
         if let Some(server_task) = self.server_task.take() {
             server_task.abort();
             // Wait until we've torn down the dbus service.
-            report_if_error!(warpui::r#async::block_on(server_task));
+            report_if_error!(torchui::r#async::block_on(server_task));
         }
     }
 
@@ -257,7 +257,7 @@ impl DBusServiceHost {
     }
 }
 
-impl warpui::Entity for DBusServiceHost {
+impl torchui::Entity for DBusServiceHost {
     type Event = ();
 }
 

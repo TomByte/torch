@@ -11,15 +11,15 @@ use ai::agent::action_result::{RunAgentsAgentOutcomeKind, RunAgentsResult};
 use ai::agent::orchestration_config::{OrchestrationConfig, OrchestrationConfigStatus};
 use ai::skills::SkillReference;
 use pathfinder_geometry::vector::vec2f;
-use warp_core::send_telemetry_from_ctx;
-use warp_errors::report_error;
-use warp_graphql::queries::get_runners::RunnerSortBy;
-use warpui::elements::{
+use torch_core::send_telemetry_from_ctx;
+use torch_errors::report_error;
+use torch_graphql::queries::get_runners::RunnerSortBy;
+use torchui::elements::{
     Border, ChildAnchor, ChildView, Container, CornerRadius, CrossAxisAlignment, Empty, Flex,
     OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Stack, Text, Wrap,
 };
-use warpui::keymap::FixedBinding;
-use warpui::{
+use torchui::keymap::FixedBinding;
+use torchui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };
@@ -81,7 +81,7 @@ const RUN_AGENTS_CARD_TITLE: &str = "Can I start additional agents for this task
 const SPAWN_AGENTS_CANCELLED_LABEL: &str = "Spawn agents cancelled";
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings([
         FixedBinding::new(
@@ -295,10 +295,10 @@ fn resolve_interactive_defaults(
     ctx: &ViewContext<RunAgentsCardView>,
 ) {
     if orchestration_config_state.model_id.is_empty() {
-        let harness = warp_cli::agent::Harness::parse_orchestration_harness(
+        let harness = torch_cli::agent::Harness::parse_orchestration_harness(
             &orchestration_config_state.harness_type,
         );
-        if matches!(harness, Some(warp_cli::agent::Harness::Oz) | None)
+        if matches!(harness, Some(torch_cli::agent::Harness::Oz) | None)
             && let Some(base) = block_model.base_model(ctx).map(|id| id.to_string())
         {
             orchestration_config_state.model_id = base;
@@ -643,10 +643,10 @@ impl RunAgentsCardView {
                 .resolve_from_config(config);
         }
         if new_state.orchestration_config_state.model_id.is_empty() {
-            let harness = warp_cli::agent::Harness::parse_orchestration_harness(
+            let harness = torch_cli::agent::Harness::parse_orchestration_harness(
                 &new_state.orchestration_config_state.harness_type,
             );
-            if matches!(harness, Some(warp_cli::agent::Harness::Oz) | None)
+            if matches!(harness, Some(torch_cli::agent::Harness::Oz) | None)
                 && let Some(base) = self.block_model.base_model(ctx).map(|id| id.to_string())
             {
                 new_state.orchestration_config_state.model_id = base;
@@ -843,7 +843,7 @@ impl RunAgentsCardView {
         ) {
             return;
         }
-        let Some(harness) = warp_cli::agent::Harness::parse_orchestration_harness(
+        let Some(harness) = torch_cli::agent::Harness::parse_orchestration_harness(
             &self
                 .orchestration_edit_state
                 .orchestration_config_state
@@ -964,8 +964,8 @@ impl RunAgentsCardView {
             // matching the other dropdowns in this card.
             handle.update(ctx, |picker, picker_ctx| {
                 picker.set_menu_position(
-                    warpui::elements::PositionedElementAnchor::TopLeft,
-                    warpui::elements::ChildAnchor::BottomLeft,
+                    torchui::elements::PositionedElementAnchor::TopLeft,
+                    torchui::elements::ChildAnchor::BottomLeft,
                     picker_ctx,
                 );
             });
@@ -1162,8 +1162,8 @@ impl RunAgentsCardView {
     ) {
         dropdown_handle.update(ctx, |dropdown, ctx| {
             dropdown.set_menu_position(
-                warpui::elements::PositionedElementAnchor::TopLeft,
-                warpui::elements::ChildAnchor::BottomLeft,
+                torchui::elements::PositionedElementAnchor::TopLeft,
+                torchui::elements::ChildAnchor::BottomLeft,
                 ctx,
             );
         });
@@ -1340,9 +1340,9 @@ impl View for RunAgentsCardView {
                 OffsetPositioning::offset_from_save_position_element(
                     Self::get_position_id_for_accept_split_button(&self.position_id_prefix),
                     vec2f(0., 8.),
-                    warpui::elements::PositionedElementOffsetBounds::WindowByPosition,
-                    warpui::elements::PositionedElementAnchor::BottomRight,
-                    warpui::elements::ChildAnchor::TopRight,
+                    torchui::elements::PositionedElementOffsetBounds::WindowByPosition,
+                    torchui::elements::PositionedElementAnchor::BottomRight,
+                    torchui::elements::ChildAnchor::TopRight,
                 ),
             );
         }
@@ -1476,7 +1476,7 @@ impl TypedActionView for RunAgentsCardView {
                     &mut self.orchestration_edit_state.orchestration_config_state,
                     ctx,
                 );
-                if let Some(harness) = warp_cli::agent::Harness::parse_orchestration_harness(
+                if let Some(harness) = torch_cli::agent::Harness::parse_orchestration_harness(
                     &self
                         .orchestration_edit_state
                         .orchestration_config_state
@@ -1802,7 +1802,7 @@ fn render_editor(
     scope: &(impl TeamScope + ?Sized),
     app: &AppContext,
 ) -> Box<dyn Element> {
-    use warpui::elements::ConstrainedBox;
+    use torchui::elements::ConstrainedBox;
     let appearance = Appearance::as_ref(app);
     let theme = appearance.theme();
     let mut column = Flex::column().with_cross_axis_alignment(CrossAxisAlignment::Stretch);

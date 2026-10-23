@@ -2,14 +2,14 @@ use std::sync::Arc;
 
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
-use warp_core::send_telemetry_from_ctx;
-use warp_core::ui::color::blend::Blend;
-use warp_core::ui::theme::Fill;
-use warpui::elements::{
+use torch_core::send_telemetry_from_ctx;
+use torch_core::ui::color::blend::Blend;
+use torch_core::ui::theme::Fill;
+use torchui::elements::{
     ChildAnchor, ChildView, ConstrainedBox, OffsetPositioning, ParentAnchor, ParentElement,
     ParentOffsetBounds, Stack,
 };
-use warpui::{
+use torchui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };

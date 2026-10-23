@@ -1,4 +1,4 @@
-use warpui::EntityId;
+use torchui::EntityId;
 
 use super::WorkspaceAction;
 use crate::pane_group::TerminalPaneId;

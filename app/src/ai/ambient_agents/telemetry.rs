@@ -1,8 +1,8 @@
 use serde::Serialize;
 use serde_json::{Value, json};
 use strum_macros::{EnumDiscriminants, EnumIter};
-use warp_core::features::FeatureFlag;
-use warp_core::telemetry::{EnablementState, TelemetryEvent, TelemetryEventDesc};
+use torch_core::features::FeatureFlag;
+use torch_core::telemetry::{EnablementState, TelemetryEvent, TelemetryEventDesc};
 
 use crate::server::ids::ServerId;
 
@@ -227,7 +227,7 @@ impl TelemetryEvent for CloudAgentTelemetryEvent {
     }
 
     fn event_descs() -> impl Iterator<Item = Box<dyn TelemetryEventDesc>> {
-        warp_core::telemetry::enum_events::<Self>()
+        torch_core::telemetry::enum_events::<Self>()
     }
 }
 
@@ -299,4 +299,4 @@ impl TelemetryEventDesc for CloudAgentTelemetryEventDiscriminants {
     }
 }
 
-warp_core::register_telemetry_event!(CloudAgentTelemetryEvent);
+torch_core::register_telemetry_event!(CloudAgentTelemetryEvent);

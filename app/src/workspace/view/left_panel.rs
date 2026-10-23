@@ -1,21 +1,21 @@
 use std::collections::HashSet;
 use std::path::PathBuf;
 
-use warp_core::send_telemetry_from_ctx;
-use warp_core::ui::Icon;
-use warp_core::ui::theme::color::internal_colors;
-use warp_errors::report_error;
-use warp_util::path::LineAndColumnArg;
-use warpui::elements::{
+use torch_core::send_telemetry_from_ctx;
+use torch_core::ui::Icon;
+use torch_core::ui::theme::color::internal_colors;
+use torch_errors::report_error;
+use torch_util::path::LineAndColumnArg;
+use torchui::elements::{
     Align, ChildView, ConstrainedBox, Container, CrossAxisAlignment, DragBarSide, Element, Empty,
     Flex, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Resizable,
     ResizableStateHandle, Shrinkable, resizable_state_handle,
 };
-use warpui::fonts::Weight;
-use warpui::platform::Cursor;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::fonts::Weight;
+use torchui::platform::Cursor;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Entity, FocusContext, ModelHandle, SingletonEntity, TypedActionView, View,
     ViewContext, ViewHandle, WeakViewHandle,
 };
@@ -140,7 +140,7 @@ pub enum LeftPanelEvent {
     ShowDeleteConfirmationDialog {
         conversation_id: AIConversationId,
         conversation_title: String,
-        terminal_view_id: Option<warpui::EntityId>,
+        terminal_view_id: Option<torchui::EntityId>,
     },
     SignInRequested,
 }
@@ -156,7 +156,7 @@ pub enum ToolPanelView {
 /// Encapsulates the active view state to enforce that all mutations go through
 /// `active_view_state::set`, which handles necessary side effects.
 mod active_view_state {
-    use warpui::ViewContext;
+    use torchui::ViewContext;
 
     use super::ToolPanelView;
 
@@ -195,9 +195,9 @@ mod active_view_state {
 }
 
 pub struct ToolbeltButtonConfig {
-    pub icon: warp_core::ui::Icon,
+    pub icon: torch_core::ui::Icon,
     /// Optional icon to use when the given toolbelt option is in an active state.
-    pub active_icon: Option<warp_core::ui::Icon>,
+    pub active_icon: Option<torch_core::ui::Icon>,
     pub tooltip_text: String,
     pub action: LeftPanelAction,
     /// Whether the button should be rendered with an "active" state.
@@ -615,7 +615,7 @@ impl LeftPanelView {
 
     fn get_or_create_global_search_view_for_pane_group(
         &mut self,
-        pane_group_id: warpui::EntityId,
+        pane_group_id: torchui::EntityId,
         ctx: &mut ViewContext<Self>,
     ) -> ViewHandle<GlobalSearchView> {
         if let Some(view) = self
@@ -641,7 +641,7 @@ impl LeftPanelView {
 
     fn get_or_create_file_tree_view_for_pane_group(
         &mut self,
-        pane_group_id: warpui::EntityId,
+        pane_group_id: torchui::EntityId,
         ctx: &mut ViewContext<Self>,
     ) -> ViewHandle<FileTreeView> {
         if let Some(view) = self
@@ -1202,7 +1202,7 @@ impl LeftPanelView {
 
     fn deactivate_file_tree_view_for_pane_group(
         &self,
-        pane_group_id: warpui::EntityId,
+        pane_group_id: torchui::EntityId,
         ctx: &mut ViewContext<Self>,
     ) {
         if let Some(view) = self
@@ -1409,7 +1409,7 @@ impl View for LeftPanelView {
         })
         .finish();
 
-        if warpui::platform::is_mobile_device() {
+        if torchui::platform::is_mobile_device() {
             return panel_content;
         }
 

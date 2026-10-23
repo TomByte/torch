@@ -12,8 +12,8 @@ use cloud_objects::ids::{
 };
 #[cfg(any(test, feature = "test-util"))]
 use mockall::automock;
-use warp_graphql::mcp_gallery_template::MCPGalleryTemplate;
-use warp_graphql::object_permissions::AccessLevel;
+use torch_graphql::mcp_gallery_template::MCPGalleryTemplate;
+use torch_graphql::object_permissions::AccessLevel;
 
 /// Identifies a guest to remove from an object.
 #[derive(Clone, Debug)]

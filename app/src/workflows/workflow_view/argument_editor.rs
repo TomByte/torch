@@ -2,17 +2,17 @@ use std::cmp::Ordering;
 
 use itertools::Itertools;
 use pathfinder_color::ColorU;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::appearance::Appearance;
-use warp_editor::editor::NavigationKey;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::ui::appearance::Appearance;
+use torch_editor::editor::NavigationKey;
+use torchui::elements::{
     ChildView, ConstrainedBox, Container, CrossAxisAlignment, Fill, Flex, MainAxisAlignment,
     MainAxisSize, ParentElement, Shrinkable,
 };
-use warpui::text_layout::TextStyle;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{AppContext, Element, SingletonEntity as _, ViewContext, ViewHandle};
+use torchui::text_layout::TextStyle;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{AppContext, Element, SingletonEntity as _, ViewContext, ViewHandle};
 
 use super::alias_argument_selector::{AliasArgumentSelector, AliasArgumentSelectorEvent};
 use super::{

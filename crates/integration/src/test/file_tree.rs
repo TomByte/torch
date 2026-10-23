@@ -1,11 +1,11 @@
 use regex::Regex;
-use warp::integration_testing::step::new_step_with_default_assertions;
-use warp::integration_testing::tab::assert_pane_title;
-use warp::integration_testing::terminal::wait_until_bootstrapped_single_pane_for_tab;
-use warp::integration_testing::view_getters::{pane_group_view, workspace_view};
-use warp::workspace::WorkspaceAction;
-use warpui_core::integration::TestStep;
-use warpui_core::{App, async_assert, async_assert_eq};
+use torch::integration_testing::step::new_step_with_default_assertions;
+use torch::integration_testing::tab::assert_pane_title;
+use torch::integration_testing::terminal::wait_until_bootstrapped_single_pane_for_tab;
+use torch::integration_testing::view_getters::{pane_group_view, workspace_view};
+use torch::workspace::WorkspaceAction;
+use torchui_core::integration::TestStep;
+use torchui_core::{App, async_assert, async_assert_eq};
 
 use super::{Builder, new_builder};
 use crate::util::write_all_rc_files_for_test;

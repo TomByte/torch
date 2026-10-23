@@ -1,6 +1,6 @@
 use ai::agent::action::RunAgentsExecutionMode;
-use warp_cli::agent::Harness;
-use warpui::App;
+use torch_cli::agent::Harness;
+use torchui::App;
 
 use super::{
     AUTH_SECRET_INHERIT_LABEL, AuthSecretNamesInput, DEFAULT_MODEL_LABEL, HarnessEntryInput,

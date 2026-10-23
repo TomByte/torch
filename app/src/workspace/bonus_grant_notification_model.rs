@@ -1,8 +1,8 @@
 use std::collections::HashSet;
 
 use chrono::{Duration, Utc};
-use warp_core::settings::Setting;
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torch_core::settings::Setting;
+use torchui::{Entity, ModelContext, SingletonEntity};
 
 use crate::ai::blocklist::view_util::{format_dollars, usage_display_unit};
 use crate::ai::request_usage_model::{

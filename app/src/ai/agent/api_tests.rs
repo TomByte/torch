@@ -1,4 +1,4 @@
-use warp_core::channel::{Channel, ChannelState};
+use torch_core::channel::{Channel, ChannelState};
 
 use super::{RequestParams, ServerConversationToken};
 use crate::ai::agent::ServerOutputId;

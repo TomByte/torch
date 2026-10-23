@@ -6,16 +6,16 @@ use instant::Instant;
 use markdown_parser::FormattedTextFragment;
 use parking_lot::FairMutex;
 use pathfinder_color::ColorU;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::Icon as CoreIcon;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::Fill;
-use warpui::r#async::{SpawnedFutureHandle, Timer};
-use warpui::elements::shimmering_text::ShimmeringTextStateHandle;
-use warpui::elements::{Border, Container, Empty, Flex, MouseStateHandle, ParentElement, Text};
-use warpui::keymap::Keystroke;
-use warpui::presenter::ChildView;
-use warpui::{
+use torch_core::features::FeatureFlag;
+use torch_core::ui::Icon as CoreIcon;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::Fill;
+use torchui::r#async::{SpawnedFutureHandle, Timer};
+use torchui::elements::shimmering_text::ShimmeringTextStateHandle;
+use torchui::elements::{Border, Container, Empty, Flex, MouseStateHandle, ParentElement, Text};
+use torchui::keymap::Keystroke;
+use torchui::presenter::ChildView;
+use torchui::{
     AppContext, Element, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View,
     ViewContext, ViewHandle,
 };
@@ -1024,7 +1024,7 @@ fn latest_model_used_before_exchange<V: View>(
 
 fn render_agent_tip(tip: &AgentTip, app: &AppContext) -> Box<dyn Element> {
     use markdown_parser::{FormattedTextFragment, FormattedTextLine};
-    use warpui::text_layout::ClipConfig;
+    use torchui::text_layout::ClipConfig;
 
     use crate::ai::agent_tips::AITip;
 
@@ -1051,7 +1051,7 @@ fn render_agent_tip(tip: &AgentTip, app: &AppContext) -> Box<dyn Element> {
 
     let formatted_text =
         markdown_parser::FormattedText::new(vec![FormattedTextLine::Line(fragments)]);
-    warpui::elements::FormattedTextElement::new(
+    torchui::elements::FormattedTextElement::new(
         formatted_text,
         appearance.monospace_font_size() - 3.,
         appearance.ui_font_family(),
@@ -1063,7 +1063,7 @@ fn render_agent_tip(tip: &AgentTip, app: &AppContext) -> Box<dyn Element> {
     .set_selectable(true)
     .with_clip(ClipConfig::ellipsis())
     .register_default_click_handlers_with_action_support(move |link, evt, app| {
-        use warpui::elements::HyperlinkLens;
+        use torchui::elements::HyperlinkLens;
         match link {
             HyperlinkLens::Url(url) => {
                 send_telemetry_from_app_ctx!(
@@ -1257,7 +1257,7 @@ impl View for BlocklistAIStatusBar {
         "BlocklistAIStatusBar"
     }
 
-    fn render(&self, app: &AppContext) -> Box<dyn warpui::Element> {
+    fn render(&self, app: &AppContext) -> Box<dyn torchui::Element> {
         let appearance = Appearance::as_ref(app);
         let agent_view_controller = self.agent_view_controller.as_ref(app);
         if let Some(cloud_mode_setup_terminal_message) =

@@ -9,10 +9,10 @@ use ai::skills::{
 pub use file_watchers::{
     SkillWatcher, SkillWatcherEvent, extract_skill_parent_directory, read_skills_from_directories,
 };
-use warp_core::features::FeatureFlag;
-use warp_util::host_id::HostId;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warpui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torch_util::host_id::HostId;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torchui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
 
 use super::bundled::{BundledSkill, BundledSkills};
 #[cfg(test)]

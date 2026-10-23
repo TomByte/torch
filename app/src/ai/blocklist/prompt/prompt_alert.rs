@@ -1,11 +1,11 @@
 use ai::api_keys::ApiKeyManager;
 use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
-use warp_core::ui::appearance::Appearance;
-use warpui::elements::{
+use torch_core::ui::appearance::Appearance;
+use torchui::elements::{
     ConstrainedBox, Container, CrossAxisAlignment, Flex, FormattedTextElement,
     HighlightedHyperlink, HyperlinkLens, MainAxisAlignment, MainAxisSize, ParentElement,
 };
-use warpui::{
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext,
     WeakViewHandle,
 };

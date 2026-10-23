@@ -4,19 +4,19 @@ use std::sync::Arc;
 
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::{Vector2F, vec2f};
-use warp_core::features::FeatureFlag;
-use warp_core::ui::theme::Fill;
-use warp_core::ui::theme::color::internal_colors;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::ui::theme::Fill;
+use torch_core::ui::theme::color::internal_colors;
+use torchui::elements::{
     Border, ChildAnchor, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     DEFAULT_UI_LINE_HEIGHT_RATIO, Empty, Flex, Hoverable, MouseStateHandle, OffsetPositioning,
     ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Stack, Text,
 };
-use warpui::fonts::{Cache, FamilyId, Properties, Weight};
-use warpui::keymap::Keystroke;
-use warpui::platform::Cursor;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::fonts::{Cache, FamilyId, Properties, Weight};
+use torchui::keymap::Keystroke;
+use torchui::platform::Cursor;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, EntityId, Gradient, ModelHandle, SingletonEntity, TypedActionView,
     View, ViewContext, ViewHandle,
 };

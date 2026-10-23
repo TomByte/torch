@@ -2,10 +2,10 @@ use std::collections::HashSet;
 
 use serde_json::{Value, json};
 use strum_macros::{EnumDiscriminants, EnumIter};
-use warp_core::send_telemetry_from_ctx;
-use warp_core::telemetry::{EnablementState, TelemetryEvent, TelemetryEventDesc};
-use warp_core::user_preferences::GetUserPreferences;
-use warpui::{AppContext, Entity, ModelContext, SingletonEntity};
+use torch_core::send_telemetry_from_ctx;
+use torch_core::telemetry::{EnablementState, TelemetryEvent, TelemetryEventDesc};
+use torch_core::user_preferences::GetUserPreferences;
+use torchui::{AppContext, Entity, ModelContext, SingletonEntity};
 
 use crate::pricing::{PricingInfoModel, PricingInfoModelEvent};
 
@@ -163,7 +163,7 @@ impl TelemetryEvent for PricingPromotionTelemetryEvent {
     }
 
     fn event_descs() -> impl Iterator<Item = Box<dyn TelemetryEventDesc>> {
-        warp_core::telemetry::enum_events::<Self>()
+        torch_core::telemetry::enum_events::<Self>()
     }
 }
 
@@ -189,7 +189,7 @@ impl TelemetryEventDesc for PricingPromotionTelemetryEventDiscriminants {
     }
 }
 
-warp_core::register_telemetry_event!(PricingPromotionTelemetryEvent);
+torch_core::register_telemetry_event!(PricingPromotionTelemetryEvent);
 
 #[cfg(test)]
 #[path = "pricing_promotion_tests.rs"]

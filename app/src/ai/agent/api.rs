@@ -21,11 +21,11 @@ use futures_lite::Stream;
 pub use r#impl::generate_multi_agent_output;
 use mcp::TemplatableMCPServerInfo;
 use serde::Serialize;
-use warp_core::channel::{Channel, ChannelState};
-use warp_core::execution_mode::AppExecutionMode;
-use warp_core::features::FeatureFlag;
-use warp_core::user_preferences::GetUserPreferences;
-use warpui::{AppContext, EntityId, SingletonEntity as _};
+use torch_core::channel::{Channel, ChannelState};
+use torch_core::execution_mode::AppExecutionMode;
+use torch_core::features::FeatureFlag;
+use torch_core::user_preferences::GetUserPreferences;
+use torchui::{AppContext, EntityId, SingletonEntity as _};
 
 use super::{AIAgentInput, MCPContext, MCPServer, RequestMetadata, ServerOutputId, Suggestions};
 use crate::ai::agent::conversation::AIConversationId;

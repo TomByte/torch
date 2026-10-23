@@ -4,7 +4,7 @@ use chrono::Utc;
 use cloud_object_client::MockObjectClient;
 use itertools::Itertools;
 use settings::manager::SettingsManager;
-use warpui::{App, SingletonEntity};
+use torchui::{App, SingletonEntity};
 
 use super::*;
 use crate::auth::AuthStateProvider;

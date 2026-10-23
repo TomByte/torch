@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use session_sharing_protocol::common::{AgentAttachment, ParticipantId};
 use uuid::Uuid;
-use warpui::{AppContext, Entity, EntityId, ModelContext, SingletonEntity};
+use torchui::{AppContext, Entity, EntityId, ModelContext, SingletonEntity};
 
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent::{AIAgentAttachment, BaseUserQuery};

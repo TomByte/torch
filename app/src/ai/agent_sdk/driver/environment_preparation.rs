@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use anyhow::bail;
 use anyhow::{Context as _, ensure};
 use serde::{Deserialize, Serialize};
-use warp_cli::agent::RepositoryIdentity;
+use torch_cli::agent::RepositoryIdentity;
 
 #[cfg(any(test, feature = "local_fs"))]
 use super::environment_checkout_protocol::CheckoutBatch;

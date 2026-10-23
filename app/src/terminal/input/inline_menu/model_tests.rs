@@ -1,4 +1,4 @@
-use warpui::App;
+use torchui::App;
 
 use super::InlineMenuModel;
 use crate::terminal::input::inline_menu::{InlineMenuAction, InlineMenuType};

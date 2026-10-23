@@ -6,24 +6,24 @@ use itertools::Itertools;
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use session_sharing_protocol::common::{Guest, PendingGuest, SessionId, TeamAclData};
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::Fill as ThemeFill;
-use warp_editor::editor::NavigationKey;
-use warp_errors::report_error;
-use warpui::clipboard::ClipboardContent;
-use warpui::elements::{
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::Fill as ThemeFill;
+use torch_editor::editor::NavigationKey;
+use torch_errors::report_error;
+use torchui::clipboard::ClipboardContent;
+use torchui::elements::{
     Align, Border, ChildAnchor, ChildView, ConstrainedBox, Container, CornerRadius,
     CrossAxisAlignment, Dismiss, Empty, Fill, Flex, Highlight, MainAxisAlignment, MainAxisSize,
     MouseStateHandle, OffsetPositioning, ParentAnchor, ParentElement, PositionedElementAnchor,
     PositionedElementOffsetBounds, Radius, SavePosition, ScrollStateHandle, Scrollable,
     ScrollableElement, ScrollbarWidth, Shrinkable, Stack, UniformList, UniformListState,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::keymap::FixedBinding;
-use warpui::platform::{Cursor, SaveFilePickerConfiguration};
-use warpui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::keymap::FixedBinding;
+use torchui::platform::{Cursor, SaveFilePickerConfiguration};
+use torchui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle, WeakViewHandle,
 };
@@ -216,7 +216,7 @@ pub enum SharingDialogAction {
 }
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings([FixedBinding::new(
         "escape",

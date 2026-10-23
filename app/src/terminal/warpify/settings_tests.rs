@@ -1,5 +1,5 @@
 use settings::{Setting, SyncToCloud};
-use warpui::{App, SingletonEntity};
+use torchui::{App, SingletonEntity};
 
 use super::{EnableSshWrapper, UseSshTmuxWrapper, WarpifySettings};
 use crate::test_util::settings::initialize_settings_for_tests;

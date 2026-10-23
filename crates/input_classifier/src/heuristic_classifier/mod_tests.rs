@@ -1,13 +1,13 @@
-use warp_completer::meta::SpannedItem;
-use warp_completer::util::parse_current_commands_and_tokens;
-use warp_completer::{ParsedTokenData, ParsedTokensSnapshot};
+use torch_completer::meta::SpannedItem;
+use torch_completer::util::parse_current_commands_and_tokens;
+use torch_completer::{ParsedTokenData, ParsedTokensSnapshot};
 
 use super::*;
 use crate::Context;
 use crate::test_utils::CompletionContext;
 
 async fn mock_parsed_input_token(buffer_text: String) -> ParsedTokensSnapshot {
-    warp_features::mark_initialized();
+    torch_features::mark_initialized();
     let completion_context = CompletionContext::new();
     parse_current_commands_and_tokens(buffer_text, &completion_context).await
 }

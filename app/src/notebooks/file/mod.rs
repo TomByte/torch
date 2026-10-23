@@ -5,29 +5,29 @@ use std::sync::Arc;
 use pathfinder_geometry::vector::vec2f;
 #[cfg(not(target_family = "wasm"))]
 use remote_server::manager::RemoteServerManager;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::icons::ICON_DIMENSIONS;
-use warp_editor::model::CoreEditorModel;
+use torch_core::features::FeatureFlag;
+use torch_core::ui::icons::ICON_DIMENSIONS;
+use torch_editor::model::CoreEditorModel;
 #[cfg(feature = "local_fs")]
-use warp_files::{FileModel, FileModelEvent};
+use torch_files::{FileModel, FileModelEvent};
 #[cfg(feature = "local_fs")]
-use warp_util::file::FileId;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warp_util::path::user_friendly_path;
-use warp_util::remote_path::RemotePath;
-use warpui::accessibility::{AccessibilityContent, WarpA11yRole};
+use torch_util::file::FileId;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torch_util::path::user_friendly_path;
+use torch_util::remote_path::RemotePath;
+use torchui::accessibility::{AccessibilityContent, WarpA11yRole};
 #[cfg(feature = "local_fs")]
-use warpui::clipboard::ClipboardContent;
-use warpui::elements::{
+use torchui::clipboard::ClipboardContent;
+use torchui::elements::{
     Align, Container, CrossAxisAlignment, DispatchEventResult, Empty, EventHandler, Flex,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, SavePosition, Shrinkable,
     Stack, Text,
 };
-use warpui::keymap::EditableBinding;
-use warpui::presenter::ChildView;
-use warpui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::keymap::EditableBinding;
+use torchui::presenter::ChildView;
+use torchui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };
@@ -117,7 +117,7 @@ pub enum FileNotebookEvent {
     OpenFileWithTarget {
         path: PathBuf,
         target: FileTarget,
-        line_col: Option<warp_util::path::LineAndColumnArg>,
+        line_col: Option<torch_util::path::LineAndColumnArg>,
     },
 }
 
@@ -226,7 +226,7 @@ pub const TOGGLE_MARKDOWN_DISPLAY_MODE_BINDING_DESCRIPTION: &str =
 pub const TOGGLE_MARKDOWN_DISPLAY_MODE_KEY_BINDING: &str = "cmdorctrl-e";
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_editable_bindings([
         EditableBinding::new(
@@ -1033,7 +1033,7 @@ impl View for FileNotebookView {
         "FileNotebookView"
     }
 
-    fn keymap_context(&self, _app: &AppContext) -> warpui::keymap::Context {
+    fn keymap_context(&self, _app: &AppContext) -> torchui::keymap::Context {
         let mut context = Self::default_keymap_context();
         if self.shows_markdown_toggle() {
             context.set.insert(MARKDOWN_DISPLAY_MODE_TOGGLE_CONTEXT);
@@ -1285,13 +1285,13 @@ impl BackingView for FileNotebookView {
             let title_text = render_pane_header_title_text(
                 title,
                 appearance,
-                warpui::text_layout::ClipConfig::start(),
+                torchui::text_layout::ClipConfig::start(),
             );
 
             let title_element: Box<dyn Element> =
                 if let Some(display_path) = self.file_state.path().map(|p| p.display_path()) {
                     use pathfinder_geometry::vector::vec2f;
-                    use warpui::elements::{
+                    use torchui::elements::{
                         ChildAnchor, Hoverable, OffsetPositioning, ParentAnchor,
                         ParentOffsetBounds, Stack,
                     };
@@ -1340,7 +1340,7 @@ impl BackingView for FileNotebookView {
                 title,
                 title_secondary: None,
                 title_style: None,
-                title_clip_config: warpui::text_layout::ClipConfig::start(),
+                title_clip_config: torchui::text_layout::ClipConfig::start(),
                 title_max_width: None,
                 left_of_title: None,
                 right_of_title: None,

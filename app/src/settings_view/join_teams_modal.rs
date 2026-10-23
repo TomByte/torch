@@ -1,13 +1,13 @@
-use warpui::elements::{
+use torchui::elements::{
     Border, ClippedScrollStateHandle, ClippedScrollable, ConstrainedBox, Container, CornerRadius,
     CrossAxisAlignment, Expanded, Flex, MainAxisAlignment, MainAxisSize, MouseStateHandle,
     ParentElement, Radius, ScrollbarWidth, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::platform::Cursor;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
+use torchui::fonts::{Properties, Weight};
+use torchui::platform::Cursor;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
 
 use crate::appearance::Appearance;
 use crate::server::ids::ServerId;
@@ -177,7 +177,7 @@ impl View for JoinTeamsModal {
                     ScrollbarWidth::Auto,
                     theme.nonactive_ui_text_color().into(),
                     theme.active_ui_text_color().into(),
-                    warpui::elements::Fill::None,
+                    torchui::elements::Fill::None,
                 )
                 .finish(),
             )

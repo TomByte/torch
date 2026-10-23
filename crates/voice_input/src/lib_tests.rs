@@ -1,4 +1,4 @@
-use warpui_core::App;
+use torchui_core::App;
 
 use super::{
     StartListeningError, VoiceInput, VoiceInputLifecycle, VoiceInputLifecycleState,

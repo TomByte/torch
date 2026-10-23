@@ -15,29 +15,29 @@ use regex::Regex;
 use string_offset::CharOffset;
 use url::Url;
 use vec1::{Vec1, vec1};
-use warp_core::r#async::debounce;
-use warp_core::features::FeatureFlag;
-use warp_core::semantic_selection::SemanticSelection;
-use warp_editor::content::buffer::{
+use torch_core::r#async::debounce;
+use torch_core::features::FeatureFlag;
+use torch_core::semantic_selection::SemanticSelection;
+use torch_editor::content::buffer::{
     AutoScrollBehavior, Buffer, BufferEditAction, BufferEvent, BufferSelectAction, EditOrigin,
     SelectionOffsets, ShouldAutoscroll,
 };
-use warp_editor::content::selection_model::BufferSelectionModel;
-use warp_editor::content::text::{
+use torch_editor::content::selection_model::BufferSelectionModel;
+use torch_editor::content::text::{
     BlockHeaderSize, BlockType, BufferBlockItem, BufferBlockStyle, BufferTextStyle, CodeBlockType,
     IndentBehavior, IndentUnit, TextStyles, TextStylesWithMetadata,
 };
-use warp_editor::model::{BufferUpdateWrapper, CoreEditorModel, RichTextEditorModel};
-use warp_editor::render::model::{
+use torch_editor::model::{BufferUpdateWrapper, CoreEditorModel, RichTextEditorModel};
+use torch_editor::render::model::{
     AutoScrollMode, BlockItem, RenderEvent, RenderState, RichTextStyles, StyleUpdateAction,
 };
-use warp_editor::search::Searcher;
-use warp_editor::selection::{SelectionMode, SelectionModel, TextDirection, TextUnit};
-use warp_errors::report_error;
-use warpui::accessibility::{AccessibilityContent, ActionAccessibilityContent, WarpA11yRole};
-use warpui::clipboard::ClipboardContent;
-use warpui::elements::ListIndentLevel;
-use warpui::{
+use torch_editor::search::Searcher;
+use torch_editor::selection::{SelectionMode, SelectionModel, TextDirection, TextUnit};
+use torch_errors::report_error;
+use torchui::accessibility::{AccessibilityContent, ActionAccessibilityContent, WarpA11yRole};
+use torchui::clipboard::ClipboardContent;
+use torchui::elements::ListIndentLevel;
+use torchui::{
     AppContext, Entity, ModelAsRef, ModelContext, ModelHandle, SingletonEntity, WindowId,
 };
 

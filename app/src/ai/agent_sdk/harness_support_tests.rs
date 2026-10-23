@@ -1,4 +1,4 @@
-use warp_cli::harness_support::ReportShutdownArgs;
+use torch_cli::harness_support::ReportShutdownArgs;
 
 #[cfg(target_os = "linux")]
 use super::kernel_log_commands;

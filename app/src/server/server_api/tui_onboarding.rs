@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use cynic::QueryBuilder;
 #[cfg(test)]
 use mockall::automock;
-use warp_graphql::queries::tui_onboarding_markers::{
+use torch_graphql::queries::tui_onboarding_markers::{
     TuiOnboardingMarkers, TuiOnboardingMarkersResult, TuiOnboardingMarkersVariables,
 };
 

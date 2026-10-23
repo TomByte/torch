@@ -8,10 +8,10 @@
 //! themes, making labels hard to read. We assert against the *composited* color
 //! (label blended over the chip surface) — what the user actually sees.
 
-use warp_core::ui::color::blend::Blend;
-use warp_core::ui::color::contrast::{MinimumAllowedContrast, high_enough_contrast};
-use warp_core::ui::theme::{Details, Fill, WarpTheme, mock_terminal_colors};
-use warpui::color::ColorU;
+use torch_core::ui::color::blend::Blend;
+use torch_core::ui::color::contrast::{MinimumAllowedContrast, high_enough_contrast};
+use torch_core::ui::theme::{Details, Fill, WarpTheme, mock_terminal_colors};
+use torchui::color::ColorU;
 
 use super::readable_chip_label_color;
 

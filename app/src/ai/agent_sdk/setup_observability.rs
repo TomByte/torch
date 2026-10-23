@@ -5,7 +5,7 @@ use chrono::{DateTime, Utc};
 use enum_iterator::Sequence;
 use futures::FutureExt as _;
 use tracing::Instrument as _;
-use warpui::r#async::executor::Background;
+use torchui::r#async::executor::Background;
 
 use crate::ai::ambient_agents::AmbientAgentTaskId;
 use crate::server::server_api::ai::{AIClient, AgentRunClientEventRequest};

@@ -7,7 +7,7 @@ use warp_multi_agent_api::client_action::{
     Action, AddMessagesToTask, CreateTask, MoveMessagesToNewTask,
 };
 use warp_multi_agent_api::message::request_metadata;
-use warpui::{App, EntityId};
+use torchui::{App, EntityId};
 
 use super::*;
 use crate::ai::agent::conversation::{AIConversation, AIConversationId};

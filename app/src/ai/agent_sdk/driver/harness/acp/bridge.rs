@@ -38,7 +38,7 @@ use futures::FutureExt as _;
 use futures::io::{AsyncRead, AsyncReadExt as _, AsyncWrite, AsyncWriteExt as _};
 use rand::RngCore as _;
 use serde::{Deserialize, Serialize};
-use warp_util::path::ShellFamily;
+use torch_util::path::ShellFamily;
 
 const LAUNCH_FILE_NAME: &str = "launch.json";
 #[cfg(unix)]
@@ -310,7 +310,7 @@ fn relay_agent(
     // Agents installed through npm are `.cmd` shims on Windows. `CreateProcess` does not consult
     // `PATHEXT`, so look the program up the way the shell would; std then runs a `.cmd`/`.bat`
     // path through `cmd.exe` with the appropriate quoting.
-    let program_path = warp_util::path::resolve_executable(program)
+    let program_path = torch_util::path::resolve_executable(program)
         .ok_or_else(|| anyhow!("ACP agent `{program}` was not found on PATH"))?;
     let mut child = command::blocking::Command::new(program_path.as_ref())
         .args(args)
@@ -478,7 +478,7 @@ impl BridgeListener {
     /// are rejected and moving on, and returns the agent's stdout (our reader) and stdin (our
     /// writer) ends of the socket.
     pub(crate) async fn accept(&self, timeout: Duration) -> Result<(BridgeReader, BridgeWriter)> {
-        let deadline = warpui::r#async::Timer::after(timeout).fuse();
+        let deadline = torchui::r#async::Timer::after(timeout).fuse();
         futures::pin_mut!(deadline);
         loop {
             let accept = self.listener.accept().fuse();

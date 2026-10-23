@@ -4,8 +4,8 @@ use std::time::Duration;
 
 use ai::agent::action_result::{RecordingStopped, StopRecordingResult};
 use futures::channel::oneshot;
-use warpui::r#async::Timer;
-use warpui::{AppContext, Entity, ModelContext, SingletonEntity};
+use torchui::r#async::Timer;
+use torchui::{AppContext, Entity, ModelContext, SingletonEntity};
 
 pub(crate) use super::recording_controller::FinalizeReason;
 use super::recording_controller::{

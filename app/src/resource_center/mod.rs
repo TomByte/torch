@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use chrono::{DateTime, FixedOffset};
 use settings::Setting as _;
-use warp_errors::report_if_error;
+use torch_errors::report_if_error;
 
 use crate::terminal::general_settings::GeneralSettings;
 use crate::util::bindings::trigger_to_keystroke;
@@ -18,8 +18,8 @@ pub mod sections;
 mod view;
 use serde::{Deserialize, Serialize};
 pub use view::{ResourceCenterAction, ResourceCenterEvent, ResourceCenterPage, ResourceCenterView};
-use warpui::keymap::Keystroke;
-use warpui::{AppContext, Entity, SingletonEntity};
+use torchui::keymap::Keystroke;
+use torchui::{AppContext, Entity, SingletonEntity};
 
 use self::section_views::feature_section::FeatureSection;
 

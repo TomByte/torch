@@ -1,8 +1,8 @@
 use url::Url;
-use warp_core::ui::appearance::Appearance;
-use warpui::elements::{Empty, MouseStateHandle};
-use warpui::platform::WindowStyle;
-use warpui::{
+use torch_core::ui::appearance::Appearance;
+use torchui::elements::{Empty, MouseStateHandle};
+use torchui::platform::WindowStyle;
+use torchui::{
     AddSingletonModel, App, AppContext, Element, Entity, SingletonEntity, TypedActionView, View,
     WindowId,
 };

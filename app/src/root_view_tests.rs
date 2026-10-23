@@ -4,11 +4,11 @@ use onboarding::{
     UICustomizationSettings,
 };
 use session_sharing_protocol::common::SessionId;
-use warp_core::features::FeatureFlag;
-use warp_core::user_preferences::GetUserPreferences as _;
-use warpui::elements::Empty;
-use warpui::platform::WindowStyle;
-use warpui::{
+use torch_core::features::FeatureFlag;
+use torch_core::user_preferences::GetUserPreferences as _;
+use torchui::elements::Empty;
+use torchui::platform::WindowStyle;
+use torchui::{
     App, AppContext, Element, Entity, EntityId, SingletonEntity, TypedActionView, View, ViewHandle,
 };
 

@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use warp_core::channel::ChannelState;
-use warp_core::features::FeatureFlag;
-use warpui::{AppContext, Entity, EntityId, ModelContext, SingletonEntity, ViewHandle, WindowId};
+use torch_core::channel::ChannelState;
+use torch_core::features::FeatureFlag;
+use torchui::{AppContext, Entity, EntityId, ModelContext, SingletonEntity, ViewHandle, WindowId};
 
 use crate::BlocklistAIHistoryModel;
 use crate::ai::active_agent_views_model::{ActiveAgentViewsEvent, ActiveAgentViewsModel};

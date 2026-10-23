@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use warp_core::features::FeatureFlag;
-use warpui::App;
+use torch_core::features::FeatureFlag;
+use torchui::App;
 
 use super::ui_helpers::context_window_snap_values;
 use crate::LaunchMode;

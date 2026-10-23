@@ -1,7 +1,7 @@
-use warp_core::ui::appearance::Appearance;
-use warpui::elements::Empty;
-use warpui::platform::WindowStyle;
-use warpui::{
+use torch_core::ui::appearance::Appearance;
+use torchui::elements::Empty;
+use torchui::platform::WindowStyle;
+use torchui::{
     AddSingletonModel, App, AppContext, Element, Entity, TypedActionView, View, WindowId,
 };
 

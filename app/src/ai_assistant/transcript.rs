@@ -2,20 +2,20 @@ use markdown_parser::CodeBlockText;
 use markdown_parser::markdown_parser::RUNNABLE_BLOCK_MARKDOWN_LANG;
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
-use warp_core::ui::builder::AnimatedButtonOptions;
-use warpui::clipboard::ClipboardContent;
-use warpui::elements::{
+use torch_core::ui::builder::AnimatedButtonOptions;
+use torchui::clipboard::ClipboardContent;
+use torchui::elements::{
     Align, Border, ChildAnchor, ClippedScrollStateHandle, ClippedScrollable, ConstrainedBox,
     Container, CornerRadius, CrossAxisAlignment, DispatchEventResult, EventHandler, Fill, Flex,
     FormattedTextElement, HyperlinkUrl, Icon, MainAxisAlignment, MainAxisSize, MouseStateHandle,
     ParentAnchor, ParentElement, Radius, SavePosition, ScrollbarWidth, Shrinkable, Stack, Text,
     Wrap,
 };
-use warpui::keymap::Keystroke;
-use warpui::platform::Cursor;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::units::{IntoPixels, Pixels};
-use warpui::{
+use torchui::keymap::Keystroke;
+use torchui::platform::Cursor;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::units::{IntoPixels, Pixels};
+use torchui::{
     AppContext, BlurContext, Element, Entity, FocusContext, ModelHandle, SingletonEntity,
     TypedActionView, View, ViewContext, WeakViewHandle,
 };

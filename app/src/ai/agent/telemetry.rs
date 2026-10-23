@@ -1,5 +1,5 @@
 use serde::Serialize;
-use warpui::{AppContext, SingletonEntity};
+use torchui::{AppContext, SingletonEntity};
 
 use super::conversation::AIConversationId;
 use super::{AIAgentCitation, AIAgentExchangeId, ServerOutputId};

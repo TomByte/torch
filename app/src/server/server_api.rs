@@ -41,18 +41,18 @@ use team::TeamClient;
 #[cfg(feature = "tui")]
 use tui_onboarding::TuiOnboardingClient;
 use url::Url;
-use warp_core::context_flag::ContextFlag;
-use warp_errors::{AnyhowErrorExt, ErrorExt, register_error, report_error};
-use warp_server_client::HttpStatusError;
-use warp_server_client::auth::{AuthClientImpl, AuthEvent, EXPERIMENT_ID_HEADER};
-use warp_server_client::base_client::{
+use torch_core::context_flag::ContextFlag;
+use torch_errors::{AnyhowErrorExt, ErrorExt, register_error, report_error};
+use torch_server_client::HttpStatusError;
+use torch_server_client::auth::{AuthClientImpl, AuthEvent, EXPERIMENT_ID_HEADER};
+use torch_server_client::base_client::{
     AmbientHeaderPolicy, AuthenticatedGraphqlConfig, BaseClient, GraphqlRoutingConfig,
     HeaderOverride, TEAM_UID_HEADER,
 };
-use warp_server_client::iap::{IapManager, IapState};
-use warp_server_client::network_logging::NetworkLogModel;
-use warpui::r#async::BoxFuture;
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torch_server_client::iap::{IapManager, IapState};
+use torch_server_client::network_logging::NetworkLogModel;
+use torchui::r#async::BoxFuture;
+use torchui::{Entity, ModelContext, SingletonEntity};
 use workspace::WorkspaceClient;
 
 use super::experiments::{ServerExperiment, ServerExperiments};
@@ -579,7 +579,7 @@ impl ServerApi {
         .await
     }
 
-    pub fn send_graphql_request<'a, QF, O: warp_graphql::client::Operation<QF> + Send + 'a>(
+    pub fn send_graphql_request<'a, QF, O: torch_graphql::client::Operation<QF> + Send + 'a>(
         &'a self,
         operation: O,
         timeout: Option<Duration>,
@@ -587,14 +587,14 @@ impl ServerApi {
     where
         QF: 'a,
     {
-        warp_server_client::graphql_helpers::send_graphql_request(
+        torch_server_client::graphql_helpers::send_graphql_request(
             &self.base_client,
             operation,
             timeout,
         )
     }
 
-    fn send_graphql_request_for_team<'a, QF, O: warp_graphql::client::Operation<QF> + Send + 'a>(
+    fn send_graphql_request_for_team<'a, QF, O: torch_graphql::client::Operation<QF> + Send + 'a>(
         &'a self,
         operation: O,
         team_scope: RequestTeamScope,
@@ -604,14 +604,14 @@ impl ServerApi {
     {
         match Self::team_uid_header_value(team_scope) {
             Some(team_uid) => {
-                warp_server_client::graphql_helpers::send_team_scoped_graphql_request(
+                torch_server_client::graphql_helpers::send_team_scoped_graphql_request(
                     &self.base_client,
                     operation,
                     None,
                     team_uid,
                 )
             }
-            None => warp_server_client::graphql_helpers::send_graphql_request(
+            None => torch_server_client::graphql_helpers::send_graphql_request(
                 &self.base_client,
                 operation,
                 None,

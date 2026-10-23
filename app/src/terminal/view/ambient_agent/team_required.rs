@@ -1,9 +1,9 @@
-use warpui::elements::{
+use torchui::elements::{
     Align, ChildView, ConstrainedBox, Container, CrossAxisAlignment, Expanded, Flex, ParentElement,
     Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 

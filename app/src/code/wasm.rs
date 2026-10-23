@@ -1,9 +1,9 @@
 use std::path::{Path, PathBuf};
 
 use ai::diff_validation::DiffDelta;
-use warp_util::path::LineAndColumnArg;
-use warpui::elements::{DraggableState, Empty, MouseStateHandle};
-use warpui::{
+use torch_util::path::LineAndColumnArg;
+use torchui::elements::{DraggableState, Empty, MouseStateHandle};
+use torchui::{
     AppContext, Element, Entity, ModelHandle, TypedActionView, View, ViewContext, ViewHandle,
 };
 

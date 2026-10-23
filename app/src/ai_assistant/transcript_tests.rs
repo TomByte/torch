@@ -1,5 +1,5 @@
-use warpui::platform::WindowStyle;
-use warpui::{App, SingletonEntity};
+use torchui::platform::WindowStyle;
+use torchui::{App, SingletonEntity};
 
 use super::Transcript;
 use crate::ai::AIRequestUsageModel;

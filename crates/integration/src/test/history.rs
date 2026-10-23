@@ -1,23 +1,23 @@
 use std::collections::HashMap;
 
 use settings::Setting as _;
-use warp::integration_testing::command_search::{
+use torch::integration_testing::command_search::{
     assert_command_search_has_results, assert_command_search_is_open,
     assert_history_filter_is_active,
 };
-use warp::integration_testing::input::assert_workflow_info_box_is_open;
-use warp::integration_testing::step::new_step_with_default_assertions;
-use warp::integration_testing::terminal::{
+use torch::integration_testing::input::assert_workflow_info_box_is_open;
+use torch::integration_testing::step::new_step_with_default_assertions;
+use torch::integration_testing::terminal::{
     assert_input_editor_contents, wait_until_bootstrapped_single_pane_for_tab,
 };
-use warp::integration_testing::view_getters::single_input_view;
-use warp::integration_testing::{self};
-use warp::search::command_search::settings::ShowGlobalWorkflowsInUniversalSearch;
-use warp::sqlite_testing::set_user_and_hostname_for_commands;
-use warp::terminal::input::Input;
-use warp::terminal::model::session::get_local_hostname;
-use warp::terminal::shell::ShellType;
-use warpui_core::{ViewHandle, async_assert};
+use torch::integration_testing::view_getters::single_input_view;
+use torch::integration_testing::{self};
+use torch::search::command_search::settings::ShowGlobalWorkflowsInUniversalSearch;
+use torch::sqlite_testing::set_user_and_hostname_for_commands;
+use torch::terminal::input::Input;
+use torch::terminal::model::session::get_local_hostname;
+use torch::terminal::shell::ShellType;
+use torchui_core::{ViewHandle, async_assert};
 
 use super::{TEST_ONLY_ASSETS, new_builder};
 use crate::Builder;

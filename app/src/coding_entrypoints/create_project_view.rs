@@ -1,12 +1,12 @@
-use warp_core::send_telemetry_from_ctx;
-use warp_core::ui::icons::Icon;
-use warpui::elements::{
+use torch_core::send_telemetry_from_ctx;
+use torch_core::ui::icons::Icon;
+use torchui::elements::{
     ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Expanded, Fill, Flex,
     Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement as _, Radius, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::platform::Cursor;
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::platform::Cursor;
+use torchui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity as _, TypedActionView, View,
     ViewContext, ViewHandle,
 };

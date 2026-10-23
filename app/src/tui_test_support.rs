@@ -1,4 +1,4 @@
-//! Test-only app initialization used by the external `warp_tui` crate.
+//! Test-only app initialization used by the external `torch_tui` crate.
 use std::collections::{HashMap, HashSet};
 use std::future::Future;
 use std::sync::Arc;
@@ -6,10 +6,10 @@ use std::sync::Arc;
 use ai::api_keys::ApiKeyManager;
 use ai::index::full_source_code_embedding::manager::CodebaseIndexManager;
 use chrono::{Duration, Local};
-use warp_cli::agent::Harness;
-use warp_core::SessionId;
-use warp_core::execution_mode::{AppExecutionMode, ExecutionMode};
-use warpui::{AppContext, ModelContext, ModelHandle, SingletonEntity as _};
+use torch_cli::agent::Harness;
+use torch_core::SessionId;
+use torch_core::execution_mode::{AppExecutionMode, ExecutionMode};
+use torchui::{AppContext, ModelContext, ModelHandle, SingletonEntity as _};
 
 use crate::LaunchMode;
 use crate::ai::active_agent_views_model::ActiveAgentViewsModel;
@@ -255,7 +255,7 @@ pub fn register_tui_input_mode_test_settings(ctx: &mut AppContext) {
     init_and_register_user_preferences(ctx);
     ctx.add_singleton_model(|_| SettingsManager::default());
     ctx.add_singleton_model(WarpConfig::mock);
-    warpui_extras::secure_storage::register_noop("test", ctx);
+    torchui_extras::secure_storage::register_noop("test", ctx);
     ctx.add_singleton_model(|_| ServerApiProvider::new_for_test());
     ctx.add_singleton_model(|_| AuthStateProvider::new_for_test());
     AISettings::register_and_subscribe_to_events(ctx);
@@ -341,14 +341,14 @@ pub fn queue_tui_permission_action(
 /// Registers the app models required to construct full TUI session views in tests.
 ///
 /// Registration order mirrors model subscription dependencies.
-pub fn register_tui_session_view_test_singletons(app: &mut warpui::App) {
+pub fn register_tui_session_view_test_singletons(app: &mut torchui::App) {
     app.add_singleton_model(|ctx| AppExecutionMode::new(ExecutionMode::App, false, ctx));
-    app.update(warp_core::telemetry::testing::MockTelemetryContextProvider::register);
+    app.update(torch_core::telemetry::testing::MockTelemetryContextProvider::register);
     app.update(init_and_register_user_preferences);
     app.add_singleton_model(|_| SettingsManager::default());
     app.add_singleton_model(WarpConfig::mock);
     app.update(|ctx| {
-        warpui_extras::secure_storage::register_noop("test", ctx);
+        torchui_extras::secure_storage::register_noop("test", ctx);
     });
     app.update(AISettings::register_and_subscribe_to_events);
     app.update(TuiVoiceSettings::register);

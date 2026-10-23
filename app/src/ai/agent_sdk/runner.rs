@@ -4,23 +4,23 @@ use anyhow::{Result, anyhow};
 use chrono::{DateTime, Utc};
 use comfy_table::Cell;
 use serde::Serialize;
-use warp_cli::GlobalOptions;
-use warp_cli::agent::OutputFormat;
-use warp_cli::runner::{
+use torch_cli::GlobalOptions;
+use torch_cli::agent::OutputFormat;
+use torch_cli::runner::{
     CreateRunnerArgs, DeleteRunnerArgs, ListRunnersArgs, RunnerArchArg, RunnerCommand,
     RunnerMacosVersionArg, RunnerOsArg, RunnerSortByArg, UpdateRunnerArgs, validate_os_config,
 };
-use warp_cli::scope::ObjectScope;
-use warp_graphql::mutations::upsert_runner::{
+use torch_cli::scope::ObjectScope;
+use torch_graphql::mutations::upsert_runner::{
     LinuxConfigInput, MacOsConfigInput, RunnerInput, RunnerInstanceShapeInput, UpsertRunnerInput,
 };
-use warp_graphql::object::SpaceType;
-use warp_graphql::object_permissions::Owner as GqlOwner;
-use warp_graphql::queries::get_runners::{
+use torch_graphql::object::SpaceType;
+use torch_graphql::object_permissions::Owner as GqlOwner;
+use torch_graphql::queries::get_runners::{
     Runner, RunnerArch, RunnerConfig, RunnerMacOsVersion, RunnerOs, RunnerSortBy,
 };
-use warpui::platform::TerminationMode;
-use warpui::{AppContext, ModelContext, SingletonEntity};
+use torchui::platform::TerminationMode;
+use torchui::{AppContext, ModelContext, SingletonEntity};
 
 use super::output::{self, TableFormat};
 use crate::ai::runner_display::{arch_display, macos_version_display, os_display};
@@ -227,7 +227,7 @@ impl RunnerCommandRunner {
     }
 }
 
-impl warpui::Entity for RunnerCommandRunner {
+impl torchui::Entity for RunnerCommandRunner {
     type Event = ();
 }
 impl SingletonEntity for RunnerCommandRunner {}

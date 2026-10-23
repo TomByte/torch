@@ -1,9 +1,9 @@
 use fuzzy_match::FuzzyMatchResult;
 use ordered_float::OrderedFloat;
-use warpui::elements::{
+use torchui::elements::{
     ConstrainedBox, Container, CrossAxisAlignment, Flex, Icon, ParentElement, Text,
 };
-use warpui::{AppContext, Element, SingletonEntity};
+use torchui::{AppContext, Element, SingletonEntity};
 
 use crate::appearance::Appearance;
 use crate::code_review::diff_state::DiffMode;

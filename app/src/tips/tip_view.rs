@@ -1,16 +1,16 @@
 use pathfinder_geometry::vector::vec2f;
-use warpui::elements::{
+use torchui::elements::{
     Align, Border, ChildAnchor, ClippedScrollStateHandle, ClippedScrollable, ConstrainedBox,
     Container, CornerRadius, CrossAxisAlignment, DispatchEventResult, Element, EventHandler, Flex,
     Hoverable, Icon, MouseStateHandle, OffsetPositioning, ParentElement, PositionedElementAnchor,
     PositionedElementOffsetBounds, Radius, ScrollbarWidth, Shrinkable, Stack,
 };
-use warpui::fonts::Weight;
-use warpui::keymap::{FixedBinding, Keystroke};
-use warpui::platform::Cursor;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::fonts::Weight;
+use torchui::keymap::{FixedBinding, Keystroke};
+use torchui::platform::Cursor;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{
     Action, AppContext, BlurContext, Entity, EntityId, ModelHandle, SingletonEntity,
     TypedActionView, View, ViewContext, WindowId,
 };
@@ -90,7 +90,7 @@ pub enum TipsAction {
 }
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings(vec![FixedBinding::new(
         "escape",

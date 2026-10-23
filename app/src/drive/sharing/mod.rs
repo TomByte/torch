@@ -2,11 +2,11 @@ use std::borrow::Cow;
 
 use chrono::{DateTime, Local};
 use session_sharing_protocol::common::SessionId;
-use warp_core::channel::ChannelState;
-use warp_core::ui::appearance::Appearance;
-use warpui::color::ColorU;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{AppContext, SingletonEntity, WeakViewHandle};
+use torch_core::channel::ChannelState;
+use torch_core::ui::appearance::Appearance;
+use torchui::color::ColorU;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{AppContext, SingletonEntity, WeakViewHandle};
 
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::blocklist::BlocklistAIHistoryModel;

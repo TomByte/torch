@@ -1,6 +1,6 @@
-use warp_core::ui::appearance::Appearance;
-use warpui::elements::{Container, CrossAxisAlignment, Element, Flex, ParentElement, Text};
-use warpui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext};
+use torch_core::ui::appearance::Appearance;
+use torchui::elements::{Container, CrossAxisAlignment, Element, Flex, ParentElement, Text};
+use torchui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext};
 
 use super::search_results_common::{
     CollapsibleSearchResultsState, render_collapsible_search_results,

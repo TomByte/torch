@@ -1,15 +1,15 @@
 use settings::macros::define_settings_group;
 use settings::{RespectUserSyncSetting, Setting, SupportedPlatforms, SyncToCloud};
-use warp_core::ui::builder::MIN_FONT_SIZE;
-use warpui::elements::DEFAULT_UI_LINE_HEIGHT_RATIO;
-use warpui::fonts::Weight;
-use warpui::rendering::ThinStrokes;
-use warpui::{AppContext, SingletonEntity};
+use torch_core::ui::builder::MIN_FONT_SIZE;
+use torchui::elements::DEFAULT_UI_LINE_HEIGHT_RATIO;
+use torchui::fonts::Weight;
+use torchui::rendering::ThinStrokes;
+use torchui::{AppContext, SingletonEntity};
 
 use super::EnforceMinimumContrast as EnforceMinimumContrastEnum;
 
 pub const DEFAULT_MONOSPACE_FONT_NAME: &str = "Hack";
-pub const DEFAULT_MONOSPACE_FONT_SIZE: f32 = if warp_core::channel::ChannelState::is_local_only() {
+pub const DEFAULT_MONOSPACE_FONT_SIZE: f32 = if torch_core::channel::ChannelState::is_local_only() {
     14.0
 } else {
     13.0
@@ -53,7 +53,7 @@ define_settings_group!(FontSettings,
         },
         line_height_ratio: LineHeightRatio {
             type: f32,
-            default: if warp_core::channel::ChannelState::is_local_only() { 1.3 } else { DEFAULT_UI_LINE_HEIGHT_RATIO },
+            default: if torch_core::channel::ChannelState::is_local_only() { 1.3 } else { DEFAULT_UI_LINE_HEIGHT_RATIO },
             supported_platforms: SupportedPlatforms::ALL,
             sync_to_cloud: SyncToCloud::Never,
             surface: settings::SettingSurfaces::GUI,

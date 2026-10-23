@@ -1,6 +1,6 @@
 use fuzzy_match::match_indices_case_insensitive;
 use itertools::Itertools;
-use warpui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
+use torchui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
 
 use super::ProjectSearchItem;
 use crate::projects::ProjectManagementModel;

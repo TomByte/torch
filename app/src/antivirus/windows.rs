@@ -1,5 +1,5 @@
-use warp_core::send_telemetry_from_ctx;
-use warpui::ModelContext;
+use torch_core::send_telemetry_from_ctx;
+use torchui::ModelContext;
 use windows::Win32::System::Com::{
     CLSCTX_ALL, COINIT_APARTMENTTHREADED, CoCreateInstance, CoInitializeEx, CoUninitialize,
 };

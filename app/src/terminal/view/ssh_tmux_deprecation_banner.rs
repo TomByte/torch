@@ -6,14 +6,14 @@
 //! `ssh_tmux_deprecation_notice_pending` setting, which is set by a one-time migration and
 //! cleared by the parent [`crate::terminal::TerminalView`] once the banner is shown.
 
-use warp_core::ui::theme::color::internal_colors;
-use warpui::elements::{
+use torch_core::ui::theme::color::internal_colors;
+use torchui::elements::{
     Align, ConstrainedBox, Container, CrossAxisAlignment, Flex, Hoverable, MainAxisAlignment,
     MainAxisSize, MouseStateHandle, ParentElement, Shrinkable, Text,
 };
-use warpui::platform::Cursor;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
+use torchui::platform::Cursor;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
 
 use crate::Appearance;
 use crate::terminal::model::session::SessionId;

@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use hashbrown::HashMap;
 use indexmap::IndexMap;
 use warp_multi_agent_api as api;
-use warp_util::hashed::Hashed;
+use torch_util::hashed::Hashed;
 
 use super::task::helper::{MessageExt, ToolCallExt};
 use super::task::{Task, TaskId};

@@ -1,5 +1,5 @@
 use ai::agent::action::RunAgentsExecutionMode;
-use warpui::{App, AppContext, Entity};
+use torchui::{App, AppContext, Entity};
 
 use super::{
     accept_disabled_reason_with_auth, empty_env_recommendation_message, harness_is_selectable,
@@ -25,8 +25,8 @@ fn pi_orchestration_requires_cloud_execution() {
             accept_disabled_reason_with_auth(&state, ctx).as_deref(),
             Some("Pi child agents require Cloud execution."),
         );
-        assert!(!harness_is_selectable(warp_cli::agent::Harness::Pi, true));
-        assert!(harness_is_selectable(warp_cli::agent::Harness::Pi, false));
+        assert!(!harness_is_selectable(torch_cli::agent::Harness::Pi, true));
+        assert!(harness_is_selectable(torch_cli::agent::Harness::Pi, false));
     });
 }
 

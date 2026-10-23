@@ -1,7 +1,7 @@
 use settings::macros::define_settings_group;
 use settings::{RespectUserSyncSetting, Setting, SupportedPlatforms, SyncToCloud};
-use warpui::AppContext;
-use warpui::platform::SystemTheme;
+use torchui::AppContext;
+use torchui::platform::SystemTheme;
 
 use crate::themes::theme::{RespectSystemTheme, SelectedSystemThemes, ThemeKind};
 
@@ -16,7 +16,7 @@ define_settings_group!(ThemeSettings, settings: [
         type: ThemeKind,
         // Note that for new users, we now override this default value in SettingsInitializer
         // to set the default theme to Phenomenon.
-        default: if warp_core::channel::ChannelState::is_local_only() { ThemeKind::Light } else { ThemeKind::default() },
+        default: if torch_core::channel::ChannelState::is_local_only() { ThemeKind::Light } else { ThemeKind::default() },
         supported_platforms: SupportedPlatforms::ALL,
         sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
         surface: settings::SettingSurfaces::GUI,
@@ -65,7 +65,7 @@ impl SystemThemes {
 }
 
 pub(crate) fn available_theme(kind: &ThemeKind) -> ThemeKind {
-    if warp_core::channel::ChannelState::is_local_only() {
+    if torch_core::channel::ChannelState::is_local_only() {
         kind.torch_compatible()
     } else {
         kind.clone()

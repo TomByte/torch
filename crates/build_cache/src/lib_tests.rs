@@ -11,7 +11,7 @@ use async_io::Timer;
 use command::r#async::Command;
 #[cfg(unix)]
 use instant::Instant;
-use warp_errors::ErrorExt as _;
+use torch_errors::ErrorExt as _;
 
 use super::{
     CacheConfiguration, CacheScope, CacheSetupError, CacheSetupPlan, CacheSetupReport,

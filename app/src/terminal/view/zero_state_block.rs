@@ -1,17 +1,17 @@
 use settings::Setting;
-use warp_core::ui::Icon;
-use warp_errors::report_if_error;
-use warpui::elements::{
+use torch_core::ui::Icon;
+use torch_errors::report_if_error;
+use torchui::elements::{
     ChildAnchor, Container, CrossAxisAlignment, Flex, MainAxisSize, OffsetPositioning,
     ParentAnchor, ParentElement, ParentOffsetBounds, Shrinkable, Stack, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::keymap::Keystroke;
-use warpui::prelude::{ConstrainedBox, Cursor, Empty, Hoverable, MouseStateHandle, vec2f};
-use warpui::scene::{Border, CornerRadius, Radius};
-use warpui::ui_components::checkbox::Checkbox;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::keymap::Keystroke;
+use torchui::prelude::{ConstrainedBox, Cursor, Empty, Hoverable, MouseStateHandle, vec2f};
+use torchui::scene::{Border, CornerRadius, Radius};
+use torchui::ui_components::checkbox::Checkbox;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
 };
 

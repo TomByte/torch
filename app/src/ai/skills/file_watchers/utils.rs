@@ -7,10 +7,10 @@ use ai::skills::{
 use anyhow::Error;
 use repo_metadata::{RepoMetadataModel, RepositoryIdentifier};
 use walkdir::{DirEntry, WalkDir};
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warp_util::remote_path::RemotePath;
-use warp_util::standardized_path::StandardizedPath;
-use warpui::AppContext;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torch_util::remote_path::RemotePath;
+use torch_util::standardized_path::StandardizedPath;
+use torchui::AppContext;
 
 use crate::warp_managed_paths_watcher::warp_managed_skill_dirs;
 

@@ -7,7 +7,7 @@ fn planned_environment_becomes_the_next_recovery_baseline() {
     use crate::terminal::local_tty::shell::DirectShellStarter;
     use crate::terminal::shell::ShellType;
 
-    warpui::App::test((), |mut app| async move {
+    torchui::App::test((), |mut app| async move {
         let init = app.update(TerminalSurfaceInit::new_for_test);
         let mut resources = ShellRecoveryResources {
             starter: ShellStarter::Direct(DirectShellStarter::new_for_test(
@@ -56,7 +56,7 @@ fn replacement_join_returns_without_waiting_for_a_stuck_loop() {
         mio_channel::channel().1
     });
     let started = Instant::now();
-    let result = warpui::r#async::block_on(join_event_loop(handle, Duration::ZERO));
+    let result = torchui::r#async::block_on(join_event_loop(handle, Duration::ZERO));
     assert!(result.err().unwrap().to_string().contains("timeout"));
     assert!(started.elapsed() < Duration::from_secs(1));
     release_tx.send(()).unwrap();
@@ -69,7 +69,7 @@ fn replacement_join_returns_the_original_channel() {
     while !handle.is_finished() {
         std::thread::yield_now();
     }
-    let receiver = warpui::r#async::block_on(join_event_loop(handle, Duration::ZERO)).unwrap();
+    let receiver = torchui::r#async::block_on(join_event_loop(handle, Duration::ZERO)).unwrap();
     sender.send(Message::ShutdownForReplacement).unwrap();
     assert!(matches!(
         receiver.try_recv(),

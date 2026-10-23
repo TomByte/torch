@@ -6,9 +6,9 @@ use std::sync::Arc;
 
 use typed_path::{TypedPath, TypedPathBuf};
 #[cfg(unix)]
-use warp_completer::completer::EngineDirEntry;
-use warp_completer::signatures::CommandRegistry;
-use warpui::App;
+use torch_completer::completer::EngineDirEntry;
+use torch_completer::signatures::CommandRegistry;
+use torchui::App;
 
 use crate::completer::SessionContext;
 use crate::terminal::model::session::command_executor::testing::TestCommandExecutor;
@@ -43,7 +43,7 @@ fn test_list_entries_follows_symlinks_and_succeeds() {
                 let cwd = TypedPathBuf::from(dirs.tests().to_string_lossy().as_bytes());
                 let ctx = test_session_context(test_wsl_like_session(), cwd.clone(), &app);
 
-                let entries = warpui::r#async::block_on(super::list_entries(&ctx, &cwd.to_path()))
+                let entries = torchui::r#async::block_on(super::list_entries(&ctx, &cwd.to_path()))
                     .expect("guest listing should succeed against a real local shell");
 
                 let mut entries = HashSet::<EngineDirEntry>::from_iter(entries);
@@ -72,7 +72,7 @@ fn test_list_entries_returns_none_on_guest_failure() {
         let directory = TypedPath::unix("/definitely/does/not/exist/on/this/machine");
         let ctx = test_session_context(test_wsl_like_session(), directory.to_path_buf(), &app);
 
-        let result = warpui::r#async::block_on(super::list_entries(&ctx, &directory));
+        let result = torchui::r#async::block_on(super::list_entries(&ctx, &directory));
         assert_eq!(result, None);
     });
 }
@@ -86,7 +86,7 @@ fn test_run_guest_listing_returns_none_on_timeout() {
             &app,
         );
 
-        let result = warpui::r#async::block_on(super::run_guest_listing(
+        let result = torchui::r#async::block_on(super::run_guest_listing(
             &ctx,
             "sleep 5",
             super::GUEST_LISTING_TIMEOUT,

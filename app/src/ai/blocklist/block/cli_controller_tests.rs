@@ -1,4 +1,4 @@
-use warpui::{App, ViewHandle};
+use torchui::{App, ViewHandle};
 
 use super::*;
 use crate::terminal::TerminalView;

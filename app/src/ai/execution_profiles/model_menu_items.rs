@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
 use itertools::Itertools;
-use warp_core::ui::Icon;
-use warpui::elements::{
+use torch_core::ui::Icon;
+use torchui::elements::{
     ConstrainedBox, Container, CrossAxisAlignment, Flex, ParentElement, SavePosition, Shrinkable,
     Text,
 };
-use warpui::fonts::{Properties, Style};
-use warpui::{Action, AppContext, Element, SingletonEntity as _};
+use torchui::fonts::{Properties, Style};
+use torchui::{Action, AppContext, Element, SingletonEntity as _};
 
 use crate::ai::agent::conversation::AIConversation;
 use crate::ai::custom_model_routers::is_custom_router_id;

@@ -6,8 +6,8 @@ use session_sharing_protocol::common::{
     CLIAgentSessionState, InputMode, InputType as ProtocolInputType, SelectedAgentModel,
     SelectedConversation, ServerConversationToken, UniversalDeveloperInputContextUpdate,
 };
-use warp_core::features::FeatureFlag;
-use warpui::{AppContext, ModelHandle, SingletonEntity, WeakViewHandle};
+use torch_core::features::FeatureFlag;
+use torchui::{AppContext, ModelHandle, SingletonEntity, WeakViewHandle};
 
 use crate::ai::blocklist::agent_view::{AgentViewController, AgentViewEntryOrigin};
 use crate::ai::blocklist::{BlocklistAIContextModel, BlocklistAIHistoryModel, InputConfig};
@@ -23,7 +23,7 @@ use crate::workspaces::user_workspaces::{ResolvedTeamScope, UserWorkspaces};
 /// This function is shared between the viewer and sharer to ensure consistent behavior.
 pub(crate) fn apply_selected_agent_model_update(
     weak_view_handle: &WeakViewHandle<TerminalView>,
-    terminal_view_id: warpui::EntityId,
+    terminal_view_id: torchui::EntityId,
     selected_model: &SelectedAgentModel,
     _guard: &ActiveRemoteUpdate,
     ctx: &mut AppContext,

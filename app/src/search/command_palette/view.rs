@@ -4,18 +4,18 @@ use std::sync::Arc;
 
 use itertools::Itertools;
 use lazy_static::lazy_static;
-use warp_core::send_telemetry_from_app_ctx;
-use warp_util::path::LineAndColumnArg;
-use warpui::elements::{
+use torch_core::send_telemetry_from_app_ctx;
+use torch_util::path::LineAndColumnArg;
+use torchui::elements::{
     Align, Border, ChildView, Clipped, ClippedScrollStateHandle, ClippedScrollable, ConstrainedBox,
     Container, CornerRadius, Dismiss, DispatchEventResult, Empty, EventHandler, Fill, Flex,
     ParentElement, Radius, SavePosition, Shrinkable,
 };
-use warpui::event::KeyState;
-use warpui::keymap::BindingId;
-use warpui::platform::keyboard::KeyCode;
-use warpui::units::{IntoPixels, Pixels};
-use warpui::{
+use torchui::event::KeyState;
+use torchui::keymap::BindingId;
+use torchui::platform::keyboard::KeyCode;
+use torchui::units::{IntoPixels, Pixels};
+use torchui::{
     AppContext, Element, Entity, EntityId, FocusContext, ModelHandle, SingletonEntity,
     TypedActionView, ViewContext, ViewHandle, WindowId,
 };
@@ -52,7 +52,7 @@ use crate::{ToastStack, send_telemetry_from_ctx};
 
 lazy_static! {
     /// Set of hardcoded action names that we want to show in the command palette zero state.
-    static ref SUGGESTED_ACTIONS: HashSet<&'static str> = if warp_core::channel::ChannelState::is_local_only() {
+    static ref SUGGESTED_ACTIONS: HashSet<&'static str> = if torch_core::channel::ChannelState::is_local_only() {
         HashSet::from(["workspace:show_theme_chooser"])
     } else {
         HashSet::from_iter(
@@ -183,7 +183,7 @@ impl TypedActionView for View {
     }
 }
 
-impl warpui::View for View {
+impl torchui::View for View {
     fn ui_name() -> &'static str {
         "CommandPaletteView"
     }
@@ -264,7 +264,7 @@ impl View {
         let search_bar_state = ctx.add_model(|_ctx| {
             let state = SearchBarState::new(SearchResultOrdering::TopDown)
                 .with_max_results(MAX_SEARCH_RESULTS);
-            if warp_core::channel::ChannelState::is_local_only() {
+            if torch_core::channel::ChannelState::is_local_only() {
                 state.show_results_on_empty()
             } else {
                 state
@@ -325,7 +325,7 @@ impl View {
             let search_bar = SearchBar::new(
                 mixer.clone(),
                 search_bar_state.clone(),
-                if warp_core::channel::ChannelState::is_local_only() {
+                if torch_core::channel::ChannelState::is_local_only() {
                     "Search projects, sessions, and actions"
                 } else {
                     "Search for a command"
@@ -334,7 +334,7 @@ impl View {
                 ctx,
             )
             .with_font_family(ui_font_family, ctx);
-            if warp_core::channel::ChannelState::is_local_only() {
+            if torch_core::channel::ChannelState::is_local_only() {
                 search_bar.with_text_colors(
                     |appearance| {
                         use crate::util::color::{ContrastingColor, MinimumAllowedContrast};
@@ -1116,11 +1116,11 @@ impl View {
         self.close(ctx, Some(result_action.result_type()));
     }
 
-    /// Dispatches `action` to the correct window and [`warpui::View`] by using the current state of
+    /// Dispatches `action` to the correct window and [`torchui::View`] by using the current state of
     /// the [`BindingSource`] model.
     fn dispatch_typed_action_on_view(
         &self,
-        action: &dyn warpui::Action,
+        action: &dyn torchui::Action,
         ctx: &mut ViewContext<Self>,
     ) {
         send_telemetry_from_ctx!(

@@ -3,9 +3,9 @@ use settings_page::{
     Category, CategoryHeader, FilteredPageType, MatchData, PageTitle, PageType, SettingsWidget,
     categories_with_visible_content, search_terms_match,
 };
-use warpui::elements::Empty;
-use warpui::platform::WindowStyle;
-use warpui::{
+use torchui::elements::Empty;
+use torchui::platform::WindowStyle;
+use torchui::{
     App, AppContext, Element, Entity, Presenter, TypedActionView, View, WindowInvalidation,
 };
 

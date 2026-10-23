@@ -9,10 +9,10 @@ use std::sync::LazyLock;
 use dirs::home_dir;
 use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumString, VariantNames};
-use warp_core::ui::color::CLAUDE_ORANGE;
-use warp_core::ui::icons::Icon;
-use warp_core::ui::theme::Fill;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
+use torch_core::ui::color::CLAUDE_ORANGE;
+use torch_core::ui::icons::Icon;
+use torch_core::ui::theme::Fill;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
 
 /// Represents a skill provider/origin (Agents, Claude, Codex, or Warp).
 #[derive(
@@ -165,7 +165,7 @@ pub fn provider_rank(provider: SkillProvider) -> usize {
 
 pub fn home_skills_path(provider: SkillProvider) -> Option<PathBuf> {
     if provider == SkillProvider::Warp {
-        return warp_core::paths::warp_home_skills_dir();
+        return torch_core::paths::warp_home_skills_dir();
     }
     let definition = SKILL_PROVIDER_DEFINITIONS
         .iter()

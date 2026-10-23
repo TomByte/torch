@@ -1,19 +1,19 @@
 use pathfinder_color::ColorU;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::builder::UiBuilder;
-use warp_core::ui::color::{darken, lighten};
-use warp_core::ui::theme::ColorScheme;
-use warpui::assets::asset_cache::AssetSource;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::builder::UiBuilder;
+use torch_core::ui::color::{darken, lighten};
+use torch_core::ui::theme::ColorScheme;
+use torchui::assets::asset_cache::AssetSource;
+use torchui::elements::{
     Border, CacheOption, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Fill, Flex,
     Image, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, Shrinkable,
 };
-use warpui::fonts::Weight;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::ui_components::switch::SwitchStateHandle;
-use warpui::{Action, AppContext, Element, SingletonEntity as _};
+use torchui::fonts::Weight;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::ui_components::switch::SwitchStateHandle;
+use torchui::{Action, AppContext, Element, SingletonEntity as _};
 
 use crate::settings::PrivacySettings;
 use crate::themes::theme::ThemeKind;

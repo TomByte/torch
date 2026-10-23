@@ -11,7 +11,7 @@ use rmcp::model::{
 use rmcp::service::PeerRequestOptions;
 use rmcp::{Peer, RoleClient, ServiceError};
 use uuid::Uuid;
-use warpui::r#async::Timer;
+use torchui::r#async::Timer;
 
 /// Total connection, dispatch, and response budget for one tool call.
 pub const TOOL_CALL_TIMEOUT: Duration = Duration::from_secs(30 * 60);

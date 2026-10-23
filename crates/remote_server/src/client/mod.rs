@@ -7,7 +7,7 @@ use std::time::Duration;
 use dashmap::DashMap;
 use futures::channel::oneshot;
 use futures::io::{AsyncRead, AsyncWrite};
-use warpui_core::r#async::{FutureExt as _, executor};
+use torchui_core::r#async::{FutureExt as _, executor};
 
 use crate::codebase_index_proto::{
     RemoteCodebaseIndexStatus, proto_to_codebase_index_status_updated,
@@ -28,10 +28,10 @@ use crate::repo_metadata_proto::{proto_snapshot_to_update, proto_to_repo_metadat
 mod remote_server_log;
 #[cfg(not(target_family = "wasm"))]
 pub use remote_server_log::RemoteServerLog;
-use warp_core::{SessionId, safe_error, safe_warn};
-use warp_errors::report_error;
-use warp_util::standardized_path::StandardizedPath;
-use warpui_core::r#async::TransportStream;
+use torch_core::{SessionId, safe_error, safe_warn};
+use torch_errors::report_error;
+use torch_util::standardized_path::StandardizedPath;
+use torchui_core::r#async::TransportStream;
 
 use crate::protocol::{self, ProtocolError, RequestId};
 

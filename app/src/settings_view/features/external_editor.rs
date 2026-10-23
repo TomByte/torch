@@ -2,12 +2,12 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 
 use settings::{Setting, ToggleableSetting};
-use warp_core::features::FeatureFlag;
-use warp_errors::report_if_error;
-use warpui::elements::{Flex, MouseStateHandle, ParentElement};
-use warpui::ui_components::components::UiComponent;
-use warpui::ui_components::switch::SwitchStateHandle;
-use warpui::{Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
+use torch_core::features::FeatureFlag;
+use torch_errors::report_if_error;
+use torchui::elements::{Flex, MouseStateHandle, ParentElement};
+use torchui::ui_components::components::UiComponent;
+use torchui::ui_components::switch::SwitchStateHandle;
+use torchui::{Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
 
 use crate::appearance::Appearance;
 use crate::send_telemetry_from_ctx;
@@ -274,7 +274,7 @@ impl View for ExternalEditorView {
         "ExternalEditorView"
     }
 
-    fn render(&self, app: &warpui::AppContext) -> Box<dyn warpui::Element> {
+    fn render(&self, app: &torchui::AppContext) -> Box<dyn torchui::Element> {
         let appearance = Appearance::as_ref(app);
 
         let default_editor = render_dropdown_item(

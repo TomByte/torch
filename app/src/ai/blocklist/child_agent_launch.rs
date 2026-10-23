@@ -4,7 +4,7 @@ use std::collections::HashMap;
 #[cfg(not(target_family = "wasm"))]
 use std::future::Future;
 
-use warpui::{AppContext, EntityId, SingletonEntity as _};
+use torchui::{AppContext, EntityId, SingletonEntity as _};
 #[cfg(not(target_family = "wasm"))]
 use {
     crate::ai::agent::conversation::AIConversationId,

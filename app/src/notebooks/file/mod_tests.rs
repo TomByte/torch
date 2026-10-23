@@ -7,14 +7,14 @@ use repo_metadata::RepoMetadataModel;
 use repo_metadata::repositories::DetectedRepositories;
 use repo_metadata::watcher::DirectoryWatcher;
 use string_offset::CharOffset;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::appearance::Appearance;
-use warp_editor::render::model::BlockItem;
+use torch_core::features::FeatureFlag;
+use torch_core::ui::appearance::Appearance;
+use torch_editor::render::model::BlockItem;
 #[cfg(feature = "local_fs")]
-use warp_files::FileModel;
-use warpui::keymap::Keystroke;
-use warpui::platform::WindowStyle;
-use warpui::{App, SingletonEntity, View};
+use torch_files::FileModel;
+use torchui::keymap::Keystroke;
+use torchui::platform::WindowStyle;
+use torchui::{App, SingletonEntity, View};
 
 use super::{
     FileNotebookAction, FileNotebookView, FileState, MarkdownDisplayMode, SourceFile,
@@ -371,14 +371,14 @@ fn test_file_notebook_mermaid_blocks_default_to_rendered() {
 #[cfg(feature = "local_fs")]
 #[test]
 fn test_reload_and_discard_after_failed_open() {
-    use warpui::TypedActionView;
+    use torchui::TypedActionView;
 
     /// Opens the notebook's current file and waits for the read to settle.
     async fn await_open(
-        app: &mut warpui::App,
-        handle: &warpui::ViewHandle<FileNotebookView>,
-        open: impl FnOnce(&mut FileNotebookView, &mut warpui::ViewContext<FileNotebookView>),
-    ) -> warp_util::file::FileId {
+        app: &mut torchui::App,
+        handle: &torchui::ViewHandle<FileNotebookView>,
+        open: impl FnOnce(&mut FileNotebookView, &mut torchui::ViewContext<FileNotebookView>),
+    ) -> torch_util::file::FileId {
         let (file_id, future) = handle.update(app, |file_notebook, ctx| {
             open(file_notebook, ctx);
             let file_id = file_notebook.file_id.expect("File should have a file_id");

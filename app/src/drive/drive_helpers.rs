@@ -1,7 +1,7 @@
-use warp_server_auth::AuthStateProvider;
-use warp_server_auth::auth_state::AuthState;
-use warp_server_auth::user::PersonalObjectLimits;
-use warpui::{AppContext, SingletonEntity};
+use torch_server_auth::AuthStateProvider;
+use torch_server_auth::auth_state::AuthState;
+use torch_server_auth::user::PersonalObjectLimits;
+use torchui::{AppContext, SingletonEntity};
 
 use crate::auth::auth_manager::AuthManager;
 use crate::cloud_object::Space;

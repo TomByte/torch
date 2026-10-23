@@ -3,8 +3,8 @@
 //! [`crate::workspaces::user_workspaces::team_workspace_settings`] for the workspace-vs-team
 //! two-layer model and the team-scoped policies that layer on top.
 
-use warp_core::features::FeatureFlag;
-use warpui::{AppContext, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torchui::{AppContext, SingletonEntity};
 
 use super::UserWorkspaces;
 use crate::auth::AuthStateProvider;

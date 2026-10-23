@@ -2,7 +2,7 @@ use std::cell::Cell;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use warpui::App;
+use torchui::App;
 
 use super::*;
 use crate::ai::aws_credentials::AwsCredentialRefresher;

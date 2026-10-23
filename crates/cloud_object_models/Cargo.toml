@@ -30,11 +30,11 @@ settings_value = { workspace = true, features = ["derive"] }
 uuid.workspace = true
 url.workspace = true
 warp-workflows.workspace = true
-warp_cli.workspace = true
-warp_core.workspace = true
-warp_errors.workspace = true
-warp_graphql.workspace = true
-warp_util.workspace = true
+torch_cli.workspace = true
+torch_core.workspace = true
+torch_errors.workspace = true
+torch_graphql.workspace = true
+torch_util.workspace = true
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 cloud_object_persistence.workspace = true

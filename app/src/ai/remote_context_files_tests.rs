@@ -1,8 +1,8 @@
 use remote_server::proto::{FileContextProto, file_context_proto};
-use warp_util::host_id::HostId;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warp_util::remote_path::RemotePath;
-use warp_util::standardized_path::StandardizedPath;
+use torch_util::host_id::HostId;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torch_util::remote_path::RemotePath;
+use torch_util::standardized_path::StandardizedPath;
 
 use super::*;
 

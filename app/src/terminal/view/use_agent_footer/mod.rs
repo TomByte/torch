@@ -5,7 +5,7 @@
 //! Gemini CLI, Codex), it displays a specialized footer with additional functionality.
 
 use base64::Engine;
-use warpui::clipboard::{ClipboardContent, ImageData};
+use torchui::clipboard::{ClipboardContent, ImageData};
 
 use crate::ai::agent::ImageContext;
 use crate::ai::blocklist::agent_view::agent_input_footer::{
@@ -24,24 +24,24 @@ use std::time::Duration;
 
 use parking_lot::FairMutex;
 use pathfinder_color::ColorU;
-use warp_core::features::FeatureFlag;
-use warp_core::send_telemetry_from_ctx;
-use warp_core::settings::Setting;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::color::contrast::{
+use torch_core::features::FeatureFlag;
+use torch_core::send_telemetry_from_ctx;
+use torch_core::settings::Setting;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::color::contrast::{
     MinimumAllowedContrast, high_enough_contrast, pick_best_foreground_color,
 };
-use warp_core::ui::theme::Fill as ThemeFill;
-use warp_core::ui::theme::color::internal_colors;
-use warp_errors::report_error;
-use warp_terminal::model::escape_sequences::{BRACKETED_PASTE_END, BRACKETED_PASTE_START};
+use torch_core::ui::theme::Fill as ThemeFill;
+use torch_core::ui::theme::color::internal_colors;
+use torch_errors::report_error;
+use torch_terminal::model::escape_sequences::{BRACKETED_PASTE_END, BRACKETED_PASTE_START};
 use warpify_footer::{WarpifyFooterView, WarpifyFooterViewEvent};
-use warpui::r#async::Timer;
-use warpui::elements::{
+use torchui::r#async::Timer;
+use torchui::elements::{
     ChildView, Container, CrossAxisAlignment, Empty, Expanded, Flex, MainAxisSize, ParentElement,
 };
-use warpui::keymap::Keystroke;
-use warpui::{
+use torchui::keymap::Keystroke;
+use torchui::{
     AppContext, Element, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View,
     ViewContext, ViewHandle,
 };
@@ -402,7 +402,7 @@ impl TerminalView {
     }
 
     /// Returns whether the active long-running command in this terminal is
-    /// Warp's own headless TUI (`warp_tui`).
+    /// Warp's own headless TUI (`torch_tui`).
     pub(super) fn is_running_warp_tui(&self, model: &TerminalModel, ctx: &AppContext) -> bool {
         let active_block = model.block_list().active_block();
         if !active_block.is_active_and_long_running() {

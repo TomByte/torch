@@ -1,9 +1,9 @@
 use std::fs;
 
 use virtual_fs::{Stub, VirtualFS};
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warp_util::standardized_path::StandardizedPath;
-use warpui_core::App;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torch_util::standardized_path::StandardizedPath;
+use torchui_core::App;
 
 use crate::repositories::{DetectedRepositories, RepoDetectionSource, stub_git_repository};
 use crate::watcher::DirectoryWatcher;

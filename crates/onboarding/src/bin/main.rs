@@ -11,19 +11,19 @@ use onboarding::{
 };
 use pathfinder_color::ColorU;
 use rust_embed::RustEmbed;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::icons::Icon;
-use warp_core::ui::theme::{
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::icons::Icon;
+use torch_core::ui::theme::{
     AnsiColor, AnsiColors, Details, Fill, Image, TerminalColors, WarpTheme,
 };
-use warpui_core::assets::asset_cache::AssetSource;
-use warpui_core::elements::{
+use torchui_core::assets::asset_cache::AssetSource;
+use torchui_core::elements::{
     Container, CrossAxisAlignment, Flex, MainAxisAlignment, MainAxisSize, ParentElement,
 };
-use warpui_core::fonts::{Cache, FamilyId, Weight};
-use warpui_core::presenter::ChildView;
-use warpui_core::ui_components::components::{UiComponent as _, UiComponentStyles};
-use warpui_core::{
+use torchui_core::fonts::{Cache, FamilyId, Weight};
+use torchui_core::presenter::ChildView;
+use torchui_core::ui_components::components::{UiComponent as _, UiComponentStyles};
+use torchui_core::{
     AddWindowOptions, AppContext, AssetProvider, Element, Entity, SingletonEntity as _,
     TypedActionView, View, ViewContext, ViewHandle, platform,
 };
@@ -60,7 +60,7 @@ fn demo_offer_variant() -> Option<OfferVariant> {
 
 fn main() -> Result<()> {
     // Initialize logging for the onboarding binary.
-    warp_logging::init(warp_logging::LogConfig {
+    torch_logging::init(torch_logging::LogConfig {
         log_destination: None,
         ..Default::default()
     })?;
@@ -72,11 +72,11 @@ fn main() -> Result<()> {
     // channel; this demo has no channel, so it previews the flag defaults.
     if demo_offer_variant().is_some() {
         // Except for this one, which the offer slides live behind.
-        warp_core::features::FeatureFlag::AccountFirstOnboarding.set_enabled(true);
+        torch_core::features::FeatureFlag::AccountFirstOnboarding.set_enabled(true);
     }
-    warp_core::features::mark_initialized();
+    torch_core::features::mark_initialized();
 
-    let app_builder = warpui::platform::AppBuilder::new(
+    let app_builder = torchui::platform::AppBuilder::new(
         platform::AppCallbacks::default(),
         Box::new(ASSETS),
         None,
@@ -302,7 +302,7 @@ impl View for OnboardingMainView {
         }
     }
 
-    fn on_focus(&mut self, focus_ctx: &warpui_core::FocusContext, ctx: &mut ViewContext<Self>) {
+    fn on_focus(&mut self, focus_ctx: &torchui_core::FocusContext, ctx: &mut ViewContext<Self>) {
         if let OnboardingMainState::Onboarding(view) = &self.state
             && focus_ctx.is_self_focused()
         {

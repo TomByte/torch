@@ -1,6 +1,6 @@
-use warp_core::ui::appearance::Appearance;
-use warpui::platform::WindowStyle;
-use warpui::{App, View};
+use torch_core::ui::appearance::Appearance;
+use torchui::platform::WindowStyle;
+use torchui::{App, View};
 
 use super::{CompactDropdown, CompactDropdownItem};
 use crate::menu::MenuVariant;

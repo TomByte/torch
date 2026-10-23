@@ -1,7 +1,7 @@
 use settings::Setting;
-use warpui::integration::{AssertionOutcome, TestStep};
-use warpui::windowing::WindowManager;
-use warpui::{App, SingletonEntity, WindowId, async_assert};
+use torchui::integration::{AssertionOutcome, TestStep};
+use torchui::windowing::WindowManager;
+use torchui::{App, SingletonEntity, WindowId, async_assert};
 
 use crate::integration_testing::step::new_step_with_default_assertions;
 use crate::integration_testing::view_getters::{settings_view, theme_chooser_view};

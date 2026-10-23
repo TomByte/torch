@@ -1,15 +1,15 @@
 use pathfinder_geometry::vector::vec2f;
 use thousands::Separable;
 use uuid::Uuid;
-use warp_core::features::FeatureFlag;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torchui::elements::{
     ChildAnchor, ChildView, ConstrainedBox, Container, CrossAxisAlignment, Dismiss, Flex,
     Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning, ParentAnchor,
     ParentElement, ParentOffsetBounds, Shrinkable, Stack, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{AppContext, Element, SingletonEntity, ViewHandle};
+use torchui::fonts::{Properties, Weight};
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{AppContext, Element, SingletonEntity, ViewHandle};
 
 use super::{ExecutionProfileEditorView, ExecutionProfileEditorViewAction};
 use crate::ai::blocklist::BlocklistAIPermissions;
@@ -445,7 +445,7 @@ pub fn render_permissions_section(
     appearance: &Appearance,
     view: &ExecutionProfileEditorView,
     profile_data: &AIExecutionProfile,
-    app: &warpui::AppContext,
+    app: &torchui::AppContext,
 ) -> Box<dyn Element> {
     let ai_settings = AISettings::as_ref(app);
     let scope = view.team_context(app);
@@ -717,7 +717,7 @@ fn render_directory_allowlist_section(
     view: &ExecutionProfileEditorView,
     profile_data: &AIExecutionProfile,
     appearance: &Appearance,
-    app: &warpui::AppContext,
+    app: &torchui::AppContext,
 ) -> Box<dyn Element> {
     let ai_settings = AISettings::as_ref(app);
     let scope = view.team_context(app);
@@ -743,7 +743,7 @@ fn render_command_allowlist_section(
     view: &ExecutionProfileEditorView,
     profile_data: &AIExecutionProfile,
     appearance: &Appearance,
-    app: &warpui::AppContext,
+    app: &torchui::AppContext,
 ) -> Box<dyn Element> {
     let ai_settings = AISettings::as_ref(app);
     let scope = view.team_context(app);
@@ -770,7 +770,7 @@ fn render_command_denylist_section(
     view: &ExecutionProfileEditorView,
     profile_data: &AIExecutionProfile,
     appearance: &Appearance,
-    app: &warpui::AppContext,
+    app: &torchui::AppContext,
 ) -> Box<dyn Element> {
     use crate::ai::blocklist::BlocklistAIPermissions;
 
@@ -838,7 +838,7 @@ fn display_mcp_name(uuid: &Uuid, app: &AppContext) -> String {
 fn render_mcp_allowlist_section(
     view: &ExecutionProfileEditorView,
     profile_data: &AIExecutionProfile,
-    app: &warpui::AppContext,
+    app: &torchui::AppContext,
     appearance: &Appearance,
 ) -> Box<dyn Element> {
     let ai_settings = AISettings::as_ref(app);
@@ -864,7 +864,7 @@ fn render_mcp_allowlist_section(
 fn render_mcp_denylist_section(
     view: &ExecutionProfileEditorView,
     profile_data: &AIExecutionProfile,
-    app: &warpui::AppContext,
+    app: &torchui::AppContext,
     appearance: &Appearance,
 ) -> Box<dyn Element> {
     let ai_settings = AISettings::as_ref(app);

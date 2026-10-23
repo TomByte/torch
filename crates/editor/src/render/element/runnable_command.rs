@@ -1,6 +1,6 @@
-use warpui_core::elements::{Border, CornerRadius, Empty, Radius};
-use warpui_core::geometry::vector::vec2f;
-use warpui_core::{AppContext, Element, SizeConstraint};
+use torchui_core::elements::{Border, CornerRadius, Empty, Radius};
+use torchui_core::geometry::vector::vec2f;
+use torchui_core::{AppContext, Element, SizeConstraint};
 
 use super::{RenderContext, RenderableBlock};
 use crate::editor::RunnableCommandModel;
@@ -45,7 +45,7 @@ impl RenderableBlock for RenderableRunnableCommand {
     fn layout(
         &mut self,
         _model: &RenderState,
-        ctx: &mut warpui_core::LayoutContext,
+        ctx: &mut torchui_core::LayoutContext,
         app: &AppContext,
     ) {
         self.footer.layout(
@@ -88,7 +88,7 @@ impl RenderableBlock for RenderableRunnableCommand {
         // `RichTextElement::content_z_index` for context.
         ctx.paint
             .scene
-            .start_layer(warpui_core::ClipBounds::ActiveLayer);
+            .start_layer(torchui_core::ClipBounds::ActiveLayer);
 
         // Position the block footer right below the content area, flush with its right-hand edge.
         // This gives the footer some padding relative to the visible area with a background.
@@ -105,8 +105,8 @@ impl RenderableBlock for RenderableRunnableCommand {
 
     fn after_layout(
         &mut self,
-        ctx: &mut warpui_core::AfterLayoutContext,
-        app: &warpui_core::AppContext,
+        ctx: &mut torchui_core::AfterLayoutContext,
+        app: &torchui_core::AppContext,
     ) {
         self.footer.after_layout(ctx, app);
     }
@@ -114,8 +114,8 @@ impl RenderableBlock for RenderableRunnableCommand {
     fn dispatch_event(
         &mut self,
         _model: &crate::render::model::RenderState,
-        event: &warpui_core::event::DispatchedEvent,
-        ctx: &mut warpui_core::EventContext,
+        event: &torchui_core::event::DispatchedEvent,
+        ctx: &mut torchui_core::EventContext,
         app: &AppContext,
     ) -> bool {
         self.footer.dispatch_event(event, ctx, app)

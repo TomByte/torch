@@ -10,19 +10,19 @@ use std::ops::{Range, RangeInclusive};
 use lazy_static::lazy_static;
 use num_traits::Float as _;
 use unicode_width::UnicodeWidthChar;
-use warp_core::features::FeatureFlag;
-use warp_errors::{ReportErrorLogMode, report_error};
-use warpui::assets::asset_cache::{AssetCache, AssetSource, AssetState};
-use warpui::color::ColorU;
-use warpui::elements::{Border, CornerRadius, DEFAULT_UI_LINE_HEIGHT_RATIO, Fill, Radius};
-use warpui::fonts::{FamilyId, FontId, Properties, Style, Weight};
-use warpui::geometry::rect::RectF;
-use warpui::geometry::vector::{Vector2F, vec2f};
-use warpui::image_cache::{AnimatedImageBehavior, CacheOption, FitType, Image, ImageCache};
-use warpui::platform::LineStyle;
-use warpui::text_layout::{DEFAULT_TOP_BOTTOM_RATIO, Line, StyleAndFont, TextStyle};
-use warpui::units::{IntoLines as _, Lines, Pixels};
-use warpui::{AppContext, Element, EntityId, PaintContext, Scene, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torch_errors::{ReportErrorLogMode, report_error};
+use torchui::assets::asset_cache::{AssetCache, AssetSource, AssetState};
+use torchui::color::ColorU;
+use torchui::elements::{Border, CornerRadius, DEFAULT_UI_LINE_HEIGHT_RATIO, Fill, Radius};
+use torchui::fonts::{FamilyId, FontId, Properties, Style, Weight};
+use torchui::geometry::rect::RectF;
+use torchui::geometry::vector::{Vector2F, vec2f};
+use torchui::image_cache::{AnimatedImageBehavior, CacheOption, FitType, Image, ImageCache};
+use torchui::platform::LineStyle;
+use torchui::text_layout::{DEFAULT_TOP_BOTTOM_RATIO, Line, StyleAndFont, TextStyle};
+use torchui::units::{IntoLines as _, Lines, Pixels};
+use torchui::{AppContext, Element, EntityId, PaintContext, Scene, SingletonEntity};
 
 pub use self::cell_glyph_cache::CellGlyphCache;
 use self::cell_type::{CellType, IsFocused, Secret};
@@ -591,7 +591,7 @@ fn render_grid_without_ligatures<'a>(
         }
 
         if !foreground_image_ids.is_empty() {
-            ctx.scene.start_layer(warpui::ClipBounds::ActiveLayer);
+            ctx.scene.start_layer(torchui::ClipBounds::ActiveLayer);
             for image_placement in foreground_image_ids {
                 if let Some((image_metadata, image_placement_data)) = image_metadata
                     .get(&image_placement.image_id)
@@ -1100,7 +1100,7 @@ fn render_grid_with_ligatures<'a>(
         }
 
         if !foreground_image_ids.is_empty() {
-            ctx.scene.start_layer(warpui::ClipBounds::ActiveLayer);
+            ctx.scene.start_layer(torchui::ClipBounds::ActiveLayer);
             for image_placement in foreground_image_ids {
                 if let Some((image_metadata, image_placement_data)) = image_metadata
                     .get(&image_placement.image_id)

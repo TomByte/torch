@@ -2,17 +2,17 @@ use std::cell::RefCell;
 
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::Vector2F;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::Fill;
-use warp_editor::render::element::VerticalExpansionBehavior;
-use warpui::elements::{
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::Fill;
+use torch_editor::render::element::VerticalExpansionBehavior;
+use torchui::elements::{
     Border, ChildView, Clipped, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Flex,
     MainAxisAlignment, MainAxisSize, ParentElement, Radius, Shrinkable, Text,
 };
-use warpui::keymap::Keystroke;
-use warpui::text_layout::ClipConfig;
-use warpui::units::Pixels;
-use warpui::{
+use torchui::keymap::Keystroke;
+use torchui::text_layout::ClipConfig;
+use torchui::units::Pixels;
+use torchui::{
     AppContext, Element, Entity, FocusContext, ModelHandle, SingletonEntity, TypedActionView, View,
     ViewContext, ViewHandle,
 };

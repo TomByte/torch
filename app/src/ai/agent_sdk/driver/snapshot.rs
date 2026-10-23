@@ -37,10 +37,10 @@ use futures::future::join_all;
 use tokio::fs::{self as tokio_fs, OpenOptions};
 use tokio::io::AsyncWriteExt as _;
 use tokio::sync::{mpsc, oneshot};
-use warp_core::safe_info;
-use warp_errors::report_error;
-use warpui::r#async::FutureExt as _;
-use warpui::r#async::executor::Background;
+use torch_core::safe_info;
+use torch_errors::report_error;
+use torchui::r#async::FutureExt as _;
+use torchui::r#async::executor::Background;
 
 use crate::ai::agent_sdk::retry::with_bounded_retry;
 use crate::ai::ambient_agents::AmbientAgentTaskId;

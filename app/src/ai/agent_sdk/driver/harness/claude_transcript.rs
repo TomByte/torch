@@ -24,8 +24,8 @@ use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use uuid::Uuid;
-use warp_core::safe_warn;
-use warp_harness_usage::{CaptureDiagnostics, JsonlCapture, JsonlDiagnostics, JsonlReadStatus};
+use torch_core::safe_warn;
+use torch_harness_usage::{CaptureDiagnostics, JsonlCapture, JsonlDiagnostics, JsonlReadStatus};
 
 use super::json_utils::entries_to_jsonl;
 use super::transcript_persistence::read_jsonl_capture;

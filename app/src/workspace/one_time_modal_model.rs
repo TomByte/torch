@@ -2,10 +2,10 @@ use std::future::Future;
 
 use ai::api_keys::{ApiKeyManager, ApiKeyManagerEvent};
 use settings::Setting as _;
-use warp_core::features::FeatureFlag;
-use warp_core::send_telemetry_from_ctx;
-use warp_util::sync::Condition;
-use warpui::{AppContext, Entity, ModelContext, SingletonEntity, WindowId};
+use torch_core::features::FeatureFlag;
+use torch_core::send_telemetry_from_ctx;
+use torch_util::sync::Condition;
+use torchui::{AppContext, Entity, ModelContext, SingletonEntity, WindowId};
 
 use super::hoa_onboarding;
 use super::view::chatgpt_plan_modal::ChatGPTPlanModalTelemetryEvent;

@@ -7,17 +7,17 @@ use itertools::Itertools;
 #[cfg(not(target_family = "wasm"))]
 use repo_metadata::repositories::DetectedRepositories;
 use settings::Setting as _;
-use warp_core::features::FeatureFlag;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torchui::elements::{
     AnchorPair, Border, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     Dismiss, Empty, Fill, Flex, Hoverable, Icon, MouseStateHandle, OffsetPositioning, OffsetType,
     ParentElement, PositionedElementOffsetBounds, PositioningAxis, Radius, SavePosition,
     ScrollStateHandle, Scrollable, ScrollableElement, ScrollbarWidth, Shrinkable, Stack, Text,
     UniformList, UniformListState, XAxisAnchor, YAxisAnchor,
 };
-use warpui::platform::Cursor;
-use warpui::windowing::WindowManager;
-use warpui::{
+use torchui::platform::Cursor;
+use torchui::windowing::WindowManager;
+use torchui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle, WeakViewHandle,
 };

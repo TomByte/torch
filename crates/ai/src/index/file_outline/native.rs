@@ -13,8 +13,8 @@ use repo_metadata::RepositoryUpdate;
 use repo_metadata::entry::{BudgetExceededBehavior, IgnoredPathStrategy, is_file_parsable};
 use streaming_iterator::StreamingIterator;
 use syntax_tree::TextSlice;
-use warp_errors::report_error;
-use warp_util::standardized_path::StandardizedPath;
+use torch_errors::report_error;
+use torch_util::standardized_path::StandardizedPath;
 
 use crate::index::file_outline::{FileOutline, Outline, Symbol};
 use crate::index::{Entry, FileId, FileMetadata, THREADPOOL};
@@ -85,7 +85,7 @@ pub async fn build_outline(
         if sender.send(result).is_err() {
             report_error!(
                 anyhow!("Could not send result of outline generation to background thread"),
-                warp_errors::ReportErrorLogMode::OncePerRun
+                torch_errors::ReportErrorLogMode::OncePerRun
             );
         }
     });

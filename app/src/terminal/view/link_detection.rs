@@ -1,8 +1,8 @@
 use std::ops::Deref;
 
 use serde::{Serialize, Serializer};
-use warpui::ViewContext;
-use warpui::platform::Cursor;
+use torchui::ViewContext;
+use torchui::platform::Cursor;
 
 use crate::terminal::TerminalModel;
 use crate::terminal::model::RespectObfuscatedSecrets;
@@ -21,13 +21,13 @@ cfg_if::cfg_if! {
         use std::path::PathBuf;
         use unicode_general_category::{get_general_category, GeneralCategory};
         use unicode_width::UnicodeWidthChar;
-        use warp_util::path::CleanPathResult;
-        use warp_util::path::LineAndColumnArg;
+        use torch_util::path::CleanPathResult;
+        use torch_util::path::LineAndColumnArg;
     }
 }
 
 #[cfg(feature = "local_fs")]
-use warp_errors::report_error;
+use torch_errors::report_error;
 
 use super::{FindLinkArg, TerminalEditor};
 

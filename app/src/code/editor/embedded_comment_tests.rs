@@ -1,6 +1,6 @@
 use serde_yaml::{Mapping, Value};
-use warp_editor::content::markdown::MarkdownStyle;
-use warpui::{EntityId, WindowId};
+use torch_editor::content::markdown::MarkdownStyle;
+use torchui::{EntityId, WindowId};
 
 use super::{
     COMMENT_ID_MAPPING_KEY, ENTITY_ID_MAPPING_KEY, EmbeddedCommentSpace, EmbeddedItem as _,

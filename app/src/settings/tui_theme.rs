@@ -2,9 +2,9 @@ use std::str::FromStr;
 
 use settings::macros::define_settings_group;
 use settings::{Setting as _, SupportedPlatforms, SyncToCloud};
-use warp_core::ui::theme::{ColorScheme, WarpTheme};
+use torch_core::ui::theme::{ColorScheme, WarpTheme};
 #[cfg(feature = "tui")]
-use warpui_core::runtime::BackgroundLuminance;
+use torchui_core::runtime::BackgroundLuminance;
 
 #[cfg(feature = "tui")]
 use crate::themes::default_themes::{dark_theme, light_theme};

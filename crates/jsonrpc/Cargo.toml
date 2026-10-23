@@ -6,7 +6,7 @@ publish.workspace = true
 license.workspace = true
 
 [dependencies]
-warp_errors.workspace = true
+torch_errors.workspace = true
 anyhow.workspace = true
 async-channel.workspace = true
 async-trait.workspace = true
@@ -14,4 +14,4 @@ futures.workspace = true
 log.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-warpui_core.workspace = true
+torchui_core.workspace = true

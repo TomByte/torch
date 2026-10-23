@@ -1,6 +1,6 @@
 use chrono::Local;
-use warpui::integration::{AssertionCallback, TestStep};
-use warpui::{App, SingletonEntity, TypedActionView, ViewHandle, WindowId, async_assert};
+use torchui::integration::{AssertionCallback, TestStep};
+use torchui::{App, SingletonEntity, TypedActionView, ViewHandle, WindowId, async_assert};
 
 use crate::ai::ai_document_view::{AIDocumentAction, AIDocumentView};
 use crate::ai::blocklist::history_model::BlocklistAIHistoryModel;

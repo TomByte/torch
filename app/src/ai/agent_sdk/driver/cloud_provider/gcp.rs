@@ -6,10 +6,10 @@ use std::time::Duration;
 
 use anyhow::Context as _;
 use command::r#async::Command;
-use warp_core::{safe_info, safe_warn};
-use warp_managed_secrets::{GcpCredentials, GcpFederationConfig};
-use warpui::ModelSpawner;
-use warpui::r#async::FutureExt as _;
+use torch_core::{safe_info, safe_warn};
+use torch_managed_secrets::{GcpCredentials, GcpFederationConfig};
+use torchui::ModelSpawner;
+use torchui::r#async::FutureExt as _;
 
 use super::super::terminal::TerminalDriver;
 use super::{CloudProvider, CloudProviderSetupError, Result};

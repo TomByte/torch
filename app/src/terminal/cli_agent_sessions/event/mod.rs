@@ -1,8 +1,8 @@
 mod v1;
 
 use serde::Deserialize;
-pub use warp_core::cli_agent_protocol::CLI_AGENT_NOTIFICATION_SENTINEL;
-use warp_errors::report_error;
+pub use torch_core::cli_agent_protocol::CLI_AGENT_NOTIFICATION_SENTINEL;
+use torch_errors::report_error;
 
 use crate::terminal::CLIAgent;
 

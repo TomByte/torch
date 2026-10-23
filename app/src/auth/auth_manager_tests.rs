@@ -3,7 +3,7 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::Duration;
 
 use anyhow::anyhow;
-use warpui::{App, SingletonEntity};
+use torchui::{App, SingletonEntity};
 
 use super::{AuthManager, AuthManagerEvent, request_device_code_with_timeout};
 use crate::ServerApiProvider;
@@ -132,7 +132,7 @@ fn pending_api_key_failure_leaves_auth_state_logged_out() {
         assert!(auth_state.user_id().is_none());
         assert!(!auth_state.is_logged_in());
 
-        warpui::r#async::Timer::after(Duration::from_millis(100)).await;
+        torchui::r#async::Timer::after(Duration::from_millis(100)).await;
 
         assert!(saw_auth_failure.load(Ordering::Relaxed));
         assert!(auth_state.credentials().is_none());
@@ -284,7 +284,7 @@ fn test_log_out_clears_pending_auth_state() {
         // routes to `PersistedUser::remove_from_secure_storage`. That requires
         // a `SecureStorage` singleton, so register a no-op one for this test.
         app.update(|ctx| {
-            warpui_extras::secure_storage::register_noop("warp_test", ctx);
+            torchui_extras::secure_storage::register_noop("warp_test", ctx);
         });
 
         AuthManager::handle(&app).update(&mut app, |auth_manager, ctx| {

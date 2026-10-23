@@ -5,8 +5,8 @@ use ai::api_keys::{ApiKeyManager, ChatGPTConnectFailure, ChatGPTConnectionStatus
 use settings::Setting as _;
 use url::Url;
 use uuid::Uuid;
-use warp_core::channel::ChannelState;
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torch_core::channel::ChannelState;
+use torchui::{Entity, ModelContext, SingletonEntity};
 
 use crate::auth::AuthStateProvider;
 use crate::server::server_api::ai::AIClient;

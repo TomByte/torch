@@ -26,10 +26,10 @@ pub(crate) use gui_input_mode_policy::GuiInputModePolicy;
 pub use inline_agent_view_header::*;
 pub use orchestration_pill_bar::{OrchestrationPillBar, render_orchestration_breadcrumbs};
 use pathfinder_color::ColorU;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::Fill;
-use warpui::fonts::Properties;
-use warpui::keymap::Keystroke;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::Fill;
+use torchui::fonts::Properties;
+use torchui::keymap::Keystroke;
 pub use zero_state_block::*;
 
 use crate::terminal::model::TerminalModel;

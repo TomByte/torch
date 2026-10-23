@@ -22,11 +22,11 @@ use session_sharing_protocol::sharer::{
     ReconnectPayload, ReconnectToken, ReconnectionFailedReason, SessionEndedReason,
     SessionSourceType, SessionTerminatedReason, UpstreamMessage,
 };
-use warp_server_client::iap::IapManager;
+use torch_server_client::iap::IapManager;
 #[cfg(not(target_family = "wasm"))]
-use warpui::r#async::executor::Foreground;
-use warpui::r#async::{FutureExt as _, Timer};
-use warpui::{App, ModelHandle, RetryOption};
+use torchui::r#async::executor::Foreground;
+use torchui::r#async::{FutureExt as _, Timer};
+use torchui::{App, ModelHandle, RetryOption};
 use websocket::{Error as WebsocketError, Message, Sink, Stream, WebsocketMessage as _};
 
 use super::{
@@ -1842,7 +1842,7 @@ fn test_events_are_saved_on_send_and_removed_on_ack() {
         // Simulate receiving the EventsProcessedAck message from the server.
         network.update(
             &mut app,
-            |network, ctx: &mut warpui::ModelContext<'_, Network>| {
+            |network, ctx: &mut torchui::ModelContext<'_, Network>| {
                 let downstream_message = DownstreamMessage::EventsProcessedAck {
                     latest_processed_event_no: 1,
                 };

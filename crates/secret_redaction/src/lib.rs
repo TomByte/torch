@@ -8,8 +8,8 @@ use lazy_static::lazy_static;
 use parking_lot::Mutex;
 use regex_dfas::RegexDFAs;
 use string_offset::StringRange;
-use warp_core::safe_warn;
-use warp_errors::report_error;
+use torch_core::safe_warn;
+use torch_errors::report_error;
 
 /// The character used to replace each redacted character of a detected secret.
 pub const SECRET_REDACTION_REPLACEMENT_CHARACTER: &str = "*";

@@ -1,4 +1,4 @@
-use warpui::text::point::Point;
+use torchui::text::point::Point;
 
 use super::super::Buffer;
 

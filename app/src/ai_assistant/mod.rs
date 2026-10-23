@@ -6,12 +6,12 @@ use itertools::Itertools;
 use lazy_static::lazy_static;
 use pathfinder_color::ColorU;
 use serde::{Deserialize, Serialize};
-use warp_core::command::ExitCode;
-use warp_graphql::ai::{
+use torch_core::command::ExitCode;
+use torch_graphql::ai::{
     RequestLimitInfo as RequestLimitInfoGraphql,
     RequestLimitRefreshDuration as RequestLimitRefreshDurationGraphql,
 };
-use warp_graphql::mutations::generate_commands::{GenerateCommandsFailureType, GeneratedCommand};
+use torch_graphql::mutations::generate_commands::{GenerateCommandsFailureType, GeneratedCommand};
 
 use crate::ai::{RequestLimitInfo, RequestLimitRefreshDuration};
 use crate::server::telemetry::OpenedWarpAISource;

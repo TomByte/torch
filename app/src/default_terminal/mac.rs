@@ -2,7 +2,7 @@ use std::ptr::NonNull;
 
 use objc2_core_foundation::{CFRetained, CFString};
 use objc2_foundation::NSBundle;
-use warp_core::channel::{Channel, ChannelState};
+use torch_core::channel::{Channel, ChannelState};
 
 // Launch Services constants
 type LSRolesMask = u32;

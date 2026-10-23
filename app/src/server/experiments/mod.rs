@@ -11,9 +11,9 @@
 //! See [here](https://www.notion.so/warpdev/Server-side-experiments-dynamic-feature-enablement-c0fb9aed695d4178a19b8830e3269094)
 //! for a full guide on the server-side experiment framework.
 
-use warpui::AppContext;
+use torchui::AppContext;
 #[cfg(test)]
-use warpui::SingletonEntity;
+use torchui::SingletonEntity;
 
 use crate::features::FeatureFlag;
 

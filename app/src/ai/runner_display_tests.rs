@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use warp_graphql::queries::get_runners::{RunnerArch, RunnerConfig, RunnerMacOsVersion, RunnerOs};
+use torch_graphql::queries::get_runners::{RunnerArch, RunnerConfig, RunnerMacOsVersion, RunnerOs};
 
 use super::{RunPlatform, RunnerPlatform, resolve_run_platform};
 use crate::ui_components::icons::Icon;

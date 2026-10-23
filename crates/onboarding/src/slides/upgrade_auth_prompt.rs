@@ -1,12 +1,12 @@
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::icons::Icon;
-use warpui_core::Element;
-use warpui_core::elements::{
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::icons::Icon;
+use torchui_core::Element;
+use torchui_core::elements::{
     Border, ConstrainedBox, Container, CrossAxisAlignment, Flex, MainAxisSize, MouseStateHandle,
     ParentElement,
 };
-use warpui_core::ui_components::components::{UiComponent as _, UiComponentStyles};
-use warpui_core::ui_components::link::OnClickFn;
+use torchui_core::ui_components::components::{UiComponent as _, UiComponentStyles};
+use torchui_core::ui_components::link::OnClickFn;
 
 pub(super) fn render_upgrade_auth_prompt_bar(
     appearance: &Appearance,
@@ -22,7 +22,7 @@ pub(super) fn render_upgrade_auth_prompt_bar(
     let theme = appearance.theme();
     let bar_bg = theme.surface_1();
     let bar_bg_solid = bar_bg.into_solid();
-    let text_color = warp_core::ui::theme::color::internal_colors::text_sub(theme, bar_bg_solid);
+    let text_color = torch_core::ui::theme::color::internal_colors::text_sub(theme, bar_bg_solid);
     let ui_builder = appearance.ui_builder();
 
     let text_styles = UiComponentStyles {
@@ -108,7 +108,7 @@ pub(super) fn render_upgrade_auth_prompt_bar(
         Container::new(row)
             .with_background(bar_bg)
             .with_border(Border::top(1.).with_border_color(
-                warp_core::ui::theme::color::internal_colors::neutral_4(theme),
+                torch_core::ui::theme::color::internal_colors::neutral_4(theme),
             ))
             .with_horizontal_padding(16.)
             .finish(),

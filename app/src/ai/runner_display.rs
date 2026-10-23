@@ -6,7 +6,7 @@
 
 use std::collections::HashMap;
 
-use warp_graphql::queries::get_runners::{
+use torch_graphql::queries::get_runners::{
     Runner, RunnerArch, RunnerConfig, RunnerMacOsVersion, RunnerOs,
 };
 

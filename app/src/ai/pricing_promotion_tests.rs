@@ -1,5 +1,5 @@
 use serde_json::json;
-use warp_core::telemetry::TelemetryEvent;
+use torch_core::telemetry::TelemetryEvent;
 
 use super::{PricingPromotionState, PricingPromotionSurface, PricingPromotionTelemetryEvent};
 

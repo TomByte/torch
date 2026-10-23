@@ -23,25 +23,25 @@ use tree::DEFAULT_FLEX_VALUE;
 use typed_path::TypedPath;
 use url::Url;
 use uuid::Uuid;
-use warp_cli::agent::Harness;
-use warp_core::command::ExitCode;
-use warp_core::context_flag::ContextFlag;
-use warp_errors::report_if_error;
-use warp_terminal::focus_env::add_session_focus_env_vars;
-use warp_terminal::shell::{ShellName, ShellType};
+use torch_cli::agent::Harness;
+use torch_core::command::ExitCode;
+use torch_core::context_flag::ContextFlag;
+use torch_errors::report_if_error;
+use torch_terminal::focus_env::add_session_focus_env_vars;
+use torch_terminal::shell::{ShellName, ShellType};
 #[cfg(feature = "local_fs")]
-use warp_util::path::LineAndColumnArg;
-use warp_util::path::convert_wsl_to_windows_host_path;
-use warp_util::remote_path::RemotePath;
-use warpui::r#async::SpawnedFutureHandle;
-use warpui::elements::{
+use torch_util::path::LineAndColumnArg;
+use torch_util::path::convert_wsl_to_windows_host_path;
+use torch_util::remote_path::RemotePath;
+use torchui::r#async::SpawnedFutureHandle;
+use torchui::elements::{
     ChildView, Clipped, CrossAxisAlignment, DispatchEventResult, Element, EventHandler, Flex,
     MainAxisSize, ParentElement, Shrinkable, Stack,
 };
-use warpui::keymap::{Context, EditableBinding, FixedBinding};
-use warpui::notification::NotificationSendError;
-use warpui::windowing::WindowManager;
-use warpui::{
+use torchui::keymap::{Context, EditableBinding, FixedBinding};
+use torchui::notification::NotificationSendError;
+use torchui::windowing::WindowManager;
+use torchui::{
     AppContext, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle, WeakViewHandle, WindowId,
 };
@@ -209,7 +209,7 @@ pub use pane::{
     PaneHeaderAction, PaneHeaderCustomAction, PaneId, PaneView, TerminalPaneId,
 };
 pub use tree::{Direction, PaneData, PaneFlex, PaneNode, SplitDirection};
-use warp_errors::report_error;
+use torch_errors::report_error;
 pub use working_directories::{WorkingDirectoriesEvent, WorkingDirectoriesModel};
 
 use self::pane::{DetachType, PaneViewEvent};
@@ -315,7 +315,7 @@ enum PaneRemovalReason {
 }
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
     app.register_binding_validator::<PaneGroup>(is_binding_pty_compliant);
 
     self::pane::init(app);

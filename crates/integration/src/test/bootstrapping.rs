@@ -2,30 +2,30 @@
 
 use settings::Setting as _;
 use version_compare::Cmp;
-use warp::cmd_or_ctrl_shift;
-use warp::integration_testing::input::{
+use torch::cmd_or_ctrl_shift;
+use torch::integration_testing::input::{
     input_contains_string, input_editor_is_focused, input_editor_is_not_focused, input_is_empty,
 };
-use warp::integration_testing::step::new_step_with_default_assertions;
-use warp::integration_testing::tab::tab_title_step;
-use warp::integration_testing::terminal::util::{
+use torch::integration_testing::step::new_step_with_default_assertions;
+use torch::integration_testing::tab::tab_title_step;
+use torch::integration_testing::terminal::util::{
     ExpectedExitStatus, current_shell_starter_and_version,
 };
-use warp::integration_testing::terminal::{
+use torch::integration_testing::terminal::{
     assert_active_block_command_for_single_terminal_in_tab,
     assert_long_running_block_executing_for_single_terminal_in_tab,
     clear_blocklist_to_remove_bootstrapped_blocks, execute_command_for_single_terminal_in_tab,
     wait_until_bootstrapped_single_pane_for_tab,
 };
-use warp::integration_testing::view_getters::{
+use torch::integration_testing::view_getters::{
     single_input_view_for_tab, single_terminal_view_for_tab,
 };
-use warp::terminal::session_settings::HonorPS1;
-use warp::terminal::shell::{self, ShellType};
-use warp::workspace::Workspace;
-use warpui_core::clipboard::ClipboardContent;
-use warpui_core::integration::{AssertionCallback, TestStep};
-use warpui_core::{ViewHandle, async_assert, async_assert_eq};
+use torch::terminal::session_settings::HonorPS1;
+use torch::terminal::shell::{self, ShellType};
+use torch::workspace::Workspace;
+use torchui_core::clipboard::ClipboardContent;
+use torchui_core::integration::{AssertionCallback, TestStep};
+use torchui_core::{ViewHandle, async_assert, async_assert_eq};
 
 use super::{Builder, new_builder};
 use crate::util::{ShellRcType, write_all_rc_files_for_test, write_rc_files_for_test};

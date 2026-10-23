@@ -6,7 +6,7 @@ use async_trait::async_trait;
 use cloud_objects::cloud_object::CloudObjectUpsertParams;
 // Re-exported from cloud_objects.
 pub use cloud_objects::cloud_object::{GenericStringModel, Serializer};
-pub use warp_server_client::ids::GenericStringObjectId;
+pub use torch_server_client::ids::GenericStringObjectId;
 
 use crate::appearance::Appearance;
 use crate::cloud_object::{

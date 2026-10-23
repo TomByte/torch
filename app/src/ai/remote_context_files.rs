@@ -4,9 +4,9 @@ use futures::future::{BoxFuture, FutureExt as _};
 use remote_server::proto::{
     FileContextProto, ReadFileContextFile, ReadFileContextRequest, file_context_proto,
 };
-use warp_util::host_id::HostId;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warpui::{AppContext, SingletonEntity};
+use torch_util::host_id::HostId;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torchui::{AppContext, SingletonEntity};
 
 use crate::remote_server::manager::RemoteServerManager;
 

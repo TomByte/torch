@@ -4,7 +4,7 @@ use std::future::Future;
 
 use mcp::tool_call::call_tool_with_deadline;
 use uuid::Uuid;
-use warpui::ModelSpawner;
+use torchui::ModelSpawner;
 
 use super::TemplatableMCPServerManager;
 

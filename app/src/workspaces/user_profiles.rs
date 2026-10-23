@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 pub use cloud_object_models::UserProfileWithUID;
-use warpui::{Entity, SingletonEntity};
+use torchui::{Entity, SingletonEntity};
 
 use crate::auth::UserUid;
 

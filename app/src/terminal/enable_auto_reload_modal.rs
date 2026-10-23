@@ -3,16 +3,16 @@ use std::sync::Arc;
 use enclose::enclose;
 use itertools::Itertools as _;
 use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
-use warp_core::ui::appearance::Appearance;
-use warp_graphql::billing::AddonCreditsOption;
-use warpui::elements::{
+use torch_core::ui::appearance::Appearance;
+use torch_graphql::billing::AddonCreditsOption;
+use torchui::elements::{
     Border, ChildView, Container, CrossAxisAlignment, Empty, Flex, HighlightedHyperlink,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Text,
 };
-use warpui::fonts::Weight;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent as _, UiComponentStyles};
-use warpui::{AppContext, Element, Entity, SingletonEntity as _, View, ViewContext, ViewHandle};
+use torchui::fonts::Weight;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent as _, UiComponentStyles};
+use torchui::{AppContext, Element, Entity, SingletonEntity as _, View, ViewContext, ViewHandle};
 
 use crate::ai::blocklist::view_util::usage_display_unit;
 use crate::features::FeatureFlag;
@@ -238,7 +238,7 @@ impl EnableAutoReloadModalBody {
                 "https://docs.warp.dev/support-and-community/plans-and-billing/add-on-credits#id-2.-enable-auto-reload",
             ),
         ];
-        let explanation_text = warpui::elements::FormattedTextElement::new(
+        let explanation_text = torchui::elements::FormattedTextElement::new(
             FormattedText::new([FormattedTextLine::Line(explanation_fragments)]),
             appearance.ui_font_size(),
             appearance.ui_font_family(),
@@ -249,10 +249,10 @@ impl EnableAutoReloadModalBody {
         .with_hyperlink_font_color(theme.accent().into_solid())
         .register_default_click_handlers_with_action_support(|hyperlink_lens, _event, ctx| {
             match hyperlink_lens {
-                warpui::elements::HyperlinkLens::Url(url) => {
+                torchui::elements::HyperlinkLens::Url(url) => {
                     ctx.open_url(url);
                 }
-                warpui::elements::HyperlinkLens::Action(_action_ref) => {}
+                torchui::elements::HyperlinkLens::Action(_action_ref) => {}
             }
         })
         .finish();
@@ -386,7 +386,7 @@ pub enum Action {
     Enable,
 }
 
-impl warpui::TypedActionView for EnableAutoReloadModalBody {
+impl torchui::TypedActionView for EnableAutoReloadModalBody {
     type Action = Action;
 
     fn handle_action(&mut self, action: &Self::Action, ctx: &mut ViewContext<Self>) {
@@ -506,7 +506,7 @@ impl Entity for EnableAutoReloadModal {
     type Event = EnableAutoReloadModalEvent;
 }
 
-impl warpui::TypedActionView for EnableAutoReloadModal {
+impl torchui::TypedActionView for EnableAutoReloadModal {
     type Action = ();
 }
 

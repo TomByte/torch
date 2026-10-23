@@ -1,4 +1,4 @@
-use warpui::{App, SingletonEntity as _};
+use torchui::{App, SingletonEntity as _};
 
 use super::*;
 use crate::server::ids::ServerId;

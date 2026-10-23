@@ -8,7 +8,7 @@ use signal_hook::iterator::exfiltrator::WithOrigin;
 use signal_hook::low_level::siginfo::{Cause, Process};
 use signal_hook::{SigId, flag};
 use signal_hook_tokio::SignalsInfo;
-use warpui::r#async::executor::{Background, BackgroundTask};
+use torchui::r#async::executor::{Background, BackgroundTask};
 
 use super::Interrupt;
 

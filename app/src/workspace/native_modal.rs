@@ -1,14 +1,14 @@
 use settings::Setting as _;
-use warp_core::ui::theme::Fill;
-use warpui::elements::{Align, Container, Empty, Flex, MouseStateHandle, ParentElement};
-use warpui::fonts::Weight;
-use warpui::keymap::FixedBinding;
-use warpui::modals::{AlertDialogWithCallbacks, AppModalCallback};
-use warpui::platform::Cursor;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::ui_components::text::Span;
-use warpui::{
+use torch_core::ui::theme::Fill;
+use torchui::elements::{Align, Container, Empty, Flex, MouseStateHandle, ParentElement};
+use torchui::fonts::Weight;
+use torchui::keymap::FixedBinding;
+use torchui::modals::{AlertDialogWithCallbacks, AppModalCallback};
+use torchui::platform::Cursor;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::ui_components::text::Span;
+use torchui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
 };
 
@@ -17,7 +17,7 @@ use crate::terminal::general_settings::{GeneralSettings, GeneralSettingsChangedE
 use crate::ui_components::dialog::{Dialog, dialog_styles};
 
 pub(super) fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings(vec![
         FixedBinding::new("escape", NativeModalAction::Close, id!("NativeModal")),
@@ -120,7 +120,7 @@ impl View for NativeModal {
         "NativeModal"
     }
 
-    fn render(&self, app: &warpui::AppContext) -> Box<dyn warpui::Element> {
+    fn render(&self, app: &torchui::AppContext) -> Box<dyn torchui::Element> {
         let Some(alert_dialog) = self.alert_dialog.as_ref() else {
             log::warn!("No alert dialog was set for the native modal");
             return Empty::new().finish();

@@ -7,8 +7,8 @@ use std::time::Duration;
 use anyhow::Context;
 use tempfile::{Builder, NamedTempFile};
 use vec1::Vec1;
-use warp_core::safe_info;
-use warpui::{ModelSpawner, SingletonEntity};
+use torch_core::safe_info;
+use torchui::{ModelSpawner, SingletonEntity};
 
 use super::super::terminal::TerminalDriver;
 use super::{CloudProvider, CloudProviderSetupError, Result};
@@ -97,7 +97,7 @@ impl CloudProvider for AwsCloudProvider {
                         .as_ref(ctx)
                         .issue_task_identity_token(
                             None,
-                            warp_managed_secrets::client::IdentityTokenOptions {
+                            torch_managed_secrets::client::IdentityTokenOptions {
                                 audience,
                                 requested_duration: duration,
                                 subject_template,

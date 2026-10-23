@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use settings::Setting as _;
-use warpui::{
+use torchui::{
     Entity, GetSingletonModelHandle, ModelContext, ModelHandle, SingletonEntity, UpdateModel,
 };
 

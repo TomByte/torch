@@ -2,8 +2,8 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::{Result, anyhow};
-use warp_graphql::queries::get_oauth_connect_tx_status::OauthConnectTxStatus;
-use warpui::r#async::Timer;
+use torch_graphql::queries::get_oauth_connect_tx_status::OauthConnectTxStatus;
+use torchui::r#async::Timer;
 
 use crate::server::server_api::integrations::IntegrationsClient;
 

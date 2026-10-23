@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use ai::LLMProvider;
-use warpui::App;
+use torchui::App;
 
 use super::*;
 use crate::ai::credit_availability::AICreditSource;
@@ -88,7 +88,7 @@ fn initialize_app_with_workspaces(app: &mut App, workspaces: Vec<Workspace>) {
         app.update(crate::settings::init_and_register_user_preferences);
     }
     app.update(|ctx| {
-        warpui_extras::secure_storage::register_noop("test", ctx);
+        torchui_extras::secure_storage::register_noop("test", ctx);
         ctx.add_singleton_model(ApiKeyManager::new);
     });
     app.add_singleton_model(|_| crate::pricing::PricingInfoModel::new());

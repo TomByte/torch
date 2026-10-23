@@ -3,7 +3,7 @@ use std::sync::LazyLock;
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use warp_core::features::FeatureFlag;
+use torch_core::features::FeatureFlag;
 
 use super::{Availability, SlashCommandKind, SlashCommandSurfaces};
 use crate::search::slash_command_menu::StaticCommand;

@@ -9,15 +9,15 @@ use futures::FutureExt;
 #[cfg(not(target_family = "wasm"))]
 use futures::{channel::oneshot, future::Shared};
 #[cfg(not(target_family = "wasm"))]
-use warp_files::FileModel;
-use warp_util::file::FileId;
+use torch_files::FileModel;
+use torch_util::file::FileId;
 #[cfg(not(target_family = "wasm"))]
-use warp_util::file::FileSaveError;
-use warp_util::standardized_path::StandardizedPath;
+use torch_util::file::FileSaveError;
+use torch_util::standardized_path::StandardizedPath;
 #[cfg(not(target_family = "wasm"))]
-use warpui::SingletonEntity;
-use warpui::elements::ChildView;
-use warpui::{AppContext, Element, Entity, TypedActionView, View, ViewContext, ViewHandle};
+use torchui::SingletonEntity;
+use torchui::elements::ChildView;
+use torchui::{AppContext, Element, Entity, TypedActionView, View, ViewContext, ViewHandle};
 
 use super::diff_viewer::{DiffViewer, DisplayMode};
 use super::editor::NavBarBehavior;

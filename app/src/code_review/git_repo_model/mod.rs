@@ -1,4 +1,4 @@
-use warpui::{AppContext, Entity, ModelContext, ModelHandle};
+use torchui::{AppContext, Entity, ModelContext, ModelHandle};
 
 #[cfg(feature = "local_fs")]
 mod local;
@@ -95,7 +95,7 @@ pub(super) fn new_local_git_repo_status_model(
 }
 
 pub(super) fn new_remote_git_repo_status_model(
-    remote_path: warp_util::remote_path::RemotePath,
+    remote_path: torch_util::remote_path::RemotePath,
     ctx: &mut ModelContext<GitRepoModels>,
 ) -> ModelHandle<GitRepoStatusModel> {
     let inner = ctx.add_model(|ctx| RemoteGitRepoStatusModel::new(remote_path, ctx));

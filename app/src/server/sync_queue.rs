@@ -10,10 +10,10 @@ use derivative::Derivative;
 use http::StatusCode;
 use lazy_static::lazy_static;
 use uuid::Uuid;
-use warp_errors::report_error;
-use warp_graphql::scalars::time::ServerTimestamp;
-use warpui::r#async::FutureId;
-use warpui::{Entity, ModelContext, RequestState, RetryOption, SingletonEntity};
+use torch_errors::report_error;
+use torch_graphql::scalars::time::ServerTimestamp;
+use torchui::r#async::FutureId;
+use torchui::{Entity, ModelContext, RequestState, RetryOption, SingletonEntity};
 
 use super::graphql::GraphQLError;
 use super::ids::{ClientId, HashableId, ObjectUid, ServerId, SyncId, ToServerId};

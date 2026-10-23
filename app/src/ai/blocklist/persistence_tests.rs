@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use warpui::{App, EntityId};
+use torchui::{App, EntityId};
 
 use super::{PersistedAIInputType, maybe_build_ai_query_upsert_event};
 use crate::ai::agent::conversation::{AIConversation, AIConversationId};

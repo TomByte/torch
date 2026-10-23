@@ -4,14 +4,14 @@ use std::time::Duration;
 
 use pathfinder_color::ColorU;
 use settings::Setting as _;
-use warp_core::semantic_selection::SemanticSelection;
-use warpui::elements::{
+use torch_core::semantic_selection::SemanticSelection;
+use torchui::elements::{
     Container, DispatchEventResult, Element, EventHandler, SavePosition, SelectableArea,
     SelectionHandle, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::units::Pixels;
-use warpui::{AppContext, EntityId, ModelAsRef, ModelHandle, SingletonEntity, ViewHandle};
+use torchui::fonts::{Properties, Weight};
+use torchui::units::Pixels;
+use torchui::{AppContext, EntityId, ModelAsRef, ModelHandle, SingletonEntity, ViewHandle};
 
 use super::input::InputRenderStateModel;
 use super::model::block::Block;

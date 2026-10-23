@@ -3,17 +3,17 @@ use std::collections::HashMap;
 
 use anyhow::Error;
 use pathfinder_geometry::vector::vec2f;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::Fill;
-use warp_core::ui::theme::color::internal_colors::neutral_4;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::Fill;
+use torch_core::ui::theme::color::internal_colors::neutral_4;
+use torchui::elements::{
     ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Dismiss, Flex, Hoverable,
     MainAxisAlignment, MainAxisSize, MouseState, MouseStateHandle, ParentElement, Radius,
 };
-use warpui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, SingletonEntity as _, TypedActionView, View, ViewContext,
     ViewHandle,
 };

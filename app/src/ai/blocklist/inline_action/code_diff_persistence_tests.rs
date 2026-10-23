@@ -1,9 +1,9 @@
 use std::fs;
 
 use ai::diff_validation::DiffDelta;
-use warp_files::FileModel;
-use warpui::platform::WindowStyle;
-use warpui::{App, ReadView};
+use torch_files::FileModel;
+use torchui::platform::WindowStyle;
+use torchui::{App, ReadView};
 
 use super::*;
 use crate::notebooks::editor::keys::NotebookKeybindings;

@@ -8,28 +8,28 @@ use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use settings::Setting;
 use siphasher::sip::SipHasher;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::icons::Icon;
-use warp_core::ui::theme::Fill;
-use warp_core::ui::theme::color::internal_colors;
-use warpui::clipboard::ClipboardContent;
-use warpui::elements::new_scrollable::{
+use torch_core::features::FeatureFlag;
+use torch_core::ui::icons::Icon;
+use torch_core::ui::theme::Fill;
+use torch_core::ui::theme::color::internal_colors;
+use torchui::clipboard::ClipboardContent;
+use torchui::elements::new_scrollable::{
     NewScrollableElement, ScrollableAppearance, SingleAxisConfig,
 };
-use warpui::elements::{
+use torchui::elements::{
     Align, Border, ChildAnchor, ChildView, Clipped, ConstrainedBox, Container, CornerRadius,
     CrossAxisAlignment, Element, Empty, Expanded, Flex, Hoverable, List, ListState, MainAxisSize,
     MouseStateHandle, NewScrollable, OffsetPositioning, Padding, ParentAnchor, ParentElement,
     ParentOffsetBounds, Radius, Rect, ScrollStateHandle, ScrollbarWidth, Shrinkable,
     SizeConstraintCondition, SizeConstraintSwitch, Stack, Text, Wrap,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::keymap::FixedBinding;
-use warpui::platform::Cursor;
-use warpui::scene::DropShadow;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::keymap::FixedBinding;
+use torchui::platform::Cursor;
+use torchui::scene::DropShadow;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Entity, FocusContext, ModelHandle, SingletonEntity, TypedActionView, View,
     ViewContext, ViewHandle, WeakViewHandle,
 };
@@ -143,7 +143,7 @@ pub fn init(app: &mut AppContext) {
     app.register_fixed_bindings([FixedBinding::new(
         cmd_or_ctrl_shift("f"),
         AgentManagementViewAction::FocusSearch,
-        warpui::keymap::macros::id!(AgentManagementView::ui_name()),
+        torchui::keymap::macros::id!(AgentManagementView::ui_name()),
     )]);
 }
 
@@ -2199,7 +2199,7 @@ impl AgentManagementView {
             axis_config,
             theme.nonactive_ui_detail().into(),
             theme.active_ui_detail().into(),
-            warpui::elements::Fill::None,
+            torchui::elements::Fill::None,
         )
         .with_vertical_scrollbar(ScrollableAppearance::new(ScrollbarWidth::None, false))
         .with_always_handle_events_first(false)

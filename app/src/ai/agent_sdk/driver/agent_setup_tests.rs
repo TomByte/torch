@@ -4,7 +4,7 @@ use std::fs;
 use std::sync::Arc;
 
 use tempfile::TempDir;
-use warpui::App;
+use torchui::App;
 
 use super::super::AgentDriverOptions;
 use super::super::terminal::TerminalDriver;
@@ -26,7 +26,7 @@ fn driver_without_a_task_keeps_preparation_inputs_without_run_state() {
             ]),
             secrets: HashMap::from([(
                 "WARP_PREPARATION_TEST_SECRET".into(),
-                warp_managed_secrets::ManagedSecretValue::raw_value("test-value"),
+                torch_managed_secrets::ManagedSecretValue::raw_value("test-value"),
             )]),
             computer_use_config: Some((true, None)),
             ..Default::default()

@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
-use warp_core::send_telemetry_from_ctx;
-use warpui::{
+use torch_core::send_telemetry_from_ctx;
+use torchui::{
     AppContext, Entity, EntityId, ModelContext, SingletonEntity, TypedActionView, ViewHandle,
     WindowId,
 };

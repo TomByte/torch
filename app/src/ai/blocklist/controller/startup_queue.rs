@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
 use session_sharing_protocol::common::{AgentAttachment, ParticipantId, ServerConversationToken};
-use warp_core::features::FeatureFlag;
-use warp_errors::report_error;
-use warpui::{ModelContext, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torch_errors::report_error;
+use torchui::{ModelContext, SingletonEntity};
 
 use super::BlocklistAIController;
 use super::external_harness::ExternalHarnessPrompt;

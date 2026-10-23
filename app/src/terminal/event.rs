@@ -5,10 +5,10 @@ use std::time::Duration;
 
 use instant::Instant;
 pub use remote_server::setup::RemoteServerSetupState;
-pub use warp_terminal::event::{
+pub use torch_terminal::event::{
     ExecutedExecutorCommandEvent, ObservedExitStatus, ParseGeneratorOutputError,
 };
-use warp_util::lazy::Lazy;
+use torch_util::lazy::Lazy;
 
 use super::history::HistoryEntry;
 use super::model::ansi::{ExternalShellWidgetSelectionValue, FinishUpdateValue};
@@ -28,7 +28,7 @@ use crate::terminal::shell::ShellType;
 #[derive(Clone)]
 /// Events sent to the main thread by the terminal model & event loop.
 pub enum Event {
-    CompletionsFinished(Vec<ShellCompletion>, Option<warp_completer::meta::Span>),
+    CompletionsFinished(Vec<ShellCompletion>, Option<torch_completer::meta::Span>),
     MouseCursorDirty,
     Title {
         title: String,
@@ -160,21 +160,21 @@ pub enum Event {
     },
 }
 
-impl From<warp_terminal::event::Event> for Event {
-    fn from(event: warp_terminal::event::Event) -> Self {
+impl From<torch_terminal::event::Event> for Event {
+    fn from(event: torch_terminal::event::Event) -> Self {
         match event {
-            warp_terminal::event::Event::MouseCursorDirty => Self::MouseCursorDirty,
-            warp_terminal::event::Event::ClipboardStore(clipboard, text) => {
+            torch_terminal::event::Event::MouseCursorDirty => Self::MouseCursorDirty,
+            torch_terminal::event::Event::ClipboardStore(clipboard, text) => {
                 Self::ClipboardStore(clipboard, text)
             }
-            warp_terminal::event::Event::ClipboardLoad(clipboard, load) => {
+            torch_terminal::event::Event::ClipboardLoad(clipboard, load) => {
                 Self::ClipboardLoad(clipboard, load)
             }
-            warp_terminal::event::Event::CursorBlinkingChange(blinking) => {
+            torch_terminal::event::Event::CursorBlinkingChange(blinking) => {
                 Self::CursorBlinkingChange(blinking)
             }
-            warp_terminal::event::Event::Bell => Self::Bell,
-            warp_terminal::event::Event::ImageReceived {
+            torch_terminal::event::Event::Bell => Self::Bell,
+            torch_terminal::event::Event::ImageReceived {
                 image_id,
                 image_data,
                 image_protocol,

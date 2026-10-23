@@ -5,12 +5,12 @@ use std::time::Duration;
 
 use anyhow::{Context, Result};
 use instant::Instant;
-use warp_harness_usage::api::HarnessUsageRequest;
-use warp_harness_usage::{
+use torch_harness_usage::api::HarnessUsageRequest;
+use torch_harness_usage::{
     CaptureDiagnostics, JsonlCapture, JsonlDiagnostics, JsonlLimits, JsonlReadStatus, parse_jsonl,
 };
-use warpui::r#async::Timer;
-use warpui::duration_with_jitter;
+use torchui::r#async::Timer;
+use torchui::duration_with_jitter;
 
 use crate::ai::agent::api::ServerConversationToken;
 use crate::server::server_api::harness_support::{HarnessSupportClient, upload_to_target};

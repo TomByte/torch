@@ -3,31 +3,31 @@ use std::sync::LazyLock;
 
 use itertools::Itertools;
 use pathfinder_geometry::vector::vec2f;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::Icon;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::color::blend::Blend;
-use warp_core::ui::theme::Fill;
-use warp_search_core::inline_menu::{InlineMenuResultsUpdate, InlineMenuSelection};
-use warpui::color::ColorU;
-use warpui::elements::drag_resize::drag_resize_handle;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::ui::Icon;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::color::blend::Blend;
+use torch_core::ui::theme::Fill;
+use torch_search_core::inline_menu::{InlineMenuResultsUpdate, InlineMenuSelection};
+use torchui::color::ColorU;
+use torchui::elements::drag_resize::drag_resize_handle;
+use torchui::elements::{
     ChildAnchor, Clipped, DispatchEventResult, DragResizeElement, DragResizeHandle, EventHandler,
     Expanded, Hoverable, MainAxisAlignment, MainAxisSize, MouseInBehavior, MouseStateHandle,
     OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, ResizeEndFn,
     ScrollStateHandle, Scrollable, ScrollableElement, ScrollbarWidth, SizeConstraintCondition,
     SizeConstraintSwitch, Stack, UniformList, UniformListState,
 };
-use warpui::fonts::Weight;
-use warpui::platform::Cursor;
-use warpui::prelude::{
+use torchui::fonts::Weight;
+use torchui::platform::Cursor;
+use torchui::prelude::{
     Align, ChildView, ConstrainedBox, Container, CrossAxisAlignment, Empty, Flex, SavePosition,
     Text,
 };
-use warpui::scene::{Border, CornerRadius, Radius};
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::scene::{Border, CornerRadius, Radius};
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{
     Action, AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View,
     ViewContext, ViewHandle, WeakViewHandle,
 };
@@ -132,8 +132,8 @@ impl<A: InlineMenuAction> QueryResultRendererExt for QueryResultRenderer<A> {
         is_selected: bool,
         app: &AppContext,
     ) -> Box<dyn Element> {
-        use warpui::elements::{DispatchEventResult, EventHandler, Hoverable};
-        use warpui::platform::Cursor;
+        use torchui::elements::{DispatchEventResult, EventHandler, Hoverable};
+        use torchui::platform::Cursor;
 
         if self.search_result.is_static_separator() {
             return self.render_inline_with_highlight_state(ItemHighlightState::Default, true, app);
@@ -190,7 +190,7 @@ impl<A: InlineMenuAction> QueryResultRendererExt for QueryResultRenderer<A> {
         is_static_separator: bool,
         app: &AppContext,
     ) -> Box<dyn Element> {
-        use warpui::elements::{MainAxisSize, Shrinkable};
+        use torchui::elements::{MainAxisSize, Shrinkable};
 
         let appearance = Appearance::as_ref(app);
         let icon = self.search_result.render_icon(highlight_state, appearance);
@@ -932,7 +932,7 @@ impl<A: InlineMenuAction, T: 'static + Send + Sync> InlineMenuView<A, T> {
             ScrollbarWidth::Auto,
             theme.nonactive_ui_detail().into(),
             theme.active_ui_detail().into(),
-            warpui::elements::Fill::None,
+            torchui::elements::Fill::None,
         )
         .with_overlayed_scrollbar()
         .finish();

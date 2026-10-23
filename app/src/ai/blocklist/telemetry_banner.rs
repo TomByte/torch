@@ -1,11 +1,11 @@
-use warpui::elements::{
+use torchui::elements::{
     ConstrainedBox, Container, CrossAxisAlignment, Flex, MainAxisAlignment, MainAxisSize,
     MouseStateHandle, ParentElement, Shrinkable, Text,
 };
-use warpui::platform::Cursor;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{AppContext, Element, Entity, SingletonEntity, View, ViewContext};
+use torchui::platform::Cursor;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{AppContext, Element, Entity, SingletonEntity, View, ViewContext};
 
 use crate::settings_view::SettingsSection;
 use crate::terminal::view::TerminalAction;

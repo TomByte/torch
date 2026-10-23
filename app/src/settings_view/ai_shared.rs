@@ -12,15 +12,15 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 
 use settings::Setting;
-use warp_core::context_flag::ContextFlag;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::theme::color::internal_colors;
-use warpui::elements::{
+use torch_core::context_flag::ContextFlag;
+use torch_core::features::FeatureFlag;
+use torch_core::ui::theme::color::internal_colors;
+use torchui::elements::{
     ChildView, Container, Element, Fill, Flex, MouseStateHandle, ParentElement,
 };
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::ui_components::switch::SwitchStateHandle;
-use warpui::{Action, AppContext, SingletonEntity, View, ViewContext, ViewHandle};
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::ui_components::switch::SwitchStateHandle;
+use torchui::{Action, AppContext, SingletonEntity, View, ViewContext, ViewHandle};
 
 use super::SettingsAction;
 use super::settings_page::{
@@ -211,9 +211,9 @@ pub fn render_ai_feature_switch(
 }
 
 pub mod styles {
-    use warp_core::ui::appearance::Appearance;
-    use warp_core::ui::theme::Fill;
-    use warpui::{AppContext, SingletonEntity};
+    use torch_core::ui::appearance::Appearance;
+    use torch_core::ui::theme::Fill;
+    use torchui::{AppContext, SingletonEntity};
 
     /// Negative margin applied to description text so it appears closer to the main settings option
     /// text.

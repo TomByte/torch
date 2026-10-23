@@ -1,18 +1,18 @@
 use chrono::{Local, TimeZone};
 use uuid::Uuid;
-use warp_core::ui::external_product_icon::ExternalProductIcon;
-use warp_core::ui::icons::Icon;
-use warp_core::ui::theme::color::internal_colors;
-use warpui::elements::{
+use torch_core::ui::external_product_icon::ExternalProductIcon;
+use torch_core::ui::icons::Icon;
+use torch_core::ui::theme::color::internal_colors;
+use torchui::elements::{
     Align, Border, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Empty,
     Flex, Hoverable, MainAxisAlignment, MouseStateHandle, Padding, ParentElement, Radius,
     Shrinkable, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::keymap::Keystroke;
-use warpui::platform::Cursor;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::keymap::Keystroke;
+use torchui::platform::Cursor;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 

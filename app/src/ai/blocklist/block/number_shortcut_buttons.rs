@@ -1,12 +1,12 @@
-use warpui::elements::{
+use torchui::elements::{
     ClippedScrollStateHandle, Container, CrossAxisAlignment, DispatchEventResult, EventHandler,
     Flex, Hoverable, MouseInBehavior, MouseStateHandle, ParentElement, SavePosition, ScrollTarget,
     ScrollToPositionMode,
 };
-use warpui::keymap::FixedBinding;
-use warpui::ui_components::button::Button;
-use warpui::ui_components::components::UiComponent;
-use warpui::{
+use torchui::keymap::FixedBinding;
+use torchui::ui_components::button::Button;
+use torchui::ui_components::components::UiComponent;
+use torchui::{
     AppContext, Element, Entity, TypedActionView, View, ViewContext, ViewHandle, WeakViewHandle,
 };
 
@@ -20,7 +20,7 @@ const KEYBOARD_NAVIGATION_ENABLED: &str = "KeyboardNavigationEnabled";
 const ENTER_ACTIVATION_ENABLED: &str = "EnterActivationEnabled";
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     for i in 1..=9u8 {
         app.register_fixed_bindings([FixedBinding::new(
@@ -77,7 +77,7 @@ pub enum NumberShortcutButtonsAction {
 
 pub enum NumberShortcutButtonsEvent {}
 
-pub type ButtonBuilder = Box<dyn Fn(bool, &warpui::AppContext) -> Button>;
+pub type ButtonBuilder = Box<dyn Fn(bool, &torchui::AppContext) -> Button>;
 pub type OnButtonClickFn = Box<dyn Fn(&mut ViewContext<NumberShortcutButtons>)>;
 
 #[derive(Clone, Default)]
@@ -123,7 +123,7 @@ pub struct NumberShortcutButtonBuilder {
 
 impl NumberShortcutButtonBuilder {
     pub fn new(
-        button_builder: impl Fn(bool, &warpui::AppContext) -> Button + 'static,
+        button_builder: impl Fn(bool, &torchui::AppContext) -> Button + 'static,
         on_click: impl Fn(&mut ViewContext<NumberShortcutButtons>) + 'static,
     ) -> Self {
         Self {
@@ -142,7 +142,7 @@ impl NumberShortcutButtonBuilder {
     }
 }
 
-pub fn numbered_shortcut_button<A: warpui::Action + Clone + 'static>(
+pub fn numbered_shortcut_button<A: torchui::Action + Clone + 'static>(
     number: usize,
     text_label: String,
     is_checked: bool,
@@ -317,7 +317,7 @@ impl View for NumberShortcutButtons {
         "NumberShortcutButtons"
     }
 
-    fn render(&self, app: &warpui::AppContext) -> Box<dyn warpui::Element> {
+    fn render(&self, app: &torchui::AppContext) -> Box<dyn torchui::Element> {
         Hoverable::new(self.mouse_state.clone(), |_| {
             let mut content = Flex::column().with_cross_axis_alignment(CrossAxisAlignment::Stretch);
             for (index, button_builder) in self.button_builders.iter().enumerate() {
@@ -367,7 +367,7 @@ impl View for NumberShortcutButtons {
         .finish()
     }
 
-    fn keymap_context(&self, app: &AppContext) -> warpui::keymap::Context {
+    fn keymap_context(&self, app: &AppContext) -> torchui::keymap::Context {
         let mut context = Self::default_keymap_context();
         if !self.button_builders.is_empty() && self.keyboard_shortcuts_enabled(app) {
             context.set.insert(NUMBER_SELECT_ENABLED);

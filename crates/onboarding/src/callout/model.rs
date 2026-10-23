@@ -1,6 +1,6 @@
-use warp_core::send_telemetry_from_ctx;
-use warp_errors::report_error;
-use warpui_core::{Entity, ModelContext};
+use torch_core::send_telemetry_from_ctx;
+use torch_errors::report_error;
+use torchui_core::{Entity, ModelContext};
 
 use crate::OnboardingIntention;
 use crate::telemetry::OnboardingEvent;

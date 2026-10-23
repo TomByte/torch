@@ -8,11 +8,11 @@ pub use onboarding::OnboardingIntention;
 use pathfinder_geometry::vector::Vector2F;
 use session_sharing_protocol::common::Role;
 use session_sharing_protocol::sharer::RoleUpdateReason;
-use warp_util::user_input::UserInput;
-use warpui::EntityId;
-use warpui::elements::HyperlinkUrl;
-use warpui::event::ModifiersState;
-use warpui::units::Lines;
+use torch_util::user_input::UserInput;
+use torchui::EntityId;
+use torchui::elements::HyperlinkUrl;
+use torchui::event::ModifiersState;
+use torchui::units::Lines;
 
 use super::inline_banner::{
     AwsBedrockLoginBannerAction, AwsCliNotInstalledBannerAction, OpenInWarpBannerAction,
@@ -190,7 +190,7 @@ pub enum TerminalAction {
     RunNativeShellCompletions {
         buffer_text: String,
         results_tx:
-            async_channel::Sender<(Vec<ShellCompletion>, Option<warp_completer::meta::Span>)>,
+            async_channel::Sender<(Vec<ShellCompletion>, Option<torch_completer::meta::Span>)>,
     },
     KeyDown(String),
     TypedCharacters(String),
@@ -273,7 +273,7 @@ pub enum TerminalAction {
     OpenCodeInWarp {
         path: PathBuf,
         layout: crate::util::file::external_editor::settings::EditorLayout,
-        line_col: Option<warp_util::path::LineAndColumnArg>,
+        line_col: Option<torch_util::path::LineAndColumnArg>,
     },
     OpenWorkflowModal,
     OpenWorkflowModalForAIWorkflow(Workflow),

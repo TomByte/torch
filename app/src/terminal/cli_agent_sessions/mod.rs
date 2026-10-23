@@ -10,9 +10,9 @@ use std::time::Duration;
 
 use event::{CLIAgentEvent, CLIAgentEventSource, CLIAgentEventType};
 use instant::Instant;
-use warp_core::execution_mode::AppExecutionMode;
-use warpui::r#async::SpawnedFutureHandle;
-use warpui::{Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
+use torch_core::execution_mode::AppExecutionMode;
+use torchui::r#async::SpawnedFutureHandle;
+use torchui::{Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
 
 use self::listener::CLIAgentSessionListener;
 use super::CLIAgent;
@@ -700,7 +700,7 @@ impl CLIAgentSessionsModel {
             .entry(terminal_view_id)
             .or_default();
         let handle = ctx.spawn_abortable(
-            async move { warpui::r#async::Timer::after(window).await },
+            async move { torchui::r#async::Timer::after(window).await },
             move |model, _, ctx| model.resolve_pending_cancel(terminal_view_id, token, ctx),
             |_, _| {},
         );

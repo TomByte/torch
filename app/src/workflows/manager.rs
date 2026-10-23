@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 
-use warpui::{Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
+use torchui::{Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
 
 use super::CloudWorkflowModel;
 use super::workflow::Workflow;

@@ -10,11 +10,11 @@ use serde::{Deserialize, Deserializer, Serialize};
 use sha2::{Digest, Sha256};
 use url::Url;
 use uuid::Uuid;
-use warp_core::send_telemetry_from_ctx;
-use warp_errors::report_error;
+use torch_core::send_telemetry_from_ctx;
+use torch_errors::report_error;
 use warp_multi_agent_api as api;
-use warpui_core::{Entity, ModelContext, SingletonEntity};
-use warpui_extras::secure_storage::{self, AppContextExt};
+use torchui_core::{Entity, ModelContext, SingletonEntity};
+use torchui_extras::secure_storage::{self, AppContextExt};
 
 use crate::LLMProvider;
 pub use crate::aws_credentials::{AwsCredentials, AwsCredentialsState};

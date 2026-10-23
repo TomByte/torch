@@ -15,11 +15,11 @@ use session_sharing_protocol::common::SessionId;
 use tempfile::TempDir;
 use terminal::shared_session::permissions_manager::SessionPermissionsManager;
 use terminal::view::ActiveSessionState;
-use warp_editor::editor::NavigationKey;
+use torch_editor::editor::NavigationKey;
 #[cfg(feature = "local_fs")]
-use warp_files::FileModel;
-use warpui::platform::WindowStyle;
-use warpui::{AddSingletonModel, App, ViewHandle};
+use torch_files::FileModel;
+use torchui::platform::WindowStyle;
+use torchui::{AddSingletonModel, App, ViewHandle};
 use watcher::HomeDirectoryWatcher;
 
 use super::*;
@@ -210,7 +210,7 @@ pub(crate) fn initialize_app_with_team_client(app: &mut App, team_client: Arc<dy
     // page's `IapManager::as_ref(ctx).is_enabled()` check panics if the
     // singleton isn't registered, even though it's a no-op on production.
     app.add_singleton_model(|ctx| {
-        warp_server_client::iap::IapManager::new(
+        torch_server_client::iap::IapManager::new(
             None,
             Box::new(|_| futures::FutureExt::boxed(futures::future::ready(None::<String>))),
             None,
@@ -852,7 +852,7 @@ fn test_tools_panel_does_not_suppress_vertical_tab_bar_traffic_light_padding() {
 /// would drop the override and let the source profile's default D win.
 #[test]
 fn copy_model_and_profile_preserves_explicit_model_over_source_profile_default() {
-    use warpui::EntityId;
+    use torchui::EntityId;
 
     use crate::ai::llms::{AvailableLLMs, LLMId, LLMInfo, ModelsByFeature};
     use crate::workspaces::user_workspaces::TeamlessScopeForTest;
@@ -1250,7 +1250,7 @@ fn test_open_file_with_target_event_preserves_requested_line() {
 #[cfg(feature = "local_fs")]
 #[test]
 fn test_markdown_toggle_shortcut_switches_between_raw_and_rendered_panes() {
-    use warpui::keymap::Keystroke;
+    use torchui::keymap::Keystroke;
 
     use crate::code::editor_management::CodeManager;
     use crate::code::global_buffer_model::GlobalBufferModel;
@@ -4473,11 +4473,11 @@ fn test_worktree_sidecar_hides_linked_worktrees_from_repo_list() {
             let external_git_dir_canon = CanonicalizedPath::try_from(external_git_dir.as_path())
                 .expect("canonical external git dir");
 
-            let main_repo_std: warp_util::standardized_path::StandardizedPath =
+            let main_repo_std: torch_util::standardized_path::StandardizedPath =
                 main_repo_canon.into();
-            let linked_worktree_std: warp_util::standardized_path::StandardizedPath =
+            let linked_worktree_std: torch_util::standardized_path::StandardizedPath =
                 linked_worktree_canon.into();
-            let external_git_dir_std: warp_util::standardized_path::StandardizedPath =
+            let external_git_dir_std: torch_util::standardized_path::StandardizedPath =
                 external_git_dir_canon.into();
 
             DetectedRepositories::handle(ctx).update(ctx, |repos, _ctx| {
@@ -5504,7 +5504,7 @@ fn test_tools_panel_warp_drive_toggle_updates_available_views() {
 mod simplified_wasm_tab_bar {
     use chrono::Utc;
     use uuid::Uuid;
-    use warpui::{AppContext, View, ViewContext};
+    use torchui::{AppContext, View, ViewContext};
 
     use super::*;
     use crate::ai::agent::api::ServerConversationToken;

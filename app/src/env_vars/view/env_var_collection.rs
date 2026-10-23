@@ -1,19 +1,19 @@
 use pathfinder_geometry::vector::{Vector2F, vec2f};
-use warp_core::features::FeatureFlag;
-use warp_errors::report_error;
-use warpui::clipboard::ClipboardContent;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_errors::report_error;
+use torchui::clipboard::ClipboardContent;
+use torchui::elements::{
     Align, AnchorPair, ChildAnchor, Clipped, ClippedScrollStateHandle, ClippedScrollable,
     ConstrainedBox, Container, CrossAxisAlignment, DispatchEventResult, EventHandler, Fill, Flex,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning, OffsetType, ParentAnchor,
     ParentElement, ParentOffsetBounds, PositioningAxis, SavePosition, ScrollbarWidth, Shrinkable,
     Stack, XAxisAnchor, YAxisAnchor,
 };
-use warpui::keymap::EditableBinding;
-use warpui::platform::Cursor;
-use warpui::presenter::ChildView;
-use warpui::ui_components::components::UiComponent;
-use warpui::{
+use torchui::keymap::EditableBinding;
+use torchui::platform::Cursor;
+use torchui::presenter::ChildView;
+use torchui::ui_components::components::UiComponent;
+use torchui::{
     AppContext, BlurContext, Element, Entity, FocusContext, ModelAsRef, ModelHandle,
     SingletonEntity, TypedActionView, View, ViewContext, ViewHandle, WindowId, id,
 };
@@ -1284,7 +1284,7 @@ impl View for EnvVarCollectionView {
         }
     }
 
-    fn render(&self, app: &AppContext) -> Box<dyn warpui::Element> {
+    fn render(&self, app: &AppContext) -> Box<dyn torchui::Element> {
         let appearance = Appearance::as_ref(app);
         let theme = appearance.theme();
         let mut content = Flex::column();

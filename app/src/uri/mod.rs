@@ -16,11 +16,11 @@ use itertools::Itertools;
 use session_sharing_protocol::common::SessionId;
 use url::Url;
 #[cfg(not(target_family = "wasm"))]
-use warp_errors::report_error;
-use warp_util::path::LineAndColumnArg;
-use warpui::notification::UserNotification;
-use warpui::platform::TerminationMode;
-use warpui::{AppContext, EntityId, SingletonEntity as _, TypedActionView, ViewHandle, WindowId};
+use torch_errors::report_error;
+use torch_util::path::LineAndColumnArg;
+use torchui::notification::UserNotification;
+use torchui::platform::TerminationMode;
+use torchui::{AppContext, EntityId, SingletonEntity as _, TypedActionView, ViewHandle, WindowId};
 
 use self::docker::open_docker_container;
 use crate::ai::active_agent_views_model::{ActiveAgentViewsModel, ConversationOrTaskId};

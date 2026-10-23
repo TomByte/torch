@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use futures::FutureExt;
 use futures::future::BoxFuture;
-use warpui::{Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
+use torchui::{Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
 
 use super::{
     ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessActionInput,

@@ -1,10 +1,10 @@
 use ai::api_keys::{ApiKeyManager, GeapCredentialsState};
-use warp_core::ui::Icon;
-use warpui::elements::{
+use torch_core::ui::Icon;
+use torchui::elements::{
     ChildView, ConstrainedBox, CrossAxisAlignment, Flex, MainAxisAlignment, MainAxisSize,
     ParentElement, Shrinkable, SizeConstraintCondition, SizeConstraintSwitch, Text,
 };
-use warpui::{
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 

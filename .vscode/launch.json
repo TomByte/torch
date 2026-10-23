@@ -135,11 +135,11 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug unit tests in library 'warpui'",
+      "name": "Debug unit tests in library 'torchui'",
       "cargo": {
-        "args": ["test", "--no-run", "--lib", "--package=warpui"],
+        "args": ["test", "--no-run", "--lib", "--package=torchui"],
         "filter": {
-          "name": "warpui",
+          "name": "torchui",
           "kind": "lib"
         }
       },

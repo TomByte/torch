@@ -1,5 +1,5 @@
-use warpui::async_assert;
-use warpui::integration::{AssertionCallback, TestStep};
+use torchui::async_assert;
+use torchui::integration::{AssertionCallback, TestStep};
 
 use super::terminal::assert_no_block_executing;
 use crate::integration_testing::view_getters::terminal_view;

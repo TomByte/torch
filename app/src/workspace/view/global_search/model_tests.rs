@@ -1,6 +1,6 @@
 use remote_server::HostId;
 use remote_server::proto::{RipgrepSearchMatch, RipgrepSearchSubmatch, RipgrepSearchSuccess};
-use warp_util::local_or_remote_path::LocalOrRemotePath;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
 
 use super::GlobalSearch;
 

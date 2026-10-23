@@ -1,5 +1,5 @@
 use chrono::{DateTime, Duration, Local, TimeZone as _};
-use warp_core::command::ExitCode;
+use torch_core::command::ExitCode;
 
 use super::*;
 use crate::terminal::HistoryEntry;

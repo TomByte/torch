@@ -1,11 +1,11 @@
 use std::path::PathBuf;
 
-use warp_editor::model::CoreEditorModel;
-use warp_editor::render::model::{
+use torch_editor::model::CoreEditorModel;
+use torch_editor::render::model::{
     BlockItem, HitTestOptions, LineCount, Location, RenderLineLocation,
 };
-use warpui::units::Pixels;
-use warpui::{AppContext, ViewContext};
+use torchui::units::Pixels;
+use torchui::{AppContext, ViewContext};
 
 use super::{CodeReviewView, CodeReviewViewState, FILE_HEADER_HEIGHT};
 use crate::code::buffer_location::LocalOrRemotePath;

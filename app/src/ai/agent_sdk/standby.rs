@@ -17,13 +17,13 @@ use cloud_object_models::{CodeForge, SourceRepo};
 use futures::future::BoxFuture;
 use futures::stream::BoxStream;
 use futures::{FutureExt as _, Sink, SinkExt as _, StreamExt as _, sink, stream};
-use warp_cli::agent::{Harness, RunCloudStandbyArgs};
-use warp_cli::skill::SkillSpec;
-use warp_core::{safe_info, safe_warn};
-use warp_graphql::queries::execution_config::ExecutionConfiguration;
-use warpui::r#async::Timer;
-use warpui::platform::TerminationMode;
-use warpui::{AppContext, ModelSpawner, SingletonEntity};
+use torch_cli::agent::{Harness, RunCloudStandbyArgs};
+use torch_cli::skill::SkillSpec;
+use torch_core::{safe_info, safe_warn};
+use torch_graphql::queries::execution_config::ExecutionConfiguration;
+use torchui::r#async::Timer;
+use torchui::platform::TerminationMode;
+use torchui::{AppContext, ModelSpawner, SingletonEntity};
 
 use crate::ai::agent_sdk::driver::agent_setup::configured_skills::{
     merge_skill_dirs, resolve_configured_skills,

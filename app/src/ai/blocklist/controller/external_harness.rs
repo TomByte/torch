@@ -4,10 +4,10 @@
 // by this client (so task status syncing keeps working); only the turn itself is the harness's.
 use session_sharing_protocol::common::{AgentAttachment, ParticipantId};
 use uuid::Uuid;
-use warp_errors::report_error;
+use torch_errors::report_error;
 use warp_multi_agent_api::response_event::{StreamFinished, StreamInit, stream_finished};
 use warp_multi_agent_api::{ResponseEvent, response_event};
-use warpui::{ModelContext, SingletonEntity};
+use torchui::{ModelContext, SingletonEntity};
 
 use super::response_stream::ResponseStreamId;
 use super::{BlocklistAIController, RequestInput};

@@ -1,8 +1,8 @@
 //! Shared projection of cloud environments for GUI and TUI consumers.
 
 use settings::Setting as _;
-use warp_errors::report_if_error;
-use warpui::{AppContext, Entity, ModelContext, SingletonEntity as _};
+use torch_errors::report_if_error;
+use torchui::{AppContext, Entity, ModelContext, SingletonEntity as _};
 
 use super::CloudAmbientAgentEnvironment;
 use crate::ai::cloud_agent_settings::CloudAgentSettings;
@@ -169,7 +169,7 @@ impl Entity for CloudEnvironmentCatalog {
     type Event = CloudEnvironmentCatalogEvent;
 }
 
-impl warpui::SingletonEntity for CloudEnvironmentCatalog {}
+impl torchui::SingletonEntity for CloudEnvironmentCatalog {}
 
 pub(crate) fn sort_environments_by_recency(environments: &mut [CloudAmbientAgentEnvironment]) {
     environments.sort_by(|a, b| {

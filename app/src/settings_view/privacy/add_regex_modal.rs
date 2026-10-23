@@ -1,12 +1,12 @@
 use regex::Regex;
-use warp_editor::editor::NavigationKey;
-use warpui::elements::{
+use torch_editor::editor::NavigationKey;
+use torchui::elements::{
     ChildView, Container, CrossAxisAlignment, Empty, Expanded, Flex, MainAxisSize,
     MouseStateHandle, ParentElement, Text,
 };
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 

@@ -13,11 +13,11 @@ use futures::future::ready;
 #[cfg(not(target_family = "wasm"))]
 use repo_metadata::repositories::DetectedRepositories;
 use repo_metadata::repositories::RepoDetectionSource;
-use warp_core::SessionId;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warpui::AppContext;
+use torch_core::SessionId;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torchui::AppContext;
 #[cfg(not(target_family = "wasm"))]
-use warpui::SingletonEntity;
+use torchui::SingletonEntity;
 
 #[cfg(not(target_family = "wasm"))]
 use crate::remote_server::manager::RemoteServerManager;

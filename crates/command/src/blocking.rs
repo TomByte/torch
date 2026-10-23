@@ -10,7 +10,7 @@ use std::process::{Child, CommandArgs, CommandEnvs, ExitStatus, Output, Stdio};
 #[cfg(windows)]
 use anyhow::Context as _;
 #[cfg(windows)]
-use warp_errors::report_error;
+use torch_errors::report_error;
 #[cfg(windows)]
 use {super::windows::JobObject, std::os::windows::io::AsRawHandle};
 

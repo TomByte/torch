@@ -1,4 +1,4 @@
-use warp_graphql::queries::get_user::UserOutput as GqlUserOutput;
+use torch_graphql::queries::get_user::UserOutput as GqlUserOutput;
 
 use super::UserUid;
 use super::user::User;

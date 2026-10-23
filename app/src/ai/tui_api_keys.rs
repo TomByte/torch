@@ -1,14 +1,14 @@
 use ai::api_keys::ApiKeyManager;
 use anyhow::Context as _;
 use uuid::Uuid;
-use warpui::{ModelContext, SingletonEntity as _};
+use torchui::{ModelContext, SingletonEntity as _};
 
 use crate::warp_managed_paths_watcher::{
     WarpManagedPathsWatcher, WarpManagedPathsWatcherEvent, repository_update_touches_path,
 };
 
 fn revision_file_path() -> std::path::PathBuf {
-    warp_core::paths::tui_config_local_dir().join("api_keys.revision")
+    torch_core::paths::tui_config_local_dir().join("api_keys.revision")
 }
 
 /// Signals running TUI processes to reload their API keys from secure storage.

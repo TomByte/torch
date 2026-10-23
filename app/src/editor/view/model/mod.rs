@@ -36,13 +36,13 @@ use vim::{
     vim_inner_block, vim_inner_line, vim_inner_paragraph, vim_inner_quote, vim_inner_word,
     vim_word_iterator_from_offset,
 };
-use warp_errors::report_error;
-use warpui::accessibility::{AccessibilityContent, WarpA11yRole};
-use warpui::text::TextBuffer;
-use warpui::text::point::Point;
-use warpui::text::word_boundaries::WordBoundariesPolicy;
-use warpui::text_layout::TextStyle;
-use warpui::{AppContext, Entity, ModelAsRef, ModelContext, ModelHandle, SingletonEntity};
+use torch_errors::report_error;
+use torchui::accessibility::{AccessibilityContent, WarpA11yRole};
+use torchui::text::TextBuffer;
+use torchui::text::point::Point;
+use torchui::text::word_boundaries::WordBoundariesPolicy;
+use torchui::text_layout::TextStyle;
+use torchui::{AppContext, Entity, ModelAsRef, ModelContext, ModelHandle, SingletonEntity};
 
 use self::buffer::Peer;
 use super::{PlainTextEditorViewAction, SelectionInsertion, ValidInputType, movement};

@@ -3,10 +3,10 @@ use futures::executor::block_on;
 use itertools::Itertools;
 use mockito::{Matcher, Mock, Server};
 use serde_json::{Value, json};
-use warp_graphql::ai::PlatformErrorCode;
-use warp_graphql::platform_error::{PlatformErrorInfo, PlatformErrorMessageFormat};
-use warp_graphql::queries::execution_config::CodeForge;
-use warp_server_client::base_client::{CLOUD_AGENT_ID_HEADER, TEAM_UID_HEADER};
+use torch_graphql::ai::PlatformErrorCode;
+use torch_graphql::platform_error::{PlatformErrorInfo, PlatformErrorMessageFormat};
+use torch_graphql::queries::execution_config::CodeForge;
+use torch_server_client::base_client::{CLOUD_AGENT_ID_HEADER, TEAM_UID_HEADER};
 
 use super::super::ServerApi;
 use super::{
@@ -89,7 +89,7 @@ fn mock_execution_bootstrap(
     workload_token: &str,
     supports_deferred_repositories: bool,
 ) -> Mock {
-    let mut server = warp_core::channel::ChannelState::mock_server();
+    let mut server = torch_core::channel::ChannelState::mock_server();
     server
         .mock("POST", "/graphql/v2")
         .match_query(Matcher::UrlEncoded(
@@ -136,7 +136,7 @@ fn block_snapshot_resolves_url_before_deserializing_storage_bytes() {
         .with_body(block.to_json().unwrap())
         .create();
     let api_request = {
-        let mut server = warp_core::channel::ChannelState::mock_server();
+        let mut server = torch_core::channel::ChannelState::mock_server();
         server.mock("GET", "/api/v1/agent/conversations/test-block-download/block-snapshot")
             .match_query(Matcher::UrlEncoded("redirect".into(), "false".into()))
             .with_status(200)
@@ -266,7 +266,7 @@ fn execution_bootstrap_rejects_configuration_errors() {
 }
 
 fn mock_git_credentials(input: Value, response: Value, operation: &str) -> Mock {
-    let mut server = warp_core::channel::ChannelState::mock_server();
+    let mut server = torch_core::channel::ChannelState::mock_server();
     server
         .mock("POST", "/graphql/v2")
         .match_query(Matcher::UrlEncoded("op".into(), operation.into()))
@@ -329,7 +329,7 @@ fn factory_git_credentials_do_not_fall_back_after_schema_errors() {
         }]}),
         "TaskGitCredentials",
     );
-    let mut server = warp_core::channel::ChannelState::mock_server();
+    let mut server = torch_core::channel::ChannelState::mock_server();
     let fallback = server
         .mock("POST", "/graphql/v2")
         .match_query(Matcher::UrlEncoded(
@@ -446,7 +446,7 @@ fn task_status_message_input_preserves_full_platform_error() {
 fn list_agents_sends_selected_team_header() {
     let team_uid = ServerId::from(7);
     let _request = {
-        let mut server = warp_core::channel::ChannelState::mock_server();
+        let mut server = torch_core::channel::ChannelState::mock_server();
         server
             .mock("GET", "/api/v1/agent/identities")
             .match_header(TEAM_UID_HEADER, team_uid.to_string().as_str())
@@ -465,7 +465,7 @@ fn list_agents_sends_selected_team_header() {
 fn create_agent_sends_selected_team_header() {
     let team_uid = ServerId::from(8);
     let _request = {
-        let mut server = warp_core::channel::ChannelState::mock_server();
+        let mut server = torch_core::channel::ChannelState::mock_server();
         server
             .mock("POST", "/api/v1/agent/identities")
             .match_header(TEAM_UID_HEADER, team_uid.to_string().as_str())
@@ -496,7 +496,7 @@ fn create_agent_sends_selected_team_header() {
 fn list_skills_sends_selected_team_header() {
     let team_uid = ServerId::from(9);
     let _request = {
-        let mut server = warp_core::channel::ChannelState::mock_server();
+        let mut server = torch_core::channel::ChannelState::mock_server();
         server
             .mock("GET", "/api/v1/agent")
             .match_header(TEAM_UID_HEADER, team_uid.to_string().as_str())
@@ -515,7 +515,7 @@ fn list_skills_sends_selected_team_header() {
 fn list_memory_stores_sends_selected_team_header() {
     let team_uid = ServerId::from(10);
     let _request = {
-        let mut server = warp_core::channel::ChannelState::mock_server();
+        let mut server = torch_core::channel::ChannelState::mock_server();
         server
             .mock("GET", "/api/v1/memory_stores")
             .match_header(TEAM_UID_HEADER, team_uid.to_string().as_str())
@@ -533,7 +533,7 @@ fn list_memory_stores_sends_selected_team_header() {
 #[test]
 fn list_agents_omits_team_header_for_personal_scope() {
     let _request = {
-        let mut server = warp_core::channel::ChannelState::mock_server();
+        let mut server = torch_core::channel::ChannelState::mock_server();
         server
             .mock("GET", "/api/v1/agent/identities")
             .match_header(TEAM_UID_HEADER, Matcher::Missing)
@@ -579,7 +579,7 @@ fn list_agent_runs_sends_selected_team_header() {
     let team_uid = ServerId::from(123);
     let scope = RequestTeamScope::from_scope(&TeamContextForOperation::new_for_test(team_uid));
     let _request = {
-        let mut server = warp_core::channel::ChannelState::mock_server();
+        let mut server = torch_core::channel::ChannelState::mock_server();
         server
             .mock("GET", "/api/v1/agent/runs")
             .match_header(TEAM_UID_HEADER, team_uid.to_string().as_str())
@@ -599,7 +599,7 @@ fn list_agent_runs_sends_selected_team_header() {
 fn list_agent_runs_omits_team_header_for_teamless_scope() {
     let scope = RequestTeamScope::from_scope(&TeamlessScopeForTest);
     let _request = {
-        let mut server = warp_core::channel::ChannelState::mock_server();
+        let mut server = torch_core::channel::ChannelState::mock_server();
         server
             .mock("GET", "/api/v1/agent/runs")
             .match_header(TEAM_UID_HEADER, Matcher::Missing)
@@ -686,7 +686,7 @@ fn connected_self_hosted_workers_path_uses_public_api_route() {
 fn list_connected_self_hosted_workers_sends_selected_team_header() {
     let team_uid = ServerId::from(124);
     let _request = {
-        let mut server = warp_core::channel::ChannelState::mock_server();
+        let mut server = torch_core::channel::ChannelState::mock_server();
         server
             .mock("GET", "/api/v1/agent/connected-self-hosted-workers")
             .match_header(TEAM_UID_HEADER, team_uid.to_string().as_str())

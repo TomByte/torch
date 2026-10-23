@@ -1,4 +1,4 @@
-use warpui::r#async::BoxFuture;
+use torchui::r#async::BoxFuture;
 
 use super::*;
 

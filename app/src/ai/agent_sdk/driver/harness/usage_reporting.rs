@@ -7,11 +7,11 @@ use futures::channel::oneshot;
 use futures::future::{AbortHandle, Abortable, Shared};
 use instant::Instant;
 use parking_lot::Mutex;
-use warp_harness_usage::ExtractionOutcome;
-use warp_harness_usage::api::HarnessUsageRequest;
-use warpui::r#async::executor::Background;
-use warpui::r#async::{FutureExt as _, Timer};
-use warpui::duration_with_jitter;
+use torch_harness_usage::ExtractionOutcome;
+use torch_harness_usage::api::HarnessUsageRequest;
+use torchui::r#async::executor::Background;
+use torchui::r#async::{FutureExt as _, Timer};
+use torchui::duration_with_jitter;
 
 use super::transcript_persistence::UploadedTranscriptUsage;
 use crate::ai::ambient_agents::AmbientAgentTaskId;

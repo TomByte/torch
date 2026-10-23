@@ -5,7 +5,7 @@ use async_io::Timer;
 use instant::Instant;
 use nix::sys::signal::kill;
 use nix::unistd::Pid;
-use warp_core::SessionId;
+use torch_core::SessionId;
 
 use super::*;
 use crate::remote_server::proto::{

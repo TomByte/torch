@@ -6,10 +6,10 @@ use chrono::{DateTime, Local};
 use pathfinder_color::ColorU;
 use pathfinder_geometry::rect::RectF;
 use pathfinder_geometry::vector::{Vector2F, vec2f};
-use warp_core::ui::color::blend::Blend;
-use warpui::accessibility::{AccessibilityContent, ActionAccessibilityContent, WarpA11yRole};
-use warpui::assets::asset_cache::AssetSource;
-use warpui::elements::{
+use torch_core::ui::color::blend::Blend;
+use torchui::accessibility::{AccessibilityContent, ActionAccessibilityContent, WarpA11yRole};
+use torchui::assets::asset_cache::AssetSource;
+use torchui::elements::{
     Align, Border, CacheOption, ChildAnchor, ClippedScrollStateHandle, ClippedScrollable,
     ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Dismiss, DispatchEventResult,
     DropShadow, Element, EventHandler, Expanded, Flex, Hoverable, Icon, Image, MainAxisAlignment,
@@ -18,12 +18,12 @@ use warpui::elements::{
     Radius, Rect, SavePosition, ScrollTarget, ScrollToPositionMode, ScrollbarWidth, Shrinkable,
     Stack, Text,
 };
-use warpui::fonts::{FamilyId, Properties};
-use warpui::keymap::FixedBinding;
-use warpui::platform::Cursor;
-use warpui::text_layout::ClipConfig;
-use warpui::ui_components::components::UiComponent;
-use warpui::{
+use torchui::fonts::{FamilyId, Properties};
+use torchui::keymap::FixedBinding;
+use torchui::platform::Cursor;
+use torchui::text_layout::ClipConfig;
+use torchui::ui_components::components::UiComponent;
+use torchui::{
     Action, AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, WindowId,
 };
 
@@ -1754,7 +1754,7 @@ pub enum MenuAction {
 }
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings([
         FixedBinding::new(
@@ -2236,7 +2236,7 @@ impl<A: Action + Clone> SubMenu<A> {
                             ScrollbarWidth::Auto,
                             appearance.theme().nonactive_ui_detail().into(),
                             appearance.theme().active_ui_detail().into(),
-                            warpui::elements::Fill::None,
+                            torchui::elements::Fill::None,
                         )
                         .with_overlayed_scrollbar()
                         .finish(),

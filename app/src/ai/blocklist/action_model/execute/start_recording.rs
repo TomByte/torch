@@ -4,8 +4,8 @@ use ai::agent::action_result::{AIAgentActionResultType, RecordingStarted, StartR
 use futures::FutureExt;
 use futures::future::BoxFuture;
 use uuid::Uuid;
-use warp_core::features::FeatureFlag;
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torchui::{Entity, ModelContext, SingletonEntity};
 
 use super::{ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessActionInput};
 use crate::ai::agent::AIAgentActionType;

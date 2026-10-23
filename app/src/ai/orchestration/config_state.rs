@@ -3,7 +3,7 @@
 
 use ai::agent::action::RunAgentsExecutionMode;
 use ai::agent::orchestration_config::{OrchestrationConfig, OrchestrationExecutionMode};
-use warp_cli::agent::Harness;
+use torch_cli::agent::Harness;
 
 use super::providers::ORCHESTRATION_WARP_WORKER_HOST;
 use super::validation::should_show_auth_secret_picker;

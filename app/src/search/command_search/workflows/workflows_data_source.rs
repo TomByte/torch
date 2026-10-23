@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use itertools::Itertools;
-use warpui::{AppContext, SingletonEntity};
+use torchui::{AppContext, SingletonEntity};
 
 use super::{WorkflowIdentity, WorkflowSearchItem};
 use crate::completer::SessionContext;

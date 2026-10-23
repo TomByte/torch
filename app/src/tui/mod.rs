@@ -1,6 +1,6 @@
 //! The headless `warp-tui` front-end's app-side entry point.
 //!
-//! `warp_tui` boots the real headless Warp app via [`crate::run_tui`]. Once
+//! `torch_tui` boots the real headless Warp app via [`crate::run_tui`]. Once
 //! shared initialization is done, [`init`] registers the [`TuiLoginModel`] that
 //! the TUI observes, mounts the TUI immediately (so it renders right away), and
 //! leaves device authorization behind an explicit welcome-screen action. The
@@ -20,7 +20,7 @@ use telemetry::{
 };
 use url::Url;
 pub use user_info::{TuiUserInfoManager, TuiUserInfoManagerEvent, TuiUserInfoSnapshot};
-use warpui::{AppContext, Entity, SingletonEntity};
+use torchui::{AppContext, Entity, SingletonEntity};
 
 use crate::TuiMountFn;
 use crate::ai::mcp::FileBasedMCPManager;
@@ -29,7 +29,7 @@ use crate::auth::auth_state::AuthState;
 use crate::auth::{self, AuthStateProvider};
 use crate::tui_onboarding_markers::TuiOnboardingMarkers;
 
-/// Login state of the headless TUI, observed by the `warp_tui` root view to
+/// Login state of the headless TUI, observed by the `torch_tui` root view to
 /// decide whether to show the login placeholder or the input UI.
 pub enum TuiLoginPhase {
     /// No validated user identity is available, so the login welcome remains visible.
@@ -64,7 +64,7 @@ enum TuiAuthBrowserFlow {
 }
 
 /// Singleton holding the TUI's [`TuiLoginPhase`]. Updated by [`init`]'s auth
-/// flow and read by the `warp_tui` root view.
+/// flow and read by the `torch_tui` root view.
 pub struct TuiLoginModel {
     phase: TuiLoginPhase,
     browser_flow: TuiAuthBrowserFlow,
@@ -428,7 +428,7 @@ fn set_login_phase(ctx: &mut AppContext, phase: TuiLoginPhase) {
 
 fn send_tui_onboarding_event(event: Option<TuiOnboardingTelemetryEvent>, ctx: &mut AppContext) {
     if let Some(event) = event {
-        warp_core::send_telemetry_from_app_ctx!(event, ctx);
+        torch_core::send_telemetry_from_app_ctx!(event, ctx);
     }
 }
 

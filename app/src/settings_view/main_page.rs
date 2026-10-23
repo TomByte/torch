@@ -4,26 +4,26 @@ use ::settings::{Setting, ToggleableSetting};
 use lazy_static::lazy_static;
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
-use warp_core::channel::ChannelState;
-use warp_core::context_flag::ContextFlag;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::icons::Icon;
-use warp_errors::{report_error, report_if_error};
+use torch_core::channel::ChannelState;
+use torch_core::context_flag::ContextFlag;
+use torch_core::features::FeatureFlag;
+use torch_core::ui::icons::Icon;
+use torch_errors::{report_error, report_if_error};
 #[cfg(not(target_family = "wasm"))]
-use warp_server_client::iap::{IapCredentialsState, IapManager, IapManagerEvent};
-use warpui::assets::asset_cache::AssetSource;
-use warpui::elements::{
+use torch_server_client::iap::{IapCredentialsState, IapManager, IapManagerEvent};
+use torchui::assets::asset_cache::AssetSource;
+use torchui::elements::{
     Align, Border, CacheOption, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     Element, Empty, Flex, Image, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement,
     Radius, Shrinkable, Text,
 };
-use warpui::fonts::Weight;
-use warpui::keymap::ContextPredicate;
-use warpui::platform::Cursor;
-use warpui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::ui_components::switch::SwitchStateHandle;
-use warpui::{
+use torchui::fonts::Weight;
+use torchui::keymap::ContextPredicate;
+use torchui::platform::Cursor;
+use torchui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::ui_components::switch::SwitchStateHandle;
+use torchui::{
     Action, AppContext, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle, WeakViewHandle, id,
 };
@@ -646,7 +646,7 @@ impl SettingsWidget for AccountWidget {
             self.render_anonymous_account_info(view.auth_state.as_ref(), appearance)
         } else {
             let profile_image_source = view.auth_state.user_photo_url().map(|url| {
-                asset_cache::url_source_with_persistence(url, &warp_core::paths::cache_dir())
+                asset_cache::url_source_with_persistence(url, &torch_core::paths::cache_dir())
             });
             self.render_account_info(
                 view,

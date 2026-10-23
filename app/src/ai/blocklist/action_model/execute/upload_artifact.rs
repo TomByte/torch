@@ -8,8 +8,8 @@ mod tests;
 use futures::FutureExt;
 use futures::future::BoxFuture;
 #[cfg(not(target_family = "wasm"))]
-use warpui::SingletonEntity;
-use warpui::{Entity, EntityId, ModelContext, ModelHandle};
+use torchui::SingletonEntity;
+use torchui::{Entity, EntityId, ModelContext, ModelHandle};
 
 use super::{ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessActionInput};
 use crate::terminal::model::session::active_session::ActiveSession;

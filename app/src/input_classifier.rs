@@ -7,7 +7,7 @@ use input_classifier::{HeuristicClassifier, InputClassifier};
     feature = "nld_classifier_v3"
 ))]
 use input_classifier::{OnnxClassifier, OnnxModel};
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torchui::{Entity, ModelContext, SingletonEntity};
 
 pub struct InputClassifierModel {
     pub classifier: Arc<dyn InputClassifier>,

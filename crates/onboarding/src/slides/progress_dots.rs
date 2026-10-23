@@ -1,7 +1,7 @@
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::color::internal_colors;
-use warpui_core::Element;
-use warpui_core::elements::{
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::color::internal_colors;
+use torchui_core::Element;
+use torchui_core::elements::{
     ConstrainedBox, Container, CornerRadius, Empty, Flex, MainAxisSize, ParentElement, Radius,
 };
 

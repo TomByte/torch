@@ -1,12 +1,12 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use warp_core::features::FeatureFlag;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torchui::elements::{
     ChildView, Clipped, Container, CrossAxisAlignment, Element, Flex, MainAxisAlignment,
     MainAxisSize, ParentElement, Wrap,
 };
-use warpui::{
+use torchui::{
     AppContext, Entity, EntityId, FocusContext, ModelHandle, SingletonEntity, TypedActionView,
     View, ViewContext, ViewHandle,
 };

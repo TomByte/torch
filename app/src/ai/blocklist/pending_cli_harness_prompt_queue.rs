@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use session_sharing_protocol::common::ParticipantId;
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torchui::{Entity, ModelContext, SingletonEntity};
 
 use crate::ai::ambient_agents::AmbientAgentTaskId;
 

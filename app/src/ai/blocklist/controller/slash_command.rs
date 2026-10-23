@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use warp_core::features::FeatureFlag;
-use warp_errors::report_error;
-use warpui::{AppContext, ModelContext, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torch_errors::report_error;
+use torchui::{AppContext, ModelContext, SingletonEntity};
 
 use super::response_stream::RecoveryBudget;
 use super::{

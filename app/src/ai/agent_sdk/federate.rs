@@ -2,13 +2,13 @@ use std::process;
 
 use anyhow::{Result, anyhow};
 use serde_json::json;
-use warp_cli::GlobalOptions;
-use warp_cli::agent::OutputFormat;
-use warp_cli::federate::{FederateCommand, IssueGcpTokenArgs, IssueTokenArgs};
-use warp_core::features::FeatureFlag;
-use warp_errors::report_error;
-use warpui::platform::TerminationMode;
-use warpui::{AppContext, SingletonEntity as _};
+use torch_cli::GlobalOptions;
+use torch_cli::agent::OutputFormat;
+use torch_cli::federate::{FederateCommand, IssueGcpTokenArgs, IssueTokenArgs};
+use torch_core::features::FeatureFlag;
+use torch_errors::report_error;
+use torchui::platform::TerminationMode;
+use torchui::{AppContext, SingletonEntity as _};
 
 use super::common::set_ambient_task_context_from_run_id;
 use crate::server::server_api::managed_secrets::AppManagedSecretManager as ManagedSecretManager;
@@ -47,7 +47,7 @@ fn issue_token(
     ManagedSecretManager::handle(ctx).update(ctx, move |manager, ctx| {
         let future = manager.issue_task_identity_token(
             None,
-            warp_managed_secrets::client::IdentityTokenOptions {
+            torch_managed_secrets::client::IdentityTokenOptions {
                 audience,
                 requested_duration: duration,
                 subject_template,

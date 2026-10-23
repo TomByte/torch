@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
 use chrono::Utc;
-use warp_graphql::object::{Space, SpaceType};
-use warp_graphql::queries::get_runners::{Runner, RunnerArch, RunnerConfig, RunnerOs};
-use warpui::{App, SingletonEntity};
+use torch_graphql::object::{Space, SpaceType};
+use torch_graphql::queries::get_runners::{Runner, RunnerArch, RunnerConfig, RunnerOs};
+use torchui::{App, SingletonEntity};
 
 use super::{EnvironmentCommandRunner, validate_default_runner};
 use crate::ASSETS;

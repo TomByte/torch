@@ -14,24 +14,24 @@ use lsp::{LspManagerModel, LspManagerModelEvent, LspServerModel, LspState};
 use pathfinder_color::ColorU;
 #[cfg(not(target_family = "wasm"))]
 use remote_server::codebase_index_proto::{RemoteCodebaseIndexState, RemoteCodebaseIndexStatus};
-use warp_core::features::FeatureFlag;
-use warp_core::settings::ToggleableSetting as _;
-use warp_core::ui::theme::{AnsiColorIdentifier, Fill as ThemeFill};
-use warp_util::path::user_friendly_path;
+use torch_core::features::FeatureFlag;
+use torch_core::settings::ToggleableSetting as _;
+use torch_core::ui::theme::{AnsiColorIdentifier, Fill as ThemeFill};
+use torch_util::path::user_friendly_path;
 #[cfg(not(target_family = "wasm"))]
-use warp_util::remote_path::RemotePath;
-use warpui::elements::{
+use torch_util::remote_path::RemotePath;
+use torchui::elements::{
     ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Element, Empty,
     Expanded, Fill, Flex, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius,
     Shrinkable,
 };
-use warpui::fonts::Weight;
-use warpui::keymap::ContextPredicate;
-use warpui::platform::{Cursor, FilePickerConfiguration};
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::ui_components::switch::{SwitchStateHandle, TooltipConfig};
-use warpui::{
+use torchui::fonts::Weight;
+use torchui::keymap::ContextPredicate;
+use torchui::platform::{Cursor, FilePickerConfiguration};
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::ui_components::switch::{SwitchStateHandle, TooltipConfig};
+use torchui::{
     Action, AppContext, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle, WindowId, id,
 };
@@ -1255,15 +1255,15 @@ impl CodePageWidget {
                     ..Default::default()
                 })
                 .with_text_and_icon_label(
-                    warpui::ui_components::button::TextAndIcon::new(
-                        warpui::ui_components::button::TextAndIconAlignment::IconFirst,
+                    torchui::ui_components::button::TextAndIcon::new(
+                        torchui::ui_components::button::TextAndIconAlignment::IconFirst,
                         "Open project rules",
-                        warpui::elements::Icon::new(
+                        torchui::elements::Icon::new(
                             "bundled/svg/file-code-02.svg",
                             theme.foreground(),
                         ),
-                        warpui::elements::MainAxisSize::Min,
-                        warpui::elements::MainAxisAlignment::Center,
+                        torchui::elements::MainAxisSize::Min,
+                        torchui::elements::MainAxisAlignment::Center,
                         pathfinder_geometry::vector::vec2f(14., 14.),
                     )
                     .with_inner_padding(4.),
@@ -1951,7 +1951,7 @@ impl CodePageWidget {
         &self,
         workspace_path: &Path,
         server_type: LSPServerType,
-        server_model: Option<&warpui::ModelHandle<LspServerModel>>,
+        server_model: Option<&torchui::ModelHandle<LspServerModel>>,
         is_enabled: bool,
         mouse_states: LspServerRowMouseStates,
         appearance: &Appearance,
@@ -2138,9 +2138,9 @@ impl CodePageWidget {
     /// Gets the status color and text for an LSP server.
     fn get_lsp_status_info(
         &self,
-        server_model: Option<&warpui::ModelHandle<LspServerModel>>,
+        server_model: Option<&torchui::ModelHandle<LspServerModel>>,
         app: &AppContext,
-        theme: &warp_core::ui::theme::WarpTheme,
+        theme: &torch_core::ui::theme::WarpTheme,
     ) -> (ColorU, &'static str) {
         match server_model {
             Some(model) => {

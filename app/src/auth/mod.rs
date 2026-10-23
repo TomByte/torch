@@ -10,7 +10,7 @@ pub mod login_slide;
 pub mod needs_sso_link_view;
 pub mod paste_auth_token_modal;
 mod user_properties;
-pub use warp_server_auth::{auth_state, credentials, user, user_uid};
+pub use torch_server_auth::{auth_state, credentials, user, user_uid};
 #[cfg(target_family = "wasm")]
 pub mod web_handoff;
 
@@ -23,12 +23,12 @@ pub use login_failure_notification::LoginFailureReason;
 #[cfg(feature = "tui")]
 use url::Url;
 pub use user_uid::UserUid;
-use warp_core::channel::ChannelState;
-use warp_core::features::FeatureFlag;
-use warp_core::user_preferences::GetUserPreferences as _;
-use warp_errors::{report_error, report_if_error};
-use warpui::modals::{AlertDialogWithCallbacks, ModalButton};
-use warpui::{AppContext, SingletonEntity};
+use torch_core::channel::ChannelState;
+use torch_core::features::FeatureFlag;
+use torch_core::user_preferences::GetUserPreferences as _;
+use torch_errors::{report_error, report_if_error};
+use torchui::modals::{AlertDialogWithCallbacks, ModalButton};
+use torchui::{AppContext, SingletonEntity};
 
 use crate::ai::agent_conversations_model::AgentConversationsModel;
 use crate::ai::blocklist::BlocklistAIHistoryModel;

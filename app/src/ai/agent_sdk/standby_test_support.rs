@@ -8,7 +8,7 @@ use chrono::TimeDelta;
 use futures::channel::oneshot;
 use futures::executor::block_on;
 use futures::{FutureExt as _, StreamExt as _, future, sink};
-use warpui::r#async::FutureExt as _;
+use torchui::r#async::FutureExt as _;
 
 use super::super::*;
 
@@ -235,7 +235,7 @@ pub(super) fn execution_config() -> ExecutionConfiguration {
         conversation_id: None,
         parent_run_id: None,
         team_id: None,
-        harness: warp_graphql::ai::AgentHarness::Oz,
+        harness: torch_graphql::ai::AgentHarness::Oz,
         model_id: None,
         reasoning_level: None,
         profile_id: None,

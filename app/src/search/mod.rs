@@ -23,5 +23,5 @@ pub use item::SearchItem;
 pub use mixer::SyncDataSource;
 pub use result_renderer::ItemHighlightState;
 // Re-export core search types.
-pub use warp_search_core::*;
+pub use torch_search_core::*;
 pub use workflows::fuzzy_match::FuzzyMatchWorkflowResult;

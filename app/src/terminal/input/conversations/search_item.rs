@@ -2,12 +2,12 @@
 
 use fuzzy_match::FuzzyMatchResult;
 use ordered_float::OrderedFloat;
-use warp_core::ui::theme::Fill;
-use warpui::elements::{ConstrainedBox, Container, Highlight, ParentElement, Shrinkable, Text};
-use warpui::fonts::{Properties, Style, Weight};
-use warpui::prelude::{Align, CrossAxisAlignment, Flex, MainAxisAlignment, MainAxisSize};
-use warpui::text_layout::ClipConfig;
-use warpui::{AppContext, Element, SingletonEntity};
+use torch_core::ui::theme::Fill;
+use torchui::elements::{ConstrainedBox, Container, Highlight, ParentElement, Shrinkable, Text};
+use torchui::fonts::{Properties, Style, Weight};
+use torchui::prelude::{Align, CrossAxisAlignment, Flex, MainAxisAlignment, MainAxisSize};
+use torchui::text_layout::ClipConfig;
+use torchui::{AppContext, Element, SingletonEntity};
 
 use crate::ai::agent_conversations_model::AgentConversationEntry;
 use crate::ai::conversation_status_ui::render_status_element;

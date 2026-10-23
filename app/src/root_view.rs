@@ -18,20 +18,20 @@ use serde::{Deserialize, Serialize};
 use session_sharing_protocol::common::SessionId;
 use settings::Setting as _;
 use url::Url;
-use warp_core::context_flag::ContextFlag;
-use warp_core::safe_error;
-use warp_core::user_preferences::GetUserPreferences as _;
-use warp_errors::{report_error, report_if_error};
-use warpui::clipboard::ClipboardContent;
-use warpui::elements::{
+use torch_core::context_flag::ContextFlag;
+use torch_core::safe_error;
+use torch_core::user_preferences::GetUserPreferences as _;
+use torch_errors::{report_error, report_if_error};
+use torchui::clipboard::ClipboardContent;
+use torchui::elements::{
     Border, ChildAnchor, OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Stack,
 };
-use warpui::keymap::{EditableBinding, FixedBinding};
-use warpui::platform::{WindowBounds, WindowStyle};
-use warpui::presenter::ChildView;
-use warpui::rendering::OnGPUDeviceSelected;
-use warpui::windowing::WindowManager;
-use warpui::{
+use torchui::keymap::{EditableBinding, FixedBinding};
+use torchui::platform::{WindowBounds, WindowStyle};
+use torchui::presenter::ChildView;
+use torchui::rendering::OnGPUDeviceSelected;
+use torchui::windowing::WindowManager;
+use torchui::{
     AddWindowOptions, AppContext, DisplayId, Element, Entity, EntityId, FocusContext,
     NextNewWindowsHasThisWindowsBoundsUponClose, SingletonEntity, TypedActionView, View,
     ViewContext, ViewHandle, WindowId, id,
@@ -298,11 +298,11 @@ impl CreateEnvironmentArg {
                 // Accept valid URLs (e.g., https://github.com/user/repo)
                 Url::parse(repo).is_ok()
                     // Or valid POSIX portable pathnames (e.g., user/repo)
-                    || warp_util::path::is_posix_portable_pathname(repo)
+                    || torch_util::path::is_posix_portable_pathname(repo)
                     // Or absolute POSIX paths with portable components (e.g., /Users/me/repo)
                     || repo
                         .strip_prefix('/')
-                        .is_some_and(warp_util::path::is_posix_portable_pathname)
+                        .is_some_and(torch_util::path::is_posix_portable_pathname)
             })
             .join(" ");
 
@@ -1478,7 +1478,7 @@ fn toggle_quake_mode_window(global_resource_handles: &GlobalResourceHandles, ctx
                     background_backdrop: *window_settings.background_backdrop,
                     // Ignore the quake window for positioning the next window
                     anchor_new_windows_from_closed_position:
-                        warpui::NextNewWindowsHasThisWindowsBoundsUponClose::No,
+                        torchui::NextNewWindowsHasThisWindowsBoundsUponClose::No,
                     on_gpu_driver_selected: on_gpu_driver_selected_callback(),
                     window_instance: Some(ChannelState::app_id().to_string() + "-hotkey"),
                     ..Default::default()
@@ -1998,7 +1998,7 @@ impl RootView {
                 // the default if it's not already set and the user is logging in.
                 #[cfg(target_os = "macos")]
                 {
-                    use warpui_extras::user_preferences::UserPreferences;
+                    use torchui_extras::user_preferences::UserPreferences;
 
                     // Make sure we're interacting with user defaults instead
                     // of some other preferences store.  Apple implements some
@@ -2006,7 +2006,7 @@ impl RootView {
                     // defaults (like press-and-hold being either accented
                     // characters or key repeat), so we need to make sure we're
                     // interacting with the user defaults system.
-                    let user_defaults = warpui_extras::user_preferences::user_defaults::UserDefaultsPreferencesStorage::new(None);
+                    let user_defaults = torchui_extras::user_preferences::user_defaults::UserDefaultsPreferencesStorage::new(None);
                     if user_defaults
                         .read_value("ApplePressAndHoldEnabled")
                         .unwrap_or_default()
@@ -3832,11 +3832,11 @@ impl RootView {
     #[cfg(feature = "voice_input")]
     fn maybe_stop_active_voice_input(
         &mut self,
-        key_code: &warpui::platform::keyboard::KeyCode,
+        key_code: &torchui::platform::keyboard::KeyCode,
         ctx: &mut ViewContext<Self>,
     ) -> bool {
         use voice_input::{VoiceInput, VoiceInputState, VoiceInputToggledFrom};
-        use warpui::event::KeyState;
+        use torchui::event::KeyState;
 
         use crate::settings::AISettings;
 
@@ -4049,10 +4049,10 @@ impl View for RootView {
 
         cfg_if::cfg_if! {
             if #[cfg(feature = "voice_input")] {
-                use warpui::elements::{EventHandler, DispatchEventResult};
+                use torchui::elements::{EventHandler, DispatchEventResult};
                 EventHandler::new(stack.finish())
                     .on_modifier_state_changed(|ctx, _app, key_code, key_state| {
-                        if matches!(key_state, warpui::event::KeyState::Released) {
+                        if matches!(key_state, torchui::event::KeyState::Released) {
                             ctx.dispatch_action("root_view:maybe_stop_active_voice_input", *key_code);
                         }
                         DispatchEventResult::PropagateToParent
@@ -4064,7 +4064,7 @@ impl View for RootView {
         }
     }
 
-    fn keymap_context(&self, app: &AppContext) -> warpui::keymap::Context {
+    fn keymap_context(&self, app: &AppContext) -> torchui::keymap::Context {
         let mut context = Self::default_keymap_context();
         if quake_mode_window_is_open() {
             context.set.insert(flags::QUAKE_WINDOW_OPEN_FLAG);

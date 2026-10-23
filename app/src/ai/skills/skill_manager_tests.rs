@@ -6,14 +6,14 @@ use ai::skills::{ParsedSkill, SkillProvider, SkillReference, SkillScope, get_pro
 use repo_metadata::repositories::DetectedRepositories;
 use repo_metadata::{DirectoryWatcher, RepoMetadataModel};
 use tempfile::TempDir;
-use warp_core::channel::ChannelState;
-use warp_core::execution_mode::{AppExecutionMode, ExecutionMode};
-use warp_core::features::FeatureFlag;
-use warp_util::host_id::HostId;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warp_util::remote_path::RemotePath;
-use warp_util::standardized_path::StandardizedPath;
-use warpui::App;
+use torch_core::channel::ChannelState;
+use torch_core::execution_mode::{AppExecutionMode, ExecutionMode};
+use torch_core::features::FeatureFlag;
+use torch_util::host_id::HostId;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torch_util::remote_path::RemotePath;
+use torch_util::standardized_path::StandardizedPath;
+use torchui::App;
 use watcher::HomeDirectoryWatcher;
 
 use super::*;
@@ -93,7 +93,7 @@ fn get_skills_for_working_directory_scopes_subdirectory_skills() {
 
         // Register the repo root so get_root_for_path returns Some.
         let canonical_repo =
-            warp_util::standardized_path::StandardizedPath::from_local_canonicalized(&repo)
+            torch_util::standardized_path::StandardizedPath::from_local_canonicalized(&repo)
                 .unwrap();
         repo_handle.update(&mut app, |repos, _ctx| {
             repos.insert_test_repo_root(canonical_repo);
@@ -381,7 +381,7 @@ fn get_skills_for_working_directory_name_collision_returns_both() {
 
         // Register the repo root so get_root_for_path returns Some.
         let canonical_repo =
-            warp_util::standardized_path::StandardizedPath::from_local_canonicalized(&repo)
+            torch_util::standardized_path::StandardizedPath::from_local_canonicalized(&repo)
                 .unwrap();
         repo_handle.update(&mut app, |repos, _ctx| {
             repos.insert_test_repo_root(canonical_repo);
@@ -484,7 +484,7 @@ fn cloud_environment_skills_always_included() {
         let skill_manager_handle = app.add_singleton_model(SkillManager::new);
 
         let canonical_repo_a =
-            warp_util::standardized_path::StandardizedPath::from_local_canonicalized(&repo_a)
+            torch_util::standardized_path::StandardizedPath::from_local_canonicalized(&repo_a)
                 .unwrap();
         repo_handle.update(&mut app, |repos, _ctx| {
             repos.insert_test_repo_root(canonical_repo_a);
@@ -690,7 +690,7 @@ fn test_build_bundled_skill_context() {
     assert!(context.contains_key("keybindings_file_path"));
     assert_eq!(
         context.get("gui_settings_file_path").unwrap(),
-        &warp_core::paths::gui_config_local_dir()
+        &torch_core::paths::gui_config_local_dir()
             .map(|path| path.join("settings.toml"))
             .unwrap_or_default()
             .display()
@@ -698,21 +698,21 @@ fn test_build_bundled_skill_context() {
     );
     assert_eq!(
         context.get("tui_settings_file_path").unwrap(),
-        &warp_core::paths::tui_config_local_dir()
+        &torch_core::paths::tui_config_local_dir()
             .join("settings.toml")
             .display()
             .to_string()
     );
     assert_eq!(
         context.get("gui_mcp_config_file_path").unwrap(),
-        &warp_core::paths::gui_mcp_config_file_path()
+        &torch_core::paths::gui_mcp_config_file_path()
             .unwrap_or_default()
             .display()
             .to_string()
     );
     assert_eq!(
         context.get("tui_mcp_config_file_path").unwrap(),
-        &warp_core::paths::tui_mcp_config_file_path()
+        &torch_core::paths::tui_mcp_config_file_path()
             .display()
             .to_string()
     );

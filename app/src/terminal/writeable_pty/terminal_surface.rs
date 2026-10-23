@@ -2,10 +2,10 @@ use std::borrow::Cow;
 
 use async_channel::Sender;
 use uuid::Uuid;
-use warp_completer::meta::Span;
+use torch_completer::meta::Span;
 #[cfg(unix)]
-use warpui::AppContext;
-use warpui::{Entity, ViewContext};
+use torchui::AppContext;
+use torchui::{Entity, ViewContext};
 
 use crate::ai::agent::AIAgentPtyWriteMode;
 use crate::server::telemetry::CloudAgentShellRecoveryFailureClass;
@@ -51,7 +51,7 @@ pub trait PtyIntentEvent {
 /// A terminal frontend surface driven by `TerminalManager`.
 ///
 /// Each surface defines how its own event type collapses into a PTY/session intent.
-/// This is bounded by [`Entity`] instead of [`View`](warpui::View) so the same
+/// This is bounded by [`Entity`] instead of [`View`](torchui::View) so the same
 /// manager can drive both GUI views and TUI views.
 pub trait TerminalSurface: Entity + 'static
 where

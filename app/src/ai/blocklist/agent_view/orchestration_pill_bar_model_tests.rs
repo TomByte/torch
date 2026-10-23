@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use warpui::App;
+use torchui::App;
 
 use super::*;
 use crate::ai::agent::conversation::AIConversation;
@@ -72,7 +72,7 @@ fn toggle_pin_persists_pinned_state_to_sqlite_event() {
         // the source of truth for the persisted flag.
         let conversation = AIConversation::new(false, false);
         let conversation_id = conversation.id();
-        let terminal_view_id = warpui::EntityId::new();
+        let terminal_view_id = torchui::EntityId::new();
         history_model.update(&mut app, |model, ctx| {
             model.restore_conversations(terminal_view_id, vec![conversation], ctx);
         });

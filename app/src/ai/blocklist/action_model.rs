@@ -45,7 +45,7 @@ use itertools::Itertools;
 use parking_lot::FairMutex;
 use preprocess::{PendingPreprocessedActions, PreprocessId};
 pub(crate) use recording_telemetry::RecordingTelemetryEvent;
-use warpui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
+use torchui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
 
 use self::execute::search_codebase::SearchCodebaseExecutor;
 use self::execute::{

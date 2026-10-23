@@ -2,9 +2,9 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use settings::Setting as _;
-use warp_errors::report_if_error;
-use warpui::r#async::SpawnedFutureHandle;
-use warpui::{Entity, ModelContext, ModelHandle, SingletonEntity as _};
+use torch_errors::report_if_error;
+use torchui::r#async::SpawnedFutureHandle;
+use torchui::{Entity, ModelContext, ModelHandle, SingletonEntity as _};
 
 use super::GitHubRepoEvent;
 use crate::code_review::git_repo_model::{GitRepoStatusEvent, GitRepoStatusModel};

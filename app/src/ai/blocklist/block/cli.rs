@@ -10,17 +10,17 @@ use parking_lot::{FairMutex, RwLock};
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use settings::Setting as _;
-use warp_core::features::FeatureFlag;
-use warp_core::semantic_selection::SemanticSelection;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::color::internal_colors;
-use warp_editor::content::buffer::InitialBufferState;
-use warp_editor::render::element::VerticalExpansionBehavior;
-use warp_errors::report_error;
-use warpui::r#async::{SpawnedFutureHandle, Timer};
-use warpui::clipboard::ClipboardContent;
-use warpui::elements::new_scrollable::SingleAxisConfig;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::semantic_selection::SemanticSelection;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::color::internal_colors;
+use torch_editor::content::buffer::InitialBufferState;
+use torch_editor::render::element::VerticalExpansionBehavior;
+use torch_errors::report_error;
+use torchui::r#async::{SpawnedFutureHandle, Timer};
+use torchui::clipboard::ClipboardContent;
+use torchui::elements::new_scrollable::SingleAxisConfig;
+use torchui::elements::{
     Border, ChildAnchor, ChildView, ClippedScrollStateHandle, ConstrainedBox, Container,
     CornerRadius, CrossAxisAlignment, DragBarSide, DropShadow, Empty, Expanded, Fill, Flex,
     FormattedTextElement, Highlight, HighlightedHyperlink, Hoverable, MainAxisAlignment,
@@ -29,11 +29,11 @@ use warpui::elements::{
     ResizableStateHandle, SavePosition, SelectableArea, SelectionHandle, Shrinkable,
     SizeConstraintCondition, SizeConstraintSwitch, Stack, Text, resizable_state_handle,
 };
-use warpui::fonts::{Properties, Style, Weight};
-use warpui::keymap::{EditableBinding, Keystroke};
-use warpui::platform::{Cursor, OperatingSystem};
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::fonts::{Properties, Style, Weight};
+use torchui::keymap::{EditableBinding, Keystroke};
+use torchui::platform::{Cursor, OperatingSystem};
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View,
     ViewContext, ViewHandle,
 };
@@ -131,8 +131,8 @@ const HAS_PENDING_NON_TRANSFER_CONTROL_ACTION_CONTEXT_KEY: &str =
 const BLOCKED_ACTION_MESSAGE_FOR_TRANSFER_CONTROL: &str = "Agent is asking you to take control.";
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::FixedBinding;
-    use warpui::keymap::macros::*;
+    use torchui::keymap::FixedBinding;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings([
         FixedBinding::new(
@@ -970,7 +970,7 @@ impl View for CLISubagentView {
         "CLISubagentView"
     }
 
-    fn render(&self, app: &warpui::AppContext) -> Box<dyn warpui::Element> {
+    fn render(&self, app: &torchui::AppContext) -> Box<dyn torchui::Element> {
         let terminal_model = self.terminal_model.lock();
         let Some(block) = terminal_model.block_list().block_with_id(&self.block_id) else {
             return Empty::new().finish();
@@ -1456,7 +1456,7 @@ impl View for CLISubagentView {
             .finish()
     }
 
-    fn keymap_context(&self, app: &AppContext) -> warpui::keymap::Context {
+    fn keymap_context(&self, app: &AppContext) -> torchui::keymap::Context {
         let mut context = Self::default_keymap_context();
 
         let terminal_model = self.terminal_model.lock();
@@ -1633,7 +1633,7 @@ fn render_action(action: AIAgentActionType, app: &AppContext) -> Option<Box<dyn 
 
     let icon = Container::new(
         ConstrainedBox::new(
-            warpui::elements::Icon::new(icon.into(), internal_colors::neutral_5(theme)).finish(),
+            torchui::elements::Icon::new(icon.into(), internal_colors::neutral_5(theme)).finish(),
         )
         .with_width(icon_size(app))
         .with_height(icon_size(app))
@@ -1675,7 +1675,7 @@ fn render_web_search(query: Option<String>, app: &AppContext) -> Box<dyn Element
 
     let icon = Container::new(
         ConstrainedBox::new(
-            warpui::elements::Icon::new(Icon::Search.into(), internal_colors::neutral_5(theme))
+            torchui::elements::Icon::new(Icon::Search.into(), internal_colors::neutral_5(theme))
                 .finish(),
         )
         .with_width(icon_size(app))

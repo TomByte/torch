@@ -11,11 +11,11 @@ use anyhow::Result;
 use cfg_aliases::cfg_aliases;
 use sha2::Digest;
 use walkdir::WalkDir;
-use warp_util::assets::{
+use torch_util::assets::{
     ASSETS_DIR, ASYNC_ASSETS_DIR, CONPTY_DLL_FILE, DXCOMPILER_DLL_FILE, DXIL_DLL_FILE,
     OPEN_CONSOLE_EXE_FILE, REMOTE_ASSETS_DIR, WINDOWS_ASSETS_DIR,
 };
-use warp_util::path::app_target_dir;
+use torch_util::path::app_target_dir;
 
 fn main() -> Result<()> {
     cfg_aliases! {
@@ -198,7 +198,7 @@ fn copy_async_assets() {
                 let mut hasher = sha2::Sha256::new();
                 hasher.update(&contents);
                 let hash: [u8; 32] = hasher.finalize().into();
-                let new_relative_path = warp_util::assets::hashed_asset_path(
+                let new_relative_path = torch_util::assets::hashed_asset_path(
                     asset_path
                         .strip_prefix(&asset_dir)
                         .expect("asset in unexpected location"),

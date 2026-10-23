@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use anyhow::{Context as _, Result};
 use channel_versions::ChannelVersions;
-use warp_errors::report_error;
+use torch_errors::report_error;
 
 use crate::channel::{Channel, ChannelState};
 use crate::server::server_api::{FETCH_CHANNEL_VERSIONS_TIMEOUT, ServerApi};

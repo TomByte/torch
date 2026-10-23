@@ -1,6 +1,6 @@
 use repo_metadata::file_tree_update::RepoMetadataUpdate;
 use repo_metadata::{StandingQueryContent, StandingQueryResultsDelta};
-use warp_util::standardized_path::StandardizedPath;
+use torch_util::standardized_path::StandardizedPath;
 
 use super::{proto_snapshot_to_update, proto_to_repo_metadata_update};
 use crate::proto;

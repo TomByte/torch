@@ -1,7 +1,7 @@
 //! Module containing the definition of a platform agnostic audible bell.
 
 use anyhow::Result;
-use warpui::{Entity, SingletonEntity};
+use torchui::{Entity, SingletonEntity};
 
 #[cfg_attr(any(target_os = "linux", target_os = "freebsd"), path = "linux.rs")]
 #[cfg_attr(target_os = "macos", path = "macos.rs")]

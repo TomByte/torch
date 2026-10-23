@@ -5,23 +5,23 @@ use std::time::Duration;
 use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 use rayon::ThreadPoolBuilder;
 use string_offset::CharOffset;
-use warp_editor::content::buffer::{StyledBufferBlock, StyledBufferRun, StyledTextBlock};
-use warp_editor::content::edit::EditDelta;
-use warp_editor::content::text::{BufferBlockStyle, TextStylesWithMetadata};
-use warp_editor::render::layout::TextLayout;
-use warp_editor::render::model::{
+use torch_editor::content::buffer::{StyledBufferBlock, StyledBufferRun, StyledTextBlock};
+use torch_editor::content::edit::EditDelta;
+use torch_editor::content::text::{BufferBlockStyle, TextStylesWithMetadata};
+use torch_editor::render::layout::TextLayout;
+use torch_editor::render::model::{
     BrokenLinkStyle, CheckBoxStyle, HorizontalRuleStyle, InlineCodeStyle, ParagraphStyles,
     RenderLayoutOptions, RichTextStyles, TableStyle,
 };
 #[cfg(target_os = "macos")]
-use warpui::platform::mac::FontDB as MacFontDB;
-use warpui_core::App;
-use warpui_core::color::ColorU;
-use warpui_core::elements::{Border, Fill};
+use torchui::platform::mac::FontDB as MacFontDB;
+use torchui_core::App;
+use torchui_core::color::ColorU;
+use torchui_core::elements::{Border, Fill};
 #[cfg(target_os = "macos")]
-use warpui_core::fonts::Cache as FontCache;
-use warpui_core::fonts::{FamilyId, Weight};
-use warpui_core::units::IntoPixels;
+use torchui_core::fonts::Cache as FontCache;
+use torchui_core::fonts::{FamilyId, Weight};
+use torchui_core::units::IntoPixels;
 
 const BLOCK_COUNT: usize = 4_096;
 const RAYON_THREAD_COUNT: usize = 6;
@@ -136,7 +136,7 @@ fn layout_delta(
     delta: &EditDelta,
     text_layout: &TextLayout<'_>,
     layout_options: &RenderLayoutOptions,
-    app: &warpui_core::AppContext,
+    app: &torchui_core::AppContext,
 ) {
     black_box(delta.layout_delta(text_layout, None, layout_options, None, app));
 }

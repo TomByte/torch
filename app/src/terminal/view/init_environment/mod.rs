@@ -1,10 +1,10 @@
 pub mod mode_selector;
 
-use warpui::elements::{
+use torchui::elements::{
     ChildView, Container, CornerRadius, CrossAxisAlignment, Flex, MouseStateHandle, ParentElement,
     Radius, Text,
 };
-use warpui::{
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 

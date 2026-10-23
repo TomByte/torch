@@ -27,11 +27,11 @@ use parking_lot::FairMutex;
 use pending_response_streams::PendingResponseStreams;
 use session_sharing_protocol::common::{AgentAttachment, ParticipantId};
 pub use slash_command::*;
-use warp_core::assertions::safe_assert;
-use warp_errors::report_error;
+use torch_core::assertions::safe_assert;
+use torch_errors::report_error;
 use warp_multi_agent_api::{AgentType, Task, ToolType, message};
-use warpui::r#async::{SpawnedFutureHandle, Timer};
-use warpui::{
+use torchui::r#async::{SpawnedFutureHandle, Timer};
+use torchui::{
     AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity, WeakViewHandle,
 };
 
@@ -126,7 +126,7 @@ impl SessionContext {
 
     /// Returns the remote host ID if this is a `WarpifiedRemote` session with
     /// a connected `RemoteServerClient`.
-    pub fn host_id(&self) -> Option<&warp_core::HostId> {
+    pub fn host_id(&self) -> Option<&torch_core::HostId> {
         match &self.session_type {
             Some(SessionType::WarpifiedRemote { host_id }) => host_id.as_ref(),
             Some(SessionType::Local) | None => None,

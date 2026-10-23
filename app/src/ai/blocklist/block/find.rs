@@ -3,7 +3,7 @@ use std::ops::Range;
 
 use itertools::Itertools;
 use regex::RegexBuilder;
-use warpui::SingletonEntity;
+use torchui::SingletonEntity;
 
 use super::{AIBlock, TextLocation};
 use crate::ai::agent::{AIAgentTextSection, MessageId};
@@ -52,7 +52,7 @@ impl FindableRichContentView for AIBlock {
     fn run_find(
         &mut self,
         options: &FindOptions,
-        ctx: &mut warpui::ViewContext<Self>,
+        ctx: &mut torchui::ViewContext<Self>,
     ) -> Vec<RichContentMatchId> {
         self.clear_matches(ctx);
 
@@ -139,7 +139,7 @@ impl FindableRichContentView for AIBlock {
         new_match_ids
     }
 
-    fn clear_matches(&mut self, ctx: &mut warpui::ViewContext<Self>) {
+    fn clear_matches(&mut self, ctx: &mut torchui::ViewContext<Self>) {
         self.find_state.matches.clear();
         ctx.notify();
     }

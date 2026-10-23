@@ -5,11 +5,11 @@ use ai::skills::{ParsedSkill, SkillProvider, SkillReference, SkillScope};
 use computer_use::{Action, ScreenshotParams, Target, TargetedAction};
 use repo_metadata::repositories::DetectedRepositories;
 use repo_metadata::{DirectoryWatcher, RepoMetadataModel};
-use warp_util::host_id::HostId;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warp_util::remote_path::RemotePath;
-use warp_util::standardized_path::StandardizedPath;
-use warpui::App;
+use torch_util::host_id::HostId;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torch_util::remote_path::RemotePath;
+use torch_util::standardized_path::StandardizedPath;
+use torchui::App;
 use watcher::HomeDirectoryWatcher;
 
 use super::{

@@ -1,10 +1,10 @@
 #![cfg_attr(target_family = "wasm", allow(dead_code, unused_imports))]
 
-use warpui::elements::{
+use torchui::elements::{
     Align, Border, ChildView, ConstrainedBox, Container, CornerRadius, DropShadow, Flex,
     ParentElement, Radius, Text,
 };
-use warpui::{
+use torchui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };

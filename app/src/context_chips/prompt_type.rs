@@ -1,4 +1,4 @@
-use warpui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
+use torchui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
 
 use super::current_prompt::CurrentPrompt;
 use super::prompt_snapshot::PromptSnapshot;

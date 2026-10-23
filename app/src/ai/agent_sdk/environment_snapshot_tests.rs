@@ -4,8 +4,8 @@ use std::time::Duration;
 
 use cloud_object_models::CodeForge;
 use instant::Instant;
-use warp_server_client::HttpStatusError;
-use warpui::r#async::executor::Background;
+use torch_server_client::HttpStatusError;
+use torchui::r#async::executor::Background;
 
 use super::*;
 use crate::server::server_api::ai::MockAIClient;

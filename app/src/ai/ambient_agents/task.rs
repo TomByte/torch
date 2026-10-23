@@ -8,11 +8,11 @@ use iso8601_duration::Duration as Iso8601Duration;
 use serde::{Deserialize, Serialize};
 use session_sharing_protocol::common::SessionId;
 use url::Url;
-use warp_cli::agent::Harness;
-use warp_core::ui::theme::WarpTheme;
-use warp_errors::report_error;
-use warpui::color::ColorU;
-use warpui::{SingletonEntity, View, ViewContext};
+use torch_cli::agent::Harness;
+use torch_core::ui::theme::WarpTheme;
+use torch_errors::report_error;
+use torchui::color::ColorU;
+use torchui::{SingletonEntity, View, ViewContext};
 
 use super::AmbientAgentTaskId;
 use crate::ai::agent::conversation::ConversationStatus;

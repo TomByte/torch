@@ -1,14 +1,14 @@
 use pathfinder_color::ColorU;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::Fill;
-use warpui::elements::{
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::Fill;
+use torchui::elements::{
     ChildView, ClippedScrollStateHandle, ClippedScrollable, ConstrainedBox, Container,
     CornerRadius, CrossAxisAlignment, Dismiss, DropShadow, Flex, MainAxisAlignment, MainAxisSize,
     ParentElement, Radius, ScrollbarWidth, Text,
 };
-use warpui::fonts::{FamilyId, Properties};
-use warpui::keymap::FixedBinding;
-use warpui::{
+use torchui::fonts::{FamilyId, Properties};
+use torchui::keymap::FixedBinding;
+use torchui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };
@@ -57,7 +57,7 @@ struct Styles {
 }
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings([FixedBinding::new(
         "escape",
@@ -368,7 +368,7 @@ impl View for NodeVersionPopupView {
             ScrollbarWidth::Auto,
             appearance.theme().nonactive_ui_detail().into(),
             appearance.theme().active_ui_detail().into(),
-            warpui::elements::Fill::None,
+            torchui::elements::Fill::None,
         )
         .with_overlayed_scrollbar()
         .finish();

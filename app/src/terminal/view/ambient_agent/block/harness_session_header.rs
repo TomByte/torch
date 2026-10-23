@@ -1,13 +1,13 @@
-use warp_core::ui::appearance::Appearance;
-use warp_terminal::model::BlockId;
-use warpui::elements::{
+use torch_core::ui::appearance::Appearance;
+use torch_terminal::model::BlockId;
+use torchui::elements::{
     ConstrainedBox, CrossAxisAlignment, Flex, Hoverable, MainAxisSize, ParentElement, Shrinkable,
     Text,
 };
-use warpui::platform::Cursor;
-use warpui::prelude::{Container, MouseStateHandle};
-use warpui::text_layout::ClipConfig;
-use warpui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
+use torchui::platform::Cursor;
+use torchui::prelude::{Container, MouseStateHandle};
+use torchui::text_layout::ClipConfig;
+use torchui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
 
 use crate::terminal::CLIAgent;
 use crate::terminal::view::PADDING_LEFT;

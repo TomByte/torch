@@ -1,5 +1,5 @@
-use warp_ripgrep::search::Submatch;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
+use torch_ripgrep::search::Submatch;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
 
 pub struct SearchConfig {
     pub use_regex: bool,

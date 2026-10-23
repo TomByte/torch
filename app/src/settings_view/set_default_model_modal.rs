@@ -1,8 +1,8 @@
-use warpui::elements::{
+use torchui::elements::{
     ChildView, Container, CrossAxisAlignment, DispatchEventResult, Element, EventHandler, Flex,
     MainAxisAlignment, MainAxisSize, ParentElement, Text,
 };
-use warpui::{
+use torchui::{
     AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
     WeakViewHandle,
 };

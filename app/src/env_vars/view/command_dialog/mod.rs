@@ -1,5 +1,5 @@
 pub use cloud_object_models::EnvVarSecretCommand;
-use warpui::ViewContext;
+use torchui::ViewContext;
 
 use super::env_var_collection::{EnvVarCollectionView, VariableRowIndex};
 use crate::env_vars::EnvVarValue;

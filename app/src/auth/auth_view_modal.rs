@@ -4,17 +4,17 @@ use anyhow::{Result, anyhow};
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use url::Url;
-use warp_core::features::FeatureFlag;
-use warp_core::{safe_anyhow, safe_error};
-use warp_errors::{ErrorExt, report_error};
-use warpui::actions::StandardAction;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::{safe_anyhow, safe_error};
+use torch_errors::{ErrorExt, report_error};
+use torchui::actions::StandardAction;
+use torchui::elements::{
     ChildAnchor, ChildView, Container, Fill, HighlightedHyperlink, MouseStateHandle,
     OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Stack,
 };
-use warpui::keymap::FixedBinding;
-use warpui::ui_components::components::{Coords, UiComponentStyles};
-use warpui::{
+use torchui::keymap::FixedBinding;
+use torchui::ui_components::components::{Coords, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };
@@ -32,7 +32,7 @@ use crate::server::server_api::auth::UserAuthenticationError;
 use crate::util::bindings::CustomAction;
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings([
         // Bindings for paste require the StandardAction and CustomAction binding to work on all platforms.
@@ -216,7 +216,7 @@ impl AuthView {
     }
 
     pub fn start_sign_in(&mut self, ctx: &mut ViewContext<Self>) {
-        if warp_core::channel::ChannelState::is_local_only() {
+        if torch_core::channel::ChannelState::is_local_only() {
             return;
         }
 

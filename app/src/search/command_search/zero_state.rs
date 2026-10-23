@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 
 use lazy_static::lazy_static;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::theme::color::internal_colors;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::ui::theme::color::internal_colors;
+use torchui::elements::{
     Container, CornerRadius, Flex, Hoverable, MouseStateHandle, ParentElement, Radius, Text, Wrap,
 };
-use warpui::platform::Cursor;
-use warpui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
+use torchui::platform::Cursor;
+use torchui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
 
 use crate::appearance::Appearance;
 use crate::drive::settings::{WarpDriveSettings, WarpDriveSettingsChangedEvent};
@@ -183,7 +183,7 @@ impl View for CommandSearchZeroStateView {
         "CommandSearchZeroStateView"
     }
 
-    fn render(&self, app: &AppContext) -> Box<dyn warpui::Element> {
+    fn render(&self, app: &AppContext) -> Box<dyn torchui::Element> {
         let appearance = Appearance::as_ref(app);
 
         let command_search_text = Container::new(

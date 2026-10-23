@@ -1,14 +1,14 @@
 //! Renders the AI block "header", which includes a version of the AI "prompt" as it was rendered
 //! when the query was submitted.
-use warp_core::features::FeatureFlag;
-use warp_util::path::user_friendly_path;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_util::path::user_friendly_path;
+use torchui::elements::{
     ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Flex, Hoverable,
     Icon as ElementIcon, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius,
     SavePosition, Text,
 };
-use warpui::platform::Cursor;
-use warpui::{AppContext, Element, EntityId, SingletonEntity, ViewHandle};
+use torchui::platform::Cursor;
+use torchui::{AppContext, Element, EntityId, SingletonEntity, ViewHandle};
 
 use crate::ai::agent::AIAgentExchangeId;
 use crate::ai::agent::conversation::AIConversationId;

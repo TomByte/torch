@@ -12,8 +12,8 @@ use ::local_control::{
 use serde::Serialize;
 use serde_json::{Value, json};
 use settings::Setting as _;
-use warp_core::channel::ChannelState;
-use warpui::{AppContext, ModelContext, SingletonEntity, ViewHandle, WindowId};
+use torch_core::channel::ChannelState;
+use torchui::{AppContext, ModelContext, SingletonEntity, ViewHandle, WindowId};
 
 use crate::drive::settings::WarpDriveSettings;
 use crate::features::FeatureFlag;

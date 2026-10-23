@@ -1,6 +1,6 @@
 use ::local_control::protocol::TargetSelector;
 use ::local_control::{ErrorCode, InstanceId};
-use warpui::App;
+use torchui::App;
 
 use super::create_tab;
 use crate::local_control::LocalControlBridge;

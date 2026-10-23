@@ -39,9 +39,9 @@ log.workspace = true
 shellexpand.workspace = true
 strum.workspace = true
 strum_macros.workspace = true
-warpui_core.workspace = true
-warpui_extras = { workspace = true, features = ["default"] }
-warp_graphql.workspace = true
+torchui_core.workspace = true
+torchui_extras = { workspace = true, features = ["default"] }
+torch_graphql.workspace = true
 warp_multi_agent_api.workspace = true
 dirs.workspace = true
 lazy_static.workspace = true
@@ -55,10 +55,10 @@ futures.workspace = true
 generic-array = "0.14.7"
 derivative.workspace = true
 hex.workspace = true
-warp_core.workspace = true
-warp_errors.workspace = true
-warp_terminal.workspace = true
-warp_util.workspace = true
+torch_core.workspace = true
+torch_errors.workspace = true
+torch_terminal.workspace = true
+torch_util.workspace = true
 chrono.workspace = true
 persistence.workspace = true
 priority-queue = "2.3.1"
@@ -89,7 +89,7 @@ prost.workspace = true
 serial_test = "0.8.0"
 tempfile.workspace = true
 virtual-fs.workspace = true
-warp_core = { workspace = true, features = ["test-util"] }
+torch_core = { workspace = true, features = ["test-util"] }
 
 [build-dependencies]
 anyhow.workspace = true

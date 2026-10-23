@@ -34,7 +34,7 @@ fn signal_lifecycle_child() -> ! {
         other => panic!("unknown child kind {other}"),
     };
 
-    let background = warpui::r#async::executor::Background::default();
+    let background = torchui::r#async::executor::Background::default();
     let mut watch = block_on(InterruptWatch::register(&background)).expect("signal watch");
     println!("{READY_MARKER}");
 

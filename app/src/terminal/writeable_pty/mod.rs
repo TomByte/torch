@@ -9,4 +9,4 @@ pub(crate) mod terminal_surface;
 
 pub use pty_controller::{PtyController, PtyControllerEvent};
 pub use terminal_surface::{PtyIntent, PtyIntentEvent, TerminalSurface};
-pub use warp_terminal::writeable_pty::Message;
+pub use torch_terminal::writeable_pty::Message;

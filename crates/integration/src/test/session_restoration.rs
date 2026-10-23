@@ -1,26 +1,26 @@
 use settings::{RespectUserSyncSetting, SyncToCloud};
-use warp::features::FeatureFlag;
-use warp::integration_testing::notebook::{
+use torch::features::FeatureFlag;
+use torch::integration_testing::notebook::{
     assert_cloud_preference_exists, assert_notebook_contents, assert_notebook_metadata_revision,
 };
-use warp::integration_testing::step::{
+use torch::integration_testing::step::{
     new_step_with_default_assertions, new_step_with_default_assertions_for_pane,
 };
-use warp::integration_testing::tab::assert_pane_title;
-use warp::integration_testing::terminal::wait_until_bootstrapped_single_pane_for_tab;
-use warp::integration_testing::view_getters::single_terminal_view_for_tab;
-use warp::integration_testing::workflow::assert_workflow_metadata_revision;
-use warp::integration_testing::{self};
-use warp::settings::Preference;
-use warp::settings_view::{SettingsSection, SettingsView};
-use warp::sqlite_testing::set_user_and_hostname_for_blocks;
-use warp::terminal::model::session::get_local_hostname;
-use warp::terminal::model::terminal_model::BlockIndex;
-use warp::terminal::shell::ShellType;
-use warp::terminal::{History, ShellHost, TerminalView};
-use warp::workspace::Workspace;
-use warpui_core::integration::{AssertionOutcome, TestStep};
-use warpui_core::{SingletonEntity, ViewHandle, async_assert_eq};
+use torch::integration_testing::tab::assert_pane_title;
+use torch::integration_testing::terminal::wait_until_bootstrapped_single_pane_for_tab;
+use torch::integration_testing::view_getters::single_terminal_view_for_tab;
+use torch::integration_testing::workflow::assert_workflow_metadata_revision;
+use torch::integration_testing::{self};
+use torch::settings::Preference;
+use torch::settings_view::{SettingsSection, SettingsView};
+use torch::sqlite_testing::set_user_and_hostname_for_blocks;
+use torch::terminal::model::session::get_local_hostname;
+use torch::terminal::model::terminal_model::BlockIndex;
+use torch::terminal::shell::ShellType;
+use torch::terminal::{History, ShellHost, TerminalView};
+use torch::workspace::Workspace;
+use torchui_core::integration::{AssertionOutcome, TestStep};
+use torchui_core::{SingletonEntity, ViewHandle, async_assert_eq};
 
 use super::{Builder, TEST_ONLY_ASSETS, new_builder};
 use crate::util::{get_local_user, tab_title_in_home_dir};

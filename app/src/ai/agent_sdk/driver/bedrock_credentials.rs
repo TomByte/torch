@@ -14,15 +14,15 @@ use std::time::{Duration, SystemTime};
 use ai::api_keys::{ApiKeyManager, AwsCredentials, AwsCredentialsState};
 use anyhow::{Context as _, Result};
 use vec1::vec1;
-use warp_managed_secrets::client::IdentityTokenOptions;
-use warpui::{ModelSpawner, SingletonEntity};
+use torch_managed_secrets::client::IdentityTokenOptions;
+use torchui::{ModelSpawner, SingletonEntity};
 
 use super::AgentDriver;
 use crate::ai::aws_credentials::{
     aws_role_session_name, sts_client, AWS_BEDROCK_STS_AUDIENCE, BEDROCK_IDENTITY_TOKEN_DURATION,
 };
 use crate::server::server_api::managed_secrets::AppManagedSecretManager as ManagedSecretManager;
-use warp_errors::report_error;
+use torch_errors::report_error;
 
 /// How long to wait between Bedrock credential refresh attempts — well ahead of the
 /// 1-hour STS temporary credential expiry, matching the approach used for git credentials.
@@ -126,7 +126,7 @@ pub(crate) async fn refresh_loop(
     foreground: &ModelSpawner<AgentDriver>,
 ) {
     loop {
-        warpui::r#async::Timer::after(BEDROCK_CREDENTIALS_REFRESH_INTERVAL).await;
+        torchui::r#async::Timer::after(BEDROCK_CREDENTIALS_REFRESH_INTERVAL).await;
 
         log::info!("Proactively refreshing AWS Bedrock OIDC credentials for task {task_id}");
 
@@ -147,7 +147,7 @@ pub(crate) async fn refresh_loop(
                         attempt + 1,
                         delay.as_secs()
                     );
-                    warpui::r#async::Timer::after(delay).await;
+                    torchui::r#async::Timer::after(delay).await;
                     attempt += 1;
                 }
                 Err(e) => {

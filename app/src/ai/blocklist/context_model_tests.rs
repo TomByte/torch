@@ -9,9 +9,9 @@ use parking_lot::FairMutex;
 #[cfg(feature = "local_fs")]
 use repo_metadata::DirectoryWatcher;
 #[cfg(feature = "local_fs")]
-use warp_util::standardized_path::StandardizedPath;
-use warpui::r#async::executor::Background;
-use warpui::{App, EntityId, ModelHandle, SingletonEntity};
+use torch_util::standardized_path::StandardizedPath;
+use torchui::r#async::executor::Background;
+use torchui::{App, EntityId, ModelHandle, SingletonEntity};
 
 use super::{BlocklistAIContextModel, PendingAttachment, PendingFile};
 use crate::ai::agent::conversation::AIConversationId;
@@ -63,7 +63,7 @@ struct TestConversationSelection {
 impl TestConversationSelection {
     fn new(
         terminal_surface_id: EntityId,
-        _: &mut warpui::ModelContext<Box<dyn ConversationSelection>>,
+        _: &mut torchui::ModelContext<Box<dyn ConversationSelection>>,
     ) -> Self {
         Self {
             terminal_surface_id,
@@ -76,22 +76,22 @@ impl AgentConversationListPolicy for TestConversationSelection {
     fn classify_entry(
         &self,
         _: &AgentConversationEntry,
-        _: &warpui::AppContext,
+        _: &torchui::AppContext,
     ) -> AgentConversationListEntryState {
         AgentConversationListEntryState::Unavailable
     }
 }
 
 impl ConversationSelection for TestConversationSelection {
-    fn selected_conversation_id(&self, _: &warpui::AppContext) -> Option<AIConversationId> {
+    fn selected_conversation_id(&self, _: &torchui::AppContext) -> Option<AIConversationId> {
         self.selected_conversation_id
     }
 
-    fn is_conversation_active(&self, _: &warpui::AppContext) -> bool {
+    fn is_conversation_active(&self, _: &torchui::AppContext) -> bool {
         self.selected_conversation_id.is_some()
     }
 
-    fn is_conversation_fullscreen(&self, _: &warpui::AppContext) -> bool {
+    fn is_conversation_fullscreen(&self, _: &torchui::AppContext) -> bool {
         self.selected_conversation_id.is_some()
     }
 
@@ -99,7 +99,7 @@ impl ConversationSelection for TestConversationSelection {
         &mut self,
         conversation_id: AIConversationId,
         _: AgentViewEntryOrigin,
-        ctx: &mut warpui::ModelContext<Box<dyn ConversationSelection>>,
+        ctx: &mut torchui::ModelContext<Box<dyn ConversationSelection>>,
     ) {
         if self.selected_conversation_id != Some(conversation_id) {
             self.selected_conversation_id = Some(conversation_id);
@@ -110,7 +110,7 @@ impl ConversationSelection for TestConversationSelection {
     fn select_new_conversation(
         &mut self,
         _: AgentViewEntryOrigin,
-        ctx: &mut warpui::ModelContext<Box<dyn ConversationSelection>>,
+        ctx: &mut torchui::ModelContext<Box<dyn ConversationSelection>>,
     ) {
         if self.selected_conversation_id.take().is_some() {
             ctx.emit(ConversationSelectionEvent::Changed);
@@ -120,7 +120,7 @@ impl ConversationSelection for TestConversationSelection {
     fn try_start_new_conversation(
         &mut self,
         _: AgentViewEntryOrigin,
-        ctx: &mut warpui::ModelContext<Box<dyn ConversationSelection>>,
+        ctx: &mut torchui::ModelContext<Box<dyn ConversationSelection>>,
     ) -> Result<AIConversationId, EnterAgentViewError> {
         let conversation_id = BlocklistAIHistoryModel::handle(ctx).update(ctx, |history, ctx| {
             history.start_new_conversation(self.terminal_surface_id, false, false, false, ctx)
@@ -131,7 +131,7 @@ impl ConversationSelection for TestConversationSelection {
 
     fn pending_query_autoexecute_override(
         &self,
-        app: &warpui::AppContext,
+        app: &torchui::AppContext,
     ) -> crate::ai::agent::conversation::AIConversationAutoexecuteMode {
         self.selected_conversation_id
             .as_ref()
@@ -144,7 +144,7 @@ impl ConversationSelection for TestConversationSelection {
 
     fn toggle_pending_query_autoexecute(
         &mut self,
-        ctx: &mut warpui::ModelContext<Box<dyn ConversationSelection>>,
+        ctx: &mut torchui::ModelContext<Box<dyn ConversationSelection>>,
     ) {
         if let Some(conversation_id) = self.selected_conversation_id {
             BlocklistAIHistoryModel::handle(ctx).update(ctx, |history, ctx| {
@@ -160,7 +160,7 @@ impl ConversationSelection for TestConversationSelection {
     fn handle_history_event(
         &mut self,
         _: &BlocklistAIHistoryEvent,
-        _: &mut warpui::ModelContext<Box<dyn ConversationSelection>>,
+        _: &mut torchui::ModelContext<Box<dyn ConversationSelection>>,
     ) {
     }
 }

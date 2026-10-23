@@ -4,11 +4,11 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 
 use ::settings::Setting;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::appearance::Appearance;
-use warp_errors::{report_error, report_if_error};
-use warpui::elements::{ChildView, Container, Flex, MouseStateHandle, ParentElement};
-use warpui::{
+use torch_core::features::FeatureFlag;
+use torch_core::ui::appearance::Appearance;
+use torch_errors::{report_error, report_if_error};
+use torchui::elements::{ChildView, Container, Flex, MouseStateHandle, ParentElement};
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 

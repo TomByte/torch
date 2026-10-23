@@ -1,4 +1,4 @@
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torchui::{Entity, ModelContext, SingletonEntity};
 
 pub struct FileMCPWatcher {}
 

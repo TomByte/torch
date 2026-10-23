@@ -15,20 +15,20 @@ use ai::index::full_source_code_embedding::manager::CodebaseIndexManagerEvent;
 #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
 use git2::Repository as GitRepository;
 use pathfinder_color::ColorU;
-use warp_core::features::FeatureFlag;
-use warp_core::paths::home_relative_path;
-use warp_core::ui::theme::color::internal_colors;
-use warpui::r#async::{SpawnedFutureHandle, Timer};
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::paths::home_relative_path;
+use torch_core::ui::theme::color::internal_colors;
+use torchui::r#async::{SpawnedFutureHandle, Timer};
+use torchui::elements::{
     Align, Border, ChildView, ClippedScrollStateHandle, ClippedScrollable, ConstrainedBox,
     Container, CornerRadius, CrossAxisAlignment, Dismiss, Element, Empty, Expanded, Flex,
     MainAxisSize, MouseStateHandle, ParentElement, Radius, ScrollbarWidth, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::platform::FilePickerConfiguration;
-use warpui::platform::file_picker::FilePickerError;
-use warpui::ui_components::components::UiComponent;
-use warpui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
+use torchui::fonts::{Properties, Weight};
+use torchui::platform::FilePickerConfiguration;
+use torchui::platform::file_picker::FilePickerError;
+use torchui::ui_components::components::UiComponent;
+use torchui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
 
 use crate::appearance::Appearance;
 use crate::modal::MODAL_BACKDROP_OPACITY;
@@ -522,7 +522,7 @@ impl AgentAssistedEnvironmentModal {
             ScrollbarWidth::Auto,
             theme.nonactive_ui_text_color().into(),
             theme.active_ui_text_color().into(),
-            warpui::elements::Fill::None,
+            torchui::elements::Fill::None,
         )
         .with_overlayed_scrollbar()
         .with_padding_start(0.)

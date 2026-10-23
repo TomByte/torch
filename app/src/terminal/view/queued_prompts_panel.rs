@@ -11,23 +11,23 @@ use std::collections::HashMap;
 use pathfinder_color::ColorU;
 use pathfinder_geometry::rect::RectF;
 use pathfinder_geometry::vector::vec2f;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::theme::color::internal_colors;
-use warpui::clipboard::ClipboardContent;
-use warpui::elements::new_scrollable::{NewScrollable, ScrollableAppearance, SingleAxisConfig};
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::ui::theme::color::internal_colors;
+use torchui::clipboard::ClipboardContent;
+use torchui::elements::new_scrollable::{NewScrollable, ScrollableAppearance, SingleAxisConfig};
+use torchui::elements::{
     Border, ChildAnchor, ChildView, Clipped, ClippedScrollStateHandle, ConstrainedBox, Container,
     CornerRadius, CrossAxisAlignment, DEFAULT_UI_LINE_HEIGHT_RATIO, DragAxis, Draggable,
     DraggableState, Empty, Expanded, Fill, Flex, Hoverable, MinSize, MouseStateHandle,
     OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, SavePosition,
     ScrollbarWidth, Shrinkable, Stack, Text,
 };
-use warpui::fonts::{Properties, Style, Weight};
-use warpui::keymap::Keystroke;
-use warpui::platform::Cursor;
-use warpui::text_layout::ClipConfig;
-use warpui::ui_components::components::UiComponent;
-use warpui::{
+use torchui::fonts::{Properties, Style, Weight};
+use torchui::keymap::Keystroke;
+use torchui::platform::Cursor;
+use torchui::text_layout::ClipConfig;
+use torchui::ui_components::components::UiComponent;
+use torchui::{
     AppContext, BlurContext, Element, Entity, EntityId, FocusContext, ModelHandle, SingletonEntity,
     TypedActionView, View, ViewContext, ViewHandle,
 };

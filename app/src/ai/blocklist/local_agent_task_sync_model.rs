@@ -7,8 +7,8 @@ use std::sync::Arc;
 use futures::channel::oneshot;
 use session_sharing_protocol::common::SessionId;
 use update_queue::LocalTaskUpdateQueue;
-use warp_graphql::ai::{AgentTaskState, PlatformErrorCode};
-use warpui::{Entity, EntityId, ModelContext, SingletonEntity};
+use torch_graphql::ai::{AgentTaskState, PlatformErrorCode};
+use torchui::{Entity, EntityId, ModelContext, SingletonEntity};
 
 use super::history_model::{
     BlocklistAIHistoryEvent, BlocklistAIHistoryModel, ConversationStatusUpdate,

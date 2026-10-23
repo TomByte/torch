@@ -2,9 +2,9 @@
 
 use std::path::{Path, PathBuf};
 
-use warp_cli::skill::SkillSpec;
-use warp_core::features::FeatureFlag;
-use warpui::{Entity, ModelSpawner};
+use torch_cli::skill::SkillSpec;
+use torch_core::features::FeatureFlag;
+use torchui::{Entity, ModelSpawner};
 
 use crate::ai::agent_sdk::driver::AgentDriverError;
 use crate::ai::agent_sdk::setup_observability::{SetupClientEventReporter, SetupStep};

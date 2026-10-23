@@ -12,7 +12,7 @@ use std::sync::Arc;
 use anyhow::{Result, anyhow};
 use instant::Instant;
 #[cfg(feature = "local_fs")]
-use warp_util::standardized_path::StandardizedPath;
+use torch_util::standardized_path::StandardizedPath;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "local_fs")] {
@@ -20,15 +20,15 @@ cfg_if::cfg_if! {
     }
 }
 #[cfg(not(target_family = "wasm"))]
-use warp_core::channel::ChannelState;
-use warp_core::send_telemetry_from_ctx;
+use torch_core::channel::ChannelState;
+use torch_core::send_telemetry_from_ctx;
 #[cfg(feature = "local_fs")]
-use warp_core::sync_queue::SyncQueue;
-use warp_util::git::run_git_command;
+use torch_core::sync_queue::SyncQueue;
+use torch_util::git::run_git_command;
 #[cfg(not(target_arch = "wasm32"))]
-use warpui::AppContext;
-use warpui::r#async::SpawnedFutureHandle;
-use warpui::{ModelContext, SingletonEntity};
+use torchui::AppContext;
+use torchui::r#async::SpawnedFutureHandle;
+use torchui::{ModelContext, SingletonEntity};
 
 use crate::code_review::diff_size_limits::{
     DiffSize, MAX_DIFF_SIZE, UnrenderableReason, compute_diff_size,
@@ -57,11 +57,11 @@ cfg_if::cfg_if! {
             RepoMetadataError, Repository, RepositoryUpdate, RepositoryWatchMode,
         };
         use async_channel::Sender;
-        use warpui::ModelHandle;
+        use torchui::ModelHandle;
     }
 }
 #[cfg(feature = "local_fs")]
-use warp_errors::report_error;
+use torch_errors::report_error;
 
 #[cfg(feature = "local_fs")]
 use super::DiffOperation;
@@ -440,7 +440,7 @@ impl LocalDiffStateModel {
     }
 
     #[cfg(not(feature = "local_fs"))]
-    pub fn is_git_operation_blocked(&self, _app: &warpui::AppContext) -> bool {
+    pub fn is_git_operation_blocked(&self, _app: &torchui::AppContext) -> bool {
         false
     }
     /// Returns `true` once the repository has at least one commit.
@@ -467,7 +467,7 @@ impl LocalDiffStateModel {
     }
 
     #[cfg(not(feature = "local_fs"))]
-    fn active_repository_path(&self, _app: &warpui::AppContext) -> Option<PathBuf> {
+    fn active_repository_path(&self, _app: &torchui::AppContext) -> Option<PathBuf> {
         None
     }
 
@@ -1728,7 +1728,7 @@ impl LocalDiffStateModel {
         let n = file.read(&mut buffer)?;
         buffer.truncate(n);
 
-        if warp_util::file_type::is_buffer_binary(&buffer) {
+        if torch_util::file_type::is_buffer_binary(&buffer) {
             return Ok(None);
         }
         file.rewind()?;
@@ -2944,7 +2944,7 @@ pub(crate) async fn diff_metadata_against_head(
     })
 }
 
-impl warpui::Entity for LocalDiffStateModel {
+impl torchui::Entity for LocalDiffStateModel {
     type Event = DiffStateModelEvent;
 }
 

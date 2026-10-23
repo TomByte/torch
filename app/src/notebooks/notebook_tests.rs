@@ -2,11 +2,11 @@ use std::sync::Arc;
 
 use chrono::{Duration, Utc};
 use futures_util::future::BoxFuture;
-use warp_core::ui::appearance::Appearance;
-use warp_editor::editor::EditorView;
-use warpui::platform::WindowStyle;
-use warpui::presenter::ChildView;
-use warpui::{
+use torch_core::ui::appearance::Appearance;
+use torch_editor::editor::EditorView;
+use torchui::platform::WindowStyle;
+use torchui::presenter::ChildView;
+use torchui::{
     AddSingletonModel, App, AppContext, Element, Entity, SingletonEntity, TypedActionView, View,
     ViewHandle, WindowId,
 };

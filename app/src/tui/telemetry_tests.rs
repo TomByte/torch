@@ -1,6 +1,6 @@
 use anyhow::anyhow;
 use serde_json::json;
-use warp_core::telemetry::TelemetryEvent as _;
+use torch_core::telemetry::TelemetryEvent as _;
 
 use super::{
     AbandonmentPhase, AuthenticationAttempt, AuthenticationEntrypoint, AuthenticationFailureReason,

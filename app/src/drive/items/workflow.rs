@@ -1,8 +1,8 @@
-use warp_core::context_flag::ContextFlag;
-use warpui::elements::{Container, Flex, MouseStateHandle, ParentElement};
-use warpui::fonts::Weight;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{AppContext, Element, SingletonEntity};
+use torch_core::context_flag::ContextFlag;
+use torchui::elements::{Container, Flex, MouseStateHandle, ParentElement};
+use torchui::fonts::Weight;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{AppContext, Element, SingletonEntity};
 
 use super::{WarpDriveItem, WarpDriveItemId};
 use crate::appearance::Appearance;
@@ -65,7 +65,7 @@ impl WarpDriveItem for WarpDriveWorkflow {
 
     fn preview(&self, appearance: &Appearance) -> Option<Box<dyn Element>> {
         let mut modal =
-            Flex::column().with_cross_axis_alignment(warpui::elements::CrossAxisAlignment::Stretch);
+            Flex::column().with_cross_axis_alignment(torchui::elements::CrossAxisAlignment::Stretch);
 
         let mut text = Flex::column()
             .with_child(Container::new(self.render_workflow_name(appearance)).finish());

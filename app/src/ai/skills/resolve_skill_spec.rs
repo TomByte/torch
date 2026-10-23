@@ -18,9 +18,9 @@ use ai::skills::{
 };
 use command::r#async::Command as AsyncCommand;
 use command::blocking::Command;
-use warp_cli::skill::SkillSpec;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warpui::{AppContext, SingletonEntity as _};
+use torch_cli::skill::SkillSpec;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torchui::{AppContext, SingletonEntity as _};
 
 use super::SkillManager;
 use crate::warp_managed_paths_watcher::warp_managed_skill_dirs;

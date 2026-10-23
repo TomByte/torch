@@ -2,7 +2,7 @@ use std::path::Path;
 
 use string_offset::ByteOffset;
 #[cfg(not(target_family = "wasm"))]
-use warp_util::standardized_path::StandardizedPath;
+use torch_util::standardized_path::StandardizedPath;
 
 mod naive;
 #[cfg(not(target_family = "wasm"))]

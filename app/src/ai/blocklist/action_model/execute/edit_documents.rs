@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use ai::diff_validation::DiffDelta;
 use futures::FutureExt;
 use futures::future::BoxFuture;
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torchui::{Entity, ModelContext, SingletonEntity};
 
 use super::{ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessActionInput};
 use crate::ai::agent::{

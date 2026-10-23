@@ -4,7 +4,7 @@ use std::sync::{Arc, mpsc};
 use std::time::Duration;
 
 use futures::executor::block_on;
-use warpui::r#async::executor::Background;
+use torchui::r#async::executor::Background;
 
 use super::{OzRunTimelineEvent, SetupClientEventReporter, SetupScope, SetupStep};
 use crate::server::server_api::ai::MockAIClient;

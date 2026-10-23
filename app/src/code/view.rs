@@ -5,28 +5,28 @@ use lsp::LspManagerModel;
 use pathfinder_color::ColorU;
 use pathfinder_geometry::rect::RectF;
 use pathfinder_geometry::vector::vec2f;
-use warp_core::channel::{Channel, ChannelState};
-use warp_core::features::FeatureFlag;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::icons::ICON_DIMENSIONS;
-use warp_editor::render::element::VerticalExpansionBehavior;
-use warp_util::path::LineAndColumnArg;
+use torch_core::channel::{Channel, ChannelState};
+use torch_core::features::FeatureFlag;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::icons::ICON_DIMENSIONS;
+use torch_editor::render::element::VerticalExpansionBehavior;
+use torch_util::path::LineAndColumnArg;
 #[cfg(feature = "local_fs")]
-use warpui::clipboard::ClipboardContent;
-use warpui::elements::{
+use torchui::clipboard::ClipboardContent;
+use torchui::elements::{
     AcceptedByDropTarget, Align, Border, ChildAnchor, ChildView, Clipped, ConstrainedBox,
     Container, CornerRadius, CrossAxisAlignment, Draggable, DraggableState, DropTarget, Empty,
     Expanded, Flex, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle,
     OffsetPositioning, Padding, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Rect,
     SavePosition, Shrinkable, Stack, Text,
 };
-use warpui::fonts::{Properties, Style, Weight};
-use warpui::keymap::EditableBinding;
-use warpui::text::point::Point;
-use warpui::text_layout::ClipConfig;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::UiComponent;
-use warpui::{
+use torchui::fonts::{Properties, Style, Weight};
+use torchui::keymap::EditableBinding;
+use torchui::text::point::Point;
+use torchui::text_layout::ClipConfig;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::UiComponent;
+use torchui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle, WindowId, id,
 };
@@ -401,8 +401,8 @@ impl CodeView {
                             ctx,
                         )
                         .with_horizontal_scrollbar_appearance(
-                            warpui::elements::new_scrollable::ScrollableAppearance::new(
-                                warpui::elements::ScrollbarWidth::Auto,
+                            torchui::elements::new_scrollable::ScrollableAppearance::new(
+                                torchui::elements::ScrollbarWidth::Auto,
                                 true,
                             ),
                         )
@@ -445,8 +445,8 @@ impl CodeView {
                 ctx,
             )
             .with_horizontal_scrollbar_appearance(
-                warpui::elements::new_scrollable::ScrollableAppearance::new(
-                    warpui::elements::ScrollbarWidth::Auto,
+                torchui::elements::new_scrollable::ScrollableAppearance::new(
+                    torchui::elements::ScrollbarWidth::Auto,
                     true,
                 ),
             )
@@ -2254,7 +2254,7 @@ impl View for CodeView {
         "CodeView"
     }
 
-    fn keymap_context(&self, _app: &AppContext) -> warpui::keymap::Context {
+    fn keymap_context(&self, _app: &AppContext) -> torchui::keymap::Context {
         let mut context = Self::default_keymap_context();
         if self.markdown_mode_segmented_control.is_some() {
             context.set.insert(MARKDOWN_DISPLAY_MODE_TOGGLE_CONTEXT);

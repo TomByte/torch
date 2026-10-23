@@ -1,10 +1,10 @@
-use warp_core::ui::appearance::Appearance;
-use warpui::Element;
-use warpui::elements::{Container, MouseStateHandle};
-use warpui::fonts::Weight;
-use warpui::platform::Cursor;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torch_core::ui::appearance::Appearance;
+use torchui::Element;
+use torchui::elements::{Container, MouseStateHandle};
+use torchui::fonts::Weight;
+use torchui::platform::Cursor;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 
 use super::env_var_collection::{EnvVarCollectionAction, EnvVarCollectionView};
 use crate::ui_components::dialog::{Dialog, dialog_styles};

@@ -1,7 +1,7 @@
 use settings::Setting as _;
-use warp_core::features::FeatureFlag;
-use warp_errors::report_if_error;
-use warpui::{App, EntityId, ModelHandle, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torch_errors::report_if_error;
+use torchui::{App, EntityId, ModelHandle, SingletonEntity};
 
 use super::AgentNotificationsModel;
 use crate::BlocklistAIHistoryModel;

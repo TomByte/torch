@@ -1,14 +1,14 @@
 //! The "Editor and Code Review" settings page, shown under the Code umbrella.
 
-use warp_core::settings::{Setting as _, ToggleableSetting as _};
-use warp_errors::report_if_error;
-use warpui::elements::Element;
+use torch_core::settings::{Setting as _, ToggleableSetting as _};
+use torch_errors::report_if_error;
+use torchui::elements::Element;
 #[cfg(feature = "local_fs")]
-use warpui::elements::{ChildView, Empty};
-use warpui::keymap::ContextPredicate;
-use warpui::ui_components::components::UiComponent;
-use warpui::ui_components::switch::SwitchStateHandle;
-use warpui::{
+use torchui::elements::{ChildView, Empty};
+use torchui::keymap::ContextPredicate;
+use torchui::ui_components::components::UiComponent;
+use torchui::ui_components::switch::SwitchStateHandle;
+use torchui::{
     Action, AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 

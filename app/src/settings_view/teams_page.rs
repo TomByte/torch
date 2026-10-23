@@ -11,25 +11,25 @@ use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use warp_core::features::FeatureFlag;
-use warp_core::ui::theme::color::internal_colors;
-use warp_errors::report_error;
-use warpui::clipboard::ClipboardContent;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::ui::theme::color::internal_colors;
+use torch_errors::report_error;
+use torchui::clipboard::ClipboardContent;
+use torchui::elements::{
     Align, Border, ChildAnchor, Clipped, ClippedScrollStateHandle, ConstrainedBox, Container,
     CornerRadius, CrossAxisAlignment, Element, Flex, FormattedTextElement, HighlightedHyperlink,
     Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning, ParentAnchor,
     ParentElement, ParentOffsetBounds, Radius, SavePosition, ScrollTarget, ScrollToPositionMode,
     Shrinkable, Stack, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::platform::Cursor;
-use warpui::presenter::ChildView;
-use warpui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::ui_components::switch::SwitchStateHandle;
-use warpui::ui_components::text_input::TextInput;
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::platform::Cursor;
+use torchui::presenter::ChildView;
+use torchui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::ui_components::switch::SwitchStateHandle;
+use torchui::ui_components::text_input::TextInput;
+use torchui::{
     AppContext, Entity, FocusContext, ModelHandle, SingletonEntity, TypedActionView, View,
     ViewContext, ViewHandle, WeakViewHandle,
 };

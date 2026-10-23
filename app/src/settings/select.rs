@@ -4,8 +4,8 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use settings::macros::define_settings_group;
 use settings::{RespectUserSyncSetting, Setting, SupportedPlatforms, SyncToCloud};
-use warpui::AppContext;
-use warpui::clipboard::ClipboardContent;
+use torchui::AppContext;
+use torchui::clipboard::ClipboardContent;
 
 #[derive(
     Debug,

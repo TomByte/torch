@@ -7,17 +7,17 @@ use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::Vector2F;
 use thiserror::Error;
 use validator::ValidateEmail;
-use warp_errors::report_error;
-use warpui::clipboard::ClipboardContent;
-use warpui::elements::{
+use torch_errors::report_error;
+use torchui::clipboard::ClipboardContent;
+use torchui::elements::{
     Align, Border, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Element, Fill,
     Flex, FormattedTextElement, HighlightedHyperlink, Icon, MainAxisSize, MouseStateHandle,
     ParentElement, Radius, Rect, Shrinkable,
 };
-use warpui::fonts::Weight;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::fonts::Weight;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Entity, EventContext, FocusContext, SingletonEntity, TypedActionView, View,
     ViewContext, ViewHandle,
 };

@@ -6,9 +6,9 @@ use std::time::Duration;
 use anyhow::{Context, Result};
 use futures::channel::oneshot::{self, Receiver};
 use futures::stream::AbortHandle;
-use warp_errors::{report_error, report_if_error};
-use warpui::r#async::{Spawnable, Timer};
-use warpui::{
+use torch_errors::{report_error, report_if_error};
+use torchui::r#async::{Spawnable, Timer};
+use torchui::{
     Entity, ModelContext, ModelHandle, RequestState, SingletonEntity, duration_with_jitter,
 };
 

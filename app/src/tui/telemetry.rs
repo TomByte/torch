@@ -1,7 +1,7 @@
 use instant::Instant;
 use serde_json::{Value, json};
 use strum_macros::{EnumDiscriminants, EnumIter};
-use warp_core::telemetry::{EnablementState, TelemetryEvent, TelemetryEventDesc};
+use torch_core::telemetry::{EnablementState, TelemetryEvent, TelemetryEventDesc};
 
 use super::TuiLoginPhase;
 use crate::server::server_api::auth::UserAuthenticationError;
@@ -282,7 +282,7 @@ impl TelemetryEvent for TuiOnboardingTelemetryEvent {
     }
 
     fn event_descs() -> impl Iterator<Item = Box<dyn TelemetryEventDesc>> {
-        warp_core::telemetry::enum_events::<Self>()
+        torch_core::telemetry::enum_events::<Self>()
     }
 }
 
@@ -316,7 +316,7 @@ impl TelemetryEventDesc for TuiOnboardingTelemetryEventDiscriminants {
     }
 }
 
-warp_core::register_telemetry_event!(TuiOnboardingTelemetryEvent);
+torch_core::register_telemetry_event!(TuiOnboardingTelemetryEvent);
 
 struct ActiveFlow {
     journey: Journey,

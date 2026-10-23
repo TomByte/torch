@@ -1,10 +1,10 @@
-use warp_core::ui::theme::color::internal_colors;
-use warpui::elements::{
+use torch_core::ui::theme::color::internal_colors;
+use torchui::elements::{
     Border, ChildView, Container, CornerRadius, Dismiss, Empty, Flex, ParentElement, Radius, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::ui_components::components::UiComponent;
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::ui_components::components::UiComponent;
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 

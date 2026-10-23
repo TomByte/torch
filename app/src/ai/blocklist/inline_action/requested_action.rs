@@ -14,15 +14,15 @@ use std::borrow::Cow;
 use lazy_static::lazy_static;
 use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
 use pathfinder_color::ColorU;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::color::internal_colors::neutral_2;
-use warpui::elements::{
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::color::internal_colors::neutral_2;
+use torchui::elements::{
     Align, Border, Clipped, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Flex,
     FormattedTextElement, MainAxisAlignment, ParentElement, Radius, Shrinkable, Wrap, WrapFill,
 };
-use warpui::fonts::FamilyId;
-use warpui::keymap::Keystroke;
-use warpui::{AppContext, Element, SingletonEntity};
+use torchui::fonts::FamilyId;
+use torchui::keymap::Keystroke;
+use torchui::{AppContext, Element, SingletonEntity};
 
 use super::inline_action_header::HeaderConfig;
 use crate::ai::blocklist::block::view_impl::WithContentItemSpacing;

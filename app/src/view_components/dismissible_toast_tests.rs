@@ -1,9 +1,9 @@
 use std::time::Duration;
 
-use warp_core::ui::appearance::Appearance;
-use warpui::keymap::Keystroke;
-use warpui::platform::WindowStyle;
-use warpui::{App, TypedActionView, ViewHandle};
+use torch_core::ui::appearance::Appearance;
+use torchui::keymap::Keystroke;
+use torchui::platform::WindowStyle;
+use torchui::{App, TypedActionView, ViewHandle};
 
 use super::{
     COLLAPSED_MAX_CHARS, COLLAPSED_MAX_LINES, DismissibleToast, DismissibleToastAction,

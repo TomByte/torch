@@ -1,7 +1,7 @@
 use anyhow::{Result, anyhow};
-use warp_cli::agent::Harness;
-use warp_graphql::managed_secrets::ManagedSecretType;
-use warp_managed_secrets::ManagedSecretValue;
+use torch_cli::agent::Harness;
+use torch_graphql::managed_secrets::ManagedSecretType;
+use torch_managed_secrets::ManagedSecretValue;
 
 pub struct AuthSecretTypeField {
     pub label: &'static str,

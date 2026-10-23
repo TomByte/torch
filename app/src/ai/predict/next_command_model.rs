@@ -8,19 +8,19 @@ use futures::stream::AbortHandle;
 use itertools::Itertools;
 #[cfg_attr(not(feature = "local_fs"), allow(unused_imports))]
 use parking_lot::{FairMutex, Mutex};
-use warp_completer::completer::{
+use torch_completer::completer::{
     self, AliasExpansionResult, CompleterOptions, CompletionsFallbackStrategy, MatchStrategy,
     expand_command_aliases,
 };
-use warp_completer::meta::Spanned;
-use warp_completer::parsers::ParsedExpression;
-use warp_completer::parsers::hir::{Command, Expression, FlagType};
+use torch_completer::meta::Spanned;
+use torch_completer::parsers::ParsedExpression;
+use torch_completer::parsers::hir::{Command, Expression, FlagType};
 #[cfg(feature = "local_fs")]
-use warp_core::command::ExitCode;
-use warp_core::features::FeatureFlag;
+use torch_core::command::ExitCode;
+use torch_core::features::FeatureFlag;
 #[cfg(feature = "local_fs")]
-use warpui::r#async::FutureExt;
-use warpui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
+use torchui::r#async::FutureExt;
+use torchui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
 
 use super::generate_ai_input_suggestions::{
     GenerateAIInputSuggestionsRequest, GenerateAIInputSuggestionsResponseV2, NextCommandContext,
@@ -47,7 +47,7 @@ cfg_if::cfg_if! {
     if #[cfg(feature = "local_fs")] {
         use diesel::SqliteConnection;
         use std::path::PathBuf;
-        use warp_completer::parsers::hir::ArgType;
+        use torch_completer::parsers::hir::ArgType;
     }
 }
 
@@ -62,7 +62,7 @@ const NUM_ADDITIONAL_PREV_COMMAND_CONTEXT_LLM: usize = 2;
 #[cfg(feature = "local_fs")]
 const ARG_GENERATOR_VALIDATION_TIMEOUT: Duration = Duration::from_millis(150);
 
-pub fn is_next_command_enabled(app: &warpui::AppContext) -> bool {
+pub fn is_next_command_enabled(app: &torchui::AppContext) -> bool {
     AISettings::as_ref(app).is_intelligent_autosuggestions_enabled(app)
         && UserWorkspaces::as_ref(app).is_next_command_enabled()
 }

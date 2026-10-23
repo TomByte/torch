@@ -4,8 +4,8 @@ use std::path::{Path, PathBuf};
 
 use ai::skills::SkillReference;
 use serde::{Deserialize, Serialize};
-use warp_util::path::LineAndColumnArg;
-use warpui::{AppContext, Entity, EntityId, ModelContext, SingletonEntity, ViewHandle, WindowId};
+use torch_util::path::LineAndColumnArg;
+use torchui::{AppContext, Entity, EntityId, ModelContext, SingletonEntity, ViewHandle, WindowId};
 
 use super::buffer_location::LocalOrRemotePath;
 use super::view::CodeView;

@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
 use settings::macros::define_settings_group;
 use settings::{RespectUserSyncSetting, SupportedPlatforms, SyncToCloud};
-use warp_core::features::FeatureFlag;
-use warpui::units::Pixels;
-use warpui::{AppContext, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torchui::units::Pixels;
+use torchui::{AppContext, SingletonEntity};
 
 use crate::settings::{AISettings, InputSettings, TerminalSpacing};
 
@@ -162,7 +162,7 @@ define_settings_group!(TerminalSettings, settings: [
     },
     alt_screen_padding: AltScreenPadding {
         type: AltScreenPaddingMode,
-        default: if warp_core::channel::ChannelState::is_local_only() {
+        default: if torch_core::channel::ChannelState::is_local_only() {
             AltScreenPaddingMode::MatchBlocklist
         } else {
             AltScreenPaddingMode::default()

@@ -14,10 +14,10 @@ use ai::agent::orchestration_config::OrchestrationConfig;
 use ai::skills::SkillReference;
 use futures::FutureExt;
 use futures::future::BoxFuture;
-use warp_cli::agent::Harness;
-use warp_core::execution_mode::AppExecutionMode;
-use warp_core::{send_telemetry_from_app_ctx, send_telemetry_from_ctx};
-use warpui::{Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
+use torch_cli::agent::Harness;
+use torch_core::execution_mode::AppExecutionMode;
+use torch_core::{send_telemetry_from_app_ctx, send_telemetry_from_ctx};
+use torchui::{Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
 
 use super::start_agent::{StartAgentExecutor, StartAgentOutcome};
 use super::{ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessActionInput};
@@ -318,7 +318,7 @@ impl RunAgentsExecutor {
                     let kind = match slot {
                         ChildSlot::Failed(error) => RunAgentsAgentOutcomeKind::Failed { error },
                         ChildSlot::Pending(recv) => {
-                            let timeout = warpui::r#async::Timer::after(SPAWN_TIMEOUT);
+                            let timeout = torchui::r#async::Timer::after(SPAWN_TIMEOUT);
                             match futures::future::select(Box::pin(recv.recv()), Box::pin(timeout))
                                 .await
                             {

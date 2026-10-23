@@ -4,7 +4,7 @@
 //! Mirrors the pattern used by [`crate::ai::execution_profiles::editor::manager::ExecutionProfileEditorManager`].
 use std::collections::HashMap;
 
-use warpui::{Entity, SingletonEntity, WindowId};
+use torchui::{Entity, SingletonEntity, WindowId};
 
 use crate::workspace::PaneViewLocator;
 

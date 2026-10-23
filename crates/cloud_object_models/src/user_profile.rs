@@ -22,8 +22,8 @@ impl From<ProfileData> for UserProfileWithUID {
     }
 }
 
-impl From<warp_graphql::user::PublicUserProfile> for UserProfileWithUID {
-    fn from(value: warp_graphql::user::PublicUserProfile) -> Self {
+impl From<torch_graphql::user::PublicUserProfile> for UserProfileWithUID {
+    fn from(value: torch_graphql::user::PublicUserProfile) -> Self {
         UserProfileWithUID {
             firebase_uid: UserUid::new(&value.uid),
             display_name: value.display_name,

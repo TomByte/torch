@@ -1,10 +1,10 @@
 use std::path::PathBuf;
 
 use uuid::Uuid;
-use warp_core::execution_mode::ExecutionMode;
-use warp_core::settings::Setting as _;
-use warp_util::path::EscapeChar;
-use warpui::{App, EntityId, ModelHandle, SingletonEntity};
+use torch_core::execution_mode::ExecutionMode;
+use torch_core::settings::Setting as _;
+use torch_util::path::EscapeChar;
+use torchui::{App, EntityId, ModelHandle, SingletonEntity};
 
 use super::{BlocklistAIHistoryModel, BlocklistAIPermissions};
 use crate::ai::active_agent_views_model::ActiveAgentViewsModel;

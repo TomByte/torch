@@ -8,8 +8,8 @@
 //! separate piece of work.
 use std::path::PathBuf;
 
-use warp_util::path::EscapeChar;
-use warpui::{AppContext, EntityId, SingletonEntity};
+use torch_util::path::EscapeChar;
+use torchui::{AppContext, EntityId, SingletonEntity};
 
 use super::mapping::{command_from_raw_input, first_diff, path_from_raw_input};
 use super::protocol::{ToolCallFields, ToolKind};

@@ -1,4 +1,4 @@
-use warpui::{EntityId, ModelContext, ModelHandle, SingletonEntity};
+use torchui::{EntityId, ModelContext, ModelHandle, SingletonEntity};
 
 use super::{CLIAgentEvent, CLIAgentSessionsModel};
 use crate::features::FeatureFlag;
@@ -182,7 +182,7 @@ pub struct CLIAgentSessionListener {
     inner: Box<dyn CLIAgentSessionHandler>,
 }
 
-impl warpui::Entity for CLIAgentSessionListener {
+impl torchui::Entity for CLIAgentSessionListener {
     type Event = ();
 }
 

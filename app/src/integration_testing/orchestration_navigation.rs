@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use warp_multi_agent_api as api;
-use warpui::integration::TestStep;
-use warpui::{SingletonEntity, TypedActionView, async_assert_eq};
+use torchui::integration::TestStep;
+use torchui::{SingletonEntity, TypedActionView, async_assert_eq};
 
 use crate::ai::agent::conversation::{AIConversation, AIConversationId};
 use crate::ai::blocklist::BlocklistAIHistoryModel;

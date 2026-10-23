@@ -14,8 +14,8 @@ chrono = { workspace = true }
 futures = { workspace = true }
 log = { workspace = true }
 thiserror.workspace = true
-warp_core = { workspace = true }
-warpui_core.workspace = true
+torch_core = { workspace = true }
+torchui_core.workspace = true
 
 [dev-dependencies]
 instant = { workspace = true }

@@ -1,23 +1,23 @@
 use std::collections::HashMap;
 
 use settings::Setting as _;
-use warp::integration_testing::step::new_step_with_default_assertions;
-use warp::integration_testing::subshell::util::ssh_command;
-use warp::integration_testing::subshell::{
+use torch::integration_testing::step::new_step_with_default_assertions;
+use torch::integration_testing::subshell::util::ssh_command;
+use torch::integration_testing::subshell::{
     assert_subshell_banner_is_showing, assert_subshell_is_bootstrapped,
     enter_local_subshell_command, enter_remote_subshell_command, enter_ssh_password,
     setup_gcloud_sdk, trigger_subshell_bootstrap, wait_for_password_prompt,
 };
-use warp::integration_testing::terminal::util::current_shell_starter_and_version;
-use warp::integration_testing::terminal::wait_until_bootstrapped_single_pane_for_tab;
-use warp::integration_testing::view_getters::single_input_view_for_tab;
-use warp::root_view::SubshellCommandArg;
-use warp::terminal::shell::ShellType;
-use warp::terminal::warpify::settings::AddedSubshellCommands;
-use warpui_core::integration::{AssertionOutcome, TestStep};
-use warpui_core::windowing::WindowManager;
-use warpui_core::windowing::state::ApplicationStage;
-use warpui_core::{UpdateModel, async_assert};
+use torch::integration_testing::terminal::util::current_shell_starter_and_version;
+use torch::integration_testing::terminal::wait_until_bootstrapped_single_pane_for_tab;
+use torch::integration_testing::view_getters::single_input_view_for_tab;
+use torch::root_view::SubshellCommandArg;
+use torch::terminal::shell::ShellType;
+use torch::terminal::warpify::settings::AddedSubshellCommands;
+use torchui_core::integration::{AssertionOutcome, TestStep};
+use torchui_core::windowing::WindowManager;
+use torchui_core::windowing::state::ApplicationStage;
+use torchui_core::{UpdateModel, async_assert};
 
 use super::{Builder, new_builder};
 use crate::util::skip_if_powershell_core_2303;

@@ -3,19 +3,19 @@
 use std::cmp;
 
 use fuzzy_match::{FuzzyMatchResult, match_indices_case_insensitive};
-use warp_core::ui::theme::Fill;
-use warp_editor::editor::NavigationKey;
-use warpui::color::ColorU;
-use warpui::elements::{
+use torch_core::ui::theme::Fill;
+use torch_editor::editor::NavigationKey;
+use torchui::color::ColorU;
+use torchui::elements::{
     Border, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Dismiss,
     DispatchEventResult, DropShadow, Element, Empty, EventHandler, Flex, Highlight, MainAxisSize,
     MouseInBehavior, ParentElement, Radius, ScrollStateHandle, Scrollable, ScrollableElement,
     ScrollbarWidth, Text, UniformList, UniformListState,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::keymap::FixedBinding;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::keymap::FixedBinding;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Entity, FocusContext, SingletonEntity as _, TypedActionView, View, ViewContext,
     ViewHandle, id,
 };
@@ -412,7 +412,7 @@ impl CodeReviewDiffMenu {
             ScrollbarWidth::None,
             theme.nonactive_ui_detail().into(),
             theme.active_ui_detail().into(),
-            warpui::elements::Fill::None,
+            torchui::elements::Fill::None,
         )
         .with_padding_end(0.)
         .with_padding_start(0.);

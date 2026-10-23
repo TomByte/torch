@@ -1,7 +1,7 @@
-use warp_graphql::billing::{
+use torch_graphql::billing::{
     AddonCreditsOption, OveragesPricing, PlanPricing, PricingInfo, StripeSubscriptionPlan,
 };
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torchui::{Entity, ModelContext, SingletonEntity};
 
 pub mod addon_pack;
 

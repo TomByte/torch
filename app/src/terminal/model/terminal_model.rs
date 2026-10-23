@@ -14,21 +14,21 @@ use session_sharing_protocol::common::{
 };
 use session_sharing_protocol::sharer::SessionSourceType;
 use string_offset::CharOffset;
-use warp_completer::meta::Span;
-use warp_core::command::ExitCode;
-use warp_core::features::FeatureFlag;
-use warp_core::semantic_selection::SemanticSelection;
-use warp_errors::report_error;
-pub use warp_terminal::event::ExitReason;
-use warp_terminal::event::{
+use torch_completer::meta::Span;
+use torch_core::command::ExitCode;
+use torch_core::features::FeatureFlag;
+use torch_core::semantic_selection::SemanticSelection;
+use torch_errors::report_error;
+pub use torch_terminal::event::ExitReason;
+use torch_terminal::event::{
     ObservedExitStatus, validate_and_decode_in_band_command_output_to_bytes,
 };
-pub use warp_terminal::model::{BlockIndex, RangeInModel};
-use warp_terminal::model::{KeyboardModes, KeyboardModesApplyBehavior};
-use warpui::AppContext;
-use warpui::assets::asset_cache::Asset;
-use warpui::r#async::executor::Background;
-use warpui::image_cache::ImageType;
+pub use torch_terminal::model::{BlockIndex, RangeInModel};
+use torch_terminal::model::{KeyboardModes, KeyboardModesApplyBehavior};
+use torchui::AppContext;
+use torchui::assets::asset_cache::Asset;
+use torchui::r#async::executor::Background;
+use torchui::image_cache::ImageType;
 
 use super::super::{AltScreen, BlockList};
 use super::ansi::{BootstrappedValue, FinishUpdateValue, InputBufferValue, Mode, PendingHook};
@@ -2709,7 +2709,7 @@ impl ansi::Handler for TerminalModel {
         delegate!(self.set_cursor_shape(shape));
     }
 
-    fn set_hyperlink(&mut self, hyperlink: Option<warp_terminal::model::ansi::Hyperlink>) {
+    fn set_hyperlink(&mut self, hyperlink: Option<torch_terminal::model::ansi::Hyperlink>) {
         delegate!(self.set_hyperlink(hyperlink));
     }
 
@@ -2963,7 +2963,7 @@ impl ansi::Handler for TerminalModel {
         delegate!(self.configure_charset(index, charset));
     }
 
-    fn set_color(&mut self, index: usize, color: warpui::color::ColorU) {
+    fn set_color(&mut self, index: usize, color: torchui::color::ColorU) {
         self.override_colors[index] = Some(color);
     }
 

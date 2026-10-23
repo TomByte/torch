@@ -1,7 +1,7 @@
 use settings::Setting as _;
-use warp_errors::report_if_error;
-use warpui::keymap::FixedBinding;
-use warpui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
+use torch_errors::report_if_error;
+use torchui::keymap::FixedBinding;
+use torchui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
 
 use crate::Appearance;
 use crate::chip_configurator::{
@@ -17,7 +17,7 @@ use crate::workspace::tab_settings::{
 const MODAL_TITLE: &str = "Edit toolbar";
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings([FixedBinding::new(
         "escape",

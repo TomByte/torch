@@ -1,9 +1,9 @@
 use asset_macro::bundled_or_fetched_asset;
 use pathfinder_color::ColorU;
-use warp_core::ui::color::blend::Blend;
-use warp_core::ui::color::{OPAQUE, coloru_with_opacity};
-use warp_core::ui::theme::color::CustomDetails;
-use warp_core::ui::theme::{
+use torch_core::ui::color::blend::Blend;
+use torch_core::ui::color::{OPAQUE, coloru_with_opacity};
+use torch_core::ui::theme::color::CustomDetails;
+use torch_core::ui::theme::{
     AnsiColor, AnsiColors, Details, Fill, HorizontalGradient, Image, TerminalColors,
     VerticalGradient, WarpTheme,
 };
@@ -260,7 +260,7 @@ pub(super) fn adeberry_colors() -> TerminalColors {
 
 /// Default bundled themes
 pub fn dark_theme() -> WarpTheme {
-    if warp_core::channel::ChannelState::is_local_only() {
+    if torch_core::channel::ChannelState::is_local_only() {
         return WarpTheme::new(
             Fill::Solid(ColorU::from_u32(0x232323FF)),
             ColorU::from_u32(0xE6E6E6FF),
@@ -306,7 +306,7 @@ pub fn dark_theme() -> WarpTheme {
 }
 
 pub fn light_theme() -> WarpTheme {
-    if warp_core::channel::ChannelState::is_local_only() {
+    if torch_core::channel::ChannelState::is_local_only() {
         return WarpTheme::new(
             Fill::Solid(ColorU::from_u32(0xFCFCFDFF)),
             ColorU::from_u32(0x303238FF),

@@ -455,7 +455,7 @@ fn should_watch_preserves_git_internal_allowlist() {
 }
 
 fn find_entry<'a>(entry: &'a super::Entry, path: &std::path::Path) -> Option<&'a super::Entry> {
-    let std_path = warp_util::standardized_path::StandardizedPath::try_from_local(path).ok()?;
+    let std_path = torch_util::standardized_path::StandardizedPath::try_from_local(path).ok()?;
     if entry.path() == &std_path {
         return Some(entry);
     }
@@ -527,7 +527,7 @@ fn standing_queries_report_skills_below_an_ignored_directory() {
         assert!(agents.loaded());
         assert!(find_entry(&tree, &repo.join(".agents/skills/test/SKILL.md")).is_some());
 
-        let skill_path = warp_util::standardized_path::StandardizedPath::try_from_local(
+        let skill_path = torch_util::standardized_path::StandardizedPath::try_from_local(
             &repo.join(".agents/skills/test/SKILL.md"),
         )
         .unwrap();
@@ -584,7 +584,7 @@ fn standing_queries_report_symlinked_skills_without_materializing_symlinked_dire
             assert!(results.project_skills().any(|content| {
                 content
                     == &StandingQueryContent::file(
-                        warp_util::standardized_path::StandardizedPath::try_from_local(
+                        torch_util::standardized_path::StandardizedPath::try_from_local(
                             &linked_directory.join("SKILL.md"),
                         )
                         .unwrap(),
@@ -628,7 +628,7 @@ fn standing_queries_do_not_report_rules_below_an_unloaded_shallow_directory() {
         assert!(!src.loaded());
         assert!(find_entry(&tree, &repo.join("src/deep/WARP.md")).is_none());
 
-        let rule_path = warp_util::standardized_path::StandardizedPath::try_from_local(
+        let rule_path = torch_util::standardized_path::StandardizedPath::try_from_local(
             &repo.join("src/deep/WARP.md"),
         )
         .unwrap();
@@ -690,9 +690,9 @@ fn shallow_tree_expands_force_included_skill_branch_only() {
         assert!(find_entry(&tree, &rule_path).is_none());
 
         let skill_path =
-            warp_util::standardized_path::StandardizedPath::try_from_local(&skill_path).unwrap();
+            torch_util::standardized_path::StandardizedPath::try_from_local(&skill_path).unwrap();
         let rule_path =
-            warp_util::standardized_path::StandardizedPath::try_from_local(&rule_path).unwrap();
+            torch_util::standardized_path::StandardizedPath::try_from_local(&rule_path).unwrap();
         assert!(
             results
                 .project_skills()

@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use warpui::ModelContext;
+use torchui::ModelContext;
 
 use crate::launch_configs::launch_config::LaunchConfig;
 use crate::tab_configs::{TabConfig, TabConfigError};

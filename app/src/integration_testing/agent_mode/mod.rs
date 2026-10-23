@@ -12,10 +12,10 @@ pub use assertions::*;
 pub use step::*;
 pub use user_defaults::*;
 pub use util::*;
-use warp_errors::report_error;
-use warpui::integration::PersistedDataMap;
-pub use warpui::integration::RUNTIME_TAG_FAILURE_REASON;
-use warpui::{App, SingletonEntity as _, WindowId};
+use torch_errors::report_error;
+use torchui::integration::PersistedDataMap;
+pub use torchui::integration::RUNTIME_TAG_FAILURE_REASON;
+use torchui::{App, SingletonEntity as _, WindowId};
 
 use crate::BlocklistAIHistoryModel;
 use crate::ai::agent::{AIAgentActionType, AIAgentOutputStatus, FinishedAIAgentOutput};

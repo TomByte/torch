@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use ai::skills::{ParsedSkill, SkillProvider, SkillScope};
 use warp_multi_agent_api as api;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
 
 use super::convert_conversation::ConvertToExchanges;
 use super::convert_from::user_inputs_from_messages;

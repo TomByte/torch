@@ -7,24 +7,24 @@ use std::time::Duration;
 use pathfinder_geometry::vector::vec2f;
 use regex::Regex;
 use settings::Setting as _;
-use warp_core::context_flag::ContextFlag;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::theme::WarpTheme;
-use warp_core::ui::theme::color::internal_colors;
-use warp_errors::{report_error, report_if_error};
-use warpui::r#async::{SpawnedFutureHandle, Timer};
-use warpui::elements::{
+use torch_core::context_flag::ContextFlag;
+use torch_core::features::FeatureFlag;
+use torch_core::ui::theme::WarpTheme;
+use torch_core::ui::theme::color::internal_colors;
+use torch_errors::{report_error, report_if_error};
+use torchui::r#async::{SpawnedFutureHandle, Timer};
+use torchui::elements::{
     Align, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Empty, Expanded,
     Flex, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius,
     Rect, Shrinkable, Text,
 };
-use warpui::fonts::Weight;
-use warpui::keymap::ContextPredicate;
-use warpui::platform::Cursor;
-use warpui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::ui_components::switch::{SwitchStateHandle, TooltipConfig};
-use warpui::{
+use torchui::fonts::Weight;
+use torchui::keymap::ContextPredicate;
+use torchui::platform::Cursor;
+use torchui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::ui_components::switch::{SwitchStateHandle, TooltipConfig};
+use torchui::{
     Action, AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView,
     UpdateModel, View, ViewContext, ViewHandle, id,
 };
@@ -1703,6 +1703,6 @@ mod styles {
     pub const DESCRIPTION_LINE_MARGIN_BOTTOM: f32 = 6.;
 }
 
-fn description_text_color(theme: &WarpTheme) -> warp_core::ui::theme::Fill {
+fn description_text_color(theme: &WarpTheme) -> torch_core::ui::theme::Fill {
     theme.sub_text_color(theme.surface_2())
 }

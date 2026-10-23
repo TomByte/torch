@@ -1,6 +1,6 @@
 use chrono::Local;
 use session_sharing_protocol::common::SessionId;
-use warpui::{App, SingletonEntity, TypedActionView, ViewHandle};
+use torchui::{App, SingletonEntity, TypedActionView, ViewHandle};
 
 use super::{SharingDialog, SharingDialogAction, SharingDialogMode};
 use crate::auth::UserUid;

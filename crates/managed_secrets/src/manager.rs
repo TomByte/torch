@@ -4,10 +4,10 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use vec1::vec1;
-use warp_core::features::FeatureFlag;
-use warp_graphql::managed_secrets::ManagedSecret;
-use warp_graphql::queries::task_secrets::ManagedSecretValue as GqlManagedSecretValue;
-use warpui_core::{Entity, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torch_graphql::managed_secrets::ManagedSecret;
+use torch_graphql::queries::task_secrets::ManagedSecretValue as GqlManagedSecretValue;
+use torchui_core::{Entity, SingletonEntity};
 
 use crate::ManagedSecretValue;
 use crate::client::{
@@ -218,7 +218,7 @@ where
     pub fn list_harness_auth_secrets(
         &self,
         request_scope: RequestScope,
-        harness: warp_graphql::ai::AgentHarness,
+        harness: torch_graphql::ai::AgentHarness,
     ) -> impl Future<Output = anyhow::Result<Vec<ManagedSecret>>> + use<RequestScope> {
         let client = self.client.clone();
         async move {
@@ -248,7 +248,7 @@ where
         {
             // We only need the workload token for the duration of the request.
             let workload_token =
-                warp_isolation_platform::issue_workload_token(Some(Duration::from_mins(5))).await?;
+                torch_isolation_platform::issue_workload_token(Some(Duration::from_mins(5))).await?;
             let gql_secrets = client
                 .get_task_secrets(task_id, workload_token.token)
                 .await?;

@@ -1,6 +1,6 @@
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-pub use warp_util::path::*;
-use warpui::{AppContext, SingletonEntity};
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+pub use torch_util::path::*;
+use torchui::{AppContext, SingletonEntity};
 
 use crate::remote_server::manager::RemoteServerManager;
 

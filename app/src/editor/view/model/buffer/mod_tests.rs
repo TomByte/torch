@@ -11,8 +11,8 @@ use enclose::enclose;
 use futures::StreamExt;
 use rand::prelude::StdRng;
 use test::Network;
-use warpui::color::ColorU;
-use warpui::{App, ModelHandle};
+use torchui::color::ColorU;
+use torchui::{App, ModelHandle};
 
 use super::*;
 use crate::editor::soft_wrap::ClampDirection;

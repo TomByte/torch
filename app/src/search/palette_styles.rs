@@ -1,5 +1,5 @@
-use warp_core::ui::appearance::Appearance;
-use warpui::elements::{Border, CornerRadius, Radius, ScrollbarWidth};
+use torch_core::ui::appearance::Appearance;
+use torchui::elements::{Border, CornerRadius, Radius, ScrollbarWidth};
 
 use crate::search::result_renderer::QueryResultRendererStyles;
 

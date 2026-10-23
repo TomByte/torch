@@ -1,7 +1,7 @@
 use std::ffi::OsStr;
 
 use sysinfo::ProcessesToUpdate;
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torchui::{Entity, ModelContext, SingletonEntity};
 
 /// Process and OS information, queried on demand.
 pub struct SystemInfo {

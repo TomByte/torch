@@ -6,20 +6,20 @@ use chrono::{DateTime, Utc};
 use comfy_table::Cell;
 use inquire::{Confirm, InquireError, Password};
 use serde::Serialize;
-use warp_cli::GlobalOptions;
-use warp_cli::agent::OutputFormat;
-use warp_cli::scope::ObjectScope;
-use warp_cli::secret::{
+use torch_cli::GlobalOptions;
+use torch_cli::agent::OutputFormat;
+use torch_cli::scope::ObjectScope;
+use torch_cli::secret::{
     AnthropicMethod, CodexMethod, CreateProvider, CreateSecretArgs, DeleteSecretArgs,
     ListSecretsArgs, SecretCommand, SecretType, UpdateSecretArgs, ValueArgs,
 };
-use warp_core::features::FeatureFlag;
-use warp_graphql::managed_secrets::{ManagedSecret, ManagedSecretType};
-use warp_graphql::object::SpaceType;
-use warp_managed_secrets::ManagedSecretValue;
-use warp_managed_secrets::client::SecretOwner;
-use warpui::platform::TerminationMode;
-use warpui::{AppContext, SingletonEntity as _};
+use torch_core::features::FeatureFlag;
+use torch_graphql::managed_secrets::{ManagedSecret, ManagedSecretType};
+use torch_graphql::object::SpaceType;
+use torch_managed_secrets::ManagedSecretValue;
+use torch_managed_secrets::client::SecretOwner;
+use torchui::platform::TerminationMode;
+use torchui::{AppContext, SingletonEntity as _};
 
 use super::output::{self, TableFormat};
 use crate::auth::UserUid;

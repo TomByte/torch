@@ -21,8 +21,8 @@ pub use telemetry::{
     RequestFileEditsTelemetryEvent,
 };
 use vec1::{Vec1, vec1};
-use warp_core::send_telemetry_from_ctx;
-use warpui::{Entity, EntityId, ModelContext, ModelHandle, SingletonEntity as _};
+use torch_core::send_telemetry_from_ctx;
+use torchui::{Entity, EntityId, ModelContext, ModelHandle, SingletonEntity as _};
 
 use super::{ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessActionInput};
 use crate::ai::agent::conversation::AIConversationId;

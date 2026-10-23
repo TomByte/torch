@@ -6,8 +6,8 @@
 //! option lists cannot drift between the GUI and the TUI.
 
 use ai::agent::action::RunAgentsExecutionMode;
-use warp_cli::agent::Harness;
-use warpui::{AppContext, SingletonEntity};
+use torch_cli::agent::Harness;
+use torchui::{AppContext, SingletonEntity};
 
 use super::config_state::{AuthSecretSelection, OrchestrationConfigState};
 use super::providers::{
@@ -71,10 +71,10 @@ pub enum OptionBadge {
     Default,
     Recent,
     Connected,
-    /// Constructed by `warp_tui` (the TUI ask-question card). The variant
+    /// Constructed by `torch_tui` (the TUI ask-question card). The variant
     /// lives here so both frontends share a single `OptionBadge` type.
     /// The lint is suppressed because the construction site is in the
-    /// downstream `warp_tui` crate, which is invisible to clippy when
+    /// downstream `torch_tui` crate, which is invisible to clippy when
     /// linting `warp` in isolation.
     #[allow(dead_code)]
     Recommended,

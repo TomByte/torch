@@ -1,18 +1,18 @@
-use warp_cli::agent::Harness;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::Fill;
-use warp_core::ui::theme::color::internal_colors;
-use warp_editor::editor::NavigationKey;
-use warp_managed_secrets::client::SecretOwner;
-use warpui::elements::{
+use torch_cli::agent::Harness;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::Fill;
+use torch_core::ui::theme::color::internal_colors;
+use torch_editor::editor::NavigationKey;
+use torch_managed_secrets::client::SecretOwner;
+use torchui::elements::{
     Border, ChildAnchor, ChildView, Clipped, ConstrainedBox, Container, CornerRadius,
     CrossAxisAlignment, Empty, Expanded, Flex, Hoverable, MainAxisAlignment, MainAxisSize,
     MouseStateHandle, OffsetPositioning, ParentAnchor, ParentElement as _, ParentOffsetBounds,
     Radius, Stack, Text, Wrap,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
     WeakViewHandle,
 };
@@ -463,7 +463,7 @@ impl AuthSecretFtuxView {
             }
             container.finish()
         })
-        .with_cursor(warpui::platform::Cursor::PointingHand)
+        .with_cursor(torchui::platform::Cursor::PointingHand)
         .on_click(|ctx, _, _| {
             ctx.dispatch_typed_action(AuthSecretFtuxAction::ToggleHarnessMenu);
         })
@@ -477,7 +477,7 @@ impl AuthSecretFtuxView {
             stack.add_positioned_overlay_child(
                 ChildView::new(menu).finish(),
                 OffsetPositioning::offset_from_parent(
-                    warpui::geometry::vector::vec2f(0., 4.),
+                    torchui::geometry::vector::vec2f(0., 4.),
                     ParentOffsetBounds::WindowByPosition,
                     ParentAnchor::BottomLeft,
                     ChildAnchor::TopLeft,
@@ -799,7 +799,7 @@ impl AuthSecretFtuxView {
             .soft_wrap(true)
             .finish()
         })
-        .with_cursor(warpui::platform::Cursor::PointingHand)
+        .with_cursor(torchui::platform::Cursor::PointingHand)
         .on_click(move |ctx, _, _| {
             ctx.dispatch_typed_action(AuthSecretFtuxAction::LearnMore(learn_more_url));
         })
@@ -885,7 +885,7 @@ impl AuthSecretFtuxView {
             .on_click(|ctx, _, _| {
                 ctx.dispatch_typed_action(AuthSecretFtuxAction::ToggleTeamScope);
             })
-            .with_cursor(warpui::platform::Cursor::PointingHand)
+            .with_cursor(torchui::platform::Cursor::PointingHand)
             .finish();
 
         let theme = appearance.theme();
@@ -985,9 +985,9 @@ impl AuthSecretFtuxView {
             inner.finish()
         })
         .with_cursor(if disabled {
-            warpui::platform::Cursor::Arrow
+            torchui::platform::Cursor::Arrow
         } else {
-            warpui::platform::Cursor::PointingHand
+            torchui::platform::Cursor::PointingHand
         })
         .on_click(move |ctx, _, _| {
             if disabled {

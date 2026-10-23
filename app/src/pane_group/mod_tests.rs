@@ -16,13 +16,13 @@ use repo_metadata::watcher::DirectoryWatcher;
 use session_sharing_protocol::common::SessionId;
 use shared_session::permissions_manager::SessionPermissionsManager;
 use uuid::Uuid;
-use warp_core::features::FeatureFlag;
-use warp_server_client::base_client::TEAM_UID_HEADER;
-use warp_server_client::iap::IapManager;
-use warpui::platform::{WindowBounds, WindowStyle};
-use warpui::windowing::WindowManager;
-use warpui::windowing::state::ApplicationStage;
-use warpui::{App, ModelHandle};
+use torch_core::features::FeatureFlag;
+use torch_server_client::base_client::TEAM_UID_HEADER;
+use torch_server_client::iap::IapManager;
+use torchui::platform::{WindowBounds, WindowStyle};
+use torchui::windowing::WindowManager;
+use torchui::windowing::state::ApplicationStage;
+use torchui::{App, ModelHandle};
 use watcher::HomeDirectoryWatcher;
 
 use super::child_agent::restoration::is_stale_ancestor_list_completion;
@@ -390,7 +390,7 @@ fn local_child_dispatch_fails_after_window_team_change() {
 
         let team_a_header = team_a_uid.to_string();
         let request_mock = {
-            let mut server = warp_core::channel::ChannelState::mock_server();
+            let mut server = torch_core::channel::ChannelState::mock_server();
             server
                 .mock("POST", "/graphql/v2")
                 .match_query(Matcher::UrlEncoded(
@@ -4074,7 +4074,7 @@ fn test_focused_pane_is_synchronized_with_application_focus() {
 #[cfg(feature = "local_fs")]
 #[test]
 fn test_undo_close_keeps_a_file_pane_watching_its_file() {
-    use warp_files::FileModel;
+    use torch_files::FileModel;
 
     let _undo_closed_panes = FeatureFlag::UndoClosedPanes.override_enabled(true);
 

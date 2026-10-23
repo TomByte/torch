@@ -1,7 +1,7 @@
 use settings::Setting as _;
-use warpui::integration::{AssertionCallback, AssertionOutcome};
-use warpui::units::{IntoPixels, Lines};
-use warpui::{AppContext, SingletonEntity, WindowId, async_assert, async_assert_eq};
+use torchui::integration::{AssertionCallback, AssertionOutcome};
+use torchui::units::{IntoPixels, Lines};
+use torchui::{AppContext, SingletonEntity, WindowId, async_assert, async_assert_eq};
 
 use crate::integration_testing::terminal::util::ExpectedOutput;
 use crate::integration_testing::view_getters::{

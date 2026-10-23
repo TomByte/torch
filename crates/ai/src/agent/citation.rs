@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use warp_errors::{ReportErrorLogMode, report_error};
+use torch_errors::{ReportErrorLogMode, report_error};
 use warp_multi_agent_api as api;
 
 /// A citation listed in an AI response.

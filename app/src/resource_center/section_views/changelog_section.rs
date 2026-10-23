@@ -1,14 +1,14 @@
 use instant::Instant;
 use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
-use warp_core::features::FeatureFlag;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torchui::elements::{
     Border, CacheOption, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Element,
     Flex, FormattedTextElement, HighlightedHyperlink, Icon, Image, MouseStateHandle, ParentElement,
     Radius,
 };
-use warpui::fonts::Weight;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::fonts::Weight;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Entity, ModelAsRef, ModelHandle, SingletonEntity, TypedActionView, View,
     ViewContext,
 };

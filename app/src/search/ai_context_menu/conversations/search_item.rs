@@ -1,10 +1,10 @@
 use fuzzy_match::FuzzyMatchResult;
 use ordered_float::OrderedFloat;
-use warpui::elements::{
+use torchui::elements::{
     ConstrainedBox, Container, CrossAxisAlignment, Flex, Highlight, Icon, ParentElement, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::{AppContext, Element, SingletonEntity};
+use torchui::fonts::{Properties, Weight};
+use torchui::{AppContext, Element, SingletonEntity};
 
 use super::ConversationContextItem;
 use crate::appearance::Appearance;

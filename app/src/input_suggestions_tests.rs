@@ -1,14 +1,14 @@
 use std::collections::HashSet;
 
 use chrono::Local;
-use warp_completer::completer::{
+use torch_completer::completer::{
     EngineFileType, Match, MatchStrategy, MatchedSuggestion, Priority, Suggestion,
     SuggestionResults, SuggestionType, TopLevelCommandCaseSensitivity,
 };
-use warp_completer::meta::Span;
-use warp_core::ui::appearance::Appearance;
-use warpui::App;
-use warpui::platform::WindowStyle;
+use torch_completer::meta::Span;
+use torch_core::ui::appearance::Appearance;
+use torchui::App;
+use torchui::platform::WindowStyle;
 
 use super::{HistoryInputSuggestion, InputSuggestions, TabCompletionsPreselectOption};
 use crate::ai::blocklist::AIQueryHistory;
@@ -37,7 +37,7 @@ fn test_basic_tab_prefix() {
         prefix_matched_suggestion("stash"),
         prefix_matched_suggestion("status"),
         prefix_matched_suggestion("stats/")
-            .with_file_type(warp_completer::completer::EngineFileType::Directory),
+            .with_file_type(torch_completer::completer::EngineFileType::Directory),
     ];
 
     let suggestion_results = SuggestionResults {

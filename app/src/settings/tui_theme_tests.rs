@@ -2,7 +2,7 @@ use settings::schema::SettingSchemaEntry;
 use settings::{Setting, SettingSurfaces, SettingsMode, SyncToCloud};
 use settings_value::SettingsValue;
 #[cfg(feature = "tui")]
-use warpui_core::runtime::BackgroundLuminance;
+use torchui_core::runtime::BackgroundLuminance;
 
 use super::{TuiTheme, TuiThemeSetting};
 

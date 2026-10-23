@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
 use ai::api_keys::{ApiKeyManager, CustomEndpointParams, CustomEndpointSchema};
-use warp_core::features::FeatureFlag;
+use torch_core::features::FeatureFlag;
 use warp_multi_agent_api as api;
-use warpui::{App, SingletonEntity};
+use torchui::{App, SingletonEntity};
 
 use super::{
     AIConversation, AIConversationAutoexecuteMode, AIConversationId, ConversationDriver,

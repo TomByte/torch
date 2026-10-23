@@ -5,7 +5,7 @@
 //! by the server after processing watcher events and consumed by the client
 //! to update its [`RemoteRepoMetadataModel`](crate::remote_model::RemoteRepoMetadataModel).
 
-use warp_util::standardized_path::StandardizedPath;
+use torch_util::standardized_path::StandardizedPath;
 
 use crate::entry::{DirectoryEntry, Entry, FileMetadata};
 use crate::standing_queries::StandingQueryResultsDelta;

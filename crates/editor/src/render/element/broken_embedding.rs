@@ -1,9 +1,9 @@
-use warpui_core::elements::{
+use torchui_core::elements::{
     Align, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Empty, Flex, Icon,
     ParentElement, Radius, Shrinkable, Text,
 };
-use warpui_core::geometry::vector::vec2f;
-use warpui_core::{AppContext, Element, SizeConstraint};
+use torchui_core::geometry::vector::vec2f;
+use torchui_core::{AppContext, Element, SizeConstraint};
 
 use super::RenderableBlock;
 use crate::editor::EmbeddedItemModel;
@@ -73,8 +73,8 @@ impl RenderableBlock for RenderableBrokenEmbedding {
     fn layout(
         &mut self,
         model: &crate::render::model::RenderState,
-        ctx: &mut warpui_core::LayoutContext,
-        app: &warpui_core::AppContext,
+        ctx: &mut torchui_core::LayoutContext,
+        app: &torchui_core::AppContext,
     ) {
         self.row.layout(
             SizeConstraint::strict(vec2f(
@@ -98,7 +98,7 @@ impl RenderableBlock for RenderableBrokenEmbedding {
         &mut self,
         model: &crate::render::model::RenderState,
         ctx: &mut super::RenderContext,
-        app: &warpui_core::AppContext,
+        app: &torchui_core::AppContext,
     ) {
         let content = model.content();
         let broken_link = extract_block!(self.viewport_item, content, (block, BlockItem::Embedded(item)) => block.embedded(item));
@@ -150,7 +150,7 @@ impl RenderableBlock for RenderableBrokenEmbedding {
 
         ctx.paint
             .scene
-            .start_layer(warpui_core::ClipBounds::ActiveLayer);
+            .start_layer(torchui_core::ClipBounds::ActiveLayer);
         self.row
             .paint(ctx.content_to_screen(content_origin), ctx.paint, app);
         ctx.paint.scene.stop_layer();
@@ -158,8 +158,8 @@ impl RenderableBlock for RenderableBrokenEmbedding {
 
     fn after_layout(
         &mut self,
-        ctx: &mut warpui_core::AfterLayoutContext,
-        app: &warpui_core::AppContext,
+        ctx: &mut torchui_core::AfterLayoutContext,
+        app: &torchui_core::AppContext,
     ) {
         self.row.after_layout(ctx, app);
     }
@@ -167,8 +167,8 @@ impl RenderableBlock for RenderableBrokenEmbedding {
     fn dispatch_event(
         &mut self,
         _model: &crate::render::model::RenderState,
-        event: &warpui_core::event::DispatchedEvent,
-        ctx: &mut warpui_core::EventContext,
+        event: &torchui_core::event::DispatchedEvent,
+        ctx: &mut torchui_core::EventContext,
         app: &AppContext,
     ) -> bool {
         self.row.dispatch_event(event, ctx, app)

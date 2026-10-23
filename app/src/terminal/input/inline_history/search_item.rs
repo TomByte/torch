@@ -1,15 +1,15 @@
 use chrono::{DateTime, Local};
 use fuzzy_match::FuzzyMatchResult;
 use ordered_float::OrderedFloat;
-use warp_core::ui::Icon;
-use warp_core::ui::color::coloru_with_opacity;
-use warp_core::ui::theme::Fill;
-use warpui::elements::{ConstrainedBox, Container, Highlight, ParentElement, Shrinkable, Text};
-use warpui::fonts::{Properties, Weight};
-use warpui::prelude::{Align, CrossAxisAlignment, Flex, MainAxisAlignment, MainAxisSize};
-use warpui::scene::{CornerRadius, Radius};
-use warpui::text_layout::ClipConfig;
-use warpui::{AppContext, Element, SingletonEntity};
+use torch_core::ui::Icon;
+use torch_core::ui::color::coloru_with_opacity;
+use torch_core::ui::theme::Fill;
+use torchui::elements::{ConstrainedBox, Container, Highlight, ParentElement, Shrinkable, Text};
+use torchui::fonts::{Properties, Weight};
+use torchui::prelude::{Align, CrossAxisAlignment, Flex, MainAxisAlignment, MainAxisSize};
+use torchui::scene::{CornerRadius, Radius};
+use torchui::text_layout::ClipConfig;
+use torchui::{AppContext, Element, SingletonEntity};
 
 use crate::ai::agent::conversation::{AIConversationId, ConversationStatus};
 use crate::ai::conversation_status_ui::{STATUS_ELEMENT_PADDING, render_status_element};

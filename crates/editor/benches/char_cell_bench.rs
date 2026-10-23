@@ -5,7 +5,7 @@ use std::time::Duration;
 
 use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 use string_offset::CharOffset;
-use warp_editor::render::model::CharCellState;
+use torch_editor::render::model::CharCellState;
 
 struct CountingAllocator;
 

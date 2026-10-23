@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
-use warp_graphql::ai::{AgentTaskState, PlatformErrorCode};
-use warp_graphql::platform_error::{PlatformErrorInfo, PlatformErrorMessageFormat};
+use torch_graphql::ai::{AgentTaskState, PlatformErrorCode};
+use torch_graphql::platform_error::{PlatformErrorInfo, PlatformErrorMessageFormat};
 
 use super::{classify_driver_error, markdown_code_span};
 use crate::ai::agent::{RenderableAIError, TransientNetworkErrorKind};

@@ -14,11 +14,11 @@ use ::local_control::protocol::{
 use ::local_control::{ActionKind, ControlError, ErrorCode, InstanceId};
 use serde_json::json;
 #[cfg(feature = "local_fs")]
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warp_util::path::LineAndColumnArg;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torch_util::path::LineAndColumnArg;
 #[cfg(feature = "local_fs")]
-use warpui::SingletonEntity;
-use warpui::{AppContext, ModelContext, TypedActionView};
+use torchui::SingletonEntity;
+use torchui::{AppContext, ModelContext, TypedActionView};
 
 #[cfg(feature = "local_fs")]
 use crate::code::editor_management::CodeSource;

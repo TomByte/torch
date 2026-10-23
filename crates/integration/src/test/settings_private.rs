@@ -6,26 +6,26 @@
 use std::collections::HashMap;
 
 use settings::Setting as _;
-use warp::features::FeatureFlag;
-use warp::integration_testing::step::new_step_with_default_assertions;
-use warp::integration_testing::terminal::wait_until_bootstrapped_single_pane_for_tab;
-use warp::settings::{CodeSettings, DebugSettings, FontSettings};
-use warpui_core::integration::TestStep;
-use warpui_core::{SingletonEntity, async_assert, async_assert_eq};
+use torch::features::FeatureFlag;
+use torch::integration_testing::step::new_step_with_default_assertions;
+use torch::integration_testing::terminal::wait_until_bootstrapped_single_pane_for_tab;
+use torch::settings::{CodeSettings, DebugSettings, FontSettings};
+use torchui_core::integration::TestStep;
+use torchui_core::{SingletonEntity, async_assert, async_assert_eq};
 
 use super::{Builder, new_builder};
 
 /// Helper: read the TOML settings file from disk and return its contents.
 /// Returns an empty string if the file does not exist.
 fn read_toml_file() -> String {
-    let path = warp::settings::user_preferences_toml_file_path();
+    let path = torch::settings::user_preferences_toml_file_path();
     std::fs::read_to_string(path).unwrap_or_default()
 }
 
 /// Helper: read the JSON user preferences file from disk and return its contents.
 /// Returns an empty string if the file does not exist.
 fn read_json_prefs_file() -> String {
-    let path = warp::settings::user_preferences_file_path();
+    let path = torch::settings::user_preferences_file_path();
     std::fs::read_to_string(path).unwrap_or_default()
 }
 

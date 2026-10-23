@@ -1,5 +1,5 @@
 use url::Url;
-use warpui::App;
+use torchui::App;
 
 use super::*;
 use crate::ai::llms::{AvailableLLMs, LLMId, LLMInfo, LLMPreferences, ModelsByFeature};
@@ -19,7 +19,7 @@ fn team_request_scope() -> RequestTeamScope {
     RequestTeamScope::from_scope(&TeamContextForOperation::new_for_test(7.into()))
 }
 
-fn add_model(app: &mut App) -> warpui::ModelHandle<AmbientAgentViewModel> {
+fn add_model(app: &mut App) -> torchui::ModelHandle<AmbientAgentViewModel> {
     let terminal_view = add_window_with_terminal(app, None);
     let terminal_view_id = terminal_view.id();
     app.add_model(|ctx| {
@@ -64,7 +64,7 @@ fn record_ambient_execution_ended_clears_active_session_and_enables_followup() {
 }
 
 fn install_default_agent_mode_model(
-    model: &warpui::ModelHandle<AmbientAgentViewModel>,
+    model: &torchui::ModelHandle<AmbientAgentViewModel>,
     app: &mut App,
     info: LLMInfo,
 ) {

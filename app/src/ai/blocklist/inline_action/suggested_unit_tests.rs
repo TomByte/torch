@@ -3,16 +3,16 @@ use std::sync::Arc;
 use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
 use rand::distributions::Alphanumeric;
 use rand::{Rng as _, thread_rng};
-use warp_core::settings::ToggleableSetting;
-use warp_core::ui::appearance::Appearance;
-use warpui::elements::{
+use torch_core::settings::ToggleableSetting;
+use torch_core::ui::appearance::Appearance;
+use torchui::elements::{
     Align, ConstrainedBox, Container, CrossAxisAlignment, Expanded, Flex, FormattedTextElement,
     HighlightedHyperlink, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement,
     SavePosition, Shrinkable, SizeConstraintCondition, SizeConstraintSwitch, Text,
 };
-use warpui::platform::Cursor;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::platform::Cursor;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity, TypedActionView, View, ViewContext,
 };
 
@@ -169,7 +169,7 @@ impl SuggestedUnitTestsView {
     fn render_icon(&self, appearance: &Appearance) -> Box<dyn Element> {
         Container::new(
             ConstrainedBox::new(
-                warpui::elements::Icon::new(
+                torchui::elements::Icon::new(
                     Icon::Code2.into(),
                     appearance
                         .theme()

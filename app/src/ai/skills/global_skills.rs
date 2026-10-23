@@ -5,8 +5,8 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use std::str::FromStr;
 
 use ai::skills::{ParsedSkill, provider_rank};
-use warp_cli::skill::SkillSpec;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
+use torch_cli::skill::SkillSpec;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
 
 use crate::ai::cloud_environments::GithubRepo;
 

@@ -3,65 +3,65 @@ use async_trait::async_trait;
 use cynic::{MutationBuilder, QueryBuilder};
 #[cfg(test)]
 use mockall::{automock, predicate::*};
-use warp_graphql::mutations::add_invite_link_domain_restriction::{
+use torch_graphql::mutations::add_invite_link_domain_restriction::{
     AddInviteLinkDomainRestriction, AddInviteLinkDomainRestrictionInput,
     AddInviteLinkDomainRestrictionResult, AddInviteLinkDomainRestrictionVariables,
 };
-use warp_graphql::mutations::create_team::{
+use torch_graphql::mutations::create_team::{
     CreateTeam, CreateTeamInput, CreateTeamResult, CreateTeamVariables,
 };
-use warp_graphql::mutations::delete_invite_link_domain_restriction::{
+use torch_graphql::mutations::delete_invite_link_domain_restriction::{
     DeleteInviteLinkDomainRestriction, DeleteInviteLinkDomainRestrictionInput,
     DeleteInviteLinkDomainRestrictionResult, DeleteInviteLinkDomainRestrictionVariables,
 };
-use warp_graphql::mutations::delete_team_invite::{
+use torch_graphql::mutations::delete_team_invite::{
     DeleteTeamInvite, DeleteTeamInviteInput, DeleteTeamInviteResult, DeleteTeamInviteVariables,
 };
-use warp_graphql::mutations::join_team_in_workspace::{
+use torch_graphql::mutations::join_team_in_workspace::{
     JoinTeamInWorkspace, JoinTeamInWorkspaceInput, JoinTeamInWorkspaceResult,
     JoinTeamInWorkspaceVariables,
 };
-use warp_graphql::mutations::join_team_with_team_discovery::{
+use torch_graphql::mutations::join_team_with_team_discovery::{
     JoinTeamWithTeamDiscovery, JoinTeamWithTeamDiscoveryInput, JoinTeamWithTeamDiscoveryResult,
     JoinTeamWithTeamDiscoveryVariables, TeamDiscoveryEntrypoint,
 };
-use warp_graphql::mutations::join_workspace_from_discovery::{
+use torch_graphql::mutations::join_workspace_from_discovery::{
     JoinWorkspaceFromDiscovery, JoinWorkspaceFromDiscoveryInput, JoinWorkspaceFromDiscoveryResult,
     JoinWorkspaceFromDiscoveryVariables,
 };
-use warp_graphql::mutations::remove_user_from_team::{
+use torch_graphql::mutations::remove_user_from_team::{
     RemoveUserFromTeam, RemoveUserFromTeamInput, RemoveUserFromTeamResult,
     RemoveUserFromTeamVariables,
 };
-use warp_graphql::mutations::rename_team::{
+use torch_graphql::mutations::rename_team::{
     RenameTeam, RenameTeamInput, RenameTeamResult, RenameTeamVariables,
 };
-use warp_graphql::mutations::reset_invite_links::{
+use torch_graphql::mutations::reset_invite_links::{
     ResetInviteLinks, ResetInviteLinksInput, ResetInviteLinksResult, ResetInviteLinksVariables,
 };
-use warp_graphql::mutations::send_team_invite_email::{
+use torch_graphql::mutations::send_team_invite_email::{
     SendTeamInviteEmail, SendTeamInviteEmailInput, SendTeamInviteEmailResult,
     SendTeamInviteEmailVariables,
 };
-use warp_graphql::mutations::set_is_invite_link_enabled::{
+use torch_graphql::mutations::set_is_invite_link_enabled::{
     SetIsInviteLinkEnabled, SetIsInviteLinkEnabledInput, SetIsInviteLinkEnabledResult,
     SetIsInviteLinkEnabledVariables,
 };
-use warp_graphql::mutations::set_team_discoverability::{
+use torch_graphql::mutations::set_team_discoverability::{
     SetTeamDiscoverability, SetTeamDiscoverabilityInput, SetTeamDiscoverabilityResult,
     SetTeamDiscoverabilityVariables,
 };
-use warp_graphql::mutations::set_team_member_role::{
+use torch_graphql::mutations::set_team_member_role::{
     SetTeamMemberRole, SetTeamMemberRoleInput, SetTeamMemberRoleResult, SetTeamMemberRoleVariables,
 };
-use warp_graphql::mutations::transfer_team_ownership::{
+use torch_graphql::mutations::transfer_team_ownership::{
     TransferTeamOwnership, TransferTeamOwnershipInput, TransferTeamOwnershipResult,
     TransferTeamOwnershipVariables,
 };
-use warp_graphql::queries::get_discoverable_teams::{
+use torch_graphql::queries::get_discoverable_teams::{
     GetDiscoverableTeams, GetDiscoverableTeamsVariables,
 };
-use warp_graphql::queries::get_workspaces_metadata_for_user::{
+use torch_graphql::queries::get_workspaces_metadata_for_user::{
     GetWorkspacesMetadataForUser, GetWorkspacesMetadataForUserVariables, PricingInfoResult,
 };
 
@@ -193,10 +193,10 @@ impl TeamClient for ServerApi {
         let response = self.send_graphql_request(operation, None).await?;
 
         let metadata = match response.user {
-            warp_graphql::queries::get_workspaces_metadata_for_user::UserResult::UserOutput(
+            torch_graphql::queries::get_workspaces_metadata_for_user::UserResult::UserOutput(
                 user_output,
             ) => workspaces_metadata_response_from_gql(user_output.user, self.is_service_account()),
-            warp_graphql::queries::get_workspaces_metadata_for_user::UserResult::Unknown => {
+            torch_graphql::queries::get_workspaces_metadata_for_user::UserResult::Unknown => {
                 return Err(anyhow!("Unable to fetch workspaces metadata"));
             }
         };
@@ -586,7 +586,7 @@ impl TeamClient for ServerApi {
         let result = self.send_graphql_request(operation, None).await?;
 
         match result.user {
-            warp_graphql::queries::get_discoverable_teams::UserResult::UserOutput(user_output) => {
+            torch_graphql::queries::get_discoverable_teams::UserResult::UserOutput(user_output) => {
                 Ok(DiscoveryOptions {
                     workspaces: user_output
                         .user
@@ -602,10 +602,10 @@ impl TeamClient for ServerApi {
                         .collect(),
                 })
             }
-            warp_graphql::queries::get_discoverable_teams::UserResult::UserFacingError(
+            torch_graphql::queries::get_discoverable_teams::UserResult::UserFacingError(
                 user_facing_error,
             ) => Err(anyhow!(get_user_facing_error_message(user_facing_error))),
-            warp_graphql::queries::get_discoverable_teams::UserResult::Unknown => {
+            torch_graphql::queries::get_discoverable_teams::UserResult::Unknown => {
                 Err(anyhow!("unknown error while getting discoverable teams"))
             }
         }

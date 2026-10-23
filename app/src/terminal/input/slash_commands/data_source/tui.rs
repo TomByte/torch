@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use parking_lot::FairMutex;
-use warpui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity as _};
+use torchui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity as _};
 
 use super::core::subscribe_to_shared_dependencies;
 use super::{

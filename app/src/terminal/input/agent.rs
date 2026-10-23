@@ -1,14 +1,14 @@
-use warp_cli::agent::Harness;
-use warp_core::settings::Setting;
-use warp_core::ui::theme::color::internal_colors;
-use warpui::elements::{
+use torch_cli::agent::Harness;
+use torch_core::settings::Setting;
+use torch_core::ui::theme::color::internal_colors;
+use torchui::elements::{
     Align, AnchorPair, Border, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     DispatchEventResult, DropTarget, Element, Empty, EventHandler, Expanded, Flex, Hoverable,
     MainAxisSize, OffsetPositioning, OffsetType, ParentElement, PositionedElementOffsetBounds,
     PositioningAxis, Radius, SavePosition, Stack, XAxisAnchor, YAxisAnchor,
 };
-use warpui::presenter::ChildView;
-use warpui::{AppContext, SingletonEntity as _, ViewHandle};
+use torchui::presenter::ChildView;
+use torchui::{AppContext, SingletonEntity as _, ViewHandle};
 
 use super::common::{
     add_command_xray_overlay, add_input_suggestions_overlays, add_voltron_overlay,
@@ -606,8 +606,8 @@ impl Input {
             let harness = self
                 .ambient_agent_view_model()
                 .map(|m| m.as_ref(app).selected_harness())
-                .unwrap_or(warp_cli::agent::Harness::Oz);
-            if harness != warp_cli::agent::Harness::Oz && !self.should_show_auth_secret_ftux(app) {
+                .unwrap_or(torch_cli::agent::Harness::Oz);
+            if harness != torch_cli::agent::Harness::Oz && !self.should_show_auth_secret_ftux(app) {
                 row.add_child(ChildView::new(auth_secret_selector).finish());
             }
         }
@@ -726,7 +726,7 @@ impl Input {
 
 pub mod styles {
     use pathfinder_color::ColorU;
-    use warp_core::ui::theme::WarpTheme;
+    use torch_core::ui::theme::WarpTheme;
 
     use crate::ui_components::blended_colors;
 

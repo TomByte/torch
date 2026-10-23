@@ -1,6 +1,6 @@
-use warp_core::send_telemetry_from_ctx;
-use warpui::elements::{ChildView, Flex, ParentElement as _};
-use warpui::{
+use torch_core::send_telemetry_from_ctx;
+use torchui::elements::{ChildView, Flex, ParentElement as _};
+use torchui::{
     AppContext, Element, Entity, FocusContext, TypedActionView, View, ViewContext, ViewHandle,
 };
 

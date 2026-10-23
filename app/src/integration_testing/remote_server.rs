@@ -3,12 +3,12 @@ use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 use std::time::Duration;
 
-use warp_core::{HostId, SessionId};
-use warp_errors::report_error;
-use warpui::integration::{
+use torch_core::{HostId, SessionId};
+use torch_errors::report_error;
+use torchui::integration::{
     AssertionCallback, AssertionOutcome, AssertionWithDataCallback, StepDataMap, TestStep,
 };
-use warpui::{App, SingletonEntity, WindowId, async_assert, async_assert_eq};
+use torchui::{App, SingletonEntity, WindowId, async_assert, async_assert_eq};
 
 use crate::integration_testing::view_getters::single_terminal_view_for_tab;
 use crate::remote_server::manager::{

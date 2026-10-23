@@ -12,7 +12,7 @@ use mockito::{Matcher, Server};
 use tempfile::TempDir;
 use tokio::sync::oneshot;
 use uuid::Uuid;
-use warp_cli::agent::Harness;
+use torch_cli::agent::Harness;
 
 use super::*;
 use crate::ai::agent::api::ServerConversationToken;

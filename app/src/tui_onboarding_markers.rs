@@ -3,8 +3,8 @@ use std::time::Duration;
 
 use cloud_object_models::JsonSerializer;
 use settings::{RespectUserSyncSetting, SyncToCloud};
-use warpui::r#async::Timer;
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torchui::r#async::Timer;
+use torchui::{Entity, ModelContext, SingletonEntity};
 
 use crate::cloud_object::CloudObjectEventEntrypoint;
 use crate::cloud_object::model::persistence::CloudModel;

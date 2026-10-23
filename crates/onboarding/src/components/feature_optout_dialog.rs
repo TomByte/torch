@@ -1,15 +1,15 @@
 use pathfinder_color::ColorU;
-use warp_core::ui::Icon;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::Fill;
-use warp_core::ui::theme::color::internal_colors;
-use warpui_core::Element;
-use warpui_core::elements::{
+use torch_core::ui::Icon;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::Fill;
+use torch_core::ui::theme::color::internal_colors;
+use torchui_core::Element;
+use torchui_core::elements::{
     Border, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Flex,
     FormattedTextElement, MainAxisAlignment, MainAxisSize, ParentElement, Radius, Shrinkable,
 };
-use warpui_core::fonts::Weight;
-use warpui_core::text_layout::TextAlignment;
+use torchui_core::fonts::Weight;
+use torchui_core::text_layout::TextAlignment;
 
 /// Content for a "you'll lose these features" opt-out confirmation dialog.
 pub struct FeatureOptOutDialog {

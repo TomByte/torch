@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
 use parking_lot::FairMutex;
-use warpui::elements::{
+use torchui::elements::{
     ChildView, Container, CrossAxisAlignment, Expanded, Flex, MainAxisSize, ParentElement,
 };
-use warpui::prelude::Empty;
-use warpui::{AppContext, Element, Entity, TypedActionView, View, ViewContext, ViewHandle};
+use torchui::prelude::Empty;
+use torchui::{AppContext, Element, Entity, TypedActionView, View, ViewContext, ViewHandle};
 
 use super::{AgentFooterButtonTheme, USE_AGENT_KEYSTROKE};
 use crate::terminal::view::{PADDING_LEFT, TerminalModel};

@@ -23,7 +23,7 @@ use parking_lot::Mutex;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use warpui::r#async::executor::{Background, BackgroundTask};
+use torchui::r#async::executor::{Background, BackgroundTask};
 
 use super::protocol::{METHOD_REQUEST_PERMISSION, PermissionOutcome, RequestPermissionResponse};
 

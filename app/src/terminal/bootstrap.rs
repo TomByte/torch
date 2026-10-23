@@ -1,10 +1,10 @@
 use itertools::Itertools;
-use warp_core::session_id::SessionId;
-use warp_terminal::bootstrap::SESSION_ID_PLACEHOLDER;
-pub use warp_terminal::bootstrap::{
+use torch_core::session_id::SessionId;
+use torch_terminal::bootstrap::SESSION_ID_PLACEHOLDER;
+pub use torch_terminal::bootstrap::{
     generate_session_id, init_shell_script_for_shell, load_and_escape_script, script_for_shell,
 };
-use warpui::{AppContext, AssetProvider, SingletonEntity};
+use torchui::{AppContext, AssetProvider, SingletonEntity};
 
 #[cfg(feature = "local_fs")]
 use super::{

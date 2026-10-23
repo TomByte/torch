@@ -1,19 +1,19 @@
 use pathfinder_geometry::vector::vec2f;
-use warp_core::ui::theme::Fill;
-use warpui::elements::{Align, Container, CrossAxisAlignment, Dismiss, Flex, ParentElement, Stack};
-use warpui::fonts::Weight;
-use warpui::keymap::FixedBinding;
-use warpui::platform::Cursor;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{BorderStyle, Coords, UiComponent, UiComponentStyles};
-use warpui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
+use torch_core::ui::theme::Fill;
+use torchui::elements::{Align, Container, CrossAxisAlignment, Dismiss, Flex, ParentElement, Stack};
+use torchui::fonts::Weight;
+use torchui::keymap::FixedBinding;
+use torchui::platform::Cursor;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{BorderStyle, Coords, UiComponent, UiComponentStyles};
+use torchui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
 
 use crate::appearance::Appearance;
 use crate::ui_components::buttons;
 use crate::ui_components::dialog::{Dialog, dialog_styles};
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings([
         FixedBinding::new(
@@ -45,7 +45,7 @@ pub enum SummarizationCancelDialogAction {
     Continue,
 }
 
-use warpui::elements::MouseStateHandle;
+use torchui::elements::MouseStateHandle;
 
 #[derive(Default)]
 pub struct SummarizationCancelDialog {
@@ -63,7 +63,7 @@ impl View for SummarizationCancelDialog {
         "SummarizationCancelDialog"
     }
 
-    fn on_focus(&mut self, _focus_ctx: &warpui::FocusContext, ctx: &mut ViewContext<Self>) {
+    fn on_focus(&mut self, _focus_ctx: &torchui::FocusContext, ctx: &mut ViewContext<Self>) {
         // Ensure this dialog takes focus away from the terminal editor
         ctx.focus_self();
     }
@@ -118,7 +118,7 @@ impl View for SummarizationCancelDialog {
             .finish();
 
         // Close header with Icon::X and ESC pill
-        let esc_keystroke = warpui::keymap::Keystroke::parse("escape").expect("Valid keystroke");
+        let esc_keystroke = torchui::keymap::Keystroke::parse("escape").expect("Valid keystroke");
         let close_header = Flex::row()
             .with_cross_axis_alignment(CrossAxisAlignment::Center)
             .with_children([
@@ -190,11 +190,11 @@ impl View for SummarizationCancelDialog {
         let mut stack = Stack::new();
         stack.add_positioned_child(
             dialog_dismiss,
-            warpui::elements::OffsetPositioning::offset_from_parent(
+            torchui::elements::OffsetPositioning::offset_from_parent(
                 vec2f(0., 0.),
-                warpui::elements::ParentOffsetBounds::WindowByPosition,
-                warpui::elements::ParentAnchor::Center,
-                warpui::elements::ChildAnchor::Center,
+                torchui::elements::ParentOffsetBounds::WindowByPosition,
+                torchui::elements::ParentAnchor::Center,
+                torchui::elements::ChildAnchor::Center,
             ),
         );
 

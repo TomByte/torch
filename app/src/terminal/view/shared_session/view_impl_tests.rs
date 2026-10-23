@@ -9,8 +9,8 @@ use pathfinder_geometry::vector::vec2f;
 use persistence::model::ConversationUsageMetadata;
 use session_sharing_protocol::sharer::SessionSourceType;
 use warp_multi_agent_api::{self as api, client_action as api_client_action};
-use warpui::platform::WindowStyle;
-use warpui::{App, EntityId, TypedActionView, ViewHandle};
+use torchui::platform::WindowStyle;
+use torchui::{App, EntityId, TypedActionView, ViewHandle};
 
 use super::*;
 use crate::ai::agent::api::ServerConversationToken;
@@ -2585,7 +2585,7 @@ fn test_copy_shared_session_link_does_not_write_clipboard_when_session_pending()
         // Write a sentinel to the clipboard so we can detect if it is overwritten.
         terminal.update(&mut app, |_, ctx| {
             ctx.clipboard()
-                .write(warpui::clipboard::ClipboardContent::plain_text(
+                .write(torchui::clipboard::ClipboardContent::plain_text(
                     "sentinel".to_string(),
                 ));
         });

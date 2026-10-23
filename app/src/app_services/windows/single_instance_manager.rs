@@ -2,9 +2,9 @@ use std::sync::LazyLock;
 
 use ipc::ServerBuilder;
 use parking_lot::Mutex;
-use warp_core::channel::ChannelState;
-use warp_errors::report_error;
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torch_core::channel::ChannelState;
+use torch_errors::report_error;
+use torchui::{Entity, ModelContext, SingletonEntity};
 use windows::Win32::Foundation::{CloseHandle, ERROR_ALREADY_EXISTS, GetLastError, HANDLE};
 use windows::Win32::System::Threading::CreateMutexW;
 use windows::core::Error;

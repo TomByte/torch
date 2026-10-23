@@ -1,13 +1,13 @@
 //! Components for the notebook header.
 
-use warp_core::features::FeatureFlag;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torchui::elements::{
     Container, CrossAxisAlignment, Flex, Highlight, MainAxisAlignment, MainAxisSize,
     MouseStateHandle, ParentElement, Shrinkable,
 };
-use warpui::platform::Cursor;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{AppContext, Element, SingletonEntity};
+use torchui::platform::Cursor;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{AppContext, Element, SingletonEntity};
 
 use super::super::active_notebook_data::ActiveNotebookData;
 use super::{EDIT_BUTTON_MARGIN, NotebookAction};

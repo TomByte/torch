@@ -6,11 +6,11 @@ use std::ops::Range;
 
 use settings::Setting as _;
 use string_offset::{ByteOffset, CharOffset};
-pub use warp_completer::completer::SuggestionTypeName;
-pub use warp_completer::util::parse_current_commands_and_tokens;
-pub use warp_completer::{ParsedTokenData, ParsedTokensSnapshot};
-use warp_core::features::FeatureFlag;
-use warpui::{AppContext, SingletonEntity, ViewContext};
+pub use torch_completer::completer::SuggestionTypeName;
+pub use torch_completer::util::parse_current_commands_and_tokens;
+pub use torch_completer::{ParsedTokenData, ParsedTokensSnapshot};
+use torch_core::features::FeatureFlag;
+use torchui::{AppContext, SingletonEntity, ViewContext};
 
 use super::Input;
 use crate::appearance::Appearance;

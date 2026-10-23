@@ -20,10 +20,10 @@ use session_sharing_protocol::sharer::{
     QuotaType, RemoveGuestResponse, SessionEndedReason, SessionSourceType,
     TeamAccessLevelUpdateResponse, UpdatePendingUserRoleResponse,
 };
-use warp_core::execution_mode::AppExecutionMode;
-use warp_core::send_telemetry_from_ctx;
-use warp_errors::report_error;
-use warpui::{
+use torch_core::execution_mode::AppExecutionMode;
+use torch_core::send_telemetry_from_ctx;
+use torch_errors::report_error;
+use torchui::{
     AppContext, ModelContext, ModelHandle, SingletonEntity, ViewContext, ViewHandle, WindowId,
 };
 
@@ -1610,7 +1610,7 @@ impl TerminalManager<TerminalView> {
                                 ctx.spawn(
                                     async move {
                                         let workload_token =
-                                            warp_isolation_platform::issue_workload_token(Some(
+                                            torch_isolation_platform::issue_workload_token(Some(
                                                 std::time::Duration::from_secs(60),
                                             ))
                                             .await

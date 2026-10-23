@@ -22,26 +22,26 @@ use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::UnicodeWidthStr;
 use vec1::Vec1;
 use vim::vim::{MotionType, VimMode};
-use warp_core::channel::ChannelState;
-use warp_core::ui::Icon;
-use warp_core::ui::theme::Fill as ThemeFill;
-use warp_errors::report_error;
-use warpui_core::assets::asset_cache::AssetSource;
-use warpui_core::color::ColorU;
-use warpui_core::elements::{
+use torch_core::channel::ChannelState;
+use torch_core::ui::Icon;
+use torch_core::ui::theme::Fill as ThemeFill;
+use torch_errors::report_error;
+use torchui_core::assets::asset_cache::AssetSource;
+use torchui_core::color::ColorU;
+use torchui_core::elements::{
     Border, Fill, ListIndentLevel, ListNumbering, Margin, MouseStateHandle, Padding, ScrollData,
 };
-use warpui_core::fonts::{FamilyId, Properties, Weight};
-use warpui_core::geometry::rect::RectF;
-use warpui_core::geometry::vector::{Vector2F, vec2f};
-use warpui_core::platform::LineStyle;
-use warpui_core::text_layout::{CaretPosition, Line, TextFrame};
-use warpui_core::text_selection_utils::{
+use torchui_core::fonts::{FamilyId, Properties, Weight};
+use torchui_core::geometry::rect::RectF;
+use torchui_core::geometry::vector::{Vector2F, vec2f};
+use torchui_core::platform::LineStyle;
+use torchui_core::text_layout::{CaretPosition, Line, TextFrame};
+use torchui_core::text_selection_utils::{
     NewlineTickParams, calculate_tick_width, create_newline_tick_rect,
     selection_crosses_newline_offset_based,
 };
-use warpui_core::units::{IntoPixels, Pixels};
-use warpui_core::{AppContext, Entity, EntityId, ModelContext, ModelHandle};
+use torchui_core::units::{IntoPixels, Pixels};
+use torchui_core::{AppContext, Entity, EntityId, ModelContext, ModelHandle};
 
 pub use self::char_cell_display::{DisplayLattice, DisplayRow, DisplayRowKind};
 use self::location::WrapDirection;
@@ -1024,7 +1024,7 @@ impl CharCellState {
     /// channel (no font engine): the channel only carries an `EditDelta` (not the
     /// full text this rebuild needs) and is async, whereas TUI cursor queries need
     /// fresh `line_starts` synchronously within the same frame as the edit.
-    /// [`on_buffer_version_updated`](warp_editor::model::CoreEditorModel::on_buffer_version_updated)
+    /// [`on_buffer_version_updated`](torch_editor::model::CoreEditorModel::on_buffer_version_updated)
     /// is the guaranteed-synchronous post-edit hook that calls this.
     ///
     /// `text` should be the buffer's current plain text (without any trailing
@@ -2495,7 +2495,7 @@ impl RenderState {
     ///
     /// CharCell mode consumes `styles.base_text.fixed_width_tab_size` for tab
     /// geometry. Other style fields are retained for API compatibility but are
-    /// unused; callers (e.g. `warp_tui`) may supply a minimal stub.
+    /// unused; callers (e.g. `torch_tui`) may supply a minimal stub.
     pub fn new_tui(
         terminal_width: u16,
         styles: RichTextStyles,
@@ -5280,7 +5280,7 @@ impl<'a> Positioned<'a, Paragraph> {
                 vec2f(underline_width, UNDERLINE_THICKNESS),
             );
 
-            let dash = warpui_core::scene::Dash {
+            let dash = torchui_core::scene::Dash {
                 dash_length: DASHED_UNDERLINE_DASH_LENGTH,
                 gap_length: DASHED_UNDERLINE_GAP_LENGTH,
                 force_consistent_gap_length: true,
@@ -5289,7 +5289,7 @@ impl<'a> Positioned<'a, Paragraph> {
                 .scene
                 .draw_rect_without_hit_recording(underline_rect)
                 .with_border(
-                    warpui_core::scene::Border::bottom(UNDERLINE_THICKNESS)
+                    torchui_core::scene::Border::bottom(UNDERLINE_THICKNESS)
                         .with_dashed_border(dash)
                         .with_border_color(color),
                 );

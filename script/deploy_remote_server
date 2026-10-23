@@ -130,7 +130,7 @@ echo "    Features: $FEATURES"
 echo ""
 
 cargo build \
-    -p warp \
+    -p torch \
     --bin "$WARP_BIN" \
     --target "$TARGET" \
     --profile "$CARGO_PROFILE" \

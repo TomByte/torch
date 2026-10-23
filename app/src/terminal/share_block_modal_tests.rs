@@ -1,4 +1,4 @@
-use warpui::browser::escape_html_attribute;
+use torchui::browser::escape_html_attribute;
 
 #[test]
 fn escape_html_attribute_escapes_attribute_breakout_characters() {

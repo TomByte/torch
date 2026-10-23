@@ -7,8 +7,8 @@ use futures::channel::oneshot;
 use regex::Regex;
 use serial_test::serial;
 use session_sharing_protocol::sharer::SessionRetentionReason;
-use warp_core::features::FeatureFlag;
-use warpui::{App, SingletonEntity as _};
+use torch_core::features::FeatureFlag;
+use torchui::{App, SingletonEntity as _};
 
 use super::{ShareSessionError, TerminalDriver, WaitingCommand};
 use crate::ai::agent_sdk::driver::AgentDriverError;

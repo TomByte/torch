@@ -4,9 +4,9 @@ use std::time::Duration;
 
 use ai::index::full_source_code_embedding::manager::CodebaseIndexManager;
 use markdown_parser::FormattedTextFragment;
-use warpui::r#async::{SpawnedFutureHandle, Timer};
-use warpui::keymap::Keystroke;
-use warpui::{AppContext, Entity, ModelContext, SingletonEntity};
+use torchui::r#async::{SpawnedFutureHandle, Timer};
+use torchui::keymap::Keystroke;
+use torchui::{AppContext, Entity, ModelContext, SingletonEntity};
 
 use crate::ai::persisted_workspace::PersistedWorkspace;
 use crate::palette::PaletteMode;

@@ -1,9 +1,9 @@
-use warpui::elements::{Container, Element, MouseStateHandle, Text};
-use warpui::fonts::{Properties, Style, Weight};
-use warpui::platform::Cursor;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::UiComponent;
-use warpui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext};
+use torchui::elements::{Container, Element, MouseStateHandle, Text};
+use torchui::fonts::{Properties, Style, Weight};
+use torchui::platform::Cursor;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::UiComponent;
+use torchui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext};
 
 use crate::appearance::Appearance;
 use crate::ui_components::buttons::close_button;

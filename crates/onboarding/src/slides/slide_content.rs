@@ -1,6 +1,6 @@
-use warp_core::ui::appearance::Appearance;
-use warpui_core::Element;
-use warpui_core::elements::{
+use torch_core::ui::appearance::Appearance;
+use torchui_core::Element;
+use torchui_core::elements::{
     Align, ClippedScrollStateHandle, ClippedScrollable, Container, CrossAxisAlignment, Flex,
     MainAxisSize, ParentElement, ScrollbarWidth, Shrinkable,
 };

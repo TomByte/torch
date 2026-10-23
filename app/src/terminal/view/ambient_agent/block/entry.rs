@@ -1,16 +1,16 @@
 use settings::Setting;
-use warp_core::send_telemetry_from_ctx;
-use warp_core::ui::Icon;
-use warp_core::ui::appearance::Appearance;
-use warpui::elements::{
+use torch_core::send_telemetry_from_ctx;
+use torch_core::ui::Icon;
+use torch_core::ui::appearance::Appearance;
+use torchui::elements::{
     ConstrainedBox, Container, CrossAxisAlignment, Flex, Hoverable, MainAxisSize, MouseStateHandle,
     ParentElement, Shrinkable, Text,
 };
-use warpui::fonts::Properties;
-use warpui::platform::Cursor;
-use warpui::prelude::Empty;
-use warpui::text_layout::ClipConfig;
-use warpui::{
+use torchui::fonts::Properties;
+use torchui::platform::Cursor;
+use torchui::prelude::Empty;
+use torchui::text_layout::ClipConfig;
+use torchui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle, WeakModelHandle,
 };
@@ -260,7 +260,7 @@ impl View for AmbientAgentEntryBlock {
                 )
                 .with_color(theme.main_text_color(theme.background()).into_solid())
                 .with_style(Properties {
-                    weight: warpui::fonts::Weight::Bold,
+                    weight: torchui::fonts::Weight::Bold,
                     ..Default::default()
                 })
                 .soft_wrap(false)

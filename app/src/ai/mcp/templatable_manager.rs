@@ -21,8 +21,8 @@ use parking_lot::Mutex;
 use simple_logger::SimpleLogger;
 use uuid::Uuid;
 #[cfg(not(target_family = "wasm"))]
-use warpui::ModelSpawner;
-use warpui::{Entity, SingletonEntity};
+use torchui::ModelSpawner;
+use torchui::{Entity, SingletonEntity};
 
 #[cfg(not(target_family = "wasm"))]
 use crate::ai::mcp::templatable::CloudTemplatableMCPServer;
@@ -313,7 +313,7 @@ impl TemplatableMCPServerManager {
         self.authorization_urls.get(&uuid).map(String::as_str)
     }
     #[cfg(all(not(target_family = "wasm"), feature = "tui"))]
-    pub fn has_credentials(&self, installation_uuid: Uuid, app: &warpui::AppContext) -> bool {
+    pub fn has_credentials(&self, installation_uuid: Uuid, app: &torchui::AppContext) -> bool {
         if let Some(hash) = FileBasedMCPManager::as_ref(app).get_hash_by_uuid(installation_uuid) {
             return self.file_based_server_credentials.contains_key(&hash);
         }
@@ -321,7 +321,7 @@ impl TemplatableMCPServerManager {
             .is_some_and(|uuid| self.server_credentials.contains_key(&uuid))
     }
     #[cfg(all(not(target_family = "wasm"), feature = "tui"))]
-    pub fn can_log_out(&self, installation_uuid: Uuid, app: &warpui::AppContext) -> bool {
+    pub fn can_log_out(&self, installation_uuid: Uuid, app: &torchui::AppContext) -> bool {
         self.has_credentials(installation_uuid, app)
             || self
                 .active_servers
@@ -383,7 +383,7 @@ impl TemplatableMCPServerManager {
     pub fn get_active_file_based_servers(
         &self,
         cwd: &std::path::Path,
-        app: &warpui::AppContext,
+        app: &torchui::AppContext,
     ) -> HashMap<Uuid, &TemplatableMCPServerInfo> {
         FileBasedMCPManager::as_ref(app)
             .get_servers_for_working_directory(cwd, app)

@@ -2,14 +2,14 @@
 //! We fall back to the existing Warpification behavior and display this banner so the user knows why advanced features are unavailable.
 
 use remote_server::transport::UserFacingError;
-use warp_core::ui::theme::AnsiColorIdentifier;
-use warp_core::ui::theme::color::internal_colors;
-use warpui::elements::{
+use torch_core::ui::theme::AnsiColorIdentifier;
+use torch_core::ui::theme::color::internal_colors;
+use torchui::elements::{
     ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Flex, Hoverable,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, Shrinkable, Text,
 };
-use warpui::platform::Cursor;
-use warpui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
+use torchui::platform::Cursor;
+use torchui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
 
 use crate::Appearance;
 use crate::terminal::model::session::SessionId;

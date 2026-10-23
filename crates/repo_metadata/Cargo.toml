@@ -21,10 +21,10 @@ serde_json.workspace = true
 thiserror.workspace = true
 walkdir.workspace = true
 itertools.workspace = true
-warpui_core.workspace = true
-warp_core.workspace = true
-warp_errors.workspace = true
-warp_util.workspace = true
+torchui_core.workspace = true
+torch_core.workspace = true
+torch_errors.workspace = true
+torch_util.workspace = true
 ignore = "0.4.23"
 once_cell.workspace = true
 log.workspace = true
@@ -49,4 +49,4 @@ anyhow.workspace = true
 env_logger.workspace = true
 futures = "0.3"
 virtual-fs.workspace = true
-warpui = { workspace = true, features = ["test-util"] }
+torchui = { workspace = true, features = ["test-util"] }

@@ -2,18 +2,18 @@ use itertools::Itertools;
 use pathfinder_geometry::vector::vec2f;
 use serde::Serialize;
 use settings::Setting as _;
-use warp_core::ui::theme::Fill;
-use warp_errors::report_if_error;
-use warpui::elements::{
+use torch_core::ui::theme::Fill;
+use torch_errors::report_if_error;
+use torchui::elements::{
     Align, Border, ChildAnchor, ChildView, Clipped, ConstrainedBox, Container, CornerRadius,
     CrossAxisAlignment, Empty, Flex, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle,
     OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Stack,
 };
-use warpui::keymap::FixedBinding;
-use warpui::platform::Cursor;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::keymap::FixedBinding;
+use torchui::platform::Cursor;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 
@@ -59,7 +59,7 @@ const SHELL_PROMPT_SECTION_HEADER: &str = "Shell prompt (PS1)";
 const RESTORE_DEFAULT_BUTTON: &str = "Restore default";
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings([FixedBinding::new(
         "escape",
@@ -503,7 +503,7 @@ impl EditorModal {
             .span(MODAL_TITLE.to_string())
             .with_style(UiComponentStyles {
                 font_size: Some(MODAL_TITLE_FONT_SIZE),
-                font_weight: Some(warpui::fonts::Weight::Bold),
+                font_weight: Some(torchui::fonts::Weight::Bold),
                 ..Default::default()
             })
             .build()
@@ -694,7 +694,7 @@ impl EditorModal {
                     .span(WARP_PROMPT_SECTION_HEADER.to_string())
                     .with_style(UiComponentStyles {
                         font_size: Some(MODAL_CONTENT_FONT_SIZE),
-                        font_weight: Some(warpui::fonts::Weight::Semibold),
+                        font_weight: Some(torchui::fonts::Weight::Semibold),
                         ..Default::default()
                     })
                     .build()
@@ -743,7 +743,7 @@ impl EditorModal {
             .span(SHELL_PROMPT_SECTION_HEADER.to_string())
             .with_style(UiComponentStyles {
                 font_size: Some(MODAL_CONTENT_FONT_SIZE),
-                font_weight: Some(warpui::fonts::Weight::Semibold),
+                font_weight: Some(torchui::fonts::Weight::Semibold),
                 ..Default::default()
             })
             .build()

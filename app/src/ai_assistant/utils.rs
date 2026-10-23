@@ -1,14 +1,14 @@
 /// Common functionality used across different AI Assistant components.
 use markdown_parser::{CodeBlockText, FormattedText, FormattedTextLine, parse_markdown};
 use pathfinder_color::ColorU;
-use warpui::elements::{
+use torchui::elements::{
     ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Flex, HighlightedHyperlink, Icon,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, Text,
 };
-use warpui::platform::Cursor;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{AppContext, Element, ModelHandle};
+use torchui::platform::Cursor;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{AppContext, Element, ModelHandle};
 
 use super::panel::AIAssistantAction;
 use super::requests::Requests;

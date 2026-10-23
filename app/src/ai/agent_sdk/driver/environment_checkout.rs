@@ -17,9 +17,9 @@ use tokio::fs;
 use tokio::io::{AsyncRead, AsyncReadExt as _};
 use tracing::Instrument as _;
 use tracing_opentelemetry::OpenTelemetrySpanExt as _;
-use warp_cli::agent::{RepositoryForge, RepositoryHeadRef};
-use warp_cli::environment_checkout::EnvironmentCheckoutArgs;
-use warp_core::features::FeatureFlag;
+use torch_cli::agent::{RepositoryForge, RepositoryHeadRef};
+use torch_cli::environment_checkout::EnvironmentCheckoutArgs;
+use torch_core::features::FeatureFlag;
 
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 use super::cache_setup;

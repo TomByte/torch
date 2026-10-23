@@ -3,8 +3,8 @@ use std::time::Duration;
 
 use ai::index::full_source_code_embedding::manager::CodebaseIndexManager;
 use settings::Setting;
-use warpui::integration::{AssertionOutcome, StepData, TestStep};
-use warpui::{App, ReadModel, SingletonEntity, UpdateModel, WindowId, async_assert};
+use torchui::integration::{AssertionOutcome, StepData, TestStep};
+use torchui::{App, ReadModel, SingletonEntity, UpdateModel, WindowId, async_assert};
 
 use crate::integration_testing::step::new_step_with_default_assertions;
 use crate::settings::CodeSettings;

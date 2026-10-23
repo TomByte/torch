@@ -1,10 +1,10 @@
-use warpui::elements::{
+use torchui::elements::{
     Align, Border, ChildView, Clipped, Container, CornerRadius, CrossAxisAlignment, Expanded, Flex,
     MouseStateHandle, Padding, ParentElement, Radius, Text,
 };
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 

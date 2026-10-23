@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 
-use warpui::elements::ChildView;
-use warpui::ui_components::components::UiComponentStyles;
-use warpui::{AppContext, Element, Entity, TypedActionView, View, ViewContext, ViewHandle};
+use torchui::elements::ChildView;
+use torchui::ui_components::components::UiComponentStyles;
+use torchui::{AppContext, Element, Entity, TypedActionView, View, ViewContext, ViewHandle};
 
 use crate::tab_configs::PickerStyle;
 use crate::util::git::{

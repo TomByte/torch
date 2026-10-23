@@ -5,7 +5,7 @@ mod tests;
 use ::local_control::protocol::{TabCreateParams, TabType, TargetSelector};
 use ::local_control::{ActionKind, ControlError, ErrorCode, InstanceId};
 use serde::Serialize;
-use warpui::{ModelContext, TypedActionView};
+use torchui::{ModelContext, TypedActionView};
 
 use crate::local_control::LocalControlBridge;
 use crate::local_control::resolver::{

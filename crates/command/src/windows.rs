@@ -2,7 +2,7 @@ use std::ffi::OsStr;
 use std::os::windows::process::CommandExt as _;
 
 use anyhow::{Context, Result};
-use warp_errors::report_error;
+use torch_errors::report_error;
 
 #[derive(Debug, thiserror::Error)]
 pub enum JobObjectError {

@@ -1,8 +1,8 @@
 use pathfinder_color::ColorU;
-use warp_core::ui::appearance::Appearance;
-use warpui::elements::{ChildView, Container, Fill};
-use warpui::ui_components::components::{Coords, UiComponentStyles};
-use warpui::{
+use torch_core::ui::appearance::Appearance;
+use torchui::elements::{ChildView, Container, Fill};
+use torchui::ui_components::components::{Coords, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };

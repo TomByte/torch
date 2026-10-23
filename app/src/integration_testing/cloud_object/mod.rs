@@ -7,7 +7,7 @@ pub use assertion::*;
 use futures::FutureExt;
 use futures::future::join_all;
 use itertools::Itertools;
-use warpui::{App, SingletonEntity};
+use torchui::{App, SingletonEntity};
 
 use crate::cloud_object::Space;
 use crate::cloud_object::model::persistence::CloudModel;

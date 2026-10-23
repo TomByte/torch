@@ -5,7 +5,7 @@ use futures::channel::oneshot;
 use futures::future::FutureExt;
 use futures::io::BufReader;
 use futures::{AsyncRead, AsyncWrite};
-use warpui_core::r#async::executor::Background;
+use torchui_core::r#async::executor::Background;
 
 use super::Service;
 use super::protocol::{

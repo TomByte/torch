@@ -1,9 +1,9 @@
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
-use warp_core::ui::icons::Icon as WarpIcon;
-use warp_core::ui::theme::color::internal_colors;
-use warp_core::ui::theme::{ColorScheme, Fill as WarpThemeFill, WarpTheme};
-use warpui::elements::{
+use torch_core::ui::icons::Icon as WarpIcon;
+use torch_core::ui::theme::color::internal_colors;
+use torch_core::ui::theme::{ColorScheme, Fill as WarpThemeFill, WarpTheme};
+use torchui::elements::{
     ChildAnchor, ConstrainedBox, Container, CornerRadius, Element, OffsetPositioning, ParentAnchor,
     ParentElement, ParentOffsetBounds, Radius, Stack,
 };

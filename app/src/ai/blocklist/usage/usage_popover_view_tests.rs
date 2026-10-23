@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
 use chrono::Utc;
-use warpui::elements::ChildView;
-use warpui::platform::WindowStyle;
-use warpui::{App, SingletonEntity, ViewHandle};
+use torchui::elements::ChildView;
+use torchui::platform::WindowStyle;
+use torchui::{App, SingletonEntity, ViewHandle};
 
 use super::*;
 use crate::ai::agent::api::ServerConversationToken;

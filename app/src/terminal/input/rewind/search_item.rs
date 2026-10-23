@@ -3,16 +3,16 @@
 
 use fuzzy_match::FuzzyMatchResult;
 use ordered_float::OrderedFloat;
-use warp_core::ui::Icon;
-use warp_core::ui::color::coloru_with_opacity;
-use warp_core::ui::theme::Fill;
-use warpui::elements::{
+use torch_core::ui::Icon;
+use torch_core::ui::color::coloru_with_opacity;
+use torch_core::ui::theme::Fill;
+use torchui::elements::{
     ConstrainedBox, Container, CrossAxisAlignment, Flex, Highlight, ParentElement, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::scene::{CornerRadius, Radius};
-use warpui::text_layout::ClipConfig;
-use warpui::{AppContext, Element, SingletonEntity};
+use torchui::fonts::{Properties, Weight};
+use torchui::scene::{CornerRadius, Radius};
+use torchui::text_layout::ClipConfig;
+use torchui::{AppContext, Element, SingletonEntity};
 
 use crate::ai::agent::AIAgentExchangeId;
 use crate::appearance::Appearance;
@@ -135,7 +135,7 @@ impl SearchItem for RewindSearchItem {
         }
 
         // Line 2: Code changes summary
-        let secondary_text_color: warpui::color::ColorU =
+        let secondary_text_color: torchui::color::ColorU =
             theme.sub_text_color(theme.surface_1()).into();
 
         let changes_element: Box<dyn Element> = if self.is_current {

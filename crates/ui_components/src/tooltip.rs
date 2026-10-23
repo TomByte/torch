@@ -1,9 +1,9 @@
 use std::borrow::Cow;
 
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::color::internal_colors;
-use warpui_core::keymap::Keystroke;
-use warpui_core::prelude::*;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::color::internal_colors;
+use torchui_core::keymap::Keystroke;
+use torchui_core::prelude::*;
 
 use crate::{Component, keyboard_shortcut};
 
@@ -41,7 +41,7 @@ impl Component for Tooltip {
         &self,
         appearance: &Appearance,
         params: Self::Params<'a>,
-    ) -> Box<dyn warpui_core::Element> {
+    ) -> Box<dyn torchui_core::Element> {
         let font_family = appearance.ui_font_family();
         let font_size = appearance.ui_font_size() + UI_FONT_SIZE_ADJUSTMENT;
 

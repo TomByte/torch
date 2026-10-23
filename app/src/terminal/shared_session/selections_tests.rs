@@ -1,6 +1,6 @@
-use warp_core::semantic_selection::SemanticSelection;
-use warpui::App;
-use warpui::text::SelectionType;
+use torch_core::semantic_selection::SemanticSelection;
+use torchui::App;
+use torchui::text::SelectionType;
 
 use crate::terminal::block_filter::BlockFilterQuery;
 use crate::terminal::event_listener::ChannelEventListener;

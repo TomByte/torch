@@ -3,8 +3,8 @@ use std::sync::Arc;
 use chrono::Utc;
 use cloud_object_client::MockObjectClient;
 use settings::manager::SettingsManager;
-use warp_graphql::object_permissions::AccessLevel;
-use warpui::{App, SingletonEntity, WindowId};
+use torch_graphql::object_permissions::AccessLevel;
+use torchui::{App, SingletonEntity, WindowId};
 
 use super::*;
 use crate::auth::{AuthStateProvider, UserUid};

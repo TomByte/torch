@@ -1,4 +1,4 @@
-use warp_core::ui::theme::Fill;
+use torch_core::ui::theme::Fill;
 
 use super::RenderableBlock;
 use super::paint::RenderContext;
@@ -37,8 +37,8 @@ impl RenderableBlock for RenderableTemporaryBlock {
     fn layout(
         &mut self,
         _model: &RenderState,
-        _ctx: &mut warpui_core::LayoutContext,
-        _app: &warpui_core::AppContext,
+        _ctx: &mut torchui_core::LayoutContext,
+        _app: &torchui_core::AppContext,
     ) {
     }
 
@@ -46,7 +46,7 @@ impl RenderableBlock for RenderableTemporaryBlock {
         &mut self,
         model: &RenderState,
         ctx: &mut RenderContext,
-        _app: &warpui_core::AppContext,
+        _app: &torchui_core::AppContext,
     ) {
         // We cannot use `extract_block` macro here since we need to locate the viewport item by content height instead of charoffset
         // (temporary block has an offset of zero).

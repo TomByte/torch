@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
-use warp_errors::report_error;
-use warpui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity, WindowId};
+use torch_errors::report_error;
+use torchui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity, WindowId};
 
 use super::env_var_collection_search_item::EnvVarCollectionSearchItem;
 use super::notebook_search_item::NotebookSearchItem;
@@ -68,7 +68,7 @@ pub struct DataSource {
 impl DataSource {
     #[cfg(not(target_family = "wasm"))]
     pub fn new(window_id: WindowId, ctx: &mut ModelContext<Self>) -> Self {
-        if warp_core::features::FeatureFlag::UseTantivySearch.is_enabled() {
+        if torch_core::features::FeatureFlag::UseTantivySearch.is_enabled() {
             Self::new_full_text(window_id, ctx)
         } else {
             Self::new_fuzzy(window_id, ctx)
@@ -663,9 +663,9 @@ mod full_text_searcher {
 
     use fuzzy_match::FuzzyMatchResult;
     use itertools::Itertools;
-    use warp_search_core::define_search_schema;
-    use warpui::r#async::executor::Background;
-    use warpui::{AppContext, SingletonEntity};
+    use torch_search_core::define_search_schema;
+    use torchui::r#async::executor::Background;
+    use torchui::{AppContext, SingletonEntity};
 
     use crate::cloud_object::model::persistence::CloudModel;
     use crate::cloud_object::{

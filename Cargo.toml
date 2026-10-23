@@ -16,10 +16,10 @@ default-members = [
   "crates/graphql",
   "crates/markdown_parser",
   "crates/sum_tree",
-  "crates/warpui",
-  "crates/warp_completer",
-  "crates/warp_terminal",
-  "crates/warp_util",
+  "crates/torchui",
+  "crates/torch_completer",
+  "crates/torch_terminal",
+  "crates/torch_util",
 ]
 
 [workspace.package]
@@ -78,33 +78,33 @@ ui_components = { path = "crates/ui_components" }
 vim = { path = "crates/vim" }
 virtual-fs = { path = "crates/virtual_fs" }
 voice_input = { path = "crates/voice_input" }
-warp = { path = "app" }
-warp_assets = { path = "crates/warp_assets" }
-warp_channel_config = { path = "crates/warp_channel_config" }
-warp_cli = { path = "crates/warp_cli" }
-warp_completer = { path = "crates/warp_completer" }
-warp_core = { path = "crates/warp_core" }
-warp_editor = { path = "crates/editor" }
-warp_errors = { path = "crates/warp_errors" }
-warp_features = { path = "crates/warp_features" }
-warp_files = { path = "crates/warp_files" }
-warp_graphql = { path = "crates/graphql" }
-warp_graphql_schema = { path = "crates/warp_graphql_schema" }
-warp_harness_usage = { path = "crates/warp_harness_usage" }
-warp_isolation_platform = { path = "crates/isolation_platform" }
-warp_logging = { path = "crates/warp_logging" }
-warp_managed_secrets = { path = "crates/managed_secrets" }
-warp_multi_agent_client = { path = "crates/warp_multi_agent_client" }
-warp_ripgrep = { path = "crates/warp_ripgrep" }
-warp_search_core = { path = "crates/warp_search_core" }
-warp_server_auth = { path = "crates/warp_server_auth" }
-warp_server_client = { path = "crates/warp_server_client" }
-warp_terminal = { path = "crates/warp_terminal" }
-warp_util = { path = "crates/warp_util" }
-warp_web_event_bus = { path = "crates/warp_web_event_bus" }
-warpui = { path = "crates/warpui" }
-warpui_core = { path = "crates/warpui_core" }
-warpui_extras = { path = "crates/warpui_extras", default-features = false }
+torch = { path = "app" }
+torch_assets = { path = "crates/torch_assets" }
+torch_channel_config = { path = "crates/torch_channel_config" }
+torch_cli = { path = "crates/torch_cli" }
+torch_completer = { path = "crates/torch_completer" }
+torch_core = { path = "crates/torch_core" }
+torch_editor = { path = "crates/editor" }
+torch_errors = { path = "crates/torch_errors" }
+torch_features = { path = "crates/torch_features" }
+torch_files = { path = "crates/torch_files" }
+torch_graphql = { path = "crates/graphql" }
+torch_graphql_schema = { path = "crates/torch_graphql_schema" }
+torch_harness_usage = { path = "crates/torch_harness_usage" }
+torch_isolation_platform = { path = "crates/isolation_platform" }
+torch_logging = { path = "crates/torch_logging" }
+torch_managed_secrets = { path = "crates/managed_secrets" }
+torch_multi_agent_client = { path = "crates/torch_multi_agent_client" }
+torch_ripgrep = { path = "crates/torch_ripgrep" }
+torch_search_core = { path = "crates/torch_search_core" }
+torch_server_auth = { path = "crates/torch_server_auth" }
+torch_server_client = { path = "crates/torch_server_client" }
+torch_terminal = { path = "crates/torch_terminal" }
+torch_util = { path = "crates/torch_util" }
+torch_web_event_bus = { path = "crates/torch_web_event_bus" }
+torchui = { path = "crates/torchui" }
+torchui_core = { path = "crates/torchui_core" }
+torchui_extras = { path = "crates/torchui_extras", default-features = false }
 watcher = { path = "crates/watcher" }
 websocket = { path = "crates/websocket" }
 
@@ -436,7 +436,7 @@ split-debuginfo = "unpacked"
 
 [profile.dev.package]
 # Improve the performance of core terminal logic.
-warp_terminal.opt-level = 3
+torch_terminal.opt-level = 3
 # Minimize the runtime overhead of CPU profiling at the cost of a small
 # increase in compile time for this crate.
 backtrace.opt-level = 3

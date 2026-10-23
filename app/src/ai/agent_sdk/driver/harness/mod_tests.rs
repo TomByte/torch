@@ -6,9 +6,9 @@ use anyhow::Result;
 use async_trait::async_trait;
 use futures::channel::oneshot;
 use tempfile::TempDir;
-use warp_cli::agent::{Harness, HarnessTransport};
-use warpui::r#async::FutureExt as _;
-use warpui::{App, ModelSpawner, SingletonEntity as _};
+use torch_cli::agent::{Harness, HarnessTransport};
+use torchui::r#async::FutureExt as _;
+use torchui::{App, ModelSpawner, SingletonEntity as _};
 
 use super::{
     HARNESS_FAILURE_OUTPUT_TRUNCATION_MARKER, HarnessKind, HarnessPersistence, HarnessRunner,

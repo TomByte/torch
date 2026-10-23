@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use futures_util::StreamExt;
-use warp_core::features::FeatureFlag;
+use torch_core::features::FeatureFlag;
 use warp_multi_agent_api as api;
 
 use super::convert_to::convert_input;
@@ -149,7 +149,7 @@ pub async fn generate_multi_agent_output(
         mcp_context: params.mcp_context.map(Into::into),
     };
 
-    let response_stream = warp_multi_agent_client::generate_multi_agent_output(
+    let response_stream = torch_multi_agent_client::generate_multi_agent_output(
         server_api.as_ref(),
         &request,
         team_scope.team_uid().map(|uid| uid.uid()),
@@ -178,18 +178,18 @@ pub async fn generate_multi_agent_output(
 }
 
 async fn convert_multi_agent_client_error(
-    error: warp_multi_agent_client::Error,
+    error: torch_multi_agent_client::Error,
 ) -> Arc<AIApiError> {
     let error = match error {
-        warp_multi_agent_client::Error::Authentication(error)
-        | warp_multi_agent_client::Error::AmbientHeaders(error) => AIApiError::Other(error),
-        warp_multi_agent_client::Error::Base64Decode(error) => {
+        torch_multi_agent_client::Error::Authentication(error)
+        | torch_multi_agent_client::Error::AmbientHeaders(error) => AIApiError::Other(error),
+        torch_multi_agent_client::Error::Base64Decode(error) => {
             AIApiError::Other(anyhow::Error::from(error))
         }
-        warp_multi_agent_client::Error::ProtobufDecode(error) => {
+        torch_multi_agent_client::Error::ProtobufDecode(error) => {
             AIApiError::Other(anyhow::Error::from(error))
         }
-        warp_multi_agent_client::Error::EventSource(error) => {
+        torch_multi_agent_client::Error::EventSource(error) => {
             AIApiError::from_stream_error("GenerateMultiAgentOutput", *error).await
         }
     };

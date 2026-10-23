@@ -7,14 +7,14 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use pathfinder_color::ColorU;
-use warp_core::ui::icons::Icon;
-use warp_core::ui::theme::WarpTheme;
-use warp_core::ui::theme::color::internal_colors;
-use warpui::elements::{
+use torch_core::ui::icons::Icon;
+use torch_core::ui::theme::WarpTheme;
+use torch_core::ui::theme::color::internal_colors;
+use torchui::elements::{
     ConstrainedBox, CrossAxisAlignment, Empty, Flex, Hoverable, MainAxisSize, MouseState,
     MouseStateHandle, ParentElement, SavePosition, Shrinkable, Text,
 };
-use warpui::{Element, EventContext};
+use torchui::{Element, EventContext};
 
 use crate::appearance::Appearance;
 
@@ -309,7 +309,7 @@ fn render_value(
     on_toggle: &Arc<ToggleFn>,
     on_toggle_string: &Arc<ToggleStringFn>,
     on_copy_json: &Arc<CopyJsonFn>,
-    font_family: warpui::fonts::FamilyId,
+    font_family: torchui::fonts::FamilyId,
     column: &mut Flex,
 ) {
     match value {
@@ -515,7 +515,7 @@ fn render_long_string_row(
     position_id_prefix: &str,
     on_toggle_string: &Arc<ToggleStringFn>,
     on_copy_json: &Arc<CopyJsonFn>,
-    font_family: warpui::fonts::FamilyId,
+    font_family: torchui::fonts::FamilyId,
     column: &mut Flex,
 ) {
     let anchor_id = format!("{position_id_prefix}:row:{path:?}");
@@ -538,7 +538,7 @@ fn render_long_string_row(
     // Chevron in the standard left position.
     chevron_and_key.add_child(
         ConstrainedBox::new(
-            icon.to_warpui_icon(warp_core::ui::theme::Fill::Solid(colors.annotation))
+            icon.to_warpui_icon(torch_core::ui::theme::Fill::Solid(colors.annotation))
                 .finish(),
         )
         .with_width(CHEVRON_SIZE)
@@ -625,7 +625,7 @@ fn render_container_node(
     position_id_prefix: &str,
     on_toggle: &Arc<ToggleFn>,
     on_copy_json: &Arc<CopyJsonFn>,
-    font_family: warpui::fonts::FamilyId,
+    font_family: torchui::fonts::FamilyId,
     column: &mut Flex,
 ) {
     // Empty containers have no chevron and are not interactive.
@@ -657,7 +657,7 @@ fn render_container_node(
         let icon_color = colors.annotation;
         row.add_child(
             ConstrainedBox::new(
-                icon.to_warpui_icon(warp_core::ui::theme::Fill::Solid(icon_color))
+                icon.to_warpui_icon(torch_core::ui::theme::Fill::Solid(icon_color))
                     .finish(),
             )
             .with_width(CHEVRON_SIZE)
@@ -734,7 +734,7 @@ fn render_scalar_row(
     colors: &JsonTreeColors,
     position_id_prefix: &str,
     on_copy_json: &Arc<CopyJsonFn>,
-    font_family: warpui::fonts::FamilyId,
+    font_family: torchui::fonts::FamilyId,
     column: &mut Flex,
 ) {
     let anchor_id = format!("{position_id_prefix}:row:{path:?}");

@@ -1,7 +1,7 @@
-use warp_core::ui::appearance::Appearance;
-use warp_server_client::auth::AgentIdentity;
-use warpui::App;
-use warpui::platform::WindowStyle;
+use torch_core::ui::appearance::Appearance;
+use torch_server_client::auth::AgentIdentity;
+use torchui::App;
+use torchui::platform::WindowStyle;
 
 use super::{ApiKeyType, CreateApiKeyModal};
 use crate::auth::AuthStateProvider;

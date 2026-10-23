@@ -1,18 +1,18 @@
 use pathfinder_geometry::vector::Vector2F;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::Fill;
-use warp_core::ui::theme::color::internal_colors;
-use warpui_core::elements::{
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::Fill;
+use torch_core::ui::theme::color::internal_colors;
+use torchui_core::elements::{
     Border, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Flex,
     FormattedTextElement, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle,
     ParentElement, Radius, Shrinkable, Text, Wrap,
 };
-use warpui_core::fonts::Weight;
-use warpui_core::platform::Cursor;
-use warpui_core::prelude::Align;
-use warpui_core::presenter::EventContext;
-use warpui_core::text_layout::TextAlignment;
-use warpui_core::{AppContext, Element};
+use torchui_core::fonts::Weight;
+use torchui_core::platform::Cursor;
+use torchui_core::prelude::Align;
+use torchui_core::presenter::EventContext;
+use torchui_core::text_layout::TextAlignment;
+use torchui_core::{AppContext, Element};
 
 pub(super) type ClickCallback = Box<dyn FnMut(&mut EventContext, &AppContext, Vector2F) + 'static>;
 pub(super) type HoverCallback =

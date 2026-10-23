@@ -2,23 +2,23 @@ use std::collections::HashMap;
 
 use serde::Serialize;
 use string_offset::CharCounter;
-use warp_completer::ParsedTokensSnapshot;
-use warp_completer::signatures::CommandRegistry;
-use warp_completer::util::parse_current_commands_and_tokens;
-use warp_core::ui::theme::{AnsiColorIdentifier, AnsiColors};
-use warp_errors::report_error;
-use warpui::clipboard::ClipboardContent;
-use warpui::elements::new_scrollable::{ClippedAxisConfiguration, DualAxisConfig, NewScrollable};
-use warpui::elements::{
+use torch_completer::ParsedTokensSnapshot;
+use torch_completer::signatures::CommandRegistry;
+use torch_completer::util::parse_current_commands_and_tokens;
+use torch_core::ui::theme::{AnsiColorIdentifier, AnsiColors};
+use torch_errors::report_error;
+use torchui::clipboard::ClipboardContent;
+use torchui::elements::new_scrollable::{ClippedAxisConfiguration, DualAxisConfig, NewScrollable};
+use torchui::elements::{
     Align, Border, ClippedScrollStateHandle, ConstrainedBox, Container, CornerRadius,
     CrossAxisAlignment, Element, Empty, Expanded, Flex, Highlight, HighlightedRange,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::prelude::ChildView;
-use warpui::text_layout::TextStyle;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
+use torchui::fonts::{Properties, Weight};
+use torchui::prelude::ChildView;
+use torchui::text_layout::TextStyle;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
 
 use crate::ai::agent_management::telemetry::{AgentManagementTelemetryEvent, SetupGuideStep};
 use crate::ai::blocklist::code_block::{
@@ -624,7 +624,7 @@ impl View for CloudSetupGuideView {
             },
             theme.nonactive_ui_detail().into(),
             theme.active_ui_detail().into(),
-            warpui::elements::Fill::None,
+            torchui::elements::Fill::None,
         )
         .finish();
 

@@ -1,7 +1,7 @@
 use std::time::Duration;
 
-use warpui::integration::{AssertionCallback, TestStep};
-use warpui::{async_assert, async_assert_eq};
+use torchui::integration::{AssertionCallback, TestStep};
+use torchui::{async_assert, async_assert_eq};
 
 use crate::integration_testing::step::new_step_with_default_assertions;
 use crate::integration_testing::terminal::util::ExpectedExitStatus;

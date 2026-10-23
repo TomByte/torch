@@ -26,10 +26,10 @@ use std::sync::Arc;
 use anyhow::Context as _;
 use futures::channel::oneshot;
 use futures::future::{Either, select};
-use warp_core::send_telemetry_from_ctx;
-use warp_errors::report_error;
-use warp_util::standardized_path::StandardizedPath;
-use warpui::{AppContext, EntityId, ModelHandle, SingletonEntity};
+use torch_core::send_telemetry_from_ctx;
+use torch_errors::report_error;
+use torch_util::standardized_path::StandardizedPath;
+use torchui::{AppContext, EntityId, ModelHandle, SingletonEntity};
 
 use super::snapshot::{HandoffUploadResult, SnapshotUploadTarget, upload_handoff_snapshot};
 use super::touched_repos::extract_paths_from_conversation;

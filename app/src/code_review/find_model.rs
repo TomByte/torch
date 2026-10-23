@@ -3,17 +3,17 @@ use std::ops::Range;
 
 use string_offset::CharOffset;
 #[cfg(not(target_family = "wasm"))]
-use warp_core::channel::ChannelState;
-use warp_core::send_telemetry_from_ctx;
+use torch_core::channel::ChannelState;
+use torch_core::send_telemetry_from_ctx;
 #[cfg(not(target_family = "wasm"))]
-use warp_editor::content::find::SearchConfig;
+use torch_editor::content::find::SearchConfig;
 #[cfg(not(target_family = "wasm"))]
-use warp_editor::search::Searcher;
-use warp_editor::search::{RestorableSearchResults, SelectedResult};
+use torch_editor::search::Searcher;
+use torch_editor::search::{RestorableSearchResults, SelectedResult};
 #[cfg(not(target_family = "wasm"))]
-use warp_errors::report_error;
-use warpui::r#async::SpawnedFutureHandle;
-use warpui::{AppContext, Entity, EntityId, ModelContext, ViewHandle, WeakViewHandle};
+use torch_errors::report_error;
+use torchui::r#async::SpawnedFutureHandle;
+use torchui::{AppContext, Entity, EntityId, ModelContext, ViewHandle, WeakViewHandle};
 
 use crate::code::local_code_editor::LocalCodeEditorView;
 use crate::code_review::code_review_view::CodeReviewView;
@@ -238,7 +238,7 @@ impl CodeReviewFindModel {
         &self,
         editor_id: EntityId,
         ctx: &AppContext,
-    ) -> Option<warpui::ModelHandle<Searcher>> {
+    ) -> Option<torchui::ModelHandle<Searcher>> {
         let view = self.weak_view_handle.upgrade(ctx);
         if view.is_none() {
             if ChannelState::enable_debug_features() {

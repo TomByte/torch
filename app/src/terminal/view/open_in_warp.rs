@@ -5,15 +5,15 @@ use std::sync::Arc;
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use settings::Setting as _;
-use warp_completer::completer::TopLevelCommandCaseSensitivity;
-use warp_completer::parsers::classify_command;
-use warp_completer::parsers::hir::{Command, Expression};
-use warp_completer::parsers::simple::all_parsed_commands;
-use warp_completer::signatures::CommandRegistry;
-use warp_errors::report_if_error;
-use warp_util::path::EscapeChar;
-use warpui::accessibility::{AccessibilityContent, ActionAccessibilityContent, WarpA11yRole};
-use warpui::{SingletonEntity, ViewContext};
+use torch_completer::completer::TopLevelCommandCaseSensitivity;
+use torch_completer::parsers::classify_command;
+use torch_completer::parsers::hir::{Command, Expression};
+use torch_completer::parsers::simple::all_parsed_commands;
+use torch_completer::signatures::CommandRegistry;
+use torch_errors::report_if_error;
+use torch_util::path::EscapeChar;
+use torchui::accessibility::{AccessibilityContent, ActionAccessibilityContent, WarpA11yRole};
+use torchui::{SingletonEntity, ViewContext};
 
 use super::{Event, InlineBannerItem, InlineBannerType, TerminalView};
 #[cfg(feature = "local_fs")]

@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use std::pin::Pin;
 use std::sync::Arc;
 
-use warp_core::sync_queue::SyncQueueTaskTrait;
+use torch_core::sync_queue::SyncQueueTaskTrait;
 
 use super::diff_state::{DiffMode, DiffStateError, FileDiffAndContent, LocalDiffStateModel};
 

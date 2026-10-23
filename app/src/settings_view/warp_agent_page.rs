@@ -26,25 +26,25 @@ use pathfinder_geometry::vector::vec2f;
 use settings::{Setting, ToggleableSetting};
 use strum::IntoEnumIterator;
 use uuid::Uuid;
-use warp_core::channel::ChannelState;
-use warp_core::context_flag::ContextFlag;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::theme::color::internal_colors;
-use warp_editor::editor::NavigationKey;
-use warp_errors::report_if_error;
-use warpui::r#async::Timer;
-use warpui::elements::{
+use torch_core::channel::ChannelState;
+use torch_core::context_flag::ContextFlag;
+use torch_core::features::FeatureFlag;
+use torch_core::ui::theme::color::internal_colors;
+use torch_editor::editor::NavigationKey;
+use torch_errors::report_if_error;
+use torchui::r#async::Timer;
+use torchui::elements::{
     Border, ChildAnchor, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     Empty, Expanded, Flex, FormattedTextElement, HighlightedHyperlink, Hoverable, HyperlinkLens,
     HyperlinkUrl, MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning,
     ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Shrinkable, Stack, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::keymap::{ContextPredicate, Keystroke};
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::ui_components::switch::{SwitchStateHandle, TooltipConfig};
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::keymap::{ContextPredicate, Keystroke};
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::ui_components::switch::{SwitchStateHandle, TooltipConfig};
+use torchui::{
     Action, AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle, WeakViewHandle, WindowId, id,
 };
@@ -308,7 +308,7 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
         app,
     );
     {
-        use warpui::keymap::FixedBinding;
+        use torchui::keymap::FixedBinding;
 
         use crate::settings::ThinkingDisplayMode;
 
@@ -335,7 +335,7 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
         app.register_fixed_bindings(mode_bindings);
     }
     {
-        use warpui::keymap::FixedBinding;
+        use torchui::keymap::FixedBinding;
 
         let ai_context = context.clone() & id!(flags::IS_ANY_AI_ENABLED);
         let mode_bindings: Vec<FixedBinding> = OrchestrationMessageDisplayMode::iter()
@@ -364,7 +364,7 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
         app.register_fixed_bindings(mode_bindings);
     }
     if FeatureFlag::QueueSlashCommand.is_enabled() {
-        use warpui::keymap::FixedBinding;
+        use torchui::keymap::FixedBinding;
 
         let ai_context = context.clone() & id!(flags::IS_ANY_AI_ENABLED);
         let mode_bindings: Vec<FixedBinding> = PromptSubmissionMode::iter()
@@ -989,7 +989,7 @@ impl WarpAgentPageView {
         });
         #[cfg(feature = "local_fs")]
         {
-            let is_enabled = warp_core::features::FeatureFlag::CustomModelRouters.is_enabled()
+            let is_enabled = torch_core::features::FeatureFlag::CustomModelRouters.is_enabled()
                 && is_any_ai_enabled;
             add_router_button.update(ctx, |button, ctx| {
                 button.set_disabled(!is_enabled, ctx);
@@ -1819,7 +1819,7 @@ impl WarpAgentPageView {
     /// reach the loopback callback.
     #[cfg(not(target_family = "wasm"))]
     fn start_grok_oauth(&mut self, ctx: &mut ViewContext<Self>) {
-        use warp_core::safe_error;
+        use torch_core::safe_error;
 
         use crate::ToastStack;
         use crate::view_components::{DismissibleToast, ToastLink};
@@ -2217,7 +2217,7 @@ impl WarpAgentPageView {
     /// attempt's PKCE verifier.
     #[cfg(not(target_family = "wasm"))]
     fn submit_grok_code(&mut self, code: String, ctx: &mut ViewContext<Self>) {
-        use warp_core::safe_error;
+        use torch_core::safe_error;
 
         use crate::ToastStack;
         use crate::view_components::DismissibleToast;
@@ -2472,7 +2472,7 @@ impl WarpAgentPageView {
     ) -> Vec<ViewHandle<super::custom_router_view::CustomRouterView>> {
         use super::custom_router_view::{CustomRouterView, CustomRouterViewEvent};
         use crate::user_config::WarpConfig;
-        if !warp_core::features::FeatureFlag::CustomModelRouters.is_enabled() {
+        if !torch_core::features::FeatureFlag::CustomModelRouters.is_enabled() {
             return Vec::new();
         }
         let routers: Vec<crate::ai::custom_model_routers::CustomModelRouter> =
@@ -2516,7 +2516,7 @@ impl View for WarpAgentPageView {
         "WarpAgentPage"
     }
 
-    fn render(&self, app: &warpui::AppContext) -> Box<dyn warpui::Element> {
+    fn render(&self, app: &torchui::AppContext) -> Box<dyn torchui::Element> {
         self.page.render(self, app)
     }
 }
@@ -3951,8 +3951,8 @@ impl NaturalLanguageDetectionWidget {
         view: &WarpAgentPageView,
         ai_settings: &AISettings,
         appearance: &Appearance,
-        app: &warpui::AppContext,
-    ) -> Box<dyn warpui::Element> {
+        app: &torchui::AppContext,
+    ) -> Box<dyn torchui::Element> {
         let is_toggleable = ai_settings.is_any_ai_enabled(app);
         let is_nld_enabled = *ai_settings.ai_autodetection_enabled_internal.value();
 
@@ -4112,8 +4112,8 @@ impl VoiceWidget {
         &self,
         view: &WarpAgentPageView,
         appearance: &Appearance,
-        app: &warpui::AppContext,
-    ) -> Box<dyn warpui::Element> {
+        app: &torchui::AppContext,
+    ) -> Box<dyn torchui::Element> {
         let ai_settings = AISettings::as_ref(app);
         let is_toggleable = ai_settings.is_any_ai_enabled(app);
         let mut column = Flex::column().with_child(render_ai_setting_toggle::<VoiceInputEnabled>(
@@ -6898,7 +6898,7 @@ impl SettingsWidget for CustomModelRoutersWidget {
             // Router summary cards
             for view_handle in &view.router_views {
                 column.add_child(
-                    Container::new(warpui::elements::ChildView::new(view_handle).finish())
+                    Container::new(torchui::elements::ChildView::new(view_handle).finish())
                         .with_margin_top(8.)
                         .finish(),
                 );

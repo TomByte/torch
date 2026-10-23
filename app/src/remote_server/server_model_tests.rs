@@ -1,8 +1,8 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
-use warp_util::standardized_path::StandardizedPath;
-use warpui::{App, ModelHandle};
+use torch_util::standardized_path::StandardizedPath;
+use torchui::{App, ModelHandle};
 
 use super::super::diff_state_tracker::RemoteDiffStateManager;
 use super::super::proto::{

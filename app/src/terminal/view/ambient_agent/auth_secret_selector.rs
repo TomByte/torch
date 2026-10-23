@@ -3,16 +3,16 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use pathfinder_geometry::vector::vec2f;
-use warp_cli::agent::Harness;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::Fill;
-use warp_core::ui::theme::color::internal_colors;
-use warp_managed_secrets::client::SecretOwner;
-use warpui::elements::{
+use torch_cli::agent::Harness;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::Fill;
+use torch_core::ui::theme::color::internal_colors;
+use torch_managed_secrets::client::SecretOwner;
+use torchui::elements::{
     Border, ChildAnchor, ChildView, OffsetPositioning, ParentAnchor, ParentElement as _,
     ParentOffsetBounds, Stack,
 };
-use warpui::{
+use torchui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };
@@ -576,8 +576,8 @@ impl AuthSecretSelector {
         OffsetPositioning::offset_from_save_position_element(
             MAIN_MENU_SAVE_POSITION_ID.to_string(),
             vec2f(offset_x, 0.),
-            warpui::elements::PositionedElementOffsetBounds::WindowByPosition,
-            warpui::elements::PositionedElementAnchor::BottomLeft,
+            torchui::elements::PositionedElementOffsetBounds::WindowByPosition,
+            torchui::elements::PositionedElementAnchor::BottomLeft,
             ChildAnchor::BottomLeft,
         )
     }
@@ -810,7 +810,7 @@ impl View for AuthSecretSelector {
         stack.add_child(ChildView::new(&self.button).finish());
 
         if self.is_menu_open {
-            let main_menu = warpui::elements::SavePosition::new(
+            let main_menu = torchui::elements::SavePosition::new(
                 ChildView::new(&self.menu).finish(),
                 MAIN_MENU_SAVE_POSITION_ID,
             )

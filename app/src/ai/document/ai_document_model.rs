@@ -13,12 +13,12 @@ pub use ai::document::{AIDocumentId, AIDocumentVersion};
 use chrono::{DateTime, Local, Utc};
 use itertools::Itertools;
 use uuid::Uuid;
-use warp_editor::model::RichTextEditorModel;
-use warp_editor::render::model::RichTextStyles;
-use warp_errors::{ReportErrorLogMode, report_error};
+use torch_editor::model::RichTextEditorModel;
+use torch_editor::render::model::RichTextStyles;
+use torch_errors::{ReportErrorLogMode, report_error};
 use warp_multi_agent_api as maa_api;
-use warpui::color::ColorU;
-use warpui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity, WindowId};
+use torchui::color::ColorU;
+use torchui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity, WindowId};
 
 use crate::ai::agent::AIAgentActionId;
 use crate::ai::agent::conversation::AIConversationId;
@@ -941,7 +941,7 @@ impl AIDocumentModel {
     pub fn get_document_content(
         &self,
         id: &AIDocumentId,
-        ctx: &warpui::AppContext,
+        ctx: &torchui::AppContext,
     ) -> Option<String> {
         let doc = self.documents.get(id)?;
         Some(doc.editor.as_ref(ctx).markdown_unescaped(ctx))
@@ -1606,7 +1606,7 @@ impl AIDocumentModel {
 }
 
 impl AIDocumentEarlierVersion {
-    pub fn get_content(&self, ctx: &warpui::AppContext) -> String {
+    pub fn get_content(&self, ctx: &torchui::AppContext) -> String {
         self.editor.as_ref(ctx).markdown_unescaped(ctx)
     }
 }

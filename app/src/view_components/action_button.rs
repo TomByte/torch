@@ -3,23 +3,23 @@ use std::sync::Arc;
 
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::{Vector2F, vec2f};
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::color::contrast::MinimumAllowedContrast;
-use warp_core::ui::color::{ContrastingColor, coloru_with_opacity};
-use warp_core::ui::theme::color::internal_colors;
-use warp_core::ui::theme::{AnsiColorIdentifier, Fill};
-use warpui::elements::{
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::color::contrast::MinimumAllowedContrast;
+use torch_core::ui::color::{ContrastingColor, coloru_with_opacity};
+use torch_core::ui::theme::color::internal_colors;
+use torch_core::ui::theme::{AnsiColorIdentifier, Fill};
+use torchui::elements::{
     Border, ChildAnchor, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     DEFAULT_UI_LINE_HEIGHT_RATIO, Flex, Hoverable, MainAxisAlignment, MainAxisSize,
     MouseStateHandle, OffsetPositioning, Padding, ParentAnchor, ParentElement as _,
     ParentOffsetBounds, Radius, Stack, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::keymap::Keystroke;
-use warpui::platform::Cursor;
-use warpui::text_layout::ClipConfig;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::keymap::Keystroke;
+use torchui::platform::Cursor;
+use torchui::text_layout::ClipConfig;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, BlurContext, Element, Entity, EventContext, FocusContext, Gradient,
     SingletonEntity as _, TypedActionView, View, ViewContext,
 };

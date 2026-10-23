@@ -6,8 +6,8 @@ pub use secret_redaction::{
 };
 use similar::DiffableStr;
 use string_offset::StringRange;
-use warpui::elements::{MouseStateHandle, PartialClickableElement};
-use warpui::platform::Cursor;
+use torchui::elements::{MouseStateHandle, PartialClickableElement};
+use torchui::platform::Cursor;
 
 use super::{AIBlockAction, TextLocation};
 use crate::ai::agent::{AIAgentOutput, AIAgentTextSection, AgentOutputText};

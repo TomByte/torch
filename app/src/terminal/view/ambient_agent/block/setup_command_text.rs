@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
-use warp_core::ui::Icon;
-use warp_core::ui::appearance::Appearance;
-use warpui::elements::ParentElement;
-use warpui::prelude::{
+use torch_core::ui::Icon;
+use torch_core::ui::appearance::Appearance;
+use torchui::elements::ParentElement;
+use torchui::prelude::{
     ConstrainedBox, Container, CrossAxisAlignment, Cursor, Flex, Hoverable, MouseStateHandle, Text,
 };
-use warpui::{
+use torchui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
 };
 

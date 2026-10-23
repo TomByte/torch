@@ -56,7 +56,7 @@ pub(crate) fn init_child_process(
 /// broadening tracing initialization to ordinary application processes.
 pub fn start_auth_refresh(
     client: std::sync::Arc<crate::server::server_api::managed_secrets::AppManagedSecretsClient>,
-    ctx: &mut warpui::AppContext,
+    ctx: &mut torchui::AppContext,
 ) {
     native::start_auth_refresh(client, ctx);
 }

@@ -3,17 +3,17 @@ use std::sync::LazyLock;
 
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
-use warp_core::ui::appearance::Appearance;
-use warpui::elements::{
+use torch_core::ui::appearance::Appearance;
+use torchui::elements::{
     ChildAnchor, ConstrainedBox, Container, CrossAxisAlignment, Flex, Hoverable, MainAxisAlignment,
     MainAxisSize, MouseStateHandle, OffsetPositioning, ParentAnchor, ParentElement,
     ParentOffsetBounds, Stack,
 };
-use warpui::fonts::Weight;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::ui_components::text::Span;
-use warpui::{AppContext, Element, EntityId, EventContext, SingletonEntity};
+use torchui::fonts::Weight;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::ui_components::text::Span;
+use torchui::{AppContext, Element, EntityId, EventContext, SingletonEntity};
 
 use crate::ai::AIRequestUsageModel;
 use crate::ai::agent::{
@@ -281,7 +281,7 @@ pub fn render_ai_follow_up_icon(
                 .tool_tip("Follow up with existing conversation".to_owned())
                 .with_style(UiComponentStyles {
                     font_size: Some(12.),
-                    background: Some(warpui::elements::Fill::Solid(tooltip_background)),
+                    background: Some(torchui::elements::Fill::Solid(tooltip_background)),
                     font_color: Some(appearance.theme().background().into_solid()),
                     ..Default::default()
                 });

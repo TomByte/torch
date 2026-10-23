@@ -1,5 +1,5 @@
-use warp_graphql::ai::{AgentTaskState, PlatformErrorCode};
-use warp_graphql::platform_error::{PlatformErrorInfo, PlatformErrorMessageFormat};
+use torch_graphql::ai::{AgentTaskState, PlatformErrorCode};
+use torch_graphql::platform_error::{PlatformErrorInfo, PlatformErrorMessageFormat};
 
 use super::AgentDriverError;
 use super::terminal::ShareSessionError;
@@ -72,7 +72,7 @@ pub fn classify_driver_error(error: &AgentDriverError) -> (AgentTaskState, TaskS
             ),
         ),
         AgentDriverError::NotLoggedIn => {
-            let bin = warp_cli::binary_name().unwrap_or_else(|| "warp".to_string());
+            let bin = torch_cli::binary_name().unwrap_or_else(|| "warp".to_string());
             (
                 AgentTaskState::Error,
                 TaskStatusUpdate::with_error_code(

@@ -17,20 +17,20 @@ use repo_metadata::{DirectoryWatcher, RepoMetadataEvent, RepoMetadataModel, Repo
 use serde_json::json;
 use session_sharing_protocol::common::{AgentAttachment, ParticipantId};
 use tempfile::TempDir;
-use warp_cli::agent::{Harness, HarnessTransport};
-use warp_cli::skill::SkillSpec;
-use warp_cli::{
+use torch_cli::agent::{Harness, HarnessTransport};
+use torch_cli::skill::SkillSpec;
+use torch_cli::{
     OZ_CLI_ENV, OZ_HARNESS_ENV, OZ_PARENT_RUN_ID_ENV, OZ_RUN_ID_ENV, SERVER_ROOT_URL_OVERRIDE_ENV,
     SESSION_SHARING_SERVER_URL_OVERRIDE_ENV, WS_SERVER_URL_OVERRIDE_ENV,
 };
-use warp_core::channel::ChannelState;
-use warp_graphql::ai::AgentTaskState;
-use warp_graphql::platform_error::PlatformErrorMessageFormat;
-use warp_managed_secrets::ManagedSecretValue;
+use torch_core::channel::ChannelState;
+use torch_graphql::ai::AgentTaskState;
+use torch_graphql::platform_error::PlatformErrorMessageFormat;
+use torch_managed_secrets::ManagedSecretValue;
 use warp_multi_agent_api::response_event;
-use warp_util::standardized_path::StandardizedPath;
-use warpui::r#async::Timer;
-use warpui::{App, SingletonEntity as _};
+use torch_util::standardized_path::StandardizedPath;
+use torchui::r#async::Timer;
+use torchui::{App, SingletonEntity as _};
 
 use super::{
     AgentDriver, AgentDriverError, AgentRunPrompt, CLIAgentSessionStatus, DebugWindowController,
@@ -1685,11 +1685,11 @@ fn warp_skill_dirs_env_relative_entries_resolve_against_working_dir() {
 /// stream to completion.
 fn conversation_with_in_progress_mock_stream(
     app: &mut App,
-    terminal_id: warpui::EntityId,
-    ai_controller: &warpui::ModelHandle<crate::ai::blocklist::BlocklistAIController>,
+    terminal_id: torchui::EntityId,
+    ai_controller: &torchui::ModelHandle<crate::ai::blocklist::BlocklistAIController>,
 ) -> (
     crate::ai::agent::conversation::AIConversationId,
-    warpui::ModelHandle<ResponseStream>,
+    torchui::ModelHandle<ResponseStream>,
 ) {
     let stream_id = ResponseStreamId::new_for_test();
     let conversation_id = BlocklistAIHistoryModel::handle(app).update(app, |history, ctx| {
@@ -1729,7 +1729,7 @@ fn conversation_with_in_progress_mock_stream(
 
 /// Drives `stream` through a successful `Init` + `Finished(Done)` completion via the
 /// real controller subscription, matching a parent turn finishing normally.
-fn complete_mock_stream_successfully(app: &mut App, stream: &warpui::ModelHandle<ResponseStream>) {
+fn complete_mock_stream_successfully(app: &mut App, stream: &torchui::ModelHandle<ResponseStream>) {
     stream.update(app, |stream, ctx| {
         stream.emit_response_event_for_test(
             warp_multi_agent_api::ResponseEvent {
@@ -1890,9 +1890,9 @@ fn external_harness_run_exits_on_success_without_injecting_buffered_child_messag
 /// commits to an immediate exit on `Success` (`None`) or defers it (`Some`).
 fn driver_wired_for_terminal(
     app: &mut App,
-    terminal_view: warpui::ViewHandle<crate::terminal::TerminalView>,
+    terminal_view: torchui::ViewHandle<crate::terminal::TerminalView>,
     idle_on_complete: Option<Duration>,
-) -> warpui::ModelHandle<AgentDriver> {
+) -> torchui::ModelHandle<AgentDriver> {
     let temp = TempDir::new().unwrap();
     let driver_handle = app.add_model(|ctx| {
         let terminal_driver =
@@ -2540,10 +2540,10 @@ fn exit_commit_handle_blocks_injection_before_model_side_cleanup_runs() {
 /// id.
 fn driver_wired_for_resumed_conversation(
     app: &mut App,
-    terminal_view: warpui::ViewHandle<crate::terminal::TerminalView>,
+    terminal_view: torchui::ViewHandle<crate::terminal::TerminalView>,
     idle_on_complete: Option<Duration>,
     resumed_conversation_id: crate::ai::agent::conversation::AIConversationId,
-) -> warpui::ModelHandle<AgentDriver> {
+) -> torchui::ModelHandle<AgentDriver> {
     let temp = TempDir::new().unwrap();
     let driver_handle = app.add_model(|ctx| {
         let terminal_driver =
@@ -2765,7 +2765,7 @@ fn deferred_repository_semantic_skill_publication_without_initial_inventory() {
         );
         return;
     }
-    let _factory_mcp = warp_core::features::FeatureFlag::FactoryMcp.override_enabled(false);
+    let _factory_mcp = torch_core::features::FeatureFlag::FactoryMcp.override_enabled(false);
     for transport in [HarnessTransport::Pty, HarnessTransport::Acp] {
         for use_factory_repositories in [true, false] {
             for (harness, skill_parent) in [
@@ -2774,7 +2774,7 @@ fn deferred_repository_semantic_skill_publication_without_initial_inventory() {
                 (Harness::Gemini, ".gemini"),
             ] {
                 App::test((), |mut app| async move {
-                    let _capability = warp_core::features::FeatureFlag::FactoryDeferredRepositories
+                    let _capability = torch_core::features::FeatureFlag::FactoryDeferredRepositories
                         .override_enabled(!use_factory_repositories);
                     let should_activate = use_factory_repositories;
                     initialize_workspace_test_app(&mut app);

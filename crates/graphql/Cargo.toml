@@ -1,7 +1,7 @@
 [package]
 authors.workspace = true
 edition = "2024"
-name = "warp_graphql"
+name = "torch_graphql"
 version = "0.1.0"
 publish.workspace = true
 license.workspace = true
@@ -21,9 +21,9 @@ persistence.workspace = true
 reqwest.workspace = true
 serde.workspace = true
 thiserror.workspace = true
-warp_core.workspace = true
-warp_errors = { workspace = true, features = ["reqwest-errors"] }
-warp_graphql_schema.workspace = true
+torch_core.workspace = true
+torch_errors = { workspace = true, features = ["reqwest-errors"] }
+torch_graphql_schema.workspace = true
 websocket = {path = "../websocket"}
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]

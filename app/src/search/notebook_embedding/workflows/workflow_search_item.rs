@@ -1,11 +1,11 @@
 use ordered_float::OrderedFloat;
-use warpui::elements::{
+use torchui::elements::{
     Clipped, ConstrainedBox, Container, CrossAxisAlignment, Flex, Highlight, MainAxisAlignment,
     MainAxisSize, ParentElement, Shrinkable, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{AppContext, Element, SingletonEntity};
+use torchui::fonts::{Properties, Weight};
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{AppContext, Element, SingletonEntity};
 
 use crate::appearance::Appearance;
 use crate::cloud_object::CloudObject;

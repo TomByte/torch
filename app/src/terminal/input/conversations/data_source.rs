@@ -2,7 +2,7 @@
 use std::collections::HashSet;
 
 use ordered_float::OrderedFloat;
-use warpui::{AppContext, Entity, ModelHandle, SingletonEntity};
+use torchui::{AppContext, Entity, ModelHandle, SingletonEntity};
 
 use crate::AgentConversationsModel;
 use crate::ai::agent_conversations_model::{

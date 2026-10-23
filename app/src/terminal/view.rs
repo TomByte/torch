@@ -25,8 +25,8 @@ pub use init_project::{
 use onboarding::callout::{FinalState, OnboardingCalloutViewEvent, OnboardingQuery};
 use onboarding::{OnboardingCalloutView, OnboardingKeybindings};
 use repo_metadata::CanonicalizedPath;
-use warp_util::remote_path::RemotePath;
-use warp_util::standardized_path::StandardizedPath;
+use torch_util::remote_path::RemotePath;
+use torch_util::standardized_path::StandardizedPath;
 
 use crate::ai::block_context::BlockContext;
 use crate::global_resource_handles::GlobalResourceHandlesProvider;
@@ -135,30 +135,30 @@ use sum_tree::SeekBias;
 use use_agent_footer::UseAgentToolbar;
 use uuid::Uuid;
 use vec1::vec1;
-use warp_completer::meta::Span;
-use warp_core::r#async::debounce;
-use warp_core::channel::ChannelState;
-use warp_core::command::ExitCode;
-use warp_core::context_flag::ContextFlag;
-use warp_core::semantic_selection::SemanticSelection;
-use warp_core::user_preferences::GetUserPreferences as _;
-use warp_errors::{report_error, report_if_error};
-use warp_terminal::event::{ExitReason, ObservedExitStatus};
-use warp_util::local_or_remote_path::LocalOrRemotePath;
+use torch_completer::meta::Span;
+use torch_core::r#async::debounce;
+use torch_core::channel::ChannelState;
+use torch_core::command::ExitCode;
+use torch_core::context_flag::ContextFlag;
+use torch_core::semantic_selection::SemanticSelection;
+use torch_core::user_preferences::GetUserPreferences as _;
+use torch_errors::{report_error, report_if_error};
+use torch_terminal::event::{ExitReason, ObservedExitStatus};
+use torch_util::local_or_remote_path::LocalOrRemotePath;
 #[cfg(feature = "local_fs")]
-use warp_util::path::LineAndColumnArg;
-use warp_util::path::ShellFamily;
-use warpui::accessibility::{AccessibilityContent, ActionAccessibilityContent, WarpA11yRole};
-use warpui::assets::asset_cache::{AssetCache, AssetCacheEvent};
-use warpui::r#async::{SpawnedFutureHandle, Timer};
-use warpui::clipboard::ClipboardContent;
-use warpui::clipboard_utils::get_image_filepaths_from_paths;
-use warpui::elements::new_scrollable::{
+use torch_util::path::LineAndColumnArg;
+use torch_util::path::ShellFamily;
+use torchui::accessibility::{AccessibilityContent, ActionAccessibilityContent, WarpA11yRole};
+use torchui::assets::asset_cache::{AssetCache, AssetCacheEvent};
+use torchui::r#async::{SpawnedFutureHandle, Timer};
+use torchui::clipboard::ClipboardContent;
+use torchui::clipboard_utils::get_image_filepaths_from_paths;
+use torchui::elements::new_scrollable::{
     AxisConfiguration, ClippedAxisConfiguration, DualAxisConfig, NewScrollableElement,
     ScrollableAppearance, SingleAxisConfig,
 };
-use warpui::elements::shimmering_text::ShimmeringTextStateHandle;
-use warpui::elements::{
+use torchui::elements::shimmering_text::ShimmeringTextStateHandle;
+use torchui::elements::{
     Align, Border, ChildAnchor, ChildView, Clipped, ClippedScrollStateHandle, ConstrainedBox,
     Container, CornerRadius, CrossAxisAlignment, DispatchEventResult, DropTarget, DropTargetData,
     Empty, EventHandler, Expanded, Fill, Flex, Hoverable, Icon, LiveElement, MouseStateHandle,
@@ -167,18 +167,18 @@ use warpui::elements::{
     ScrollStateHandle, Scrollable, ScrollableElement, ScrollbarWidth, Shrinkable, Stack, Text,
     get_rich_content_position_id,
 };
-use warpui::event::ModifiersState;
-use warpui::fonts::{Cache as FontCache, FamilyId, Properties};
-use warpui::geometry::vector::{Vector2F, vec2f};
-use warpui::image_cache::ImageType;
-use warpui::keymap::Keystroke;
-use warpui::notification::{NotificationSendError, RequestPermissionsOutcome, UserNotification};
-use warpui::platform::{Cursor, OperatingSystem};
-use warpui::text::SelectionType;
-use warpui::ui_components::components::UiComponent;
-use warpui::units::{IntoLines, IntoPixels, Lines, Pixels};
-use warpui::windowing::WindowManager;
-use warpui::{
+use torchui::event::ModifiersState;
+use torchui::fonts::{Cache as FontCache, FamilyId, Properties};
+use torchui::geometry::vector::{Vector2F, vec2f};
+use torchui::image_cache::ImageType;
+use torchui::keymap::Keystroke;
+use torchui::notification::{NotificationSendError, RequestPermissionsOutcome, UserNotification};
+use torchui::platform::{Cursor, OperatingSystem};
+use torchui::text::SelectionType;
+use torchui::ui_components::components::UiComponent;
+use torchui::units::{IntoLines, IntoPixels, Lines, Pixels};
+use torchui::windowing::WindowManager;
+use torchui::{
     AccessibilityData, AppContext, BlurContext, CursorInfo, Element, Entity, EntityId,
     EventContext, FocusContext, ModelAsRef, ModelHandle, SingletonEntity, Tracked, TypedActionView,
     View, ViewAsRef, ViewContext, ViewHandle, WeakModelHandle, WeakViewHandle, WindowId,
@@ -2733,14 +2733,14 @@ pub struct TerminalView {
     ///   2. Whether this View's window is the active window.
     ///
     /// We need to derive and cache this state on this View in order to correctly implement focus
-    /// reporting. Because focus is window-scoped, i.e. warpui does not consider activating a
+    /// reporting. Because focus is window-scoped, i.e. torchui does not consider activating a
     /// different window as blurring the focused View in the previously active window, we cannot
-    /// simply rely on the warpui::View::on_blur and on_focus methods to report focus-in/out to the
+    /// simply rely on the torchui::View::on_blur and on_focus methods to report focus-in/out to the
     /// PTY, as those methods will not trigger when changing active windows. The singleton model
-    /// [`warpui::windowing::State`] will allow us to subscribe to active window change. So, we can
+    /// [`torchui::windowing::State`] will allow us to subscribe to active window change. So, we can
     /// subscribe to that and have that callback also report focus-in/out. However, that will still
     /// leave cases for potential double-reporting, as a single click can trigger both
-    /// [`warpui::View::on_focus`] and emit a [`warpui::windowing::StateEvent`]. This field will
+    /// [`torchui::View::on_focus`] and emit a [`torchui::windowing::StateEvent`]. This field will
     /// guard against that double- reporting case, though it needs to be kept in sync with the
     /// focused view and active window.
     is_focused_and_active: bool,
@@ -2943,9 +2943,9 @@ pub struct TerminalView {
     /// Mouse state handle for the conversation details panel toggle button in the pane header.
     /// On WASM this is used by the workspace-level transcript panel toggle; on desktop, it is used
     /// by the pane-level details panel toggle.
-    conversation_details_panel_toggle_mouse_state: warpui::elements::MouseStateHandle,
+    conversation_details_panel_toggle_mouse_state: torchui::elements::MouseStateHandle,
     /// Mouse state handle for the ambient agent cancel button in the pane header.
-    ambient_agent_cancel_mouse_state: warpui::elements::MouseStateHandle,
+    ambient_agent_cancel_mouse_state: torchui::elements::MouseStateHandle,
 
     /// First-time cloud agent setup view (full-screen overlay for creating initial environment).
     first_time_cloud_agent_setup_view: ViewHandle<ambient_agent::FirstTimeCloudAgentSetupView>,
@@ -8168,7 +8168,7 @@ impl TerminalView {
     }
 
     #[cfg(any(test, feature = "integration_tests"))]
-    pub fn sessions<'a, A: warpui::ModelAsRef>(&self, ctx: &'a A) -> &'a Sessions {
+    pub fn sessions<'a, A: torchui::ModelAsRef>(&self, ctx: &'a A) -> &'a Sessions {
         self.sessions.as_ref(ctx)
     }
 
@@ -8816,7 +8816,7 @@ impl TerminalView {
         if model.is_read_only() {
             return false;
         }
-        // Warp's own headless TUI (`warp_tui`) is itself an agent surface, so
+        // Warp's own headless TUI (`torch_tui`) is itself an agent surface, so
         // suppress the outer agent input bar while it runs in this pane. Uses
         // the same command-based detection as the CLI agent footer (see
         // `is_running_warp_tui`).
@@ -9811,7 +9811,7 @@ impl TerminalView {
         });
     }
 
-    /// Receiving the warpui::Event::KeyDown event from a child element.
+    /// Receiving the torchui::Event::KeyDown event from a child element.
     /// Generally, this should be control characters rather than printable characters.
     fn keydown_on_terminal(&mut self, characters: &str, ctx: &mut ViewContext<Self>) {
         if self.is_long_running() {
@@ -9854,7 +9854,7 @@ impl TerminalView {
 
         was_bootstrap_script_echoed || is_shared_session_executor
     }
-    /// Receiving a warpui::Event::TypedCharacters event from a child element.
+    /// Receiving a torchui::Event::TypedCharacters event from a child element.
     /// We can assume `characters` consists of all printable characters, and therefore,
     /// can go into the input box.
     fn typed_characters_on_terminal(&mut self, characters: &str, ctx: &mut ViewContext<Self>) {
@@ -11811,7 +11811,7 @@ impl TerminalView {
         };
         let escape_char = session.shell_family().escape_char();
         let Some(top_level_command) =
-            warp_completer::parsers::simple::top_level_command(command, escape_char)
+            torch_completer::parsers::simple::top_level_command(command, escape_char)
         else {
             return false;
         };
@@ -13213,7 +13213,7 @@ impl TerminalView {
                 if self.is_login_shell_bootstrapped {
                     let _ = ctx.spawn(
                         async move {
-                            warpui::r#async::Timer::after(EXECUTE_PENDING_COMMAND_DELAY).await;
+                            torchui::r#async::Timer::after(EXECUTE_PENDING_COMMAND_DELAY).await;
                         },
                         Self::execute_pending_command,
                     );
@@ -13259,14 +13259,14 @@ impl TerminalView {
                                     .and_then(|session| {
                                         let escape_char = session.shell_family().escape_char();
                                         let cmd =
-                                            warp_completer::parsers::simple::top_level_command(
+                                            torch_completer::parsers::simple::top_level_command(
                                                 command,
                                                 escape_char,
                                             )?;
                                         let cmd = session
                                             .alias_value(cmd.as_str())
                                             .and_then(|alias| {
-                                                warp_completer::parsers::simple::top_level_command(
+                                                torch_completer::parsers::simple::top_level_command(
                                                     alias,
                                                     escape_char,
                                                 )
@@ -13639,7 +13639,7 @@ impl TerminalView {
 
                 ctx.spawn(
                     async {
-                        warpui::r#async::Timer::after(*TRIGGER_RC_FILE_SUBSHELL_BOOTSTRAP_DELAY)
+                        torchui::r#async::Timer::after(*TRIGGER_RC_FILE_SUBSHELL_BOOTSTRAP_DELAY)
                             .await
                     },
                     move |me, _, ctx| {
@@ -17129,7 +17129,7 @@ impl TerminalView {
     fn start_bootstrap_timer(&self, duration: Duration, ctx: &mut ViewContext<Self>) {
         let _ = ctx.spawn(
             async move {
-                warpui::r#async::Timer::after(duration).await;
+                torchui::r#async::Timer::after(duration).await;
             },
             Self::on_bootstrap_failed_timer_complete,
         );
@@ -27232,7 +27232,7 @@ impl TerminalView {
                 && session.shell_family() == ShellFamily::Posix
                 && is_in_long_running_command;
             if is_msys2_long_running {
-                let input = warpui::clipboard_utils::escaped_paths_str(paths, None);
+                let input = torchui::clipboard_utils::escaped_paths_str(paths, None);
                 self.typed_characters_on_terminal(&input, ctx);
                 return;
             }
@@ -27243,7 +27243,7 @@ impl TerminalView {
             let paths = if session.is_wsl() {
                 paths_converted = paths
                     .iter()
-                    .map(|p| warp_util::path::convert_windows_path_to_wsl(p))
+                    .map(|p| torch_util::path::convert_windows_path_to_wsl(p))
                     .collect::<Vec<_>>();
                 paths_converted.as_slice()
             } else {
@@ -27251,7 +27251,7 @@ impl TerminalView {
             };
 
             let input =
-                warpui::clipboard_utils::escaped_paths_str(paths, Some(self.shell_family(ctx)));
+                torchui::clipboard_utils::escaped_paths_str(paths, Some(self.shell_family(ctx)));
             self.typed_characters_on_terminal(&input, ctx);
         }
     }
@@ -27314,7 +27314,7 @@ impl TerminalView {
                 let active_block_id = self.model.lock().block_list().active_block_id().clone();
                 ctx.spawn(
                     async {
-                        warpui::r#async::Timer::after(Duration::from_secs(3)).await;
+                        torchui::r#async::Timer::after(Duration::from_secs(3)).await;
                         active_block_id
                     },
                     move |terminal_view, active_block_id, _| {
@@ -27593,7 +27593,7 @@ impl TerminalSurface for TerminalView {
         // Redraw the input once a still-starting shell's message should become visible.
         let _ = ctx.spawn(
             async {
-                warpui::r#async::Timer::after(SLOW_SHELL_START_DURATION).await;
+                torchui::r#async::Timer::after(SLOW_SHELL_START_DURATION).await;
             },
             |me, _, ctx| {
                 me.input.update(ctx, |_, ctx| ctx.notify());
@@ -28713,7 +28713,7 @@ impl TypedActionView for TerminalView {
                     }
                     images.push(ui_components::lightbox::LightboxImage {
                         source: ui_components::lightbox::LightboxImageSource::Resolved {
-                            asset_source: warpui::assets::asset_cache::AssetSource::Raw {
+                            asset_source: torchui::assets::asset_cache::AssetSource::Raw {
                                 id: asset_id,
                             },
                         },
@@ -29332,7 +29332,7 @@ impl View for TerminalView {
                     column.add_child(Shrinkable::new(1., output_area).finish());
 
                     // Suppress the "Use agent" footer when the nested program is
-                    // Warp's own TUI (`warp_tui`) — it's already an agent surface,
+                    // Warp's own TUI (`torch_tui`) — it's already an agent surface,
                     // so the outer footer would just stack on top of it. Other
                     // full-screen TUIs (vim, htop, …) still get the footer.
                     if model.is_alt_screen_active()
@@ -29765,7 +29765,7 @@ impl View for TerminalView {
         if should_show_panel {
             Container::new(
                 Flex::row()
-                    .with_main_axis_size(warpui::elements::MainAxisSize::Max)
+                    .with_main_axis_size(torchui::elements::MainAxisSize::Max)
                     .with_cross_axis_alignment(CrossAxisAlignment::Stretch)
                     .with_child(Shrinkable::new(1., final_element).finish())
                     .with_child(ChildView::new(&self.conversation_details_panel).finish())
@@ -29809,7 +29809,7 @@ impl View for TerminalView {
         }
     }
 
-    fn keymap_context(&self, app: &AppContext) -> warpui::keymap::Context {
+    fn keymap_context(&self, app: &AppContext) -> torchui::keymap::Context {
         let mut context = Self::default_keymap_context();
         context.map.insert(
             "TerminalView_BlockSelectionCardinality",

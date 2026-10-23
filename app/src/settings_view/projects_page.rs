@@ -5,14 +5,14 @@ use std::path::PathBuf;
 
 use pathfinder_color::ColorU;
 use settings::Setting as _;
-use warpui::elements::{
+use torchui::elements::{
     Align, Container, CrossAxisAlignment, Expanded, Flex, MouseStateHandle, ParentElement, Text,
 };
-use warpui::platform::FilePickerConfiguration;
-use warpui::text_layout::ClipConfig;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::UiComponent;
-use warpui::{
+use torchui::platform::FilePickerConfiguration;
+use torchui::text_layout::ClipConfig;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::UiComponent;
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 
@@ -118,7 +118,7 @@ impl SettingsPageMeta for ProjectsPageView {
         SettingsSection::Projects
     }
     fn should_render(&self, _: &AppContext) -> bool {
-        warp_core::channel::ChannelState::is_local_only()
+        torch_core::channel::ChannelState::is_local_only()
     }
     fn on_page_selected(&mut self, _: bool, ctx: &mut ViewContext<Self>) {
         ProjectCatalog::handle(ctx).update(ctx, |catalog, ctx| catalog.refresh(ctx));

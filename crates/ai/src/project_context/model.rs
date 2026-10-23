@@ -3,9 +3,9 @@ use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 use futures::future::BoxFuture;
-use warp_util::host_id::HostId;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warpui_core::{AppContext, Entity, ModelContext, SingletonEntity};
+use torch_util::host_id::HostId;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torchui_core::{AppContext, Entity, ModelContext, SingletonEntity};
 
 use super::GlobalRules;
 
@@ -14,8 +14,8 @@ cfg_if::cfg_if! {
         use repo_metadata::{
             RepoMetadataEvent, RepoMetadataModel, RepositoryIdentifier, StandingQueryContent,
         };
-        use warp_util::remote_path::RemotePath;
-        use warp_util::standardized_path::StandardizedPath;
+        use torch_util::remote_path::RemotePath;
+        use torch_util::standardized_path::StandardizedPath;
     }
 }
 

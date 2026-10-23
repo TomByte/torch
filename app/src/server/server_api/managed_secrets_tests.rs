@@ -5,10 +5,10 @@ use futures::executor::block_on;
 use mockito::{Matcher, Mock};
 use serde_json::json;
 use vec1::vec1;
-use warp_graphql::ai::AgentHarness;
-use warp_graphql::managed_secrets::ManagedSecretType;
-use warp_managed_secrets::client::{IdentityTokenOptions, ManagedSecretsClient as _, SecretOwner};
-use warp_server_client::base_client::TEAM_UID_HEADER;
+use torch_graphql::ai::AgentHarness;
+use torch_graphql::managed_secrets::ManagedSecretType;
+use torch_managed_secrets::client::{IdentityTokenOptions, ManagedSecretsClient as _, SecretOwner};
+use torch_server_client::base_client::TEAM_UID_HEADER;
 
 use super::super::ServerApi;
 use super::IdentityTokenUserFacingError;
@@ -25,7 +25,7 @@ fn identity_token_request_sends_selected_team_without_changing_subject_template(
     let server_api = server_api();
     let team_uid = ServerId::from(17);
     let request_scope = request_scope_for_team(team_uid);
-    let mut server = warp_core::channel::ChannelState::mock_server();
+    let mut server = torch_core::channel::ChannelState::mock_server();
     let request = server.mock("POST", "/graphql/v2")
         .match_query(Matcher::UrlEncoded("op".to_string(), "IssueTaskIdentityToken".to_string()))
         .match_header(TEAM_UID_HEADER, team_uid.to_string().as_str())
@@ -59,7 +59,7 @@ fn identity_token_request_sends_selected_team_without_changing_subject_template(
 fn identity_token_user_facing_error_is_distinct_from_transport_errors() {
     let server_api = server_api();
     let message = "Cannot issue a team-scoped identity token: you belong to multiple teams. Select a team using the X-Warp-Team-Uid request header.";
-    let mut server = warp_core::channel::ChannelState::mock_server();
+    let mut server = torch_core::channel::ChannelState::mock_server();
     let request = server
         .mock("POST", "/graphql/v2")
         .match_query(Matcher::UrlEncoded(
@@ -110,7 +110,7 @@ fn server_api() -> ServerApi {
 }
 
 fn mock_graphql_request(operation: &str, team_uid: Option<&str>) -> Mock {
-    let mut server = warp_core::channel::ChannelState::mock_server();
+    let mut server = torch_core::channel::ChannelState::mock_server();
     let request = server
         .mock("POST", "/graphql/v2")
         .match_query(Matcher::UrlEncoded("op".to_string(), operation.to_string()))

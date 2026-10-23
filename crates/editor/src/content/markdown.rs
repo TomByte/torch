@@ -14,9 +14,9 @@ use markdown_parser::{
 };
 use markup5ever::ns;
 use string_offset::CharOffset;
-use warpui_core::elements::{ListIndentLevel, ListNumbering};
-use warpui_core::text::point::Point;
-use warpui_core::{AppContext, ModelContext, ModelHandle};
+use torchui_core::elements::{ListIndentLevel, ListNumbering};
+use torchui_core::text::point::Point;
+use torchui_core::{AppContext, ModelContext, ModelHandle};
 
 use super::buffer::{
     ActionWithSelectionDelta, Buffer, EditOrigin, EditResult, StyledBufferBlock,

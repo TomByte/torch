@@ -1,16 +1,16 @@
 use std::borrow::Cow;
 use std::cell::RefCell;
 
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::builder::UiBuilder;
-use warp_core::ui::theme::WarpTheme;
-use warp_core::ui::theme::color::internal_colors;
-use warpui::clipboard::ClipboardContent;
-use warpui::elements::*;
-use warpui::text_layout::ClipConfig;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::UiComponent as _;
-use warpui::{Entity, SingletonEntity as _, TypedActionView, View, ViewContext};
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::builder::UiBuilder;
+use torch_core::ui::theme::WarpTheme;
+use torch_core::ui::theme::color::internal_colors;
+use torchui::clipboard::ClipboardContent;
+use torchui::elements::*;
+use torchui::text_layout::ClipConfig;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::UiComponent as _;
+use torchui::{Entity, SingletonEntity as _, TypedActionView, View, ViewContext};
 
 use crate::terminal::model::terminal_model::ExitReason;
 use crate::ui_components;

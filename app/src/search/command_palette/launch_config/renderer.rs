@@ -1,11 +1,11 @@
-use warpui::Element;
-use warpui::elements::{
+use torchui::Element;
+use torchui::elements::{
     Align, Border, ConstrainedBox, Container, CornerRadius, Flex, Highlight, ParentElement, Radius,
     Shrinkable, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::ui_components::text::Span;
+use torchui::fonts::{Properties, Weight};
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::ui_components::text::Span;
 
 use crate::appearance::Appearance;
 use crate::launch_configs::launch_config::LaunchConfig;

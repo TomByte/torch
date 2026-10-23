@@ -8,13 +8,13 @@ license.workspace = true
 [dependencies]
 pathfinder_color.workspace = true
 pathfinder_geometry.workspace = true
-warpui_core.workspace = true
-warp_core.workspace = true
+torchui_core.workspace = true
+torch_core.workspace = true
 
 [dev-dependencies]
 anyhow.workspace = true
 asset_cache.workspace = true
 rust-embed.workspace = true
 rustls.workspace = true
-warpui.workspace = true
-warp_core = { workspace = true, features = ["test-util"] }
+torchui.workspace = true
+torch_core = { workspace = true, features = ["test-util"] }

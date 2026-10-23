@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use uuid::Uuid;
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torchui::{Entity, ModelContext, SingletonEntity};
 
 use crate::ai::mcp::templatable::{
     GalleryData, JsonTemplate, TemplatableMCPServer, TemplateVariable,
@@ -129,7 +129,7 @@ impl MCPGalleryManager {
     /// Update gallery items from the server response
     pub fn update_gallery_items(
         &mut self,
-        templates: Vec<warp_graphql::mcp_gallery_template::MCPGalleryTemplate>,
+        templates: Vec<torch_graphql::mcp_gallery_template::MCPGalleryTemplate>,
         ctx: &mut ModelContext<Self>,
     ) {
         let mut gallery_items = HashMap::new();

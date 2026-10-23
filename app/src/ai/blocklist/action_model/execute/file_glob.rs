@@ -5,9 +5,9 @@ use std::time::Duration;
 use futures::FutureExt;
 use futures::future::BoxFuture;
 use itertools::Itertools;
-use warp_core::features::FeatureFlag;
-use warpui::r#async::FutureExt as AsyncFutureExt;
-use warpui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torchui::r#async::FutureExt as AsyncFutureExt;
+use torchui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
 
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent::{
@@ -26,7 +26,7 @@ use crate::{TelemetryEvent, send_telemetry_from_app_ctx};
 
 const FILE_GLOB_TIMEOUT: Duration = Duration::from_secs(10);
 
-use warp_errors::report_error;
+use torch_errors::report_error;
 
 use super::{
     ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessActionInput,

@@ -5,8 +5,8 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use session_sharing_protocol::common::AgentAttachment;
-use warp_core::safe_warn;
-use warp_errors::report_error;
+use torch_core::safe_warn;
+use torch_errors::report_error;
 
 /// Max file attachment size is 10 MB.
 pub(crate) const MAX_ATTACHMENT_SIZE_BYTES: usize = 10 * 1024 * 1024;

@@ -4,8 +4,8 @@ use std::path::{Path, PathBuf, absolute};
 use anyhow::{Context as _, Result, anyhow, bail};
 use serde::Deserialize;
 use typed_path::{WindowsComponent, WindowsPath};
-use warp_cli::agent::Harness;
-use warp_util::path::file_exists_and_is_executable;
+use torch_cli::agent::Harness;
+use torch_util::path::file_exists_and_is_executable;
 
 use super::super::super::AgentDriverError;
 use super::super::ThirdPartyHarness;

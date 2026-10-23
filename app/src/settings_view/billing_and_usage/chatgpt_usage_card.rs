@@ -1,12 +1,12 @@
 use ::ai::api_keys::ApiKeyManager;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::appearance::Appearance;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::ui::appearance::Appearance;
+use torchui::elements::{
     Border, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Flex, HyperlinkUrl,
     MainAxisAlignment, MainAxisSize, ParentElement, Radius, Shrinkable, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::{AppContext, Element, SingletonEntity, View, ViewHandle};
+use torchui::fonts::{Properties, Weight};
+use torchui::{AppContext, Element, SingletonEntity, View, ViewHandle};
 
 use crate::ai::llms::CHATGPT_USAGE_URL;
 use crate::settings_view::billing_and_usage_page::BillingAndUsagePageAction;

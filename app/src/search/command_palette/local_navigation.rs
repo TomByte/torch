@@ -4,11 +4,11 @@ use std::path::PathBuf;
 
 use fuzzy_match::match_indices_case_insensitive;
 use ordered_float::OrderedFloat;
-use warp_core::ui::color::blend::Blend;
-use warp_core::ui::theme::Fill;
-use warpui::elements::{Container, Flex, ParentElement, Text};
-use warpui::text_layout::ClipConfig;
-use warpui::{AppContext, Element, Entity, EntityId, SingletonEntity};
+use torch_core::ui::color::blend::Blend;
+use torch_core::ui::theme::Fill;
+use torchui::elements::{Container, Flex, ParentElement, Text};
+use torchui::text_layout::ClipConfig;
+use torchui::{AppContext, Element, Entity, EntityId, SingletonEntity};
 
 use crate::appearance::Appearance;
 use crate::search::command_palette::mixer::CommandPaletteItemAction;

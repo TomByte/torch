@@ -1,6 +1,6 @@
-use warp_core::ui::appearance::Appearance;
-use warpui::platform::WindowStyle;
-use warpui::{App, TypedActionView};
+use torch_core::ui::appearance::Appearance;
+use torchui::platform::WindowStyle;
+use torchui::{App, TypedActionView};
 
 use super::{Menu, MenuAction, MenuItem, MenuItemFields, SelectAction, SubMenu};
 

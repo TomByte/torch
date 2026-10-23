@@ -1,4 +1,4 @@
-use warp_graphql::ai::AgentTaskState;
+use torch_graphql::ai::AgentTaskState;
 
 use super::{LocalTaskUpdate, LocalTaskUpdateQueue};
 use crate::ai::ambient_agents::AmbientAgentTaskId;

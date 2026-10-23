@@ -5,9 +5,9 @@ use async_channel::Sender;
 pub use cloud_object_client::ObjectUpdateMessage;
 use futures_util::stream::AbortHandle;
 use instant::Instant;
-use warp_errors::report_error;
-use warpui::r#async::Timer;
-use warpui::{Entity, ModelContext, ModelHandle, RequestState, SingletonEntity};
+use torch_errors::report_error;
+use torchui::r#async::Timer;
+use torchui::{Entity, ModelContext, ModelHandle, RequestState, SingletonEntity};
 
 use super::update_manager::UpdateManager;
 use crate::cloud_object::model::persistence::{CloudModel, CloudModelEvent};

@@ -4,8 +4,8 @@ pub use cloud_object_models::{
     RunAgentsPermission, WriteToPtyPermission,
 };
 use markdown_parser::{FormattedTextFragment, FormattedTextInline};
-use warp_core::features::FeatureFlag;
-use warpui::{AppContext, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torchui::{AppContext, SingletonEntity};
 
 use super::llms::{LLMContextWindow, LLMInfo, LLMPreferences, LLMProvider};
 use crate::cloud_object::model::generic_string_model::StringModel;

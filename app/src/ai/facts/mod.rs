@@ -1,5 +1,5 @@
 pub use cloud_object_models::{AIFact, AIMemory, CloudAIFact, CloudAIFactModel};
-use warp_core::ui::appearance::Appearance;
+use torch_core::ui::appearance::Appearance;
 
 use crate::cloud_object::model::generic_string_model::StringModel;
 use crate::cloud_object::model::json_model::JsonModel;

@@ -1,6 +1,6 @@
 use onboarding::SelectedSettings;
-use warp_core::execution_mode::AppExecutionMode;
-use warpui::{SingletonEntity as _, ViewContext};
+use torch_core::execution_mode::AppExecutionMode;
+use torchui::{SingletonEntity as _, ViewContext};
 
 use crate::settings::AISettings;
 use crate::terminal::view::{

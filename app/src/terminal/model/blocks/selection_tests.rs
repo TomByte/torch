@@ -1,5 +1,5 @@
 use float_cmp::assert_approx_eq;
-use warpui::App;
+use torchui::App;
 
 use super::*;
 use crate::terminal::event_listener::ChannelEventListener;

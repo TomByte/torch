@@ -1,5 +1,5 @@
 use chrono::Utc;
-use warp_graphql::billing::BonusGrantType;
+use torch_graphql::billing::BonusGrantType;
 
 use super::BonusGrantNotificationModel;
 use crate::ai::request_usage_model::{BonusGrant, BonusGrantScope};

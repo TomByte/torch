@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use warp_errors::report_error;
-use warpui::{Entity, ModelContext, ModelHandle, SingletonEntity};
+use torch_errors::report_error;
+use torchui::{Entity, ModelContext, ModelHandle, SingletonEntity};
 
 use crate::ai::agent::conversation::{AIConversationId, ConversationStatus};
 use crate::ai::agent::{LifecycleEventType, StartAgentExecutionMode};

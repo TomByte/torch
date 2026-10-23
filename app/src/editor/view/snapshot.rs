@@ -12,16 +12,16 @@ use parking_lot::Mutex;
 use pathfinder_geometry::vector::{Vector2F, vec2f};
 use rayon::prelude::*;
 use string_offset::ByteOffset;
-use warp_completer::completer::Description;
-use warp_errors::report_error;
-use warpui::fonts::{Cache as FontCache, FamilyId, Properties};
-use warpui::platform::LineStyle;
-use warpui::text::point::Point;
-use warpui::text_layout::{
+use torch_completer::completer::Description;
+use torch_errors::report_error;
+use torchui::fonts::{Cache as FontCache, FamilyId, Properties};
+use torchui::platform::LineStyle;
+use torchui::text::point::Point;
+use torchui::text_layout::{
     self, ClipConfig, ComputeBaselinePositionFn, DEFAULT_TOP_BOTTOM_RATIO, LayoutCache,
     StyleAndFont, TextAlignment, TextStyle, default_compute_baseline_position_fn,
 };
-use warpui::{AppContext, EntityId, ModelHandle};
+use torchui::{AppContext, EntityId, ModelHandle};
 
 use super::model::EditorModel;
 use super::{

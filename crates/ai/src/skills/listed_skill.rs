@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use warp_core::ui::icons::Icon;
+use torch_core::ui::icons::Icon;
 
 use super::{ParsedSkill, SkillProvider, SkillReference, SkillScope};
 

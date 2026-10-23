@@ -4,7 +4,7 @@ use ai::api_keys::{
 };
 use settings::Setting;
 use uuid::Uuid;
-use warpui::{AppContext, Entity, ModelContext, SingletonEntity};
+use torchui::{AppContext, Entity, ModelContext, SingletonEntity};
 
 use crate::LaunchMode;
 use crate::global_resource_handles::GlobalResourceHandlesProvider;

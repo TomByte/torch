@@ -1,6 +1,6 @@
-use warp_core::ui::appearance::Appearance;
-use warpui::App;
-use warpui::platform::WindowStyle;
+use torch_core::ui::appearance::Appearance;
+use torchui::App;
+use torchui::platform::WindowStyle;
 
 use super::DrivePanel;
 use crate::ai::blocklist::BlocklistAIHistoryModel;

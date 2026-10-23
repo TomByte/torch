@@ -2,18 +2,18 @@ use std::ops::Range;
 use std::sync::Arc;
 use std::time::Duration;
 
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::color::internal_colors;
-use warpui_core::elements::{
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::color::internal_colors;
+use torchui_core::elements::{
     ChildAnchor, Container, CrossAxisAlignment, Flex, Highlight, Hoverable, MouseStateHandle,
     OffsetPositioning, ParentElement, PositionedElementAnchor, PositionedElementOffsetBounds,
     SavePosition, Stack, Text,
 };
-use warpui_core::geometry::vector::vec2f;
-use warpui_core::platform::Cursor;
-use warpui_core::text_layout::TextStyle;
-use warpui_core::ui_components::components::UiComponent;
-use warpui_core::{
+use torchui_core::geometry::vector::vec2f;
+use torchui_core::platform::Cursor;
+use torchui_core::text_layout::TextStyle;
+use torchui_core::ui_components::components::UiComponent;
+use torchui_core::{
     AfterLayoutContext, AppContext, Element, LayoutContext, SingletonEntity, SizeConstraint,
     WeakViewHandle,
 };
@@ -164,8 +164,8 @@ impl RenderableBlock for RenderableHiddenSection {
     fn dispatch_event(
         &mut self,
         _model: &RenderState,
-        event: &warpui_core::event::DispatchedEvent,
-        ctx: &mut warpui_core::EventContext,
+        event: &torchui_core::event::DispatchedEvent,
+        ctx: &mut torchui_core::EventContext,
         app: &AppContext,
     ) -> bool {
         self.element.dispatch_event(event, ctx, app)

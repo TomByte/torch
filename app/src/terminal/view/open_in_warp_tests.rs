@@ -1,7 +1,7 @@
 use std::path::Path;
 
-use warp_completer::completer::TopLevelCommandCaseSensitivity;
-use warp_util::path::EscapeChar;
+use torch_completer::completer::TopLevelCommandCaseSensitivity;
+use torch_util::path::EscapeChar;
 
 use super::{OpenablePath, check_openable_in_warp};
 use crate::util::openable_file_type::OpenableFileType;

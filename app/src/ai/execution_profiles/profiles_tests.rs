@@ -1,9 +1,9 @@
 use chrono::{DateTime, Utc};
 use settings::Setting as _;
-use warp_core::features::FeatureFlag;
-use warp_graphql::object_permissions::AccessLevel;
-use warp_util::path::EscapeChar;
-use warpui::{App, EntityId, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torch_graphql::object_permissions::AccessLevel;
+use torch_util::path::EscapeChar;
+use torchui::{App, EntityId, SingletonEntity};
 
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::blocklist::{BlocklistAIHistoryModel, BlocklistAIPermissions};
@@ -1328,8 +1328,8 @@ fn profile_sources_preserve_state_across_migration_and_rollout() {
             app.add_model(|ctx| {
                 AIExecutionProfilesModel::new(
                     &LaunchMode::CommandLine {
-                        command: warp_cli::CliCommand::Whoami,
-                        global_options: warp_cli::GlobalOptions::default(),
+                        command: torch_cli::CliCommand::Whoami,
+                        global_options: torch_cli::GlobalOptions::default(),
                         debug: false,
                         is_sandboxed: true,
                         computer_use_override: None,

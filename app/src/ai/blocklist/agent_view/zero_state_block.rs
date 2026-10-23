@@ -8,22 +8,22 @@ use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine, p
 use parking_lot::FairMutex;
 use pathfinder_color::ColorU;
 use settings::Setting;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::Icon;
-use warp_errors::report_if_error;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::ui::Icon;
+use torch_errors::report_if_error;
+use torchui::elements::{
     Clipped, Container, CornerRadius, CrossAxisAlignment, DispatchEventResult, EventHandler, Flex,
     FormattedTextElement, HighlightedHyperlink, MainAxisSize, MouseStateHandle, ParentElement,
     Radius, Shrinkable, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::keymap::Keystroke;
-use warpui::prelude::{
+use torchui::fonts::{Properties, Weight};
+use torchui::keymap::Keystroke;
+use torchui::prelude::{
     Align, ConstrainedBox, Cursor, Empty, Hoverable, MainAxisAlignment, SavePosition,
 };
-use warpui::scene::Border;
-use warpui::ui_components::components::{UiComponent as _, UiComponentStyles};
-use warpui::{
+use torchui::scene::Border;
+use torchui::ui_components::components::{UiComponent as _, UiComponentStyles};
+use torchui::{
     Action, AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View,
     ViewContext,
 };
@@ -1326,7 +1326,7 @@ where
 }
 
 mod styles {
-    use warp_core::ui::appearance::Appearance;
+    use torch_core::ui::appearance::Appearance;
 
     pub const CONTAINER_VERTICAL_PADDING: f32 = 16.;
     pub const TITLE_MARGIN_BOTTOM: f32 = 8.;

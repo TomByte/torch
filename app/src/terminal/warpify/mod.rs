@@ -4,7 +4,7 @@ pub mod success_block;
 pub mod trigger_state;
 
 use channel_versions::overrides::TargetOS;
-use warpui::AssetProvider;
+use torchui::AssetProvider;
 
 use crate::ASSETS;
 use crate::terminal::model::terminal_model::SubshellInitializationInfo;

@@ -27,11 +27,11 @@ use session_sharing_protocol::viewer::{
     DownstreamMessage, InitPayload, RoleUpdatedReason, SessionEndedReason, UpstreamMessage,
     ViewerRemovedReason,
 };
-use warp_core::features::FeatureFlag;
-use warp_errors::report_error;
-use warp_server_client::iap::IapManager;
-use warpui::r#async::{SpawnedFutureHandle, Timer};
-use warpui::{
+use torch_core::features::FeatureFlag;
+use torch_errors::report_error;
+use torch_server_client::iap::IapManager;
+use torchui::r#async::{SpawnedFutureHandle, Timer};
+use torchui::{
     Entity, ModelContext, ModelHandle, RequestState, RetryOption, SingletonEntity, WeakViewHandle,
 };
 use websocket::{Message, Sink, Stream, WebsocketMessage as _};

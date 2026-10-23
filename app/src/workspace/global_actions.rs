@@ -2,12 +2,12 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use ::settings::ToggleableSetting;
-use warp_core::execution_mode::AppExecutionMode;
-use warp_errors::report_error;
-use warp_graphql::mutations::create_anonymous_user::AnonymousUserType;
-use warpui::r#async::Timer;
-use warpui::windowing::WindowManager;
-use warpui::{AppContext, Entity, SingletonEntity, TypedActionView};
+use torch_core::execution_mode::AppExecutionMode;
+use torch_errors::report_error;
+use torch_graphql::mutations::create_anonymous_user::AnonymousUserType;
+use torchui::r#async::Timer;
+use torchui::windowing::WindowManager;
+use torchui::{AppContext, Entity, SingletonEntity, TypedActionView};
 
 use crate::ai::agent::AIAgentExchangeId;
 use crate::ai::agent::conversation::AIConversationId;
@@ -235,7 +235,7 @@ fn create_anonymous_user(_: &(), ctx: &mut AppContext) {
     let auth_client =
         ServerApiProvider::handle(ctx).read(ctx, |provider, _ctx| provider.get_auth_client());
     let result =
-        warpui::r#async::block_on(auth_client.create_anonymous_user(None, anonymous_user_type));
+        torchui::r#async::block_on(auth_client.create_anonymous_user(None, anonymous_user_type));
     match result {
         Ok(user) => log::info!("Successfully created anonymous user {user:?}"),
         Err(err) => report_error!(err.context("Failed to create anonymous user")),

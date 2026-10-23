@@ -8,17 +8,17 @@ use enclose::enclose;
 use itertools::Itertools;
 use settings::Setting as _;
 use settings::manager::SettingsManager;
-use warp_core::channel::ChannelState;
-use warp_core::context_flag::ContextFlag;
-use warp_errors::{report_error, report_if_error};
-use warp_util::path::user_friendly_path;
-use warpui::actions::StandardAction;
-use warpui::keymap::{Keystroke, Trigger};
-use warpui::platform::menu::{
+use torch_core::channel::ChannelState;
+use torch_core::context_flag::ContextFlag;
+use torch_errors::{report_error, report_if_error};
+use torch_util::path::user_friendly_path;
+use torchui::actions::StandardAction;
+use torchui::keymap::{Keystroke, Trigger};
+use torchui::platform::menu::{
     CustomMenuItem, Menu, MenuBar, MenuItem, MenuItemProperties, MenuItemPropertyChanges,
 };
-use warpui::windowing::WindowManager;
-use warpui::{AppContext, SingletonEntity};
+use torchui::windowing::WindowManager;
+use torchui::{AppContext, SingletonEntity};
 
 use crate::ai::persisted_workspace::PersistedWorkspace;
 use crate::auth;

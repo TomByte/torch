@@ -5,9 +5,9 @@ use std::sync::Arc;
 use futures::executor::block_on;
 #[cfg(not(feature = "skip_login"))]
 use mockito::Matcher;
-use warp_graphql::queries::execution_config::{CodeForge, ExecutionRepositoryRefType};
+use torch_graphql::queries::execution_config::{CodeForge, ExecutionRepositoryRefType};
 #[cfg(not(feature = "skip_login"))]
-use warp_server_client::base_client::AMBIENT_WORKLOAD_TOKEN_HEADER;
+use torch_server_client::base_client::AMBIENT_WORKLOAD_TOKEN_HEADER;
 
 use super::*;
 
@@ -102,10 +102,10 @@ fn configuration_errors_return_after_one_request() {
         let error = block_on(api.fetch_configuration("sandbox")).unwrap_err();
         assert_eq!(
             match error
-                .downcast_ref::<warp_graphql::client::GraphQLError>()
+                .downcast_ref::<torch_graphql::client::GraphQLError>()
                 .unwrap()
             {
-                warp_graphql::client::GraphQLError::HttpError { status, .. } => status.as_u16(),
+                torch_graphql::client::GraphQLError::HttpError { status, .. } => status.as_u16(),
                 error => panic!("unexpected GraphQL error: {error}"),
             },
             status as u16

@@ -16,8 +16,8 @@ pub(super) mod proxy;
 use std::fs::Permissions;
 use std::os::unix::fs::PermissionsExt;
 
-use warp_errors::report_error;
-use warpui::r#async::executor;
+use torch_errors::report_error;
+use torchui::r#async::executor;
 
 use super::server_model::{ConnectionId, ServerModel};
 
@@ -45,7 +45,7 @@ pub fn run_daemon(identity_key: String) -> anyhow::Result<()> {
 /// Called from `launch()` inside the headless AppBuilder callback.
 /// Binds the Unix domain socket, writes the PID file, spawns the
 /// accept loop, and registers the `ServerModel` singleton.
-pub(crate) fn launch_daemon(identity_key: &str, ctx: &mut warpui::AppContext) {
+pub(crate) fn launch_daemon(identity_key: &str, ctx: &mut torchui::AppContext) {
     let socket_path = proxy::socket_path(identity_key);
     let pid_path = proxy::pid_path(identity_key);
 
@@ -127,7 +127,7 @@ pub(crate) fn launch_daemon(identity_key: &str, ctx: &mut warpui::AppContext) {
 pub(super) async fn handle_daemon_connection(
     conn_id: ConnectionId,
     stream: async_io::Async<std::os::unix::net::UnixStream>,
-    spawner: warpui::ModelSpawner<ServerModel>,
+    spawner: torchui::ModelSpawner<ServerModel>,
     exec: std::sync::Arc<executor::Background>,
 ) {
     use futures::AsyncReadExt as _;

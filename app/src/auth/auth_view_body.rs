@@ -1,20 +1,20 @@
 use anyhow::anyhow;
 use lazy_static::lazy_static;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::appearance::DEFAULT_COMMAND_PALETTE_FONT_SIZE;
-use warp_core::ui::builder::UiBuilder;
-use warp_errors::report_error;
-use warpui::accessibility::{AccessibilityContent, WarpA11yRole};
-use warpui::clipboard::ClipboardContent;
-use warpui::color::ColorU;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::ui::appearance::DEFAULT_COMMAND_PALETTE_FONT_SIZE;
+use torch_core::ui::builder::UiBuilder;
+use torch_errors::report_error;
+use torchui::accessibility::{AccessibilityContent, WarpA11yRole};
+use torchui::clipboard::ClipboardContent;
+use torchui::color::ColorU;
+use torchui::elements::{
     Align, Border, Container, CornerRadius, CrossAxisAlignment, Dismiss, Fill, Flex,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, Stack,
 };
-use warpui::fonts::Weight;
-use warpui::keymap::FixedBinding;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::fonts::Weight;
+use torchui::keymap::FixedBinding;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity, TypedActionView, UpdateModel, View,
     ViewContext, ViewHandle,
 };
@@ -62,7 +62,7 @@ lazy_static! {
 }
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings([FixedBinding::new(
         "enter",

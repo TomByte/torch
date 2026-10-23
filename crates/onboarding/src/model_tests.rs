@@ -1,7 +1,7 @@
 use ai::LLMId;
-use warp_core::features::FeatureFlag;
-use warp_core::telemetry::testing::MockTelemetryContextProvider;
-use warpui_core::{App, Entity, ModelHandle};
+use torch_core::features::FeatureFlag;
+use torch_core::telemetry::testing::MockTelemetryContextProvider;
+use torchui_core::{App, Entity, ModelHandle};
 
 use crate::OnboardingIntention;
 use crate::model::{

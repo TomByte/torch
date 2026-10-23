@@ -11,13 +11,13 @@ use futures::future::join_all;
 use itertools::Itertools as _;
 use repo_metadata::local_model::IndexedRepoState;
 use repo_metadata::{RepoMetadataModel, RepositoryIdentifier};
-use warp_cli::agent::Harness;
-use warp_cli::mcp::MCPSpec;
-use warp_cli::skill::SkillSpec;
-use warp_core::features::FeatureFlag;
-use warp_core::safe_info;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warpui::{Entity, ModelSpawner, SingletonEntity};
+use torch_cli::agent::Harness;
+use torch_cli::mcp::MCPSpec;
+use torch_cli::skill::SkillSpec;
+use torch_core::features::FeatureFlag;
+use torch_core::safe_info;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torchui::{Entity, ModelSpawner, SingletonEntity};
 
 use super::environment::{
     FACTORY_REPO_CLONE_URL_ENV_VAR, FACTORY_REPO_DIR_ENV_VAR,

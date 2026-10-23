@@ -4,8 +4,8 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, anyhow};
 use command::blocking::Command;
-use warp_core::channel::ChannelState;
-use warp_util::path::ShellFamily;
+use torch_core::channel::ChannelState;
+use torch_util::path::ShellFamily;
 
 /// Compute the target path where the Oz CLI symlink should be installed, based on channel
 fn oz_install_target_path() -> PathBuf {

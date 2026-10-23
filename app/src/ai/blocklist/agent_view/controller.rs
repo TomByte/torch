@@ -3,10 +3,10 @@ use std::time::Duration;
 
 use instant::Instant;
 use parking_lot::FairMutex;
-use warp_core::ui::appearance::Appearance;
-use warpui::r#async::SpawnedFutureHandle;
-use warpui::keymap::Keystroke;
-use warpui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
+use torch_core::ui::appearance::Appearance;
+use torchui::r#async::SpawnedFutureHandle;
+use torchui::keymap::Keystroke;
+use torchui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
 
 use super::{DismissalStrategy, EphemeralMessage, EphemeralMessageModel};
 use crate::BlocklistAIHistoryModel;
@@ -514,7 +514,7 @@ impl AgentViewController {
         self.pending_confirmation = Some(pending_confirmation);
 
         let abort_handle = ctx.spawn_abortable(
-            async move { warpui::r#async::Timer::after(ENTER_OR_EXIT_CONFIRMATION_WINDOW).await },
+            async move { torchui::r#async::Timer::after(ENTER_OR_EXIT_CONFIRMATION_WINDOW).await },
             move |me, _, _ctx| {
                 me.pending_confirmation = None;
                 me.pending_confirmation_abort_handle = None;
@@ -1038,7 +1038,7 @@ fn exit_confirmation_message(
     should_stop_and_exit: bool,
     app: &AppContext,
 ) -> Message {
-    use warpui::SingletonEntity;
+    use torchui::SingletonEntity;
 
     use crate::terminal::input::message_bar::{Message, MessageItem};
 

@@ -5,8 +5,8 @@ use anyhow::Result;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use vec1::Vec1;
-use warp_graphql::managed_secrets::{ManagedSecret, ManagedSecretConfig, ManagedSecretType};
-pub use warp_graphql::queries::task_secrets::ManagedSecretValue;
+use torch_graphql::managed_secrets::{ManagedSecret, ManagedSecretConfig, ManagedSecretType};
+pub use torch_graphql::queries::task_secrets::ManagedSecretValue;
 
 /// An OIDC identity token issued for a task workload.
 #[derive(Debug, Clone)]
@@ -91,7 +91,7 @@ pub trait ManagedSecretsClient: 'static + Send + Sync {
     async fn list_harness_auth_secrets(
         &self,
         request_scope: &Self::RequestScope,
-        harness: warp_graphql::ai::AgentHarness,
+        harness: torch_graphql::ai::AgentHarness,
     ) -> Result<Vec<ManagedSecret>>;
 
     async fn get_task_secrets(

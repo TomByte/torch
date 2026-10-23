@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use chrono::Utc;
 use persistence::model::{ConversationUsageMetadata, PRIMARY_AGENT_CATEGORY};
 use warp_multi_agent_api as api;
-use warpui::{App, SingletonEntity};
+use torchui::{App, SingletonEntity};
 
 use super::*;
 use crate::ai::agent::api::ServerConversationToken;

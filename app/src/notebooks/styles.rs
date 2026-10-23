@@ -1,13 +1,13 @@
 //! Shared styles for notebooks.
 
-use warpui::elements::{
+use torchui::elements::{
     Container, CrossAxisAlignment, Flex, Hoverable, MainAxisAlignment, MouseStateHandle,
     ParentElement,
 };
-use warpui::platform::Cursor;
-use warpui::ui_components::components::UiComponent as _;
-use warpui::units::{IntoPixels, Pixels};
-use warpui::{Element, fonts};
+use torchui::platform::Cursor;
+use torchui::ui_components::components::UiComponent as _;
+use torchui::units::{IntoPixels, Pixels};
+use torchui::{Element, fonts};
 
 use crate::appearance::Appearance;
 use crate::settings::{FontSettings, derived_notebook_font_size};

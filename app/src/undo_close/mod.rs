@@ -1,8 +1,8 @@
 pub mod settings;
 mod stack;
 
-use warpui::AppContext;
-use warpui::keymap::EditableBinding;
+use torchui::AppContext;
+use torchui::keymap::EditableBinding;
 
 pub use self::settings::UndoCloseSettings;
 pub use self::stack::{UndoCloseStack, UndoCloseStackEvent};
@@ -11,7 +11,7 @@ use crate::workspace::WorkspaceAction;
 
 /// Register keybindings for undo close functionality.
 pub fn init(ctx: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     ctx.register_editable_bindings([EditableBinding::new(
         "app:reopen_closed_session",

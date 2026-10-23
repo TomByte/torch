@@ -1,4 +1,4 @@
-use warpui::{SingletonEntity, View, ViewContext};
+use torchui::{SingletonEntity, View, ViewContext};
 
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::blocklist::{BeginConversationRenameError, BlocklistAIHistoryModel};

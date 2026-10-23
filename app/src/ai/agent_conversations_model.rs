@@ -17,16 +17,16 @@ use instant::Instant;
 use itertools::Itertools;
 pub use query::query_conversation_entries;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use warp_cli::agent::Harness;
-use warp_core::execution_mode::AppExecutionMode;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::theme::WarpTheme;
-use warp_core::ui::theme::color::internal_colors;
-use warp_errors::report_error;
-use warpui::r#async::Timer;
-use warpui::color::ColorU;
-use warpui::windowing::{StateEvent, WindowManager};
-use warpui::{
+use torch_cli::agent::Harness;
+use torch_core::execution_mode::AppExecutionMode;
+use torch_core::features::FeatureFlag;
+use torch_core::ui::theme::WarpTheme;
+use torch_core::ui::theme::color::internal_colors;
+use torch_errors::report_error;
+use torchui::r#async::Timer;
+use torchui::color::ColorU;
+use torchui::windowing::{StateEvent, WindowManager};
+use torchui::{
     AppContext, Entity, EntityId, ModelContext, ModelHandle, RequestState, SingletonEntity,
     WindowId, duration_with_jitter,
 };

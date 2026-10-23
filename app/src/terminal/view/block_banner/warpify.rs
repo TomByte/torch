@@ -1,12 +1,12 @@
 use pathfinder_color::ColorU;
-use warpui::Element;
-use warpui::elements::{
+use torchui::Element;
+use torchui::elements::{
     Align, Container, CrossAxisAlignment, Flex, MouseStateHandle, ParentElement, Shrinkable,
 };
-use warpui::fonts::Weight;
-use warpui::keymap::Keystroke;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::fonts::Weight;
+use torchui::keymap::Keystroke;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 
 use super::render_block_banner;
 use crate::appearance::Appearance;

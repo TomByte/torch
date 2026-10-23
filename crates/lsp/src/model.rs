@@ -15,13 +15,13 @@ use lsp_types::{
 #[cfg(not(target_arch = "wasm32"))]
 use simple_logger::manager::LogManager;
 #[cfg(not(target_arch = "wasm32"))]
-use warp_core::features::FeatureFlag;
+use torch_core::features::FeatureFlag;
 #[cfg(not(target_arch = "wasm32"))]
-use warp_errors::report_error;
+use torch_errors::report_error;
 #[cfg(not(target_arch = "wasm32"))]
-use warpui_core::SingletonEntity;
-use warpui_core::r#async::executor::Background;
-use warpui_core::{Entity, ModelContext};
+use torchui_core::SingletonEntity;
+use torchui_core::r#async::executor::Background;
+use torchui_core::{Entity, ModelContext};
 
 use crate::config::{LanguageId, lsp_uri_to_path};
 use crate::server_repo_watcher::LspRepoWatcher;

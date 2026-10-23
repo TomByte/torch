@@ -1,4 +1,4 @@
-use warpui::AppContext;
+use torchui::AppContext;
 
 use super::{CloudObject, GenericStringObjectFormat, JsonObjectType, ObjectType};
 use crate::server::cloud_objects::update_manager::{

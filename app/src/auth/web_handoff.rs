@@ -1,7 +1,7 @@
 use anyhow::anyhow;
-use warp_errors::report_error;
-use warpui::ui_components::components::UiComponent as _;
-use warpui::{AppContext, Element, Entity, SingletonEntity, View, ViewContext};
+use torch_errors::report_error;
+use torchui::ui_components::components::UiComponent as _;
+use torchui::{AppContext, Element, Entity, SingletonEntity, View, ViewContext};
 use wasm_bindgen::prelude::*;
 
 use super::auth_manager::{AuthManager, AuthManagerEvent};

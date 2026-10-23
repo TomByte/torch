@@ -5,18 +5,18 @@ use std::time::Duration;
 use mockall::Sequence;
 use regex::Regex;
 use settings::{PrivatePreferences, PublicPreferences};
-use warp_graphql::billing::{
+use torch_graphql::billing::{
     BillingMetadata as GqlBillingMetadata, BonusGrantsInfo as GqlBonusGrantsInfo,
     ChargeUnit as GqlChargeUnit, CustomerType as GqlCustomerType,
     DelinquencyStatus as GqlDelinquencyStatus,
     PurchaseAddOnCreditsPolicy as GqlPurchaseAddOnCreditsPolicy, Tier as GqlTier,
 };
-use warp_graphql::queries::get_workspaces_metadata_for_user::{
+use torch_graphql::queries::get_workspaces_metadata_for_user::{
     User as GqlUser, UserProfile as GqlUserProfile, UserPurchasePolicyBillingMetadata,
     UserPurchasePolicyTier,
 };
-use warp_graphql::user::DiscoverableTeamData as GqlDiscoverableTeamData;
-use warp_graphql::workspace::{
+use torch_graphql::user::DiscoverableTeamData as GqlDiscoverableTeamData;
+use torch_graphql::workspace::{
     AddonCreditsSettings as GqlAddonCreditsSettings,
     AdminEnablementSetting as GqlAdminEnablementSetting,
     AdminEnablementSettingInfo as GqlAdminEnablementSettingInfo,
@@ -49,10 +49,10 @@ use warp_graphql::workspace::{
     WriteToPtyAutonomyValue as GqlWriteToPtyAutonomyValue,
     WriteToPtySettingInfo as GqlWriteToPtySettingInfo,
 };
-use warpui::elements::Empty;
-use warpui::platform::WindowStyle;
-use warpui::{AddSingletonModel, App, Element, TypedActionView, View, ViewHandle, WindowId};
-use warpui_extras::user_preferences;
+use torchui::elements::Empty;
+use torchui::platform::WindowStyle;
+use torchui::{AddSingletonModel, App, Element, TypedActionView, View, ViewHandle, WindowId};
+use torchui_extras::user_preferences;
 
 use super::*;
 use crate::ai::blocklist::is_agent_mode_autonomy_allowed;
@@ -277,7 +277,7 @@ fn test_loading_all_spaces_after_switching_from_offline() {
         });
 
         // Spend time waiting for the initial load to finish etc.
-        warpui::r#async::Timer::after(Duration::from_secs(1)).await;
+        torchui::r#async::Timer::after(Duration::from_secs(1)).await;
 
         // Lets go offline
         NetworkStatus::handle(&app).update(&mut app, |network_status, ctx| {
@@ -290,7 +290,7 @@ fn test_loading_all_spaces_after_switching_from_offline() {
         });
 
         // Spend time waiting for the load to finish etc.
-        warpui::r#async::Timer::after(Duration::from_secs(1)).await;
+        torchui::r#async::Timer::after(Duration::from_secs(1)).await;
 
         // We also ensure that UserWorkspaces stores a team
         UserWorkspaces::handle(&app).read(&app, |teams, _| {
@@ -946,12 +946,12 @@ fn workspace_for_teams(teams: Vec<Team>) -> Workspace {
     workspace
 }
 
-fn team_selection(team: Option<Option<String>>) -> warp_cli::scope::TeamSelection {
-    warp_cli::scope::TeamSelection { team }
+fn team_selection(team: Option<Option<String>>) -> torch_cli::scope::TeamSelection {
+    torch_cli::scope::TeamSelection { team }
 }
 
-fn object_scope(team: Option<Option<String>>, personal: bool) -> warp_cli::scope::ObjectScope {
-    warp_cli::scope::ObjectScope {
+fn object_scope(team: Option<Option<String>>, personal: bool) -> torch_cli::scope::ObjectScope {
+    torch_cli::scope::ObjectScope {
         team_selection: team_selection(team),
         personal,
     }
@@ -3802,7 +3802,7 @@ fn test_purchase_addon_credits_forwards_teamless_team_uid() {
 
         // Give the spawned client call time to run so the mock expectation is
         // exercised before the test ends.
-        warpui::r#async::Timer::after(Duration::from_millis(100)).await;
+        torchui::r#async::Timer::after(Duration::from_millis(100)).await;
     })
 }
 
@@ -3835,7 +3835,7 @@ fn test_purchase_addon_credits_forwards_team_uid_when_present() {
 
         // Give the spawned client call time to run so the mock expectation is
         // exercised before the test ends.
-        warpui::r#async::Timer::after(Duration::from_millis(100)).await;
+        torchui::r#async::Timer::after(Duration::from_millis(100)).await;
     })
 }
 
@@ -4019,7 +4019,7 @@ fn test_remove_user_from_team_rejected_emits_error_event_without_updating_worksp
             );
         });
 
-        warpui::r#async::Timer::after(Duration::from_millis(100)).await;
+        torchui::r#async::Timer::after(Duration::from_millis(100)).await;
 
         let error_message = receiver
             .try_recv()
@@ -4107,7 +4107,7 @@ fn test_remove_user_from_team_success_emits_success_event_and_refreshes_members(
             );
         });
 
-        warpui::r#async::Timer::after(Duration::from_millis(100)).await;
+        torchui::r#async::Timer::after(Duration::from_millis(100)).await;
 
         receiver
             .try_recv()
@@ -4562,9 +4562,9 @@ fn gql_user_with_tier(
         profile: GqlUserProfile {
             uid: "test-user".to_string(),
         },
-        ai_credit_availability: warp_graphql::ai::AICreditAvailability {
+        ai_credit_availability: torch_graphql::ai::AICreditAvailability {
             available: true,
-            denial_reason: warp_graphql::ai::AICreditAvailabilityDenialReason::None,
+            denial_reason: torch_graphql::ai::AICreditAvailabilityDenialReason::None,
             credit_source: None,
         },
         billing_metadata: user_tier.map(|tier| UserPurchasePolicyBillingMetadata { tier }),
@@ -5014,7 +5014,7 @@ fn legacy_cache_migration_yields_a_usable_teamless_catalog() {
     // all available LLMs were solely for Agent Mode. Migrating it must still produce a
     // catalog whose `agent_mode` bucket resolves the cached model -- a "usable teamless
     // catalog" -- not an empty or default one.
-    warpui::App::test((), |mut app| async move {
+    torchui::App::test((), |mut app| async move {
         app.update(|ctx| {
             ctx.add_singleton_model(|_| {
                 PrivatePreferences::new(

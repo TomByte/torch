@@ -4,15 +4,15 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 
 use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
-use warp_core::features::FeatureFlag;
-use warp_core::settings::ToggleableSetting as _;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::settings::ToggleableSetting as _;
+use torchui::elements::{
     Container, Element, Flex, FormattedTextElement, HighlightedHyperlink, HyperlinkUrl,
     MouseStateHandle, ParentElement,
 };
-use warpui::keymap::ContextPredicate;
-use warpui::ui_components::switch::SwitchStateHandle;
-use warpui::{
+use torchui::keymap::ContextPredicate;
+use torchui::ui_components::switch::SwitchStateHandle;
+use torchui::{
     Action, AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle, id,
 };
 

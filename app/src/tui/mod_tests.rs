@@ -1,9 +1,9 @@
 use std::cell::Cell;
 use std::rc::Rc;
 
-use warp_core::channel::ChannelState;
-use warp_core::telemetry::testing::MockTelemetryContextProvider;
-use warpui::{App, SingletonEntity};
+use torch_core::channel::ChannelState;
+use torch_core::telemetry::testing::MockTelemetryContextProvider;
+use torchui::{App, SingletonEntity};
 
 use super::telemetry::TuiOnboardingTelemetry;
 use super::{

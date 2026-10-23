@@ -25,12 +25,12 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use string_offset::{ByteOffset, CharOffset, impl_offset};
 use sum_tree::{Cursor, SeekBias, SumTree};
-use warp_core::features::FeatureFlag;
-use warpui_core::AppContext;
-use warpui_core::elements::ListIndentLevel;
-use warpui_core::fonts::{Properties, Style, Weight};
-use warpui_core::text::BlockHeaderSize as HeaderSize;
-use warpui_core::text::point::Point;
+use torch_core::features::FeatureFlag;
+use torchui_core::AppContext;
+use torchui_core::elements::ListIndentLevel;
+use torchui_core::fonts::{Properties, Style, Weight};
+use torchui_core::text::BlockHeaderSize as HeaderSize;
+use torchui_core::text::point::Point;
 
 use super::buffer::Buffer;
 use super::core::CursorType;

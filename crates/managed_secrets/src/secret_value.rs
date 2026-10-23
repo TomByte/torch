@@ -1,7 +1,7 @@
 use std::fmt;
 
 use serde::Serialize;
-use warp_graphql::managed_secrets::ManagedSecretType;
+use torch_graphql::managed_secrets::ManagedSecretType;
 
 /// Maximum length in bytes of a `KEY=VALUE` env string, one less than Linux's `MAX_ARG_STRLEN`
 /// (128 KiB). The kernel stores each env string NUL-terminated, so the `KEY=VALUE` content must

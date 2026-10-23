@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use serde::Serialize;
 use strum::IntoEnumIterator;
 use strum_macros::{EnumDiscriminants, EnumIter};
-use warp_core::features::FeatureFlag;
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torchui::{Entity, ModelContext, SingletonEntity};
 
 #[cfg(target_os = "macos")]
 use super::config::HotkeyError;
@@ -48,7 +48,7 @@ impl ImportedConfigModel {
         use strum::IntoEnumIterator;
         self.started = true;
 
-        let loaded_system_fonts = warpui::fonts::Cache::handle(ctx)
+        let loaded_system_fonts = torchui::fonts::Cache::handle(ctx)
             .update(ctx, |font_cache, ctx| font_cache.all_system_fonts(ctx));
         ctx.spawn(loaded_system_fonts, |_, fonts, ctx| {
             let fonts = fonts

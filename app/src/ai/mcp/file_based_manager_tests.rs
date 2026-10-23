@@ -6,8 +6,8 @@ use repo_metadata::repositories::DetectedRepositories;
 use repo_metadata::watcher::DirectoryWatcher;
 use settings::Setting as _;
 use uuid::Uuid;
-use warp_core::features::FeatureFlag;
-use warpui::{App, Entity, ModelHandle, SingletonEntity as _};
+use torch_core::features::FeatureFlag;
+use torchui::{App, Entity, ModelHandle, SingletonEntity as _};
 use watcher::HomeDirectoryWatcher;
 
 use super::{
@@ -24,7 +24,7 @@ use crate::warp_managed_paths_watcher::{WarpManagedPathsWatcher, warp_managed_mc
 use crate::workspaces::user_workspaces::UserWorkspaces;
 
 // Helper to initialize dependencies and return FileBasedMCPManager handle
-fn setup_app(app: &mut App) -> warpui::ModelHandle<FileBasedMCPManager> {
+fn setup_app(app: &mut App) -> torchui::ModelHandle<FileBasedMCPManager> {
     app.add_singleton_model(DirectoryWatcher::new);
     app.add_singleton_model(|_| DetectedRepositories::default());
     app.add_singleton_model(RepoMetadataModel::new);

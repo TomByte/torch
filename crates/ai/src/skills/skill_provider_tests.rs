@@ -1,7 +1,7 @@
-use warp_util::host_id::HostId;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warp_util::remote_path::RemotePath;
-use warp_util::standardized_path::StandardizedPath;
+use torch_util::host_id::HostId;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torch_util::remote_path::RemotePath;
+use torch_util::standardized_path::StandardizedPath;
 
 use super::{
     SkillProvider, SkillScope, get_provider_for_path, get_scope_for_path, home_skills_path,
@@ -12,13 +12,13 @@ use super::{
 fn warp_home_skills_path_uses_warp_home_path() {
     assert_eq!(
         home_skills_path(SkillProvider::Warp),
-        warp_core::paths::warp_home_skills_dir()
+        torch_core::paths::warp_home_skills_dir()
     );
 }
 
 #[test]
 fn warp_home_skill_path_is_home_warp_skill() {
-    let Some(warp_home_skills_dir) = warp_core::paths::warp_home_skills_dir() else {
+    let Some(warp_home_skills_dir) = torch_core::paths::warp_home_skills_dir() else {
         eprintln!("Skipping test: home directory not available");
         return;
     };

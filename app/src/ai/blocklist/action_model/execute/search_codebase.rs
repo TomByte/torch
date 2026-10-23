@@ -5,8 +5,8 @@ use futures::FutureExt;
 use futures::channel::oneshot;
 use futures::future::BoxFuture;
 use itertools::Itertools;
-use warp_errors::report_error;
-use warpui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
+use torch_errors::report_error;
+use torchui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
 
 use super::{
     ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessActionInput,

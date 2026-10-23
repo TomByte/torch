@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
 use parking_lot::FairMutex;
-use warp_core::ui::appearance::Appearance;
-use warp_terminal::model::BlockId;
-use warpui::prelude::{Container, Empty, MouseStateHandle};
-use warpui::scene::{CornerRadius, Radius};
-use warpui::{
+use torch_core::ui::appearance::Appearance;
+use torch_terminal::model::BlockId;
+use torchui::prelude::{Container, Empty, MouseStateHandle};
+use torchui::scene::{CornerRadius, Radius};
+use torchui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
 };
 

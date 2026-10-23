@@ -1,9 +1,9 @@
-use warpui::elements::{Container, CornerRadius, Dismiss, MouseStateHandle, Radius};
-use warpui::fonts::Weight;
-use warpui::platform::Cursor;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::elements::{Container, CornerRadius, Dismiss, MouseStateHandle, Radius};
+use torchui::fonts::Weight;
+use torchui::platform::Cursor;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };

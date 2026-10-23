@@ -4,11 +4,11 @@ use std::sync::Arc;
 
 use ai::diff_validation::DiffDelta;
 use line_ending::LineEnding;
-use warp_core::ui::appearance::Appearance;
-use warp_editor::content::buffer::InitialBufferState;
-use warp_editor::render::element::VerticalExpansionBehavior;
-use warpui::App;
-use warpui::platform::WindowStyle;
+use torch_core::ui::appearance::Appearance;
+use torch_editor::content::buffer::InitialBufferState;
+use torch_editor::render::element::VerticalExpansionBehavior;
+use torchui::App;
+use torchui::platform::WindowStyle;
 
 use super::*;
 use crate::AuthStateProvider;

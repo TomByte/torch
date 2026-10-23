@@ -2,10 +2,10 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 
 use settings::{PrivatePreferences, PublicPreferences, Setting as _, SettingsManager, SyncToCloud};
-use warp_core::channel::{Channel, ChannelState};
-use warpui::SingletonEntity as _;
-use warpui_extras::secure_storage::{self, AppContextExt as _};
-use warpui_extras::user_preferences;
+use torch_core::channel::{Channel, ChannelState};
+use torchui::SingletonEntity as _;
+use torchui_extras::secure_storage::{self, AppContextExt as _};
+use torchui_extras::user_preferences;
 
 use super::{
     LocalControlMode, LocalControlModeSetting, LocalControlSettings, default_mode_for_channel,
@@ -97,7 +97,7 @@ fn unset_mode_follows_channel_default() {
 
 #[test]
 fn mode_is_persisted_to_secure_storage() {
-    warpui::App::test((), |mut app| async move {
+    torchui::App::test((), |mut app| async move {
         app.update(|ctx| {
             ctx.add_singleton_model(|_| {
                 PublicPreferences::new(
@@ -144,7 +144,7 @@ fn mode_is_persisted_to_secure_storage() {
 
 #[test]
 fn mode_does_not_migrate_from_private_preferences() {
-    warpui::App::test((), |mut app| async move {
+    torchui::App::test((), |mut app| async move {
         app.update(|ctx| {
             ctx.add_singleton_model(|_| {
                 PublicPreferences::new(
@@ -189,7 +189,7 @@ fn mode_is_private_and_never_cloud_synced() {
 
 #[test]
 fn cloud_sync_cannot_disable_local_control() {
-    warpui::App::test((), |mut app| async move {
+    torchui::App::test((), |mut app| async move {
         app.update(|ctx| {
             ctx.add_singleton_model(|_| {
                 PublicPreferences::new(

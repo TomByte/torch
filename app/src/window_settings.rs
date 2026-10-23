@@ -1,8 +1,8 @@
 use settings::macros::define_settings_group;
 use settings::{RespectUserSyncSetting, Setting as _, SupportedPlatforms, SyncToCloud};
-use warp_errors::report_if_error;
-use warpui::platform::WindowBackdrop;
-use warpui::{AppContext, SingletonEntity, WindowId};
+use torch_errors::report_if_error;
+use torchui::platform::WindowBackdrop;
+use torchui::{AppContext, SingletonEntity, WindowId};
 
 define_settings_group!(WindowSettings, settings: [
     background_blur_radius: BackgroundBlurRadius {

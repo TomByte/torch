@@ -7,7 +7,7 @@
 use anyhow::{Result, anyhow};
 use serde::de::DeserializeOwned;
 use settings_value::SettingsValue;
-use warpui_core::{
+use torchui_core::{
     AddSingletonModel, Entity, GetSingletonModelHandle, ModelContext, ModelHandle, SingletonEntity,
     UpdateModel,
 };

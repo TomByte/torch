@@ -236,7 +236,7 @@ fn bonus_grant_conversion_preserves_usage_cents() {
         created_at: chrono::Utc::now().into(),
         cost_cents: 1000,
         expiration: None,
-        grant_type: warp_graphql::billing::BonusGrantType::Any,
+        grant_type: torch_graphql::billing::BonusGrantType::Any,
         scope: GqlBonusGrantScope::User,
         reason: "purchase".to_string(),
         user_facing_message: None,
@@ -257,7 +257,7 @@ fn bonus_grant_conversion_preserves_usage_cents() {
 }
 
 mod pending_email_invites_conversion {
-    use warp_graphql::workspace::EmailInvite as GqlEmailInvite;
+    use torch_graphql::workspace::EmailInvite as GqlEmailInvite;
 
     use crate::workspaces::gql_convert::team_pending_email_invites_from_gql;
 
@@ -313,7 +313,7 @@ mod pending_email_invites_conversion {
 }
 
 mod team_settings_conversion {
-    use warp_graphql::workspace as gqlws;
+    use torch_graphql::workspace as gqlws;
 
     use crate::ai::execution_profiles::{
         ActionPermission, ComputerUsePermission, WriteToPtyPermission,
@@ -596,7 +596,7 @@ mod team_settings_conversion {
 }
 
 mod team_visibility_conversion {
-    use warp_graphql::workspace::TeamVisibility as GqlTeamVisibility;
+    use torch_graphql::workspace::TeamVisibility as GqlTeamVisibility;
 
     use crate::workspaces::team::TeamVisibility;
 

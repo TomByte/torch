@@ -18,7 +18,7 @@ use remote_server::setup::{
 };
 use remote_server::ssh::ssh_args;
 use remote_server::transport::{Connection, ControlPath, Error, InstallOutcome, RemoteTransport};
-use warpui::r#async::executor;
+use torchui::r#async::executor;
 
 #[path = "ssh_transport/installation.rs"]
 pub(crate) mod installation;

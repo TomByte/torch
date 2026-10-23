@@ -1,12 +1,12 @@
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
-use warpui::elements::{
+use torchui::elements::{
     ChildAnchor, CornerRadius, Fill, Hoverable, MouseStateHandle, OffsetPositioning, ParentAnchor,
     ParentElement, ParentOffsetBounds, Radius, Stack,
 };
-use warpui::fonts::Weight;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{AppContext, Element, SingletonEntity};
+use torchui::fonts::Weight;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{AppContext, Element, SingletonEntity};
 
 use super::presence_manager::{MUTED_AVATAR_BORDER_COLOR, MUTED_PARTICIPANT_COLOR, Participant};
 use crate::appearance::Appearance;

@@ -7,8 +7,8 @@ use ::local_control::{ControlError, ErrorCode};
 use serde::Serialize;
 use serde_json::{Value, json};
 use settings::Setting as _;
-use warpui::keymap::DescriptionContext;
-use warpui::{ModelContext, SingletonEntity};
+use torchui::keymap::DescriptionContext;
+use torchui::{ModelContext, SingletonEntity};
 
 use crate::WindowSettings;
 use crate::local_control::LocalControlBridge;

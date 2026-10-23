@@ -11,10 +11,10 @@ use std::time::Duration;
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use warp_core::SessionId;
-use warp_util::remote_path::RemotePath;
-use warp_util::standardized_path::StandardizedPath;
-use warpui::{AppContext, ModelContext, ModelHandle};
+use torch_core::SessionId;
+use torch_util::remote_path::RemotePath;
+use torch_util::standardized_path::StandardizedPath;
+use torchui::{AppContext, ModelContext, ModelHandle};
 
 use crate::code_review::diff_size_limits::DiffSize;
 use crate::util::git::{BranchEntry, Commit, FileChangeEntry, PrInfo};
@@ -441,7 +441,7 @@ pub enum DiffStateModel {
     Remote(ModelHandle<RemoteDiffStateModel>),
 }
 
-impl warpui::Entity for DiffStateModel {
+impl torchui::Entity for DiffStateModel {
     type Event = DiffStateModelEvent;
 }
 

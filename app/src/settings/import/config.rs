@@ -6,11 +6,11 @@ use pathfinder_color::ColorU;
 use serde::Serialize;
 use strum_macros::EnumIter;
 use thiserror::Error;
-use warp_core::ui::color::hex_color::HexColorError as UiHexColorError;
-use warp_core::ui::theme::{AnsiColors, WarpTheme};
-use warpui::DisplayIdx;
-use warpui::fonts::FontInfo;
-use warpui::keymap::Keystroke;
+use torch_core::ui::color::hex_color::HexColorError as UiHexColorError;
+use torch_core::ui::theme::{AnsiColors, WarpTheme};
+use torchui::DisplayIdx;
+use torchui::fonts::FontInfo;
+use torchui::keymap::Keystroke;
 
 use super::alacritty_parser::AlacrittyConfig;
 #[cfg(target_os = "macos")]

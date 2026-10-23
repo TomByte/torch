@@ -3,16 +3,16 @@ use std::path::{Path, PathBuf};
 
 use ai::skills::{ParsedSkill, SkillPathOrigin, SkillReference, parse_bundled_skill};
 use futures::TryStreamExt;
-use warp_core::channel::ChannelState;
-use warp_core::execution_mode::AppExecutionMode;
-use warp_core::features::FeatureFlag;
-use warp_core::safe_warn;
-use warp_core::ui::icons::Icon;
-use warp_errors::report_error;
-use warp_util::host_id::HostId;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warp_util::remote_path::RemotePath;
-use warpui::{AppContext, SingletonEntity};
+use torch_core::channel::ChannelState;
+use torch_core::execution_mode::AppExecutionMode;
+use torch_core::features::FeatureFlag;
+use torch_core::safe_warn;
+use torch_core::ui::icons::Icon;
+use torch_errors::report_error;
+use torch_util::host_id::HostId;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torch_util::remote_path::RemotePath;
+use torchui::{AppContext, SingletonEntity};
 
 use super::SkillDescriptor;
 use crate::ai::mcp::{McpIntegration, TemplatableMCPServerManager};
@@ -37,7 +37,7 @@ pub enum BundledSkillActivation {
 pub(crate) const FACTORY_DEFERRED_REPOSITORIES_SKILL: &str = "factory-deferred-repositories";
 
 pub(crate) fn factory_deferred_repositories_skill_path() -> Option<PathBuf> {
-    warp_core::paths::bundled_resources_dir().map(|root| {
+    torch_core::paths::bundled_resources_dir().map(|root| {
         root.join("bundled")
             .join("skills")
             .join(FACTORY_DEFERRED_REPOSITORIES_SKILL)
@@ -194,7 +194,7 @@ pub struct BundledSkill {
 impl BundledSkill {
     /// Detect all skill definitions bundled with Warp for the local host.
     pub async fn detect() -> Self {
-        let Some(resources_dir) = warp_core::paths::bundled_resources_dir() else {
+        let Some(resources_dir) = torch_core::paths::bundled_resources_dir() else {
             return Self::default();
         };
         Self::detect_in_resources_dir(resources_dir).await
@@ -205,7 +205,7 @@ impl BundledSkill {
     ///
     /// Called directly by the remote-server daemon, whose resources live at
     /// the global install location rather than inside an app bundle (which
-    /// is what [`warp_core::paths::bundled_resources_dir`] resolves).
+    /// is what [`torch_core::paths::bundled_resources_dir`] resolves).
     pub(crate) async fn detect_in_resources_dir(resources_dir: PathBuf) -> Self {
         let (mut definitions, figma_definitions) = futures::join!(
             load_bundled_skill_definitions(&resources_dir),
@@ -513,24 +513,24 @@ pub(crate) fn build_bundled_skill_context(
         (
             "gui_settings_file_path".to_owned(),
             display_optional_path(
-                warp_core::paths::gui_config_local_dir()
+                torch_core::paths::gui_config_local_dir()
                     .map(|config_dir| config_dir.join("settings.toml")),
             ),
         ),
         (
             "tui_settings_file_path".to_owned(),
-            warp_core::paths::tui_config_local_dir()
+            torch_core::paths::tui_config_local_dir()
                 .join("settings.toml")
                 .display()
                 .to_string(),
         ),
         (
             "gui_mcp_config_file_path".to_owned(),
-            display_optional_path(warp_core::paths::gui_mcp_config_file_path()),
+            display_optional_path(torch_core::paths::gui_mcp_config_file_path()),
         ),
         (
             "tui_mcp_config_file_path".to_owned(),
-            warp_core::paths::tui_mcp_config_file_path()
+            torch_core::paths::tui_mcp_config_file_path()
                 .display()
                 .to_string(),
         ),

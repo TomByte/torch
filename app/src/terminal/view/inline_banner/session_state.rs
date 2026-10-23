@@ -1,5 +1,5 @@
 use settings::Setting;
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torchui::{Entity, ModelContext, SingletonEntity};
 
 use crate::settings::{AISettings, AISettingsChangedEvent};
 

@@ -1,6 +1,6 @@
 //! Permission checks for local control.
 use ::local_control::{ActionKind, ControlError, ErrorCode, PROTOCOL_VERSION};
-use warpui::{ModelContext, SingletonEntity};
+use torchui::{ModelContext, SingletonEntity};
 
 use crate::features::FeatureFlag;
 use crate::local_control::LocalControlBridge;

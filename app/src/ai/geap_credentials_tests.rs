@@ -3,8 +3,8 @@ use std::time::{Duration, SystemTime};
 
 use ai::api_keys::ApiKeyManager;
 use settings::{PrivatePreferences, PublicPreferences};
-use warpui::{AddSingletonModel, App};
-use warpui_extras::user_preferences;
+use torchui::{AddSingletonModel, App};
+use torchui_extras::user_preferences;
 
 use super::*;
 use crate::features::FeatureFlag;
@@ -220,7 +220,7 @@ fn initialize_app(app: &mut App, workspaces: Vec<Workspace>) {
         )
     });
     app.update(|ctx| {
-        warpui_extras::secure_storage::register_noop("test", ctx);
+        torchui_extras::secure_storage::register_noop("test", ctx);
         ctx.add_singleton_model(ApiKeyManager::new);
     });
 }

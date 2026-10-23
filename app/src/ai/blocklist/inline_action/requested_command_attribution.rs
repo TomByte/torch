@@ -2,7 +2,7 @@
 //! to known documents (e.g. Warp Drive objects).
 
 use markdown_parser::{FormattedTextLine, parse_markdown};
-use warpui::{AppContext, SingletonEntity};
+use torchui::{AppContext, SingletonEntity};
 
 use crate::ai::agent::AIAgentCitation;
 use crate::cloud_object::model::persistence::CloudModel;

@@ -9,11 +9,11 @@ use repo_metadata::{
     StandingQueryContent, StandingQueryResults, StandingQueryResultsDelta,
 };
 use virtual_fs::{Stub, VirtualFS};
-use warp_util::host_id::HostId;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warp_util::remote_path::RemotePath;
-use warp_util::standardized_path::StandardizedPath;
-use warpui::App;
+use torch_util::host_id::HostId;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torch_util::remote_path::RemotePath;
+use torch_util::standardized_path::StandardizedPath;
+use torchui::App;
 
 use super::{
     extract_skill_parent_directory, find_project_skill_files_in_tree, is_home_provider_path,
@@ -362,7 +362,7 @@ fn is_home_provider_path_true_for_known_providers() {
     let path = home_dir.join(".agents").join("skills");
     assert!(is_home_provider_path(&path));
 
-    if let Some(path) = warp_core::paths::warp_home_skills_dir() {
+    if let Some(path) = torch_core::paths::warp_home_skills_dir() {
         assert!(is_home_provider_path(&path));
     }
 
@@ -385,7 +385,7 @@ fn extract_skill_parent_directory_returns_home_dir_for_warp_home_skill() {
         eprintln!("Skipping test: home directory not available");
         return;
     };
-    let Some(warp_home_skills_dir) = warp_core::paths::warp_home_skills_dir() else {
+    let Some(warp_home_skills_dir) = torch_core::paths::warp_home_skills_dir() else {
         eprintln!("Skipping test: Warp home skills directory not available");
         return;
     };
@@ -464,7 +464,7 @@ fn find_skill_files_in_tree_finds_root_skills() {
             false,
         ));
         let skill1_dir = Entry::Directory(DirectoryEntry {
-            path: warp_util::standardized_path::StandardizedPath::try_from_local(
+            path: torch_util::standardized_path::StandardizedPath::try_from_local(
                 &repo.join(".agents/skills/root-skill-1"),
             )
             .unwrap(),
@@ -473,7 +473,7 @@ fn find_skill_files_in_tree_finds_root_skills() {
             loaded: true,
         });
         let warp_skills = Entry::Directory(DirectoryEntry {
-            path: warp_util::standardized_path::StandardizedPath::try_from_local(
+            path: torch_util::standardized_path::StandardizedPath::try_from_local(
                 &repo.join(".agents/skills"),
             )
             .unwrap(),
@@ -482,7 +482,7 @@ fn find_skill_files_in_tree_finds_root_skills() {
             loaded: true,
         });
         let warp_dir = Entry::Directory(DirectoryEntry {
-            path: warp_util::standardized_path::StandardizedPath::try_from_local(
+            path: torch_util::standardized_path::StandardizedPath::try_from_local(
                 &repo.join(".agents"),
             )
             .unwrap(),
@@ -496,7 +496,7 @@ fn find_skill_files_in_tree_finds_root_skills() {
             false,
         ));
         let skill2_dir = Entry::Directory(DirectoryEntry {
-            path: warp_util::standardized_path::StandardizedPath::try_from_local(
+            path: torch_util::standardized_path::StandardizedPath::try_from_local(
                 &repo.join(".claude/skills/root-skill-2"),
             )
             .unwrap(),
@@ -505,7 +505,7 @@ fn find_skill_files_in_tree_finds_root_skills() {
             loaded: true,
         });
         let claude_skills = Entry::Directory(DirectoryEntry {
-            path: warp_util::standardized_path::StandardizedPath::try_from_local(
+            path: torch_util::standardized_path::StandardizedPath::try_from_local(
                 &repo.join(".claude/skills"),
             )
             .unwrap(),
@@ -514,7 +514,7 @@ fn find_skill_files_in_tree_finds_root_skills() {
             loaded: true,
         });
         let claude_dir = Entry::Directory(DirectoryEntry {
-            path: warp_util::standardized_path::StandardizedPath::try_from_local(
+            path: torch_util::standardized_path::StandardizedPath::try_from_local(
                 &repo.join(".claude"),
             )
             .unwrap(),
@@ -524,7 +524,7 @@ fn find_skill_files_in_tree_finds_root_skills() {
         });
 
         let root = Entry::Directory(DirectoryEntry {
-            path: warp_util::standardized_path::StandardizedPath::try_from_local(&repo).unwrap(),
+            path: torch_util::standardized_path::StandardizedPath::try_from_local(&repo).unwrap(),
             children: vec![warp_dir, claude_dir],
             ignored: false,
             loaded: true,
@@ -535,7 +535,7 @@ fn find_skill_files_in_tree_finds_root_skills() {
             app.add_singleton_model(|_| DetectedRepositories::default());
             let repo_handle = watcher.update(&mut app, |w, ctx| {
                 w.add_directory(
-                    warp_util::standardized_path::StandardizedPath::from_local_canonicalized(&repo)
+                    torch_util::standardized_path::StandardizedPath::from_local_canonicalized(&repo)
                         .unwrap(),
                     ctx,
                 )
@@ -546,7 +546,7 @@ fn find_skill_files_in_tree_finds_root_skills() {
             let model_handle = app.add_singleton_model(RepoMetadataModel::new);
             model_handle.update(&mut app, |model, ctx| {
                 let key =
-                    warp_util::standardized_path::StandardizedPath::from_local_canonicalized(&repo)
+                    torch_util::standardized_path::StandardizedPath::from_local_canonicalized(&repo)
                         .unwrap();
                 model.insert_test_state(key.clone(), state, ctx);
                 model.insert_test_standing_results(
@@ -613,7 +613,7 @@ fn find_skill_files_in_tree_finds_subdirectory_skills() {
             false,
         ));
         let root_skill_dir = Entry::Directory(DirectoryEntry {
-            path: warp_util::standardized_path::StandardizedPath::try_from_local(
+            path: torch_util::standardized_path::StandardizedPath::try_from_local(
                 &repo.join(".agents/skills/root-skill"),
             )
             .unwrap(),
@@ -622,7 +622,7 @@ fn find_skill_files_in_tree_finds_subdirectory_skills() {
             loaded: true,
         });
         let root_warp_skills = Entry::Directory(DirectoryEntry {
-            path: warp_util::standardized_path::StandardizedPath::try_from_local(
+            path: torch_util::standardized_path::StandardizedPath::try_from_local(
                 &repo.join(".agents/skills"),
             )
             .unwrap(),
@@ -631,7 +631,7 @@ fn find_skill_files_in_tree_finds_subdirectory_skills() {
             loaded: true,
         });
         let root_warp = Entry::Directory(DirectoryEntry {
-            path: warp_util::standardized_path::StandardizedPath::try_from_local(
+            path: torch_util::standardized_path::StandardizedPath::try_from_local(
                 &repo.join(".agents"),
             )
             .unwrap(),
@@ -645,7 +645,7 @@ fn find_skill_files_in_tree_finds_subdirectory_skills() {
             false,
         ));
         let frontend_skill_dir = Entry::Directory(DirectoryEntry {
-            path: warp_util::standardized_path::StandardizedPath::try_from_local(
+            path: torch_util::standardized_path::StandardizedPath::try_from_local(
                 &repo.join("packages/frontend/.agents/skills/frontend-skill"),
             )
             .unwrap(),
@@ -654,7 +654,7 @@ fn find_skill_files_in_tree_finds_subdirectory_skills() {
             loaded: true,
         });
         let frontend_warp_skills = Entry::Directory(DirectoryEntry {
-            path: warp_util::standardized_path::StandardizedPath::try_from_local(
+            path: torch_util::standardized_path::StandardizedPath::try_from_local(
                 &repo.join("packages/frontend/.agents/skills"),
             )
             .unwrap(),
@@ -663,7 +663,7 @@ fn find_skill_files_in_tree_finds_subdirectory_skills() {
             loaded: true,
         });
         let frontend_warp = Entry::Directory(DirectoryEntry {
-            path: warp_util::standardized_path::StandardizedPath::try_from_local(
+            path: torch_util::standardized_path::StandardizedPath::try_from_local(
                 &repo.join("packages/frontend/.agents"),
             )
             .unwrap(),
@@ -672,7 +672,7 @@ fn find_skill_files_in_tree_finds_subdirectory_skills() {
             loaded: true,
         });
         let frontend = Entry::Directory(DirectoryEntry {
-            path: warp_util::standardized_path::StandardizedPath::try_from_local(
+            path: torch_util::standardized_path::StandardizedPath::try_from_local(
                 &repo.join("packages/frontend"),
             )
             .unwrap(),
@@ -681,7 +681,7 @@ fn find_skill_files_in_tree_finds_subdirectory_skills() {
             loaded: true,
         });
         let packages = Entry::Directory(DirectoryEntry {
-            path: warp_util::standardized_path::StandardizedPath::try_from_local(
+            path: torch_util::standardized_path::StandardizedPath::try_from_local(
                 &repo.join("packages"),
             )
             .unwrap(),
@@ -691,7 +691,7 @@ fn find_skill_files_in_tree_finds_subdirectory_skills() {
         });
 
         let root = Entry::Directory(DirectoryEntry {
-            path: warp_util::standardized_path::StandardizedPath::try_from_local(&repo).unwrap(),
+            path: torch_util::standardized_path::StandardizedPath::try_from_local(&repo).unwrap(),
             children: vec![root_warp, packages],
             ignored: false,
             loaded: true,
@@ -702,7 +702,7 @@ fn find_skill_files_in_tree_finds_subdirectory_skills() {
             app.add_singleton_model(|_| DetectedRepositories::default());
             let repo_handle = watcher.update(&mut app, |w, ctx| {
                 w.add_directory(
-                    warp_util::standardized_path::StandardizedPath::from_local_canonicalized(&repo)
+                    torch_util::standardized_path::StandardizedPath::from_local_canonicalized(&repo)
                         .unwrap(),
                     ctx,
                 )
@@ -713,7 +713,7 @@ fn find_skill_files_in_tree_finds_subdirectory_skills() {
             let model_handle = app.add_singleton_model(RepoMetadataModel::new);
             model_handle.update(&mut app, |model, ctx| {
                 let key =
-                    warp_util::standardized_path::StandardizedPath::from_local_canonicalized(&repo)
+                    torch_util::standardized_path::StandardizedPath::from_local_canonicalized(&repo)
                         .unwrap();
                 model.insert_test_state(key.clone(), state, ctx);
                 model.insert_test_standing_results(
@@ -942,14 +942,14 @@ fn find_skill_files_in_tree_empty_repo() {
         vfs.mkdir("repo/src");
 
         let src = Entry::Directory(DirectoryEntry {
-            path: warp_util::standardized_path::StandardizedPath::try_from_local(&repo.join("src"))
+            path: torch_util::standardized_path::StandardizedPath::try_from_local(&repo.join("src"))
                 .unwrap(),
             children: vec![],
             ignored: false,
             loaded: true,
         });
         let root = Entry::Directory(DirectoryEntry {
-            path: warp_util::standardized_path::StandardizedPath::try_from_local(&repo).unwrap(),
+            path: torch_util::standardized_path::StandardizedPath::try_from_local(&repo).unwrap(),
             children: vec![src],
             ignored: false,
             loaded: true,
@@ -960,7 +960,7 @@ fn find_skill_files_in_tree_empty_repo() {
             app.add_singleton_model(|_| DetectedRepositories::default());
             let repo_handle = watcher.update(&mut app, |w, ctx| {
                 w.add_directory(
-                    warp_util::standardized_path::StandardizedPath::from_local_canonicalized(&repo)
+                    torch_util::standardized_path::StandardizedPath::from_local_canonicalized(&repo)
                         .unwrap(),
                     ctx,
                 )
@@ -971,7 +971,7 @@ fn find_skill_files_in_tree_empty_repo() {
             let model_handle = app.add_singleton_model(RepoMetadataModel::new);
             model_handle.update(&mut app, |model, ctx| {
                 let key =
-                    warp_util::standardized_path::StandardizedPath::from_local_canonicalized(&repo)
+                    torch_util::standardized_path::StandardizedPath::from_local_canonicalized(&repo)
                         .unwrap();
                 model.insert_test_state(key, state, ctx);
             });

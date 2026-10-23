@@ -1,9 +1,9 @@
 use std::fmt::Display;
 
-use warpui::Element;
-use warpui::elements::MouseStateHandle;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::Element;
+use torchui::elements::MouseStateHandle;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
 
 use super::teams_page::TeamsPageAction;
 use crate::Appearance;

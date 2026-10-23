@@ -1,15 +1,15 @@
-use warp_core::features::FeatureFlag;
-use warp_core::settings::ToggleableSetting as _;
-use warp_errors::report_if_error;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::settings::ToggleableSetting as _;
+use torch_errors::report_if_error;
+use torchui::elements::{
     Container, Element, Flex, MouseStateHandle, ParentElement, Shrinkable, Text,
 };
-use warpui::fonts::Weight;
-use warpui::keymap::ContextPredicate;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::ui_components::switch::SwitchStateHandle;
-use warpui::{
+use torchui::fonts::Weight;
+use torchui::keymap::ContextPredicate;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::ui_components::switch::SwitchStateHandle;
+use torchui::{
     Action, AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle, id,
 };
 
@@ -194,8 +194,8 @@ impl SettingsWidget for WarpDriveHeaderWidget {
                 .with_style(UiComponentStyles {
                     font_size: Some(14.),
                     font_weight: Some(Weight::Semibold),
-                    border_radius: Some(warpui::elements::CornerRadius::with_all(
-                        warpui::elements::Radius::Pixels(4.),
+                    border_radius: Some(torchui::elements::CornerRadius::with_all(
+                        torchui::elements::Radius::Pixels(4.),
                     )),
                     padding: Some(Coords {
                         top: 8.,
@@ -216,7 +216,7 @@ impl SettingsWidget for WarpDriveHeaderWidget {
 
         Container::new(
             Flex::row()
-                .with_cross_axis_alignment(warpui::elements::CrossAxisAlignment::Center)
+                .with_cross_axis_alignment(torchui::elements::CrossAxisAlignment::Center)
                 .with_child(Shrinkable::new(1., message).finish())
                 .with_child(button)
                 .finish(),

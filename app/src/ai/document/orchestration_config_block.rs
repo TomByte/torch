@@ -5,19 +5,19 @@
 use ai::agent::action::RunAgentsExecutionMode;
 use ai::agent::orchestration_config::OrchestrationConfigStatus;
 use pathfinder_geometry::vector::vec2f;
-use warp_cli::agent::Harness;
-use warp_core::send_telemetry_from_ctx;
-use warp_graphql::queries::get_runners::RunnerSortBy;
-use warpui::elements::{
+use torch_cli::agent::Harness;
+use torch_core::send_telemetry_from_ctx;
+use torch_graphql::queries::get_runners::RunnerSortBy;
+use torchui::elements::{
     ChildAnchor, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Empty,
     Flex, Hoverable, MouseStateHandle, OffsetPositioning, ParentAnchor, ParentElement,
     ParentOffsetBounds, Radius, Stack, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::platform::Cursor;
-use warpui::ui_components::components::UiComponent;
-use warpui::ui_components::switch::SwitchStateHandle;
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::platform::Cursor;
+use torchui::ui_components::components::UiComponent;
+use torchui::ui_components::switch::SwitchStateHandle;
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 
@@ -835,7 +835,7 @@ impl View for OrchestrationConfigBlockView {
 
         let header_row = Flex::row()
             .with_cross_axis_alignment(CrossAxisAlignment::Center)
-            .with_child(warpui::elements::Expanded::new(1.0, header_label).finish())
+            .with_child(torchui::elements::Expanded::new(1.0, header_label).finish())
             .with_child(
                 ui_builder
                     .switch(self.toggle_switch_state.clone())
@@ -873,9 +873,9 @@ impl View for OrchestrationConfigBlockView {
 
             // "View details" link row
             let chevron_icon = if self.details_expanded {
-                warp_core::ui::Icon::ChevronDown
+                torch_core::ui::Icon::ChevronDown
             } else {
-                warp_core::ui::Icon::ChevronRight
+                torch_core::ui::Icon::ChevronRight
             };
             let disabled_text_color = blended_colors::text_disabled(theme, theme.background());
             let details_text = Text::new(
@@ -887,7 +887,7 @@ impl View for OrchestrationConfigBlockView {
             .finish();
             let chevron = ConstrainedBox::new(
                 chevron_icon
-                    .to_warpui_icon(warp_core::ui::theme::Fill::Solid(disabled_text_color))
+                    .to_warpui_icon(torch_core::ui::theme::Fill::Solid(disabled_text_color))
                     .finish(),
             )
             .with_width(14.)
@@ -916,7 +916,7 @@ impl View for OrchestrationConfigBlockView {
             if self.details_expanded {
                 // Cloud / Local mode toggle (full width)
                 let active_seg_bg =
-                    warp_core::ui::theme::color::internal_colors::accent_overlay_2(theme);
+                    torch_core::ui::theme::color::internal_colors::accent_overlay_2(theme);
                 column.add_child(
                     Container::new(oc::render_mode_toggle(
                         self.orchestration_edit_state
@@ -988,8 +988,8 @@ impl View for OrchestrationConfigBlockView {
         let card = Container::new(column.finish())
             .with_uniform_padding(12.)
             .with_corner_radius(CornerRadius::with_all(Radius::Pixels(4.)))
-            .with_background(warp_core::ui::theme::color::internal_colors::accent_overlay_1(theme))
-            .with_border(warpui::elements::Border::all(1.).with_border_fill(theme.accent()))
+            .with_background(torch_core::ui::theme::color::internal_colors::accent_overlay_1(theme))
+            .with_border(torchui::elements::Border::all(1.).with_border_fill(theme.accent()))
             .finish();
 
         let mut stack = Stack::new().with_child(card);

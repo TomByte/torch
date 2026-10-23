@@ -1,5 +1,5 @@
 use settings::Setting as _;
-use warpui::{AppContext, SingletonEntity};
+use torchui::{AppContext, SingletonEntity};
 
 use super::TerminalModel;
 use super::alt_screen_reporting::AltScreenReporting;

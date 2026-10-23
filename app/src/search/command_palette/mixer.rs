@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
 use strum_macros::IntoStaticStr;
-use warp_util::path::LineAndColumnArg;
-use warpui::keymap::BindingId;
-use warpui::{EntityId, WindowId};
+use torch_util::path::LineAndColumnArg;
+use torchui::keymap::BindingId;
+use torchui::{EntityId, WindowId};
 
 use crate::ai::agent::conversation::AIConversationId;
 use crate::drive::CloudObjectTypeAndId;

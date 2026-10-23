@@ -2,20 +2,20 @@ use std::collections::HashMap;
 
 use chrono::{DateTime, Utc};
 use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
-use warp_core::features::FeatureFlag;
-use warp_graphql::object_permissions::OwnerType;
-use warp_graphql::queries::api_keys::ApiKeyProperties as GqlApiKeyProperties;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_graphql::object_permissions::OwnerType;
+use torch_graphql::queries::api_keys::ApiKeyProperties as GqlApiKeyProperties;
+use torchui::elements::{
     Align, Border, ChildView, ConstrainedBox, Container, CrossAxisAlignment, DragBarSide, Element,
     Empty, Expanded, Flex, FormattedTextElement, HighlightedHyperlink, MainAxisSize,
     MouseStateHandle, Padding, ParentElement, Resizable, ResizableStateHandle, Shrinkable, Text,
     resizable_state_handle,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::text_layout::ClipConfig;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
+use torchui::fonts::{Properties, Weight};
+use torchui::text_layout::ClipConfig;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
 
 use super::SettingsSection;
 use super::platform::{
@@ -209,7 +209,7 @@ impl PlatformPageView {
                         right: 24.,
                     }),
                     font_size: Some(16.),
-                    font_weight: Some(warpui::fonts::Weight::Bold),
+                    font_weight: Some(torchui::fonts::Weight::Bold),
                     ..Default::default()
                 })
                 .with_body_style(UiComponentStyles {

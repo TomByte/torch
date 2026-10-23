@@ -4,9 +4,9 @@ use std::sync::Arc;
 use chrono::{DateTime, Local, TimeZone as _};
 use futures::Future;
 use serde::{Deserialize, Serialize};
-use warp_core::command::ExitCode;
-use warp_errors::report_error;
-use warpui::{AppContext, Entity, ModelContext, SingletonEntity};
+use torch_core::command::ExitCode;
+use torch_errors::report_error;
+use torchui::{AppContext, Entity, ModelContext, SingletonEntity};
 
 use super::model::block::{AgentInteractionMetadata, Block, SerializedAIMetadata, SerializedBlock};
 use super::shell::ShellType;

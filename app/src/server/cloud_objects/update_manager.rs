@@ -13,14 +13,14 @@ use futures::stream::AbortHandle;
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use regex::Regex;
-use warp_core::features::FeatureFlag;
-use warp_errors::report_error;
-use warp_graphql::mcp_gallery_template::MCPGalleryTemplate;
-use warp_graphql::object_permissions::AccessLevel;
-use warp_graphql::scalars::time::ServerTimestamp;
-use warp_util::sync::Condition;
-use warpui::r#async::{FutureId, Timer};
-use warpui::{
+use torch_core::features::FeatureFlag;
+use torch_errors::report_error;
+use torch_graphql::mcp_gallery_template::MCPGalleryTemplate;
+use torch_graphql::object_permissions::AccessLevel;
+use torch_graphql::scalars::time::ServerTimestamp;
+use torch_util::sync::Condition;
+use torchui::r#async::{FutureId, Timer};
+use torchui::{
     AppContext, Entity, ModelContext, ModelHandle, RequestState, RetryOption, SingletonEntity,
     duration_with_jitter,
 };
@@ -2711,8 +2711,8 @@ impl UpdateManager {
         ctx: &mut ModelContext<Self>,
     ) where
         P: 'static + FnMut(Arc<dyn ObjectClient>) -> S,
-        S: warpui::r#async::Spawnable + Future<Output = anyhow::Result<R>>,
-        <S as Future>::Output: warpui::r#async::SpawnableOutput,
+        S: torchui::r#async::Spawnable + Future<Output = anyhow::Result<R>>,
+        <S as Future>::Output: torchui::r#async::SpawnableOutput,
         F: 'static + FnMut(R, &mut AppContext) -> Option<ServerPermissions>,
     {
         let object_client = self.object_client.clone();
@@ -2773,8 +2773,8 @@ impl UpdateManager {
         mut on_success: impl FnMut(&mut Self, M, &mut ModelContext<Self>) + 'static,
     ) where
         P: 'static + FnMut(Arc<dyn ObjectClient>) -> S,
-        S: warpui::r#async::Spawnable + Future<Output = anyhow::Result<M>>,
-        <S as Future>::Output: warpui::r#async::SpawnableOutput,
+        S: torchui::r#async::Spawnable + Future<Output = anyhow::Result<M>>,
+        <S as Future>::Output: torchui::r#async::SpawnableOutput,
     {
         let cloud_model = CloudModel::handle(ctx);
         let uid = server_id.uid();

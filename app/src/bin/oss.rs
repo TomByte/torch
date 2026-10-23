@@ -3,12 +3,12 @@
 #![cfg_attr(feature = "release_bundle", windows_subsystem = "windows")]
 
 use anyhow::Result;
-use warp_core::AppId;
-use warp_core::channel::{Channel, ChannelConfig, ChannelState, OzConfig, WarpServerConfig};
+use torch_core::AppId;
+use torch_core::channel::{Channel, ChannelConfig, ChannelState, OzConfig, WarpServerConfig};
 
-// Simple wrapper around warp::run() for Warp OSS builds.
+// Simple wrapper around torch::run() for Warp OSS builds.
 fn main() -> Result<()> {
-    if warp::local_hooks::run_if_requested() {
+    if torch::local_hooks::run_if_requested() {
         return Ok(());
     }
     let state = ChannelState::new(
@@ -24,7 +24,7 @@ fn main() -> Result<()> {
     );
     ChannelState::set(state);
 
-    warp::run()
+    torch::run()
 }
 
 // If we're not using an external plist, embed the following as the Info.plist.

@@ -3,18 +3,18 @@ use std::fmt::Debug;
 use pathfinder_geometry::rect::RectF;
 use pathfinder_geometry::vector::{Vector2F, vec2f};
 use sharing::SharedPaneContent;
-use warp_core::features::FeatureFlag;
-use warp_core::settings::Setting;
-use warp_errors::report_error;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::settings::Setting;
+use torch_errors::report_error;
+use torchui::elements::{
     AcceptedByDropTarget, Align, Border, ChildAnchor, Clipped, ConstrainedBox, Container,
     CornerRadius, CrossAxisAlignment, Dismiss, Draggable, DraggableState, Empty, Flex, Hoverable,
     Icon, MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning, ParentAnchor,
     ParentElement, ParentOffsetBounds, PositionedElementAnchor, PositionedElementOffsetBounds,
     Radius, SavePosition, Shrinkable, Stack, Text,
 };
-use warpui::presenter::ChildView;
-use warpui::{
+use torchui::presenter::ChildView;
+use torchui::{
     AppContext, Element, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View,
     ViewContext, ViewHandle,
 };
@@ -795,7 +795,7 @@ impl<P: BackingView> View for PaneHeader<P> {
         let element = match header_content {
             HeaderContent::Standard(mut header) => {
                 // On mobile devices, always show icons since hover effects don't work with touch
-                if warpui::platform::is_mobile_device() {
+                if torchui::platform::is_mobile_device() {
                     header.options.always_show_icons = true;
                 }
                 self.render_standard_header(header, app)

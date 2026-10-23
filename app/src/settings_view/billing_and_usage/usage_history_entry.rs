@@ -1,13 +1,13 @@
 use chrono::Local;
-use warp_core::ui::appearance::Appearance;
-use warp_errors::report_error;
-use warp_graphql::queries::get_conversation_usage::ConversationUsage;
-use warpui::elements::{
+use torch_core::ui::appearance::Appearance;
+use torch_errors::report_error;
+use torch_graphql::queries::get_conversation_usage::ConversationUsage;
+use torchui::elements::{
     Border, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Empty, Flex, Hoverable,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, Shrinkable, Text,
 };
-use warpui::platform::Cursor;
-use warpui::{AppContext, Element, View};
+use torchui::platform::Cursor;
+use torchui::{AppContext, Element, View};
 
 use crate::ai::blocklist::usage::conversation_usage_view::{
     ConversationUsageInfo, ConversationUsageView, DisplayMode,

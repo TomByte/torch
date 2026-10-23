@@ -7,8 +7,8 @@ use futures::Future;
 use futures::future::join_all;
 use futures_lite::StreamExt;
 use itertools::Itertools;
-use warp_core::command::ExitCode;
-use warpui::{App, ModelHandle};
+use torch_core::command::ExitCode;
+use torchui::{App, ModelHandle};
 
 use super::{HistoryEntry, HistoryEvent, PersistedCommand, ShellHost};
 use crate::ai::agent::conversation::AIConversationId;

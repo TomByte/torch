@@ -8,11 +8,11 @@ pub use history::{
     History, HistoryEntry, HistoryEvent, LinkedWorkflowData, ShellHost, UpArrowHistoryConfig,
 };
 pub use view::{Event, TerminalView};
-pub use warp_terminal::shell::{self, ShellLaunchData};
-pub use warp_terminal::{CellSizeAndWindowPadding, ClipboardType, SizeInfo};
-use warpui::geometry::vector::Vector2F;
-use warpui::units::Lines;
-use warpui::{AppContext, SingletonEntity, WindowId};
+pub use torch_terminal::shell::{self, ShellLaunchData};
+pub use torch_terminal::{CellSizeAndWindowPadding, ClipboardType, SizeInfo};
+use torchui::geometry::vector::Vector2F;
+use torchui::units::Lines;
+use torchui::{AppContext, SingletonEntity, WindowId};
 mod block_list_settings;
 
 mod alias;

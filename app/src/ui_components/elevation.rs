@@ -2,9 +2,9 @@
 
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::ColorScheme;
-use warpui::elements::DropShadow;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::ColorScheme;
+use torchui::elements::DropShadow;
 
 /// Room around a shadow's shape for its blur to fade out, as a multiple of the blur. The
 /// renderer cuts a shadow off at its shape grown by this room, so a smaller one shows a hard edge.

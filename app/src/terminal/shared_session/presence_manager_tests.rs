@@ -5,8 +5,8 @@ use itertools::Itertools;
 use session_sharing_protocol::common::{
     ParticipantId, ParticipantInfo, ParticipantList, ProfileData, Role, Selection, Sharer, Viewer,
 };
-use warp_core::command::ExitCode;
-use warpui::App;
+use torch_core::command::ExitCode;
+use torchui::App;
 
 use crate::auth::UserUid;
 use crate::terminal::model::ansi::{

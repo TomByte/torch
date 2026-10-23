@@ -5,7 +5,7 @@ use std::sync::Arc;
 use chrono::Utc;
 #[cfg(feature = "local_fs")]
 use repo_metadata::DirectoryWatcher;
-use warpui_core::App;
+use torchui_core::App;
 
 use super::{
     BuildSource, CodebaseIndexFinishedStatus, CodebaseIndexManager, CodebaseIndexManagerConfig,

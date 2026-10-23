@@ -8,9 +8,9 @@ use std::sync::Arc;
 
 use futures_util::future::Either;
 use url::Url;
-use warp_util::path::{CleanPathResult, LineAndColumnArg};
-use warpui::r#async::SpawnedFutureHandle;
-use warpui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity, WindowId};
+use torch_util::path::{CleanPathResult, LineAndColumnArg};
+use torchui::r#async::SpawnedFutureHandle;
+use torchui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity, WindowId};
 
 use super::file::is_markdown_file;
 use crate::drive::OpenWarpDriveObjectArgs;

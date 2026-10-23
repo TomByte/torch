@@ -1,11 +1,11 @@
 use pathfinder_color::ColorU;
-use warpui_core::elements::{
+use torchui_core::elements::{
     Align, Border, ConstrainedBox, Container, CornerRadius, Hoverable, Icon, ListIndentLevel,
     MouseStateHandle, Radius, Rect,
 };
-use warpui_core::geometry::vector::vec2f;
-use warpui_core::platform::Cursor;
-use warpui_core::{AppContext, Element, SizeConstraint, WeakViewHandle};
+use torchui_core::geometry::vector::vec2f;
+use torchui_core::platform::Cursor;
+use torchui_core::{AppContext, Element, SizeConstraint, WeakViewHandle};
 
 use super::paint::RenderContext;
 use super::placeholder::{self, BlockPlaceholder};
@@ -106,8 +106,8 @@ impl RenderableBlock for RenderableTaskList {
     fn layout(
         &mut self,
         model: &RenderState,
-        ctx: &mut warpui_core::LayoutContext,
-        app: &warpui_core::AppContext,
+        ctx: &mut torchui_core::LayoutContext,
+        app: &torchui_core::AppContext,
     ) {
         self.task_list_icon.layout(
             SizeConstraint::strict(vec2f(self.icon_size, self.icon_size)),
@@ -143,7 +143,7 @@ impl RenderableBlock for RenderableTaskList {
         &mut self,
         model: &RenderState,
         ctx: &mut RenderContext,
-        app: &warpui_core::AppContext,
+        app: &torchui_core::AppContext,
     ) {
         let content = model.content();
         let task_list = extract_block!(self.viewport_item, content, (block, BlockItem::TaskList{ paragraph: inner, ..}) => block.task_list(inner));
@@ -176,8 +176,8 @@ impl RenderableBlock for RenderableTaskList {
     fn dispatch_event(
         &mut self,
         _model: &crate::render::model::RenderState,
-        event: &warpui_core::event::DispatchedEvent,
-        ctx: &mut warpui_core::EventContext,
+        event: &torchui_core::event::DispatchedEvent,
+        ctx: &mut torchui_core::EventContext,
         app: &AppContext,
     ) -> bool {
         self.task_list_icon.dispatch_event(event, ctx, app)

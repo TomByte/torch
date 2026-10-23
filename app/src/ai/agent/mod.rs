@@ -38,9 +38,9 @@ use session_sharing_protocol::common::ParticipantId;
 use task::TaskId;
 pub use telemetry::AIIdentifiers;
 use uuid::Uuid;
-use warp_core::channel::ChannelState;
-use warp_core::features::FeatureFlag;
-use warp_editor::render::model::LineCount;
+use torch_core::channel::ChannelState;
+use torch_core::features::FeatureFlag;
+use torch_editor::render::model::LineCount;
 use warp_multi_agent_api::{AgentEvent, AgentType, diff_hunk as diff_hunk_api};
 
 pub use self::api::{MaybeAIAgentOutputMessage, MessageToAIAgentOutputMessageError};

@@ -4,7 +4,7 @@ use crate::features::FeatureFlag;
 #[cfg(feature = "local_only")]
 #[test]
 fn terminal_only_editor_surfaces_are_unavailable() {
-    warpui::App::test((), |mut app| async move {
+    torchui::App::test((), |mut app| async move {
         app.update(|ctx| {
             for destination in [
                 SurfaceDestination::CodeReview,
@@ -23,7 +23,7 @@ fn terminal_only_editor_surfaces_are_unavailable() {
 #[test]
 fn agent_management_surface_reports_feature_flag_unavailable() {
     let flag_guard = FeatureFlag::AgentManagementView.override_enabled(false);
-    warpui::App::test((), |mut app| async move {
+    torchui::App::test((), |mut app| async move {
         assert_eq!(
             app.update(|ctx| {
                 surface_unavailable_reason(SurfaceDestination::AgentManagement, ctx)

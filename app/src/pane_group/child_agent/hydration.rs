@@ -1,7 +1,7 @@
 use session_sharing_protocol::common::SessionId;
 use uuid::Uuid;
-use warp_errors::report_error;
-use warpui::{SingletonEntity, ViewContext};
+use torch_errors::report_error;
+use torchui::{SingletonEntity, ViewContext};
 
 use super::materialization::{ChildPaneMaterialization, decide_child_pane_materialization};
 use crate::ai::agent::api::ServerConversationToken;

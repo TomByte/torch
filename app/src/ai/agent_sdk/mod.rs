@@ -18,38 +18,38 @@ use driver::agent_setup::configured_skills::{self, merge_skill_dirs};
 pub(crate) use driver::harness::{ClaudeHarness, task_env_vars, validate_cli_installed};
 use telemetry::CliTelemetryEvent;
 use tracing::Instrument as _;
-use warp_cli::agent::{
+use torch_cli::agent::{
     AgentCommand, AgentProfileCommand, Harness, HarnessTransport, OutputFormat, Prompt,
     RunAgentArgs,
 };
-use warp_cli::api_key::ApiKeyCommand;
-use warp_cli::artifact::ArtifactCommand;
-use warp_cli::environment::{EnvironmentCommand, ImageCommand};
-use warp_cli::federate::FederateCommand;
-use warp_cli::harness_support::{HarnessSupportCommand, ReportArtifactCommand, TaskStatus};
-use warp_cli::integration::IntegrationCommand;
-use warp_cli::mcp::MCPCommand;
-use warp_cli::memory_store::{MemoryCommand, MemoryStoreCommand};
-use warp_cli::model::ModelCommand;
-use warp_cli::provider::ProviderCommand;
-use warp_cli::runner::RunnerCommand;
-use warp_cli::schedule::ScheduleSubcommand;
-use warp_cli::secret::SecretCommand;
-use warp_cli::share::ShareRequest;
-use warp_cli::skill::SkillSpec;
-use warp_cli::task::{MessageCommand, TaskCommand};
-use warp_cli::{CliCommand, GlobalOptions, OZ_HARNESS_ENV};
-use warp_core::features::FeatureFlag;
-use warp_errors::report_error;
-use warp_graphql::object_permissions::OwnerType;
-use warp_graphql::queries::execution_config::ExecutionConfiguration;
-use warp_isolation_platform::IsolationPlatformError;
+use torch_cli::api_key::ApiKeyCommand;
+use torch_cli::artifact::ArtifactCommand;
+use torch_cli::environment::{EnvironmentCommand, ImageCommand};
+use torch_cli::federate::FederateCommand;
+use torch_cli::harness_support::{HarnessSupportCommand, ReportArtifactCommand, TaskStatus};
+use torch_cli::integration::IntegrationCommand;
+use torch_cli::mcp::MCPCommand;
+use torch_cli::memory_store::{MemoryCommand, MemoryStoreCommand};
+use torch_cli::model::ModelCommand;
+use torch_cli::provider::ProviderCommand;
+use torch_cli::runner::RunnerCommand;
+use torch_cli::schedule::ScheduleSubcommand;
+use torch_cli::secret::SecretCommand;
+use torch_cli::share::ShareRequest;
+use torch_cli::skill::SkillSpec;
+use torch_cli::task::{MessageCommand, TaskCommand};
+use torch_cli::{CliCommand, GlobalOptions, OZ_HARNESS_ENV};
+use torch_core::features::FeatureFlag;
+use torch_errors::report_error;
+use torch_graphql::object_permissions::OwnerType;
+use torch_graphql::queries::execution_config::ExecutionConfiguration;
+use torch_isolation_platform::IsolationPlatformError;
 #[cfg(not(target_family = "wasm"))]
-use warp_logging::log_file_path;
-use warp_managed_secrets::{ManagedSecretValue, convert_task_secrets};
-use warp_server_client::iap::{IapManager, IapManagerEvent};
-use warpui::platform::TerminationMode;
-use warpui::{AppContext, Entity, ModelSpawner, SingletonEntity};
+use torch_logging::log_file_path;
+use torch_managed_secrets::{ManagedSecretValue, convert_task_secrets};
+use torch_server_client::iap::{IapManager, IapManagerEvent};
+use torchui::platform::TerminationMode;
+use torchui::{AppContext, Entity, ModelSpawner, SingletonEntity};
 
 use crate::ai::agent::api::ServerConversationToken;
 use crate::ai::agent::api::convert_conversation::{
@@ -196,7 +196,7 @@ async fn configure_bedrock_oidc_credentials<E: Entity>(
 }
 
 pub(crate) fn run_environment_checkout(
-    args: &warp_cli::environment_checkout::EnvironmentCheckoutArgs,
+    args: &torch_cli::environment_checkout::EnvironmentCheckoutArgs,
 ) -> anyhow::Result<()> {
     #[cfg(feature = "local_fs")]
     {
@@ -847,7 +847,7 @@ fn run_task(
                 ));
             }
             match conv_cmd {
-                warp_cli::task::ConversationCommand::Get(args) => {
+                torch_cli::task::ConversationCommand::Get(args) => {
                     ambient::get_conversation(ctx, args.conversation_id)
                 }
             }
@@ -866,11 +866,11 @@ struct ExecutionTaskData {
     attachments: anyhow::Result<Vec<TaskAttachment>>,
 }
 
-impl warpui::Entity for AgentDriverRunner {
+impl torchui::Entity for AgentDriverRunner {
     type Event = ();
 }
 
-impl warpui::SingletonEntity for AgentDriverRunner {}
+impl torchui::SingletonEntity for AgentDriverRunner {}
 
 fn resolve_agent_driver_team_scope(
     args: &RunAgentArgs,
@@ -1156,7 +1156,7 @@ impl AgentDriverRunner {
             std::env::var_os(FACTORY_ID_ENV),
         );
         let (workload_token, no_isolation) =
-            match warp_isolation_platform::issue_workload_token(Some(Duration::from_mins(5))).await
+            match torch_isolation_platform::issue_workload_token(Some(Duration::from_mins(5))).await
             {
                 Ok(token) => (token.token, false),
                 Err(IsolationPlatformError::NoIsolationPlatformDetected) => (String::new(), true),
@@ -1177,7 +1177,7 @@ impl AgentDriverRunner {
             },
             retry::is_transient_graphql_or_http_error,
             |delay| async move {
-                warpui::r#async::Timer::after(delay).await;
+                torchui::r#async::Timer::after(delay).await;
             },
             |attempts_made| match attempts_made {
                 0 => Some(Duration::from_millis(250)),
@@ -1218,7 +1218,7 @@ impl AgentDriverRunner {
                 async move {
                     driver::git_credentials::ensure_workload_token_available()?;
 
-                    let workload_token = warp_isolation_platform::issue_workload_token(Some(
+                    let workload_token = torch_isolation_platform::issue_workload_token(Some(
                         std::time::Duration::from_secs(5 * 60),
                     ))
                     .await
@@ -1238,7 +1238,7 @@ impl AgentDriverRunner {
             },
             driver::git_credentials::is_retryable,
             |delay| async move {
-                warpui::r#async::Timer::after(delay).await;
+                torchui::r#async::Timer::after(delay).await;
             },
             |attempts_made| {
                 driver::git_credentials::GIT_CREDENTIALS_BOOTSTRAP_BACKOFF
@@ -1259,7 +1259,7 @@ impl AgentDriverRunner {
         // server fetch below — other forges (GitLab, Azure DevOps) get their
         // credentials exclusively from the server.
         let git_credentials_configured_with_gh =
-            warp_isolation_platform::detect().is_none() && configure_git_credentials_with_github;
+            torch_isolation_platform::detect().is_none() && configure_git_credentials_with_github;
         if git_credentials_configured_with_gh {
             foreground
                 .spawn(|_, _| {
@@ -1925,11 +1925,11 @@ impl AgentDriverRunner {
             Err(err) => return Err(AgentDriverError::TaskMetadataFetchFailed(err)),
         };
         match experimental.as_ref() {
-            Some(values) => warp_core::safe_info!(
+            Some(values) => torch_core::safe_info!(
                 safe: ("factory_experimental_config state=read_uninterpreted key_count={}", values.len()),
                 full: ("factory_experimental_config state=read_uninterpreted key_count={}", values.len())
             ),
-            None => warp_core::safe_info!(
+            None => torch_core::safe_info!(
                 safe: ("factory_experimental_config state=absent key_count=0"),
                 full: ("factory_experimental_config state=absent key_count=0")
             ),
@@ -2224,7 +2224,7 @@ fn launch_command(
         return dispatch_command(ctx, command, global_options);
     }
 
-    let cli_name = warp_cli::binary_name().unwrap_or_else(|| "warp".to_string());
+    let cli_name = torch_cli::binary_name().unwrap_or_else(|| "warp".to_string());
 
     let auth_state = AuthStateProvider::handle(ctx).as_ref(ctx).get();
     let Some(authentication) =
@@ -2288,7 +2288,7 @@ fn authenticate_and_dispatch(
     authentication: CommandAuthentication,
     parent_span: tracing::Span,
 ) {
-    let cli_name = warp_cli::binary_name().unwrap_or_else(|| "warp".to_string());
+    let cli_name = torch_cli::binary_name().unwrap_or_else(|| "warp".to_string());
 
     // Subscribe to auth events and wait for validation before running the command.
     let mut dispatched = false;

@@ -5,9 +5,9 @@ use ai::skills::SkillProvider;
 use chrono::Local;
 use pathfinder_color::ColorU;
 use smol_str::SmolStr;
-use warp_editor::render::model::LineCount;
-use warp_util::path::EscapeChar;
-use warpui::App;
+use torch_editor::render::model::LineCount;
+use torch_util::path::EscapeChar;
+use torchui::App;
 
 use super::{
     CLIAgent, UBER_TEAM_UID, build_diff_hunk_prompt, build_review_prompt,
@@ -623,7 +623,7 @@ fn test_warp_tui_matches_binaries_and_launchers() {
     assert!(CLIAgent::WarpTui.matches_command("warp-preview", None));
     assert!(CLIAgent::WarpTui.matches_command("warp-dev", None));
     assert!(CLIAgent::WarpTui.matches_command("warp-tui", None));
-    assert!(CLIAgent::WarpTui.matches_command("warp-tui-oss", None));
+    assert!(CLIAgent::WarpTui.matches_command("torch-tui", None));
     // The dev launcher script.
     assert!(CLIAgent::WarpTui.matches_command("./script/run-tui", None));
     assert!(CLIAgent::WarpTui.matches_command("script/run-tui", None));
@@ -659,7 +659,7 @@ fn test_warp_tui_does_not_match_other_commands() {
     assert!(!CLIAgent::WarpTui.matches_command("mywarp-tui", None));
     assert!(!CLIAgent::WarpTui.matches_command("", None));
     // `cargo run` is a known non-match (the first token is `cargo`).
-    assert!(!CLIAgent::WarpTui.matches_command("cargo run -p warp_tui", None));
+    assert!(!CLIAgent::WarpTui.matches_command("cargo run -p torch_tui", None));
 }
 
 #[test]
@@ -673,7 +673,7 @@ fn test_warp_tui_variant_properties() {
             "warp-preview",
             "warp-dev",
             "warp-tui",
-            "warp-tui-oss",
+            "torch-tui",
             "run-tui",
         ]
     );

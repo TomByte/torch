@@ -2,7 +2,7 @@
 
 use std::path::PathBuf;
 
-use warpui::{AppContext, SingletonEntity, ViewContext, WindowId};
+use torchui::{AppContext, SingletonEntity, ViewContext, WindowId};
 
 use super::Workspace;
 use crate::terminal::ShellLaunchData;

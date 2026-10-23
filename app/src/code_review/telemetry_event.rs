@@ -5,7 +5,7 @@ use serde::{Serialize, Serializer};
 use serde_json::json;
 use serde_with::SerializeDisplay;
 use strum_macros::{EnumDiscriminants, EnumIter};
-use warp_core::telemetry::{EnablementState, TelemetryEvent, TelemetryEventDesc};
+use torch_core::telemetry::{EnablementState, TelemetryEvent, TelemetryEventDesc};
 
 use crate::code_review::diff_state::{BackendOrigin, DiffMode, DiffOperation};
 use crate::features::FeatureFlag;
@@ -537,7 +537,7 @@ impl TelemetryEvent for CodeReviewTelemetryEvent {
     }
 
     fn event_descs() -> impl Iterator<Item = Box<dyn TelemetryEventDesc>> {
-        warp_core::telemetry::enum_events::<Self>()
+        torch_core::telemetry::enum_events::<Self>()
     }
 }
 
@@ -629,4 +629,4 @@ impl TelemetryEventDesc for CodeReviewTelemetryEventDiscriminants {
     }
 }
 
-warp_core::register_telemetry_event!(CodeReviewTelemetryEvent);
+torch_core::register_telemetry_event!(CodeReviewTelemetryEvent);

@@ -1,4 +1,4 @@
-use warp_core::channel::ChannelState;
+use torch_core::channel::ChannelState;
 
 use super::web_logout_url;
 #[cfg(feature = "tui")]

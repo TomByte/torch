@@ -20,8 +20,8 @@ use serde::{Deserialize, Serialize};
 use tempfile::NamedTempFile;
 use tokio::sync::Mutex as AsyncMutex;
 use uuid::Uuid;
-use warpui::ModelSpawner;
-use warpui::r#async::SpawnedFutureHandle;
+use torchui::ModelSpawner;
+use torchui::r#async::SpawnedFutureHandle;
 
 use crate::ai::agent_events::{
     AgentEventConsumer, AgentEventConsumerControlFlow, AgentEventDriverConfig,

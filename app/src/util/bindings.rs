@@ -8,14 +8,14 @@ use fuzzy_match::match_indices_case_insensitive;
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use regex::Regex;
-use warp_core::channel::ChannelState;
-use warpui::actions::StandardAction;
-use warpui::keymap::{
+use torch_core::channel::ChannelState;
+use torchui::actions::StandardAction;
+use torchui::keymap::{
     BindingDescription, BindingId, BindingLens, CustomTag, DescriptionContext, EditableBindingLens,
     IsBindingValid, Keystroke, Trigger,
 };
-use warpui::platform::OperatingSystem;
-use warpui::{Action, AppContext, SingletonEntity};
+use torchui::platform::OperatingSystem;
+use torchui::{Action, AppContext, SingletonEntity};
 
 use crate::keyboard::{UserDefinedKeybinding, remove_custom_keybinding, write_custom_keybinding};
 use crate::settings_view::keybindings::{KeybindingChangedEvent, KeybindingChangedNotifier};
@@ -808,7 +808,7 @@ fn materialize_description(desc: &BindingDescription, ctx: &AppContext) -> Bindi
 
 /// Possible groups a Binding can be part of. The string representation (produced in
 /// [`BindingGroup::as_str`]) is used as the group identifier within
-/// [`warpui::keymap::FixedBinding`] or [`EditableBinding`].
+/// [`torchui::keymap::FixedBinding`] or [`EditableBinding`].
 #[derive(Copy, Clone, Debug, Sequence)]
 pub enum BindingGroup {
     Settings,
@@ -868,8 +868,8 @@ impl BindingGroup {
 /// framework and we can't easily produce the shift-modified version of the key ourselves. In this case the recommended
 /// solution is to to create separate [`Keystroke`]s for the Mac and non-Mac cases. For example:
 /// ```
-/// use warpui::keymap::Keystroke;
-/// use warpui::platform::OperatingSystem;
+/// use torchui::keymap::Keystroke;
+/// use torchui::platform::OperatingSystem;
 /// let keystroke = if OperatingSystem::get().is_mac() {
 ///    Keystroke::parse("cmd-[")
 /// } else {

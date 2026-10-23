@@ -6,18 +6,18 @@ use std::path::PathBuf;
 use std::sync::mpsc::SyncSender;
 
 #[cfg(not(target_family = "wasm"))]
-use warp_cli::agent::Harness;
+use torch_cli::agent::Harness;
 #[cfg(any(feature = "local_tty", not(target_family = "wasm")))]
-use warp_errors::report_error;
+use torch_errors::report_error;
 #[cfg(feature = "local_tty")]
-use warpui::ModelHandle;
-use warpui::ViewContext;
+use torchui::ModelHandle;
+use torchui::ViewContext;
 #[cfg(not(target_family = "wasm"))]
-use warpui::r#async::FutureExt;
+use torchui::r#async::FutureExt;
 #[cfg(feature = "local_tty")]
-use warpui::geometry::vector::Vector2F;
+use torchui::geometry::vector::Vector2F;
 #[cfg(not(target_family = "wasm"))]
-use warpui::{SingletonEntity, View, ViewHandle};
+use torchui::{SingletonEntity, View, ViewHandle};
 
 use super::TerminalView;
 #[cfg(not(target_family = "wasm"))]

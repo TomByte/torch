@@ -5,21 +5,21 @@ use instant::Instant;
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use uuid::Uuid;
-use warp_core::ui::builder::UiBuilder;
-use warp_core::ui::theme::color::internal_colors;
-use warpui::accessibility::{AccessibilityContent, ActionAccessibilityContent, WarpA11yRole};
-use warpui::r#async::{SpawnedFutureHandle, Timer};
-use warpui::elements::{
+use torch_core::ui::builder::UiBuilder;
+use torch_core::ui::theme::color::internal_colors;
+use torchui::accessibility::{AccessibilityContent, ActionAccessibilityContent, WarpA11yRole};
+use torchui::r#async::{SpawnedFutureHandle, Timer};
+use torchui::elements::{
     Border, ChildAnchor, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     DispatchEventResult, EventHandler, Flex, Hoverable, Icon, MainAxisAlignment, MainAxisSize,
     MouseStateHandle, OffsetPositioning, ParentElement, PositionedElementAnchor,
     PositionedElementOffsetBounds, Radius, SavePosition, Shrinkable, Stack,
 };
-use warpui::fonts::Weight;
-use warpui::keymap::Keystroke;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::fonts::Weight;
+use torchui::keymap::Keystroke;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{
     Action, AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };
@@ -610,14 +610,14 @@ impl<A: Action + Clone> DismissibleToast<A> {
 
         let is_clickable = self.is_clickable();
         // On mobile devices, always show close button since hover effects don't work with touch
-        let is_mobile = warpui::platform::is_mobile_device();
+        let is_mobile = torchui::platform::is_mobile_device();
 
         Hoverable::new(self.close_button_hover_state.clone(), move |mouse_state| {
             let toast_container = Container::new(row.finish())
                 .with_vertical_padding(VERTICAL_PADDING)
                 .with_horizontal_padding(HORIZONTAL_PADDING)
                 .with_background(self.flavor.bg_color(appearance))
-                .with_corner_radius(warpui::elements::CornerRadius::with_all(Radius::Pixels(
+                .with_corner_radius(torchui::elements::CornerRadius::with_all(Radius::Pixels(
                     TOAST_CORNER_RADIUS,
                 )))
                 .with_border(Border::all(1.).with_border_fill(self.flavor.border_color(appearance)))

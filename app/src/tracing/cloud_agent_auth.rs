@@ -31,9 +31,9 @@ use http::header::{AUTHORIZATION, HeaderValue};
 use instant::Instant;
 use opentelemetry_http::{Bytes, HttpClient, HttpError, Request, Response};
 use serde::{Deserialize, Serialize};
-use warp_managed_secrets::client::{IdentityTokenOptions, TaskIdentityToken};
-use warpui::r#async::{FutureExt as _, Timer};
-use warpui::{AppContext, Entity, ModelContext, SingletonEntity};
+use torch_managed_secrets::client::{IdentityTokenOptions, TaskIdentityToken};
+use torchui::r#async::{FutureExt as _, Timer};
+use torchui::{AppContext, Entity, ModelContext, SingletonEntity};
 
 use crate::server::server_api::managed_secrets::AppManagedSecretsClient;
 

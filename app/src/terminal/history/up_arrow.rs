@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
-use warp_core::features::FeatureFlag;
-use warpui::{AppContext, EntityId, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torchui::{AppContext, EntityId, SingletonEntity};
 
 use super::History;
 use crate::ai::blocklist::history_model::AIQueryHistory;

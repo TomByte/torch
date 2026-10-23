@@ -2,7 +2,7 @@ use std::path::Path;
 
 #[cfg(feature = "local_fs")]
 use settings::Setting as _;
-use warp_core::features::FeatureFlag;
+use torch_core::features::FeatureFlag;
 
 use super::*;
 

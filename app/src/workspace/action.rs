@@ -4,13 +4,13 @@ use std::sync::Arc;
 
 use session_sharing_protocol::common::SessionId;
 use ui_components::lightbox;
-use warp_util::path::LineAndColumnArg;
-use warpui::accessibility::AccessibilityVerbosity;
-use warpui::geometry::rect::RectF;
-use warpui::geometry::vector::Vector2F;
-use warpui::platform::Cursor;
-use warpui::platform::keyboard::KeyCode;
-use warpui::{EntityId, WeakViewHandle, WindowId};
+use torch_util::path::LineAndColumnArg;
+use torchui::accessibility::AccessibilityVerbosity;
+use torchui::geometry::rect::RectF;
+use torchui::geometry::vector::Vector2F;
+use torchui::platform::Cursor;
+use torchui::platform::keyboard::KeyCode;
+use torchui::{EntityId, WeakViewHandle, WindowId};
 
 use super::global_actions::{ForkFromExchange, ForkedConversationDestination};
 use super::tab_settings::{
@@ -687,7 +687,7 @@ pub enum WorkspaceAction {
     /// Open the workspace modal for creating a new managed auth secret.
     /// Dispatched by orchestration card pickers' "New API key…" item.
     OpenCreateAuthSecretModal {
-        harness: warp_cli::agent::Harness,
+        harness: torch_cli::agent::Harness,
     },
     /// Summarize the active AI conversation in the focused pane.
     SummarizeAIConversation {

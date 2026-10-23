@@ -4,8 +4,8 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use remote_server::proto::UploadHandoffSnapshotResponse;
-use warp_util::standardized_path::StandardizedPath;
-use warpui::{SingletonEntity, ViewContext};
+use torch_util::standardized_path::StandardizedPath;
+use torchui::{SingletonEntity, ViewContext};
 
 use crate::ai::agent_sdk::driver::upload_snapshot_for_handoff;
 use crate::ai::blocklist::handoff::touched_repos::{TouchedWorkspace, derive_touched_workspace};

@@ -1,24 +1,24 @@
 use ai::LLMId;
 use pathfinder_color::ColorU;
 use ui_components::{Component as _, Options as _, button};
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::icons::Icon;
-use warp_core::ui::theme::Fill;
-use warp_core::ui::theme::color::internal_colors;
-use warpui_core::elements::{
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::icons::Icon;
+use torch_core::ui::theme::Fill;
+use torch_core::ui::theme::color::internal_colors;
+use torchui_core::elements::{
     AnchorPair, Border, ClippedScrollStateHandle, ClippedScrollable, ConstrainedBox, Container,
     CornerRadius, CrossAxisAlignment, Dismiss, Empty, Flex, FormattedTextElement, Hoverable,
     Icon as WarpUiIcon, MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning,
     OffsetType, ParentElement, ParentOffsetBounds, PositioningAxis, Radius, SavePosition,
     ScrollTarget, ScrollToPositionMode, ScrollbarWidth, Stack, Text, XAxisAnchor, YAxisAnchor,
 };
-use warpui_core::fonts::{Properties, Weight};
-use warpui_core::keymap::Keystroke;
-use warpui_core::platform::Cursor;
-use warpui_core::scene::DropShadow;
-use warpui_core::text_layout::TextAlignment;
-use warpui_core::ui_components::components::{UiComponent as _, UiComponentStyles};
-use warpui_core::{
+use torchui_core::fonts::{Properties, Weight};
+use torchui_core::keymap::Keystroke;
+use torchui_core::platform::Cursor;
+use torchui_core::scene::DropShadow;
+use torchui_core::text_layout::TextAlignment;
+use torchui_core::ui_components::components::{UiComponent as _, UiComponentStyles};
+use torchui_core::{
     AppContext, Element, Entity, SingletonEntity as _, TypedActionView, View, ViewContext,
 };
 
@@ -100,7 +100,7 @@ pub enum AgentSlideAction {
 }
 
 pub struct AgentSlide {
-    onboarding_state: warpui_core::ModelHandle<OnboardingStateModel>,
+    onboarding_state: torchui_core::ModelHandle<OnboardingStateModel>,
 
     /// Mouse state handles for each model row.
     model_mouse_states: Vec<MouseStateHandle>,
@@ -129,7 +129,7 @@ fn model_row_position_id(index: usize) -> String {
 
 impl AgentSlide {
     pub(crate) fn new(
-        onboarding_state: warpui_core::ModelHandle<OnboardingStateModel>,
+        onboarding_state: torchui_core::ModelHandle<OnboardingStateModel>,
         ctx: &mut ViewContext<Self>,
     ) -> Self {
         let model_count = onboarding_state.as_ref(ctx).models().len();

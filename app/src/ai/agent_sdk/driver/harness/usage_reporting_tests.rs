@@ -7,8 +7,8 @@ use futures::FutureExt as _;
 use futures::channel::oneshot;
 use futures::executor::block_on;
 use futures::future::{self, AbortHandle};
-use warp_harness_usage::{CaptureDiagnostics, JsonlDiagnostics, JsonlReadStatus, extract_claude};
-use warpui::r#async::executor::Background;
+use torch_harness_usage::{CaptureDiagnostics, JsonlDiagnostics, JsonlReadStatus, extract_claude};
+use torchui::r#async::executor::Background;
 
 use super::*;
 use crate::server::server_api::ServerApiProvider;

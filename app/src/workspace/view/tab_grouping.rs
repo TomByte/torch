@@ -2,8 +2,8 @@ use std::collections::HashSet;
 
 use instant::Instant;
 use itertools::{Either, Itertools};
-use warp_core::features::FeatureFlag;
-use warpui::{EntityId, UpdateView, ViewContext};
+use torch_core::features::FeatureFlag;
+use torchui::{EntityId, UpdateView, ViewContext};
 
 use super::{Workspace, group_member_indices};
 use crate::menu::{MenuItem, MenuItemFields};
@@ -32,7 +32,7 @@ impl Workspace {
         clicked_index: usize,
         ctx: &mut ViewContext<Self>,
     ) {
-        let order = if warp_core::channel::ChannelState::is_local_only() {
+        let order = if torch_core::channel::ChannelState::is_local_only() {
             super::vertical_tabs::torch::session_order(self, ctx)
         } else {
             (0..self.tabs.len()).collect()

@@ -7,10 +7,10 @@ use futures::channel::oneshot;
 use futures::executor::block_on;
 use futures::future::{pending, ready};
 use futures::poll;
-use warp_cli::agent::{
+use torch_cli::agent::{
     RepositoryForge, RepositoryHeadRef, RepositoryIdentity, RepositoryPreparationOverride,
 };
-use warp_core::command::ExitCode;
+use torch_core::command::ExitCode;
 
 use super::super::environment_checkout_protocol::{
     CheckoutBatch, CheckoutRequest, ResolvedHeads, is_valid_git_object_id,
@@ -209,8 +209,8 @@ fn head_probe_timeout_preserves_later_snapshot_repositories() {
 
     use nix::sys::stat::Mode;
     use nix::unistd::mkfifo;
-    use warp_cli::environment_checkout::EnvironmentCheckoutArgs;
-    use warp_core::features::FeatureFlag;
+    use torch_cli::environment_checkout::EnvironmentCheckoutArgs;
+    use torch_core::features::FeatureFlag;
 
     let _mirrors = FeatureFlag::GitMirrorCache.override_enabled(false);
     let directory = tempfile::tempdir().unwrap();

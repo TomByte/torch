@@ -42,9 +42,9 @@ pub(crate) use team_required::{
     toast_message as cloud_agent_team_required_toast_message,
 };
 pub use tips::{CloudModeTip, get_cloud_mode_tips};
-use warp_core::features::FeatureFlag;
-use warpui::geometry::vector::Vector2F;
-use warpui::{AppContext, ModelHandle, ViewHandle, WindowId};
+use torch_core::features::FeatureFlag;
+use torchui::geometry::vector::Vector2F;
+use torchui::{AppContext, ModelHandle, ViewHandle, WindowId};
 
 use crate::ai::blocklist::agent_view::{AgentViewController, AgentViewState};
 use crate::pane_group::TerminalViewResources;

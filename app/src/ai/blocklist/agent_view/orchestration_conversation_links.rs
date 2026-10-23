@@ -1,16 +1,16 @@
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::Vector2F;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::Fill;
-use warpui::elements::{
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::Fill;
+use torchui::elements::{
     ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Empty, Expanded, Flex, Hoverable,
     MainAxisSize, MouseStateHandle, ParentElement, Radius, Shrinkable, Text,
 };
-use warpui::fonts::Properties;
-use warpui::fonts::Weight::Bold;
-use warpui::platform::Cursor;
-use warpui::text_layout::ClipConfig;
-use warpui::{AppContext, Element, EntityId, EventContext, SingletonEntity};
+use torchui::fonts::Properties;
+use torchui::fonts::Weight::Bold;
+use torchui::platform::Cursor;
+use torchui::text_layout::ClipConfig;
+use torchui::{AppContext, Element, EntityId, EventContext, SingletonEntity};
 
 use crate::ai::agent::conversation::{AIConversation, AIConversationId};
 use crate::ai::agent_conversations_model::entry::AgentConversationEntryId;

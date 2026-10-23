@@ -5,7 +5,7 @@ use std::path::PathBuf;
 #[cfg(any(test, feature = "local_fs"))]
 use anyhow::Context as _;
 use serde::{Deserialize, Serialize};
-use warp_cli::agent::{RepositoryForge, RepositoryHeadRef, RepositoryIdentity};
+use torch_cli::agent::{RepositoryForge, RepositoryHeadRef, RepositoryIdentity};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

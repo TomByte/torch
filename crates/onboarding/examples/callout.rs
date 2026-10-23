@@ -7,13 +7,13 @@ use onboarding::components::onboarding_callout::{
 };
 use rust_embed::RustEmbed;
 use ui_components::Component as _;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::{AnsiColor, AnsiColors, Details, Fill, TerminalColors, WarpTheme};
-use warpui_core::color::ColorU;
-use warpui_core::elements::{Rect, Stack};
-use warpui_core::fonts::{Cache, FamilyId, Weight};
-use warpui_core::prelude::*;
-use warpui_core::{AddWindowOptions, AssetProvider, ModelContext, platform};
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::{AnsiColor, AnsiColors, Details, Fill, TerminalColors, WarpTheme};
+use torchui_core::color::ColorU;
+use torchui_core::elements::{Rect, Stack};
+use torchui_core::fonts::{Cache, FamilyId, Weight};
+use torchui_core::prelude::*;
+use torchui_core::{AddWindowOptions, AssetProvider, ModelContext, platform};
 
 #[derive(Clone, Copy, RustEmbed)]
 #[folder = "../../app/assets"]
@@ -30,7 +30,7 @@ impl AssetProvider for Assets {
 }
 
 fn main() -> platform::app::TerminationResult {
-    let app_builder = warpui::platform::AppBuilder::new(
+    let app_builder = torchui::platform::AppBuilder::new(
         platform::AppCallbacks::default(),
         Box::new(ASSETS),
         None,

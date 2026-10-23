@@ -1,5 +1,5 @@
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warpui::{Entity, ModelContext};
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torchui::{Entity, ModelContext};
 
 use crate::workspace::view::global_search::SearchConfig;
 use crate::workspace::view::global_search::view::GlobalSearchEvent;

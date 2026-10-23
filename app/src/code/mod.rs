@@ -3,10 +3,10 @@ use std::fmt::Debug;
 use std::ops::AddAssign;
 
 use pathfinder_geometry::rect::RectF;
-use warp_errors::{ErrorExt, register_error};
-use warp_util::file::FileSaveError;
-use warpui::AppContext;
-use warpui::elements::DropTargetData;
+use torch_errors::{ErrorExt, register_error};
+use torch_util::file::FileSaveError;
+use torchui::AppContext;
+use torchui::elements::DropTargetData;
 
 #[cfg(not(target_family = "wasm"))]
 pub mod find_references_view;
@@ -130,7 +130,7 @@ pub mod view;
 
 /// Torch provides terminal sessions; file editing is handled by external applications.
 pub fn editor_available() -> bool {
-    !warp_core::channel::ChannelState::is_local_only()
+    !torch_core::channel::ChannelState::is_local_only()
 }
 
 pub fn init(app: &mut AppContext) {

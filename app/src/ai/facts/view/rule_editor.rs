@@ -1,14 +1,14 @@
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::color::internal_colors;
-use warp_editor::editor::NavigationKey;
-use warpui::elements::{
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::color::internal_colors;
+use torch_editor::editor::NavigationKey;
+use torchui::elements::{
     Border, ChildView, Clipped, ClippedScrollStateHandle, ClippedScrollable, ConstrainedBox,
     Container, CornerRadius, CrossAxisAlignment, Flex, MainAxisAlignment, MainAxisSize,
     MouseStateHandle, ParentElement, Radius, ScrollbarWidth,
 };
-use warpui::platform::Cursor;
-use warpui::ui_components::components::UiComponent;
-use warpui::{
+use torchui::platform::Cursor;
+use torchui::ui_components::components::UiComponent;
+use torchui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };
@@ -312,7 +312,7 @@ impl RuleEditorView {
                     ScrollbarWidth::Auto,
                     appearance.theme().nonactive_ui_detail().into(),
                     appearance.theme().active_ui_detail().into(),
-                    warpui::elements::Fill::None,
+                    torchui::elements::Fill::None,
                 )
                 .finish(),
             )

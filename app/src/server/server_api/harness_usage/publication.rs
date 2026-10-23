@@ -7,7 +7,7 @@ use http::header::{CONTENT_TYPE, RETRY_AFTER};
 use http_client::StatusCode;
 use serde::{Deserialize, Deserializer};
 use serde_json::Value;
-use warp_harness_usage::api::HarnessUsageRequest;
+use torch_harness_usage::api::HarnessUsageRequest;
 
 use super::super::ServerApi;
 use crate::ai::ambient_agents::AmbientAgentTaskId;

@@ -8,11 +8,11 @@ use num_traits::Float as _;
 use parking_lot::Mutex;
 use pathfinder_color::ColorU;
 use vec1::Vec1;
-use warp_core::semantic_selection::SemanticSelection;
-use warp_errors::report_error;
-use warp_terminal::model::{KeyboardModes, KeyboardModesApplyBehavior};
-use warpui::text::SelectionType;
-use warpui::units::Lines;
+use torch_core::semantic_selection::SemanticSelection;
+use torch_errors::report_error;
+use torch_terminal::model::{KeyboardModes, KeyboardModesApplyBehavior};
+use torchui::text::SelectionType;
+use torchui::units::Lines;
 
 use super::find::RegexDFAs;
 use super::grid::RespectDisplayedOutput;
@@ -400,7 +400,7 @@ impl ansi::Handler for AltScreen {
         self.ansi_handler().input(c);
     }
 
-    fn set_hyperlink(&mut self, hyperlink: Option<warp_terminal::model::ansi::Hyperlink>) {
+    fn set_hyperlink(&mut self, hyperlink: Option<torch_terminal::model::ansi::Hyperlink>) {
         self.ansi_handler().set_hyperlink(hyperlink);
     }
 

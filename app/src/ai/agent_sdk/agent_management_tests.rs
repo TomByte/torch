@@ -1,5 +1,5 @@
 use chrono::{TimeZone as _, Utc};
-use warp_cli::scope::TeamSelection;
+use torch_cli::scope::TeamSelection;
 
 use super::*;
 

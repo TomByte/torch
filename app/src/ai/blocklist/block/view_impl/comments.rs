@@ -1,11 +1,11 @@
-use warp_core::ui::Icon;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::color::internal_colors;
-use warpui::elements::{
+use torch_core::ui::Icon;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::color::internal_colors;
+use torchui::elements::{
     Axis, Border, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Empty,
     Expanded, Flex, Hoverable, MouseState, ParentElement, Radius, Text, Wrap, WrapFillEntireRun,
 };
-use warpui::{AppContext, Element, SingletonEntity};
+use torchui::{AppContext, Element, SingletonEntity};
 
 use crate::ai::agent::comment::ReviewComment;
 use crate::ai::agent::icons::addressed_comment_icon;

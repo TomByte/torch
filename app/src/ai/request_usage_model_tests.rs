@@ -4,10 +4,10 @@ use std::time::SystemTime;
 use ai::LLMProvider;
 use ai::api_keys::{ApiKeyManager, AwsCredentials, AwsCredentialsState, GrokTokens};
 use chrono::Duration;
-use warp_core::features::FeatureFlag;
-use warp_core::telemetry::testing::MockTelemetryContextProvider;
-use warp_graphql::billing::{AddonCreditsOption, OveragesPricing, PricingInfo};
-use warpui::{App, ModelHandle};
+use torch_core::features::FeatureFlag;
+use torch_core::telemetry::testing::MockTelemetryContextProvider;
+use torch_graphql::billing::{AddonCreditsOption, OveragesPricing, PricingInfo};
+use torchui::{App, ModelHandle};
 
 use super::*;
 use crate::ai::credit_availability::{AICreditAvailability, AICreditDenialReason, AICreditSource};
@@ -91,7 +91,7 @@ fn add_request_usage_model_without_auth(app: &mut App) -> ModelHandle<AIRequestU
     app.add_singleton_model(|_| ServerApiProvider::new_for_test());
     register_user_preferences_for_tests(app);
     app.update(|ctx| {
-        warpui_extras::secure_storage::register_noop("test", ctx);
+        torchui_extras::secure_storage::register_noop("test", ctx);
         MockTelemetryContextProvider::register(ctx);
         ctx.add_singleton_model(ApiKeyManager::new);
     });
@@ -1853,7 +1853,7 @@ fn test_availability_refresh_coalesces_concurrent_fetches() {
         });
 
         // Let the spawned fetch complete.
-        warpui::r#async::Timer::after(std::time::Duration::from_millis(100)).await;
+        torchui::r#async::Timer::after(std::time::Duration::from_millis(100)).await;
 
         request_usage_model.read(&app, |model, _| {
             assert!(!model.server_availability.refresh_in_flight);

@@ -24,9 +24,9 @@ use std::sync::Arc;
 use futures::FutureExt;
 use futures::future::{BoxFuture, join_all};
 use itertools::Itertools;
-use warp_editor::multiline::AnyMultilineString;
-use warp_util::file::FileSaveError;
-use warpui::AppContext;
+use torch_editor::multiline::AnyMultilineString;
+use torch_util::file::FileSaveError;
+use torchui::AppContext;
 
 use crate::ai::agent::{
     AnyFileContent, FileContext, FileLocations, RequestFileEditsResult, UpdatedFileContext,

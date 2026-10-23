@@ -1,7 +1,7 @@
 use futures::executor::block_on;
 use mockito::{Matcher, Server};
-use warp_core::channel::ChannelState;
-use warp_server_client::base_client::{AMBIENT_WORKLOAD_TOKEN_HEADER, CLOUD_AGENT_ID_HEADER};
+use torch_core::channel::ChannelState;
+use torch_server_client::base_client::{AMBIENT_WORKLOAD_TOKEN_HEADER, CLOUD_AGENT_ID_HEADER};
 
 use super::{HarnessSupportClient, ServerApi};
 use crate::ai::artifacts::Artifact;

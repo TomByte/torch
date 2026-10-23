@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::ffi::{OsStr, OsString};
 
 use tempfile::TempDir;
-use warp_cli::agent::{RepositoryForge, RepositoryHeadRef, RepositoryIdentity};
+use torch_cli::agent::{RepositoryForge, RepositoryHeadRef, RepositoryIdentity};
 
 use super::{FILE_ENV, MODE_ENV, PreparationPolicy, PreparationRepository, launch_environment};
 use crate::ai::agent_sdk::driver::environment_checkout_protocol::{CheckoutBatch, CheckoutRequest};

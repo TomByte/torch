@@ -1,12 +1,12 @@
 use itertools::Itertools;
 use ordered_float::OrderedFloat;
-use warpui::elements::{
+use torchui::elements::{
     ConstrainedBox, Container, CrossAxisAlignment, Flex, Highlight, Icon, MainAxisAlignment,
     MainAxisSize, ParentElement, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{AppContext, Element, SingletonEntity};
+use torchui::fonts::{Properties, Weight};
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{AppContext, Element, SingletonEntity};
 
 use crate::appearance::Appearance;
 use crate::env_vars::CloudEnvVarCollection;

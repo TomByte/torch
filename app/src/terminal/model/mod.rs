@@ -6,9 +6,9 @@ pub use terminal_model::TerminalModel;
 macro_rules! assert_lines_approx_eq {
     ($actual:expr_2021, $expected:expr_2021) => {{
         float_cmp::assert_approx_eq!(
-            warpui::units::Lines,
+            torchui::units::Lines,
             $actual,
-            warpui::units::IntoLines::into_lines($expected)
+            torchui::units::IntoLines::into_lines($expected)
         )
     }};
 }
@@ -30,12 +30,12 @@ pub mod terminal_model;
 pub mod test_utils;
 
 pub use lifecycle::{LifecycleRecoveryRecord, StartCommandOutcome};
-pub use warp_terminal::model::grid::cell;
-pub use warp_terminal::model::secrets::{
+pub use torch_terminal::model::grid::cell;
+pub use torch_terminal::model::secrets::{
     ObfuscateSecrets, RespectObfuscatedSecrets, Secret, SecretHandle,
     set_user_and_enterprise_secret_regexes,
 };
-pub use warp_terminal::model::{
+pub use torch_terminal::model::{
     BlockId, ansi, blockgrid, char_or_str, completions, escape_sequences, find, grid, image_map,
     iterm_image, kitty, mouse, selection,
 };

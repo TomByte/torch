@@ -7,7 +7,7 @@ use base64::Engine as _;
 use base64::prelude::BASE64_STANDARD;
 use bytes::Bytes;
 use reqwest::Url;
-use warpui_core::assets::asset_cache::{
+use torchui_core::assets::asset_cache::{
     Asset, AssetCache, AssetSource, AssetState, AsyncAssetId, AsyncAssetType,
 };
 
@@ -177,7 +177,7 @@ async fn persist_bytes(bytes: &Bytes, file: &Path) {
     use anyhow::Context;
     use async_fs::{OpenOptions, create_dir_all};
     use futures::AsyncWriteExt;
-    use warp_errors::report_error;
+    use torch_errors::report_error;
 
     let Some(parent_folder) = file.parent() else {
         report_error!("attempted to write cache file in filesystem root");

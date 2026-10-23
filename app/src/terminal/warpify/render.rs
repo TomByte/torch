@@ -2,16 +2,16 @@ use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
 use pathfinder_color::ColorU;
 use pathfinder_geometry::rect::RectF;
 use pathfinder_geometry::vector::Vector2F;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::{Fill, WarpTheme};
-use warpui::elements::{
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::{Fill, WarpTheme};
+use torchui::elements::{
     Align, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Flex, FormattedTextElement,
     HighlightedHyperlink, Icon, MouseStateHandle, ParentElement, Radius, Rect, Shrinkable, Stack,
     Text,
 };
-use warpui::fonts::{FamilyId, Properties, Weight};
-use warpui::ui_components::components::{UiComponent as _, UiComponentStyles};
-use warpui::{AppContext, Element, EventContext, PaintContext, SingletonEntity as _};
+use torchui::fonts::{FamilyId, Properties, Weight};
+use torchui::ui_components::components::{UiComponent as _, UiComponentStyles};
+use torchui::{AppContext, Element, EventContext, PaintContext, SingletonEntity as _};
 
 use super::SubshellSource;
 use super::settings::WarpifySettings;
@@ -230,7 +230,7 @@ pub fn draw_flag_pole(
 /// Implementation should match `[draw_subshell_flag_pole]`.
 pub fn render_subshell_flag_pole(
     max_height: f32,
-    fill: impl Into<warpui::elements::Fill>,
+    fill: impl Into<torchui::elements::Fill>,
 ) -> Box<dyn Element> {
     ConstrainedBox::new(Rect::new().with_background(fill.into()).finish())
         .with_width(LEFT_STRIPE_WIDTH)

@@ -7,7 +7,7 @@ use ::local_control::protocol::{
     ThemeNameParams, WindowTarget,
 };
 use ::local_control::{ActionKind, ControlError, ErrorCode, TargetScope};
-use warpui::{AppContext, ModelContext, TypedActionView, ViewHandle, WindowId};
+use torchui::{AppContext, ModelContext, TypedActionView, ViewHandle, WindowId};
 
 use crate::local_control::LocalControlBridge;
 use crate::local_control::handlers::metadata::action_metadata_for_name;

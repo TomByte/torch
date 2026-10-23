@@ -1,4 +1,4 @@
-//! Public app APIs used by the `warp_tui` frontend.
+//! Public app APIs used by the `torch_tui` frontend.
 
 mod history;
 
@@ -16,11 +16,11 @@ pub use voice_input::{
     StartListeningError, VoiceInput, VoiceInputLifecycle, VoiceInputLifecycleState,
     VoiceInputState, VoiceInputToggledFrom, VoiceSession, VoiceSessionResult,
 };
-pub use warp_cli::agent::Harness;
-use warp_completer::completer::{CompletionContext as _, TopLevelCommandCaseSensitivity};
-use warp_completer::signatures::CommandRegistry;
-pub use warp_core::SessionId;
-use warpui::SingletonEntity as _;
+pub use torch_cli::agent::Harness;
+use torch_completer::completer::{CompletionContext as _, TopLevelCommandCaseSensitivity};
+use torch_completer::signatures::CommandRegistry;
+pub use torch_core::SessionId;
+use torchui::SingletonEntity as _;
 
 pub use self::history::{TuiUpArrowHistoryItem, TuiUpArrowHistoryItemKind, tui_up_arrow_history};
 pub use crate::ai::agent::api::ServerConversationToken;
@@ -302,7 +302,7 @@ pub fn format_usage_credits(credits: f64) -> String {
 pub fn tui_completion_session_context(
     active_session: &ActiveSession,
     current_working_directory: String,
-    app: &warpui::AppContext,
+    app: &torchui::AppContext,
 ) -> Option<SessionContext> {
     let session = active_session.session(app)?;
     let current_working_directory =
@@ -342,7 +342,7 @@ pub fn tui_completion_context_has_exact_command(
 }
 
 /// Returns whether cloud conversation metadata failed to load.
-pub fn agent_conversations_cloud_metadata_load_failed(app: &warpui::AppContext) -> bool {
+pub fn agent_conversations_cloud_metadata_load_failed(app: &torchui::AppContext) -> bool {
     crate::ai::agent_conversations_model::AgentConversationsModel::as_ref(app)
         .cloud_conversation_metadata_load_failed()
 }
@@ -351,6 +351,6 @@ pub fn agent_conversations_cloud_metadata_load_failed(app: &warpui::AppContext) 
 /// UUID. Returns `None` when the server is unknown (e.g. a legacy/flat MCP call
 /// with no server id, or the server is not installed). Used by the TUI to surface
 /// tool/server identity in permission cards and transcript labels.
-pub fn mcp_server_name_for_id(uuid: &uuid::Uuid, app: &warpui::AppContext) -> Option<String> {
+pub fn mcp_server_name_for_id(uuid: &uuid::Uuid, app: &torchui::AppContext) -> Option<String> {
     crate::ai::mcp::TemplatableMCPServerManager::get_mcp_name(uuid, app)
 }

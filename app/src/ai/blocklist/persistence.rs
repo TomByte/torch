@@ -8,7 +8,7 @@ use anyhow::anyhow;
 use chrono::{DateTime, Local};
 use serde::{Deserialize, Deserializer, Serialize};
 use uuid::Uuid;
-use warpui::{AppContext, EntityId, SingletonEntity};
+use torchui::{AppContext, EntityId, SingletonEntity};
 
 use super::history_model::{
     AIQueryHistoryOutputStatus, BlocklistAIHistoryEvent, BlocklistAIHistoryModel,

@@ -12,10 +12,10 @@ use std::sync::Arc;
 
 use instant::Instant;
 use remote_server::manager::{RemoteServerManager, RemoteServerManagerEvent};
-use warp_core::{HostId, SessionId, send_telemetry_from_ctx};
-use warp_util::remote_path::RemotePath;
-use warp_util::standardized_path::StandardizedPath;
-use warpui::{ModelContext, SingletonEntity};
+use torch_core::{HostId, SessionId, send_telemetry_from_ctx};
+use torch_util::remote_path::RemotePath;
+use torch_util::standardized_path::StandardizedPath;
+use torchui::{ModelContext, SingletonEntity};
 
 use super::{
     BackendOrigin, CommitChainMode, DiffMetadata, DiffMode, DiffOperation, DiffState,
@@ -52,7 +52,7 @@ pub struct RemoteDiffStateModel {
     tracked_diff_load_start_time: Option<Instant>,
 }
 
-impl warpui::Entity for RemoteDiffStateModel {
+impl torchui::Entity for RemoteDiffStateModel {
     type Event = DiffStateModelEvent;
 }
 
@@ -286,7 +286,7 @@ impl RemoteDiffStateModel {
             Ok((metadata, state, diffs)) => self.apply_snapshot(metadata, state, diffs, ctx),
             Err(error) => {
                 self.tracked_diff_load_start_time = None;
-                warp_core::safe_error!(
+                torch_core::safe_error!(
                     safe: ("RemoteDiffStateModel: failed to decode diff state snapshot"),
                     full: ("RemoteDiffStateModel: failed to decode diff state snapshot: {error}")
                 );
@@ -308,7 +308,7 @@ impl RemoteDiffStateModel {
             Ok(Some(metadata)) => self.apply_metadata_update(&metadata, ctx),
             Ok(None) => {}
             Err(error) => {
-                warp_core::safe_error!(
+                torch_core::safe_error!(
                     safe: ("RemoteDiffStateModel: failed to decode diff state metadata update"),
                     full: ("RemoteDiffStateModel: failed to decode diff state metadata update: {error}")
                 );
@@ -326,7 +326,7 @@ impl RemoteDiffStateModel {
                 self.apply_file_delta(file_path, diff, metadata, ctx)
             }
             Err(error) => {
-                warp_core::safe_error!(
+                torch_core::safe_error!(
                     safe: ("RemoteDiffStateModel: failed to decode diff state file delta"),
                     full: ("RemoteDiffStateModel: failed to decode diff state file delta: {error}")
                 );

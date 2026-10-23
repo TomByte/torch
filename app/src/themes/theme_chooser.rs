@@ -1,22 +1,22 @@
 use pathfinder_color::ColorU;
 use settings::Setting as _;
-use warp_editor::editor::NavigationKey;
-use warp_errors::report_if_error;
-use warpui::accessibility::{AccessibilityContent, WarpA11yRole};
-use warpui::elements::{
+use torch_editor::editor::NavigationKey;
+use torch_errors::report_if_error;
+use torchui::accessibility::{AccessibilityContent, WarpA11yRole};
+use torchui::elements::{
     Align, ChildAnchor, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     DispatchEventResult, Element, Empty, EventHandler, Fill, Flex, Hoverable, Icon,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning, ParentAnchor,
     ParentElement, ParentOffsetBounds, Radius, Rect, SavePosition, ScrollStateHandle, Scrollable,
     ScrollableElement, ScrollbarWidth, Shrinkable, Stack, Text, UniformList, UniformListState,
 };
-use warpui::fonts::{FamilyId, Weight};
-use warpui::geometry::vector::vec2f;
-use warpui::keymap::FixedBinding;
-use warpui::platform::{Cursor, SystemTheme};
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::windowing::{StateEvent, WindowManager};
-use warpui::{
+use torchui::fonts::{FamilyId, Weight};
+use torchui::geometry::vector::vec2f;
+use torchui::keymap::FixedBinding;
+use torchui::platform::{Cursor, SystemTheme};
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::windowing::{StateEvent, WindowManager};
+use torchui::{
     AppContext, Entity, FocusContext, ModelHandle, SingletonEntity, Tracked, TypedActionView,
     UpdateModel, View, ViewContext, ViewHandle,
 };
@@ -144,7 +144,7 @@ pub struct ThemeChooser {
     search_editor: ViewHandle<EditorView>,
     referral_theme_status: ModelHandle<ReferralThemeStatus>,
     tips_completed: ModelHandle<TipsCompleted>,
-    window_id: warpui::WindowId,
+    window_id: torchui::WindowId,
 }
 
 #[derive(Debug)]
@@ -159,7 +159,7 @@ pub enum ThemeChooserAction {
 }
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings(vec![
         FixedBinding::new("up", ThemeChooserAction::Up, id!("ThemeChooser")),
@@ -179,7 +179,7 @@ fn theme_chooser_items(
     let mut theme_items: Vec<ThemeChooserItem> = theme_config
         .theme_items()
         .filter(|(key, _)| {
-            !warp_core::channel::ChannelState::is_local_only() || key.is_torch_builtin()
+            !torch_core::channel::ChannelState::is_local_only() || key.is_torch_builtin()
         })
         .filter(|(key, _)| match key {
             // Only show the referral reward themes if they are active
@@ -190,7 +190,7 @@ fn theme_chooser_items(
         })
         .map(|(key, theme)| ThemeChooserItem::new(key.clone(), theme.clone()))
         .collect();
-    if warp_core::channel::ChannelState::is_local_only() {
+    if torch_core::channel::ChannelState::is_local_only() {
         let order = [
             ThemeKind::Light,
             ThemeKind::Dark,
@@ -674,7 +674,7 @@ impl ThemeChooser {
             );
 
         // Custom themes are only supported on desktop platforms currently.
-        if cfg!(not(target_family = "wasm")) && !warp_core::channel::ChannelState::is_local_only() {
+        if cfg!(not(target_family = "wasm")) && !torch_core::channel::ChannelState::is_local_only() {
             let create_theme_button = SavePosition::new(
                 icon_button(
                     appearance,

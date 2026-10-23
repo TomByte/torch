@@ -3,8 +3,8 @@
 use std::io::Write as _;
 
 use serde_json::json;
-use warp_cli::mcp::MCPSpec;
-use warp_core::features::FeatureFlag;
+use torch_cli::mcp::MCPSpec;
+use torch_core::features::FeatureFlag;
 
 use crate::ai::ambient_agents::AgentConfigSnapshot;
 

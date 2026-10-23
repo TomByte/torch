@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use chrono::{DateTime, Local};
 use instant::Instant;
 use uuid::Uuid;
-use warp_terminal::event::ObservedExitStatus;
+use torch_terminal::event::ObservedExitStatus;
 
 use crate::ai::agent::AIAgentActionId;
 use crate::terminal::model::block::BlockId;

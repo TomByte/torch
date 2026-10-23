@@ -10,17 +10,17 @@ use settings::Setting as _;
 #[cfg(target_family = "wasm")]
 use url::Url;
 use uuid::Uuid;
-use warp_core::channel::ChannelState;
-use warp_core::features::FeatureFlag;
-use warp_errors::{report_error, report_if_error};
-use warp_graphql::mutations::create_anonymous_user::{
+use torch_core::channel::ChannelState;
+use torch_core::features::FeatureFlag;
+use torch_errors::{report_error, report_if_error};
+use torch_graphql::mutations::create_anonymous_user::{
     AnonymousUserType, CreateAnonymousUserResult,
 };
-use warp_server_auth::API_KEY_PREFIX;
-use warp_server_auth::user::persistence::PersistedUser;
-use warpui::r#async::Timer;
-use warpui::clipboard::ClipboardContent;
-use warpui::{AppContext, Entity, ModelContext, SingletonEntity, UpdateModel};
+use torch_server_auth::API_KEY_PREFIX;
+use torch_server_auth::user::persistence::PersistedUser;
+use torchui::r#async::Timer;
+use torchui::clipboard::ClipboardContent;
+use torchui::{AppContext, Entity, ModelContext, SingletonEntity, UpdateModel};
 
 use super::auth_state::{AuthState, PersistAction};
 use super::auth_view_modal::{AuthRedirectPayload, AuthViewVariant};

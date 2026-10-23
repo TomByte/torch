@@ -2,17 +2,17 @@ use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use serde_json::Value;
 use strum_macros::{EnumDiscriminants, EnumIter};
-use warp_core::send_telemetry_from_ctx;
-use warp_core::telemetry::{EnablementState, TelemetryEvent, TelemetryEventDesc};
-use warp_core::ui::theme::Fill;
-use warpui::elements::{
+use torch_core::send_telemetry_from_ctx;
+use torch_core::telemetry::{EnablementState, TelemetryEvent, TelemetryEventDesc};
+use torch_core::ui::theme::Fill;
+use torchui::elements::{
     Align, ChildAnchor, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     Expanded, Flex, MainAxisSize, OffsetPositioning, ParentAnchor, ParentElement,
     ParentOffsetBounds, Radius, Stack, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::keymap::FixedBinding;
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::keymap::FixedBinding;
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 
@@ -43,7 +43,7 @@ fn modal_text_sub(appearance: &Appearance) -> ColorU {
 }
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings([FixedBinding::new(
         "escape",
@@ -232,7 +232,7 @@ impl View for ChatGPTPlanModal {
         "ChatGPTPlanModal"
     }
 
-    fn on_focus(&mut self, _focus_ctx: &warpui::FocusContext, ctx: &mut ViewContext<Self>) {
+    fn on_focus(&mut self, _focus_ctx: &torchui::FocusContext, ctx: &mut ViewContext<Self>) {
         ctx.focus_self();
     }
 
@@ -328,7 +328,7 @@ impl TelemetryEvent for ChatGPTPlanModalTelemetryEvent {
     }
 
     fn event_descs() -> impl Iterator<Item = Box<dyn TelemetryEventDesc>> {
-        warp_core::telemetry::enum_events::<Self>()
+        torch_core::telemetry::enum_events::<Self>()
     }
 }
 
@@ -358,4 +358,4 @@ impl TelemetryEventDesc for ChatGPTPlanModalTelemetryEventDiscriminants {
     }
 }
 
-warp_core::register_telemetry_event!(ChatGPTPlanModalTelemetryEvent);
+torch_core::register_telemetry_event!(ChatGPTPlanModalTelemetryEvent);

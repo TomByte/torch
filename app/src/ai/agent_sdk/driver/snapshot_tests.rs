@@ -8,7 +8,7 @@ use command::blocking::Command as BlockingCommand;
 use mockito::{Matcher, Server, ServerGuard};
 use tempfile::{Builder as TempDirBuilder, TempDir};
 use tokio::runtime::Runtime;
-use warp_cli::agent::Harness;
+use torch_cli::agent::Harness;
 
 use super::*;
 use crate::ai::agent::api::ServerConversationToken;

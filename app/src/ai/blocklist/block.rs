@@ -42,31 +42,31 @@ use rustc_hash::FxHashSet;
 use serde::Serialize;
 use settings::Setting as _;
 use string_offset::StringRange;
-use warp_core::channel::ChannelState;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::theme::Fill;
-use warp_core::ui::theme::color::internal_colors;
-use warp_editor::content::buffer::InitialBufferState;
+use torch_core::channel::ChannelState;
+use torch_core::features::FeatureFlag;
+use torch_core::ui::theme::Fill;
+use torch_core::ui::theme::color::internal_colors;
+use torch_editor::content::buffer::InitialBufferState;
 #[cfg(feature = "local_fs")]
-use warp_editor::content::edit::resolve_asset_source_relative_to_directory;
-use warp_editor::render::element::VerticalExpansionBehavior;
-use warp_errors::{report_error, report_if_error};
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warp_util::path::ShellFamily;
-use warpui::assets::asset_cache::{AssetCache, AssetSource};
-use warpui::r#async::{SpawnedFutureHandle, Timer};
-use warpui::clipboard::ClipboardContent;
-use warpui::elements::{
+use torch_editor::content::edit::resolve_asset_source_relative_to_directory;
+use torch_editor::render::element::VerticalExpansionBehavior;
+use torch_errors::{report_error, report_if_error};
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torch_util::path::ShellFamily;
+use torchui::assets::asset_cache::{AssetCache, AssetSource};
+use torchui::r#async::{SpawnedFutureHandle, Timer};
+use torchui::clipboard::ClipboardContent;
+use torchui::elements::{
     ClippedScrollStateHandle, MainAxisAlignment, MainAxisSize, MouseStateHandle, SelectionBound,
     SelectionHandle, TableStateHandle, get_rich_content_position_id,
 };
-use warpui::image_cache::ImageType;
-use warpui::keymap::FixedBinding;
-use warpui::text::SelectionType;
-use warpui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::ui_components::radio_buttons::RadioButtonStateHandle;
-use warpui::{
+use torchui::image_cache::ImageType;
+use torchui::keymap::FixedBinding;
+use torchui::text::SelectionType;
+use torchui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::ui_components::radio_buttons::RadioButtonStateHandle;
+use torchui::{
     AppContext, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle, WeakViewHandle, WindowId,
 };
@@ -310,7 +310,7 @@ fn user_avatar_info_for_ai_block(
 }
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings([
         FixedBinding::new(
@@ -942,7 +942,7 @@ pub struct AIBlock {
     controller: ModelHandle<BlocklistAIController>,
     active_session: ModelHandle<ActiveSession>,
     terminal_view_id: EntityId,
-    window_id: warpui::WindowId,
+    window_id: torchui::WindowId,
 
     /// The current working directory at the time the AI block was created. Note that this
     /// is different from `directory_context`, which represents the directory-related contexts
@@ -6234,7 +6234,7 @@ pub enum AIBlockEvent {
     #[cfg(feature = "local_fs")]
     OpenDetectedFilePath {
         absolute_path: PathBuf,
-        line_and_column_num: Option<warp_util::path::LineAndColumnArg>,
+        line_and_column_num: Option<torch_util::path::LineAndColumnArg>,
         target_override: Option<FileTarget>,
     },
     ShowLinkTooltip(RichContentLinkTooltipInfo),
@@ -6419,7 +6419,7 @@ pub enum AIBlockAction {
         is_positive: bool,
     },
     /// Clear the selections of all other views **except** for the source view that dispatched the event.
-    /// The `source_view_id` will be `None` if the event is dispatched by the [`warpui::elements::SelectableArea`]
+    /// The `source_view_id` will be `None` if the event is dispatched by the [`torchui::elements::SelectableArea`]
     /// instead of a nested view (i.e. code block, requested command, etc.), which means all nested views
     /// should have their selections cleared.
     ClearOtherSelections {
@@ -7305,7 +7305,7 @@ impl TypedActionView for AIBlock {
                     }
                     images.push(ui_components::lightbox::LightboxImage {
                         source: ui_components::lightbox::LightboxImageSource::Resolved {
-                            asset_source: warpui::assets::asset_cache::AssetSource::Raw {
+                            asset_source: torchui::assets::asset_cache::AssetSource::Raw {
                                 id: asset_id,
                             },
                         },

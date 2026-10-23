@@ -1,14 +1,14 @@
 //! A reusable warning callout component with optional action button.
 use markdown_parser::{FormattedText, FormattedTextInline, FormattedTextLine};
-use warp_core::ui::color::blend::Blend;
-use warpui::EventContext;
-use warpui::color::ColorU;
-use warpui::elements::{
+use torch_core::ui::color::blend::Blend;
+use torchui::EventContext;
+use torchui::color::ColorU;
+use torchui::elements::{
     Border, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Element, Expanded, Flex,
     FormattedTextElement, Hoverable, HyperlinkLens, MainAxisSize, MouseStateHandle, ParentElement,
     Radius, Text,
 };
-use warpui::platform::Cursor;
+use torchui::platform::Cursor;
 
 use crate::appearance::Appearance;
 use crate::themes::theme::Fill as ThemeFill;

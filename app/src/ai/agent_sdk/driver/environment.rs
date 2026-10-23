@@ -14,14 +14,14 @@ use futures::channel::oneshot;
 use futures::future::{Either, join_all, select};
 use instant::Instant;
 use repo_metadata::repositories::{DetectedRepositories, RepoDetectionSource};
-use warp_cli::agent::{
+use torch_cli::agent::{
     RepositoryForge, RepositoryHeadRef, RepositoryIdentity, RepositoryPreparationOverride,
 };
-use warp_completer::completer::CommandExitStatus;
-use warp_core::command::ExitCode;
-use warp_core::{safe_info, safe_warn};
-use warpui::r#async::{FutureExt, Timer};
-use warpui::{ModelContext, ModelSpawner, SingletonEntity};
+use torch_completer::completer::CommandExitStatus;
+use torch_core::command::ExitCode;
+use torch_core::{safe_info, safe_warn};
+use torchui::r#async::{FutureExt, Timer};
+use torchui::{ModelContext, ModelSpawner, SingletonEntity};
 
 #[cfg(feature = "local_fs")]
 use super::cache_setup;

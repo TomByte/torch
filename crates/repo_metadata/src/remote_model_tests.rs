@@ -1,5 +1,5 @@
-use warp_util::standardized_path::StandardizedPath;
-use warpui_core::App;
+use torch_util::standardized_path::StandardizedPath;
+use torchui_core::App;
 
 use super::*;
 use crate::StandingQueryContent;

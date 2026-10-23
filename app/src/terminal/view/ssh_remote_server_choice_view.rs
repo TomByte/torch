@@ -17,15 +17,15 @@
 //! Dismissing the block (on click of either option, or when the session is
 //! deregistered) is the parent's responsibility.
 use settings::Setting;
-use warp_core::ui::theme::color::internal_colors;
-use warp_errors::report_error;
-use warpui::elements::{
+use torch_core::ui::theme::color::internal_colors;
+use torch_errors::report_error;
+use torchui::elements::{
     Border, ChildView, Container, CornerRadius, CrossAxisAlignment, Flex, Hoverable,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, Text,
 };
-use warpui::platform::Cursor;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::platform::Cursor;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };

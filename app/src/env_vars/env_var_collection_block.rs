@@ -5,16 +5,16 @@ use std::sync::Arc;
 use lazy_static::lazy_static;
 use parking_lot::RwLock;
 use settings::Setting as _;
-use warp_core::features::FeatureFlag;
-use warp_core::semantic_selection::SemanticSelection;
-use warp_core::ui::Icon;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::semantic_selection::SemanticSelection;
+use torch_core::ui::Icon;
+use torchui::elements::{
     Border, Clipped, Container, CornerRadius, CrossAxisAlignment, Flex, FormattedTextElement,
     MouseStateHandle, ParentElement, Radius, SavePosition, SelectableArea, SelectionHandle,
     get_rich_content_position_id,
 };
-use warpui::keymap::{FixedBinding, Keystroke};
-use warpui::{
+use torchui::keymap::{FixedBinding, Keystroke};
+use torchui::{
     AppContext, Element, Entity, EntityId, FocusContext, SingletonEntity, TypedActionView, View,
     ViewContext,
 };
@@ -118,7 +118,7 @@ pub struct EnvVarCollectionBlock {
 }
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings([
         FixedBinding::new(

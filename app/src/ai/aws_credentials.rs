@@ -11,9 +11,9 @@ use futures::future::BoxFuture;
 use parking_lot::FairMutex;
 use tokio::sync::Mutex;
 use vec1::vec1;
-use warp_errors::report_error;
-use warp_managed_secrets::client::IdentityTokenOptions;
-use warpui::{ModelContext, ModelHandle, SingletonEntity};
+use torch_errors::report_error;
+use torch_managed_secrets::client::IdentityTokenOptions;
+use torchui::{ModelContext, ModelHandle, SingletonEntity};
 
 use crate::server::server_api::managed_secrets::{
     AppManagedSecretManager as ManagedSecretManager, IdentityTokenUserFacingError,

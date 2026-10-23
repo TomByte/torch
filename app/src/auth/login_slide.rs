@@ -8,23 +8,23 @@ use onboarding::{OnboardingEvent, OnboardingIntention, WARP_DRIVE_FEATURES};
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use ui_components::{Component as _, Options as _, button};
-use warp_core::features::FeatureFlag;
-use warp_core::safe_error;
-use warp_core::ui::Icon;
-use warp_core::ui::theme::color::internal_colors;
-use warpui::actions::StandardAction;
-use warpui::clipboard::ClipboardContent;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::safe_error;
+use torch_core::ui::Icon;
+use torch_core::ui::theme::color::internal_colors;
+use torchui::actions::StandardAction;
+use torchui::clipboard::ClipboardContent;
+use torchui::elements::{
     Align, Border, CacheOption, ChildAnchor, ClippedScrollStateHandle, ConstrainedBox, Container,
     CornerRadius, CrossAxisAlignment, Dismiss, Fill, Flex, FormattedTextElement,
     HighlightedHyperlink, Image, MainAxisAlignment, MainAxisSize, MouseStateHandle,
     OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Shrinkable, Stack,
 };
-use warpui::fonts::Weight;
-use warpui::keymap::{FixedBinding, Keystroke};
-use warpui::text_layout::TextAlignment;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::fonts::Weight;
+use torchui::keymap::{FixedBinding, Keystroke};
+use torchui::text_layout::TextAlignment;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity, TypedActionView, UpdateModel, View,
     ViewContext, ViewHandle,
 };
@@ -50,7 +50,7 @@ const TOS_URL: &str = "https://www.warp.dev/terms-of-service";
 // ---------------------------------------------------------------------------
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings([
         FixedBinding::new(
@@ -961,7 +961,7 @@ impl LoginSlideView {
             } else {
                 // First call (narrow layout fallback): placeholder.
                 editor_rendered.set(true);
-                Container::new(warpui::elements::Empty::new().finish())
+                Container::new(torchui::elements::Empty::new().finish())
                     .with_padding_top(12.)
                     .with_padding_bottom(12.)
                     .with_padding_left(16.)
@@ -1216,14 +1216,14 @@ impl View for LoginSlideView {
                 );
                 let overlay_opacity = (100u8).saturating_sub(img.opacity);
                 stack.add_child(
-                    warpui::elements::Rect::new()
+                    torchui::elements::Rect::new()
                         .with_background(theme.background().with_opacity(overlay_opacity))
                         .finish(),
                 );
             }
             _ => {
                 stack.add_child(
-                    Container::new(warpui::elements::Empty::new().finish())
+                    Container::new(torchui::elements::Empty::new().finish())
                         .with_background(theme.background())
                         .finish(),
                 );
@@ -1244,9 +1244,9 @@ impl View for LoginSlideView {
         if matches!(self.active_overlay, Some(LoginSlideOverlay::SkipDialog)) {
             let dialog = self.render_skip_dialog(appearance);
             stack.add_child(
-                warpui::elements::Rect::new()
+                torchui::elements::Rect::new()
                     .with_background(
-                        warp_core::ui::theme::Fill::Solid(ColorU::black()).with_opacity(60),
+                        torch_core::ui::theme::Fill::Solid(ColorU::black()).with_opacity(60),
                     )
                     .finish(),
             );

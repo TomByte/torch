@@ -1,15 +1,15 @@
 use enum_iterator::{Sequence, all};
 use itertools::{Either, Itertools};
-use warpui::elements::{
+use torchui::elements::{
     Align, Border, ClippedScrollStateHandle, ClippedScrollable, ConstrainedBox, Container,
     CornerRadius, CrossAxisAlignment, Element, Fill, Flex, MainAxisSize, MouseStateHandle,
     ParentElement, Radius, Shrinkable,
 };
-use warpui::keymap::{DescriptionContext, Keystroke};
-use warpui::presenter::ChildView;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::units::Pixels;
-use warpui::{
+use torchui::keymap::{DescriptionContext, Keystroke};
+use torchui::presenter::ChildView;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::units::Pixels;
+use torchui::{
     AppContext, Entity, FocusContext, ModelHandle, SingletonEntity, TypedActionView, View,
     ViewContext, ViewHandle,
 };

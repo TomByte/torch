@@ -3,8 +3,8 @@ use ai::agent::action_result::{RecordingStopped, StopRecordingResult};
 use futures::FutureExt;
 use futures::future::BoxFuture;
 #[cfg(not(target_family = "wasm"))]
-use warpui::SingletonEntity;
-use warpui::{Entity, ModelContext};
+use torchui::SingletonEntity;
+use torchui::{Entity, ModelContext};
 
 use super::{ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessActionInput};
 use crate::ai::agent::AIAgentActionType;

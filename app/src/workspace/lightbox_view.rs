@@ -3,16 +3,16 @@ use std::sync::Arc;
 pub use lightbox::LightboxImage;
 use pathfinder_geometry::vector::Vector2F;
 use ui_components::{Component as _, lightbox};
-use warpui::assets::asset_cache::{AssetCache, AssetSource, AssetState};
-use warpui::image_cache::ImageType;
-use warpui::keymap::{FixedBinding, Keystroke};
-use warpui::prelude::*;
-use warpui::{AppContext, BlurContext, Element, Entity, SingletonEntity, View, ViewContext};
+use torchui::assets::asset_cache::{AssetCache, AssetSource, AssetState};
+use torchui::image_cache::ImageType;
+use torchui::keymap::{FixedBinding, Keystroke};
+use torchui::prelude::*;
+use torchui::{AppContext, BlurContext, Element, Entity, SingletonEntity, View, ViewContext};
 
 use crate::appearance::Appearance;
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
     let view_id = id!(LightboxView::ui_name());
     app.register_fixed_bindings([
         FixedBinding::new("escape", LightboxViewAction::Dismiss, view_id.clone()),

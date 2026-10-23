@@ -82,7 +82,7 @@ pub use tui_theme::*;
 pub use tui_voice::*;
 pub use tui_zero_state::*;
 pub use vim_banner::*;
-use warp_core::user_preferences::GetUserPreferences as _;
+use torch_core::user_preferences::GetUserPreferences as _;
 
 /// Describes errors encountered when loading settings from `settings.toml`.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -143,10 +143,10 @@ use pathfinder_geometry::vector::Vector2F;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use settings::Setting as _;
-use warp_core::features::FeatureFlag;
-use warpui::elements::DEFAULT_UI_LINE_HEIGHT_RATIO;
-use warpui::keymap::Keystroke;
-use warpui::{AppContext, DisplayIdx, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torchui::elements::DEFAULT_UI_LINE_HEIGHT_RATIO;
+use torchui::keymap::Keystroke;
+use torchui::{AppContext, DisplayIdx, SingletonEntity};
 
 use crate::root_view::QuakeModePinPosition;
 use crate::terminal::{BlockListSettings, BlockPadding};
@@ -605,19 +605,19 @@ pub struct ExtraMetaKeysChangedArg {
 
 /// Returns the path to the user preferences file.
 pub fn user_preferences_file_path() -> PathBuf {
-    warp_core::paths::config_local_dir().join("user_preferences.json")
+    torch_core::paths::config_local_dir().join("user_preferences.json")
 }
 
 /// Returns the path to the TOML settings file for the active settings surface.
 ///
 /// Both surfaces use the same `settings.toml` file name but live in different
-/// config directories (the GUI under [`warp_core::paths::config_local_dir`], the
-/// TUI under [`warp_core::paths::tui_config_local_dir`]) so an installed GUI and
+/// config directories (the GUI under [`torch_core::paths::config_local_dir`], the
+/// TUI under [`torch_core::paths::tui_config_local_dir`]) so an installed GUI and
 /// TUI never share (and clobber) one file.
 pub fn user_preferences_toml_file_path() -> PathBuf {
     let config_dir = match settings::settings_mode() {
-        settings::SettingsMode::Gui => warp_core::paths::config_local_dir(),
-        settings::SettingsMode::Tui => warp_core::paths::tui_config_local_dir(),
+        settings::SettingsMode::Gui => torch_core::paths::config_local_dir(),
+        settings::SettingsMode::Tui => torch_core::paths::tui_config_local_dir(),
     };
     config_dir.join("settings.toml")
 }

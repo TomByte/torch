@@ -8,16 +8,16 @@ use lsp::supported_servers::LSPServerType;
 use lsp_server_selector::{LSPServerInfo, create_lsp_server_selector};
 pub use model::{InitProjectModel, InitProjectModelEvent, InitStepKind};
 use model::{InitStepData, InitStepStatus};
-use warp_core::ui::theme::Fill;
+use torch_core::ui::theme::Fill;
 #[cfg(feature = "local_fs")]
-use warp_errors::report_error;
-use warpui::elements::{
+use torch_errors::report_error;
+use torchui::elements::{
     Border, ChildView, Container, CrossAxisAlignment, Empty, Flex, MouseStateHandle, ParentElement,
     Text,
 };
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::UiComponent;
-use warpui::{
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::UiComponent;
+use torchui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };

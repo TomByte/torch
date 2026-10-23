@@ -1,21 +1,21 @@
 use ui_components::{Component as _, Options as _, button};
-use warp_core::send_telemetry_from_ctx;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::icons::Icon;
-use warp_core::ui::theme::Fill;
-use warp_core::ui::theme::color::internal_colors;
-use warpui_core::elements::{
+use torch_core::send_telemetry_from_ctx;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::icons::Icon;
+use torch_core::ui::theme::Fill;
+use torch_core::ui::theme::color::internal_colors;
+use torchui_core::elements::{
     Border, ClippedScrollStateHandle, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     Empty, Flex, FormattedTextElement, Hoverable, MainAxisAlignment, MainAxisSize,
     MouseStateHandle, ParentElement, Radius, Stack,
 };
-use warpui_core::fonts::Weight;
-use warpui_core::keymap::Keystroke;
-use warpui_core::platform::Cursor;
-use warpui_core::prelude::Align;
-use warpui_core::text_layout::TextAlignment;
-use warpui_core::ui_components::components::{UiComponent as _, UiComponentStyles};
-use warpui_core::{
+use torchui_core::fonts::Weight;
+use torchui_core::keymap::Keystroke;
+use torchui_core::platform::Cursor;
+use torchui_core::prelude::Align;
+use torchui_core::text_layout::TextAlignment;
+use torchui_core::ui_components::components::{UiComponent as _, UiComponentStyles};
+use torchui_core::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity as _, TypedActionView, View,
     ViewContext,
 };

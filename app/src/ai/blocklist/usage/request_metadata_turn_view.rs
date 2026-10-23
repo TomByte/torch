@@ -3,12 +3,12 @@
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use thousands::Separable;
-use warpui::elements::{
+use torchui::elements::{
     Border, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, DropShadow, Empty, Flex,
     Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, Text,
 };
-use warpui::platform::Cursor;
-use warpui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
+use torchui::platform::Cursor;
+use torchui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
 
 use super::render_context_window_usage_icon;
 use crate::ai::agent::request_metadata::{
@@ -118,8 +118,8 @@ impl RequestMetadataTurnView {
         let font_size = appearance.ui_font_size() + 2.;
 
         let title = Text::new("Turn".to_string(), appearance.ui_font_family(), font_size)
-            .with_style(warpui::fonts::Properties {
-                weight: warpui::fonts::Weight::Bold,
+            .with_style(torchui::fonts::Properties {
+                weight: torchui::fonts::Weight::Bold,
                 ..Default::default()
             })
             .with_color(blended_colors::text_main(theme, background))
@@ -208,8 +208,8 @@ impl RequestMetadataTurnView {
         };
         let label = Hoverable::new(row_state.mouse.clone(), move |_state| {
             let text_element = Text::new(model_id.clone(), font_family, font_size)
-                .with_style(warpui::fonts::Properties {
-                    weight: warpui::fonts::Weight::Medium,
+                .with_style(torchui::fonts::Properties {
+                    weight: torchui::fonts::Weight::Medium,
                     ..Default::default()
                 })
                 .with_color(text_color)
@@ -328,8 +328,8 @@ impl RequestMetadataTurnView {
             appearance.ui_font_family(),
             header_font_size,
         )
-        .with_style(warpui::fonts::Properties {
-            weight: warpui::fonts::Weight::Bold,
+        .with_style(torchui::fonts::Properties {
+            weight: torchui::fonts::Weight::Bold,
             ..Default::default()
         })
         .with_color(blended_colors::text_main(theme, theme.surface_2()))

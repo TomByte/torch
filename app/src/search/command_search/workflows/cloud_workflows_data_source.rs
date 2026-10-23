@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use futures_lite::future::yield_now;
-use warpui::{AppContext, SingletonEntity, WindowId};
+use torchui::{AppContext, SingletonEntity, WindowId};
 
 use super::WorkflowSearchItem;
 use crate::cloud_object::model::persistence::CloudModel;

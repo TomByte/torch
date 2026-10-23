@@ -1,8 +1,8 @@
 use pathfinder_color::ColorU;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::color::ContrastingColor;
-use warp_core::ui::color::contrast::MinimumAllowedContrast;
-use warp_core::ui::theme::Fill;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::color::ContrastingColor;
+use torch_core::ui::color::contrast::MinimumAllowedContrast;
+use torch_core::ui::theme::Fill;
 
 use super::DriveObjectType;
 use crate::ui_components::blended_colors;

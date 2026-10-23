@@ -3,8 +3,8 @@ use std::sync::Arc;
 use chrono::Local;
 use futures_lite::future::yield_now;
 use ordered_float::OrderedFloat;
-use warp_core::features::FeatureFlag;
-use warpui::{AppContext, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torchui::{AppContext, SingletonEntity};
 
 use super::HistorySearchItem;
 use super::rank::{self, RankInputs};

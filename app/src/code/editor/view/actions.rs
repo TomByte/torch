@@ -8,19 +8,19 @@ use std::ops::Range;
 use lazy_static::lazy_static;
 use rangemap::RangeSet;
 use string_offset::CharOffset;
-use warp_editor::content::version::BufferVersion;
-use warp_editor::editor::{EmbeddedItemModel, RunnableCommandModel, TextDecoration};
-use warp_editor::model::{CoreEditorModel, PlainTextEditorModel};
-use warp_editor::render::element::RichTextAction;
-use warp_editor::render::model::{ExpansionType, LineCount, Location};
-use warp_editor::selection::{TextDirection, TextUnit};
-use warp_util::user_input::UserInput;
-use warpui::actions::StandardAction;
-use warpui::elements::Axis;
-use warpui::event::ModifiersState;
-use warpui::keymap::{EditableBinding, FixedBinding, Keystroke, PerPlatformKeystroke};
-use warpui::units::Pixels;
-use warpui::{AppContext, TypedActionView, ViewContext, WeakViewHandle};
+use torch_editor::content::version::BufferVersion;
+use torch_editor::editor::{EmbeddedItemModel, RunnableCommandModel, TextDecoration};
+use torch_editor::model::{CoreEditorModel, PlainTextEditorModel};
+use torch_editor::render::element::RichTextAction;
+use torch_editor::render::model::{ExpansionType, LineCount, Location};
+use torch_editor::selection::{TextDirection, TextUnit};
+use torch_util::user_input::UserInput;
+use torchui::actions::StandardAction;
+use torchui::elements::Axis;
+use torchui::event::ModifiersState;
+use torchui::keymap::{EditableBinding, FixedBinding, Keystroke, PerPlatformKeystroke};
+use torchui::units::Pixels;
+use torchui::{AppContext, TypedActionView, ViewContext, WeakViewHandle};
 
 use crate::cmd_or_ctrl_shift;
 use crate::code::editor::line::EditorLineLocation;
@@ -42,7 +42,7 @@ lazy_static! {
 }
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     let text_entry = id!("CodeEditorView") & !id!("IMEOpen");
     // We use this to disable some keybindings that would conflict with the Agent Mode embedded editor.
@@ -1128,7 +1128,7 @@ impl TypedActionView for CodeEditorView {
     }
 }
 
-impl warp_editor::editor::EditorView for CodeEditorView {
+impl torch_editor::editor::EditorView for CodeEditorView {
     type RichTextAction = CodeEditorViewAction;
 
     fn runnable_command_at<'a>(

@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use async_channel::Receiver;
 use instant::Instant;
-use warpui::{Entity, ModelContext, ModelHandle, SingletonEntity};
+use torchui::{Entity, ModelContext, ModelHandle, SingletonEntity};
 
 use super::event::{BootstrappedEvent, SshLoginStatus};
 use super::model::ansi;
@@ -472,7 +472,7 @@ pub enum ModelEvent {
     ExternalShellWidgetSelection(ExternalShellWidgetSelectionValue),
     SelectedTextChanged,
     ShellSpawned(ShellType),
-    CompletionsFinished(Vec<ShellCompletion>, Option<warp_completer::meta::Span>),
+    CompletionsFinished(Vec<ShellCompletion>, Option<torch_completer::meta::Span>),
     ImageReceived {
         image_id: u32,
         image_data: Vec<u8>,

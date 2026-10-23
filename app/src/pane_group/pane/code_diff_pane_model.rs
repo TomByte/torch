@@ -1,4 +1,4 @@
-use warpui::{Entity, ModelContext, ViewHandle};
+use torchui::{Entity, ModelContext, ViewHandle};
 
 use crate::ai::blocklist::inline_action::code_diff_view::{CodeDiffView, CodeDiffViewEvent};
 

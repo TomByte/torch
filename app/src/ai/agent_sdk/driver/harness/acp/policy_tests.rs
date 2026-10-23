@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 
 use serde_json::json;
-use warp_util::path::EscapeChar;
-use warpui::{App, SingletonEntity};
+use torch_util::path::EscapeChar;
+use torchui::{App, SingletonEntity};
 
 use super::super::protocol::ToolCallFields;
 use super::{PolicyDecision, PolicyRequest};

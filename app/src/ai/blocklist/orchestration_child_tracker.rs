@@ -30,9 +30,9 @@ use std::collections::{HashMap, HashSet};
 
 use session_sharing_protocol::common::SessionId;
 use warp_multi_agent_api as api;
-use warpui::ModelContext;
+use torchui::ModelContext;
 #[cfg(not(test))]
-use warpui::SingletonEntity;
+use torchui::SingletonEntity;
 
 #[cfg(not(test))]
 use super::history_model::BlocklistAIHistoryModel;

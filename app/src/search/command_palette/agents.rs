@@ -5,11 +5,11 @@ use fuzzy_match::match_indices_case_insensitive;
 use instant::Instant;
 use ordered_float::OrderedFloat;
 use parking_lot::Mutex;
-use warp_core::ui::color::blend::Blend;
-use warp_core::ui::theme::Fill;
-use warpui::elements::{ConstrainedBox, Container, Flex, ParentElement, Text};
-use warpui::text_layout::ClipConfig;
-use warpui::{AppContext, Element, Entity, SingletonEntity};
+use torch_core::ui::color::blend::Blend;
+use torch_core::ui::theme::Fill;
+use torchui::elements::{ConstrainedBox, Container, Flex, ParentElement, Text};
+use torchui::text_layout::ClipConfig;
+use torchui::{AppContext, Element, Entity, SingletonEntity};
 
 use crate::appearance::Appearance;
 use crate::search::command_palette::mixer::CommandPaletteItemAction;

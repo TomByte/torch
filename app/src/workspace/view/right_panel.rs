@@ -4,21 +4,21 @@ use std::sync::Arc;
 use dunce::canonicalize;
 use itertools::Itertools;
 use pathfinder_color::ColorU;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::Icon;
-use warp_errors::report_error;
-use warp_util::path::LineAndColumnArg;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::ui::Icon;
+use torch_errors::report_error;
+use torch_util::path::LineAndColumnArg;
+use torchui::elements::{
     ChildAnchor, ChildView, Clipped, ConstrainedBox, Container, CrossAxisAlignment, DragBarSide,
     Element, Empty, Flex, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement,
     PositionedElementAnchor, Resizable, ResizableStateHandle, Shrinkable, Text,
     resizable_state_handle,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::keymap::EditableBinding;
-use warpui::platform::Cursor;
-use warpui::ui_components::components::UiComponent;
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::keymap::EditableBinding;
+use torchui::platform::Cursor;
+use torchui::ui_components::components::UiComponent;
+use torchui::{
     AppContext, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle, WeakViewHandle,
 };
@@ -225,7 +225,7 @@ impl CodeReviewState {
                 dropdown.set_font_color(font_color, ctx);
                 dropdown.set_font_size(ui_font_size, ctx);
                 dropdown.set_vertical_margin(0., ctx);
-                dropdown.set_top_bar_height(warp_core::ui::icons::ICON_DIMENSIONS, ctx);
+                dropdown.set_top_bar_height(torch_core::ui::icons::ICON_DIMENSIONS, ctx);
                 dropdown.set_padding(HEADER_BUTTON_PADDING, ctx);
 
                 // The font color above is derived from the active theme and
@@ -440,7 +440,7 @@ pub struct RightPanelView {
 
 impl RightPanelView {
     pub fn init(app: &mut AppContext) {
-        use warpui::keymap::macros::*;
+        use torchui::keymap::macros::*;
 
         app.register_editable_bindings([EditableBinding::new(
             "workspace:toggle_maximize_code_review_panel",
@@ -943,8 +943,8 @@ impl RightPanelView {
     #[cfg_attr(not(feature = "local_fs"), allow(dead_code))]
     fn render_maximize_pane_button(&self) -> Box<dyn Element> {
         ConstrainedBox::new(ChildView::new(&self.maximize_button).finish())
-            .with_height(warp_core::ui::icons::ICON_DIMENSIONS)
-            .with_width(warp_core::ui::icons::ICON_DIMENSIONS)
+            .with_height(torch_core::ui::icons::ICON_DIMENSIONS)
+            .with_width(torch_core::ui::icons::ICON_DIMENSIONS)
             .finish()
     }
 

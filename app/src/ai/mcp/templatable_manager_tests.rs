@@ -2,7 +2,7 @@ use futures_util::stream::AbortHandle;
 use mcp::oauth::CallbackResult;
 use url::Url;
 use uuid::Uuid;
-use warpui::App;
+use torchui::App;
 
 use super::{SpawnedServerInfo, TemplatableMCPServerManager};
 use crate::ai::mcp::builtin;

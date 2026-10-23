@@ -1,10 +1,10 @@
 use fuzzy_match::FuzzyMatchResult;
 use ordered_float::OrderedFloat;
-use warp_core::ui::icons::Icon;
-use warpui::elements::{ConstrainedBox, Container, Highlight, Text};
-use warpui::fonts::{Properties, Weight};
-use warpui::text_layout::ClipConfig;
-use warpui::{
+use torch_core::ui::icons::Icon;
+use torchui::elements::{ConstrainedBox, Container, Highlight, Text};
+use torchui::fonts::{Properties, Weight};
+use torchui::text_layout::ClipConfig;
+use torchui::{
     AppContext, Element, Entity, ModelContext, ModelHandle, SingletonEntity as _, WindowId,
 };
 
@@ -226,7 +226,7 @@ impl SearchItem for PromptSearchItem {
         &self,
         highlight_state: ItemHighlightState,
         appearance: &Appearance,
-    ) -> Option<warp_core::ui::theme::Fill> {
+    ) -> Option<torch_core::ui::theme::Fill> {
         inline_styles::item_background(highlight_state, appearance)
     }
 

@@ -1,6 +1,6 @@
-use warp_core::ui::appearance::Appearance;
-use warpui::platform::WindowStyle;
-use warpui::{App, ViewHandle};
+use torch_core::ui::appearance::Appearance;
+use torchui::platform::WindowStyle;
+use torchui::{App, ViewHandle};
 
 use crate::auth::AuthStateProvider;
 use crate::cloud_object::model::actions::ObjectActions;

@@ -1,5 +1,5 @@
-use warpui::Element;
-use warpui::elements::MouseStateHandle;
+use torchui::Element;
+use torchui::elements::MouseStateHandle;
 
 use super::{
     InlineBannerButtonState, InlineBannerCloseButton, InlineBannerContent, InlineBannerStyle,

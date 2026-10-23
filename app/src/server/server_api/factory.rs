@@ -3,13 +3,13 @@ use async_trait::async_trait;
 use cynic::{MutationBuilder, QueryBuilder};
 #[cfg(test)]
 use mockall::automock;
-use warp_graphql::mutations::delete_runner::{
+use torch_graphql::mutations::delete_runner::{
     DeleteRunner, DeleteRunnerInput, DeleteRunnerResult, DeleteRunnerVariables,
 };
-use warp_graphql::mutations::upsert_runner::{
+use torch_graphql::mutations::upsert_runner::{
     UpsertRunner, UpsertRunnerInput, UpsertRunnerResult, UpsertRunnerVariables,
 };
-use warp_graphql::queries::get_runners::{
+use torch_graphql::queries::get_runners::{
     GetRunners, GetRunnersResult, GetRunnersVariables, Runner, RunnerSortBy,
 };
 

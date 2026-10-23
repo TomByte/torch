@@ -14,7 +14,7 @@ use warp_multi_agent_api::{
     ShellCommandFinished, Task, client_action, query_author, response_event,
     run_shell_command_result,
 };
-use warpui::{App, AppContext};
+use torchui::{App, AppContext};
 
 use super::*;
 use crate::ai::agent::conversation::{AIConversation, ConversationDriver, ConversationStatus};

@@ -1,15 +1,15 @@
 use std::path::PathBuf;
 
 use pathfinder_geometry::vector::vec2f;
-use warp_core::ui::theme::Fill;
-use warp_errors::report_error;
-use warpui::elements::{
+use torch_core::ui::theme::Fill;
+use torch_errors::report_error;
+use torchui::elements::{
     Align, ChildAnchor, ChildView, Container, OffsetPositioning, ParentAnchor, ParentOffsetBounds,
     Stack,
 };
-use warpui::keymap::{FixedBinding, Keystroke};
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::keymap::{FixedBinding, Keystroke};
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 
@@ -20,7 +20,7 @@ use crate::view_components::action_button::{
 };
 
 pub(crate) fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings([
         FixedBinding::new(
@@ -97,7 +97,7 @@ impl View for RemoveTabConfigConfirmationDialog {
         "RemoveTabConfigConfirmationDialog"
     }
 
-    fn on_focus(&mut self, _focus_ctx: &warpui::FocusContext, ctx: &mut ViewContext<Self>) {
+    fn on_focus(&mut self, _focus_ctx: &torchui::FocusContext, ctx: &mut ViewContext<Self>) {
         ctx.focus_self();
     }
 

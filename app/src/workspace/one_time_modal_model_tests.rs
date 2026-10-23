@@ -3,8 +3,8 @@ use std::time::SystemTime;
 use ai::api_keys::{ApiKeyManager, ChatGPTConnection, ChatGPTConnectionStatus};
 use futures::FutureExt;
 use settings::Setting as _;
-use warp_core::features::FeatureFlag;
-use warpui::{App, SingletonEntity, WindowId};
+use torch_core::features::FeatureFlag;
+use torchui::{App, SingletonEntity, WindowId};
 
 use super::{
     AISettings, AuthManager, AuthManagerEvent, AuthStateProvider, CloudPreferencesSyncer,

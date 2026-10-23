@@ -8,8 +8,8 @@ use remote_server::setup::{
 };
 use remote_server::transport::Error;
 use settings::Setting;
-use warp_core::SessionId;
-use warpui::{Entity, ModelContext, ModelHandle, SingletonEntity, WeakModelHandle};
+use torch_core::SessionId;
+use torchui::{Entity, ModelContext, ModelHandle, SingletonEntity, WeakModelHandle};
 
 use super::pty_controller::{EventLoopSender, PtyController};
 use crate::auth::auth_state::AuthStateProvider;

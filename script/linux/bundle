@@ -209,7 +209,7 @@ elif [[ "$ARTIFACT" == "warpctrl" ]]; then
   BINARY_NAME="warpctrl"
   PACKAGES=()
 elif [[ "$ARTIFACT" == "tui" ]]; then
-  WARP_BIN="warp-tui-oss"
+  WARP_BIN="torch-tui"
   BINARY_NAME="$WARP_BIN"
   PACKAGES=()
 fi
@@ -252,9 +252,9 @@ export APPIMAGE_NAME="$APP_NAME-$BUILD_ARCH.AppImage"
 # using the same feature flags and profile that we would be using in production.
 if [[ "$CHECK_ONLY" == "true" ]]; then
   if [[ "$ARTIFACT" == "tui" ]]; then
-    cargo check -p warp_tui --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --features "$WARP_TUI_FEATURES"
+    cargo check -p torch_tui --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --features "$WARP_TUI_FEATURES"
   else
-    cargo check -p warp --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --features "$FEATURES" ${TARGET_TRIPLE:+--target $TARGET_TRIPLE}
+    cargo check -p torch --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --features "$FEATURES" ${TARGET_TRIPLE:+--target $TARGET_TRIPLE}
   fi
   exit 0
 fi
@@ -263,9 +263,9 @@ fi
 if [[ "$BUILD" == "true" ]]; then
   echo "Building and bundling Torch for channel $RELEASE_CHANNEL and bundle id $BUNDLE_ID"
   if [[ "$ARTIFACT" == "tui" ]]; then
-    cargo build -p warp_tui --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --features "$WARP_TUI_FEATURES"
+    cargo build -p torch_tui --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --features "$WARP_TUI_FEATURES"
   else
-    cargo build -p warp --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --features "$FEATURES" ${TARGET_TRIPLE:+--target $TARGET_TRIPLE}
+    cargo build -p torch --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --features "$FEATURES" ${TARGET_TRIPLE:+--target $TARGET_TRIPLE}
   fi
 
   echo "Making debug copy of '$EXECUTABLE_PATH' at '$DEBUG_EXECUTABLE_PATH'"

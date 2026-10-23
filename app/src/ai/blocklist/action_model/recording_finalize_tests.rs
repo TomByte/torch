@@ -1,7 +1,7 @@
 use ai::agent::action_result::StopRecordingResult;
 use computer_use::RecordingHandle;
 use instant::Instant;
-use warpui::{App, SingletonEntity};
+use torchui::{App, SingletonEntity};
 
 use super::super::recording_controller::ActiveRecording;
 use super::*;

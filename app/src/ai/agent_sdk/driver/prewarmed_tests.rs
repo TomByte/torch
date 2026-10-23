@@ -3,8 +3,8 @@ use std::ffi::OsStr;
 use chrono::TimeDelta;
 #[cfg(not(feature = "skip_login"))]
 use mockito::Matcher;
-use warp_graphql::queries::execution_config::{CodeForge, ExecutionRepository};
-use warpui::App;
+use torch_graphql::queries::execution_config::{CodeForge, ExecutionRepository};
+use torchui::App;
 
 use super::environment_preparation::{FILE_ENV, MODE_ENV, PreparationPolicy};
 use super::*;
@@ -61,7 +61,7 @@ fn installation_failures_are_reported_against_the_run_with_its_credential() {
         // Production builds the server API over the shared auth state, so installing the run
         // credential changes what every later request sends.
         app.add_singleton_model(|_| {
-            warp_server_client::network_logging::NetworkLogModel::default()
+            torch_server_client::network_logging::NetworkLogModel::default()
         });
         let auth_state = app.read(|ctx| AuthStateProvider::as_ref(ctx).get().clone());
         ServerApiProvider::handle(&app).update(&mut app, |provider, ctx| {
@@ -76,7 +76,7 @@ fn installation_failures_are_reported_against_the_run_with_its_credential() {
             .add_model(|ctx| AgentDriver::new_for_test(root.path().into(), terminal_driver, ctx));
         let spawner = driver.update(&mut app, |_, ctx| ctx.spawner());
         let mut unsupported = config();
-        unsupported.harness = warp_graphql::ai::AgentHarness::ClaudeCode;
+        unsupported.harness = torch_graphql::ai::AgentHarness::ClaudeCode;
         let error = AgentDriver::prepare_prewarmed_assignment(
             &spawner,
             unsupported,
@@ -104,7 +104,7 @@ fn prewarmed_accepts_server_assignments_and_rejects_unsupported_runs() {
     configuration.conversation_id = Some("conversation".into());
     assert!(validate_assignment(&configuration).is_err());
     configuration.conversation_id = None;
-    configuration.harness = warp_graphql::ai::AgentHarness::ClaudeCode;
+    configuration.harness = torch_graphql::ai::AgentHarness::ClaudeCode;
     assert!(validate_assignment(&configuration).is_err());
 }
 

@@ -1,6 +1,6 @@
 use ai::skills::{ParsedSkill, SkillProvider, SkillScope};
 use tempfile::TempDir;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
 
 use super::*;
 

@@ -1,4 +1,4 @@
-use warpui::{App, EntityId};
+use torchui::{App, EntityId};
 
 use super::*;
 use crate::ai::agent::conversation::AIConversationId;
@@ -8,7 +8,7 @@ use crate::test_util::settings::initialize_history_persistence_for_tests;
 
 fn set_credits(
     app: &mut App,
-    history: &warpui::ModelHandle<BlocklistAIHistoryModel>,
+    history: &torchui::ModelHandle<BlocklistAIHistoryModel>,
     id: AIConversationId,
     credits: f32,
 ) {
@@ -22,7 +22,7 @@ fn set_credits(
 
 fn set_billed_cost_in_cents(
     app: &mut App,
-    history: &warpui::ModelHandle<BlocklistAIHistoryModel>,
+    history: &torchui::ModelHandle<BlocklistAIHistoryModel>,
     id: AIConversationId,
     cost_in_cents: Option<f32>,
 ) {
@@ -36,7 +36,7 @@ fn set_billed_cost_in_cents(
 
 fn set_charged_usage(
     app: &mut App,
-    history: &warpui::ModelHandle<BlocklistAIHistoryModel>,
+    history: &torchui::ModelHandle<BlocklistAIHistoryModel>,
     id: AIConversationId,
     cost_in_cents: f32,
 ) {
@@ -53,7 +53,7 @@ fn set_charged_usage(
 
 fn spawn_child(
     app: &mut App,
-    history: &warpui::ModelHandle<BlocklistAIHistoryModel>,
+    history: &torchui::ModelHandle<BlocklistAIHistoryModel>,
     name: &str,
     parent_id: AIConversationId,
     terminal_view_id: EntityId,

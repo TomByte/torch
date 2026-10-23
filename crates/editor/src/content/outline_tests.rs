@@ -1,6 +1,6 @@
 use itertools::Itertools;
 use string_offset::CharOffset;
-use warpui_core::App;
+use torchui_core::App;
 
 use crate::content::buffer::Buffer;
 use crate::content::outline::BlockOutline;

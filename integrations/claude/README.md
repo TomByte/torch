@@ -77,8 +77,8 @@ The Claude installer does not configure Codex or other agents.
 
 ## Release checks
 
-- Run `cargo test -p warp --lib --features gui,local_only local_hooks::tests` and
-  `cargo test -p warp --lib --features gui,local_only settings_view::scripting_page::tests`.
+- Run `cargo test -p torch --lib --features gui,local_only local_hooks::tests` and
+  `cargo test -p torch --lib --features gui,local_only settings_view::scripting_page::tests`.
 - Build the normal app bundle. On a clean account with no checkout or Python,
   install through Settings into a temporary Claude configuration folder; verify
   unrelated settings survive install, repair, and removal.

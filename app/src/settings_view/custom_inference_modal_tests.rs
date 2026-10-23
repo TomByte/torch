@@ -1,9 +1,9 @@
 use ai::api_keys::{CustomEndpointModel, CustomEndpointSchema};
 use pathfinder_geometry::vector::vec2f;
-use warpui::platform::WindowStyle;
-use warpui::scene::Scene;
-use warpui::units::Pixels;
-use warpui::{App, EntityIdSet, Presenter, WindowInvalidation};
+use torchui::platform::WindowStyle;
+use torchui::scene::Scene;
+use torchui::units::Pixels;
+use torchui::{App, EntityIdSet, Presenter, WindowInvalidation};
 
 use super::*;
 use crate::test_util::terminal::initialize_app_for_terminal_view;

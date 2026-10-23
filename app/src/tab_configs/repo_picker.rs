@@ -1,11 +1,11 @@
 use std::path::PathBuf;
 
-use warp_util::path::user_friendly_path;
-use warpui::elements::{Border, ChildView, Container, Hoverable, MouseStateHandle, Text};
-use warpui::platform::Cursor;
-use warpui::text_layout::ClipConfig;
-use warpui::ui_components::components::UiComponentStyles;
-use warpui::{
+use torch_util::path::user_friendly_path;
+use torchui::elements::{Border, ChildView, Container, Hoverable, MouseStateHandle, Text};
+use torchui::platform::Cursor;
+use torchui::text_layout::ClipConfig;
+use torchui::ui_components::components::UiComponentStyles;
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 

@@ -1,8 +1,8 @@
 use settings::macros::define_settings_group;
 use settings::{RespectUserSyncSetting, Setting, SupportedPlatforms, SyncToCloud};
-use warp_errors::{report_error, report_if_error};
-use warpui::keymap::Keystroke;
-use warpui::{AppContext, DisplayIdx, ModelContext};
+use torch_errors::{report_error, report_if_error};
+use torchui::keymap::Keystroke;
+use torchui::{AppContext, DisplayIdx, ModelContext};
 
 use crate::root_view::{QuakeModePinPosition, update_quake_window_bounds};
 use crate::settings::{
@@ -56,7 +56,7 @@ define_settings_group!(KeysSettings, settings: [
         type: ExtraMetaKeysEnum,
         // Coding agents rely on Meta chords such as Option-Enter; right Option still composes.
         default: ExtraMetaKeysEnum {
-            left_alt: cfg!(target_os = "macos") && warp_core::channel::ChannelState::is_local_only(),
+            left_alt: cfg!(target_os = "macos") && torch_core::channel::ChannelState::is_local_only(),
             right_alt: false,
         },
         supported_platforms: SupportedPlatforms::ALL,

@@ -1,8 +1,8 @@
 use std::sync::mpsc;
 
-use warp_core::ui::appearance::Appearance;
-use warpui::platform::WindowStyle;
-use warpui::{AddSingletonModel, App, EntityId, ModelHandle, ViewContext, ViewHandle};
+use torch_core::ui::appearance::Appearance;
+use torchui::platform::WindowStyle;
+use torchui::{AddSingletonModel, App, EntityId, ModelHandle, ViewContext, ViewHandle};
 
 use super::NotebookManager;
 use crate::ai::blocklist::BlocklistAIHistoryModel;

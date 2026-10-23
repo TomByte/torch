@@ -1,8 +1,8 @@
 use fuzzy_match::FuzzyMatchResult;
 use ordered_float::OrderedFloat;
-use warp_errors::report_error;
-use warpui::elements::{Highlight, Text};
-use warpui::{AppContext, SingletonEntity};
+use torch_errors::report_error;
+use torchui::elements::{Highlight, Text};
+use torchui::{AppContext, SingletonEntity};
 
 use crate::appearance::Appearance;
 use crate::cloud_object::CloudObject;

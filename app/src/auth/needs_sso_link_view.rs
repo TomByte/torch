@@ -1,7 +1,7 @@
-use warpui::elements::{Align, MouseStateHandle, Shrinkable};
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
+use torchui::elements::{Align, MouseStateHandle, Shrinkable};
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
 
 use super::auth_manager::AuthManager;
 use crate::appearance::Appearance;

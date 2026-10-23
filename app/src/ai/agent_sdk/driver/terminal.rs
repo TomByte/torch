@@ -13,15 +13,15 @@ use instant::Instant;
 use session_sharing_protocol::common::{Role, SessionId};
 use session_sharing_protocol::sharer::SessionRetentionReason;
 use uuid::Uuid;
-use warp_cli::share::{ShareAccessLevel, ShareRequest, ShareSubject};
-use warp_completer::completer::CommandOutput;
-use warp_core::command::ExitCode;
-use warp_core::features::FeatureFlag;
-use warp_errors::report_if_error;
-use warp_terminal::model::grid::Dimensions;
-use warp_util::path::ShellFamily;
-use warpui::r#async::FutureExt;
-use warpui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity as _, ViewHandle};
+use torch_cli::share::{ShareAccessLevel, ShareRequest, ShareSubject};
+use torch_completer::completer::CommandOutput;
+use torch_core::command::ExitCode;
+use torch_core::features::FeatureFlag;
+use torch_errors::report_if_error;
+use torch_terminal::model::grid::Dimensions;
+use torch_util::path::ShellFamily;
+use torchui::r#async::FutureExt;
+use torchui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity as _, ViewHandle};
 
 use super::AgentDriverError;
 use crate::ai::agent::redaction::redact_secrets;
@@ -114,7 +114,7 @@ const TERMINAL_SESSION_SHARE_DELAY: Duration = Duration::from_secs(20);
 
 /// Whether to wait for a requested share, which is skipped when the server runs behind ngrok.
 fn sharing_expected(should_share: bool) -> bool {
-    should_share && !warp_core::channel::ChannelState::server_root_url().contains("ngrok")
+    should_share && !torch_core::channel::ChannelState::server_root_url().contains("ngrok")
 }
 
 /// Options for creating the terminal view before constructing a [`TerminalDriver`].
@@ -432,7 +432,7 @@ impl TerminalDriver {
     pub fn with_terminal_view(
         &self,
         ctx: &mut ModelContext<Self>,
-        f: impl FnOnce(&mut TerminalView, &mut warpui::ViewContext<TerminalView>),
+        f: impl FnOnce(&mut TerminalView, &mut torchui::ViewContext<TerminalView>),
     ) {
         self.terminal_view.update(ctx, f);
     }

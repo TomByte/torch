@@ -7,13 +7,13 @@ use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use settings::Setting;
-use warp_core::settings::SyncToCloud;
-use warp_core::ui::color::blend::Blend;
-use warp_core::ui::theme::color::internal_colors;
-use warpui::elements::new_scrollable::{
+use torch_core::settings::SyncToCloud;
+use torch_core::ui::color::blend::Blend;
+use torch_core::ui::theme::color::internal_colors;
+use torchui::elements::new_scrollable::{
     ClippedAxisConfiguration, DualAxisConfig, SingleAxisConfig,
 };
-use warpui::elements::{
+use torchui::elements::{
     Align, Border, ChildAnchor, ChildView, ClippedScrollStateHandle, ConstrainedBox, Container,
     CornerRadius, CrossAxisAlignment, Element, Empty, Expanded, Flex, FormattedTextElement,
     HighlightedHyperlink, Hoverable, HyperlinkLens, MainAxisAlignment, MainAxisSize,
@@ -21,12 +21,12 @@ use warpui::elements::{
     ParentOffsetBounds, Radius, SavePosition, ScrollTarget, ScrollToPositionMode, Shrinkable,
     SizeConstraintCondition, SizeConstraintSwitch, Stack, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::platform::Cursor;
-use warpui::ui_components::button::{Button, ButtonVariant};
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::units::Pixels;
-use warpui::{Action, AppContext, SingletonEntity, ViewContext, ViewHandle};
+use torchui::fonts::{Properties, Weight};
+use torchui::platform::Cursor;
+use torchui::ui_components::button::{Button, ButtonVariant};
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::units::Pixels;
+use torchui::{Action, AppContext, SingletonEntity, ViewContext, ViewHandle};
 
 use super::SettingsSection;
 use super::about_page::AboutPageView;
@@ -1378,13 +1378,13 @@ where
     }
 }
 
-pub(super) struct PageTitle<V: warpui::View> {
+pub(super) struct PageTitle<V: torchui::View> {
     text: &'static str,
     /// An optional accessory that renders alongside it whenever the title itself renders.
     pub(super) trailing_element: Option<TrailingElementRenderer<V>>,
 }
 
-impl<V: warpui::View> PageTitle<V> {
+impl<V: torchui::View> PageTitle<V> {
     pub(super) fn new(text: &'static str) -> Self {
         Self {
             text,
@@ -1404,7 +1404,7 @@ impl<V: warpui::View> PageTitle<V> {
 
 /// Structured contents of a settings tab page. This type breaks all the content into
 /// [`SettingsWidget`]s.
-pub(super) enum PageType<V: warpui::View> {
+pub(super) enum PageType<V: torchui::View> {
     /// A page where the contents cannot be separated for showing search results. If any part
     /// matches the search query, the whole page must show. The whole page is one big
     /// [`SettingsWidget`].
@@ -1499,7 +1499,7 @@ pub(super) fn search_terms_match(terms: &str, query: &str) -> bool {
 
 /// Combines `header` with `trailing_element`, in a space-between row, when the accessory is
 /// present. Otherwise returns `header` unchanged.
-fn render_header_with_trailing_element<V: warpui::View>(
+fn render_header_with_trailing_element<V: torchui::View>(
     header: Box<dyn Element>,
     trailing_element: Option<&TrailingElementRenderer<V>>,
     view: &V,
@@ -1519,7 +1519,7 @@ fn render_header_with_trailing_element<V: warpui::View>(
 
 /// Renders the page title with its optional trailing accessory (see
 /// [`PageTitle::with_trailing_element`]), preserving `render_page_title`'s margin.
-fn render_page_title_with_trailing<V: warpui::View>(
+fn render_page_title_with_trailing<V: torchui::View>(
     title: &PageTitle<V>,
     size: f32,
     view: &V,
@@ -1538,7 +1538,7 @@ fn render_page_title_with_trailing<V: warpui::View>(
         .finish()
 }
 
-impl<V: warpui::View> PageType<V> {
+impl<V: torchui::View> PageType<V> {
     /// A page where the contents cannot be separated for showing search results. If any part
     /// matches the search query, the whole page must show. The whole page is one big
     /// [`SettingsWidget`].
@@ -1973,7 +1973,7 @@ impl<V: warpui::View> PageType<V> {
                 },
                 theme.nonactive_ui_detail().into(),
                 theme.active_ui_detail().into(),
-                warpui::elements::Fill::None,
+                torchui::elements::Fill::None,
             )
             .finish(),
             vec![(
@@ -2000,7 +2000,7 @@ impl<V: warpui::View> PageType<V> {
                     },
                     theme.nonactive_ui_detail().into(),
                     theme.active_ui_detail().into(),
-                    warpui::elements::Fill::None,
+                    torchui::elements::Fill::None,
                 )
                 .finish(),
             )],
@@ -2023,7 +2023,7 @@ impl<V: warpui::View> PageType<V> {
 }
 
 /// The results from a [`PageType`] with only matching [`SettingsWidget`]s.
-pub(super) enum FilteredPageType<'a, V: warpui::View> {
+pub(super) enum FilteredPageType<'a, V: torchui::View> {
     Monolith {
         widget: Option<&'a dyn SettingsWidget<View = V>>,
         title: Option<&'static str>,
@@ -2049,19 +2049,19 @@ pub(super) enum FilteredPageType<'a, V: warpui::View> {
 /// A category header: title text with an optional subtitle and trailing accessory. Absent when
 /// the category draws no header row at all (e.g. Warpify's single-widget category, whose widget
 /// draws its own heading).
-pub(super) struct CategoryHeader<V: warpui::View> {
+pub(super) struct CategoryHeader<V: torchui::View> {
     title: &'static str,
     subtitle: Option<&'static str>,
     trailing_element: Option<TrailingElementRenderer<V>>,
 }
 
 /// A grouping of related [`SettingsWidget`]s that fall under the same sub-header.
-pub(super) struct Category<V: warpui::View> {
+pub(super) struct Category<V: torchui::View> {
     header: Option<CategoryHeader<V>>,
     widgets: Vec<Box<dyn SettingsWidget<View = V>>>,
 }
 
-impl<V: warpui::View> CategoryHeader<V> {
+impl<V: torchui::View> CategoryHeader<V> {
     pub(super) fn new(title: &'static str) -> Self {
         Self {
             title,
@@ -2085,7 +2085,7 @@ impl<V: warpui::View> CategoryHeader<V> {
     }
 }
 
-impl<V: warpui::View> Category<V> {
+impl<V: torchui::View> Category<V> {
     pub(super) fn new(
         title: &'static str,
         widgets: Vec<Box<dyn SettingsWidget<View = V>>>,
@@ -2110,14 +2110,14 @@ impl<V: warpui::View> Category<V> {
 }
 
 /// A [`Category`] with only the results which match a search query.
-pub(super) struct FilteredCategory<'a, V: warpui::View> {
+pub(super) struct FilteredCategory<'a, V: torchui::View> {
     pub(super) title: &'static str,
     pub(super) subtitle: Option<&'static str>,
     pub(super) trailing_element: Option<&'a TrailingElementRenderer<V>>,
     pub(super) widgets: Vec<&'a dyn SettingsWidget<View = V>>,
 }
 
-pub(super) fn categories_with_visible_content<'a, V: warpui::View>(
+pub(super) fn categories_with_visible_content<'a, V: torchui::View>(
     categories: Vec<FilteredCategory<'a, V>>,
     app: &AppContext,
 ) -> Vec<FilteredCategory<'a, V>> {
@@ -2136,7 +2136,7 @@ pub(super) fn categories_with_visible_content<'a, V: warpui::View>(
 /// content to match against.
 pub(super) trait SettingsWidget {
     /// Which View (settings page) this widget belongs to.
-    type View: warpui::View;
+    type View: torchui::View;
 
     fn static_widget_id() -> &'static str
     where

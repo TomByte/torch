@@ -4,7 +4,7 @@ use std::path::Path;
 
 use build_cache::metadata::write_cache_metadata;
 use cloud_object_models::{CodeForge, SourceRepo};
-use warp_isolation_platform::IsolationPlatformType;
+use torch_isolation_platform::IsolationPlatformType;
 
 use super::{build_export_command, repository_cache_source, should_setup_cache};
 use crate::terminal::shell::ShellType;

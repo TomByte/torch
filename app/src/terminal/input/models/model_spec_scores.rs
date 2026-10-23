@@ -1,12 +1,12 @@
 use pathfinder_color::ColorU;
-use warp_core::ui::theme::color::internal_colors;
-use warpui::elements::{
+use torch_core::ui::theme::color::internal_colors;
+use torchui::elements::{
     Border, ConstrainedBox, Container, CornerRadius, Expanded, Flex, MainAxisAlignment,
     MainAxisSize, ParentElement as _, Percentage, Radius, Rect, Stack, Text,
 };
-use warpui::prelude::{Align, CrossAxisAlignment};
-use warpui::text_layout::ClipConfig;
-use warpui::{AppContext, Element, SingletonEntity as _};
+use torchui::prelude::{Align, CrossAxisAlignment};
+use torchui::text_layout::ClipConfig;
+use torchui::{AppContext, Element, SingletonEntity as _};
 
 use crate::ai::llms::LLMSpec;
 use crate::appearance::Appearance;

@@ -5,9 +5,9 @@
 //! icon, and brand color from here so the two surfaces cannot drift.
 
 use pathfinder_color::ColorU;
-use warp_cli::agent::Harness;
-use warp_core::ui::theme::color::internal_colors;
-use warp_core::ui::theme::{Fill as WarpThemeFill, WarpTheme};
+use torch_cli::agent::Harness;
+use torch_core::ui::theme::color::internal_colors;
+use torch_core::ui::theme::{Fill as WarpThemeFill, WarpTheme};
 
 use crate::ai::agent::conversation::AIAgentHarness;
 use crate::ai::blocklist::CLAUDE_ORANGE;

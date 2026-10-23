@@ -5,10 +5,10 @@ use ai::skills::SKILL_PROVIDER_DEFINITIONS;
 use repo_metadata::RepoMetadataModel;
 use repo_metadata::repositories::DetectedRepositories;
 use repo_metadata::watcher::DirectoryWatcher;
-use warp_core::ui::appearance::Appearance;
-use warp_server_client::iap::IapManager;
-use warpui::platform::WindowStyle;
-use warpui::{App, SingletonEntity, ViewHandle, WindowId};
+use torch_core::ui::appearance::Appearance;
+use torch_server_client::iap::IapManager;
+use torchui::platform::WindowStyle;
+use torchui::{App, SingletonEntity, ViewHandle, WindowId};
 use watcher::HomeDirectoryWatcher;
 
 use super::settings::initialize_history_persistence_for_tests;

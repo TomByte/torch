@@ -1,5 +1,5 @@
 use uuid::Uuid;
-use warpui::{App, EntityId, ModelHandle};
+use torchui::{App, EntityId, ModelHandle};
 
 use super::*;
 use crate::ai::agent::conversation::{AIConversationId, ConversationStatus};

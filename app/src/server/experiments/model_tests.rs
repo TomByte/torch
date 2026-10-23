@@ -1,4 +1,4 @@
-use warpui::{App, Entity, SingletonEntity};
+use torchui::{App, Entity, SingletonEntity};
 
 use super::{ServerExperiment, ServerExperiments};
 use crate::{GlobalResourceHandles, GlobalResourceHandlesProvider};

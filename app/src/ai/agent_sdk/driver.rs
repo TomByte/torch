@@ -20,17 +20,17 @@ use oneshot::{Canceled, Receiver};
 use session_sharing_protocol::sharer::SessionRetentionReason;
 use tracing::Instrument as _;
 use uuid::Uuid;
-use warp_cli::agent::{Harness, HarnessTransport, OutputFormat};
-use warp_cli::mcp::MCPSpec;
-use warp_cli::share::ShareRequest;
-use warp_core::features::FeatureFlag;
-use warp_core::{safe_debug, safe_error, safe_info, safe_warn};
-use warp_errors::{ErrorExt, ReportErrorLogMode, register_error, report_error, report_if_error};
-use warp_graphql::ai::{AgentTaskState, PlatformErrorCode};
-use warp_managed_secrets::ManagedSecretValue;
-use warpui::r#async::executor::Background;
-use warpui::r#async::{FutureExt, TimeoutError, Timer};
-use warpui::{
+use torch_cli::agent::{Harness, HarnessTransport, OutputFormat};
+use torch_cli::mcp::MCPSpec;
+use torch_cli::share::ShareRequest;
+use torch_core::features::FeatureFlag;
+use torch_core::{safe_debug, safe_error, safe_info, safe_warn};
+use torch_errors::{ErrorExt, ReportErrorLogMode, register_error, report_error, report_if_error};
+use torch_graphql::ai::{AgentTaskState, PlatformErrorCode};
+use torch_managed_secrets::ManagedSecretValue;
+use torchui::r#async::executor::Background;
+use torchui::r#async::{FutureExt, TimeoutError, Timer};
+use torchui::{
     AppContext, Entity, EntityId, ModelContext, ModelHandle, ModelSpawner, SingletonEntity,
 };
 
@@ -855,7 +855,7 @@ fn split_run_options(
 
     // Signal to third-party harnesses (e.g. Claude Code) that we're in a sandbox
     // so they allow root execution with permissive flags.
-    if warp_isolation_platform::detect().is_some() {
+    if torch_isolation_platform::detect().is_some() {
         env_vars.insert(OsString::from("IS_SANDBOX"), OsString::from("1"));
         tracing::Span::current().record("is_sandbox", true);
     }
@@ -1303,8 +1303,8 @@ impl ErrorExt for AgentDriverError {
 }
 register_error!(AgentDriverError);
 
-impl From<warpui::ModelDropped> for AgentDriverError {
-    fn from(_: warpui::ModelDropped) -> Self {
+impl From<torchui::ModelDropped> for AgentDriverError {
+    fn from(_: torchui::ModelDropped) -> Self {
         AgentDriverError::InvalidRuntimeState
     }
 }
@@ -2403,7 +2403,7 @@ impl AgentDriver {
                 // and then call stop_sharing_session when they're done. To know when streams are finished, we would need to modify start_ordered_terminal_events_listener
                 // to send a message when the streams are finished, flushed, and the websocket is disconnected. For now, we'll just sleep for a second, as this seems
                 // to be enough time for the streams to be finished and the events to be flushed.
-                warpui::r#async::Timer::after(Duration::from_secs(1)).await;
+                torchui::r#async::Timer::after(Duration::from_secs(1)).await;
 
                 conversation_status.into_result()
             }
@@ -3211,7 +3211,7 @@ impl AgentDriver {
         let command_result = loop {
             futures::select! {
                 exit_code = command_handle => break exit_code,
-                _ = warpui::r#async::Timer::after(HARNESS_SAVE_INTERVAL).fuse() => {
+                _ = torchui::r#async::Timer::after(HARNESS_SAVE_INTERVAL).fuse() => {
                     log::debug!("Triggering periodic save of harness conversation data");
                     report_if_error!(runner
                         .clone()
@@ -3392,11 +3392,11 @@ impl AgentDriver {
         harness_name: &str,
         start_event: ExitEscalationEvent,
         mut command_handle: &mut (
-                 impl FusedFuture<Output = Result<warp_core::command::ExitCode, AgentDriverError>>
+                 impl FusedFuture<Output = Result<torch_core::command::ExitCode, AgentDriverError>>
                  + Unpin
              ),
         foreground: &ModelSpawner<Self>,
-    ) -> Result<warp_core::command::ExitCode, AgentDriverError> {
+    ) -> Result<torch_core::command::ExitCode, AgentDriverError> {
         let mut escalation = ExitEscalation::new();
         match escalation.on_event(start_event) {
             ExitEscalationAction::SendExit => {}
@@ -3427,7 +3427,7 @@ impl AgentDriver {
 
         let resolved = futures::select! {
             exit_code = command_handle => Some(exit_code),
-            _ = warpui::r#async::Timer::after(HARNESS_EXIT_FOLLOWUP_DELAY).fuse() => None,
+            _ = torchui::r#async::Timer::after(HARNESS_EXIT_FOLLOWUP_DELAY).fuse() => None,
         };
         if let Some(exit_code) = resolved {
             let _ = escalation.on_event(ExitEscalationEvent::CommandExited);
@@ -3459,7 +3459,7 @@ impl AgentDriver {
 
         let resolved = futures::select! {
             exit_code = command_handle => Some(exit_code),
-            _ = warpui::r#async::Timer::after(HARNESS_EXIT_FORCE_KILL_DELAY).fuse() => None,
+            _ = torchui::r#async::Timer::after(HARNESS_EXIT_FORCE_KILL_DELAY).fuse() => None,
         };
         if let Some(exit_code) = resolved {
             let _ = escalation.on_event(ExitEscalationEvent::CommandExited);
@@ -3484,7 +3484,7 @@ impl AgentDriver {
         harness_name: &str,
         attempt: u8,
         foreground: &ModelSpawner<Self>,
-    ) -> Result<warp_core::command::ExitCode, AgentDriverError> {
+    ) -> Result<torch_core::command::ExitCode, AgentDriverError> {
         log::warn!(
             "Ambient agent CLI lifecycle: event=harness_exit_attempt \
              harness={harness_name} attempt={attempt} method=force_kill"

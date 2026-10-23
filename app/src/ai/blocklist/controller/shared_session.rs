@@ -5,12 +5,12 @@ use std::collections::HashMap;
 
 use itertools::Itertools;
 use session_sharing_protocol::common::{AgentAttachment, ParticipantId, ServerConversationToken};
-use warp_core::features::FeatureFlag;
-use warp_errors::report_error;
+use torch_core::features::FeatureFlag;
+use torch_errors::report_error;
 use warp_multi_agent_api::client_action::Action;
 use warp_multi_agent_api::message::Message;
 use warp_multi_agent_api::response_event::{ClientActions, stream_finished};
-use warpui::{AppContext, ModelContext, SingletonEntity};
+use torchui::{AppContext, ModelContext, SingletonEntity};
 
 use super::response_stream::ResponseStreamId;
 use super::{BlocklistAIController, RequestInput, SessionContext};

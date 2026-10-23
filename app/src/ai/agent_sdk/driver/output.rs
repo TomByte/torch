@@ -1369,7 +1369,7 @@ pub mod json {
 
 use std::io::{self, BufWriter, Write};
 
-use warp_core::channel::ChannelState;
+use torch_core::channel::ChannelState;
 
 use crate::ai::agent::{AIAgentText, AIAgentTextSection};
 use crate::code::editor_management::CodeSource;

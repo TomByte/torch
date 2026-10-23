@@ -8,15 +8,15 @@
 //! marked as disconnected if it is not currently connected, then a
 //! "Custom host…" entry.
 
-use warp_core::ui::theme::Fill;
-use warpui::elements::{
+use torch_core::ui::theme::Fill;
+use torchui::elements::{
     Border, ChildAnchor, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     Expanded, Flex, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement,
     PositionedElementAnchor, Radius,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::platform::Cursor;
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::platform::Cursor;
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 

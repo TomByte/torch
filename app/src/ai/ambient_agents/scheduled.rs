@@ -7,8 +7,8 @@ pub use cloud_object_models::{
 use futures::FutureExt;
 use futures::channel::oneshot;
 use serde_json::{Map, Value};
-use warp_graphql::queries::get_scheduled_agent_history::ScheduledAgentHistory;
-use warpui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
+use torch_graphql::queries::get_scheduled_agent_history::ScheduledAgentHistory;
+use torchui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
 
 use crate::cloud_object::model::generic_string_model::StringModel;
 use crate::cloud_object::model::json_model::JsonModel;
@@ -141,7 +141,7 @@ impl ScheduledAgentManager {
         &self,
         schedule_id: SyncId,
         app: &AppContext,
-    ) -> impl warpui::r#async::Spawnable<Output = anyhow::Result<Option<ScheduledAgentHistory>>> + use<>
+    ) -> impl torchui::r#async::Spawnable<Output = anyhow::Result<Option<ScheduledAgentHistory>>> + use<>
     {
         let ai_client = ServerApiProvider::as_ref(app).get_ai_client();
 

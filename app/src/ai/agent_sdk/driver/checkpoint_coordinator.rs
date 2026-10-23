@@ -25,9 +25,9 @@ use futures::future::BoxFuture;
 use instant::Instant;
 use rand::Rng as _;
 use tokio::sync::{mpsc, oneshot};
-use warpui::r#async::executor::Background;
-use warpui::r#async::{FutureExt as _, Timer};
-use warpui::{ModelSpawner, SingletonEntity};
+use torchui::r#async::executor::Background;
+use torchui::r#async::{FutureExt as _, Timer};
+use torchui::{ModelSpawner, SingletonEntity};
 
 use super::AgentDriver;
 use super::snapshot::{self, CheckpointResult, DeclarationsWriterHandle};

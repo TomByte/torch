@@ -10,11 +10,11 @@ use derivative::Derivative;
 use lazy_static::lazy_static;
 use regex::Regex;
 use url::Url;
-use warp_core::channel::Channel;
-use warp_core::features::FeatureFlag;
-use warp_graphql::queries::get_updated_cloud_objects::UpdatedObjectInput;
-use warp_graphql::scalars::time::ServerTimestamp;
-use warpui::{AppContext, SingletonEntity};
+use torch_core::channel::Channel;
+use torch_core::features::FeatureFlag;
+use torch_graphql::queries::get_updated_cloud_objects::UpdatedObjectInput;
+use torch_graphql::scalars::time::ServerTimestamp;
+use torchui::{AppContext, SingletonEntity};
 
 use self::breadcrumbs::ContainingObject;
 use self::model::actions::ObjectActions;
@@ -989,7 +989,7 @@ pub use cloud_object_models::{
     ServerPreference, ServerScheduledAmbientAgent, ServerTemplatableMCPServer, ServerWorkflow,
     ServerWorkflowEnum, TryFromGql,
 };
-use warp_errors::report_error;
+use torch_errors::report_error;
 
 #[derive(Default, Clone, Copy, Debug, Eq, Derivative)]
 #[derivative(PartialEq, Hash)]

@@ -1,6 +1,6 @@
 //! Compact free-form text input used by inline AI block actions.
-use warpui::presenter::ChildView;
-use warpui::{
+use torchui::presenter::ChildView;
+use torchui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity, View, ViewContext, ViewHandle,
 };
 

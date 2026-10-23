@@ -1,11 +1,11 @@
 use pathfinder_color::ColorU;
-use warp_errors::report_error;
-use warpui::elements::{
+use torch_errors::report_error;
+use torchui::elements::{
     Align, ChildView, ClippedScrollStateHandle, ClippedScrollable, CrossAxisAlignment, Dismiss,
     Element, Flex, MouseStateHandle, ParentElement, ScrollbarWidth,
 };
-use warpui::ui_components::components::UiComponent;
-use warpui::{
+use torchui::ui_components::components::UiComponent;
+use torchui::{
     AppContext, Entity, FocusContext, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };
@@ -186,11 +186,11 @@ impl HandoffEnvironmentCreationModal {
             ScrollbarWidth::Auto,
             theme.nonactive_ui_text_color().into(),
             theme.active_ui_text_color().into(),
-            warpui::elements::Fill::None,
+            torchui::elements::Fill::None,
         )
         .finish();
 
-        let padded_form = warpui::elements::Container::new(scrollable_form)
+        let padded_form = torchui::elements::Container::new(scrollable_form)
             .with_uniform_padding(8.)
             .finish();
 
@@ -211,7 +211,7 @@ impl HandoffEnvironmentCreationModal {
             })
             .finish();
 
-        warpui::elements::Container::new(Align::new(dialog).finish())
+        torchui::elements::Container::new(Align::new(dialog).finish())
             .with_background_color(ColorU::new(0, 0, 0, MODAL_BACKDROP_OPACITY))
             .with_corner_radius(app.windows().window_corner_radius())
             .finish()

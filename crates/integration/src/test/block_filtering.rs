@@ -1,16 +1,16 @@
-use warp::cmd_or_ctrl_shift;
-use warp::integration_testing::terminal::util::current_shell_starter_and_version;
-use warp::integration_testing::terminal::{
+use torch::cmd_or_ctrl_shift;
+use torch::integration_testing::terminal::util::current_shell_starter_and_version;
+use torch::integration_testing::terminal::{
     assert_context_menu_is_open, initialize_secret_regexes,
     wait_until_bootstrapped_single_pane_for_tab,
 };
-use warp::integration_testing::view_getters::single_terminal_view_for_tab;
-use warp::settings_view::{PrivacyPageAction, SettingsAction};
-use warp::terminal::GridType;
-use warp::terminal::model::index::Point;
-use warp::terminal::model::terminal_model::{BlockIndex, WithinBlock, WithinModel};
-use warp::terminal::shell::ShellType;
-use warpui_core::{async_assert, async_assert_eq};
+use torch::integration_testing::view_getters::single_terminal_view_for_tab;
+use torch::settings_view::{PrivacyPageAction, SettingsAction};
+use torch::terminal::GridType;
+use torch::terminal::model::index::Point;
+use torch::terminal::model::terminal_model::{BlockIndex, WithinBlock, WithinModel};
+use torch::terminal::shell::ShellType;
+use torchui_core::{async_assert, async_assert_eq};
 
 use super::new_builder;
 use crate::Builder;

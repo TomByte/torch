@@ -1,14 +1,14 @@
 use std::sync::Arc;
 
 use parking_lot::RwLock;
-use warp_core::features::FeatureFlag;
-use warp_core::semantic_selection::SemanticSelection;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::semantic_selection::SemanticSelection;
+use torchui::elements::{
     ChildView, Container, CrossAxisAlignment, Expanded, Flex, ParentElement, SavePosition,
     SelectableArea, SelectionHandle, Text, get_rich_content_position_id,
 };
-use warpui::fonts::{Properties, Style, Weight};
-use warpui::{
+use torchui::fonts::{Properties, Style, Weight};
+use torchui::{
     AppContext, Element, Entity, EntityId, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };

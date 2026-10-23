@@ -1,4 +1,4 @@
-use warp_graphql::queries::get_updated_cloud_objects::UpdatedObjectInput;
+use torch_graphql::queries::get_updated_cloud_objects::UpdatedObjectInput;
 
 use super::RevisionAndLastEditor;
 

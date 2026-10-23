@@ -1,5 +1,5 @@
-use warp_cli::skill::SkillSpec;
-use warp_graphql::queries::execution_config::ExecutionConfiguration;
+use torch_cli::skill::SkillSpec;
+use torch_graphql::queries::execution_config::ExecutionConfiguration;
 
 use super::*;
 use crate::ai::agent_sdk::driver::agent_setup::configured_skills::resolve_configured_skills;

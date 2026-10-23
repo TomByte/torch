@@ -1,11 +1,11 @@
-use warp_core::ui::appearance::Appearance;
-use warpui::elements::{
+use torch_core::ui::appearance::Appearance;
+use torchui::elements::{
     Border, Container, CornerRadius, DispatchEventResult, EventHandler, Flex, MainAxisAlignment,
     MouseStateHandle, ParentElement as _, Radius, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::platform::Cursor;
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::platform::Cursor;
+use torchui::{
     AppContext, BlurContext, Element, Entity, FocusContext, SingletonEntity, TypedActionView, View,
     ViewContext, ViewHandle, WeakViewHandle,
 };
@@ -83,7 +83,7 @@ impl View for NewEnvironmentButtonView {
         let is_focused = self.is_focused(app);
 
         let trigger = {
-            warpui::elements::Hoverable::new(self.trigger_mouse_state.clone(), move |s| {
+            torchui::elements::Hoverable::new(self.trigger_mouse_state.clone(), move |s| {
                 let is_hovered = s.is_hovered();
                 let background = if is_hovered || is_focused {
                     Some(theme.surface_3())

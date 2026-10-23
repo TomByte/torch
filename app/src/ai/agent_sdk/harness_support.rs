@@ -7,15 +7,15 @@
 use anyhow::Result;
 #[cfg(target_os = "linux")]
 use command::blocking::Command;
-use warp_cli::GlobalOptions;
-use warp_cli::agent::OutputFormat;
-use warp_cli::harness_support::{
+use torch_cli::GlobalOptions;
+use torch_cli::agent::OutputFormat;
+use torch_cli::harness_support::{
     FinishTaskArgs, HarnessSupportArgs, HarnessSupportCommand, NotifyUserArgs, ReportArtifactArgs,
     ReportArtifactCommand, ReportExternalReferenceArgs, ReportShutdownArgs, TaskStatus,
 };
-use warp_core::features::FeatureFlag;
-use warpui::platform::TerminationMode;
-use warpui::{AppContext, ModelHandle, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torchui::platform::TerminationMode;
+use torchui::{AppContext, ModelHandle, SingletonEntity};
 
 use super::common::set_ambient_task_context_from_run_id;
 use crate::ai::ambient_agents::AmbientAgentTaskId;
@@ -446,7 +446,7 @@ fn oom_kill_line_matches_pid(line: &str, pid: u32) -> bool {
 /// Singleton model for running async harness-support operations.
 struct HarnessSupportRunner;
 
-impl warpui::Entity for HarnessSupportRunner {
+impl torchui::Entity for HarnessSupportRunner {
     type Event = ();
 }
 

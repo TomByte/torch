@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-use warpui_core::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
+use torchui_core::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
 
 use crate::config::LanguageId;
 use crate::model::LanguageServerId;

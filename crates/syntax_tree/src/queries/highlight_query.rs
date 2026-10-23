@@ -5,9 +5,9 @@ use arborium::tree_sitter::{Node, Query, QueryCursor, TextProvider, Tree};
 use rangemap::RangeMap;
 use streaming_iterator::StreamingIterator;
 use string_offset::{ByteOffset, CharOffset};
-use warp_editor::content::buffer::{Buffer, ToBufferByteOffset, ToBufferCharOffset};
-use warp_editor::content::text::Bytes;
-use warpui_core::color::ColorU;
+use torch_editor::content::buffer::{Buffer, ToBufferByteOffset, ToBufferCharOffset};
+use torch_editor::content::text::Bytes;
+use torchui_core::color::ColorU;
 
 /// Color mapping from parsed syntax token name to its corresponding highlighting color.
 #[derive(Clone, Copy)]

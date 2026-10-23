@@ -2,9 +2,9 @@ use std::collections::HashMap;
 use std::ops::Deref;
 
 use anyhow::{Result, anyhow};
-use warp_features::FeatureFlag;
-use warpui_core::{AppContext, Entity, ModelContext, SingletonEntity};
-use warpui_extras::user_preferences::UserPreferences;
+use torch_features::FeatureFlag;
+use torchui_core::{AppContext, Entity, ModelContext, SingletonEntity};
+use torchui_extras::user_preferences::UserPreferences;
 
 use super::{PrivatePreferences, RespectUserSyncSetting, SupportedPlatforms, SyncToCloud};
 

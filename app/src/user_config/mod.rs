@@ -13,8 +13,8 @@ pub(crate) use imp::load_tab_configs;
 pub use imp::load_workflows;
 pub use imp::{load_launch_configs, load_theme_configs};
 use lazy_static::lazy_static;
-use warp_core::ui::theme::WarpTheme;
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torch_core::ui::theme::WarpTheme;
+use torchui::{Entity, ModelContext, SingletonEntity};
 
 use crate::ai::custom_model_routers::{CustomModelRouter, ModelConfigError};
 use crate::launch_configs::launch_config::LaunchConfig;
@@ -47,7 +47,7 @@ lazy_static! {
 #          commands:
 #            - exec: code .
 ",
-        warp_core::paths::home_relative_path(&crate::user_config::launch_configs_dir())
+        torch_core::paths::home_relative_path(&crate::user_config::launch_configs_dir())
     );
 }
 
@@ -191,12 +191,12 @@ impl WarpConfig {
 
 /// Returns the base directory in which all of the user's data is stored.
 fn base_dir() -> PathBuf {
-    warp_core::paths::data_dir()
+    torch_core::paths::data_dir()
 }
 
 /// Returns the path to the directory containing the user's custom themes.
 pub fn themes_dir() -> PathBuf {
-    warp_core::paths::themes_dir()
+    torch_core::paths::themes_dir()
 }
 
 /// Returns the path to the directory containing the user's custom workflows.

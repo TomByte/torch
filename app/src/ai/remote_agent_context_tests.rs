@@ -1,6 +1,6 @@
 use repo_metadata::repositories::DetectedRepositories;
 use repo_metadata::{DirectoryWatcher, RepoMetadataModel};
-use warpui::App;
+use torchui::App;
 use watcher::HomeDirectoryWatcher;
 
 use super::*;

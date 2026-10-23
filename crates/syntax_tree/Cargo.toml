@@ -9,8 +9,8 @@ license.workspace = true
 [dependencies]
 rangemap.workspace = true
 arborium.workspace = true
-warpui_core.workspace = true
-warp_editor.workspace = true
+torchui_core.workspace = true
+torch_editor.workspace = true
 languages.workspace = true
 futures.workspace = true
 futures-lite.workspace = true
@@ -18,8 +18,8 @@ parking_lot.workspace = true
 log.workspace = true
 string-offset.workspace = true
 streaming-iterator = "0.1.9"
-warp_util.workspace = true
+torch_util.workspace = true
 
 [dev-dependencies]
-warp_editor = { workspace = true, features = ["test-util"] }
-warpui = { workspace = true, features = ["test-util"] }
+torch_editor = { workspace = true, features = ["test-util"] }
+torchui = { workspace = true, features = ["test-util"] }

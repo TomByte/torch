@@ -8,16 +8,16 @@
 //!   error *and* the user has dismissed the workspace banner.
 //! * Otherwise, a plain bordered "Open settings file" button.
 use pathfinder_color::ColorU;
-use warp_core::ui::color::coloru_with_opacity;
-use warp_core::ui::theme::Fill;
-use warpui::elements::{
+use torch_core::ui::color::coloru_with_opacity;
+use torch_core::ui::theme::Fill;
+use torchui::elements::{
     Border, Clipped, ClippedScrollStateHandle, ClippedScrollable, ConstrainedBox, Container,
     CornerRadius, CrossAxisAlignment, Element, Empty, Expanded, Flex, Highlight, Hoverable,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, ScrollbarWidth, Text,
     Wrap,
 };
-use warpui::fonts::{FamilyId, Properties, Weight};
-use warpui::platform::Cursor;
+use torchui::fonts::{FamilyId, Properties, Weight};
+use torchui::platform::Cursor;
 
 use crate::WorkspaceAction;
 use crate::appearance::Appearance;
@@ -206,7 +206,7 @@ pub fn render_settings_error_alert(
     // action buttons below stay fixed and always actionable. Scrollbar thumb
     // colors are derived from `text_color` (which already contrasts against
     // the yellow alert background) so they remain visible in both themes.
-    // `ClippedScrollable` wants `warpui::elements::Fill` (not the theme
+    // `ClippedScrollable` wants `torchui::elements::Fill` (not the theme
     // `Fill` used elsewhere in this file), so the three fills below are
     // fully qualified to avoid an import alias.
     let scrollable_text = ConstrainedBox::new(
@@ -214,9 +214,9 @@ pub fn render_settings_error_alert(
             mouse_states.alert_text_scroll_state.clone(),
             text_row,
             ScrollbarWidth::Auto,
-            warpui::elements::Fill::Solid(coloru_with_opacity(text_color, 30)),
-            warpui::elements::Fill::Solid(coloru_with_opacity(text_color, 60)),
-            warpui::elements::Fill::None,
+            torchui::elements::Fill::Solid(coloru_with_opacity(text_color, 30)),
+            torchui::elements::Fill::Solid(coloru_with_opacity(text_color, 60)),
+            torchui::elements::Fill::None,
         )
         .finish(),
     )

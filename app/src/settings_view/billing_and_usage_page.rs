@@ -10,23 +10,23 @@ use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use settings::Setting;
 use thousands::Separable;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::Fill;
-use warp_graphql::billing::AddonCreditsOption;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::Fill;
+use torch_graphql::billing::AddonCreditsOption;
+use torchui::elements::{
     Align, Border, ChildAnchor, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Empty,
     Flex, FormattedTextElement, HighlightedHyperlink, Hoverable, HyperlinkUrl, MainAxisAlignment,
     MainAxisSize, MouseStateHandle, OffsetPositioning, ParentAnchor, ParentElement,
     ParentOffsetBounds, Radius, Shrinkable, Text, Wrap,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::platform::Cursor;
-use warpui::prelude::ChildView;
-use warpui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::ui_components::switch::SwitchStateHandle;
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::platform::Cursor;
+use torchui::prelude::ChildView;
+use torchui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::ui_components::switch::SwitchStateHandle;
+use torchui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, UpdateView, View,
     ViewContext, ViewHandle, WeakViewHandle,
 };
@@ -175,7 +175,7 @@ pub(crate) fn render_premium_upgrade_savings_note(
     )
     .with_hyperlink_font_color(theme.accent().into_solid())
     .register_default_click_handlers_with_action_support(|hyperlink_lens, _, ctx| {
-        if let warpui::elements::HyperlinkLens::Url(url) = hyperlink_lens {
+        if let torchui::elements::HyperlinkLens::Url(url) = hyperlink_lens {
             ctx.open_url(url);
         }
     })
@@ -1759,10 +1759,10 @@ impl BillingAndUsagePageView {
                             fragment.text,
                             None,
                             maybe_action.map(|act| {
-                                Box::new(move |ctx: &mut warpui::EventContext| {
+                                Box::new(move |ctx: &mut torchui::EventContext| {
                                     ctx.dispatch_typed_action(act.clone());
                                 })
-                                    as Box<dyn Fn(&mut warpui::EventContext)>
+                                    as Box<dyn Fn(&mut torchui::EventContext)>
                             }),
                             self.exceed_limit_link_mouse_state.clone(),
                         )
@@ -1906,10 +1906,10 @@ impl BillingAndUsagePageView {
                     .with_hyperlink_font_color(theme.accent().into_solid())
                     .register_default_click_handlers_with_action_support(
                         |hyperlink_lens, event, ctx| match hyperlink_lens {
-                            warpui::elements::HyperlinkLens::Url(url) => {
+                            torchui::elements::HyperlinkLens::Url(url) => {
                                 ctx.open_url(url);
                             }
-                            warpui::elements::HyperlinkLens::Action(action_ref) => {
+                            torchui::elements::HyperlinkLens::Action(action_ref) => {
                                 if let Some(action) = action_ref
                                     .as_any()
                                     .downcast_ref::<BillingAndUsagePageAction>()
@@ -2518,7 +2518,7 @@ impl BillingAndUsagePageView {
         workspace_is_delinquent_due_to_payment_issue: bool,
         appearance: &Appearance,
         prorated_request_limits_info: Option<ProratedRequestLimitsInfo>,
-    ) -> Box<dyn warpui::Element> {
+    ) -> Box<dyn torchui::Element> {
         let mut row = Flex::row();
 
         let show_alert = workspace_is_delinquent_due_to_payment_issue
@@ -2603,7 +2603,7 @@ impl BillingAndUsagePageView {
         workspace_is_delinquent_due_to_payment_issue: bool,
         appearance: &Appearance,
         prorated_request_limits_info: Option<ProratedRequestLimitsInfo>,
-    ) -> Box<dyn warpui::Element> {
+    ) -> Box<dyn torchui::Element> {
         let request_usage_details = Flex::column()
             .with_cross_axis_alignment(CrossAxisAlignment::End)
             .with_child(self.render_request_usage_count(
@@ -3520,10 +3520,10 @@ impl BillingAndUsagePageView {
         } else {
             upgrade_cta = upgrade_cta.register_default_click_handlers_with_action_support(
                 |hyperlink_lens, event, ctx| match hyperlink_lens {
-                    warpui::elements::HyperlinkLens::Url(url) => {
+                    torchui::elements::HyperlinkLens::Url(url) => {
                         ctx.open_url(url);
                     }
-                    warpui::elements::HyperlinkLens::Action(action_ref) => {
+                    torchui::elements::HyperlinkLens::Action(action_ref) => {
                         if let Some(action) = action_ref
                             .as_any()
                             .downcast_ref::<BillingAndUsagePageAction>()

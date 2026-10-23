@@ -4,8 +4,8 @@ use std::iter;
 use std::ops::RangeInclusive;
 
 use itertools::Itertools;
-use warpui::units::Lines;
-use warpui::{AppContext, EntityId};
+use torchui::units::Lines;
+use torchui::{AppContext, EntityId};
 
 use super::FindOptions;
 use super::rich_content::{FindableRichContentHandle, RichContentMatchId};

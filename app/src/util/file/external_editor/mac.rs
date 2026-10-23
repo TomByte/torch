@@ -6,10 +6,10 @@ use instant::Instant;
 use objc2::rc::{Retained, autoreleasepool};
 use objc2_app_kit::NSWorkspace;
 use objc2_foundation::{NSBundle, NSString, NSURL};
-use warp_core::AppId;
-use warp_core::channel::ChannelState;
-use warp_errors::report_error;
-use warpui::ApplicationBundleInfo;
+use torch_core::AppId;
+use torch_core::channel::ChannelState;
+use torch_errors::report_error;
+use torchui::ApplicationBundleInfo;
 
 use super::*;
 

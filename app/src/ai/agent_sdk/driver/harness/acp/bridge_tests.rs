@@ -5,7 +5,7 @@ use std::time::Duration;
 use futures::executor::block_on;
 use futures::io::{AsyncBufReadExt as _, AsyncWriteExt as _, BufReader};
 use instant::Instant;
-use warp_util::path::ShellFamily;
+use torch_util::path::ShellFamily;
 
 use super::{
     BridgeEndpoint, BridgeListener, BridgeReader, BridgeStream, BridgeWriter, MAX_TOKEN_LINE,

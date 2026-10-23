@@ -9,18 +9,18 @@ use std::collections::{HashMap, HashSet};
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use thousands::Separable;
-use warp_core::ui::Icon;
+use torch_core::ui::Icon;
 use warp_multi_agent_api as api;
-use warpui::elements::{
+use torchui::elements::{
     Border, ChildAnchor, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Dismiss,
     DispatchEventResult, DropShadow, Empty, EventHandler, Expanded, Flex, Hoverable,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning, ParentElement,
     PositionedElementAnchor, PositionedElementOffsetBounds, Radius, SavePosition, Shrinkable,
     Stack, Text,
 };
-use warpui::platform::Cursor;
-use warpui::text_layout::ClipConfig;
-use warpui::{
+use torchui::platform::Cursor;
+use torchui::text_layout::ClipConfig;
+use torchui::{
     AppContext, Element, Entity, EntityId, SingletonEntity, TypedActionView, View, ViewContext,
 };
 

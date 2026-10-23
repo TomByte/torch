@@ -8,9 +8,9 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
 #[cfg(feature = "local_fs")]
-use warpui::SingletonEntity;
-use warpui::elements::ChildView;
-use warpui::{Element, Entity, ModelHandle, View, ViewContext, ViewHandle};
+use torchui::SingletonEntity;
+use torchui::elements::ChildView;
+use torchui::{Element, Entity, ModelHandle, View, ViewContext, ViewHandle};
 
 use crate::ai::blocklist::agent_view::AgentViewController;
 #[cfg(feature = "local_fs")]
@@ -224,7 +224,7 @@ impl View for InlineReposMenuView {
         "InlineReposMenuView"
     }
 
-    fn render(&self, _app: &warpui::AppContext) -> Box<dyn Element> {
+    fn render(&self, _app: &torchui::AppContext) -> Box<dyn Element> {
         ChildView::new(&self.menu_view).finish()
     }
 }

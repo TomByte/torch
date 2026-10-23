@@ -21,12 +21,12 @@ use std::time::Duration;
 use context_chip::PromptGenerator;
 use serde::{Deserialize, Serialize};
 use smol_str::SmolStr;
-use warp_core::ui::color::blend::Blend;
-use warp_core::ui::color::contrast::{MinimumAllowedContrast, high_enough_contrast};
-use warp_core::ui::theme::{Fill, WarpTheme};
-use warpui::color::ColorU;
-use warpui::elements::Text;
-use warpui::fonts::{Properties, Weight};
+use torch_core::ui::color::blend::Blend;
+use torch_core::ui::color::contrast::{MinimumAllowedContrast, high_enough_contrast};
+use torch_core::ui::theme::{Fill, WarpTheme};
+use torchui::color::ColorU;
+use torchui::elements::Text;
+use torchui::fonts::{Properties, Weight};
 
 #[allow(unused_imports)]
 pub use self::context_chip::{

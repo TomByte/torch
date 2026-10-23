@@ -11,8 +11,8 @@
 
 use std::path::Path;
 
-use warp_core::channel::{Channel, ChannelState};
-use warp_core::paths::{WARP_CONFIG_DIR, data_dir};
+use torch_core::channel::{Channel, ChannelState};
+use torch_core::paths::{WARP_CONFIG_DIR, data_dir};
 
 /// Files that should not be symlinked during the Preview config directory
 /// migration. These are intentionally kept separate between Stable and

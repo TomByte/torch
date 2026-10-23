@@ -1,14 +1,14 @@
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::Vector2F;
-use warp_core::features::FeatureFlag;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torchui::elements::{
     Align, ConstrainedBox, Container, CrossAxisAlignment, Empty, Flex, MainAxisAlignment,
     MainAxisSize, ParentElement, Rect, Shrinkable, Stack,
 };
-use warpui::fonts::Weight;
-use warpui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{Element, ViewContext};
+use torchui::fonts::Weight;
+use torchui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{Element, ViewContext};
 
 use crate::drive::sharing::{ContentEditability, SharingAccessLevel};
 use crate::env_vars::active_env_var_collection_data::TrashStatus;

@@ -5,9 +5,9 @@ use std::sync::OnceLock;
 
 use command::blocking::Command;
 use freedesktop_desktop_entry::DesktopEntry;
-use warp_errors::report_error;
-use warp_util::path::LineAndColumnArg;
-use warpui::AppContext;
+use torch_errors::report_error;
+use torch_util::path::LineAndColumnArg;
+use torchui::AppContext;
 
 use super::Editor;
 

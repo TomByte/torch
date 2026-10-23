@@ -1,6 +1,6 @@
 //! Utilities for notebook keybindings.
 
-use warpui::{Entity, ModelContext, ModelHandle, SingletonEntity};
+use torchui::{Entity, ModelContext, ModelHandle, SingletonEntity};
 
 use crate::settings_view::keybindings::{KeybindingChangedEvent, KeybindingChangedNotifier};
 use crate::util::bindings::{

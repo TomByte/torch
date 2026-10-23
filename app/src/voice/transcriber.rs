@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use warpui::{Entity, SingletonEntity};
+use torchui::{Entity, SingletonEntity};
 
 use crate::server::server_api::TranscribeError;
 use crate::server::team_scope::RequestTeamScope;

@@ -20,8 +20,8 @@ pub use cloud_objects::drive::CloudObjectTypeAndId;
 pub use index::DriveIndexVariant;
 pub use panel::{DrivePanel, DrivePanelEvent};
 use serde::{Deserialize, Serialize};
-use warp_core::user_preferences::GetUserPreferences as _;
-use warpui::AppContext;
+use torch_core::user_preferences::GetUserPreferences as _;
+use torchui::AppContext;
 
 use crate::cloud_object::model::view::{CloudViewModel, UpdateTimestamp};
 use crate::cloud_object::{CloudObject, ObjectType};

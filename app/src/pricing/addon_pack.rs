@@ -1,5 +1,5 @@
 use thousands::Separable;
-use warp_graphql::billing::AddonCreditsOption;
+use torch_graphql::billing::AddonCreditsOption;
 
 use crate::settings::UsageDisplayUnit;
 

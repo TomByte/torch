@@ -1,9 +1,9 @@
-use warp_core::features::FeatureFlag;
-use warp_core::send_telemetry_from_ctx;
-use warp_core::ui::appearance::Appearance;
-use warp_errors::report_error;
-use warpui::keymap::Keystroke;
-use warpui::{EntityId, SingletonEntity, ViewContext};
+use torch_core::features::FeatureFlag;
+use torch_core::send_telemetry_from_ctx;
+use torch_core::ui::appearance::Appearance;
+use torch_errors::report_error;
+use torchui::keymap::Keystroke;
+use torchui::{EntityId, SingletonEntity, ViewContext};
 
 use crate::TelemetryEvent;
 use crate::ai::agent::conversation::AIConversationId;

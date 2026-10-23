@@ -1,5 +1,5 @@
 use tests::buffer::RangesWhenEditing;
-use warpui::App;
+use torchui::App;
 
 use super::*;
 use crate::editor::EditOrigin;

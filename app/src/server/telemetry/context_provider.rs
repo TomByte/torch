@@ -1,5 +1,5 @@
-use warp_core::telemetry::{TelemetryContextModel, TelemetryContextProvider};
-use warpui::{AppContext, ModelContext, SingletonEntity};
+use torch_core::telemetry::{TelemetryContextModel, TelemetryContextProvider};
+use torchui::{AppContext, ModelContext, SingletonEntity};
 
 use crate::auth::AuthStateProvider;
 

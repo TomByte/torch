@@ -1,5 +1,5 @@
 use super::*;
-use warpui::{App, TypedActionView};
+use torchui::{App, TypedActionView};
 
 #[test]
 fn terminal_only_restoration_replaces_legacy_file_tabs_with_a_terminal() {

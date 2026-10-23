@@ -1,9 +1,9 @@
 use std::sync::LazyLock;
 
-use warp_core::ui::appearance::Appearance;
-use warpui_core::elements::{MouseStateHandle, Rect};
-use warpui_core::prelude::stack::*;
-use warpui_core::prelude::*;
+use torch_core::ui::appearance::Appearance;
+use torchui_core::elements::{MouseStateHandle, Rect};
+use torchui_core::prelude::stack::*;
+use torchui_core::prelude::*;
 
 use crate::{Component, MouseEventHandler, Renderable};
 

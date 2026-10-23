@@ -5,7 +5,7 @@ use std::sync::{LazyLock, Mutex};
 
 use settings::macros::define_settings_group;
 use settings::{Setting as _, SupportedPlatforms, SyncToCloud};
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torchui::{Entity, ModelContext, SingletonEntity};
 
 define_settings_group!(ProjectsSettings, settings: [
     directories: ProjectDirectories {

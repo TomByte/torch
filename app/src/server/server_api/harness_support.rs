@@ -9,9 +9,9 @@ use base64::Engine as _;
 use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
 #[cfg(test)]
 use mockall::automock;
-use warp_cli::agent::Harness;
+use torch_cli::agent::Harness;
 #[cfg(not(target_family = "wasm"))]
-use warp_server_client::PresignedDownloadResponse;
+use torch_server_client::PresignedDownloadResponse;
 
 #[path = "harness_usage/publication.rs"]
 mod publication;

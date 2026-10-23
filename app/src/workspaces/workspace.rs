@@ -5,10 +5,10 @@ use chrono::Utc;
 use ordered_float::OrderedFloat;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use warp_graphql::billing::{
+use torch_graphql::billing::{
     AddonCreditAutoReloadStatus, AddonCreditsOption, ServiceAgreement, ServiceAgreementType,
 };
-pub use warp_graphql::billing::{
+pub use torch_graphql::billing::{
     AiCreditsUsageAndCostSubjectType, AiCreditsUsageAndCostType, AiCreditsUsageBucket,
     AiCreditsUsageSource,
 };

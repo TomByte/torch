@@ -1,10 +1,10 @@
 use std::collections::HashSet;
 use std::path::PathBuf;
 
-use warp_core::context_flag::ContextFlag;
-use warp_core::features::FeatureFlag;
-use warpui::keymap::BindingId;
-use warpui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity, WindowId};
+use torch_core::context_flag::ContextFlag;
+use torch_core::features::FeatureFlag;
+use torchui::keymap::BindingId;
+use torchui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity, WindowId};
 
 use super::{conversations, warp_drive};
 use crate::drive::settings::WarpDriveSettings;
@@ -135,7 +135,7 @@ impl DataSourceStore {
                 );
             }
 
-            if warp_core::channel::ChannelState::is_local_only() {
+            if torch_core::channel::ChannelState::is_local_only() {
                 mixer.add_sync_source(
                     self.local_navigation.clone(),
                     HashSet::from([
@@ -193,7 +193,7 @@ impl DataSourceStore {
                     HashSet::from([QueryFilter::Files]),
                     AddAsyncSourceOptions {
                         debounce_interval: None,
-                        run_in_zero_state: !warp_core::channel::ChannelState::is_local_only(),
+                        run_in_zero_state: !torch_core::channel::ChannelState::is_local_only(),
                         run_when_unfiltered: true,
                     },
                     ctx,
@@ -208,7 +208,7 @@ impl DataSourceStore {
                 );
             }
 
-            if !warp_core::channel::ChannelState::is_local_only() {
+            if !torch_core::channel::ChannelState::is_local_only() {
                 mixer.add_sync_source(
                     self.repo_data_source.clone(),
                     HashSet::from([QueryFilter::Repos]),

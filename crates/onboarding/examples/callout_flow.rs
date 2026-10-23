@@ -8,17 +8,17 @@ use onboarding::callout::{
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use rust_embed::RustEmbed;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::{AnsiColor, AnsiColors, Details, Fill, TerminalColors, WarpTheme};
-use warpui_core::elements::{
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::{AnsiColor, AnsiColors, Details, Fill, TerminalColors, WarpTheme};
+use torchui_core::elements::{
     ChildAnchor, ChildView, ConstrainedBox, Container, Flex, MainAxisAlignment, MainAxisSize,
     OffsetPositioning, ParentElement, PositionedElementAnchor, PositionedElementOffsetBounds, Rect,
     SavePosition, Stack,
 };
-use warpui_core::fonts::{Cache, FamilyId, Weight};
-use warpui_core::prelude::CrossAxisAlignment;
-use warpui_core::ui_components::components::UiComponent;
-use warpui_core::{
+use torchui_core::fonts::{Cache, FamilyId, Weight};
+use torchui_core::prelude::CrossAxisAlignment;
+use torchui_core::ui_components::components::UiComponent;
+use torchui_core::{
     AddWindowOptions, AppContext, AssetProvider, Element, Entity, SingletonEntity as _,
     TypedActionView, View, ViewContext, ViewHandle, platform,
 };
@@ -173,12 +173,12 @@ impl TypedActionView for OnboardingExampleView {
 
 fn main() -> Result<()> {
     // Initialize logging for the onboarding binary.
-    warp_logging::init(warp_logging::LogConfig {
+    torch_logging::init(torch_logging::LogConfig {
         log_destination: None,
         ..Default::default()
     })?;
 
-    let app_builder = warpui::platform::AppBuilder::new(
+    let app_builder = torchui::platform::AppBuilder::new(
         platform::AppCallbacks::default(),
         Box::new(ASSETS),
         None,

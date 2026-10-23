@@ -5,19 +5,19 @@ use std::sync::Arc;
 use pathfinder_geometry::vector::{Vector2F, vec2f};
 use unindent::Unindent;
 use vim::vim::{MotionType, VimMode};
-use warp_core::features::FeatureFlag;
-use warp_core::settings::Setting;
-use warp_core::ui::appearance::Appearance;
-use warp_editor::content::buffer::{InitialBufferState, ToBufferCharOffset, ToBufferPoint};
-use warp_editor::model::CoreEditorModel;
-use warp_editor::render::element::VerticalExpansionBehavior;
-use warp_editor::render::model::viewport::SizeInfo;
-use warp_util::user_input::UserInput;
-use warpui::keymap::Keystroke;
-use warpui::platform::WindowStyle;
-use warpui::text::point::Point;
-use warpui::units::IntoPixels;
-use warpui::{
+use torch_core::features::FeatureFlag;
+use torch_core::settings::Setting;
+use torch_core::ui::appearance::Appearance;
+use torch_editor::content::buffer::{InitialBufferState, ToBufferCharOffset, ToBufferPoint};
+use torch_editor::model::CoreEditorModel;
+use torch_editor::render::element::VerticalExpansionBehavior;
+use torch_editor::render::model::viewport::SizeInfo;
+use torch_util::user_input::UserInput;
+use torchui::keymap::Keystroke;
+use torchui::platform::WindowStyle;
+use torchui::text::point::Point;
+use torchui::units::IntoPixels;
+use torchui::{
     App, EntityId, EntityIdSet, Event, Presenter, SingletonEntity, TypedActionView, UpdateModel,
     ViewHandle, WindowId, WindowInvalidation,
 };

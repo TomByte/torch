@@ -18,9 +18,9 @@ use std::sync::OnceLock;
 use regex::Regex;
 use settings::Setting;
 #[cfg(not(target_family = "wasm"))]
-use warp_cli::scope::{ObjectScope, TeamSelection};
-use warp_core::features::FeatureFlag;
-use warpui::{AppContext, Entity, SingletonEntity, ViewContext, WeakViewHandle, WindowId};
+use torch_cli::scope::{ObjectScope, TeamSelection};
+use torch_core::features::FeatureFlag;
+use torchui::{AppContext, Entity, SingletonEntity, ViewContext, WeakViewHandle, WindowId};
 
 #[cfg(not(target_family = "wasm"))]
 use super::SoleTeamError;

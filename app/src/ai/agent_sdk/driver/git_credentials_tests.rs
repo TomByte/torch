@@ -1,15 +1,15 @@
 use std::io::Write as _;
 use std::process::Stdio;
 
-use warp_graphql::ai::PlatformErrorCode;
-use warp_graphql::error::{
+use torch_graphql::ai::PlatformErrorCode;
+use torch_graphql::error::{
     PlatformError as GraphqlPlatformError, UserFacingError, UserFacingErrorInterface,
 };
-use warp_graphql::platform_error::{
+use torch_graphql::platform_error::{
     PlatformErrorInfo, PlatformErrorInfoResponse, PlatformErrorMessage, PlatformErrorMessageFormat,
     PlatformErrorMetadataResponse,
 };
-use warp_graphql::response_context::ResponseContext;
+use torch_graphql::response_context::ResponseContext;
 
 use super::*;
 use crate::server::server_api::ai::{MockAIClient, TaskGitCredentialsResponse};
@@ -114,7 +114,7 @@ fn retained_scope_refresh_subprocess() {
         return;
     }
     for captured_scope in [false, true] {
-        let _flag = warp_core::features::FeatureFlag::FactoryDeferredRepositories
+        let _flag = torch_core::features::FeatureFlag::FactoryDeferredRepositories
             .override_enabled(!captured_scope);
         let mut ai_client = MockAIClient::new();
         ai_client
@@ -264,7 +264,7 @@ fn is_retryable_treats_generic_request_error_as_retryable() {
 #[test]
 fn is_retryable_treats_missing_isolation_platform_as_non_retryable() {
     let error = TaskGitCredentialsError::Request(anyhow::anyhow!(
-        warp_isolation_platform::IsolationPlatformError::NoIsolationPlatformDetected
+        torch_isolation_platform::IsolationPlatformError::NoIsolationPlatformDetected
     ));
     assert!(!is_retryable(&error));
 }

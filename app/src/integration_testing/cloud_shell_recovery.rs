@@ -5,8 +5,8 @@ use chrono::Local;
 use warp_multi_agent_api::request::input::tool_call_result::Result as ToolCallResult;
 use warp_multi_agent_api::response_event::StreamInit;
 use warp_multi_agent_api::run_shell_command_result::Result as RunShellCommandResult;
-use warpui::integration::TestStep;
-use warpui::{App, AppContext, SingletonEntity, WindowId, async_assert};
+use torchui::integration::TestStep;
+use torchui::{App, AppContext, SingletonEntity, WindowId, async_assert};
 
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent::task::TaskId;

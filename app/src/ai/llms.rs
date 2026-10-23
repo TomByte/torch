@@ -7,11 +7,11 @@ use ai::api_keys::{
 pub use ai::{LLMId, LLMProvider};
 use parking_lot::FairMutex;
 use serde::{Deserialize, Serialize, de};
-use warp_core::features::FeatureFlag;
-use warp_core::ui::Icon;
-use warp_errors::report_error;
+use torch_core::features::FeatureFlag;
+use torch_core::ui::Icon;
+use torch_errors::report_error;
 use warp_multi_agent_api as api;
-use warpui::{AppContext, Entity, EntityId, ModelContext, SingletonEntity};
+use torchui::{AppContext, Entity, EntityId, ModelContext, SingletonEntity};
 
 use super::agent::conversation::AIConversation;
 use super::custom_model_routers::{self, CustomModelRouter, ModelConfigError};

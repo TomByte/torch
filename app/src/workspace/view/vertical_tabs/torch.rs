@@ -10,10 +10,10 @@ use motion::{
     CardEntrance, Fade, HOVER_IN, HOVER_OUT, Motion, RowFills, RowSurface, SessionMotion,
     WorkingPulse,
 };
-use warp_core::ui::theme::{AnsiColors, ColorScheme};
-use warp_errors::report_if_error;
-use warpui::ViewContext;
-use warpui::elements::DraggableState;
+use torch_core::ui::theme::{AnsiColors, ColorScheme};
+use torch_errors::report_if_error;
+use torchui::ViewContext;
+use torchui::elements::DraggableState;
 
 use super::*;
 use crate::menu::{MenuItem, MenuItemFields};
@@ -388,7 +388,7 @@ impl Workspace {
         index: usize,
         ctx: &mut ViewContext<Self>,
     ) {
-        if !warp_core::channel::ChannelState::is_local_only() || !self.vertical_tabs_panel_open {
+        if !torch_core::channel::ChannelState::is_local_only() || !self.vertical_tabs_panel_open {
             return;
         }
         let started = Instant::now();
@@ -423,7 +423,7 @@ impl Workspace {
         self.vertical_tabs_panel
             .departing_sessions
             .retain(DepartingSession::is_animating);
-        if !warp_core::channel::ChannelState::is_local_only()
+        if !torch_core::channel::ChannelState::is_local_only()
             || !self.vertical_tabs_panel_open
             || motion_preference() != Some(MotionPreference::Full)
         {
@@ -474,7 +474,7 @@ impl Workspace {
         let into_minute =
             Duration::from_millis(chrono::Local::now().timestamp_millis() as u64 % 60_000);
         ctx.spawn(
-            warpui::r#async::Timer::after(Duration::from_secs(60) - into_minute),
+            torchui::r#async::Timer::after(Duration::from_secs(60) - into_minute),
             |workspace, _, ctx| {
                 if workspace.vertical_tabs_panel_open {
                     workspace
@@ -1015,7 +1015,7 @@ fn capture_snapshot(tab: &TabData, app: &AppContext) -> TerminalSnapshot {
     let directory = startup_directory
         .map(|path| {
             let home = dirs::home_dir();
-            warp_util::path::user_friendly_path(
+            torch_util::path::user_friendly_path(
                 &path.to_string_lossy(),
                 home.as_ref().and_then(|path| path.to_str()),
             )
@@ -1489,7 +1489,7 @@ fn status_icon(session: &Session, palette: &Palette) -> Box<dyn Element> {
             ("bundled/svg/torch-session-idle.svg", palette.muted)
         }
     };
-    ConstrainedBox::new(warpui::elements::Icon::new(asset, color).finish())
+    ConstrainedBox::new(torchui::elements::Icon::new(asset, color).finish())
         .with_width(16.)
         .with_height(16.)
         .finish()

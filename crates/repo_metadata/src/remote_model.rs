@@ -8,8 +8,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use futures::future::{self, BoxFuture, FutureExt as _};
-use warp_core::HostId;
-use warpui_core::ModelContext;
+use torch_core::HostId;
+use torchui_core::ModelContext;
 
 use super::local_model::collect_contents_recursive;
 use crate::RepoMetadataError;
@@ -269,7 +269,7 @@ impl RemoteRepoMetadataModel {
     }
 }
 
-impl warpui_core::Entity for RemoteRepoMetadataModel {
+impl torchui_core::Entity for RemoteRepoMetadataModel {
     type Event = RemoteRepositoryMetadataEvent;
 }
 

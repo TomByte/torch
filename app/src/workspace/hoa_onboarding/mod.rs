@@ -3,8 +3,8 @@ mod tab_config_step;
 mod welcome_banner;
 
 pub use hoa_onboarding_flow::{HoaOnboardingFlow, HoaOnboardingFlowEvent, HoaOnboardingStep, init};
-use warp_core::user_preferences::GetUserPreferences;
-use warpui::AppContext;
+use torch_core::user_preferences::GetUserPreferences;
+use torchui::AppContext;
 
 const HAS_COMPLETED_HOA_ONBOARDING_KEY: &str = "HasCompletedHOAOnboarding";
 

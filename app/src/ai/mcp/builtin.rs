@@ -8,7 +8,7 @@
 //!
 //! Lifecycle is owned by [`TemplatableMCPServerManager::sync_builtin_servers`]
 //! (attach on login, re-attach on token rotation, detach on logout), gated by
-//! [`warp_core::features::FeatureFlag::FactoryMcp`].
+//! [`torch_core::features::FeatureFlag::FactoryMcp`].
 //!
 //! CLI agent runs (`oz agent run`, including the cloud workers behind
 //! `oz agent run-cloud`) bypass that manager path; the agent driver attaches
@@ -17,14 +17,14 @@
 //! duration of the run.
 //!
 //! The preview URLs server is only useful inside a cloud run, so only the agent
-//! driver attaches it, gated by [`warp_core::features::FeatureFlag::PreviewUrlsMcp`].
+//! driver attaches it, gated by [`torch_core::features::FeatureFlag::PreviewUrlsMcp`].
 //!
 //! [`TemplatableMCPServerManager::sync_builtin_servers`]: super::TemplatableMCPServerManager::sync_builtin_servers
 
 use std::collections::HashMap;
 
 use uuid::Uuid;
-use warp_core::channel::ChannelState;
+use torch_core::channel::ChannelState;
 
 use super::templatable::{JsonTemplate, TemplatableMCPServer};
 use super::templatable_installation::TemplatableMCPServerInstallation;

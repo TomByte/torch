@@ -24,7 +24,7 @@ use prost::Message as _;
 #[cfg(any(test, feature = "local_tty"))]
 use session_sharing_protocol::common::ProfileData;
 #[cfg(any(test, feature = "local_tty"))]
-use warp_errors::report_error;
+use torch_errors::report_error;
 use warp_multi_agent_api as api;
 use warp_multi_agent_api::AgentType;
 

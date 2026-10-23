@@ -7,10 +7,10 @@ use ai::api_keys::{
 use futures::channel::oneshot;
 use serde::{Deserialize, Serialize};
 use vec1::vec1;
-use warp_errors::report_error;
-use warp_managed_secrets::client::{IdentityTokenOptions, TaskIdentityToken};
-use warpui::r#async::Timer;
-use warpui::{AppContext, ModelContext, SingletonEntity};
+use torch_errors::report_error;
+use torch_managed_secrets::client::{IdentityTokenOptions, TaskIdentityToken};
+use torchui::r#async::Timer;
+use torchui::{AppContext, ModelContext, SingletonEntity};
 
 use crate::auth::AuthStateProvider;
 use crate::server::server_api::managed_secrets::AppManagedSecretManager as ManagedSecretManager;

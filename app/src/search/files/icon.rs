@@ -1,6 +1,6 @@
-use warp_core::ui::appearance::Appearance;
-use warpui::Element;
-use warpui::elements::Icon;
+use torch_core::ui::appearance::Appearance;
+use torchui::Element;
+use torchui::elements::Icon;
 
 use crate::search::result_renderer::ItemHighlightState;
 

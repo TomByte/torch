@@ -3,13 +3,13 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 use settings::{Setting, ToggleableSetting};
-use warp_errors::report_if_error;
-use warpui::elements::{
+use torch_errors::report_if_error;
+use torchui::elements::{
     Container, CrossAxisAlignment, Flex, MainAxisAlignment, MouseStateHandle, ParentElement, Text,
 };
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::ui_components::switch::SwitchStateHandle;
-use warpui::{
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::ui_components::switch::SwitchStateHandle;
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 
@@ -209,7 +209,7 @@ impl View for UndoCloseView {
 impl TypedActionView for UndoCloseView {
     type Action = Action;
 
-    fn handle_action(&mut self, action: &Self::Action, ctx: &mut warpui::ViewContext<Self>) {
+    fn handle_action(&mut self, action: &Self::Action, ctx: &mut torchui::ViewContext<Self>) {
         match action {
             Action::ToggleUndoCloseEnabled => {
                 UndoCloseSettings::handle(ctx).update(ctx, |settings, ctx| {

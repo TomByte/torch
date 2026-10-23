@@ -291,8 +291,8 @@ async fn run_oauth_flow(
             // port and shouldn't block a caller that only wants to retry.
             // `send_blocking` is disallowed (no wasm support); block this
             // dedicated thread on the async `send` instead.
-            let _ = warpui_core::r#async::block_on(release_tx.send(()));
-            let _ = warpui_core::r#async::block_on(tx.send(callback));
+            let _ = torchui_core::r#async::block_on(release_tx.send(()));
+            let _ = torchui_core::r#async::block_on(tx.send(callback));
         })
         .context("failed to spawn the Grok OAuth callback server thread")?;
 

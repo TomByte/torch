@@ -4,9 +4,9 @@ use std::path::PathBuf;
 use anyhow::{Context as _, Result, bail};
 use channel_versions::VersionInfo;
 use instant::Duration;
-use warp_core::channel::{Channel, ChannelState};
-use warp_terminal::shell::ShellType;
-use warpui::ViewContext;
+use torch_core::channel::{Channel, ChannelState};
+use torch_terminal::shell::ShellType;
+use torchui::ViewContext;
 
 use super::{DownloadReady, ReadyForRelaunch, release_assets_directory_url};
 use crate::workspace::Workspace;
@@ -144,7 +144,7 @@ mod appimage {
         let mut command = command::blocking::Command::new(appimage_path);
         // Pass a flag to the app to let it know it was restarted as part of the
         // autoupdate process.
-        command.arg(warp_cli::finish_update_flag());
+        command.arg(torch_cli::finish_update_flag());
         // If we're testing with a local copy of channel_versions.json, have the
         // newly-started binary also reference that same file (so we can test
         // displaying an updated changelog after an autoupdate).
@@ -162,8 +162,8 @@ mod package_manager {
     use markdown_parser::{
         FormattedText, FormattedTextFragment, FormattedTextHeader, FormattedTextLine,
     };
-    use warpui::elements::{Container, FormattedTextElement, HighlightedHyperlink};
-    use warpui::{Element, SingletonEntity as _};
+    use torchui::elements::{Container, FormattedTextElement, HighlightedHyperlink};
+    use torchui::{Element, SingletonEntity as _};
 
     use super::*;
     use crate::appearance::Appearance;
@@ -182,16 +182,16 @@ mod package_manager {
         }
     }
 
-    impl warpui::Entity for AutoupdateContextBlock {
+    impl torchui::Entity for AutoupdateContextBlock {
         type Event = ();
     }
 
-    impl warpui::View for AutoupdateContextBlock {
+    impl torchui::View for AutoupdateContextBlock {
         fn ui_name() -> &'static str {
             "AutoupdateContextBlock"
         }
 
-        fn render(&self, app: &warpui::AppContext) -> Box<dyn warpui::Element> {
+        fn render(&self, app: &torchui::AppContext) -> Box<dyn torchui::Element> {
             let appearance = Appearance::as_ref(app);
             let theme = appearance.theme();
             let package_manager_name = self.package_manager.to_string();
@@ -284,7 +284,7 @@ mod package_manager {
         // Add any arguments that were passed to warp, skipping the first
         // argument (the name of the executable) and dropping the flag for
         // finishing an update.
-        let finish_update_flag = warp_cli::finish_update_flag();
+        let finish_update_flag = torch_cli::finish_update_flag();
         command.args(
             std::env::args()
                 .skip(1)
@@ -388,7 +388,7 @@ impl PackageManager {
                 is_signing_key_configured,
             } => {
                 let repo_prefix = if !is_repo_configured {
-                    let cache_dir = warp_core::paths::cache_dir();
+                    let cache_dir = torch_core::paths::cache_dir();
                     let cache_dir_str = cache_dir.display();
                     // Back up the existing pacman.conf file just in case
                     // anything goes wrong, then add the repository config.

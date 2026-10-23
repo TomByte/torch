@@ -1,8 +1,8 @@
 use pathfinder_geometry::vector::{Vector2F, vec2f};
-use warpui::elements::{ScrollData, ScrollableElement, ZIndex};
-use warpui::event::ModifiersState;
-use warpui::units::{IntoLines, IntoPixels, Pixels};
-use warpui::{AppContext, Element, EventContext, ModelHandle, SizeConstraint};
+use torchui::elements::{ScrollData, ScrollableElement, ZIndex};
+use torchui::event::ModifiersState;
+use torchui::units::{IntoLines, IntoPixels, Pixels};
+use torchui::{AppContext, Element, EventContext, ModelHandle, SizeConstraint};
 
 use super::block_list_element::BlockListMenuSource;
 use super::view::TerminalAction;
@@ -56,7 +56,7 @@ pub struct WaterfallGapElement {
     child_max_z_index: Option<ZIndex>,
 
     /// Standard element size and origin fields
-    origin: Option<warpui::elements::Point>,
+    origin: Option<torchui::elements::Point>,
     size: Option<Vector2F>,
 
     inline_menu_positioner: ModelHandle<InlineMenuPositioner>,
@@ -137,8 +137,8 @@ impl WaterfallGapElement {
 impl Element for WaterfallGapElement {
     fn layout(
         &mut self,
-        constraint: warpui::SizeConstraint,
-        ctx: &mut warpui::LayoutContext,
+        constraint: torchui::SizeConstraint,
+        ctx: &mut torchui::LayoutContext,
         app: &AppContext,
     ) -> Vector2F {
         // To layout the gap element, we first layout the input element and then
@@ -187,13 +187,13 @@ impl Element for WaterfallGapElement {
         constraint.max
     }
 
-    fn after_layout(&mut self, ctx: &mut warpui::AfterLayoutContext, app: &AppContext) {
+    fn after_layout(&mut self, ctx: &mut torchui::AfterLayoutContext, app: &AppContext) {
         self.input_element.after_layout(ctx, app);
         self.block_list_element.after_layout(ctx, app);
     }
 
-    fn paint(&mut self, origin: Vector2F, ctx: &mut warpui::PaintContext, app: &AppContext) {
-        self.origin = Some(warpui::elements::Point::from_vec2f(
+    fn paint(&mut self, origin: Vector2F, ctx: &mut torchui::PaintContext, app: &AppContext) {
+        self.origin = Some(torchui::elements::Point::from_vec2f(
             origin,
             ctx.scene.z_index(),
         ));
@@ -217,14 +217,14 @@ impl Element for WaterfallGapElement {
         self.size
     }
 
-    fn origin(&self) -> Option<warpui::elements::Point> {
+    fn origin(&self) -> Option<torchui::elements::Point> {
         self.origin
     }
 
     fn dispatch_event(
         &mut self,
-        event: &warpui::event::DispatchedEvent,
-        ctx: &mut warpui::EventContext,
+        event: &torchui::event::DispatchedEvent,
+        ctx: &mut torchui::EventContext,
         app: &AppContext,
     ) -> bool {
         let mut handled = false;
@@ -236,10 +236,10 @@ impl Element for WaterfallGapElement {
                 ctx,
             );
             handled |= match event_at_z_index {
-                Some(warpui::Event::LeftMouseDown { position, .. }) => {
+                Some(torchui::Event::LeftMouseDown { position, .. }) => {
                     self.mouse_down(*position, ctx)
                 }
-                Some(warpui::Event::RightMouseDown { position, .. }) => {
+                Some(torchui::Event::RightMouseDown { position, .. }) => {
                     let position_in_terminal_view =
                         *position - self.origin().expect("origin set after paint").xy();
                     ctx.dispatch_typed_action(TerminalAction::BlockListContextMenu(
@@ -249,7 +249,7 @@ impl Element for WaterfallGapElement {
                     ));
                     true
                 }
-                Some(warpui::Event::ScrollWheel {
+                Some(torchui::Event::ScrollWheel {
                     position,
                     delta,
                     precise,
@@ -264,7 +264,7 @@ impl Element for WaterfallGapElement {
 }
 
 impl ScrollableElement for WaterfallGapElement {
-    fn scroll_data(&self, app: &AppContext) -> Option<warpui::elements::ScrollData> {
+    fn scroll_data(&self, app: &AppContext) -> Option<torchui::elements::ScrollData> {
         // You might be wondering - 'what is this blocklist top inset'?
         //
         // This is the height of the inline menu when it is open and rendered above the input.

@@ -1,17 +1,17 @@
 use pathfinder_geometry::vector::vec2f;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::appearance::Appearance;
+use torch_core::features::FeatureFlag;
+use torch_core::ui::appearance::Appearance;
 #[cfg(not(target_family = "wasm"))]
-use warpui::SingletonEntity;
-use warpui::elements::{
+use torchui::SingletonEntity;
+use torchui::elements::{
     ChildAnchor, ChildView, Clipped, ConstrainedBox, Container, Empty, Fill, MainAxisAlignment,
     MainAxisSize, MouseStateHandle, OffsetPositioning, ParentAnchor, ParentElement,
     ParentOffsetBounds, Shrinkable, Stack,
 };
-use warpui::fonts::Weight;
-use warpui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{Element, ViewContext};
+use torchui::fonts::Weight;
+use torchui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{Element, ViewContext};
 
 use super::env_var_collection::{
     CORE_MAX_WIDTH, EnvVarCollectionAction, EnvVarCollectionView, ROW_SPACING, VariableRowIndex,

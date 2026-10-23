@@ -3,16 +3,16 @@
 use std::path::PathBuf;
 use std::time::Duration;
 
-use warp::features::FeatureFlag;
-use warp::integration_testing::settings::{
+use torch::features::FeatureFlag;
+use torch::integration_testing::settings::{
     active_execution_profile_id, create_and_select_execution_profile, default_execution_profile,
     execution_profile, has_multiple_execution_profiles,
 };
-use warp::integration_testing::step::new_step_with_default_assertions;
-use warp::integration_testing::terminal::wait_until_bootstrapped_single_pane_for_tab;
-use warp::integration_testing::view_getters::single_terminal_view_for_tab;
-use warpui_core::async_assert;
-use warpui_core::integration::TestStep;
+use torch::integration_testing::step::new_step_with_default_assertions;
+use torch::integration_testing::terminal::wait_until_bootstrapped_single_pane_for_tab;
+use torch::integration_testing::view_getters::single_terminal_view_for_tab;
+use torchui_core::async_assert;
+use torchui_core::integration::TestStep;
 
 use super::{Builder, new_builder};
 
@@ -45,7 +45,7 @@ directory_allowlist = ["/reloaded"]
 "#;
 
 fn settings_file_path() -> PathBuf {
-    warp::settings::user_preferences_toml_file_path()
+    torch::settings::user_preferences_toml_file_path()
 }
 
 fn write_settings_file(contents: &str) {

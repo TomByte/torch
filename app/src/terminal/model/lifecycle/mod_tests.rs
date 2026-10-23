@@ -1,8 +1,8 @@
 use std::collections::BTreeSet;
 
 use instant::Instant;
-use warp_core::features::FeatureFlag;
-use warp_core::telemetry::TelemetryEvent;
+use torch_core::features::FeatureFlag;
+use torch_core::telemetry::TelemetryEvent;
 
 use super::telemetry::{
     LifecycleRecoveryRecord, LifecycleTelemetryEvent, LifecycleTelemetryLimiter,

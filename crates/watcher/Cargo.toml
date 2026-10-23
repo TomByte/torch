@@ -7,9 +7,9 @@ publish.workspace = true
 license.workspace = true
 
 [dependencies]
-warp_errors.workspace = true
+torch_errors.workspace = true
 async-channel.workspace = true
-warpui_core.workspace = true
+torchui_core.workspace = true
 log.workspace = true
 anyhow.workspace = true
 notify-debouncer-full.workspace = true

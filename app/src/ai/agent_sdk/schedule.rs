@@ -2,15 +2,15 @@ use chrono::{DateTime, Utc};
 use comfy_table::Cell;
 use futures::future;
 use serde::Serialize;
-use warp_cli::GlobalOptions;
-use warp_cli::agent::OutputFormat;
-use warp_cli::schedule::{
+use torch_cli::GlobalOptions;
+use torch_cli::agent::OutputFormat;
+use torch_cli::schedule::{
     CreateScheduleArgs, DeleteScheduleArgs, GetScheduleArgs, PauseScheduleArgs, ScheduleCommand,
     ScheduleSubcommand, UnpauseScheduleArgs, UpdateScheduleArgs,
 };
-use warp_graphql::queries::get_scheduled_agent_history::ScheduledAgentHistory;
-use warpui::platform::TerminationMode;
-use warpui::{AppContext, SingletonEntity};
+use torch_graphql::queries::get_scheduled_agent_history::ScheduledAgentHistory;
+use torchui::platform::TerminationMode;
+use torchui::{AppContext, SingletonEntity};
 
 use super::common::{EnvironmentChoice, ResolveConfigurationError};
 use super::output::{self, TableFormat};

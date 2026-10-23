@@ -1,9 +1,9 @@
 use settings::Setting;
-use warpui::elements::{
+use torchui::elements::{
     Border, ChildView, Container, CornerRadius, DropTarget, Element, Flex, Hoverable,
     ParentElement, Radius, SavePosition, Stack,
 };
-use warpui::{AppContext, SingletonEntity};
+use torchui::{AppContext, SingletonEntity};
 
 use super::Input;
 use super::common::{
@@ -79,7 +79,7 @@ impl Input {
                 )
                 .finish(),
         );
-        if !warp_core::channel::ChannelState::is_local_only() {
+        if !torch_core::channel::ChannelState::is_local_only() {
             column.add_child(ChildView::new(&self.universal_developer_input_button_bar).finish());
         }
 
@@ -172,7 +172,7 @@ impl Input {
         if self.is_pane_focused(app) {
             // Focused: show background
             container = container
-                .with_background(if warp_core::channel::ChannelState::is_local_only() {
+                .with_background(if torch_core::channel::ChannelState::is_local_only() {
                     crate::themes::command_surface(theme)
                 } else {
                     internal_colors::fg_overlay_1(theme)

@@ -1,14 +1,14 @@
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::Vector2F;
-use warp_core::ui::Icon;
-use warp_core::ui::appearance::Appearance;
-use warpui::elements::{
+use torch_core::ui::Icon;
+use torch_core::ui::appearance::Appearance;
+use torchui::elements::{
     Align, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, DropShadow, Flex,
     MainAxisAlignment, ParentElement as _, Radius, Shrinkable,
 };
-use warpui::fonts::Weight;
-use warpui::ui_components::components::{BorderStyle, Coords, UiComponent as _, UiComponentStyles};
-use warpui::{
+use torchui::fonts::Weight;
+use torchui::ui_components::components::{BorderStyle, Coords, UiComponent as _, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity as _, TypedActionView, View,
     ViewContext, ViewHandle,
 };

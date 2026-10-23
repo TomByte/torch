@@ -20,7 +20,7 @@ use anyhow::{Context, Result, bail};
 // Use the project's allowed Command wrapper (not std::process::Command, which is
 // disallowed by clippy rules because it flashes a terminal window on Windows).
 use command::blocking::Command as BlockingCommand;
-use warp_isolation_platform::IsolationPlatformError;
+use torch_isolation_platform::IsolationPlatformError;
 
 use crate::server::retry_strategies::with_retry;
 use crate::server::server_api::ai::{
@@ -79,7 +79,7 @@ pub(crate) fn is_retryable(error: &TaskGitCredentialsError) -> bool {
 /// `WARP_WORKLOAD_TOKEN`, matching `issue_workload_token`'s own resolution,
 /// so it only short-circuits attempts that are guaranteed to fail.
 pub(crate) fn ensure_workload_token_available() -> Result<(), TaskGitCredentialsError> {
-    if !warp_isolation_platform::workload_token_available() {
+    if !torch_isolation_platform::workload_token_available() {
         return Err(TaskGitCredentialsError::Request(
             IsolationPlatformError::NoIsolationPlatformDetected.into(),
         ));
@@ -917,7 +917,7 @@ async fn try_refresh(
 ) -> Result<(), TaskGitCredentialsError> {
     ensure_workload_token_available()?;
     let workload_token =
-        warp_isolation_platform::issue_workload_token(Some(Duration::from_secs(5 * 60)))
+        torch_isolation_platform::issue_workload_token(Some(Duration::from_secs(5 * 60)))
             .await
             .map_err(|error| TaskGitCredentialsError::Request(error.into()))?
             .token;
@@ -964,7 +964,7 @@ pub(crate) async fn refresh_loop(
     use_factory_repositories: bool,
 ) {
     loop {
-        warpui::r#async::Timer::after(GIT_CREDENTIALS_REFRESH_INTERVAL).await;
+        torchui::r#async::Timer::after(GIT_CREDENTIALS_REFRESH_INTERVAL).await;
 
         log::info!("Refreshing git credentials for task {task_id}");
 
@@ -973,7 +973,7 @@ pub(crate) async fn refresh_loop(
             || try_refresh(&task_id, &ai_client, use_factory_repositories),
             is_retryable,
             |delay| async move {
-                warpui::r#async::Timer::after(delay).await;
+                torchui::r#async::Timer::after(delay).await;
             },
             |attempts_made| GIT_CREDENTIALS_REFRESH_BACKOFF.get(attempts_made).copied(),
         )

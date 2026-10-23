@@ -2,7 +2,7 @@
 //! validation, and catalog providers shared by the GUI orchestration
 //! controls and the TUI orchestration card.
 //!
-//! Nothing in this module may depend on `warpui::elements` or any other
+//! Nothing in this module may depend on `torchui::elements` or any other
 //! GUI rendering types; it only reads/writes app singletons through
 //! `AppContext`.
 

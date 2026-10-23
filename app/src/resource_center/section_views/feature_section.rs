@@ -1,11 +1,11 @@
-use warpui::elements::{
+use torchui::elements::{
     Align, ConstrainedBox, Container, CrossAxisAlignment, Element, Flex, Hoverable, Icon,
     MouseState, MouseStateHandle, ParentElement, Shrinkable,
 };
-use warpui::fonts::Weight;
-use warpui::platform::Cursor;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::fonts::Weight;
+use torchui::platform::Cursor;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{
     Action, AppContext, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View,
     ViewContext, WindowId,
 };

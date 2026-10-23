@@ -6,30 +6,30 @@ use std::rc::Rc;
 
 use ::settings::{Setting, SettingSection, ToggleableSetting};
 use enum_iterator::all;
-use warp_core::ui::theme::color::internal_colors;
-use warp_errors::{report_error, report_if_error};
-use warp_util::path::user_friendly_path;
-use warpui::elements::{
+use torch_core::ui::theme::color::internal_colors;
+use torch_errors::{report_error, report_if_error};
+use torch_util::path::user_friendly_path;
+use torchui::elements::{
     Align, Border, ChildView, Clipped, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     DEFAULT_UI_LINE_HEIGHT_RATIO, Dismiss, Element, Empty, Fill, Flex, FormattedTextElement,
     Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius,
     Shrinkable, Text, Wrap,
 };
-use warpui::fonts::{FamilyId, FontInfo, Weight};
-use warpui::keymap::{ContextPredicate, FixedBinding};
-use warpui::platform::{
+use torchui::fonts::{FamilyId, FontInfo, Weight};
+use torchui::keymap::{ContextPredicate, FixedBinding};
+use torchui::platform::{
     Cursor, FilePickerConfiguration, GraphicsBackend, SystemTheme, WindowBackdrop,
 };
-use warpui::rendering::ThinStrokes;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::ui_components::radio_buttons::{
+use torchui::rendering::ThinStrokes;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::ui_components::radio_buttons::{
     RadioButtonItem, RadioButtonLayout, RadioButtonStateHandle,
 };
-use warpui::ui_components::slider::SliderStateHandle;
-use warpui::ui_components::switch::SwitchStateHandle;
-use warpui::units::IntoPixels;
-use warpui::{
+use torchui::ui_components::slider::SliderStateHandle;
+use torchui::ui_components::switch::SwitchStateHandle;
+use torchui::units::IntoPixels;
+use torchui::{
     Action, AppContext, Entity, ModelHandle, SingletonEntity, TypedActionView, UpdateModel, View,
     ViewContext, ViewHandle, WindowId,
 };
@@ -1094,7 +1094,7 @@ impl AppearanceSettingsPageView {
             // `all_system_fonts` API doesn't exist.
             #[cfg(not(target_family = "wasm"))]
             {
-                let all_system_fonts = warpui::fonts::Cache::handle(ctx)
+                let all_system_fonts = torchui::fonts::Cache::handle(ctx)
                     .update(ctx, |font_cache, ctx| font_cache.all_system_fonts(ctx));
                 ctx.spawn(all_system_fonts, Self::set_system_fonts);
             }
@@ -2844,7 +2844,7 @@ struct CreateCustomThemeWidget {
 impl SettingsWidget for CreateCustomThemeWidget {
     type View = AppearanceSettingsPageView;
     fn should_render(&self, _: &AppContext) -> bool {
-        !warp_core::channel::ChannelState::is_local_only()
+        !torch_core::channel::ChannelState::is_local_only()
     }
 
     fn search_terms(&self) -> &str {

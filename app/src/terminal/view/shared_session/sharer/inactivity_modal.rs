@@ -1,15 +1,15 @@
 use std::time::Duration;
 
-use warp_core::ui::appearance::Appearance;
-use warpui::r#async::Timer;
-use warpui::elements::{
+use torch_core::ui::appearance::Appearance;
+use torchui::r#async::Timer;
+use torchui::elements::{
     ChildView, Container, CrossAxisAlignment, Flex, MouseStateHandle, ParentElement, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::platform::Cursor;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::platform::Cursor;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 

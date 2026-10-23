@@ -1,14 +1,14 @@
 use std::sync::Arc;
 
 use chrono::Utc;
-use warp_cli::agent::OutputFormat;
-use warp_cli::runner::{RunnerMacosVersionArg, UpdateRunnerArgs};
-use warp_cli::scope::{ObjectScope, TeamSelection};
-use warp_graphql::object::{Space, SpaceType};
-use warp_graphql::queries::get_runners::{
+use torch_cli::agent::OutputFormat;
+use torch_cli::runner::{RunnerMacosVersionArg, UpdateRunnerArgs};
+use torch_cli::scope::{ObjectScope, TeamSelection};
+use torch_graphql::object::{Space, SpaceType};
+use torch_graphql::queries::get_runners::{
     MacOsConfig, Runner, RunnerConfig, RunnerMacOsVersion, RunnerOs,
 };
-use warpui::App;
+use torchui::App;
 
 use super::{
     RunnerArch, RunnerArchArg, RunnerOsArg, build_update_input, confirm_delete, execute_update,

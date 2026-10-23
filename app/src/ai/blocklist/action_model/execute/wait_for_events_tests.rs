@@ -4,7 +4,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use warpui::{App, EntityId};
+use torchui::{App, EntityId};
 
 use super::{
     AnyActionExecution, CLIENT_WATCHDOG_SAFETY_MARGIN, DEFAULT_ORCHESTRATED_IDLE_TIMEOUT_SECONDS,

@@ -1,8 +1,8 @@
 use chrono::Utc;
 use settings::schema::SettingSchemaEntry;
 use settings::{Setting, SettingSurfaces, SettingsMode};
-use warp_graphql::scalars::time::ServerTimestamp;
-use warpui::{App, SingletonEntity};
+use torch_graphql::scalars::time::ServerTimestamp;
+use torchui::{App, SingletonEntity};
 
 use super::*;
 use crate::ai::request_usage_model::{RequestLimitInfo, RequestLimitRefreshDuration};

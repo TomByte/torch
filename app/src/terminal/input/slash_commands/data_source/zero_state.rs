@@ -1,6 +1,6 @@
 use itertools::Itertools;
-use warp_core::features::FeatureFlag;
-use warpui::{Entity, ModelHandle, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torchui::{Entity, ModelHandle, SingletonEntity};
 
 use crate::ai::skills::SkillManager;
 use crate::cloud_object::model::persistence::CloudModel;
@@ -35,7 +35,7 @@ impl SyncDataSource for GuiZeroStateDataSource {
     fn run_query(
         &self,
         query: &Query,
-        app: &warpui::AppContext,
+        app: &torchui::AppContext,
     ) -> Result<Vec<QueryResult<Self::Action>>, DataSourceRunErrorWrapper> {
         if !query.text.is_empty() {
             return Ok(vec![]);
@@ -116,7 +116,7 @@ impl SyncDataSource for TuiZeroStateDataSource {
     fn run_query(
         &self,
         query: &Query,
-        app: &warpui::AppContext,
+        app: &torchui::AppContext,
     ) -> Result<Vec<QueryResult<Self::Action>>, DataSourceRunErrorWrapper> {
         if !query.text.is_empty() {
             return Ok(vec![]);

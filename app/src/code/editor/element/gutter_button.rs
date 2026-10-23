@@ -1,10 +1,10 @@
-use warp_core::ui::Icon;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::color::ContrastingColor;
-use warp_core::ui::color::contrast::MinimumAllowedContrast;
-use warp_core::ui::theme::Fill;
-use warp_core::ui::theme::color::internal_colors;
-use warpui::elements::MouseState;
+use torch_core::ui::Icon;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::color::ContrastingColor;
+use torch_core::ui::color::contrast::MinimumAllowedContrast;
+use torch_core::ui::theme::Fill;
+use torch_core::ui::theme::color::internal_colors;
+use torchui::elements::MouseState;
 
 use crate::view_components::action_button::{
     ActionButtonTheme, DisabledSecondaryTheme, SecondaryTheme,

@@ -1,12 +1,12 @@
 use pathfinder_color::ColorU;
-use warp_editor::editor::NavigationKey;
-use warpui::elements::{
+use torch_editor::editor::NavigationKey;
+use torchui::elements::{
     ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Flex, MainAxisAlignment,
     MainAxisSize, MouseStateHandle, ParentElement, Radius, Wrap, WrapFill,
 };
-use warpui::fonts::FamilyId;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::fonts::FamilyId;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };

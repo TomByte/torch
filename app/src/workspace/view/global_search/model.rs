@@ -12,13 +12,13 @@ use remote_server::manager::{HostRequestError, RemoteServerManager, RipgrepSearc
 use remote_server::proto::RipgrepSearchSuccess;
 use remote_server::protocol::RequestId;
 use string_offset::ByteOffset;
-use warp_errors::report_error;
-use warp_ripgrep::search::{Match as RipgrepMatch, Submatch};
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warp_util::remote_path::RemotePath;
-use warp_util::standardized_path::StandardizedPath;
-use warpui::r#async::SpawnedFutureHandle;
-use warpui::{Entity, ModelContext, ModelSpawner, SingletonEntity};
+use torch_errors::report_error;
+use torch_ripgrep::search::{Match as RipgrepMatch, Submatch};
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torch_util::remote_path::RemotePath;
+use torch_util::standardized_path::StandardizedPath;
+use torchui::r#async::SpawnedFutureHandle;
+use torchui::{Entity, ModelContext, ModelSpawner, SingletonEntity};
 
 use crate::workspace::view::global_search::view::GlobalSearchEvent;
 use crate::workspace::view::global_search::{GlobalSearchMatch, SearchConfig};
@@ -240,7 +240,7 @@ impl GlobalSearch {
                     }),
                     Err(err) => {
                         report_error!(
-                            err.context("GlobalSearch: warp_ripgrep CLI search failed or aborted")
+                            err.context("GlobalSearch: torch_ripgrep CLI search failed or aborted")
                         );
                         None
                     }
@@ -413,13 +413,13 @@ impl GlobalSearch {
     ) -> Result<usize> {
         let roots_display: Vec<_> = roots.iter().map(|r| r.display().to_string()).collect();
         log::info!(
-            "GlobalSearch: starting warp_ripgrep CLI search with pattern={pattern}, roots={:?}",
+            "GlobalSearch: starting torch_ripgrep CLI search with pattern={pattern}, roots={:?}",
             roots_display
         );
 
         let patterns = &[pattern];
         let stream =
-            warp_ripgrep::search::search_streaming(patterns, &roots, ignore_case, multiline)?;
+            torch_ripgrep::search::search_streaming(patterns, &roots, ignore_case, multiline)?;
         futures::pin_mut!(stream);
 
         let mut total_match_count: usize = 0;

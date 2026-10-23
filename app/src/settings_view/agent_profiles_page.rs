@@ -15,18 +15,18 @@ use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
 use regex::Regex;
 use settings::{Setting, ToggleableSetting};
 use strum::IntoEnumIterator;
-use warp_core::features::FeatureFlag;
-use warp_errors::{report_error, report_if_error};
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_errors::{report_error, report_if_error};
+use torchui::elements::{
     ChildView, ConstrainedBox, Container, CrossAxisAlignment, Dismiss, Element, Flex,
     FormattedTextElement, HighlightedHyperlink, HyperlinkLens, HyperlinkUrl, MainAxisAlignment,
     MainAxisSize, MouseStateHandle, ParentElement, Shrinkable, Text,
 };
-use warpui::keymap::ContextPredicate;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::ui_components::slider::SliderStateHandle;
-use warpui::ui_components::switch::SwitchStateHandle;
-use warpui::{
+use torchui::keymap::ContextPredicate;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::ui_components::slider::SliderStateHandle;
+use torchui::ui_components::switch::SwitchStateHandle;
+use torchui::{
     Action, AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
     WeakViewHandle, id,
 };
@@ -1966,7 +1966,7 @@ impl UsageWidget {
         allowance_cents: Option<AllowanceCents>,
         workspace_is_delinquent_due_to_payment_issue: bool,
         appearance: &Appearance,
-    ) -> Box<dyn warpui::Element> {
+    ) -> Box<dyn torchui::Element> {
         let mut row = Flex::row();
         if used >= limit || workspace_is_delinquent_due_to_payment_issue {
             row.add_child(
@@ -2030,7 +2030,7 @@ impl UsageWidget {
         allowance_cents: Option<AllowanceCents>,
         workspace_is_delinquent_due_to_payment_issue: bool,
         appearance: &Appearance,
-    ) -> Box<dyn warpui::Element> {
+    ) -> Box<dyn torchui::Element> {
         let request_usage_details = Flex::column()
             .with_cross_axis_alignment(CrossAxisAlignment::End)
             .with_child(self.render_request_usage_count(
@@ -2719,7 +2719,7 @@ impl AgentsWidget {
         dropdown_menu: &ViewHandle<Dropdown<AgentProfilesPageAction>>,
         ai_settings: &AISettings,
         appearance: &Appearance,
-        app: &warpui::AppContext,
+        app: &torchui::AppContext,
     ) -> Box<dyn Element> {
         let header = Container::new(render_body_item_label_with_icon::<AgentProfilesPageAction>(
             header_text.into(),
@@ -2975,7 +2975,7 @@ impl AgentsWidget {
         view: &AgentProfilesPageView,
         ai_settings: &AISettings,
         appearance: &Appearance,
-        app: &warpui::AppContext,
+        app: &torchui::AppContext,
     ) -> Box<dyn Element> {
         let code_settings = CodeSettings::as_ref(app);
         let toggle = render_ai_setting_toggle::<CodebaseContextEnabled>(

@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use uuid::Uuid;
-use warpui::{AppContext, ModelContext};
+use torchui::{AppContext, ModelContext};
 
 use super::TemplatableMCPServerManager;
 use crate::ai::mcp::MCPServerUpdate;
@@ -159,7 +159,7 @@ impl TemplatableMCPServerManager {
     pub fn delete_credentials_from_secure_storage(
         &mut self,
         _sync_id: Uuid,
-        _app: &mut warpui::AppContext,
+        _app: &mut torchui::AppContext,
     ) {
         log::warn!("Deleting credentials for MCP servers is not supported in WASM")
     }

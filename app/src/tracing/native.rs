@@ -65,7 +65,7 @@ use tracing::subscriber;
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::layer::SubscriberExt as _;
 use url::{Host, Url};
-use warpui::AppContext;
+use torchui::AppContext;
 
 use super::Initialization;
 use super::child_process::ChildProcessTracingConfig;

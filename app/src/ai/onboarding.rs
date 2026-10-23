@@ -3,8 +3,8 @@
 use ai::LLMId;
 use onboarding::OnboardingAuthState;
 use onboarding::slides::OnboardingModelInfo;
-use warp_core::ui::icons::Icon;
-use warpui::{AppContext, SingletonEntity};
+use torch_core::ui::icons::Icon;
+use torchui::{AppContext, SingletonEntity};
 
 use super::llms::{LLMInfo, LLMPreferences};
 use crate::auth::AuthStateProvider;

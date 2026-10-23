@@ -22,7 +22,7 @@ use async_channel::Sender;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use cloud_object_client::ObjectPermissionUpdateResult;
-use warp_graphql::object_permissions::AccessLevel;
+use torch_graphql::object_permissions::AccessLevel;
 
 use crate::cloud_object::model::actions::{ObjectActionHistory, ObjectActionType};
 use crate::cloud_object::model::generic_string_model::GenericStringObjectId;

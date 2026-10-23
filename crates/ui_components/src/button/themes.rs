@@ -1,8 +1,8 @@
 use pathfinder_color::ColorU;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::color::coloru_with_opacity;
-use warp_core::ui::theme::Fill;
-use warp_core::ui::theme::color::internal_colors;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::color::coloru_with_opacity;
+use torch_core::ui::theme::Fill;
+use torch_core::ui::theme::color::internal_colors;
 
 /// Theming delegate for a button.
 pub trait Theme {

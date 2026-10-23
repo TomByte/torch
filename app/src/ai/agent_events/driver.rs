@@ -6,8 +6,8 @@ use async_trait::async_trait;
 use futures::StreamExt;
 use futures::future::Either;
 use instant::Instant;
-use warp_errors::{AnyhowErrorExt as _, report_error};
-use warpui::r#async::Timer;
+use torch_errors::{AnyhowErrorExt as _, report_error};
+use torchui::r#async::Timer;
 
 use crate::server::retry_strategies::{is_auth_error, is_transient_http_error};
 use crate::server::server_api::ServerApi;

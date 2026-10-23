@@ -256,8 +256,8 @@ fn artifact_rejects_unknown_artifact_type() {
 
 #[test]
 fn converts_graphql_file_artifact() {
-    let artifact = Artifact::try_from(warp_graphql::ai::AIConversationArtifact::FileArtifact(
-        warp_graphql::ai::FileArtifact {
+    let artifact = Artifact::try_from(torch_graphql::ai::AIConversationArtifact::FileArtifact(
+        torch_graphql::ai::FileArtifact {
             artifact_uid: "artifact-file-1".into(),
             filepath: "outputs/report.txt".to_string(),
             mime_type: "text/plain".to_string(),

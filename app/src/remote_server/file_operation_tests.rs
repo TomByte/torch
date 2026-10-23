@@ -11,8 +11,8 @@ use remote_server::proto::{
     ClientMessage, DeleteFile, RenameFile, ServerMessage, host_scoped_request,
 };
 use remote_server::protocol::RequestId;
-use warp_files::FileModel;
-use warpui::{App, ModelHandle};
+use torch_files::FileModel;
+use torchui::{App, ModelHandle};
 
 use super::ServerModel;
 use crate::code::global_buffer_model::GlobalBufferModel;

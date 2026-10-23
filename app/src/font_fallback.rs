@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use lazy_static::lazy_static;
-use warpui::fonts::ExternalFontFamily;
+use torchui::fonts::ExternalFontFamily;
 
 use crate::ChannelState;
 

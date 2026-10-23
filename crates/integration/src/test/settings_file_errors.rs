@@ -7,18 +7,18 @@
 
 use std::time::Duration;
 
-use warp::features::FeatureFlag;
-use warp::integration_testing::step::new_step_with_default_assertions;
-use warp::integration_testing::terminal::wait_until_bootstrapped_single_pane_for_tab;
-use warp::integration_testing::view_getters::workspace_view;
-use warpui_core::async_assert;
-use warpui_core::integration::TestStep;
+use torch::features::FeatureFlag;
+use torch::integration_testing::step::new_step_with_default_assertions;
+use torch::integration_testing::terminal::wait_until_bootstrapped_single_pane_for_tab;
+use torch::integration_testing::view_getters::workspace_view;
+use torchui_core::async_assert;
+use torchui_core::integration::TestStep;
 
 use super::{Builder, new_builder};
 
 /// Helper: returns the path to the TOML settings file.
 fn toml_file_path() -> std::path::PathBuf {
-    warp::settings::user_preferences_toml_file_path()
+    torch::settings::user_preferences_toml_file_path()
 }
 
 // ---------------------------------------------------------------------------

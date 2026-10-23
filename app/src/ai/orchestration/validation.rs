@@ -1,8 +1,8 @@
 //! Frontend-neutral validation predicates for orchestration edit flows.
 
 use ai::agent::action::RunAgentsExecutionMode;
-use warp_cli::agent::Harness;
-use warpui::{AppContext, SingletonEntity as _};
+use torch_cli::agent::Harness;
+use torchui::{AppContext, SingletonEntity as _};
 
 use super::config_state::{AuthSecretSelection, OrchestrationConfigState};
 use crate::ai::auth_secret_types::auth_secret_types_for_harness;

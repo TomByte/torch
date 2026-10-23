@@ -99,40 +99,40 @@ use sysinfo::{Pid, ProcessesToUpdate, System};
 pub use typeahead::*;
 use version_compare::Cmp;
 pub use video_recording::*;
-use warp::appearance::Appearance;
-use warp::features::FeatureFlag;
-use warp::integration_testing::assertions::{
+use torch::appearance::Appearance;
+use torch::features::FeatureFlag;
+use torch::integration_testing::assertions::{
     assert_binding_display_string, go_offline, go_online, join_a_workspace,
 };
-use warp::integration_testing::block::{
+use torch::integration_testing::block::{
     BlockPosition, LinePosition, assert_block_visible, assert_bottom_of_block_approx_at,
     assert_num_blocks_in_model,
 };
-use warp::integration_testing::clipboard::assert_clipboard_contains_string;
-use warp::integration_testing::command_palette::{
+use torch::integration_testing::clipboard::assert_clipboard_contains_string;
+use torch::integration_testing::command_palette::{
     TestStepsExt, close_command_palette, open_command_palette, open_command_palette_and_run_action,
 };
-use warp::integration_testing::context_chips::assert_working_dir_is_present;
-use warp::integration_testing::find::{Find, FindWithinBlockState};
-use warp::integration_testing::input::{
+use torch::integration_testing::context_chips::assert_working_dir_is_present;
+use torch::integration_testing::find::{Find, FindWithinBlockState};
+use torch::integration_testing::input::{
     input_contains_string, input_is_empty, open_input_context_menu,
 };
-use warp::integration_testing::navigation_palette::{
+use torch::integration_testing::navigation_palette::{
     RecentSession, check_recency, navigate_to_other_session_step, open_navigation_palette_step,
 };
-use warp::integration_testing::pane_group::assert_focused_pane_index;
-use warp::integration_testing::settings::{
+use torch::integration_testing::pane_group::assert_focused_pane_index;
+use torch::integration_testing::settings::{
     assert_theme_chooser_contains, set_window_custom_size, toggle_setting,
 };
-use warp::integration_testing::step::{
+use torch::integration_testing::step::{
     assert_no_pending_model_events, new_step_with_default_assertions,
     new_step_with_default_assertions_for_pane,
 };
-use warp::integration_testing::tab::{assert_pane_title, assert_tab_title, tab_title_step};
-use warp::integration_testing::terminal::util::{
+use torch::integration_testing::tab::{assert_pane_title, assert_tab_title, tab_title_step};
+use torch::integration_testing::terminal::util::{
     ExactLine, ExpectedExitStatus, current_shell_starter_and_version,
 };
-use warp::integration_testing::terminal::{
+use torch::integration_testing::terminal::{
     assert_active_block_output, assert_active_block_output_for_single_terminal_in_tab,
     assert_active_block_received_precmd, assert_alt_grid_active, assert_alt_screen_output,
     assert_command_executed_for_single_terminal_in_tab, assert_context_menu_is_open,
@@ -151,58 +151,58 @@ use warp::integration_testing::terminal::{
     open_context_menu_for_selected_block, performance_test, run_alt_grid_program, run_completer,
     validate_git_branch, wait_until_bootstrapped_pane, wait_until_bootstrapped_single_pane_for_tab,
 };
-use warp::integration_testing::view_getters::{
+use torch::integration_testing::view_getters::{
     pane_group_view, single_input_suggestions_view_for_tab, single_input_view_for_tab,
     single_terminal_pane_view_for_tab, single_terminal_view, single_terminal_view_for_tab,
     workspace_view,
 };
-use warp::integration_testing::warp_drive::{
+use torch::integration_testing::warp_drive::{
     assert_is_left_panel_open, assert_warp_drive_is_closed, assert_warp_drive_is_open,
 };
-use warp::integration_testing::window::{
+use torch::integration_testing::window::{
     add_and_save_window, add_window, add_window_and_check_bounds, close_window,
     save_active_window_id,
 };
-use warp::integration_testing::workspace::assert_tab_count;
-use warp::integration_testing::{self, view_of_type};
-use warp::pane_group::AGENT_MODE_PANE_DEFAULT_MINIMUM_WIDTH;
-use warp::settings::{
+use torch::integration_testing::workspace::assert_tab_count;
+use torch::integration_testing::{self, view_of_type};
+use torch::pane_group::AGENT_MODE_PANE_DEFAULT_MINIMUM_WIDTH;
+use torch::settings::{
     CompletionsOpenWhileTyping, CtrlTabBehavior, INPUT_MODE, MonospaceFontSize,
     NativeShellCompletionsEnabled, TabBehavior,
 };
-use warp::settings_view::keybindings::KeybindingsView;
-use warp::settings_view::{FeaturesPageAction, SettingsAction, SettingsSection, SettingsView};
-use warp::terminal::alt_screen_reporting::MouseReportingEnabled;
-use warp::terminal::available_shells::AvailableShells;
-use warp::terminal::block_list_viewport::{InputMode, ScrollLines, ScrollPosition};
-use warp::terminal::find::TerminalFindModel;
-use warp::terminal::input::{Input, InputSuggestionsMode};
-use warp::terminal::keys_settings::KeysSettings;
-use warp::terminal::local_tty::TerminalManager as LocalTtyTerminalManager;
-use warp::terminal::model::ansi::{Handler, InitShellValue};
-use warp::terminal::model::blocks::{BlockHeightItem, BlockHeightSummary, TotalIndex};
-use warp::terminal::model::grid::Dimensions;
-use warp::terminal::model::grid::grid_handler::TermMode;
-use warp::terminal::model::terminal_model::BlockIndex;
-use warp::terminal::session_settings::{HonorPS1, SessionSettings, StartupShellOverride};
-use warp::terminal::view::{
+use torch::settings_view::keybindings::KeybindingsView;
+use torch::settings_view::{FeaturesPageAction, SettingsAction, SettingsSection, SettingsView};
+use torch::terminal::alt_screen_reporting::MouseReportingEnabled;
+use torch::terminal::available_shells::AvailableShells;
+use torch::terminal::block_list_viewport::{InputMode, ScrollLines, ScrollPosition};
+use torch::terminal::find::TerminalFindModel;
+use torch::terminal::input::{Input, InputSuggestionsMode};
+use torch::terminal::keys_settings::KeysSettings;
+use torch::terminal::local_tty::TerminalManager as LocalTtyTerminalManager;
+use torch::terminal::model::ansi::{Handler, InitShellValue};
+use torch::terminal::model::blocks::{BlockHeightItem, BlockHeightSummary, TotalIndex};
+use torch::terminal::model::grid::Dimensions;
+use torch::terminal::model::grid::grid_handler::TermMode;
+use torch::terminal::model::terminal_model::BlockIndex;
+use torch::terminal::session_settings::{HonorPS1, SessionSettings, StartupShellOverride};
+use torch::terminal::view::{
     ALIAS_EXPANSION_BANNER_SEEN_KEY, BlockVisibilityMode, TerminalAction, TerminalViewState,
 };
-use warp::terminal::{TerminalView, shell};
-use warp::util::bindings::CustomAction;
-use warp::workflows::categories::CategoriesView;
-use warp::workspace::{
+use torch::terminal::{TerminalView, shell};
+use torch::util::bindings::CustomAction;
+use torch::workflows::categories::CategoriesView;
+use torch::workspace::{
     NEW_SESSION_MENU_BUTTON_POSITION_ID, NEW_TAB_BUTTON_POSITION_ID, Workspace, WorkspaceAction,
 };
-use warp::{AgentModeEntrypoint, cmd_or_ctrl_shift};
-use warpui_core::event::KeyState;
-use warpui_core::integration::{AssertionOutcome, StepData, TestStep};
-use warpui_core::keymap::{Keystroke, PerPlatformKeystroke, Trigger};
-use warpui_core::platform::keyboard::KeyCode;
-use warpui_core::platform::{OperatingSystem, TerminationMode};
-use warpui_core::units::Lines;
-use warpui_core::windowing::WindowManager;
-use warpui_core::{
+use torch::{AgentModeEntrypoint, cmd_or_ctrl_shift};
+use torchui_core::event::KeyState;
+use torchui_core::integration::{AssertionOutcome, StepData, TestStep};
+use torchui_core::keymap::{Keystroke, PerPlatformKeystroke, Trigger};
+use torchui_core::platform::keyboard::KeyCode;
+use torchui_core::platform::{OperatingSystem, TerminationMode};
+use torchui_core::units::Lines;
+use torchui_core::windowing::WindowManager;
+use torchui_core::{
     AssetProvider, Event, SingletonEntity, UpdateView, ViewHandle, async_assert, async_assert_eq,
 };
 pub use websockets::*;

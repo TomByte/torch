@@ -12,7 +12,7 @@ path = "src/bin/main.rs"
 required-features = ["bin"]
 
 [features]
-bin = ["warpui_core/log_named_telemetry_events"]
+bin = ["torchui_core/log_named_telemetry_events"]
 
 [dependencies]
 ai.workspace = true
@@ -29,11 +29,11 @@ serde_json.workspace = true
 strum.workspace = true
 strum_macros.workspace = true
 uuid.workspace = true
-warp_core = { workspace = true }
-warp_errors.workspace = true
-warpui.workspace = true
-warpui_core.workspace = true
-warp_logging.workspace = true
+torch_core = { workspace = true }
+torch_errors.workspace = true
+torchui.workspace = true
+torchui_core.workspace = true
+torch_logging.workspace = true
 
 [dev-dependencies]
-warp_core = { workspace = true, features = ["test-util"] }
+torch_core = { workspace = true, features = ["test-util"] }

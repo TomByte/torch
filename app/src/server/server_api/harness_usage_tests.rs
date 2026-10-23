@@ -6,12 +6,12 @@ use futures::executor::block_on;
 use http_client::StatusCode;
 use mockito::Matcher;
 use serde_json::json;
-use warp_core::channel::ChannelState;
-use warp_harness_usage::api::{
+use torch_core::channel::ChannelState;
+use torch_harness_usage::api::{
     ClaudeUsage, Coverage, CoverageStatus, HarnessUsageRequest, HarnessUsageSnapshot, ToolCalls,
     UsagePayload, UsageSnapshot,
 };
-use warp_server_client::base_client::{AMBIENT_WORKLOAD_TOKEN_HEADER, CLOUD_AGENT_ID_HEADER};
+use torch_server_client::base_client::{AMBIENT_WORKLOAD_TOKEN_HEADER, CLOUD_AGENT_ID_HEADER};
 
 use super::{
     HarnessUsageCapability, HarnessUsageError, HarnessUsageErrorKind,

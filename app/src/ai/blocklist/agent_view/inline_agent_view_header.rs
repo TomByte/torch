@@ -2,9 +2,9 @@ use std::sync::Arc;
 
 use ai::agent::action::{AIAgentActionType, ShellCommandDelay};
 use parking_lot::FairMutex;
-use warp_core::ui::appearance::Appearance;
-use warpui::elements::{CornerRadius, Radius};
-use warpui::{
+use torch_core::ui::appearance::Appearance;
+use torchui::elements::{CornerRadius, Radius};
+use torchui::{
     AppContext, Element, Entity, EntityId, ModelHandle, SingletonEntity, View, ViewContext,
 };
 

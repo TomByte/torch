@@ -9,8 +9,8 @@ use futures::future::join_all;
 use mime_guess::from_path;
 use tokio::fs;
 use tokio_util::io::StreamReader;
-use warp_core::features::FeatureFlag;
-use warp_errors::report_error;
+use torch_core::features::FeatureFlag;
+use torch_errors::report_error;
 
 use crate::ai::agent_sdk::retry::with_bounded_retry;
 use crate::ai::ambient_agents::AmbientAgentTaskId;

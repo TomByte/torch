@@ -4,13 +4,13 @@ default-run = "torch"
 description = "A local terminal with tab completion and command history"
 edition = "2024"
 autobins = false
-name = "warp"
+name = "torch"
 version = "0.1.0"
 publish.workspace = true
 license.workspace = true
 
 [lib]
-name = "warp"
+name = "torch"
 path = "src/lib.rs"
 
 [[bin]]
@@ -116,8 +116,8 @@ line-ending.workspace = true
 log.workspace = true
 log-panics = { version = "2.1.0", features = ["with-backtrace"] }
 lsp.workspace = true
-warp_logging.workspace = true
-warp_harness_usage.workspace = true
+torch_logging.workspace = true
+torch_harness_usage.workspace = true
 lz4_flex = "0.11"
 markdown_parser.workspace = true
 mcp.workspace = true
@@ -193,7 +193,7 @@ unindent = "0.1.7"
 url = { workspace = true, features = ["serde"] }
 urlocator.workspace = true
 uuid.workspace = true
-warp_cli.workspace = true
+torch_cli.workspace = true
 validator = "0.19.0"
 variant_count = "1.1.0"
 vec1.workspace = true
@@ -201,24 +201,24 @@ version-compare.workspace = true
 vte.workspace = true
 walkdir.workspace = true
 warp-workflows.workspace = true
-warp_assets.workspace = true
-warp_channel_config.workspace = true
-warp_completer.workspace = true
-warp_core.workspace = true
-warp_errors = { workspace = true, features = ["reqwest-errors"] }
-warp_editor.workspace = true
-warp_graphql.workspace = true
-warp_search_core.workspace = true
-warp_server_auth.workspace = true
-warp_server_client.workspace = true
-warp_util.workspace = true
-warpui = { workspace = true, features = ["schema_gen", "settings_value"] }
-warpui_core.workspace = true
+torch_assets.workspace = true
+torch_channel_config.workspace = true
+torch_completer.workspace = true
+torch_core.workspace = true
+torch_errors = { workspace = true, features = ["reqwest-errors"] }
+torch_editor.workspace = true
+torch_graphql.workspace = true
+torch_search_core.workspace = true
+torch_server_auth.workspace = true
+torch_server_client.workspace = true
+torch_util.workspace = true
+torchui = { workspace = true, features = ["schema_gen", "settings_value"] }
+torchui_core.workspace = true
 voice_input = { workspace = true, optional = true }
-warpui_extras = { workspace = true, features = ["default", "user_preferences-toml"] }
+torchui_extras = { workspace = true, features = ["default", "user_preferences-toml"] }
 syntax_tree.workspace = true
 languages.workspace = true
-warp_terminal.workspace = true
+torch_terminal.workspace = true
 websocket.workspace = true
 wgpu = { workspace = true, optional = true }
 natural_language_detection.workspace = true
@@ -237,10 +237,10 @@ remote_server.workspace = true
 repo_metadata.workspace = true
 vim.workspace = true
 rmcp.workspace = true
-warp_isolation_platform.workspace = true
-warp_ripgrep.workspace = true
-warp_managed_secrets.workspace = true
-warp_multi_agent_client.workspace = true
+torch_isolation_platform.workspace = true
+torch_ripgrep.workspace = true
+torch_managed_secrets.workspace = true
+torch_multi_agent_client.workspace = true
 local_control.workspace = true
 hashbrown.workspace = true
 rustc-hash.workspace = true
@@ -302,7 +302,7 @@ tokio.workspace = true
 tokio-util.workspace = true
 tracing-opentelemetry.workspace = true
 tracing-subscriber.workspace = true
-warp_errors = { workspace = true, features = ["tokio-errors", "websocket-errors"] }
+torch_errors = { workspace = true, features = ["tokio-errors", "websocket-errors"] }
 
 # AWS SDK (loading credentials for BYO LLM)
 aws-config = { version = "1.8.16", features = ["credentials-login"] }
@@ -317,7 +317,7 @@ sysinfo.workspace = true
 warp-command-signatures = { workspace = true, features = ["embed-signatures"] }
 is_executable = "1.0.1"
 watcher.workspace = true
-warp_files.workspace = true
+torch_files.workspace = true
 
 [target.'cfg(target_family = "wasm")'.dependencies]
 console_error_panic_hook = { version = "0.1.6" }
@@ -341,7 +341,7 @@ serde-wasm-bindgen = "0.6.5"
 # For wasm, we don't use the feature "embed-signatures".
 warp-command-signatures = { workspace = true }
 web-sys.workspace = true
-warp_web_event_bus.workspace = true
+torch_web_event_bus.workspace = true
 
 [target.'cfg(unix)'.dependencies]
 signal-hook = { version = "0.3.17", features = ["extended-siginfo"] }
@@ -403,16 +403,16 @@ mockito.workspace = true
 serial_test = "0.8.0"
 sum_tree = { workspace = true, features = ["test-util"] }
 virtual-fs.workspace = true
-warp_completer = { workspace = true, features = ["test-util"] }
-warp_core = { workspace = true, features = ["test-util"] }
-warp_editor = { workspace = true, features = ["test-util"] }
-warp_server_client = { workspace = true, features = ["test-util"] }
-warp_server_auth = { workspace = true, features = ["test-util"] }
-warp_terminal = { workspace = true, features = ["test-util"] }
-warpui = { workspace = true, features = ["test-util"] }
-warpui_core = { workspace = true, features = ["test-util"] }
-warpui_extras = { workspace = true, features = ["test-util"] }
-warp_files = { workspace = true, features = ["test-util"] }
+torch_completer = { workspace = true, features = ["test-util"] }
+torch_core = { workspace = true, features = ["test-util"] }
+torch_editor = { workspace = true, features = ["test-util"] }
+torch_server_client = { workspace = true, features = ["test-util"] }
+torch_server_auth = { workspace = true, features = ["test-util"] }
+torch_terminal = { workspace = true, features = ["test-util"] }
+torchui = { workspace = true, features = ["test-util"] }
+torchui_core = { workspace = true, features = ["test-util"] }
+torchui_extras = { workspace = true, features = ["test-util"] }
+torch_files = { workspace = true, features = ["test-util"] }
 repo_metadata = { workspace = true, features = ["test-util"] }
 
 [target.'cfg(not(target_family = "wasm"))'.dev-dependencies]
@@ -426,14 +426,14 @@ prost-build.workspace = true
 sha2.workspace = true
 tempfile.workspace = true
 walkdir = "2.3.2"
-warp_util.workspace = true
+torch_util.workspace = true
 
 [target.'cfg(windows)'.build-dependencies]
 embed-resource = "3.0"
 
 # Note that we support channel-specific enables for these features
 [features]
-tui = ["warp_terminal/tui", "warpui_core/tui"]
+tui = ["torch_terminal/tui", "torchui_core/tui"]
 ai_resume_button = []
 autoupdate = []
 figma_detection = []
@@ -462,7 +462,7 @@ codebase_index_persistence = ["full_source_code_embedding"]
 well_known_mcp_ids = []
 factory_mcp = []
 preview_urls_mcp = []
-local_only = ["warp_core/local_only"]
+local_only = ["torch_core/local_only"]
 default = [
     "local_only",
     "agent_mode",
@@ -560,7 +560,7 @@ default = [
     "ambient_agents_command_line",
     "ambient_agents_image_upload",
     "scheduled_ambient_agents",
-    "warp_managed_secrets",
+    "torch_managed_secrets",
     "v4a_file_diffs",
     "classic_completions",
     "force_classic_completions",
@@ -713,15 +713,15 @@ github_pr_prompt_chip = []
 create_project_flow = []
 agent_mode_evals = [
     "integration_tests",
-    "warpui/defer_scene_build",
+    "torchui/defer_scene_build",
     "full_source_code_embedding",
     "cross_repo_context",
     "cloud_object_models/agent_mode_evals",
     "rust-embed/debug-embed",
-    "warpui/log_named_telemetry_events",
-    "warp_logging/agent_mode_evals",
-    "warp_multi_agent_client/agent_mode_evals",
-    "warp_server_client/agent_mode_evals",
+    "torchui/log_named_telemetry_events",
+    "torch_logging/agent_mode_evals",
+    "torch_multi_agent_client/agent_mode_evals",
+    "torch_server_client/agent_mode_evals",
 ]
 ambient_agents_command_line = []
 ambient_agents_image_upload = []
@@ -750,7 +750,7 @@ list_skills = []
 # This feature is enabled in build.rs when compiling for platforms which
 # support having a local tty/shell session.  It can be used to conditionally
 # include dependencies that should only exist in such environments.
-local_tty = ["warp_terminal/local_tty"]
+local_tty = ["torch_terminal/local_tty"]
 local_computer_use = []
 local_claude_codex_child_harnesses = []
 # This feature is enabled in build.rs when compiling for platforms which
@@ -762,8 +762,8 @@ local_fs = [
     "lsp/local_fs",
     "persistence/local_fs",
     "repo_metadata/local_fs",
-    "warp_core/local_fs",
-    "warp_terminal/local_fs",
+    "torch_core/local_fs",
+    "torch_terminal/local_fs",
 ]
 jupyter_notebook_rendering = []
 markdown_tables = []
@@ -773,7 +773,7 @@ mcp_oauth = []
 mcp_debugging_ids = []
 oz_changelog_updates = []
 # Remote-backed tty that connects to a PTY-like interface via a server.
-remote_tty = ["warp_terminal/remote_tty"]
+remote_tty = ["torch_terminal/remote_tty"]
 # Fix for cursor reflow bug during window resize, from Alacritty resizing logic.
 resize_fix = []
 pluggable_notifications = []
@@ -790,7 +790,7 @@ remote_codebase_indexing = ["full_source_code_embedding"]
 # This feature should only be enabled when building a release bundle with
 # the bundle script, and can be used to conditionally enable functionality
 # accordingly.
-release_bundle = ["rust-embed/debug-embed", "warp_core/release_bundle"]
+release_bundle = ["rust-embed/debug-embed", "torch_core/release_bundle"]
 render_agent_mode_output_markdown = []
 render_continuous_block_selections_with_single_border = []
 richtext_multiselect = []
@@ -799,30 +799,30 @@ selectable_prompt = []
 settings_file = []
 sequential_storage = []
 session_sharing_acls = []
-skip_login = ["warp_server_client/skip_login"]
+skip_login = ["torch_server_client/skip_login"]
 # This feature should only be enabled when building a self-contained binary with the bundle script.
-standalone = ["warp_assets/standalone", "warp_core/standalone"]
+standalone = ["torch_assets/standalone", "torch_core/standalone"]
 prompt_suggestions_via_maa = []
 voice_input = ["dep:voice_input"]
 tab_close_button_on_left = []
 test-util = [
     "cloud_object_client/test-util",
-    "warp_server_auth/test-util",
+    "torch_server_auth/test-util",
     "http_client/test-util",
-    "warp_core/test-util",
-    "warp_terminal/test-util",
+    "torch_core/test-util",
+    "torch_terminal/test-util",
     "ai/test-util",
-    "warp_server_client/test-util",
+    "torch_server_client/test-util",
 ]
 terminal_lifecycle_recovery = []
 # Feature enabled only when app is compiled for integration tests.
 integration_tests = [
-    "warp_cli/integration_tests",
-    "warpui/integration_tests",
-    "warpui/test-util",
-    "warp_core/integration_tests",
-    "warp_terminal/integration_tests",
-    "warp_server_client/integration_tests",
+    "torch_cli/integration_tests",
+    "torchui/integration_tests",
+    "torchui/test-util",
+    "torch_core/integration_tests",
+    "torch_terminal/integration_tests",
+    "torch_server_client/integration_tests",
 ]
 traces = []
 viewing_shared_sessions = []
@@ -920,7 +920,7 @@ revert_to_checkpoints = []
 rewind_slash_command = []
 agent_view = []
 agent_view_block_context = ["agent_view"]
-warp_managed_secrets = []
+torch_managed_secrets = []
 v4a_file_diffs = []
 agent_tips = []
 agent_toolbar_editor = ["agent_view"]

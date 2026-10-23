@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use std::sync::Arc;
 
 use arrayvec::ArrayVec;
-use warp_errors::report_error;
+use torch_errors::report_error;
 
 use super::*;
 

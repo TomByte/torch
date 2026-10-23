@@ -2,11 +2,11 @@ use std::sync::Arc;
 
 use parking_lot::FairMutex;
 use pathfinder_color::ColorU;
-use warp_core::ui::Icon;
-use warp_core::ui::theme::WarpTheme;
-use warpui::elements::{Container, Element, MouseStateHandle};
-use warpui::keymap::Keystroke;
-use warpui::{
+use torch_core::ui::Icon;
+use torch_core::ui::theme::WarpTheme;
+use torchui::elements::{Container, Element, MouseStateHandle};
+use torchui::keymap::Keystroke;
+use torchui::{
     AppContext, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
 };
 

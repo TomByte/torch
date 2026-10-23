@@ -7,8 +7,8 @@ use async_channel::unbounded;
 use futures::channel::oneshot;
 use futures_lite::future::poll_once;
 use parking_lot::FairMutex;
-use warp_terminal::event::ObservedExitStatus;
-use warpui::{App, EntityId, ModelHandle};
+use torch_terminal::event::ObservedExitStatus;
+use torchui::{App, EntityId, ModelHandle};
 
 use super::{
     ActionResult, AnyActionExecution, BlockSelector, ExecuteActionInput, ShellCommandExecutor,

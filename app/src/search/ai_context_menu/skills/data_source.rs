@@ -1,6 +1,6 @@
 use fuzzy_match::FuzzyMatchResult;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warpui::{AppContext, Entity, SingletonEntity};
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torchui::{AppContext, Entity, SingletonEntity};
 
 use super::search_item::SkillSearchItem;
 use crate::ai::skills::SkillManager;

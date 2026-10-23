@@ -1,8 +1,8 @@
 use onboarding::slides::{AgentAutonomy, AgentDevelopmentSettings};
 use onboarding::{SelectedSettings, SessionDefault, UICustomizationSettings};
 use settings::Setting as _;
-use warp_errors::report_if_error;
-use warpui::{AppContext, SingletonEntity as _};
+use torch_errors::report_if_error;
+use torchui::{AppContext, SingletonEntity as _};
 
 use crate::ai::execution_profiles::profiles::AIExecutionProfilesModel;
 use crate::ai::execution_profiles::{ActionPermission, WriteToPtyPermission};

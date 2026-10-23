@@ -29,32 +29,32 @@ use repo_metadata::repositories::DetectedRepositories;
 use string_offset::CharOffset;
 use vec1::Vec1;
 use vim::vim::{MotionType, VimMode};
-use warp_core::r#async::debounce;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::icons::Icon;
-use warp_editor::content::buffer::InitialBufferState;
-use warp_editor::content::text::IndentUnit;
-use warp_editor::render::model::{Decoration, LineCount};
-use warp_util::content_version::ContentVersion;
-use warp_util::file::{FileId, FileLoadError, FileSaveError};
+use torch_core::r#async::debounce;
+use torch_core::features::FeatureFlag;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::icons::Icon;
+use torch_editor::content::buffer::InitialBufferState;
+use torch_editor::content::text::IndentUnit;
+use torch_editor::render::model::{Decoration, LineCount};
+use torch_util::content_version::ContentVersion;
+use torch_util::file::{FileId, FileLoadError, FileSaveError};
 #[cfg(feature = "local_fs")]
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warp_util::path::to_relative_path;
-use warp_util::sync::Condition;
-use warpui::elements::{
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torch_util::path::to_relative_path;
+use torch_util::sync::Condition;
+use torchui::elements::{
     Border, ChildAnchor, ChildView, ClippedScrollStateHandle, ConstrainedBox, Container,
     CornerRadius, CrossAxisAlignment, DropShadow, Flex, Hoverable, MainAxisAlignment, MainAxisSize,
     MouseStateHandle, OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius,
     Rect, Shrinkable, Stack, Text,
 };
-use warpui::keymap::FixedBinding;
-use warpui::keymap::macros::*;
-use warpui::platform::SaveFilePickerConfiguration;
-use warpui::text::point::Point;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::keymap::FixedBinding;
+use torchui::keymap::macros::*;
+use torchui::platform::SaveFilePickerConfiguration;
+use torchui::text::point::Point;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle, WindowId,
 };
@@ -84,7 +84,7 @@ const HOVER_DEBOUNCE_PERIOD: Duration = Duration::from_millis(500);
 /// auto-save. Mirrors VS Code's default `files.autoSaveDelay` of 1000ms.
 const AUTO_SAVE_DEBOUNCE_PERIOD: Duration = Duration::from_millis(1000);
 
-use warp_core::send_telemetry_from_ctx;
+use torch_core::send_telemetry_from_ctx;
 
 use super::ImmediateSaveError;
 use super::diff_viewer::DiffViewer;
@@ -175,7 +175,7 @@ struct LoadedFileMetadata {
     location: BufferFileLocation,
 }
 
-use warp_errors::report_error;
+use torch_errors::report_error;
 
 pub use super::diff_viewer::DisplayMode;
 
@@ -508,7 +508,7 @@ impl LocalCodeEditorView {
         // Auto-save when the editor's window is navigated away from (mirrors VS
         // Code's `files.autoSave: onWindowChange`).
         ctx.subscribe_to_model(
-            &warpui::windowing::WindowManager::handle(ctx),
+            &torchui::windowing::WindowManager::handle(ctx),
             Self::handle_window_focus_change,
         );
 
@@ -693,7 +693,7 @@ impl LocalCodeEditorView {
                 let window_id = ctx.window_id();
 
                 // Create the on-click action based on whether we have a definition
-                let on_click: Box<dyn Fn(&mut warpui::AppContext)> = if has_different_definition {
+                let on_click: Box<dyn Fn(&mut torchui::AppContext)> = if has_different_definition {
                     let target_location = definition_locations.first().unwrap().target.clone();
                     Box::new(move |app| {
                         app.dispatch_typed_action_for_view(
@@ -1256,11 +1256,11 @@ impl LocalCodeEditorView {
     /// handled separately by [`View::on_blur`].
     fn handle_window_focus_change(
         &mut self,
-        _handle: ModelHandle<warpui::windowing::WindowManager>,
-        event: &warpui::windowing::StateEvent,
+        _handle: ModelHandle<torchui::windowing::WindowManager>,
+        event: &torchui::windowing::StateEvent,
         ctx: &mut ViewContext<Self>,
     ) {
-        let warpui::windowing::StateEvent::ValueChanged { current, previous } = event;
+        let torchui::windowing::StateEvent::ValueChanged { current, previous } = event;
         let focused = ctx.is_self_or_child_focused();
         let was_window_focused = focused && previous.active_window == Some(ctx.window_id());
         let is_window_focused = focused && current.active_window == Some(ctx.window_id());
@@ -2246,13 +2246,13 @@ impl View for LocalCodeEditorView {
         "LocalCodeEditorView"
     }
 
-    fn on_focus(&mut self, focus_ctx: &warpui::FocusContext, ctx: &mut ViewContext<Self>) {
+    fn on_focus(&mut self, focus_ctx: &torchui::FocusContext, ctx: &mut ViewContext<Self>) {
         if focus_ctx.is_self_focused() {
             self.editor.update(ctx, |editor, ctx| editor.focus(ctx));
         }
     }
 
-    fn on_blur(&mut self, _blur_ctx: &warpui::BlurContext, ctx: &mut ViewContext<Self>) {
+    fn on_blur(&mut self, _blur_ctx: &torchui::BlurContext, ctx: &mut ViewContext<Self>) {
         // When focus leaves this editor's subtree entirely, treat it as a
         // focus-change auto-save (mirrors VS Code's `files.autoSave:
         // onFocusChange`). Focus moving to a child overlay (hover card,
@@ -2263,7 +2263,7 @@ impl View for LocalCodeEditorView {
         }
     }
 
-    fn render(&self, app: &AppContext) -> Box<dyn warpui::Element> {
+    fn render(&self, app: &AppContext) -> Box<dyn torchui::Element> {
         // Rendering the remote disconnection banner or version conflict banner.
         // Only show the disconnection banner if the file was successfully loaded;
         // if it never loaded, the error/loading state handles that.

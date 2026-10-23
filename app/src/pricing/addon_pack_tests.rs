@@ -1,4 +1,4 @@
-use warp_graphql::billing::AddonCreditsOption;
+use torch_graphql::billing::AddonCreditsOption;
 
 use super::{
     PackAmount, addon_credits_description, format_price, larger_packs_cost_less_per_credit,

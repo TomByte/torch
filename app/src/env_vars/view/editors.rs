@@ -1,10 +1,10 @@
-use warp_editor::editor::NavigationKey;
-use warpui::elements::{
+use torch_editor::editor::NavigationKey;
+use torchui::elements::{
     Align, ConstrainedBox, Container, Flex, ParentElement, SavePosition, Shrinkable, Stack,
 };
-use warpui::fonts::FamilyId;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{AppContext, Element, ViewContext, ViewHandle};
+use torchui::fonts::FamilyId;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{AppContext, Element, ViewContext, ViewHandle};
 
 use crate::Appearance;
 use crate::editor::{

@@ -4,16 +4,16 @@
 //! and need to create an environment.
 
 use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
-use warp_core::ui::theme::{AnsiColorIdentifier, Fill};
-use warp_errors::report_error;
-use warpui::elements::new_scrollable::SingleAxisConfig;
-use warpui::elements::{
+use torch_core::ui::theme::{AnsiColorIdentifier, Fill};
+use torch_errors::report_error;
+use torchui::elements::new_scrollable::SingleAxisConfig;
+use torchui::elements::{
     Align, Border, ChildView, ClippedScrollStateHandle, ConstrainedBox, Container, CornerRadius,
     CrossAxisAlignment, Element, Expanded, Flex, FormattedTextElement, HighlightedHyperlink,
     NewScrollable, ParentElement, Radius, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
+use torchui::fonts::{Properties, Weight};
+use torchui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
 
 use crate::ai::ambient_agents::github_auth_url::{AuthSource, GithubAuthRedirectTarget};
 use crate::ai::blocklist::view_util::{format_dollars, usage_display_unit};
@@ -394,7 +394,7 @@ impl View for FirstTimeCloudAgentSetupView {
             },
             appearance.theme().nonactive_ui_detail().into(),
             appearance.theme().active_ui_detail().into(),
-            warpui::elements::Fill::None,
+            torchui::elements::Fill::None,
         )
         .finish();
 

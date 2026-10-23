@@ -17,7 +17,7 @@ use rmcp::transport::ConfigureCommandExt as _;
 use simple_logger::SimpleLogger;
 use tokio::io::AsyncBufReadExt as _;
 use uuid::Uuid;
-use warp_errors::report_error;
+use torch_errors::report_error;
 
 use super::TemplatableMCPServerInfo;
 
@@ -593,8 +593,8 @@ fn make_client_info() -> ClientConfig {
     ClientConfig::new(
         Default::default(),
         Implementation::new(
-            warp_core::channel::ChannelState::app_id().to_string(),
-            warp_core::channel::ChannelState::app_version()
+            torch_core::channel::ChannelState::app_id().to_string(),
+            torch_core::channel::ChannelState::app_version()
                 .map(|v| v.to_string())
                 .unwrap_or_default(),
         ),

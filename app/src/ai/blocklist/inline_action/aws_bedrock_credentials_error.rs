@@ -1,13 +1,13 @@
 use settings::Setting as _;
-use warp_core::ui::Icon;
-use warp_errors::report_if_error;
-use warpui::elements::{
+use torch_core::ui::Icon;
+use torch_errors::report_if_error;
+use torchui::elements::{
     ChildView, ConstrainedBox, Container, CrossAxisAlignment, Flex, MainAxisAlignment,
     MainAxisSize, MouseStateHandle, ParentElement, Shrinkable, SizeConstraintCondition,
     SizeConstraintSwitch, Text,
 };
-use warpui::ui_components::components::UiComponent;
-use warpui::{
+use torchui::ui_components::components::UiComponent;
+use torchui::{
     AppContext, Element, Entity, EventContext, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };

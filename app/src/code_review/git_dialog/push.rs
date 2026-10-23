@@ -8,16 +8,16 @@
 
 use std::collections::HashMap;
 
-use warp_core::send_telemetry_from_ctx;
-use warp_core::ui::appearance::Appearance;
-use warp_errors::report_error;
-use warpui::ViewContext;
-use warpui::elements::{
+use torch_core::send_telemetry_from_ctx;
+use torch_core::ui::appearance::Appearance;
+use torch_errors::report_error;
+use torchui::ViewContext;
+use torchui::elements::{
     Border, ClippedScrollStateHandle, ClippedScrollable, ConstrainedBox, Container, CornerRadius,
     CrossAxisAlignment, Element, Flex, Hoverable, MainAxisAlignment, MainAxisSize,
     MouseStateHandle, ParentElement, Radius, ScrollbarWidth, Text,
 };
-use warpui::platform::Cursor;
+use torchui::platform::Cursor;
 
 use crate::code::editor::{add_color, remove_color};
 use crate::code_review::git_dialog::{
@@ -322,7 +322,7 @@ fn render_commits_section(state: &PushState, appearance: &Appearance) -> Box<dyn
             ScrollbarWidth::Auto,
             theme.nonactive_ui_detail().into(),
             theme.active_ui_detail().into(),
-            warpui::elements::Fill::None,
+            torchui::elements::Fill::None,
         )
         .finish(),
     )

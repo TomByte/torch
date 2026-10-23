@@ -2,7 +2,7 @@
 //! in tests.
 
 use settings::Setting as _;
-use warpui::{App, SingletonEntity};
+use torchui::{App, SingletonEntity};
 
 use crate::settings::{AISettings, UsageDisplayUnit};
 use crate::workspaces::user_workspaces::UserWorkspaces;

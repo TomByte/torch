@@ -6,28 +6,28 @@ use parking_lot::FairMutex;
 use pathfinder_geometry::rect::RectF;
 use pathfinder_geometry::vector::{Vector2F, vec2f};
 use serde::Serialize;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::theme::Fill;
-use warp_errors::report_error;
-use warpui::r#async::SpawnedFutureHandle;
-use warpui::browser::escape_html_attribute;
-use warpui::clipboard::ClipboardContent;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::ui::theme::Fill;
+use torch_errors::report_error;
+use torchui::r#async::SpawnedFutureHandle;
+use torchui::browser::escape_html_attribute;
+use torchui::clipboard::ClipboardContent;
+use torchui::elements::{
     Align, Border, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Dismiss, Element,
     Empty, Flex, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Point, Radius,
     SavePosition, ScrollData, ScrollStateHandle, Scrollable, ScrollableElement, ScrollbarWidth,
     Shrinkable, Stack, Text, try_rect_with_z,
 };
-use warpui::event::{DispatchedEvent, ModifiersState};
-use warpui::fonts::{FamilyId, Properties, Style, Weight};
-use warpui::keymap::FixedBinding;
-use warpui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::ui_components::radio_buttons::{
+use torchui::event::{DispatchedEvent, ModifiersState};
+use torchui::fonts::{FamilyId, Properties, Style, Weight};
+use torchui::keymap::FixedBinding;
+use torchui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::ui_components::radio_buttons::{
     RadioButtonItem, RadioButtonLayout, RadioButtonStateHandle,
 };
-use warpui::units::{IntoLines, IntoPixels, Lines, Pixels};
-use warpui::{
+use torchui::units::{IntoLines, IntoPixels, Lines, Pixels};
+use torchui::{
     AfterLayoutContext, AppContext, ClipBounds, Entity, Event, EventContext, FocusContext,
     LayoutContext, PaintContext, SingletonEntity, SizeConstraint, TypedActionView, View,
     ViewContext, ViewHandle,
@@ -156,7 +156,7 @@ pub enum ShareBlockModalAction {
 }
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings(vec![
         FixedBinding::custom(

@@ -9,10 +9,10 @@ use chrono::Utc;
 use command::r#async::Command;
 use parking_lot::FairMutex;
 use serde_json::json;
-use warp_core::features::FeatureFlag;
-use warp_errors::report_error;
-use warpui::r#async::{FutureExt as AsyncFutureExt, SpawnedFutureHandle, Timer};
-use warpui::{Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torch_errors::report_error;
+use torchui::r#async::{FutureExt as AsyncFutureExt, SpawnedFutureHandle, Timer};
+use torchui::{Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
 
 use super::static_prompt_suggestions::static_suggested_query;
 #[cfg(not(target_family = "wasm"))]

@@ -16,9 +16,9 @@ use log::LevelFilter;
 use lsp::supported_servers::LSPServerType;
 use lsp::{LspServerConfig, LspService, LspServiceInitializationResult, spawn_lsp_service};
 use lsp_types::Position;
-use warp_errors::report_error;
-use warpui_core::r#async::Timer;
-use warpui_core::r#async::executor::Background;
+use torch_errors::report_error;
+use torchui_core::r#async::Timer;
+use torchui_core::r#async::executor::Background;
 
 fn init_logging() {
     let mut base_logger = env_logger::builder();
@@ -112,7 +112,7 @@ fn main() -> anyhow::Result<()> {
         }
     });
 
-    warpui_core::r#async::block_on(task)?;
+    torchui_core::r#async::block_on(task)?;
     Ok(())
 }
 

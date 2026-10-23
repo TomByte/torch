@@ -3,11 +3,11 @@ use std::sync::Arc;
 
 use parking_lot::FairMutex;
 use style::{DENIED_MODAL_WIDTH, MODAL_HEIGHT, MODAL_WIDTH};
-use warp_core::ui::appearance::Appearance;
-use warpui::keymap::FixedBinding;
-use warpui::presenter::ChildView;
-use warpui::ui_components::components::UiComponentStyles;
-use warpui::{
+use torch_core::ui::appearance::Appearance;
+use torchui::keymap::FixedBinding;
+use torchui::presenter::ChildView;
+use torchui::ui_components::components::UiComponentStyles;
+use torchui::{
     AppContext, Element, Entity, EntityId, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };
@@ -55,7 +55,7 @@ pub enum ShareSessionModalEvent {
 }
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings([FixedBinding::new(
         "escape",

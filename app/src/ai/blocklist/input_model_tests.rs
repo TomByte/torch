@@ -17,8 +17,8 @@ use std::sync::Arc;
 use chrono::Duration;
 use parking_lot::FairMutex;
 use settings::Setting as _;
-use warpui::r#async::executor::Background;
-use warpui::{App, AppContext, EntityId, ModelHandle, SingletonEntity};
+use torchui::r#async::executor::Background;
+use torchui::{App, AppContext, EntityId, ModelHandle, SingletonEntity};
 
 use super::*;
 use crate::ai::agent::conversation::AIConversationId;

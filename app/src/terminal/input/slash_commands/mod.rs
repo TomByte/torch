@@ -13,16 +13,16 @@ pub use data_source::*;
 pub use mixer::{SlashCommandMixer, build_slash_command_mixer, slash_command_query};
 pub use view::{CloseReason, InlineSlashCommandView, SlashCommandsEvent};
 #[cfg(not(target_family = "wasm"))]
-use warp_cli::agent::Harness;
-use warp_core::features::FeatureFlag;
-use warp_core::send_telemetry_from_ctx;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::AnsiColorIdentifier;
-use warp_errors::report_error;
+use torch_cli::agent::Harness;
+use torch_core::features::FeatureFlag;
+use torch_core::send_telemetry_from_ctx;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::AnsiColorIdentifier;
+use torch_errors::report_error;
 #[cfg(feature = "local_fs")]
-use warp_util::path::{CleanPathResult, LineAndColumnArg, expand_session_home};
-use warpui::clipboard::ClipboardContent;
-use warpui::{AppContext, SingletonEntity, ViewContext};
+use torch_util::path::{CleanPathResult, LineAndColumnArg, expand_session_home};
+use torchui::clipboard::ClipboardContent;
+use torchui::{AppContext, SingletonEntity, ViewContext};
 
 use crate::TelemetryEvent;
 use crate::ai::agent::conversation::AIConversationId;

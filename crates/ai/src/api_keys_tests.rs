@@ -1,7 +1,7 @@
 use std::time::{Duration, SystemTime};
 
 #[cfg(not(target_family = "wasm"))]
-use warpui_core::App;
+use torchui_core::App;
 
 use super::*;
 
@@ -10,7 +10,7 @@ fn make_manager(keys: ApiKeys) -> ApiKeyManager {
 }
 #[test]
 fn aws_credentials_are_cleared_only_when_refresh_strategy_changes() {
-    warpui_core::App::test((), |mut app| async move {
+    torchui_core::App::test((), |mut app| async move {
         let manager = app.add_singleton_model(|_| make_manager(ApiKeys::default()));
         let strategy = AwsCredentialsRefreshStrategy::OidcManaged;
         let credentials = AwsCredentials::new(
@@ -85,10 +85,10 @@ fn llm_provider_parses_supported_api_key_provider_names() {
 
 #[test]
 fn persisted_provider_api_key_updates_request_state() {
-    warpui_core::App::test((), |mut app| async move {
+    torchui_core::App::test((), |mut app| async move {
         app.update(|ctx| {
-            warpui_extras::secure_storage::register_noop("test", ctx);
-            warp_core::telemetry::testing::MockTelemetryContextProvider::register(ctx);
+            torchui_extras::secure_storage::register_noop("test", ctx);
+            torch_core::telemetry::testing::MockTelemetryContextProvider::register(ctx);
         });
         let manager = app.add_singleton_model(ApiKeyManager::new);
 
@@ -113,10 +113,10 @@ fn persisted_provider_api_key_updates_request_state() {
 
 #[test]
 fn persisted_provider_api_key_can_be_cleared() {
-    warpui_core::App::test((), |mut app| async move {
+    torchui_core::App::test((), |mut app| async move {
         app.update(|ctx| {
-            warpui_extras::secure_storage::register_noop("test", ctx);
-            warp_core::telemetry::testing::MockTelemetryContextProvider::register(ctx);
+            torchui_extras::secure_storage::register_noop("test", ctx);
+            torch_core::telemetry::testing::MockTelemetryContextProvider::register(ctx);
         });
         let manager = app.add_singleton_model(ApiKeyManager::new);
 
@@ -369,9 +369,9 @@ fn legacy_endpoint_ids_are_deterministic_and_preserve_config_keys() {
 
 #[test]
 fn endpoint_definitions_join_keys_fail_closed_and_recover() {
-    warpui_core::App::test((), |mut app| async move {
+    torchui_core::App::test((), |mut app| async move {
         app.update(|ctx| {
-            warpui_extras::secure_storage::register_noop("test", ctx);
+            torchui_extras::secure_storage::register_noop("test", ctx);
         });
         let manager = app.add_singleton_model(ApiKeyManager::new);
         let legacy = vec![endpoint_with_keys(
@@ -429,7 +429,7 @@ fn endpoint_definitions_join_keys_fail_closed_and_recover() {
 
 #[test]
 fn empty_active_definitions_disable_the_legacy_fallback() {
-    warpui_core::App::test((), |mut app| async move {
+    torchui_core::App::test((), |mut app| async move {
         let manager = app.add_singleton_model(|_| {
             make_manager(ApiKeys {
                 custom_endpoints: vec![endpoint_with_keys(
@@ -1203,7 +1203,7 @@ fn chatgpt_events(
 
     let events = Rc::new(RefCell::new(Vec::new()));
     let events_for_test = events.clone();
-    warpui_core::App::test((), |mut app| async move {
+    torchui_core::App::test((), |mut app| async move {
         let manager = app.add_model(|_| make_manager(ApiKeys::default()));
         let sink = events_for_test.clone();
         app.update(|ctx| {

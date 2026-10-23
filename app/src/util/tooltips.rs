@@ -3,11 +3,11 @@
 #[cfg(feature = "local_fs")]
 use std::path::Path;
 
-use warpui::elements::{
+use torchui::elements::{
     Border, Container, CornerRadius, Flex, MouseStateHandle, ParentElement, Radius, Text,
 };
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{AppContext, Element, EventContext, SingletonEntity};
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{AppContext, Element, EventContext, SingletonEntity};
 
 use crate::appearance::Appearance;
 use crate::settings::PrivacySettings;
@@ -243,7 +243,7 @@ where
 ///   different affordance (skips Markdown and, when enabled, Jupyter notebooks)
 #[cfg(feature = "local_fs")]
 pub fn should_show_open_in_warp_link(path: &Path, app: &AppContext) -> bool {
-    use warpui::SingletonEntity;
+    use torchui::SingletonEntity;
 
     use crate::code::view::is_binary_file;
     use crate::notebooks::file::renders_in_warp_notebook_viewer;

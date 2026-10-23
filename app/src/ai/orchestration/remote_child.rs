@@ -9,13 +9,13 @@ use std::str::FromStr;
 use base64::Engine as _;
 use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
 use prost::Message as _;
-use warp_cli::agent::Harness;
+use torch_cli::agent::Harness;
 #[cfg(not(target_family = "wasm"))]
-use warp_cli::skill::SkillSpec;
+use torch_cli::skill::SkillSpec;
 use warp_multi_agent_api as multi_agent_api;
 #[cfg(not(target_family = "wasm"))]
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warpui::{AppContext, SingletonEntity as _};
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torchui::{AppContext, SingletonEntity as _};
 
 use crate::ChannelState;
 use crate::ai::agent::UserQueryMode;

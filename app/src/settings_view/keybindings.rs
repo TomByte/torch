@@ -1,20 +1,20 @@
 use std::collections::HashMap;
 
 use itertools::Itertools;
-use warp_core::ui::theme::color::internal_colors;
-use warp_errors::report_error;
-use warpui::elements::{
+use torch_core::ui::theme::color::internal_colors;
+use torch_errors::report_error;
+use torchui::elements::{
     Align, Border, ClippedScrollStateHandle, ClippedScrollable, ConstrainedBox, Container,
     CornerRadius, CrossAxisAlignment, DispatchEventResult, Empty, EventHandler, Fill, Flex,
     Hoverable, MouseState, MouseStateHandle, ParentElement, Radius, SavePosition, ScrollbarWidth,
     Shrinkable, Text, Wrap,
 };
-use warpui::fonts::Weight;
-use warpui::keymap::{DescriptionContext, Keystroke, Trigger};
-use warpui::presenter::ChildView;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::units::Pixels;
-use warpui::{
+use torchui::fonts::Weight;
+use torchui::keymap::{DescriptionContext, Keystroke, Trigger};
+use torchui::presenter::ChildView;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::units::Pixels;
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 
@@ -364,7 +364,7 @@ impl KeybindingRow {
                                 .with_margin_right(CLEAR_CANCEL_BUTTONS_SPACING)
                                 .finish(),
                         )
-                        .with_cross_axis_alignment(warpui::elements::CrossAxisAlignment::Center)
+                        .with_cross_axis_alignment(torchui::elements::CrossAxisAlignment::Center)
                         .finish(),
                 )
                 .finish(),

@@ -1,15 +1,15 @@
 use std::path::Path;
 
-use warp_core::paths::home_relative_path;
-use warp_core::send_telemetry_from_ctx;
-use warp_core::ui::icons::Icon;
-use warp_core::ui::theme::{AnsiColorIdentifier, Fill};
-use warpui::elements::{
+use torch_core::paths::home_relative_path;
+use torch_core::send_telemetry_from_ctx;
+use torch_core::ui::icons::Icon;
+use torch_core::ui::theme::{AnsiColorIdentifier, Fill};
+use torchui::elements::{
     Border, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Empty,
     Expanded, Flex, MainAxisSize, Padding, ParentElement, Radius, Shrinkable, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::{
     AppContext, Element, Entity, EntityId, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };
@@ -279,7 +279,7 @@ impl ConversationEndedTombstoneView {
                         ctx
                     );
                     ctx.clipboard()
-                        .write(warpui::clipboard::ClipboardContent::plain_text(
+                        .write(torchui::clipboard::ClipboardContent::plain_text(
                             branch.clone(),
                         ));
                 }
@@ -506,7 +506,7 @@ impl ConversationEndedTombstoneView {
         #[cfg(target_family = "wasm")]
         {
             // Don't show on mobile devices - they can't use the desktop app
-            if !warpui::platform::wasm::is_mobile_device()
+            if !torchui::platform::wasm::is_mobile_device()
                 && let Some(ref open_in_warp_button) = self.open_in_warp_button
             {
                 row.add_child(ChildView::new(open_in_warp_button).finish());
@@ -664,7 +664,7 @@ impl TypedActionView for ConversationEndedTombstoneView {
                         if let Ok(url) = url::Url::parse(&url_string) {
                             ctx.dispatch_typed_action(&WorkspaceAction::OpenLinkOnDesktop(url));
                         } else {
-                            warp_errors::report_error!(
+                            torch_errors::report_error!(
                                 "Failed to parse conversation URL",
                                 extra: { "url" => %url_string }
                             );
@@ -673,7 +673,7 @@ impl TypedActionView for ConversationEndedTombstoneView {
                         log::warn!("No server conversation token available for conversation");
                     }
                 } else {
-                    warp_errors::report_error!("Conversation not found in history model");
+                    torch_errors::report_error!("Conversation not found in history model");
                 }
             }
         }

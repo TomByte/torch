@@ -1,5 +1,5 @@
 use settings::Setting;
-use warpui::{App, SingletonEntity};
+use torchui::{App, SingletonEntity};
 
 use crate::terminal::TerminalModel;
 use crate::terminal::safe_mode_settings::SafeModeSettings;

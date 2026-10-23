@@ -5,9 +5,9 @@ use std::time::Duration;
 
 use instant::Instant;
 use pathfinder_geometry::vector::{Vector2F, vec2f};
-use warpui::elements::{Element, Point, SizeConstraint};
-use warpui::event::DispatchedEvent;
-use warpui::{
+use torchui::elements::{Element, Point, SizeConstraint};
+use torchui::event::DispatchedEvent;
+use torchui::{
     AfterLayoutContext, AppContext, ClipBounds, EventContext, LayoutContext, PaintContext,
 };
 

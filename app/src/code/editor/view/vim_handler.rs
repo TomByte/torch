@@ -3,14 +3,14 @@ use vim::vim::{
     InsertPosition, LineMotion, ModeTransition, MotionType, VimHandler, VimMode, VimMotion,
     VimOperand, VimOperator, VimTextObject, WordMotion,
 };
-use warp_editor::content::buffer::{
+use torch_editor::content::buffer::{
     AutoScrollBehavior, BufferEditAction, EditOrigin, SelectionOffsets, VimInsertPoint,
 };
-use warp_editor::model::{CoreEditorModel, PlainTextEditorModel};
-use warp_editor::render::model::AutoScrollMode;
-use warp_editor::selection::{TextDirection, TextUnit};
-use warpui::units::IntoPixels;
-use warpui::{SingletonEntity, ViewContext};
+use torch_editor::model::{CoreEditorModel, PlainTextEditorModel};
+use torch_editor::render::model::AutoScrollMode;
+use torch_editor::selection::{TextDirection, TextUnit};
+use torchui::units::IntoPixels;
+use torchui::{SingletonEntity, ViewContext};
 
 use super::{CodeEditorEvent, CodeEditorView};
 use crate::code::editor::find::view::Event as FindViewEvent;
@@ -21,7 +21,7 @@ use crate::vim_registers::{RegisterContent, VimRegisters};
 fn selected_text_for_vim_register(
     model: &CodeEditorModel,
     motion_type: MotionType,
-    ctx: &mut warpui::ModelContext<CodeEditorModel>,
+    ctx: &mut torchui::ModelContext<CodeEditorModel>,
 ) -> String {
     let buffer = model.content().as_ref(ctx);
     let selection_model = model.buffer_selection_model().clone();
@@ -176,7 +176,7 @@ impl VimHandler for CodeEditorView {
     ) {
         // Selection logic is almost the same for all operators, so capture that in a closure first.
         let selection_change =
-            |model: &mut CodeEditorModel, ctx: &mut warpui::ModelContext<CodeEditorModel>| {
+            |model: &mut CodeEditorModel, ctx: &mut torchui::ModelContext<CodeEditorModel>| {
                 match operand {
                     VimOperand::Motion {
                         motion,

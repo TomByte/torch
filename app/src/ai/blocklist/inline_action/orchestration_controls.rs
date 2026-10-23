@@ -9,19 +9,19 @@
 use ai::agent::action::RunAgentsExecutionMode;
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::{Vector2F, vec2f};
-use warp_cli::agent::Harness;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::theme::Fill;
-use warpui::elements::{
+use torch_cli::agent::Harness;
+use torch_core::features::FeatureFlag;
+use torch_core::ui::theme::Fill;
+use torchui::elements::{
     Border, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Empty,
     Expanded, Flex, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement,
     Point, Radius, Text,
 };
-use warpui::event::DispatchedEvent;
-use warpui::platform::Cursor;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponentStyles};
-use warpui::{
+use torchui::event::DispatchedEvent;
+use torchui::platform::Cursor;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponentStyles};
+use torchui::{
     AfterLayoutContext, AppContext, Element, EventContext, LayoutContext, PaintContext,
     SingletonEntity, SizeConstraint, View, ViewContext, ViewHandle,
 };
@@ -168,7 +168,7 @@ pub fn picker_styles(appearance: &Appearance) -> (UiComponentStyles, PickerColor
     // card background in the config block shows through, and so that
     // gradient-background themes render correctly.
     let background_fill: Fill = theme.surface_overlay_1();
-    let background: warpui::elements::Fill = background_fill.into();
+    let background: torchui::elements::Fill = background_fill.into();
     // Border and font colors are intentionally left to the dropdown's
     // default ButtonVariant::Secondary styling, which uses
     // theme.outline() and theme.main_text_color() — both are
@@ -195,7 +195,7 @@ pub fn picker_styles(appearance: &Appearance) -> (UiComponentStyles, PickerColor
 pub struct PickerColors {
     pub padding: Coords,
     pub corner_radius: CornerRadius,
-    pub background: warpui::elements::Fill,
+    pub background: torchui::elements::Fill,
 }
 
 // ── Picker creation (generic over action type) ──────────────────────
@@ -1098,7 +1098,7 @@ pub fn render_mode_toggle<A: OrchestrationControlAction>(
         active_segment_bg,
     );
 
-    let segment_outer_bg = warp_core::ui::theme::color::internal_colors::fg_overlay_2(theme);
+    let segment_outer_bg = torch_core::ui::theme::color::internal_colors::fg_overlay_2(theme);
     let segments_row = Flex::row()
         .with_cross_axis_alignment(CrossAxisAlignment::Stretch)
         .with_main_axis_alignment(MainAxisAlignment::Start)
@@ -1151,7 +1151,7 @@ fn render_segment_button<A: OrchestrationControlAction>(
     let active_text_color = blended_colors::text_main(theme, theme.surface_1());
     let inactive_text_color = blended_colors::text_disabled(theme, theme.surface_1());
     let segment_active_bg = active_bg_override
-        .unwrap_or_else(|| warp_core::ui::theme::color::internal_colors::fg_overlay_4(theme));
+        .unwrap_or_else(|| torch_core::ui::theme::color::internal_colors::fg_overlay_4(theme));
     Hoverable::new(mouse_state, move |_| {
         let text = Text::new(label_owned.clone(), font_family, font_size)
             .with_color(if is_active {
@@ -1160,7 +1160,7 @@ fn render_segment_button<A: OrchestrationControlAction>(
                 inactive_text_color
             })
             .finish();
-        let centered = warpui::elements::Align::new(text).finish();
+        let centered = torchui::elements::Align::new(text).finish();
         let mut container = Container::new(centered)
             .with_vertical_padding(ORCHESTRATION_SEGMENT_VERTICAL_PADDING)
             .with_corner_radius(CornerRadius::with_all(Radius::Pixels(4.)));

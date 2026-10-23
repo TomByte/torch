@@ -8,21 +8,21 @@ use ai::agent::{
     AskUserQuestionSession, QuestionDraft,
 };
 use itertools::Itertools;
-use warp_core::ui::theme::WarpTheme;
-use warp_core::ui::theme::color::internal_colors;
-use warpui::r#async::{SpawnedFutureHandle, Timer};
-use warpui::elements::new_scrollable::SingleAxisConfig;
-use warpui::elements::{
+use torch_core::ui::theme::WarpTheme;
+use torch_core::ui::theme::color::internal_colors;
+use torchui::r#async::{SpawnedFutureHandle, Timer};
+use torchui::elements::new_scrollable::SingleAxisConfig;
+use torchui::elements::{
     Border, ChildView, Clipped, ClippedScrollStateHandle, ConstrainedBox, Container, CornerRadius,
     CrossAxisAlignment, DEFAULT_UI_LINE_HEIGHT_RATIO, Fill, Flex, FormattedTextElement,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Point, Radius, Stack, Text,
 };
-use warpui::event::DispatchedEvent;
-use warpui::geometry::vector::Vector2F;
-use warpui::keymap::{FixedBinding, Keystroke};
-use warpui::ui_components::components::Coords;
-use warpui::units::Pixels;
-use warpui::{
+use torchui::event::DispatchedEvent;
+use torchui::geometry::vector::Vector2F;
+use torchui::keymap::{FixedBinding, Keystroke};
+use torchui::ui_components::components::Coords;
+use torchui::units::Pixels;
+use torchui::{
     AfterLayoutContext, AppContext, Element, Entity, EntityId, EventContext, FocusContext,
     LayoutContext, ModelHandle, PaintContext, SingletonEntity, SizeConstraint, TypedActionView,
     View, ViewContext, ViewHandle,
@@ -89,7 +89,7 @@ fn ask_user_question_header_height(appearance: &Appearance, app: &AppContext) ->
 }
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     // Scope these shortcuts to the active ask-user-question block so arrow/submit keys don't leak
     // into surrounding views.
@@ -172,7 +172,7 @@ struct AskUserQuestionInteractiveViews {
 /// Header state for the collapsed/expanded completion summary.
 struct AskUserQuestionCompletionState {
     label: String,
-    status_icon: warpui::elements::Icon,
+    status_icon: torchui::elements::Icon,
 }
 
 /// Stateful inline-action view that renders questionnaire UI and coordinates with the action model.
@@ -866,7 +866,7 @@ impl AskUserQuestionView {
         questions: &[AskUserQuestionItem],
         answers: Option<&[AskUserQuestionAnswerItem]>,
         label: String,
-        status_icon: warpui::elements::Icon,
+        status_icon: torchui::elements::Icon,
         appearance: &Appearance,
         app: &AppContext,
     ) -> Box<dyn Element> {
@@ -1020,7 +1020,7 @@ impl AskUserQuestionView {
         scroll_state: ClippedScrollStateHandle,
         theme: &WarpTheme,
     ) -> Box<dyn Element> {
-        let scrollable = warpui::elements::NewScrollable::vertical(
+        let scrollable = torchui::elements::NewScrollable::vertical(
             SingleAxisConfig::Clipped {
                 handle: scroll_state,
                 child: Self::body_column(question_text, options),
@@ -1175,7 +1175,7 @@ impl View for AskUserQuestionView {
         }
     }
 
-    fn keymap_context(&self, app: &AppContext) -> warpui::keymap::Context {
+    fn keymap_context(&self, app: &AppContext) -> torchui::keymap::Context {
         let mut context = Self::default_keymap_context();
         // These context flags are what activate the fixed bindings registered in init().
         if matches!(self.session.phase(), AskUserQuestionPhase::Editing)

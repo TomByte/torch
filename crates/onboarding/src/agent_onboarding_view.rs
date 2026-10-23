@@ -2,12 +2,12 @@ use std::time::Duration;
 
 use ai::LLMId;
 use instant::Instant;
-use warp_core::features::FeatureFlag;
-use warp_core::send_telemetry_from_ctx;
-use warpui_core::assets::asset_cache::AssetSource;
-use warpui_core::image_cache::ImageType;
-use warpui_core::windowing::WindowManager;
-use warpui_core::windowing::state::{ApplicationStage, StateEvent};
+use torch_core::features::FeatureFlag;
+use torch_core::send_telemetry_from_ctx;
+use torchui_core::assets::asset_cache::AssetSource;
+use torchui_core::image_cache::ImageType;
+use torchui_core::windowing::WindowManager;
+use torchui_core::windowing::state::{ApplicationStage, StateEvent};
 
 use crate::components::feature_optout_dialog::{FeatureOptOutDialog, render_feature_optout_dialog};
 use crate::model::{
@@ -28,20 +28,20 @@ const PLAN_ACTIVATED_TOAST_DURATION: Duration = Duration::from_secs(5);
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use ui_components::{Component as _, Options as _, button};
-use warp_core::ui::Icon;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::{Fill, WarpTheme};
-use warpui_core::elements::{
+use torch_core::ui::Icon;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::{Fill, WarpTheme};
+use torchui_core::elements::{
     Align, CacheOption, ChildAnchor, ConstrainedBox, Container, CrossAxisAlignment, Dismiss, Empty,
     Flex, Image, MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning,
     ParentAnchor, ParentElement, ParentOffsetBounds, Rect, Shrinkable, Stack,
 };
-use warpui_core::fonts::Weight;
-use warpui_core::keymap::macros::*;
-use warpui_core::keymap::{FixedBinding, Keystroke};
-use warpui_core::presenter::ChildView;
-use warpui_core::ui_components::components::{UiComponent as _, UiComponentStyles};
-use warpui_core::{
+use torchui_core::fonts::Weight;
+use torchui_core::keymap::macros::*;
+use torchui_core::keymap::{FixedBinding, Keystroke};
+use torchui_core::presenter::ChildView;
+use torchui_core::ui_components::components::{UiComponent as _, UiComponentStyles};
+use torchui_core::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity as _, TypedActionView, View,
     ViewContext, ViewHandle,
 };
@@ -431,7 +431,7 @@ impl AgentOnboardingView {
     /// Eagerly loads all onboarding slide images into the asset cache
     /// so they display instantly when the user navigates between slides.
     fn preload_onboarding_images(ctx: &mut ViewContext<Self>) {
-        let asset_cache = warpui_core::assets::asset_cache::AssetCache::as_ref(ctx);
+        let asset_cache = torchui_core::assets::asset_cache::AssetCache::as_ref(ctx);
         // Preload the shared background image used on all right panels.
         asset_cache.load_asset::<ImageType>(AssetSource::Bundled {
             path: crate::slides::layout::ONBOARDING_BG_PATH,
@@ -563,7 +563,7 @@ impl AgentOnboardingView {
 
         self.show_plan_activated_toast = true;
         let _ = ctx.spawn(
-            warpui_core::r#async::Timer::after(PLAN_ACTIVATED_TOAST_DURATION),
+            torchui_core::r#async::Timer::after(PLAN_ACTIVATED_TOAST_DURATION),
             |me: &mut Self, _, ctx| {
                 if me.show_plan_activated_toast {
                     me.show_plan_activated_toast = false;

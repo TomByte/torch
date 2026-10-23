@@ -11,7 +11,7 @@
 //! `HiddenForClose` (undo-close grace window) and `Moved`.
 
 use async_broadcast::broadcast;
-use warpui::App;
+use torchui::App;
 
 use super::*;
 use crate::ai::blocklist::QueuedQueryModel;

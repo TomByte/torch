@@ -7,8 +7,8 @@ use serde_json::{Map, Value};
 use settings::schema::SettingSchemaEntry;
 use settings::{SettingSurfaces, SettingsMode};
 use tempfile::NamedTempFile;
-use warp_core::channel::ChannelState;
-use warp_core::features::FeatureFlag;
+use torch_core::channel::ChannelState;
+use torch_core::features::FeatureFlag;
 
 /// Writes the settings schema to a file or prints it to standard output.
 pub fn dump_settings_schema(output_path: Option<&Path>) -> Result<()> {

@@ -7,14 +7,14 @@ use anyhow::Result;
 use async_recursion::async_recursion;
 use futures_lite::StreamExt;
 use pathfinder_color::ColorU;
-use warp_errors::report_error;
-use warpui::Element;
-use warpui::elements::{
+use torch_errors::report_error;
+use torchui::Element;
+use torchui::elements::{
     Align, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Flex, Hoverable,
     MouseStateHandle, ParentElement, Radius, Shrinkable,
 };
-use warpui::platform::Cursor;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::platform::Cursor;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
 
 use super::modal_body::{BASE_INDENT, IMPORT_FONT_SIZE, INDENT_MARGIN, ImportModalBodyAction};
 use crate::appearance::Appearance;

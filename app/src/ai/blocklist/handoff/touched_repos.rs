@@ -25,9 +25,9 @@ use command::Stdio;
 use command::r#async::Command;
 use futures::future::join_all;
 use tokio::fs as tokio_fs;
-use warp_util::standardized_path::StandardizedPath;
-use warpui::AppContext;
-use warpui::r#async::FutureExt as _;
+use torch_util::standardized_path::StandardizedPath;
+use torchui::AppContext;
+use torchui::r#async::FutureExt as _;
 
 use crate::ai::agent::conversation::AIConversation;
 use crate::ai::agent::{AIAgentAction, AIAgentActionType, AIAgentOutputMessageType};

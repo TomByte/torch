@@ -1,7 +1,7 @@
 use ordered_float::OrderedFloat;
-use warpui::elements::{Container, Flex, Highlight, ParentElement, Text};
-use warpui::fonts::{Properties, Weight};
-use warpui::{AppContext, Element, SingletonEntity};
+use torchui::elements::{Container, Flex, Highlight, ParentElement, Text};
+use torchui::fonts::{Properties, Weight};
+use torchui::{AppContext, Element, SingletonEntity};
 
 use crate::appearance::Appearance;
 use crate::cloud_object::CloudObject;

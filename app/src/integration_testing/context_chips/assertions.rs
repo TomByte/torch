@@ -1,5 +1,5 @@
-use warpui::async_assert;
-use warpui::integration::AssertionCallback;
+use torchui::async_assert;
+use torchui::integration::AssertionCallback;
 
 use crate::context_chips::ContextChipKind;
 use crate::integration_testing::view_getters::single_terminal_view_for_tab;

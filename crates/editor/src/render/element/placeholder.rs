@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use warpui_core::AppContext;
-use warpui_core::geometry::vector::{Vector2F, vec2f};
-use warpui_core::text_layout::{LayoutCache, Line};
+use torchui_core::AppContext;
+use torchui_core::geometry::vector::{Vector2F, vec2f};
+use torchui_core::text_layout::{LayoutCache, Line};
 
 use super::{CursorData, RenderContext};
 use crate::content::text::BufferBlockStyle;

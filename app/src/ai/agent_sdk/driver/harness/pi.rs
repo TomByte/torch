@@ -6,8 +6,8 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context as _, Result, anyhow};
 use serde_json::{Map, Value, json};
 use tempfile::Builder;
-use warp_core::safe_info;
-use warp_managed_secrets::ManagedSecretValue;
+use torch_core::safe_info;
+use torch_managed_secrets::ManagedSecretValue;
 
 use super::JSONMCPServer;
 use super::json_utils::{read_json_file_or_default, write_json_file};
@@ -139,7 +139,7 @@ pub(super) fn publish_skills_for_pi(
     let published = publish_skills_for_harness(
         &skill_root,
         workspace_root,
-        warp_isolation_platform::detect().is_some(),
+        torch_isolation_platform::detect().is_some(),
         skill_dirs,
         has_deferred_repositories,
         HarnessSupportSkills::Bundled,

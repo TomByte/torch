@@ -5,10 +5,10 @@ use ai::agent::orchestration_config::{
     OrchestrationConfig, OrchestrationConfigStatus, OrchestrationExecutionMode,
 };
 use settings::Setting;
-use warp_cli::agent::Harness;
-use warp_core::execution_mode::ExecutionMode;
-use warp_core::features::FeatureFlag;
-use warpui::{App, Entity, EntityId, ModelHandle};
+use torch_cli::agent::Harness;
+use torch_core::execution_mode::ExecutionMode;
+use torch_core::features::FeatureFlag;
+use torchui::{App, Entity, EntityId, ModelHandle};
 
 use super::*;
 use crate::ai::active_agent_views_model::ActiveAgentViewsModel;
@@ -237,7 +237,7 @@ fn execute_denies_duplicate_launched_agent() {
 
 fn initialize_run_agents_test(app: &mut App, mode: ExecutionMode) -> RunAgentsTestState {
     initialize_settings_for_tests_with_mode(app, mode, false);
-    app.update(warp_core::telemetry::testing::MockTelemetryContextProvider::register);
+    app.update(torch_core::telemetry::testing::MockTelemetryContextProvider::register);
     let global_resource_handles = GlobalResourceHandles::mock(app);
     app.add_singleton_model(|_| GlobalResourceHandlesProvider::new(global_resource_handles));
     let history = app.add_singleton_model(|_| BlocklistAIHistoryModel::new(vec![], vec![], &[]));

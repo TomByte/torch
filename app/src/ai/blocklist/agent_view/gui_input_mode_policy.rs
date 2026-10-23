@@ -1,7 +1,7 @@
 //! GUI implementation of [`InputModePolicy`].
 
-use warp_core::features::FeatureFlag;
-use warpui::{AppContext, EntityId, ModelHandle, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torchui::{AppContext, EntityId, ModelHandle, SingletonEntity};
 
 use super::super::conversation_selection::ConversationSelectionEvent;
 use super::super::input_mode_policy::{InputModePolicy, PolicyConfigUpdate};

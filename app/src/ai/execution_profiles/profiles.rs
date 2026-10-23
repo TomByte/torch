@@ -7,11 +7,11 @@ use anyhow::Context as _;
 use indexmap::IndexMap;
 use settings::Setting as _;
 use uuid::Uuid;
-use warp_core::channel::ChannelState;
-use warp_core::features::FeatureFlag;
-use warp_core::user_preferences::GetUserPreferences;
-use warp_errors::report_error;
-use warpui::{AppContext, Entity, EntityId, ModelContext, SingletonEntity};
+use torch_core::channel::ChannelState;
+use torch_core::features::FeatureFlag;
+use torch_core::user_preferences::GetUserPreferences;
+use torch_errors::report_error;
+use torchui::{AppContext, Entity, EntityId, ModelContext, SingletonEntity};
 
 use super::{
     AIExecutionProfile, ActionPermission, CloudAIExecutionProfileModel, ExecutionProfileId,

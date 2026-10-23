@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use warp_core::ui::icons::Icon;
-use warp_core::ui::theme::AnsiColorIdentifier;
-use warpui::elements::{ChildView, Element, Empty, ParentElement, Wrap};
-use warpui::{AppContext, Entity, TypedActionView, View, ViewContext, ViewHandle};
+use torch_core::ui::icons::Icon;
+use torch_core::ui::theme::AnsiColorIdentifier;
+use torchui::elements::{ChildView, Element, Empty, ParentElement, Wrap};
+use torchui::{AppContext, Entity, TypedActionView, View, ViewContext, ViewHandle};
 
 use super::{Artifact, file_button_label};
 use crate::notebooks::NotebookId;

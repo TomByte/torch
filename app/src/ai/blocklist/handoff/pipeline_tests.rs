@@ -6,8 +6,8 @@ use std::sync::{Arc, Mutex};
 use chrono::Local;
 use futures::channel::oneshot;
 use tempfile::NamedTempFile;
-use warp_util::standardized_path::StandardizedPath;
-use warpui::App;
+use torch_util::standardized_path::StandardizedPath;
+use torchui::App;
 
 use super::*;
 use crate::ai::agent::conversation::{AIConversation, ConversationStatus};

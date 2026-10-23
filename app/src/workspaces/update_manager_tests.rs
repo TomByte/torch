@@ -2,8 +2,8 @@ use chrono::Utc;
 use cloud_object_client::MockObjectClient;
 use itertools::Itertools;
 use settings::{PrivatePreferences, PublicPreferences};
-use warpui::{AddSingletonModel, App};
-use warpui_extras::user_preferences;
+use torchui::{AddSingletonModel, App};
+use torchui_extras::user_preferences;
 
 use super::*;
 use crate::ai::credit_availability::{AICreditAvailability, AICreditDenialReason};
@@ -413,7 +413,7 @@ fn initialize_llm_preferences_dependencies(app: &mut App) {
     app.add_singleton_model(CodeSettings::new_with_defaults);
     app.add_singleton_model(AISettings::new_with_defaults);
     app.update(|ctx| {
-        warpui_extras::secure_storage::register_noop("test", ctx);
+        torchui_extras::secure_storage::register_noop("test", ctx);
     });
     app.add_singleton_model(ai::api_keys::ApiKeyManager::new);
     app.add_singleton_model(|_| crate::ai::mcp::TemplatableMCPServerManager::default());

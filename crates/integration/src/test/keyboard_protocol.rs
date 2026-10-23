@@ -1,17 +1,17 @@
 use std::time::Duration;
 
-use warp::features::FeatureFlag;
-use warp::integration_testing::step::new_step_with_default_assertions;
-use warp::integration_testing::terminal::{
+use torch::features::FeatureFlag;
+use torch::integration_testing::step::new_step_with_default_assertions;
+use torch::integration_testing::terminal::{
     assert_long_running_block_executing_for_single_terminal_in_tab,
     wait_until_bootstrapped_single_pane_for_tab,
 };
-use warp::integration_testing::view_getters::single_terminal_view_for_tab;
-use warpui_core::event::{KeyEventDetails, KeyState};
-use warpui_core::integration::TestStep;
-use warpui_core::keymap::Keystroke;
-use warpui_core::platform::keyboard::KeyCode;
-use warpui_core::{Event, async_assert};
+use torch::integration_testing::view_getters::single_terminal_view_for_tab;
+use torchui_core::event::{KeyEventDetails, KeyState};
+use torchui_core::integration::TestStep;
+use torchui_core::keymap::Keystroke;
+use torchui_core::platform::keyboard::KeyCode;
+use torchui_core::{Event, async_assert};
 
 use super::new_builder;
 use crate::Builder;
@@ -48,7 +48,7 @@ fn wait_for_protocol_enabled() -> TestStep {
 fn assert_output_contains(
     expected: &'static str,
     description: &'static str,
-) -> impl FnMut(&mut warpui_core::App, warpui_core::WindowId) -> warpui_core::integration::AssertionOutcome
+) -> impl FnMut(&mut torchui_core::App, torchui_core::WindowId) -> torchui_core::integration::AssertionOutcome
 {
     move |app, window_id| {
         let terminal_view = single_terminal_view_for_tab(app, window_id, 0);

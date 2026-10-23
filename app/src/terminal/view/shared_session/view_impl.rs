@@ -9,18 +9,18 @@ use session_sharing_protocol::common::{
 use session_sharing_protocol::sharer::{RoleUpdateReason, SessionEndedReason, SessionSourceType};
 use session_sharing_protocol::viewer::RoleUpdatedReason;
 use settings::Setting as _;
-use warp_core::features::FeatureFlag;
-use warp_core::semantic_selection::SemanticSelection;
-use warp_core::ui::appearance::Appearance;
-use warp_errors::report_error;
-use warpui::r#async::Timer;
-use warpui::clipboard::ClipboardContent;
-use warpui::elements::MouseStateHandle;
-use warpui::platform::Cursor;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::UiComponent;
-use warpui::units::IntoLines;
-use warpui::{AppContext, Element, ModelHandle, SingletonEntity, ViewContext};
+use torch_core::features::FeatureFlag;
+use torch_core::semantic_selection::SemanticSelection;
+use torch_core::ui::appearance::Appearance;
+use torch_errors::report_error;
+use torchui::r#async::Timer;
+use torchui::clipboard::ClipboardContent;
+use torchui::elements::MouseStateHandle;
+use torchui::platform::Cursor;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::UiComponent;
+use torchui::units::IntoLines;
+use torchui::{AppContext, Element, ModelHandle, SingletonEntity, ViewContext};
 
 use super::adapter::{Adapter, Kind, Participant};
 use super::cloud_conversation_continuation::{

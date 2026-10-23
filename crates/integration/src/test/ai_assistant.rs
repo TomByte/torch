@@ -1,11 +1,11 @@
-use warp::integration_testing::step::new_step_with_default_assertions;
-use warp::integration_testing::terminal::util::ExpectedExitStatus;
-use warp::integration_testing::terminal::{
+use torch::integration_testing::step::new_step_with_default_assertions;
+use torch::integration_testing::terminal::util::ExpectedExitStatus;
+use torch::integration_testing::terminal::{
     assert_selected_block_index_is_last_renderable, execute_command_for_single_terminal_in_tab,
     wait_until_bootstrapped_single_pane_for_tab,
 };
-use warp::integration_testing::view_getters::ai_assistant_panel_view;
-use warpui_core::async_assert;
+use torch::integration_testing::view_getters::ai_assistant_panel_view;
+use torchui_core::async_assert;
 
 use super::new_builder;
 use crate::Builder;

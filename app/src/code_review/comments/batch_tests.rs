@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 
 use chrono::Local;
-use warp_editor::render::model::LineCount;
-use warpui::App;
+use torch_editor::render::model::LineCount;
+use torchui::App;
 
 use crate::code::buffer_location::LocalOrRemotePath;
 use crate::code::editor::line::EditorLineLocation;

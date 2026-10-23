@@ -12,12 +12,12 @@ use pathfinder_color::ColorU;
 use rangemap::RangeMap;
 use similar::{ChangeTag, DiffOp, TextDiff};
 use string_offset::CharOffset;
-use warp_core::ui::theme::{AnsiColorIdentifier, Fill};
-use warp_editor::content::edit::TemporaryBlock;
-use warp_editor::content::version::BufferVersion;
-use warp_editor::multiline::{AnyMultilineString, LF, MultilineStr, MultilineString};
-use warp_editor::render::model::{Decoration, LineCount, LineDecoration};
-use warpui::{Entity, ModelContext};
+use torch_core::ui::theme::{AnsiColorIdentifier, Fill};
+use torch_editor::content::edit::TemporaryBlock;
+use torch_editor::content::version::BufferVersion;
+use torch_editor::multiline::{AnyMultilineString, LF, MultilineStr, MultilineString};
+use torch_editor::render::model::{Decoration, LineCount, LineDecoration};
+use torchui::{Entity, ModelContext};
 
 use super::super::DiffResult;
 use crate::appearance::Appearance;

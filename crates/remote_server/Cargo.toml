@@ -20,10 +20,10 @@ repo_metadata.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 uuid.workspace = true
-warp_core.workspace = true
-warp_errors.workspace = true
-warp_util.workspace = true
-warpui_core.workspace = true
+torch_core.workspace = true
+torch_errors.workspace = true
+torch_util.workspace = true
+torchui_core.workspace = true
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 async-io.workspace = true

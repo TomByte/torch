@@ -1,6 +1,6 @@
 use std::collections::{HashMap, VecDeque};
 
-use warp_graphql::ai::AgentTaskState;
+use torch_graphql::ai::AgentTaskState;
 
 use super::LocalTaskUpdate;
 use crate::ai::ambient_agents::AmbientAgentTaskId;

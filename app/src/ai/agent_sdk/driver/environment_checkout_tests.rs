@@ -17,9 +17,9 @@ use opentelemetry_sdk::error::OTelSdkResult;
 use opentelemetry_sdk::trace::{SdkTracerProvider, SpanData, SpanExporter};
 use tempfile::TempDir;
 use tracing_subscriber::layer::SubscriberExt as _;
-use warp_cli::agent::{RepositoryForge, RepositoryHeadRef, RepositoryIdentity};
-use warp_cli::environment_checkout::EnvironmentCheckoutArgs;
-use warp_core::features::FeatureFlag;
+use torch_cli::agent::{RepositoryForge, RepositoryHeadRef, RepositoryIdentity};
+use torch_cli::environment_checkout::EnvironmentCheckoutArgs;
+use torch_core::features::FeatureFlag;
 
 use super::super::environment_checkout_protocol::{
     CheckoutBatch, CheckoutFailureKind, CheckoutOutcome, CheckoutReport, CheckoutRequest,

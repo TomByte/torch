@@ -1,8 +1,8 @@
-use warpui::elements::{Container, Flex, MainAxisSize, MouseStateHandle, ParentElement};
-use warpui::platform::Cursor;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::UiComponent;
-use warpui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
+use torchui::elements::{Container, Flex, MainAxisSize, MouseStateHandle, ParentElement};
+use torchui::platform::Cursor;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::UiComponent;
+use torchui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
 
 use super::style::{self, MODAL_PADDING};
 use crate::appearance::Appearance;

@@ -1,4 +1,4 @@
-use warpui::App;
+use torchui::App;
 
 use super::runner_controls_enabled;
 use crate::features::FeatureFlag;

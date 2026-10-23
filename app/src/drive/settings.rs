@@ -1,6 +1,6 @@
 use settings::macros::define_settings_group;
 use settings::{RespectUserSyncSetting, SupportedPlatforms, SyncToCloud};
-use warp_core::features::FeatureFlag;
+use torch_core::features::FeatureFlag;
 
 use super::DriveSortOrder;
 
@@ -45,12 +45,12 @@ impl WarpDriveSettings {
     /// preference. Logged-out and anonymous users can retain their onboarding
     /// preference so Warp Drive appears automatically after signup, while the
     /// feature remains unavailable until then.
-    pub fn is_warp_drive_available(app: &warpui::AppContext) -> bool {
-        if warp_core::channel::ChannelState::is_local_only() {
+    pub fn is_warp_drive_available(app: &torchui::AppContext) -> bool {
+        if torch_core::channel::ChannelState::is_local_only() {
             return false;
         }
 
-        use warpui::SingletonEntity as _;
+        use torchui::SingletonEntity as _;
         !FeatureFlag::SkipFirebaseAnonymousUser.is_enabled()
             || !crate::auth::AuthStateProvider::as_ref(app)
                 .get()
@@ -59,8 +59,8 @@ impl WarpDriveSettings {
     /// Returns whether Warp Drive should be considered enabled.
     /// Returns `false` when the user is anonymous or fully logged out,
     /// regardless of the user setting.
-    pub fn is_warp_drive_enabled(app: &warpui::AppContext) -> bool {
-        use warpui::SingletonEntity as _;
+    pub fn is_warp_drive_enabled(app: &torchui::AppContext) -> bool {
+        use torchui::SingletonEntity as _;
         *Self::as_ref(app).enable_warp_drive && Self::is_warp_drive_available(app)
     }
 }

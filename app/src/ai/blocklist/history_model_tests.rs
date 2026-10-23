@@ -5,8 +5,8 @@ use std::time::Duration;
 use chrono::{DateTime, Local, Utc};
 use itertools::Itertools;
 use uuid::Uuid;
-use warp_cli::agent::Harness;
-use warpui::{App, EntityId, ModelHandle};
+use torch_cli::agent::Harness;
+use torchui::{App, EntityId, ModelHandle};
 
 use super::{
     AIConversationMetadata, AIQueryHistoryOutputStatus, BeginConversationRenameError,
@@ -4833,7 +4833,7 @@ fn has_dangling_subagent_pair(task: &warp_multi_agent_api::Task) -> bool {
 /// `compute_active_tasks()` plus the full set of task ids that survive in the
 /// task store (so callers can assert subtask pruning).
 fn restore_truncate_and_collect(
-    app: &mut warpui::App,
+    app: &mut torchui::App,
     root_task: warp_multi_agent_api::Task,
     subtasks: Vec<warp_multi_agent_api::Task>,
     rewind_query: &str,
@@ -5445,7 +5445,7 @@ fn forked_root_task(forked: &AIConversation) -> &warp_multi_agent_api::Task {
 /// Restores `source` into the history model and returns the exchange id whose
 /// input is the given user query.
 fn restore_and_find_exchange(
-    app: &mut warpui::App,
+    app: &mut torchui::App,
     history_model: &ModelHandle<BlocklistAIHistoryModel>,
     source: AIConversation,
     query: &str,
@@ -5474,7 +5474,7 @@ fn restore_and_find_exchange(
 /// Wires up the sqlite sender the fork path requires. Returns the receiver,
 /// which the caller must keep alive so the bounded channel stays open (a
 /// dropped receiver makes the fork's persist `send` fail).
-fn install_mock_model_event_sender(app: &mut warpui::App) -> std::sync::mpsc::Receiver<ModelEvent> {
+fn install_mock_model_event_sender(app: &mut torchui::App) -> std::sync::mpsc::Receiver<ModelEvent> {
     let (sender, receiver) = std::sync::mpsc::sync_channel(8);
     let mut global_resource_handles = GlobalResourceHandles::mock(app);
     global_resource_handles.model_event_sender = Some(sender);

@@ -6,13 +6,13 @@ use fuzzy_match::FuzzyMatchResult;
 use ordered_float::OrderedFloat;
 #[cfg(not(target_family = "wasm"))]
 use repo_metadata::repositories::DetectedRepositories;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::Icon as WarpIcon;
-use warp_core::ui::appearance::Appearance;
+use torch_core::features::FeatureFlag;
+use torch_core::ui::Icon as WarpIcon;
+use torch_core::ui::appearance::Appearance;
 #[cfg(not(target_family = "wasm"))]
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warpui::fonts::FamilyId;
-use warpui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torchui::fonts::FamilyId;
+use torchui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
 
 use crate::ai::agent_conversations_model::{AgentConversationsModel, AgentConversationsModelEvent};
 use crate::ai::blocklist::block::cli_controller::{CLISubagentController, CLISubagentEvent};

@@ -1,5 +1,5 @@
-use warpui::integration::{AssertionCallback, AssertionWithDataCallback};
-use warpui::{AppContext, SingletonEntity, async_assert, async_assert_eq};
+use torchui::integration::{AssertionCallback, AssertionWithDataCallback};
+use torchui::{AppContext, SingletonEntity, async_assert, async_assert_eq};
 
 use crate::ai::facts::CloudAIFactModel;
 use crate::ai::facts::view::AIFactPage;

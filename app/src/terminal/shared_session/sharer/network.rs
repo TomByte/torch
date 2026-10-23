@@ -41,11 +41,11 @@ use session_sharing_protocol::sharer::{
     SessionTerminatedReason, TeamAccessLevelUpdateResponse, UpdatePendingUserRoleResponse,
     UpstreamMessage,
 };
-use warp_core::features::FeatureFlag;
-use warp_errors::report_error;
-use warp_server_client::iap::IapManager;
-use warpui::r#async::{FutureExt as _, Spawnable, SpawnableOutput, Timer};
-use warpui::{Entity, ModelContext, RetryOption, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torch_errors::report_error;
+use torch_server_client::iap::IapManager;
+use torchui::r#async::{FutureExt as _, Spawnable, SpawnableOutput, Timer};
+use torchui::{Entity, ModelContext, RetryOption, SingletonEntity};
 use websocket::{Message, Sink, Stream, WebSocket, WebsocketMessage as _};
 
 use crate::auth::{AuthStateProvider, UserUid};
@@ -199,7 +199,7 @@ macro_rules! sharer_warn {
 macro_rules! sharer_error {
     ($network:expr_2021, $($arg:tt)+) => {{
         let (session_id, source_task_id) = $network.log_context();
-        warp_errors::report_error!(
+        torch_errors::report_error!(
             anyhow::anyhow!("{}", format_args!($($arg)+)),
             extra: {
                 "session_id" => ?session_id,
@@ -496,7 +496,7 @@ impl Network {
         active_prompt: ActivePrompt,
         selection: Selection,
         input_replica_id: ReplicaId,
-        terminal_view_id: warpui::EntityId,
+        terminal_view_id: torchui::EntityId,
         team_uid: Option<crate::server::ids::ServerId>,
         universal_developer_input_context: UniversalDeveloperInputContext,
         lifetime: Lifetime,

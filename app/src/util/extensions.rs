@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-pub use warp_terminal::util::extensions::TrimStringExt;
+pub use torch_terminal::util::extensions::TrimStringExt;
 
 pub trait SliceExt<T: 'static> {
     fn find_insertion_index<'a, F, E>(&'a self, compare: F) -> Result<usize, E>

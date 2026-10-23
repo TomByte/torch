@@ -1,7 +1,7 @@
 use ai::project_context::model::ProjectRuleContents;
 use futures::future::{BoxFuture, FutureExt as _};
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warpui::AppContext;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torchui::AppContext;
 
 use super::remote_context_files::read_remote_text_file_contents;
 

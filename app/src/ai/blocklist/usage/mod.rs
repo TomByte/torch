@@ -1,6 +1,6 @@
-use warp_core::ui::Icon;
-use warp_core::ui::theme::{Fill, WarpTheme};
-use warpui::Element;
+use torch_core::ui::Icon;
+use torch_core::ui::theme::{Fill, WarpTheme};
+use torchui::Element;
 
 mod colors;
 pub mod conversation_usage_view;

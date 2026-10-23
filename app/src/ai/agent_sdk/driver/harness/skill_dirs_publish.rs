@@ -28,7 +28,7 @@
 //! runs need a real identity check, not an assumption). Anything else at the
 //! target — a real file or directory, or a symlink pointing elsewhere or
 //! nowhere — is a genuine conflict, resolved according to whether this run is
-//! sandboxed (see `warp_isolation_platform::detect`):
+//! sandboxed (see `torch_isolation_platform::detect`):
 //! - In a sandbox, we own the whole filesystem, so the published skill wins:
 //!   the conflicting entry is renamed aside with a `.backup` suffix rather
 //!   than deleted, so nothing is lost.
@@ -54,9 +54,9 @@ use std::path::{Path, PathBuf};
 
 use ai::skills::resolve_skills_dirs;
 use anyhow::{Context, Result};
-use warp_core::features::FeatureFlag;
-use warp_core::paths::bundled_resources_dir;
-use warp_core::safe_warn;
+use torch_core::features::FeatureFlag;
+use torch_core::paths::bundled_resources_dir;
+use torch_core::safe_warn;
 
 use crate::ai::skills::{
     FACTORY_DEFERRED_REPOSITORIES_SKILL, factory_deferred_repositories_skill_path,

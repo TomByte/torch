@@ -2,10 +2,10 @@ mod items;
 use std::collections::HashMap;
 
 pub use items::Items;
-use warp_core::context_flag::ContextFlag;
-use warp_core::features::FeatureFlag;
-use warpui::elements::{Container, Flex, MouseStateHandle, ParentElement, Shrinkable, Wrap};
-use warpui::{
+use torch_core::context_flag::ContextFlag;
+use torch_core::features::FeatureFlag;
+use torchui::elements::{Container, Flex, MouseStateHandle, ParentElement, Shrinkable, Wrap};
+use torchui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     WindowId,
 };
@@ -113,7 +113,7 @@ impl ZeroState {
             valid_filters.push(QueryFilter::Drive);
         }
         valid_filters.extend([QueryFilter::Actions, QueryFilter::Sessions]);
-        if warp_core::channel::ChannelState::is_local_only() {
+        if torch_core::channel::ChannelState::is_local_only() {
             valid_filters.push(QueryFilter::Agents);
         }
 

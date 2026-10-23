@@ -56,7 +56,7 @@ INTEL_TARGET="$INTEL_ARCH-apple-darwin"
 ARM_ARCH="aarch64"
 ARM_TARGET="$ARM_ARCH-apple-darwin"
 DEFAULT_ARCH="$(rustc --print cfg | grep target_arch)"
-# Keep in sync with `APPLE_TEAM_ID` in crates/warp_core/src/macos.rs.
+# Keep in sync with `APPLE_TEAM_ID` in crates/torch_core/src/macos.rs.
 APPLE_TEAM_ID="8M65369K4Z"
 CODESIGN_IDENTITY="Developer ID Application: C10UD LTD ($APPLE_TEAM_ID)"
 NOTARY_PROFILE="torch"
@@ -430,7 +430,7 @@ if [[ "$ARTIFACT" == cli || "$ARTIFACT" == warpctrl ]]; then
   OPEN_AFTER_BUNDLE=false
   FEATURES="$FEATURES,standalone"
 elif [[ "$ARTIFACT" == tui ]]; then
-  # The TUI is a separate console crate (`warp_tui`) with its own per-channel
+  # The TUI is a separate console crate (`torch_tui`) with its own per-channel
   # bins and a minimal feature set, so it does NOT reuse the app's accumulated
   # FEATURES. It is inherently headless (via `warp`'s `tui` feature). It needs
   # `release_bundle` to embed the channel config, plus `standalone` so
@@ -438,7 +438,7 @@ elif [[ "$ARTIFACT" == tui ]]; then
   # binary (the TUI is not shipped inside a `.app` bundle).
   UNIVERSAL_BINARY=false
   OPEN_AFTER_BUNDLE=false
-  WARP_BIN="warp-tui-oss"
+  WARP_BIN="torch-tui"
   WARP_TUI_FEATURES="release_bundle,standalone,voice_input"
 elif [[ "$ARTIFACT" == app ]]; then
   # All channels ship the v3 classifier and v2 heuristic.
@@ -464,7 +464,7 @@ fi
 # using the same feature flags and profile that we would be using in production.
 if [[ "$CHECK_ONLY" == "true" ]]; then
   if [[ "$ARTIFACT" == "tui" ]]; then
-    cargo check -p warp_tui --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --target "$DEFAULT_TARGET" --features "$WARP_TUI_FEATURES"
+    cargo check -p torch_tui --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --target "$DEFAULT_TARGET" --features "$WARP_TUI_FEATURES"
   else
     cargo check --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --target "$DEFAULT_TARGET" --features "$FEATURES"
     if [[ $UNIVERSAL_BINARY = true && "$ARTIFACT" != "cli" && "$ARTIFACT" != "warpctrl" ]]; then
@@ -747,7 +747,7 @@ elif [[ "$ARTIFACT" == "cli" || "$ARTIFACT" == "warpctrl" ]]; then
 elif [[ "$ARTIFACT" == "tui" ]]; then
   if [[ $BUILD_BINARY == true ]]; then
     echo "Building $WARP_BIN ($DEFAULT_TARGET) for channel $RELEASE_CHANNEL with profile $CARGO_PROFILE"
-    cargo build -p warp_tui --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --target "$DEFAULT_TARGET" --features "$WARP_TUI_FEATURES"
+    cargo build -p torch_tui --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --target "$DEFAULT_TARGET" --features "$WARP_TUI_FEATURES"
   else
     echo "Skipping binary build due to --skip-build flag"
   fi

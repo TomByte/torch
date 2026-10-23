@@ -9,10 +9,10 @@ use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use tempfile::NamedTempFile;
-use warp_cli::agent::Harness;
-use warp_errors::report_error;
-use warp_managed_secrets::ManagedSecretValue;
-use warpui::{ModelHandle, ModelSpawner};
+use torch_cli::agent::Harness;
+use torch_errors::report_error;
+use torch_managed_secrets::ManagedSecretValue;
+use torchui::{ModelHandle, ModelSpawner};
 
 use super::super::terminal::{CommandHandle, TerminalDriver};
 use super::super::{AgentDriver, AgentDriverError};
@@ -125,7 +125,7 @@ pub(super) fn publish_skills_for_gemini(
     let published = super::skill_dirs_publish::publish_skills_for_harness(
         &skill_root,
         workspace_root,
-        warp_isolation_platform::detect().is_some(),
+        torch_isolation_platform::detect().is_some(),
         skill_dirs,
         factory_repository_contract,
         harness_support_skills,

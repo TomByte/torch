@@ -15,9 +15,9 @@ use repo_metadata::repositories::{
 use repo_metadata::repository::{Repository, RepositorySubscriber, SubscriberId};
 use repo_metadata::watcher::{DirectoryWatcher, RepositoryUpdate};
 use strum::IntoEnumIterator;
-use warp_core::channel::ChannelState;
-use warp_core::safe_warn;
-use warpui::{Entity, ModelContext, ModelHandle, SingletonEntity};
+use torch_core::channel::ChannelState;
+use torch_core::safe_warn;
+use torchui::{Entity, ModelContext, ModelHandle, SingletonEntity};
 use watcher::HomeDirectoryWatcherEvent;
 
 use crate::HomeDirectoryWatcher;
@@ -344,7 +344,7 @@ impl FileMCPWatcher {
         }
 
         let Ok(std_path) =
-            warp_util::standardized_path::StandardizedPath::from_local_canonicalized(subdir_path)
+            torch_util::standardized_path::StandardizedPath::from_local_canonicalized(subdir_path)
         else {
             return;
         };

@@ -1,5 +1,5 @@
-use warpui::elements::ChildView;
-use warpui::{
+use torchui::elements::ChildView;
+use torchui::{
     Element, Entity, EntityId, ModelHandle, SingletonEntity as _, View, ViewContext, ViewHandle,
 };
 
@@ -212,7 +212,7 @@ impl View for InlineProfileSelectorView {
         "InlineProfileSelectorView"
     }
 
-    fn render(&self, _app: &warpui::AppContext) -> Box<dyn Element> {
+    fn render(&self, _app: &torchui::AppContext) -> Box<dyn Element> {
         ChildView::new(&self.menu_view).finish()
     }
 }

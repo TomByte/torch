@@ -1,9 +1,9 @@
 use std::path::PathBuf;
 
-use warp_util::host_id::HostId;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warp_util::remote_path::RemotePath;
-use warp_util::standardized_path::StandardizedPath;
+use torch_util::host_id::HostId;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torch_util::remote_path::RemotePath;
+use torch_util::standardized_path::StandardizedPath;
 
 fn local_path(path: &str) -> LocalOrRemotePath {
     LocalOrRemotePath::Local(PathBuf::from(path))
@@ -402,7 +402,7 @@ fn test_remote_standing_results_preserve_host_qualified_rule_paths() {
 }
 
 // Helper for global-rules tests: inserts a synthetic global rule directly into
-// the model. Bypasses the watcher infrastructure (which requires the warpui
+// the model. Bypasses the watcher infrastructure (which requires the torchui
 // runtime) so we can exercise `find_applicable_rules`'s layering logic.
 fn insert_global_rule(model: &mut ProjectContextModel, path: &Path, content: &str) {
     model.global_rules.rules.insert(
@@ -662,8 +662,8 @@ fn test_superseding_refresh_coalesces_without_overlapping_reads() {
     use std::time::Duration;
 
     use repo_metadata::repositories::DetectedRepositories;
-    use warpui_core::App;
-    use warpui_core::r#async::Timer;
+    use torchui_core::App;
+    use torchui_core::r#async::Timer;
 
     /// Coordinates a background reader that blocks until released, so the test can observe a
     /// read that is genuinely in flight (rather than one that resolves before the next

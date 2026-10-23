@@ -4,8 +4,8 @@ use std::fmt::Display;
 use anyhow::{Result, anyhow};
 use regex::Regex;
 use url::Url;
-use warp_util::path::{ShellFamily, is_posix_portable_pathname};
-use warpui::AppContext;
+use torch_util::path::{ShellFamily, is_posix_portable_pathname};
+use torchui::AppContext;
 
 use crate::root_view::SubshellCommandArg;
 use crate::send_telemetry_from_app_ctx;

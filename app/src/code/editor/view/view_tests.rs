@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
-use warp_core::ui::appearance::Appearance;
-use warp_editor::render::element::VerticalExpansionBehavior;
-use warp_util::user_input::UserInput;
-use warpui::elements::ScrollbarWidth;
-use warpui::elements::new_scrollable::ScrollableAppearance;
-use warpui::platform::WindowStyle;
-use warpui::{App, TypedActionView, ViewHandle, WindowId};
+use torch_core::ui::appearance::Appearance;
+use torch_editor::render::element::VerticalExpansionBehavior;
+use torch_util::user_input::UserInput;
+use torchui::elements::ScrollbarWidth;
+use torchui::elements::new_scrollable::ScrollableAppearance;
+use torchui::platform::WindowStyle;
+use torchui::{App, TypedActionView, ViewHandle, WindowId};
 
 use super::{CodeEditorRenderOptions, CodeEditorView, CodeEditorViewAction};
 use crate::AuthStateProvider;

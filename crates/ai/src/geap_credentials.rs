@@ -17,9 +17,9 @@ use std::time::{Duration, SystemTime};
 use chrono::{DateTime, Local};
 #[cfg(not(target_family = "wasm"))]
 use futures::channel::oneshot;
-use warp_core::ui::Icon;
+use torch_core::ui::Icon;
 use warp_multi_agent_api as api;
-use warpui_core::ModelContext;
+use torchui_core::ModelContext;
 
 use crate::api_keys::{ApiKeyManager, ApiKeyManagerEvent};
 

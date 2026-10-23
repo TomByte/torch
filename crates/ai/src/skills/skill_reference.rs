@@ -1,7 +1,7 @@
 use std::fmt;
 
 use serde::{Deserialize, Serialize};
-use warp_util::local_or_remote_path::LocalOrRemotePath;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
 
 /// An unique reference to a skill.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]

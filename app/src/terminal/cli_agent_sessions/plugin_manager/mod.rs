@@ -13,7 +13,7 @@ use claude::ClaudeCodePluginManager;
 use codex::CodexPluginManager;
 use gemini::GeminiPluginManager;
 use opencode::OpenCodePluginManager;
-use warp_core::channel::ChannelState;
+use torch_core::channel::ChannelState;
 
 use crate::features::FeatureFlag;
 use crate::terminal::CLIAgent;

@@ -5,8 +5,8 @@ use std::collections::HashSet;
 use anyhow::Context;
 #[cfg(test)]
 pub use tests::TestModel;
-use warp_errors::report_if_error;
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torch_errors::report_if_error;
+use torchui::{Entity, ModelContext, SingletonEntity};
 
 use super::ServerExperiment;
 use crate::GlobalResourceHandlesProvider;

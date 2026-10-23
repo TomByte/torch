@@ -10,9 +10,9 @@ use ai::index::locations::CodeContextLocation;
 use anyhow::{Context as _, anyhow};
 use futures_util::stream::AbortHandle;
 use instant::Instant;
-use warp_core::features::FeatureFlag;
-use warp_errors::report_error;
-use warpui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torch_errors::report_error;
+use torchui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
 
 #[cfg(not(target_family = "wasm"))]
 use crate::ai::agent::SearchCodebaseFailureReason;

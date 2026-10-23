@@ -1,5 +1,5 @@
-use warpui::integration::{AssertionOutcome, TestStep};
-use warpui::{App, WindowId};
+use torchui::integration::{AssertionOutcome, TestStep};
+use torchui::{App, WindowId};
 
 use crate::integration_testing::command_palette::assertions::{
     assert_command_palette_has_results, assert_command_palette_is_closed,

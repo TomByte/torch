@@ -1,16 +1,16 @@
-use warp::integration_testing::step::new_step_with_default_assertions;
-use warp::integration_testing::terminal::util::current_shell_starter_and_version;
-use warp::integration_testing::terminal::{
+use torch::integration_testing::step::new_step_with_default_assertions;
+use torch::integration_testing::terminal::util::current_shell_starter_and_version;
+use torch::integration_testing::terminal::{
     assert_active_block_output_for_single_terminal_in_tab, assert_input_editor_contents,
     assert_long_running_block_executing_for_single_terminal_in_tab,
     assert_no_visible_background_blocks, wait_until_bootstrapped_single_pane_for_tab,
 };
-use warp::integration_testing::view_getters::single_terminal_view_for_tab;
-use warp::terminal::model::block::TranscriptScope;
-use warp::terminal::model::terminal_model::BlockIndex;
-use warp::terminal::shell::{Shell, ShellType};
-use warpui_core::integration::{AssertionCallback, AssertionOutcome, TestStep};
-use warpui_core::{async_assert, async_assert_eq};
+use torch::integration_testing::view_getters::single_terminal_view_for_tab;
+use torch::terminal::model::block::TranscriptScope;
+use torch::terminal::model::terminal_model::BlockIndex;
+use torch::terminal::shell::{Shell, ShellType};
+use torchui_core::integration::{AssertionCallback, AssertionOutcome, TestStep};
+use torchui_core::{async_assert, async_assert_eq};
 
 use super::{Builder, new_builder};
 use crate::util::skip_if_powershell_core_2303;
@@ -206,9 +206,9 @@ pub fn test_background_output() -> Builder {
     use std::os::unix::prelude::OpenOptionsExt;
 
     use regex::Regex;
-    use warp::integration_testing::block::assert_background_output;
-    use warp::integration_testing::terminal::execute_command_for_single_terminal_in_tab;
-    use warp::integration_testing::terminal::util::ExpectedExitStatus;
+    use torch::integration_testing::block::assert_background_output;
+    use torch::integration_testing::terminal::execute_command_for_single_terminal_in_tab;
+    use torch::integration_testing::terminal::util::ExpectedExitStatus;
 
     let (starter, _) = current_shell_starter_and_version();
     let (spawn_command, kill_command) = match starter.shell_type() {

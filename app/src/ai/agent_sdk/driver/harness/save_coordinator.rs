@@ -8,9 +8,9 @@ use futures::channel::oneshot;
 use futures::future::{AbortHandle, Abortable, Shared};
 use instant::Instant;
 use parking_lot::Mutex;
-use warp_errors::report_if_error;
-use warpui::r#async::executor::Background;
-use warpui::r#async::{BoxFuture, FutureExt as _, Timer};
+use torch_errors::report_if_error;
+use torchui::r#async::executor::Background;
+use torchui::r#async::{BoxFuture, FutureExt as _, Timer};
 
 use super::SavePoint;
 

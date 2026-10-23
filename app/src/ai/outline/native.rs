@@ -15,8 +15,8 @@ use repo_metadata::{
     CanonicalizedPath, DirectoryWatcher, Repository, RepositoryUpdate, RepositoryWatchMode,
 };
 use settings::Setting as _;
-use warp_errors::report_error;
-use warpui::{Entity, ModelContext, ModelHandle, SingletonEntity};
+use torch_errors::report_error;
+use torchui::{Entity, ModelContext, ModelHandle, SingletonEntity};
 
 use super::OutlineStatus;
 use crate::ai::persisted_workspace::all_working_directories;

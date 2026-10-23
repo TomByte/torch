@@ -1,6 +1,6 @@
-use warpui::App;
-use warpui::keymap::{EditableBinding, Keystroke, Trigger};
-use warpui::platform::OperatingSystem;
+use torchui::App;
+use torchui::keymap::{EditableBinding, Keystroke, Trigger};
+use torchui::platform::OperatingSystem;
 
 use crate::terminal;
 use crate::util::bindings::{keybinding_name_to_display_string, trigger_to_keystroke};
@@ -193,7 +193,7 @@ fn test_markdown_display_mode_toggle_is_rebound_in_both_directions() {
         app.update(crate::notebooks::file::init);
 
         app.update(|ctx| {
-            let toggle_keystrokes = |ctx: &warpui::AppContext| {
+            let toggle_keystrokes = |ctx: &torchui::AppContext| {
                 ctx.editable_bindings()
                     .filter(|binding| binding.name == TOGGLE_MARKDOWN_DISPLAY_MODE_BINDING_NAME)
                     .map(|binding| trigger_to_keystroke(binding.trigger))
@@ -223,7 +223,7 @@ fn show_agents_defaults_to_cmd_shift_a_and_can_be_reassigned() {
 
         app.update(|ctx| {
             const SHOW_AGENTS: &str = "workspace:toggle_agents_palette";
-            let show_agents = |ctx: &warpui::AppContext| {
+            let show_agents = |ctx: &torchui::AppContext| {
                 ctx.editable_bindings()
                     .find(|binding| binding.name == SHOW_AGENTS)
                     .and_then(|binding| trigger_to_keystroke(binding.trigger))

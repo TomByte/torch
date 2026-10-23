@@ -7,7 +7,7 @@ mod view;
 
 pub use data_source::SelectRewindPoint;
 pub use view::{RewindMenuEvent, RewindMenuView};
-use warpui::keymap::Keystroke;
+use torchui::keymap::Keystroke;
 
 use crate::terminal::input::inline_menu::{
     InlineMenuAction, InlineMenuMessageArgs, InlineMenuType, default_navigation_message_items,

@@ -4,11 +4,11 @@ use std::time::Duration;
 
 use async_channel::Sender;
 use string_offset::ByteOffset;
-use warp_completer::completer::SuggestionTypeName;
-use warp_completer::signatures::CommandRegistry;
-use warp_core::ui::theme::AnsiColorIdentifier;
-use warpui::r#async::SpawnedFutureHandle;
-use warpui::{Entity, ModelContext, SingletonEntity, ViewHandle};
+use torch_completer::completer::SuggestionTypeName;
+use torch_completer::signatures::CommandRegistry;
+use torch_core::ui::theme::AnsiColorIdentifier;
+use torchui::r#async::SpawnedFutureHandle;
+use torchui::{Entity, ModelContext, SingletonEntity, ViewHandle};
 
 use crate::appearance::Appearance;
 use crate::completer::SessionAgnosticContext;

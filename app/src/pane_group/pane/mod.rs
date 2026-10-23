@@ -34,10 +34,10 @@ use std::fmt::Display;
 
 use serde::{Deserialize, Serialize};
 use url::Url;
-use warp_util::remote_path::RemotePath;
-use warpui::elements::{DispatchEventResult, EventHandler, MouseInBehavior};
-use warpui::presenter::ChildView;
-use warpui::{
+use torch_util::remote_path::RemotePath;
+use torchui::elements::{DispatchEventResult, EventHandler, MouseInBehavior};
+use torchui::presenter::ChildView;
+use torchui::{
     Action, AppContext, Element, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity,
     View, ViewContext, ViewHandle, WeakModelHandle,
 };
@@ -382,7 +382,7 @@ impl PaneId {
     pub(super) fn deferred_placeholder_pane_id() -> Self {
         Self(IPaneId {
             pane_type: IPaneType::DeferredPlaceholder,
-            pane_view_id: warpui::EntityId::new(),
+            pane_view_id: torchui::EntityId::new(),
         })
     }
 
@@ -391,7 +391,7 @@ impl PaneId {
     pub fn dummy_pane_id() -> Self {
         Self(IPaneId {
             pane_type: IPaneType::Dummy,
-            pane_view_id: warpui::EntityId::new(),
+            pane_view_id: torchui::EntityId::new(),
         })
     }
 
@@ -497,9 +497,9 @@ impl PaneId {
             IPaneType::NetworkLog => {
                 ChildView::<PaneView<NetworkLogView>>::with_id(self.0.pane_view_id).finish()
             }
-            IPaneType::DeferredPlaceholder => warpui::elements::Empty::new().finish(),
+            IPaneType::DeferredPlaceholder => torchui::elements::Empty::new().finish(),
             #[cfg(test)]
-            IPaneType::Dummy => warpui::elements::Empty::new().finish(),
+            IPaneType::Dummy => torchui::elements::Empty::new().finish(),
         };
         if *PaneSettings::as_ref(app).focus_panes_on_hover {
             element = EventHandler::new(element)

@@ -4,16 +4,16 @@ use instant::Instant;
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use uuid::Uuid;
-use warpui::r#async::{SpawnedFutureHandle, Timer};
-use warpui::elements::{
+use torchui::r#async::{SpawnedFutureHandle, Timer};
+use torchui::elements::{
     ChildAnchor, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, DispatchEventResult,
     EventHandler, Expanded, Flex, Hoverable, Icon, MouseStateHandle, OffsetPositioning, Padding,
     ParentElement, PositionedElementAnchor, PositionedElementOffsetBounds, Radius, SavePosition,
     Stack,
 };
-use warpui::keymap::Keystroke;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::keymap::Keystroke;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, EntityId, SingletonEntity, TypedActionView, View, ViewContext,
     WindowId,
 };
@@ -449,7 +449,7 @@ impl AgentToast {
         appearance: &Appearance,
         keystroke: Keystroke,
     ) -> Box<dyn Element> {
-        use warpui::ui_components::keyboard_shortcut::KeyboardShortcut;
+        use torchui::ui_components::keyboard_shortcut::KeyboardShortcut;
 
         use crate::ui_components::blended_colors;
 

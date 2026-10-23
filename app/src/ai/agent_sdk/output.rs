@@ -11,8 +11,8 @@ use jaq_all::fmts::write::Writer;
 use jaq_json::{Val, write as jaq_write};
 use serde::Serialize;
 use tabwriter::TabWriter;
-use warp_cli::agent::OutputFormat;
-use warp_cli::json_filter::{JqFilter, JsonOutput};
+use torch_cli::agent::OutputFormat;
+use torch_cli::json_filter::{JqFilter, JsonOutput};
 
 pub fn standard_table() -> Table {
     let mut table = Table::new();

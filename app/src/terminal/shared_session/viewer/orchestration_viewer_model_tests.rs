@@ -2,7 +2,7 @@
 //! registration, streamer-driven discovery, and the pending-metadata poll.
 
 use chrono::Utc;
-use warpui::{App, ModelHandle, ViewHandle};
+use torchui::{App, ModelHandle, ViewHandle};
 
 use super::*;
 use crate::ai::agent::conversation::AIConversation;

@@ -3,8 +3,8 @@ use std::rc::Rc;
 
 use ai::api_keys::CustomEndpointSchema;
 use settings::Setting as _;
-use warpui::{App, SingletonEntity as _};
-use warpui_extras::secure_storage;
+use torchui::{App, SingletonEntity as _};
+use torchui_extras::secure_storage;
 
 use super::*;
 use crate::settings::init_and_register_user_preferences;

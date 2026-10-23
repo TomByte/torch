@@ -3,9 +3,9 @@ use std::sync::{Arc, Mutex};
 use chrono::TimeDelta;
 use futures::channel::oneshot;
 use futures::future;
-use warp_core::features::FeatureFlag;
-use warp_graphql::queries::execution_config::CodeForge as ConfigCodeForge;
-use warpui::App;
+use torch_core::features::FeatureFlag;
+use torch_graphql::queries::execution_config::CodeForge as ConfigCodeForge;
+use torchui::App;
 
 use self::support::*;
 use super::*;

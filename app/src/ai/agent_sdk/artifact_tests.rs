@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use warp_cli::agent::OutputFormat;
+use torch_cli::agent::OutputFormat;
 
 use super::*;
 

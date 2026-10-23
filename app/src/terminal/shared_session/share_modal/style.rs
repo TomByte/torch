@@ -1,6 +1,6 @@
-use warp_core::ui::appearance::Appearance;
-use warpui::fonts::Weight;
-use warpui::ui_components::components::{Coords, UiComponentStyles};
+use torch_core::ui::appearance::Appearance;
+use torchui::fonts::Weight;
+use torchui::ui_components::components::{Coords, UiComponentStyles};
 
 pub const MODAL_WIDTH: f32 = 460.;
 pub const MODAL_HEIGHT: f32 = 300.;

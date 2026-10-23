@@ -3,14 +3,14 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use warp_completer::parsers::simple::{command_without_leading_env_vars, decompose_command};
-use warp_core::execution_mode::AppExecutionMode;
-use warp_core::features::FeatureFlag;
-use warp_core::settings::Setting;
-use warp_core::user_preferences::GetUserPreferences;
-use warp_errors::{report_error, report_if_error};
-use warp_util::path::EscapeChar;
-use warpui::{AppContext, Entity, EntityId, ModelContext, SingletonEntity};
+use torch_completer::parsers::simple::{command_without_leading_env_vars, decompose_command};
+use torch_core::execution_mode::AppExecutionMode;
+use torch_core::features::FeatureFlag;
+use torch_core::settings::Setting;
+use torch_core::user_preferences::GetUserPreferences;
+use torch_errors::{report_error, report_if_error};
+use torch_util::path::EscapeChar;
+use torchui::{AppContext, Entity, EntityId, ModelContext, SingletonEntity};
 
 use super::BlocklistAIHistoryModel;
 use crate::ai::agent::conversation::AIConversationId;

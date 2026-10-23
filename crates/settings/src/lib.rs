@@ -19,8 +19,8 @@ pub use schemars as _schemars;
 #[doc(hidden)]
 pub use settings_value as _settings_value;
 pub use settings_value::SettingsValue;
-// Re-export warpui_core for use by macros.
-pub use warpui_core;
+// Re-export torchui_core for use by macros.
+pub use torchui_core;
 
 /// Extracts the storage key (last segment after the final `.`) from a toml_path.
 ///
@@ -63,11 +63,11 @@ pub const fn toml_path_hierarchy(path: &str) -> Option<&str> {
 use anyhow::{Context, Result};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
-use warp_errors::report_error;
-use warp_features::FeatureFlag;
-use warpui_core::{AppContext, Entity, ModelContext};
-use warpui_extras::secure_storage::{self, AppContextExt as _};
-use warpui_extras::user_preferences::UserPreferences;
+use torch_errors::report_error;
+use torch_features::FeatureFlag;
+use torchui_core::{AppContext, Entity, ModelContext};
+use torchui_extras::secure_storage::{self, AppContextExt as _};
+use torchui_extras::user_preferences::UserPreferences;
 
 /// A newtype wrapper for the public preferences backend.
 ///
@@ -101,16 +101,16 @@ impl PublicPreferences {
     }
 
     /// Reloads the backing store from disk.
-    pub fn reload_from_disk(&self) -> Result<(), warpui_extras::user_preferences::Error> {
+    pub fn reload_from_disk(&self) -> Result<(), torchui_extras::user_preferences::Error> {
         self.0.reload_from_disk()
     }
 }
 
-impl warpui_core::Entity for PublicPreferences {
+impl torchui_core::Entity for PublicPreferences {
     type Event = ();
 }
 
-impl warpui_core::SingletonEntity for PublicPreferences {}
+impl torchui_core::SingletonEntity for PublicPreferences {}
 
 /// A newtype wrapper for the private preferences backend.
 ///
@@ -134,11 +134,11 @@ impl Deref for PrivatePreferences {
     }
 }
 
-impl warpui_core::Entity for PrivatePreferences {
+impl torchui_core::Entity for PrivatePreferences {
     type Event = ();
 }
 
-impl warpui_core::SingletonEntity for PrivatePreferences {}
+impl torchui_core::SingletonEntity for PrivatePreferences {}
 
 /// An enum representing the different platforms a setting could apply to.
 #[derive(Debug, Clone)]
@@ -185,7 +185,7 @@ pub enum RespectUserSyncSetting {
 pub enum SettingsMode {
     /// The full desktop GUI application.
     Gui,
-    /// The headless terminal-UI front-end (the `warp_tui` crate).
+    /// The headless terminal-UI front-end (the `torch_tui` crate).
     Tui,
 }
 
@@ -247,7 +247,7 @@ pub struct SettingSurfaces(u8);
 impl SettingSurfaces {
     /// The desktop GUI application only.
     pub const GUI: Self = Self(1 << 0);
-    /// The headless terminal-UI front-end (the `warp_tui` crate) only.
+    /// The headless terminal-UI front-end (the `torch_tui` crate) only.
     pub const TUI: Self = Self(1 << 1);
     /// Every surface (currently GUI and TUI).
     pub const ALL: Self = Self(Self::GUI.0 | Self::TUI.0);
@@ -442,7 +442,7 @@ pub trait Setting {
     fn set_value_from_cloud_sync(
         &mut self,
         new_value: Self::Value,
-        ctx: &mut warpui_core::ModelContext<Self::Group>,
+        ctx: &mut torchui_core::ModelContext<Self::Group>,
     ) -> anyhow::Result<()>;
 
     /// Sets the value of the setting persisting it to storage.
@@ -458,7 +458,7 @@ pub trait Setting {
     /// Sets the value of the setting to its default and persists it to storage.
     fn set_value_to_default(
         &mut self,
-        ctx: &mut warpui_core::ModelContext<Self::Group>,
+        ctx: &mut torchui_core::ModelContext<Self::Group>,
     ) -> anyhow::Result<()> {
         self.set_value(Self::default_value(), ctx)
     }
@@ -468,7 +468,7 @@ pub trait Setting {
     /// Private settings use the platform-native store; public settings use
     /// the main preferences backend (which may be the TOML settings file).
     fn preferences_for_setting(ctx: &AppContext) -> &dyn UserPreferences {
-        use warpui_core::SingletonEntity;
+        use torchui_core::SingletonEntity;
 
         if Self::is_private() {
             <PrivatePreferences as SingletonEntity>::as_ref(ctx).deref()

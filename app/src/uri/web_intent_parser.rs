@@ -2,7 +2,7 @@ use anyhow::{Result, anyhow};
 use url::Url;
 use uuid::Uuid;
 #[cfg(target_family = "wasm")]
-use warp_core::context_flag::ContextFlag;
+use torch_core::context_flag::ContextFlag;
 
 use crate::ChannelState;
 #[cfg(target_family = "wasm")]

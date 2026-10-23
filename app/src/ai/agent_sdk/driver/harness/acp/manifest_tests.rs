@@ -5,7 +5,7 @@ use std::path::Path;
 
 use serde_json::{Value, json};
 use tempfile::tempdir;
-use warp_cli::agent::Harness;
+use torch_cli::agent::Harness;
 
 use super::{MANIFEST_FILE, discover, read_manifest, resolve_sidecar_program};
 

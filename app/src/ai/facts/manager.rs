@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use warpui::{Entity, EntityId, ModelContext, SingletonEntity, ViewHandle, WindowId};
+use torchui::{Entity, EntityId, ModelContext, SingletonEntity, ViewHandle, WindowId};
 
 use crate::PaneViewLocator;
 use crate::ai::facts::AIFactView;

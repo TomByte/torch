@@ -14,16 +14,16 @@ use ::ai::project_context::model::{ProjectContextModel, ProjectContextModelEvent
 use remote_server::proto::OpenBufferSuccess;
 use repo_metadata::repositories::{DetectedRepositories, RepoDetectionSource};
 use repo_metadata::{RepoMetadataEvent, RepoMetadataModel, RepositoryIdentifier};
-use warp_core::channel::ChannelState;
-use warp_core::{SessionId, safe_error};
-use warp_files::{FileModel, FileModelEvent};
-use warp_util::content_version::ContentVersion;
-use warp_util::file::FileId;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warp_util::standardized_path::StandardizedPath;
-use warpui::r#async::{Spawnable, SpawnableOutput, SpawnedFutureHandle};
-use warpui::platform::TerminationMode;
-use warpui::{Entity, ModelContext, ModelHandle, SingletonEntity};
+use torch_core::channel::ChannelState;
+use torch_core::{SessionId, safe_error};
+use torch_files::{FileModel, FileModelEvent};
+use torch_util::content_version::ContentVersion;
+use torch_util::file::FileId;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torch_util::standardized_path::StandardizedPath;
+use torchui::r#async::{Spawnable, SpawnableOutput, SpawnedFutureHandle};
+use torchui::platform::TerminationMode;
+use torchui::{Entity, ModelContext, ModelHandle, SingletonEntity};
 
 use super::codebase_index_status::{
     codebase_index_status_to_proto, disabled_codebase_index_status,
@@ -104,7 +104,7 @@ use crate::util::git;
 /// script (see [`remote_server::setup::remote_server_bundled_resources_dir`]),
 /// expanding the shell-form `~/` prefix against this process's home directory.
 ///
-/// This deliberately does not use `warp_core::paths::bundled_resources_dir`,
+/// This deliberately does not use `torch_core::paths::bundled_resources_dir`,
 /// whose macOS behavior resolves resources inside an app bundle. The global
 /// location is version-independent: the last install wins, and slight skew
 /// against this daemon's version is accepted.
@@ -117,7 +117,7 @@ fn daemon_bundled_resources_dir() -> Option<PathBuf> {
 fn remote_agent_context_snapshot(
     revision: u64,
     bundled_skills: &[RemoteSkillProto],
-    ctx: &warpui::AppContext,
+    ctx: &torchui::AppContext,
 ) -> RemoteAgentContextSnapshot {
     let home_dir = dirs::home_dir()
         .map(|path| path.to_string_lossy().into_owned())
@@ -762,7 +762,7 @@ impl ServerModel {
         model
     }
 
-    fn refresh_remote_agent_context_snapshot(&mut self, ctx: &warpui::AppContext) {
+    fn refresh_remote_agent_context_snapshot(&mut self, ctx: &torchui::AppContext) {
         let revision = self
             .remote_agent_context_snapshot
             .revision

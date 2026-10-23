@@ -12,15 +12,15 @@ use diesel::SqliteConnection;
 use itertools::Itertools as _;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use warp_cli::agent::Harness;
-use warp_core::features::FeatureFlag;
+use torch_cli::agent::Harness;
+use torch_core::features::FeatureFlag;
 use warp_multi_agent_api::RequestCharges;
 use warp_multi_agent_api::client_action::{Action, StartNewConversation};
 use warp_multi_agent_api::message::tool_call::Tool;
 use warp_multi_agent_api::response_event::stream_finished::{
     ConversationUsageMetadata, TokenUsage,
 };
-use warpui::{AppContext, Entity, EntityId, ModelContext, SingletonEntity};
+use torchui::{AppContext, Entity, EntityId, ModelContext, SingletonEntity};
 
 use super::RequestInput;
 use super::controller::response_stream::ResponseStreamId;
@@ -57,7 +57,7 @@ pub use conversation_loader::{
     CLIAgentConversation, CloudConversationData,
     convert_persisted_conversation_to_ai_conversation_with_metadata, load_conversation_from_server,
 };
-use warp_errors::report_error;
+use torch_errors::report_error;
 
 /// Mirrors [`crate::persistence::agent::MAX_PERSISTED_CONVERSATION_COUNT`].
 /// Moot at steady state because the disk-side prune already keeps the

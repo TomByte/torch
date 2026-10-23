@@ -4,9 +4,9 @@ use ai::agent::action::{AIAgentActionType, FileEdit};
 use ai::diff_validation::ParsedDiff;
 use chrono::{DateTime, Utc};
 use parking_lot::FairMutex;
-use warp_core::features::FeatureFlag;
-use warpui::r#async::SpawnedFutureHandle;
-use warpui::{Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torchui::r#async::SpawnedFutureHandle;
+use torchui::{Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
 
 use super::super::controller::{BlocklistAIController, BlocklistAIControllerEvent};
 use crate::ai::agent::api::generate_multi_agent_output;
@@ -38,12 +38,12 @@ cfg_if::cfg_if! {
         use std::{path::PathBuf, time::Duration};
         use crate::ai::blocklist::{read_local_file_context, BlocklistAIPermissions};
         use crate::workspaces::user_workspaces::TeamScope;
-        use warp_terminal::shell::ShellLaunchData;
+        use torch_terminal::shell::ShellLaunchData;
         use crate::util::link_detection::{detect_file_paths, DetectedLinkType};
         use crate::util::openable_file_type::is_binary_file;
         use ai::agent::FileLocations;
-        use warpui::AppContext;
-        use warpui::r#async::FutureExt as AsyncFutureExt;
+        use torchui::AppContext;
+        use torchui::r#async::FutureExt as AsyncFutureExt;
         use itertools::Itertools;
     }
 }

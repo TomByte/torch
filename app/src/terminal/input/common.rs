@@ -2,18 +2,18 @@ use std::sync::Arc;
 
 use pathfinder_geometry::vector::vec2f;
 use vim::vim::{VimMode, VimState};
-use warp_completer::completer::Description;
-use warp_core::features::FeatureFlag;
-use warpui::elements::{
+use torch_completer::completer::Description;
+use torch_core::features::FeatureFlag;
+use torchui::elements::{
     AnchorPair, Border, ChildAnchor, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     DispatchEventResult, Element, EventHandler, Flex, OffsetPositioning, OffsetType, ParentAnchor,
     ParentElement, ParentOffsetBounds, PositionedElementOffsetBounds, PositioningAxis, Radius,
     Shrinkable, Stack, Text, XAxisAnchor,
 };
-use warpui::fonts::Weight;
-use warpui::presenter::ChildView;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{AppContext, EntityId, SingletonEntity, ViewHandle};
+use torchui::fonts::Weight;
+use torchui::presenter::ChildView;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{AppContext, EntityId, SingletonEntity, ViewHandle};
 
 use crate::ai::blocklist::BlocklistAIHistoryModel;
 use crate::ai::llms::{LLMPreferences, should_show_key_icon_for_model};

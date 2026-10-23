@@ -1,4 +1,4 @@
-use warpui::{Entity, ModelContext, ModelHandle};
+use torchui::{Entity, ModelContext, ModelHandle};
 
 use super::{BufferState, DynamicEnumSuggestionStatus, InputConfig, InputSuggestionsMode};
 use crate::ai::agent::conversation::AIConversationId;

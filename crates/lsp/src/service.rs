@@ -19,8 +19,8 @@ use lsp_types::{
 use serde_json::Value;
 #[cfg(not(target_arch = "wasm32"))]
 use simple_logger::SimpleLogger;
-use warp_errors::report_error;
-use warp_util::on_cancel::OnCancelFutureExt;
+use torch_errors::report_error;
+use torch_util::on_cancel::OnCancelFutureExt;
 
 use crate::LspServerLogLevel;
 use crate::config::{LanguageId, lsp_uri_to_path, path_to_lsp_uri};
@@ -358,7 +358,7 @@ impl WatchedFilesRegistry {
             return false;
         };
 
-        let path_relative = warp_util::path::normalize_relative_path_for_glob(path_relative);
+        let path_relative = torch_util::path::normalize_relative_path_for_glob(path_relative);
 
         self.registrations
             .values()
@@ -416,7 +416,7 @@ impl WatchedFilesRegistry {
         };
 
         // Normalize to forward slashes so glob patterns and event paths are comparable across platforms (esp. Windows).
-        let prefix = warp_util::path::normalize_relative_path_for_glob(base_relative);
+        let prefix = torch_util::path::normalize_relative_path_for_glob(base_relative);
 
         if prefix.is_empty() {
             Some(pattern)

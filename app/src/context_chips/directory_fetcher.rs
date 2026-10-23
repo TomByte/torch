@@ -1,10 +1,10 @@
 use std::cmp::Ordering;
 
-use warp_completer::completer::{EngineDirEntry, EngineFileType};
-use warp_util::file_type::is_binary_file;
-use warp_util::path::expand_session_home;
-use warpui::r#async::SpawnedFutureHandle;
-use warpui::{AppContext, Entity, ModelContext};
+use torch_completer::completer::{EngineDirEntry, EngineFileType};
+use torch_util::file_type::is_binary_file;
+use torch_util::path::expand_session_home;
+use torchui::r#async::SpawnedFutureHandle;
+use torchui::{AppContext, Entity, ModelContext};
 
 use super::display_menu::GenericMenuItem;
 use crate::completer::SessionContext;

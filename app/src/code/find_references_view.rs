@@ -9,23 +9,23 @@ use std::path::PathBuf;
 use lsp::ReferenceLocation;
 use pathfinder_geometry::vector::Vector2F;
 use string_offset::CharOffset;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::icons::Icon as WarpIcon;
-use warp_core::ui::theme::color::internal_colors;
-use warp_editor::content::buffer::InitialBufferState;
-use warp_editor::render::element::VerticalExpansionBehavior;
-use warp_files::FileModel;
-use warpui::elements::{
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::icons::Icon as WarpIcon;
+use torch_core::ui::theme::color::internal_colors;
+use torch_editor::content::buffer::InitialBufferState;
+use torch_editor::render::element::VerticalExpansionBehavior;
+use torch_files::FileModel;
+use torchui::elements::{
     Border, ChildAnchor, ChildView, ClippedScrollStateHandle, ClippedScrollable, ConstrainedBox,
     Container, CornerRadius, CrossAxisAlignment, Fill, Flex, Hoverable, MouseStateHandle,
     OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, ScrollbarWidth,
     Shrinkable, Stack, Text,
 };
-use warpui::keymap::FixedBinding;
-use warpui::platform::Cursor;
-use warpui::prelude::Align;
-use warpui::ui_components::components::UiComponent;
-use warpui::{
+use torchui::keymap::FixedBinding;
+use torchui::platform::Cursor;
+use torchui::prelude::Align;
+use torchui::ui_components::components::UiComponent;
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 
@@ -40,7 +40,7 @@ pub const FIND_REFERENCES_CARD_MAX_HEIGHT: f32 = 300.;
 const HAS_REFERENCES: &str = "HasReferences";
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings([
         FixedBinding::new(
@@ -319,15 +319,15 @@ impl FindReferencesView {
             .with_can_show_diff_ui(false)
             .with_show_line_numbers(false)
             .with_horizontal_scrollbar_appearance(
-                warpui::elements::new_scrollable::ScrollableAppearance::new(
-                    warpui::elements::ScrollbarWidth::None,
+                torchui::elements::new_scrollable::ScrollableAppearance::new(
+                    torchui::elements::ScrollbarWidth::None,
                     false,
                 ),
             );
 
             editor_view.set_vertical_scrollbar_appearance(
-                warpui::elements::new_scrollable::ScrollableAppearance::new(
-                    warpui::elements::ScrollbarWidth::None,
+                torchui::elements::new_scrollable::ScrollableAppearance::new(
+                    torchui::elements::ScrollbarWidth::None,
                     false,
                 ),
             );
@@ -400,7 +400,7 @@ impl View for FindReferencesView {
         "FindReferencesView"
     }
 
-    fn keymap_context(&self, _app: &AppContext) -> warpui::keymap::Context {
+    fn keymap_context(&self, _app: &AppContext) -> torchui::keymap::Context {
         let mut context = Self::default_keymap_context();
         if !self.references.is_empty() {
             context.set.insert(HAS_REFERENCES);
@@ -410,7 +410,7 @@ impl View for FindReferencesView {
 
     fn render(&self, app: &AppContext) -> Box<dyn Element> {
         if self.references.is_empty() {
-            return warpui::elements::Empty::new().finish();
+            return torchui::elements::Empty::new().finish();
         }
 
         let appearance = Appearance::handle(app).as_ref(app);
@@ -517,7 +517,7 @@ fn render_header(
     let icon_color = theme.sub_text_color(theme.background());
     let close_button = Hoverable::new(back_mouse_state, move |state| {
         let close_icon = ConstrainedBox::new(
-            warpui::elements::Icon::new(WarpIcon::X.into(), icon_color).finish(),
+            torchui::elements::Icon::new(WarpIcon::X.into(), icon_color).finish(),
         )
         .with_width(16.)
         .with_height(16.)

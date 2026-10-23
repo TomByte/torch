@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use warpui::integration::TestStep;
-use warpui::windowing::WindowManager;
-use warpui::{SingletonEntity, WindowId, async_assert};
+use torchui::integration::TestStep;
+use torchui::windowing::WindowManager;
+use torchui::{SingletonEntity, WindowId, async_assert};
 
 use crate::ai::facts::AIMemory;
 use crate::ai::facts::view::AIFactPage;

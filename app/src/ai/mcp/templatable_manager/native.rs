@@ -14,15 +14,15 @@ use parking_lot::Mutex;
 use simple_logger::manager::LogManager;
 use url::Url;
 use uuid::Uuid;
-use warp_core::channel::ChannelState;
-use warp_core::execution_mode::AppExecutionMode;
-use warp_core::features::FeatureFlag;
-use warp_core::safe_error;
-use warp_core::settings::Setting as _;
-use warp_errors::report_error;
-use warp_server_client::auth::AuthEvent;
-use warpui::windowing::WindowManager;
-use warpui::{AppContext, ModelContext, SingletonEntity};
+use torch_core::channel::ChannelState;
+use torch_core::execution_mode::AppExecutionMode;
+use torch_core::features::FeatureFlag;
+use torch_core::safe_error;
+use torch_core::settings::Setting as _;
+use torch_errors::report_error;
+use torch_server_client::auth::AuthEvent;
+use torchui::windowing::WindowManager;
+use torchui::{AppContext, ModelContext, SingletonEntity};
 
 use super::{
     MCPServerState, SpawnedServerInfo, TemplatableMCPServerInfo, TemplatableMCPServerManager,
@@ -185,7 +185,7 @@ impl TemplatableMCPServerManager {
             anyhow::bail!("No spawned server found for uuid={server_uuid}");
         };
 
-        warpui::r#async::block_on(server_info.oauth_result_tx.send(result)).map_err(|_| {
+        torchui::r#async::block_on(server_info.oauth_result_tx.send(result)).map_err(|_| {
             anyhow::anyhow!(
                 "Failed to send OAuth result to server {server_uuid} - receiver dropped"
             )
@@ -263,7 +263,7 @@ impl TemplatableMCPServerManager {
             report_error!(
                 "No template UUID found for installation UUID",
                 extra: { "installation_uuid" => %installation_uuid },
-                warp_errors::ReportErrorLogMode::OncePerRun
+                torch_errors::ReportErrorLogMode::OncePerRun
             );
         }
     }

@@ -1,4 +1,4 @@
-use warp_graphql::queries::execution_config::{
+use torch_graphql::queries::execution_config::{
     ExecutionRepositoryRef, SessionSharingAccessLevel, SessionSharingSubjectType,
 };
 

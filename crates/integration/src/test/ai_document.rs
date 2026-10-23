@@ -1,13 +1,13 @@
 use std::time::Duration;
 
-use warp::integration_testing::ai_document::{
+use torch::integration_testing::ai_document::{
     ai_document_overflow_button_position_id, assert_ai_document_overflow_button_position_exists,
     assert_viewed_ai_document_has_code_and_mermaid_controls, create_and_open_ai_document,
     restore_and_open_ai_document, select_initial_ai_document_version,
 };
-use warp::integration_testing::clipboard::assert_clipboard_contains_string;
-use warp::integration_testing::step::new_step_with_default_assertions;
-use warp::integration_testing::terminal::wait_until_bootstrapped_single_pane_for_tab;
+use torch::integration_testing::clipboard::assert_clipboard_contains_string;
+use torch::integration_testing::step::new_step_with_default_assertions;
+use torch::integration_testing::terminal::wait_until_bootstrapped_single_pane_for_tab;
 
 use super::new_builder;
 use crate::Builder;

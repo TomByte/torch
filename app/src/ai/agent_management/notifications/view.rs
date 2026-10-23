@@ -1,19 +1,19 @@
-use warp_core::ui::theme::color::internal_colors;
-use warp_errors::report_error;
-use warpui::elements::new_scrollable::{ScrollableAppearance, SingleAxisConfig};
-use warpui::elements::{
+use torch_core::ui::theme::color::internal_colors;
+use torch_errors::report_error;
+use torchui::elements::new_scrollable::{ScrollableAppearance, SingleAxisConfig};
+use torchui::elements::{
     Border, ChildView, ClippedScrollStateHandle, ConstrainedBox, Container, CornerRadius,
     CrossAxisAlignment, Dismiss, DispatchEventResult, Element, Empty, EventHandler,
     Fill as ElementFill, Flex, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle,
     NewScrollable, Padding, ParentElement, Radius, SavePosition, ScrollTarget,
     ScrollToPositionMode, ScrollbarWidth, Shrinkable,
 };
-use warpui::fonts::Weight;
-use warpui::keymap::FixedBinding;
-use warpui::keymap::macros::id;
-use warpui::platform::Cursor;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
+use torchui::fonts::Weight;
+use torchui::keymap::FixedBinding;
+use torchui::keymap::macros::id;
+use torchui::platform::Cursor;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
 
 use crate::ai::agent_management::notifications::item::NotificationFilter;
 use crate::ai::agent_management::notifications::item_rendering::{
@@ -57,7 +57,7 @@ impl Entity for NotificationMailboxView {
 
 #[derive(Debug, Clone)]
 pub enum NotificationMailboxViewEvent {
-    NavigateToTerminal { terminal_view_id: warpui::EntityId },
+    NavigateToTerminal { terminal_view_id: torchui::EntityId },
     Dismissed,
 }
 

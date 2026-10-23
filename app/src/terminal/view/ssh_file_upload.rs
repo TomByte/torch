@@ -5,16 +5,16 @@ use itertools::Itertools;
 use markdown_parser::{
     FormattedText, FormattedTextFragment, FormattedTextHeader, FormattedTextLine,
 };
-use warp_core::command::ExitCode;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::color::blend::Blend as _;
-use warpui::elements::{
+use torch_core::command::ExitCode;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::color::blend::Blend as _;
+use torchui::elements::{
     Border, Container, CornerRadius, CrossAxisAlignment, Flex, FormattedTextElement,
     HighlightedHyperlink, MainAxisSize, MouseStateHandle, ParentElement, Radius,
 };
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::UiComponent as _;
-use warpui::{Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::UiComponent as _;
+use torchui::{Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
 
 use crate::terminal::ssh::util::InteractiveSshCommand;
 use crate::ui_components::buttons::icon_button;
@@ -91,7 +91,7 @@ impl TypedActionView for FileUpload {
         &mut self,
         _action: &Self::Action,
         _ctx: &mut ViewContext<Self>,
-    ) -> warpui::accessibility::ActionAccessibilityContent {
+    ) -> torchui::accessibility::ActionAccessibilityContent {
         Default::default()
     }
 }
@@ -101,7 +101,7 @@ impl View for FileUpload {
         "SSH File Upload"
     }
 
-    fn render(&self, app: &warpui::AppContext) -> Box<dyn warpui::Element> {
+    fn render(&self, app: &torchui::AppContext) -> Box<dyn torchui::Element> {
         let appearance = Appearance::as_ref(app);
         self.render_file_upload_element(&self.uploads, appearance)
     }

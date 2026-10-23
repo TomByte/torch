@@ -1,6 +1,6 @@
-use warpui::integration::TestStep;
-use warpui::windowing::WindowManager;
-use warpui::{SingletonEntity, WindowId, async_assert};
+use torchui::integration::TestStep;
+use torchui::windowing::WindowManager;
+use torchui::{SingletonEntity, WindowId, async_assert};
 
 use super::open_workflow_count;
 use crate::cloud_object::model::persistence::CloudModel;

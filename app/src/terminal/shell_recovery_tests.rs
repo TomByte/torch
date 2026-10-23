@@ -1,4 +1,4 @@
-use warp_terminal::event::ObservedExitStatus;
+use torch_terminal::event::ObservedExitStatus;
 
 use super::recovered_command_output;
 

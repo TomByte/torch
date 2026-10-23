@@ -1,6 +1,6 @@
 use ai::LLMId;
-use warp_core::send_telemetry_from_ctx;
-use warpui_core::{Entity, ModelContext};
+use torch_core::send_telemetry_from_ctx;
+use torchui_core::{Entity, ModelContext};
 
 use crate::OnboardingIntention;
 use crate::slides::{AgentAutonomy, AgentDevelopmentSettings, OfferVariant, OnboardingModelInfo};
@@ -715,7 +715,7 @@ impl OnboardingStateModel {
         default_model_id: LLMId,
         ctx: &mut ModelContext<Self>,
     ) {
-        use warp_core::features::FeatureFlag;
+        use torch_core::features::FeatureFlag;
 
         // If the user is past the agent slide, don't change the agent model from underneath them.
         // ThemePicker comes after the agent slides, so it must also be guarded.
@@ -768,7 +768,7 @@ impl OnboardingStateModel {
     }
 
     fn send_completion_telemetry(&self, ctx: &mut ModelContext<Self>) {
-        if warp_core::features::FeatureFlag::AccountFirstOnboarding.is_enabled() {
+        if torch_core::features::FeatureFlag::AccountFirstOnboarding.is_enabled() {
             send_telemetry_from_ctx!(
                 OnboardingEvent::OnboardingSlidesCompleted {
                     intention: "account_first".to_string(),
@@ -804,7 +804,7 @@ impl OnboardingStateModel {
     }
 
     pub(crate) fn complete(&mut self, ctx: &mut ModelContext<Self>) {
-        if warp_core::features::FeatureFlag::AccountFirstOnboarding.is_enabled() {
+        if torch_core::features::FeatureFlag::AccountFirstOnboarding.is_enabled() {
             self.send_account_first_action("next", ctx);
         }
         self.send_completion_telemetry(ctx);
@@ -813,7 +813,7 @@ impl OnboardingStateModel {
     }
 
     pub(crate) fn back(&mut self, ctx: &mut ModelContext<Self>) {
-        use warp_core::features::FeatureFlag;
+        use torch_core::features::FeatureFlag;
         let account_first = FeatureFlag::AccountFirstOnboarding.is_enabled();
         let agent_intention = matches!(self.intention, OnboardingIntention::AgentDrivenDevelopment);
 
@@ -862,7 +862,7 @@ impl OnboardingStateModel {
     }
 
     pub(crate) fn next(&mut self, ctx: &mut ModelContext<Self>) {
-        use warp_core::features::FeatureFlag;
+        use torch_core::features::FeatureFlag;
         let account_first = FeatureFlag::AccountFirstOnboarding.is_enabled();
         let is_last_step = matches!(
             self.step,
@@ -926,7 +926,7 @@ impl OnboardingStateModel {
 
         self.step = step;
 
-        let account_first = warp_core::features::FeatureFlag::AccountFirstOnboarding.is_enabled();
+        let account_first = torch_core::features::FeatureFlag::AccountFirstOnboarding.is_enabled();
         let slide_name = match step {
             OnboardingStep::Intro => {
                 if account_first {
@@ -961,7 +961,7 @@ impl OnboardingStateModel {
     /// The `(step_index, step_count)` shown by the bottom-nav progress dots for the
     /// current step, intention, and flow variant.
     pub(crate) fn progress(&self) -> (usize, usize) {
-        use warp_core::features::FeatureFlag;
+        use torch_core::features::FeatureFlag;
         if FeatureFlag::AccountFirstOnboarding.is_enabled() {
             return match self.step {
                 OnboardingStep::Intro

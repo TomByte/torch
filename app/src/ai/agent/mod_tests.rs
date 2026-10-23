@@ -5,7 +5,7 @@ use std::sync::Arc;
 use anyhow::anyhow;
 use chrono::{Local, TimeZone, Utc};
 use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
-use warp_editor::render::model::LineCount;
+use torch_editor::render::model::LineCount;
 use warp_multi_agent_api::{FileContent, FileContentLineRange};
 
 use crate::ai::agent::{

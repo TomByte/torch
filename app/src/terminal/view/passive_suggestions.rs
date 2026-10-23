@@ -1,4 +1,4 @@
-use warpui::ViewContext;
+use torchui::ViewContext;
 
 use super::TerminalView;
 use crate::server::telemetry::InteractionSource;

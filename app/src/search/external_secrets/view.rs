@@ -3,14 +3,14 @@ use std::ops::Range;
 
 use itertools::Itertools;
 use lazy_static::lazy_static;
-use warpui::elements::{
+use torchui::elements::{
     Align, ConstrainedBox, Container, CornerRadius, Dismiss, Empty, Fill, Flex, ParentElement,
     Radius, SavePosition, ScrollStateHandle, Scrollable, ScrollableElement, Shrinkable,
     UniformList, UniformListState,
 };
-use warpui::presenter::ChildView;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::presenter::ChildView;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, FocusContext, ModelHandle, SingletonEntity, TypedActionView, View,
     ViewContext, ViewHandle, WeakViewHandle,
 };
@@ -364,7 +364,7 @@ impl TypedActionView for ExternalSecretsMenu {
 
 pub mod styles {
     use pathfinder_color::ColorU;
-    use warpui::elements::{Border, DropShadow, ScrollbarWidth};
+    use torchui::elements::{Border, DropShadow, ScrollbarWidth};
 
     use crate::appearance::Appearance;
     use crate::themes::theme::Fill;

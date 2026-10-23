@@ -1,10 +1,10 @@
 use pathfinder_color::ColorU;
-use warpui::elements::{
+use torchui::elements::{
     ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Flex, Hoverable, Icon,
     MouseStateHandle, ParentElement, Radius, Text,
 };
-use warpui::platform::Cursor;
-use warpui::{Element, EventContext};
+use torchui::platform::Cursor;
+use torchui::{Element, EventContext};
 
 use crate::appearance::Appearance;
 use crate::drive::DriveObjectType;
@@ -148,7 +148,7 @@ impl FilterChipRenderer for QueryFilter {
 }
 
 mod styles {
-    use warpui::elements::{Border, MouseState};
+    use torchui::elements::{Border, MouseState};
 
     use crate::themes::theme::{Blend, Fill, WarpTheme};
 

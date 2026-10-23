@@ -1,6 +1,6 @@
-use warp_core::context_flag::ContextFlag;
-use warp_core::features::FeatureFlag;
-use warpui::ViewContext;
+use torch_core::context_flag::ContextFlag;
+use torch_core::features::FeatureFlag;
+use torchui::ViewContext;
 
 use super::{
     ContentItem, ContentSectionData, FeatureItem, FeatureSection, FeatureSectionData,

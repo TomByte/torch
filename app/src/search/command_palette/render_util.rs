@@ -1,7 +1,7 @@
 use pathfinder_color::ColorU;
-use warp_core::ui::theme::Fill;
-use warpui::Element;
-use warpui::elements::{Align, ConstrainedBox, Container, Empty};
+use torch_core::ui::theme::Fill;
+use torchui::Element;
+use torchui::elements::{Align, ConstrainedBox, Container, Empty};
 
 use crate::appearance::Appearance;
 use crate::search::result_renderer::ItemHighlightState;

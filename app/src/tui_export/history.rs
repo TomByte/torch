@@ -1,4 +1,4 @@
-use warpui::{AppContext, EntityId, SingletonEntity};
+use torchui::{AppContext, EntityId, SingletonEntity};
 
 use crate::input_suggestions::HistoryInputSuggestion;
 use crate::terminal::history::{History, LinkedWorkflowData, UpArrowHistoryConfig};

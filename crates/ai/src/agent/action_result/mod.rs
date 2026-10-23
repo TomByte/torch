@@ -7,11 +7,11 @@ use std::time::{Duration, SystemTime};
 use chrono::{DateTime, Local};
 use itertools::Itertools as _;
 use serde::{Deserialize, Serialize};
-use warp_core::command::ExitCode;
+use torch_core::command::ExitCode;
 use warp_multi_agent_api::StoredScreenshotRef;
 use warp_multi_agent_api::apply_file_diffs_result::success::UpdatedFileContent;
-use warp_terminal::event::ObservedExitStatus;
-use warp_terminal::model::BlockId;
+use torch_terminal::event::ObservedExitStatus;
+use torch_terminal::model::BlockId;
 
 use crate::agent::FileLocations;
 use crate::document::{AIDocumentId, AIDocumentVersion};

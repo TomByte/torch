@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
 use cloud_object_client::MockObjectClient;
-use warp_core::ui::appearance::Appearance;
-use warpui::elements::Empty;
-use warpui::platform::WindowStyle;
-use warpui::{App, AppContext, Element, Entity, TypedActionView, View, ViewContext};
+use torch_core::ui::appearance::Appearance;
+use torchui::elements::Empty;
+use torchui::platform::WindowStyle;
+use torchui::{App, AppContext, Element, Entity, TypedActionView, View, ViewContext};
 
 use super::{Event, OpenOverlay};
 use crate::ai::blocklist::BlocklistAIHistoryModel;

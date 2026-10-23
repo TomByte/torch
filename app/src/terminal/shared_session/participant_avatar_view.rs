@@ -3,16 +3,16 @@ use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use session_sharing_protocol::common::{ParticipantId, ParticipantInfo, Role};
 use session_sharing_protocol::sharer::RoleUpdateReason;
-use warpui::accessibility::AccessibilityContent;
-use warpui::r#async::{SpawnedFutureHandle, Timer};
-use warpui::elements::{
+use torchui::accessibility::AccessibilityContent;
+use torchui::r#async::{SpawnedFutureHandle, Timer};
+use torchui::elements::{
     Border, ChildAnchor, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     Fill, Flex, Hoverable, MainAxisAlignment, MouseStateHandle, OffsetPositioning, ParentAnchor,
     ParentElement, ParentOffsetBounds, Radius, Stack,
 };
-use warpui::platform::Cursor;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::platform::Cursor;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };
@@ -219,7 +219,7 @@ impl ParticipantAvatarView {
         .with_uniform_padding(2.)
         .with_background(background)
         .with_corner_radius(CornerRadius::with_all(
-            warpui::elements::Radius::Percentage(50.),
+            torchui::elements::Radius::Percentage(50.),
         ))
         .finish()
     }

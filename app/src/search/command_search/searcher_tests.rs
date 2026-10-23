@@ -5,11 +5,11 @@ use std::time::Duration;
 use chrono::Local;
 use itertools::Itertools;
 use ordered_float::OrderedFloat;
-use warp_core::command::ExitCode;
-use warp_core::features::FeatureFlag;
-use warpui::r#async::Timer;
-use warpui::elements::Empty;
-use warpui::{App, AppContext, Element, SingletonEntity};
+use torch_core::command::ExitCode;
+use torch_core::features::FeatureFlag;
+use torchui::r#async::Timer;
+use torchui::elements::Empty;
+use torchui::{App, AppContext, Element, SingletonEntity};
 
 use super::*;
 use crate::ai::blocklist::AIQueryHistoryOutputStatus;
@@ -919,7 +919,7 @@ fn test_history_search_disabled_flag_scores_raw_skim_with_no_priors() {
 
         let mut old_entry = HistoryEntry::command_only(command.clone());
         old_entry.start_ts = Some(Local::now() - chrono::Duration::days(365));
-        old_entry.exit_code = Some(warp_core::command::ExitCode::from(1));
+        old_entry.exit_code = Some(torch_core::command::ExitCode::from(1));
 
         let mixer = app.add_model(|_| CommandSearchMixer::new());
         mixer.update(&mut app, |mixer, ctx| {

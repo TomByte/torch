@@ -4,8 +4,8 @@ use std::sync::mpsc::{Receiver, sync_channel};
 
 use cloud_object_client::{MockObjectClient, ObjectClient};
 use settings::manager::SettingsManager;
-use warp_core::execution_mode::{AppExecutionMode, ExecutionMode};
-use warpui::{App, ModelHandle, SingletonEntity};
+use torch_core::execution_mode::{AppExecutionMode, ExecutionMode};
+use torchui::{App, ModelHandle, SingletonEntity};
 
 use super::update_manager::UpdateManager;
 use crate::auth::AuthStateProvider;

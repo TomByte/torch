@@ -6,12 +6,12 @@ use std::time::Duration;
 use chrono::{DateTime, Local, TimeDelta};
 use futures::channel::oneshot;
 use uuid::Uuid;
-use warp_errors::report_error;
+use torch_errors::report_error;
 #[cfg(not(target_family = "wasm"))]
 use warp_multi_agent_api as maa_api;
 use warp_multi_agent_api::response_event;
-use warpui::r#async::Timer;
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torchui::r#async::Timer;
+use torchui::{Entity, ModelContext, SingletonEntity};
 
 use crate::ai::agent::api::{self, ConvertToAPITypeError, generate_multi_agent_output};
 use crate::ai::agent::conversation::AIConversationId;
@@ -580,7 +580,7 @@ impl ResponseStream {
         #[cfg(not(target_family = "wasm"))]
         {
             use ::ai::api_keys::{ApiKeyManager, GeapRefreshOutcome, GrokRefreshOutcome};
-            use warpui::r#async::FutureExt as _;
+            use torchui::r#async::FutureExt as _;
 
             use crate::ai::llms::{LLMModelHost, LLMPreferences, LLMProvider};
             use crate::workspaces::user_workspaces::UserWorkspaces;

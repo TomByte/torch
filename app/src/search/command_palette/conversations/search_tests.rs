@@ -1,4 +1,4 @@
-use warpui::{EntityId, WindowId};
+use torchui::{EntityId, WindowId};
 
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::conversation_navigation::ConversationNavigationData;

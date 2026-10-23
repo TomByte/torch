@@ -1,6 +1,6 @@
-use warpui_core::elements::{CacheOption, Image};
-use warpui_core::geometry::vector::vec2f;
-use warpui_core::{Element, SizeConstraint};
+use torchui_core::elements::{CacheOption, Image};
+use torchui_core::geometry::vector::vec2f;
+use torchui_core::{Element, SizeConstraint};
 
 use super::{RenderContext, RenderableBlock};
 use crate::extract_block;
@@ -33,8 +33,8 @@ impl RenderableBlock for RenderableImage {
     fn layout(
         &mut self,
         model: &RenderState,
-        ctx: &mut warpui_core::LayoutContext,
-        app: &warpui_core::AppContext,
+        ctx: &mut torchui_core::LayoutContext,
+        app: &torchui_core::AppContext,
     ) {
         let content = model.content();
         let (asset_source, config) = extract_block!(
@@ -58,7 +58,7 @@ impl RenderableBlock for RenderableImage {
         &mut self,
         model: &RenderState,
         ctx: &mut RenderContext,
-        app: &warpui_core::AppContext,
+        app: &torchui_core::AppContext,
     ) {
         let content = model.content();
         let positioned_image = extract_block!(
@@ -82,7 +82,7 @@ impl RenderableBlock for RenderableImage {
         }
 
         if selected {
-            let rect_bounds = warpui_core::geometry::rect::RectF::new(screen_position, size);
+            let rect_bounds = torchui_core::geometry::rect::RectF::new(screen_position, size);
             ctx.paint
                 .scene
                 .draw_rect_with_hit_recording(rect_bounds)

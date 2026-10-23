@@ -7,8 +7,8 @@ use std::sync::Arc;
 
 use anyhow::{Result, anyhow};
 use itertools::Itertools;
-use warp_core::sync_queue::{IsTransientError, SyncQueue, SyncQueueTaskTrait};
-use warp_errors::report_error;
+use torch_core::sync_queue::{IsTransientError, SyncQueue, SyncQueueTaskTrait};
+use torch_errors::report_error;
 
 use super::changed_files::ChangedFiles;
 use super::codebase_index::{SyncProgress, build_fragments_from_metadata};

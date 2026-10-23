@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
-use warp_core::channel::ChannelState;
-use warpui::SingletonEntity;
+use torch_core::channel::ChannelState;
+use torchui::SingletonEntity;
 
 use super::editor::AgentToolbarEditorMode;
 use crate::context_chips::{ContextChipKind, agent_footer_available_chips, available_chips};
@@ -184,7 +184,7 @@ impl AgentToolbarItemKind {
     /// Whether this item should be included in the toolbar given the current app state.
     /// Feature-flag checks live in `all_available()` / `default_*()`. This method
     /// handles runtime conditions that depend on user settings or workspace state.
-    pub fn is_available(&self, app: &warpui::AppContext) -> bool {
+    pub fn is_available(&self, app: &torchui::AppContext) -> bool {
         match self {
             Self::HandoffToCloud => AISettings::as_ref(app).is_cloud_handoff_enabled(app),
             // Drops the item from the toolbar editor for tiers charged in credits. The render

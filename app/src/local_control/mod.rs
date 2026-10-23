@@ -93,8 +93,8 @@ use permissions::ensure_feature_enabled;
 use permissions::{ensure_action_allowed, ensure_protocol_version};
 #[cfg(unix)]
 use tokio::io::{AsyncReadExt as _, AsyncWriteExt as _};
-use warp_core::channel::ChannelState;
-use warpui::{Entity, ModelContext, ModelSpawner, SingletonEntity};
+use torch_core::channel::ChannelState;
+use torchui::{Entity, ModelContext, ModelSpawner, SingletonEntity};
 
 #[cfg(any(unix, test))]
 const MAX_ACTIVE_CREDENTIALS: usize = 128;

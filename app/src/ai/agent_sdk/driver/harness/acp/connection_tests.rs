@@ -9,7 +9,7 @@ use futures::io::{AsyncBufReadExt as _, AsyncRead, AsyncWrite, AsyncWriteExt as 
 use futures::{FutureExt as _, StreamExt as _, future, join};
 use parking_lot::Mutex;
 use serde_json::{Value, json};
-use warpui::r#async::executor::Background;
+use torchui::r#async::executor::Background;
 
 use super::{AcpConnection, AgentRequestHandler, InboundNotification, RpcError};
 

@@ -19,127 +19,127 @@ use itertools::Itertools;
 #[cfg(test)]
 use mockall::automock;
 use prost::Message;
-use warp_core::channel::ChannelState;
-use warp_core::features::FeatureFlag;
-use warp_errors::report_error;
-use warp_graphql::ai::{AgentTaskState, PlatformErrorCode};
-use warp_graphql::client::Operation;
-use warp_graphql::error::{UserFacingError, UserFacingErrorInterface};
-use warp_graphql::mutations::confirm_file_artifact_upload::{
+use torch_core::channel::ChannelState;
+use torch_core::features::FeatureFlag;
+use torch_errors::report_error;
+use torch_graphql::ai::{AgentTaskState, PlatformErrorCode};
+use torch_graphql::client::Operation;
+use torch_graphql::error::{UserFacingError, UserFacingErrorInterface};
+use torch_graphql::mutations::confirm_file_artifact_upload::{
     ConfirmFileArtifactUpload, ConfirmFileArtifactUploadInput, ConfirmFileArtifactUploadResult,
     ConfirmFileArtifactUploadVariables,
 };
-use warp_graphql::mutations::create_agent_task::{
+use torch_graphql::mutations::create_agent_task::{
     CreateAgentTask, CreateAgentTaskInput, CreateAgentTaskResult, CreateAgentTaskVariables,
 };
-use warp_graphql::mutations::create_file_artifact_upload_target::{
+use torch_graphql::mutations::create_file_artifact_upload_target::{
     CreateFileArtifactUploadTarget, CreateFileArtifactUploadTargetInput,
     CreateFileArtifactUploadTargetResult, CreateFileArtifactUploadTargetVariables,
 };
-use warp_graphql::mutations::delete_ai_conversation::{
+use torch_graphql::mutations::delete_ai_conversation::{
     DeleteAIConversation, DeleteAIConversationVariables, DeleteConversationInput,
     DeleteConversationResult,
 };
-use warp_graphql::mutations::disconnect_chatgpt::{
+use torch_graphql::mutations::disconnect_chatgpt::{
     DisconnectChatGPT, DisconnectChatGPTResult, DisconnectChatGPTVariables,
 };
-use warp_graphql::mutations::generate_code_embeddings::{
+use torch_graphql::mutations::generate_code_embeddings::{
     GenerateCodeEmbeddings, GenerateCodeEmbeddingsInput, GenerateCodeEmbeddingsResult,
     GenerateCodeEmbeddingsVariables,
 };
-use warp_graphql::mutations::generate_commands::{
+use torch_graphql::mutations::generate_commands::{
     GenerateCommands, GenerateCommandsInput, GenerateCommandsResult, GenerateCommandsStatus,
     GenerateCommandsVariables,
 };
-use warp_graphql::mutations::generate_dialogue::{
+use torch_graphql::mutations::generate_dialogue::{
     GenerateDialogue, GenerateDialogueInput,
     GenerateDialogueResult as GenerateDialogueResultGraphql, GenerateDialogueStatus,
     GenerateDialogueVariables, TranscriptPart as TranscriptPartGraphql,
 };
-use warp_graphql::mutations::generate_metadata_for_command::{
+use torch_graphql::mutations::generate_metadata_for_command::{
     GenerateMetadataForCommand, GenerateMetadataForCommandInput, GenerateMetadataForCommandResult,
     GenerateMetadataForCommandStatus, GenerateMetadataForCommandVariables,
 };
-use warp_graphql::mutations::populate_merkle_tree_cache::{
+use torch_graphql::mutations::populate_merkle_tree_cache::{
     PopulateMerkleTreeCache, PopulateMerkleTreeCacheResult, PopulateMerkleTreeCacheVariables,
 };
-use warp_graphql::mutations::request_bonus::{
+use torch_graphql::mutations::request_bonus::{
     ProvideNegativeFeedbackResponseForAiConversation,
     ProvideNegativeFeedbackResponseForAiConversationInput,
     ProvideNegativeFeedbackResponseForAiConversationVariables, RequestsRefundedResult,
 };
-use warp_graphql::mutations::start_chatgpt_link::{
+use torch_graphql::mutations::start_chatgpt_link::{
     StartChatGPTLink, StartChatGPTLinkResult, StartChatGPTLinkVariables,
 };
-use warp_graphql::mutations::update_agent_task::{
+use torch_graphql::mutations::update_agent_task::{
     AgentTaskStatusMessageInput, UpdateAgentTask, UpdateAgentTaskInput, UpdateAgentTaskResult,
     UpdateAgentTaskVariables,
 };
-use warp_graphql::mutations::update_merkle_tree::{
+use torch_graphql::mutations::update_merkle_tree::{
     MerkleTreeNode, UpdateMerkleTree, UpdateMerkleTreeInput, UpdateMerkleTreeResult,
     UpdateMerkleTreeVariables,
 };
-use warp_graphql::platform_error::PlatformErrorInfo;
-use warp_graphql::queries::codebase_context_config::{
+use torch_graphql::platform_error::PlatformErrorInfo;
+use torch_graphql::queries::codebase_context_config::{
     CodebaseContextConfigQuery, CodebaseContextConfigResult, CodebaseContextConfigVariables,
 };
 #[cfg(not(target_family = "wasm"))]
-use warp_graphql::queries::execution_config::{
+use torch_graphql::queries::execution_config::{
     BootstrapTaskResult, ExecutionBootstrap, ExecutionBootstrapVariables, ExecutionConfiguration,
 };
-use warp_graphql::queries::free_available_models::{
+use torch_graphql::queries::free_available_models::{
     FreeAvailableModels, FreeAvailableModelsInput, FreeAvailableModelsResult,
     FreeAvailableModelsVariables,
 };
 #[cfg(not(feature = "agent_mode_evals"))]
-use warp_graphql::queries::get_ai_credit_availability::{
+use torch_graphql::queries::get_ai_credit_availability::{
     GetAICreditAvailability, GetAICreditAvailabilityVariables,
 };
-use warp_graphql::queries::get_available_harnesses::{
+use torch_graphql::queries::get_available_harnesses::{
     GetAvailableHarnesses, GetAvailableHarnessesVariables,
 };
-use warp_graphql::queries::get_chatgpt_connection::{
+use torch_graphql::queries::get_chatgpt_connection::{
     GetChatGPTConnection, GetChatGPTConnectionVariables,
 };
-use warp_graphql::queries::get_conversation_usage::{
+use torch_graphql::queries::get_conversation_usage::{
     ConversationUsage, GetConversationUsage, GetConversationUsageVariables, UserResult,
 };
-use warp_graphql::queries::get_feature_model_choices::{
+use torch_graphql::queries::get_feature_model_choices::{
     GetFeatureModelChoices, GetFeatureModelChoicesVariables,
 };
-use warp_graphql::queries::get_relevant_fragments::{
+use torch_graphql::queries::get_relevant_fragments::{
     GetRelevantFragmentsQuery, GetRelevantFragmentsResult, GetRelevantFragmentsVariables,
 };
 #[cfg(not(feature = "agent_mode_evals"))]
-use warp_graphql::queries::get_request_limit_info::{
+use torch_graphql::queries::get_request_limit_info::{
     GetRequestLimitInfo, GetRequestLimitInfoVariables,
 };
-use warp_graphql::queries::get_scheduled_agent_history::{
+use torch_graphql::queries::get_scheduled_agent_history::{
     GetScheduledAgentHistory, GetScheduledAgentHistoryVariables, ScheduledAgentHistory,
     ScheduledAgentHistoryInput, ScheduledAgentHistoryResult,
 };
-use warp_graphql::queries::rerank_fragments::{
+use torch_graphql::queries::rerank_fragments::{
     RerankFragments, RerankFragmentsResult, RerankFragmentsVariables,
 };
-use warp_graphql::queries::setup_failure_debug_authorization::{
+use torch_graphql::queries::setup_failure_debug_authorization::{
     SetupFailureDebugAuthorization, SetupFailureDebugAuthorizationInput,
     SetupFailureDebugAuthorizationResult, SetupFailureDebugAuthorizationVariables,
 };
-use warp_graphql::queries::sync_merkle_tree::{
+use torch_graphql::queries::sync_merkle_tree::{
     SyncMerkleTree, SyncMerkleTreeInput, SyncMerkleTreeResult, SyncMerkleTreeVariables,
 };
-use warp_graphql::queries::task_attachments::{
+use torch_graphql::queries::task_attachments::{
     Task as TaskAttachmentsQuery, TaskInput, TaskResult, TaskVariables,
 };
-use warp_graphql::queries::task_git_credentials::{
+use torch_graphql::queries::task_git_credentials::{
     TaskGitCredentials, TaskGitCredentialsInput, TaskGitCredentialsLegacy,
     TaskGitCredentialsLegacyInput, TaskGitCredentialsLegacyResult,
     TaskGitCredentialsLegacyVariables, TaskGitCredentialsResult, TaskGitCredentialsVariables,
 };
 #[cfg(not(target_family = "wasm"))]
-use warp_graphql::queries::task_secrets::{ManagedSecretValue, TaskSecretsInput};
+use torch_graphql::queries::task_secrets::{ManagedSecretValue, TaskSecretsInput};
 use warp_multi_agent_api::ConversationData;
-use warp_server_client::PresignedDownloadResponse;
+use torch_server_client::PresignedDownloadResponse;
 
 use super::ServerApi;
 #[cfg(not(target_family = "wasm"))]
@@ -1308,7 +1308,7 @@ pub trait AIClient: 'static + Send + Sync {
         &self,
         days: Option<i32>,
         limit: Option<i32>,
-        last_updated_end_timestamp: Option<warp_graphql::scalars::Time>,
+        last_updated_end_timestamp: Option<torch_graphql::scalars::Time>,
     ) -> Result<Vec<ConversationUsage>, anyhow::Error>;
 
     async fn get_feature_model_choices(&self) -> Result<ModelsByFeature, anyhow::Error>;
@@ -1723,7 +1723,7 @@ pub trait AIClient: 'static + Send + Sync {
 }
 
 fn into_file_artifact_record(
-    artifact: warp_graphql::mutations::create_file_artifact_upload_target::FileArtifact,
+    artifact: torch_graphql::mutations::create_file_artifact_upload_target::FileArtifact,
 ) -> FileArtifactRecord {
     FileArtifactRecord {
         artifact_uid: artifact.artifact_uid.into_inner(),
@@ -1735,7 +1735,7 @@ fn into_file_artifact_record(
 }
 
 fn task_attachments_from_list(
-    attachments: Vec<warp_graphql::queries::task_attachments::TaskAttachment>,
+    attachments: Vec<torch_graphql::queries::task_attachments::TaskAttachment>,
 ) -> Vec<TaskAttachment> {
     attachments
         .into_iter()
@@ -1959,7 +1959,7 @@ impl ServerApi {
 }
 
 pub(super) fn into_git_credential(
-    credential: warp_graphql::queries::task_git_credentials::TaskGitCredential,
+    credential: torch_graphql::queries::task_git_credentials::TaskGitCredential,
 ) -> GitCredential {
     GitCredential {
         token: credential.token,
@@ -1987,9 +1987,9 @@ fn is_unknown_git_credential_schema_error(error: &TaskGitCredentialsError) -> bo
 /// dropped, because a server-provided field we can't represent will almost certainly
 /// cause the upload to fail.
 fn convert_upload_field(
-    field: warp_graphql::mutations::create_file_artifact_upload_target::FileArtifactUploadField,
+    field: torch_graphql::mutations::create_file_artifact_upload_target::FileArtifactUploadField,
 ) -> anyhow::Result<UploadField> {
-    use warp_graphql::mutations::create_file_artifact_upload_target::FileArtifactUploadFieldValue;
+    use torch_graphql::mutations::create_file_artifact_upload_target::FileArtifactUploadFieldValue;
 
     let value = match field.value {
         FileArtifactUploadFieldValue::StaticUploadFieldValue(v) => {
@@ -2160,7 +2160,7 @@ impl AIClient for ServerApi {
         let response = self.send_graphql_request(operation, None).await?;
 
         match response.user {
-            warp_graphql::queries::get_request_limit_info::UserResult::UserOutput(user_output) => {
+            torch_graphql::queries::get_request_limit_info::UserResult::UserOutput(user_output) => {
                 let request_limit_info = user_output.user.request_limit_info.into();
 
                 let workspace_and_team_bonus_grants = user_output
@@ -2196,10 +2196,10 @@ impl AIClient for ServerApi {
                     bonus_grants,
                 })
             }
-            warp_graphql::queries::get_request_limit_info::UserResult::UserFacingError(e) => {
+            torch_graphql::queries::get_request_limit_info::UserResult::UserFacingError(e) => {
                 Err(anyhow!(get_user_facing_error_message(e)))
             }
-            warp_graphql::queries::get_request_limit_info::UserResult::Unknown => {
+            torch_graphql::queries::get_request_limit_info::UserResult::Unknown => {
                 Err(anyhow!("failed to get request limit info"))
             }
         }
@@ -2221,20 +2221,20 @@ impl AIClient for ServerApi {
         let response = self.send_graphql_request(operation, None).await?;
 
         match response.user {
-            warp_graphql::queries::get_ai_credit_availability::UserResult::UserOutput(output) => {
+            torch_graphql::queries::get_ai_credit_availability::UserResult::UserOutput(output) => {
                 Ok(output.user.ai_credit_availability.into())
             }
-            warp_graphql::queries::get_ai_credit_availability::UserResult::UserFacingError(e) => {
+            torch_graphql::queries::get_ai_credit_availability::UserResult::UserFacingError(e) => {
                 Err(anyhow!(get_user_facing_error_message(e)))
             }
-            warp_graphql::queries::get_ai_credit_availability::UserResult::Unknown => {
+            torch_graphql::queries::get_ai_credit_availability::UserResult::Unknown => {
                 Err(anyhow!("failed to get AI credit availability"))
             }
         }
     }
 
     async fn get_chatgpt_connection(&self) -> Result<ChatGPTConnectionStatus, anyhow::Error> {
-        use warp_graphql::queries::get_chatgpt_connection::UserResult;
+        use torch_graphql::queries::get_chatgpt_connection::UserResult;
 
         let operation = GetChatGPTConnection::build(GetChatGPTConnectionVariables {
             request_context: get_request_context(),
@@ -2290,7 +2290,7 @@ impl AIClient for ServerApi {
         &self,
         days: Option<i32>,
         limit: Option<i32>,
-        last_updated_end_timestamp: Option<warp_graphql::scalars::Time>,
+        last_updated_end_timestamp: Option<torch_graphql::scalars::Time>,
     ) -> Result<Vec<ConversationUsage>, anyhow::Error> {
         let operation = GetConversationUsage::build(GetConversationUsageVariables {
             request_context: get_request_context(),
@@ -2313,9 +2313,9 @@ impl AIClient for ServerApi {
         let response = self.send_graphql_request(operation, None).await?;
 
         match response.user {
-            warp_graphql::queries::get_feature_model_choices::UserResult::UserOutput(
-                warp_graphql::queries::get_feature_model_choices::UserOutput {
-                    user: warp_graphql::queries::get_feature_model_choices::User { mut workspaces },
+            torch_graphql::queries::get_feature_model_choices::UserResult::UserOutput(
+                torch_graphql::queries::get_feature_model_choices::UserOutput {
+                    user: torch_graphql::queries::get_feature_model_choices::User { mut workspaces },
                 },
             ) if !workspaces.is_empty() => {
                 // This is safe (`remove()` can panic) because we ensure workspaces is non-empty
@@ -2334,7 +2334,7 @@ impl AIClient for ServerApi {
         let response = self.send_graphql_request(operation, None).await?;
 
         match response.user {
-            warp_graphql::queries::get_available_harnesses::UserResult::UserOutput(output) => {
+            torch_graphql::queries::get_available_harnesses::UserResult::UserOutput(output) => {
                 Ok(output
                     .user
                     .available_harnesses
@@ -2356,7 +2356,7 @@ impl AIClient for ServerApi {
                     })
                     .collect())
             }
-            warp_graphql::queries::get_available_harnesses::UserResult::Unknown => {
+            torch_graphql::queries::get_available_harnesses::UserResult::Unknown => {
                 Err(anyhow!("Failed to get available harnesses"))
             }
         }
@@ -2752,7 +2752,7 @@ impl AIClient for ServerApi {
         &self,
         server_conversation_token: ServerConversationToken,
     ) -> anyhow::Result<(ConversationData, ServerAIConversationMetadata), anyhow::Error> {
-        use warp_graphql::queries::list_ai_conversations::{
+        use torch_graphql::queries::list_ai_conversations::{
             ListAIConversations, ListAIConversationsInput, ListAIConversationsResult,
             ListAIConversationsVariables,
         };
@@ -2800,7 +2800,7 @@ impl AIClient for ServerApi {
         if !FeatureFlag::CloudConversations.is_enabled() {
             return Ok(vec![]);
         }
-        use warp_graphql::queries::list_ai_conversations::{
+        use torch_graphql::queries::list_ai_conversations::{
             ListAIConversationMetadata, ListAIConversationMetadataResult,
             ListAIConversationMetadataVariables, ListAIConversationsInput,
         };
@@ -2840,11 +2840,11 @@ impl AIClient for ServerApi {
         &self,
         server_conversation_token: ServerConversationToken,
     ) -> anyhow::Result<AIAgentConversationFormat, anyhow::Error> {
-        use warp_graphql::queries::get_ai_conversation_format::{
+        use torch_graphql::queries::get_ai_conversation_format::{
             GetAIConversationFormat, GetAIConversationFormatResult,
             GetAIConversationFormatVariables,
         };
-        use warp_graphql::queries::list_ai_conversations::ListAIConversationsInput;
+        use torch_graphql::queries::list_ai_conversations::ListAIConversationsInput;
 
         let conversation_id = server_conversation_token.as_str().to_string();
         let operation = GetAIConversationFormat::build(GetAIConversationFormatVariables {
@@ -3546,13 +3546,13 @@ impl AIClient for ServerApi {
     }
 }
 
-impl TryFrom<warp_graphql::queries::get_feature_model_choices::FeatureModelChoice>
+impl TryFrom<torch_graphql::queries::get_feature_model_choices::FeatureModelChoice>
     for ModelsByFeature
 {
     type Error = anyhow::Error;
 
     fn try_from(
-        value: warp_graphql::queries::get_feature_model_choices::FeatureModelChoice,
+        value: torch_graphql::queries::get_feature_model_choices::FeatureModelChoice,
     ) -> Result<Self, Self::Error> {
         Ok(Self {
             agent_mode: value.agent_mode.try_into()?,
@@ -3563,10 +3563,10 @@ impl TryFrom<warp_graphql::queries::get_feature_model_choices::FeatureModelChoic
     }
 }
 
-impl TryFrom<warp_graphql::workspace::FeatureModelChoice> for ModelsByFeature {
+impl TryFrom<torch_graphql::workspace::FeatureModelChoice> for ModelsByFeature {
     type Error = anyhow::Error;
 
-    fn try_from(value: warp_graphql::workspace::FeatureModelChoice) -> Result<Self, Self::Error> {
+    fn try_from(value: torch_graphql::workspace::FeatureModelChoice) -> Result<Self, Self::Error> {
         Ok(Self {
             agent_mode: value.agent_mode.try_into()?,
             coding: value.coding.try_into()?,
@@ -3576,11 +3576,11 @@ impl TryFrom<warp_graphql::workspace::FeatureModelChoice> for ModelsByFeature {
     }
 }
 
-impl TryFrom<warp_graphql::queries::get_feature_model_choices::AvailableLlms> for AvailableLLMs {
+impl TryFrom<torch_graphql::queries::get_feature_model_choices::AvailableLlms> for AvailableLLMs {
     type Error = anyhow::Error;
 
     fn try_from(
-        value: warp_graphql::queries::get_feature_model_choices::AvailableLlms,
+        value: torch_graphql::queries::get_feature_model_choices::AvailableLlms,
     ) -> Result<Self, Self::Error> {
         Self::new(
             value.default_id.into(),
@@ -3590,10 +3590,10 @@ impl TryFrom<warp_graphql::queries::get_feature_model_choices::AvailableLlms> fo
     }
 }
 
-impl TryFrom<warp_graphql::workspace::AvailableLlms> for AvailableLLMs {
+impl TryFrom<torch_graphql::workspace::AvailableLlms> for AvailableLLMs {
     type Error = anyhow::Error;
 
-    fn try_from(value: warp_graphql::workspace::AvailableLlms) -> Result<Self, Self::Error> {
+    fn try_from(value: torch_graphql::workspace::AvailableLlms) -> Result<Self, Self::Error> {
         Self::new(
             value.default_id.into(),
             value.choices.into_iter().map(LLMInfo::from),
@@ -3602,8 +3602,8 @@ impl TryFrom<warp_graphql::workspace::AvailableLlms> for AvailableLLMs {
     }
 }
 
-impl From<warp_graphql::queries::get_feature_model_choices::LlmInfo> for LLMInfo {
-    fn from(value: warp_graphql::queries::get_feature_model_choices::LlmInfo) -> Self {
+impl From<torch_graphql::queries::get_feature_model_choices::LlmInfo> for LLMInfo {
+    fn from(value: torch_graphql::queries::get_feature_model_choices::LlmInfo) -> Self {
         let host_configs = {
             let mut map = std::collections::HashMap::new();
             for config in value.host_configs {
@@ -3641,8 +3641,8 @@ impl From<warp_graphql::queries::get_feature_model_choices::LlmInfo> for LLMInfo
     }
 }
 
-impl From<warp_graphql::workspace::LlmInfo> for LLMInfo {
-    fn from(value: warp_graphql::workspace::LlmInfo) -> Self {
+impl From<torch_graphql::workspace::LlmInfo> for LLMInfo {
+    fn from(value: torch_graphql::workspace::LlmInfo) -> Self {
         let host_configs = {
             let mut map = std::collections::HashMap::new();
             for config in value.host_configs {
@@ -3680,10 +3680,10 @@ impl From<warp_graphql::workspace::LlmInfo> for LLMInfo {
     }
 }
 
-impl From<warp_graphql::queries::get_feature_model_choices::RoutingHostConfig>
+impl From<torch_graphql::queries::get_feature_model_choices::RoutingHostConfig>
     for RoutingHostConfig
 {
-    fn from(value: warp_graphql::queries::get_feature_model_choices::RoutingHostConfig) -> Self {
+    fn from(value: torch_graphql::queries::get_feature_model_choices::RoutingHostConfig) -> Self {
         Self {
             enabled: value.enabled,
             model_routing_host: value.model_routing_host.into(),
@@ -3691,8 +3691,8 @@ impl From<warp_graphql::queries::get_feature_model_choices::RoutingHostConfig>
     }
 }
 
-impl From<warp_graphql::workspace::RoutingHostConfig> for RoutingHostConfig {
-    fn from(value: warp_graphql::workspace::RoutingHostConfig) -> Self {
+impl From<torch_graphql::workspace::RoutingHostConfig> for RoutingHostConfig {
+    fn from(value: torch_graphql::workspace::RoutingHostConfig) -> Self {
         Self {
             enabled: value.enabled,
             model_routing_host: value.model_routing_host.into(),
@@ -3700,22 +3700,22 @@ impl From<warp_graphql::workspace::RoutingHostConfig> for RoutingHostConfig {
     }
 }
 
-impl From<warp_graphql::queries::get_feature_model_choices::LlmModelHost> for LLMModelHost {
-    fn from(value: warp_graphql::queries::get_feature_model_choices::LlmModelHost) -> Self {
+impl From<torch_graphql::queries::get_feature_model_choices::LlmModelHost> for LLMModelHost {
+    fn from(value: torch_graphql::queries::get_feature_model_choices::LlmModelHost) -> Self {
         match value {
-            warp_graphql::queries::get_feature_model_choices::LlmModelHost::DirectApi => {
+            torch_graphql::queries::get_feature_model_choices::LlmModelHost::DirectApi => {
                 LLMModelHost::DirectApi
             }
-            warp_graphql::queries::get_feature_model_choices::LlmModelHost::AwsBedrock => {
+            torch_graphql::queries::get_feature_model_choices::LlmModelHost::AwsBedrock => {
                 LLMModelHost::AwsBedrock
             }
-            warp_graphql::queries::get_feature_model_choices::LlmModelHost::CustomEndpoint => {
+            torch_graphql::queries::get_feature_model_choices::LlmModelHost::CustomEndpoint => {
                 LLMModelHost::CustomEndpoint
             }
-            warp_graphql::queries::get_feature_model_choices::LlmModelHost::GeminiEnterprise => {
+            torch_graphql::queries::get_feature_model_choices::LlmModelHost::GeminiEnterprise => {
                 LLMModelHost::GeminiEnterprise
             }
-            warp_graphql::queries::get_feature_model_choices::LlmModelHost::Other(value) => {
+            torch_graphql::queries::get_feature_model_choices::LlmModelHost::Other(value) => {
                 log::warn!(
                     "Unknown LlmModelHost '{value}'. Make sure to update client GraphQL types!"
                 );
@@ -3725,8 +3725,8 @@ impl From<warp_graphql::queries::get_feature_model_choices::LlmModelHost> for LL
     }
 }
 
-impl From<warp_graphql::queries::get_feature_model_choices::LlmSpec> for LLMSpec {
-    fn from(value: warp_graphql::queries::get_feature_model_choices::LlmSpec) -> Self {
+impl From<torch_graphql::queries::get_feature_model_choices::LlmSpec> for LLMSpec {
+    fn from(value: torch_graphql::queries::get_feature_model_choices::LlmSpec) -> Self {
         Self {
             cost: value.cost as f32,
             quality: value.quality as f32,
@@ -3735,8 +3735,8 @@ impl From<warp_graphql::queries::get_feature_model_choices::LlmSpec> for LLMSpec
     }
 }
 
-impl From<warp_graphql::workspace::LlmSpec> for LLMSpec {
-    fn from(value: warp_graphql::workspace::LlmSpec) -> Self {
+impl From<torch_graphql::workspace::LlmSpec> for LLMSpec {
+    fn from(value: torch_graphql::workspace::LlmSpec) -> Self {
         Self {
             cost: value.cost as f32,
             quality: value.quality as f32,
@@ -3745,8 +3745,8 @@ impl From<warp_graphql::workspace::LlmSpec> for LLMSpec {
     }
 }
 
-impl From<warp_graphql::queries::get_feature_model_choices::LlmUsageMetadata> for LLMUsageMetadata {
-    fn from(value: warp_graphql::queries::get_feature_model_choices::LlmUsageMetadata) -> Self {
+impl From<torch_graphql::queries::get_feature_model_choices::LlmUsageMetadata> for LLMUsageMetadata {
+    fn from(value: torch_graphql::queries::get_feature_model_choices::LlmUsageMetadata) -> Self {
         Self {
             request_multiplier: value.request_multiplier.max(1) as usize,
             credit_multiplier: value.credit_multiplier.map(|v| v as f32),
@@ -3754,8 +3754,8 @@ impl From<warp_graphql::queries::get_feature_model_choices::LlmUsageMetadata> fo
     }
 }
 
-impl From<warp_graphql::workspace::LlmUsageMetadata> for LLMUsageMetadata {
-    fn from(value: warp_graphql::workspace::LlmUsageMetadata) -> Self {
+impl From<torch_graphql::workspace::LlmUsageMetadata> for LLMUsageMetadata {
+    fn from(value: torch_graphql::workspace::LlmUsageMetadata) -> Self {
         Self {
             request_multiplier: value.request_multiplier.max(1) as usize,
             credit_multiplier: value.credit_multiplier.map(|v| v as f32),
@@ -3763,56 +3763,56 @@ impl From<warp_graphql::workspace::LlmUsageMetadata> for LLMUsageMetadata {
     }
 }
 
-impl From<warp_graphql::queries::get_feature_model_choices::DisableReason> for DisableReason {
-    fn from(value: warp_graphql::queries::get_feature_model_choices::DisableReason) -> Self {
+impl From<torch_graphql::queries::get_feature_model_choices::DisableReason> for DisableReason {
+    fn from(value: torch_graphql::queries::get_feature_model_choices::DisableReason) -> Self {
         match value {
-            warp_graphql::queries::get_feature_model_choices::DisableReason::AdminDisabled => {
+            torch_graphql::queries::get_feature_model_choices::DisableReason::AdminDisabled => {
                 DisableReason::AdminDisabled
             }
-            warp_graphql::queries::get_feature_model_choices::DisableReason::OutOfRequests => {
+            torch_graphql::queries::get_feature_model_choices::DisableReason::OutOfRequests => {
                 DisableReason::OutOfRequests
             }
-            warp_graphql::queries::get_feature_model_choices::DisableReason::ProviderOutage => {
+            torch_graphql::queries::get_feature_model_choices::DisableReason::ProviderOutage => {
                 DisableReason::ProviderOutage
             }
-            warp_graphql::queries::get_feature_model_choices::DisableReason::RequiresUpgrade => {
+            torch_graphql::queries::get_feature_model_choices::DisableReason::RequiresUpgrade => {
                 DisableReason::RequiresUpgrade
             }
-            warp_graphql::queries::get_feature_model_choices::DisableReason::Other(_) => {
+            torch_graphql::queries::get_feature_model_choices::DisableReason::Other(_) => {
                 DisableReason::Unavailable
             }
         }
     }
 }
 
-impl From<warp_graphql::workspace::DisableReason> for DisableReason {
-    fn from(value: warp_graphql::workspace::DisableReason) -> Self {
+impl From<torch_graphql::workspace::DisableReason> for DisableReason {
+    fn from(value: torch_graphql::workspace::DisableReason) -> Self {
         match value {
-            warp_graphql::workspace::DisableReason::AdminDisabled => DisableReason::AdminDisabled,
-            warp_graphql::workspace::DisableReason::OutOfRequests => DisableReason::OutOfRequests,
-            warp_graphql::workspace::DisableReason::ProviderOutage => DisableReason::ProviderOutage,
-            warp_graphql::workspace::DisableReason::RequiresUpgrade => {
+            torch_graphql::workspace::DisableReason::AdminDisabled => DisableReason::AdminDisabled,
+            torch_graphql::workspace::DisableReason::OutOfRequests => DisableReason::OutOfRequests,
+            torch_graphql::workspace::DisableReason::ProviderOutage => DisableReason::ProviderOutage,
+            torch_graphql::workspace::DisableReason::RequiresUpgrade => {
                 DisableReason::RequiresUpgrade
             }
-            warp_graphql::workspace::DisableReason::Other(_) => DisableReason::Unavailable,
+            torch_graphql::workspace::DisableReason::Other(_) => DisableReason::Unavailable,
         }
     }
 }
 
 // Conversions for AIConversationMetadata from GraphQL types
 
-fn convert_harness(harness: warp_graphql::ai::AgentHarness) -> AIAgentHarness {
+fn convert_harness(harness: torch_graphql::ai::AgentHarness) -> AIAgentHarness {
     match harness {
-        warp_graphql::ai::AgentHarness::Oz => AIAgentHarness::Oz,
-        warp_graphql::ai::AgentHarness::ClaudeCode => AIAgentHarness::ClaudeCode,
-        warp_graphql::ai::AgentHarness::Gemini => AIAgentHarness::Gemini,
-        warp_graphql::ai::AgentHarness::Pi => AIAgentHarness::Pi,
-        warp_graphql::ai::AgentHarness::Codex => AIAgentHarness::Codex,
-        warp_graphql::ai::AgentHarness::Other(value) => {
+        torch_graphql::ai::AgentHarness::Oz => AIAgentHarness::Oz,
+        torch_graphql::ai::AgentHarness::ClaudeCode => AIAgentHarness::ClaudeCode,
+        torch_graphql::ai::AgentHarness::Gemini => AIAgentHarness::Gemini,
+        torch_graphql::ai::AgentHarness::Pi => AIAgentHarness::Pi,
+        torch_graphql::ai::AgentHarness::Codex => AIAgentHarness::Codex,
+        torch_graphql::ai::AgentHarness::Other(value) => {
             report_error!(
                 "Invalid AgentHarness; update client GraphQL types",
                 extra: { "harness" => %value },
-                warp_errors::ReportErrorLogMode::OncePerRun
+                torch_errors::ReportErrorLogMode::OncePerRun
             );
             AIAgentHarness::Unknown
         }
@@ -3820,15 +3820,15 @@ fn convert_harness(harness: warp_graphql::ai::AgentHarness) -> AIAgentHarness {
 }
 
 fn convert_block_snapshot_format(
-    format: warp_graphql::ai::SerializedBlockFormat,
+    format: torch_graphql::ai::SerializedBlockFormat,
 ) -> AIAgentSerializedBlockFormat {
     match format {
-        warp_graphql::ai::SerializedBlockFormat::JsonV1 => AIAgentSerializedBlockFormat::JsonV1,
+        torch_graphql::ai::SerializedBlockFormat::JsonV1 => AIAgentSerializedBlockFormat::JsonV1,
     }
 }
 
 fn convert_conversation_format(
-    format: warp_graphql::ai::AIConversationFormat,
+    format: torch_graphql::ai::AIConversationFormat,
 ) -> AIAgentConversationFormat {
     AIAgentConversationFormat {
         has_task_list: format.has_task_list,
@@ -3836,10 +3836,10 @@ fn convert_conversation_format(
     }
 }
 
-impl TryFrom<warp_graphql::ai::AIConversation> for ServerAIConversationMetadata {
+impl TryFrom<torch_graphql::ai::AIConversation> for ServerAIConversationMetadata {
     type Error = anyhow::Error;
 
-    fn try_from(value: warp_graphql::ai::AIConversation) -> Result<Self, Self::Error> {
+    fn try_from(value: torch_graphql::ai::AIConversation) -> Result<Self, Self::Error> {
         // Full conversion including per-model token usage and tool usage
         // stats, so restored conversations render the same usage details
         // (e.g. the credits-expansion "Models" rows) as live ones.
@@ -3876,13 +3876,13 @@ impl TryFrom<warp_graphql::ai::AIConversation> for ServerAIConversationMetadata 
     }
 }
 
-impl TryFrom<warp_graphql::queries::list_ai_conversations::AIConversationMetadata>
+impl TryFrom<torch_graphql::queries::list_ai_conversations::AIConversationMetadata>
     for ServerAIConversationMetadata
 {
     type Error = anyhow::Error;
 
     fn try_from(
-        value: warp_graphql::queries::list_ai_conversations::AIConversationMetadata,
+        value: torch_graphql::queries::list_ai_conversations::AIConversationMetadata,
     ) -> Result<Self, Self::Error> {
         let usage: ConversationUsageMetadata = (&value.usage.usage_metadata).into();
         let metadata = value.metadata.try_into()?;

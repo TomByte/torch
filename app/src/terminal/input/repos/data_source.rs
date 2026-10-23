@@ -6,7 +6,7 @@ use std::path::PathBuf;
 #[cfg(feature = "local_fs")]
 use std::sync::{Arc, Mutex};
 
-use warpui::{AppContext, Entity, SingletonEntity};
+use torchui::{AppContext, Entity, SingletonEntity};
 
 use crate::ai::persisted_workspace::PersistedWorkspace;
 use crate::search::data_source::{Query, QueryResult};

@@ -3,8 +3,8 @@ use std::future::Future;
 use std::time::Duration;
 
 use anyhow::Result;
-use warpui::r#async::Timer;
-use warpui::{RetryOption, duration_with_jitter};
+use torchui::r#async::Timer;
+use torchui::{RetryOption, duration_with_jitter};
 
 use crate::server::graphql::GraphQLError;
 use crate::server::server_api::presigned_upload::HttpStatusError;

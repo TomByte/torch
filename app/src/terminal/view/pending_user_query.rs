@@ -1,5 +1,5 @@
-use warp_core::features::FeatureFlag;
-use warpui::{SingletonEntity, ViewContext};
+use torch_core::features::FeatureFlag;
+use torchui::{SingletonEntity, ViewContext};
 
 use super::rich_content::RichContentMetadata;
 use crate::ai::agent::CancellationReason;

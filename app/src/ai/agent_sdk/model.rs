@@ -2,10 +2,10 @@ use std::collections::BTreeSet;
 
 use comfy_table::Cell;
 use serde::Serialize;
-use warp_cli::GlobalOptions;
-use warp_cli::model::{ListModelsArgs, ModelCommand};
-use warpui::platform::TerminationMode;
-use warpui::{AppContext, ModelContext, SingletonEntity};
+use torch_cli::GlobalOptions;
+use torch_cli::model::{ListModelsArgs, ModelCommand};
+use torchui::platform::TerminationMode;
+use torchui::{AppContext, ModelContext, SingletonEntity};
 
 use crate::ai::agent_sdk::output::{self, TableFormat};
 use crate::ai::llms::LLMPreferences;
@@ -74,7 +74,7 @@ impl ModelCommandRunner {
     }
 }
 
-impl warpui::Entity for ModelCommandRunner {
+impl torchui::Entity for ModelCommandRunner {
     type Event = ();
 }
 

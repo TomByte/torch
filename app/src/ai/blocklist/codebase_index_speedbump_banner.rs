@@ -1,13 +1,13 @@
 use std::path::PathBuf;
 
-use warpui::Element;
-use warpui::elements::{
+use torchui::Element;
+use torchui::elements::{
     Align, ConstrainedBox, Container, CrossAxisAlignment, Flex, MainAxisSize, MouseStateHandle,
     ParentElement, Shrinkable,
 };
-use warpui::platform::Cursor;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::platform::Cursor;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 
 use crate::appearance::Appearance;
 use crate::terminal::view::{InlineBannerId, TerminalAction};

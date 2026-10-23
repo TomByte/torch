@@ -4,18 +4,18 @@
 use chrono::{DateTime, Local};
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::color::Opacity;
-use warp_core::ui::theme::color::internal_colors;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::ui::color::Opacity;
+use torch_core::ui::theme::color::internal_colors;
+use torchui::elements::{
     Border, ChildAnchor, Container, CornerRadius, DispatchEventResult, DropShadow, EventHandler,
     Flex, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentAnchor, ParentElement, Radius,
     Shrinkable, Wrap,
 };
-use warpui::fonts::{Properties, Style, Weight};
-use warpui::ui_components::chip::Chip;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{AppContext, Element, SingletonEntity};
+use torchui::fonts::{Properties, Style, Weight};
+use torchui::ui_components::chip::Chip;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{AppContext, Element, SingletonEntity};
 
 use super::common::{FindContext, render_query_text, render_user_avatar};
 use crate::ai::blocklist::AttachmentType;
@@ -165,7 +165,7 @@ pub(crate) fn render_query(
     }
 
     Flex::row()
-        .with_cross_axis_alignment(warpui::elements::CrossAxisAlignment::Start)
+        .with_cross_axis_alignment(torchui::elements::CrossAxisAlignment::Start)
         .with_child(avatar)
         .with_child(Shrinkable::new(1., query.finish()).finish())
         .finish()

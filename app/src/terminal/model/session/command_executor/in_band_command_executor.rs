@@ -8,11 +8,11 @@ use anyhow::Result;
 use async_channel::{self, Receiver, Sender};
 use async_trait::async_trait;
 use parking_lot::{Mutex, MutexGuard};
-use warp_completer::completer::{CommandExitStatus, CommandOutput};
-use warp_core::command::ExitCode;
-use warp_terminal::model::Point;
-use warp_util::on_cancel::OnCancelFutureExt;
-use warpui::r#async::block_on;
+use torch_completer::completer::{CommandExitStatus, CommandOutput};
+use torch_core::command::ExitCode;
+use torch_terminal::model::Point;
+use torch_util::on_cancel::OnCancelFutureExt;
+use torchui::r#async::block_on;
 
 use super::ExecuteCommandOptions;
 use crate::safe_info;

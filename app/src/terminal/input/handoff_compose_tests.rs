@@ -1,4 +1,4 @@
-use warpui::App;
+use torchui::App;
 
 use super::HandoffComposeState;
 use crate::ai::ambient_agents::telemetry::HandoffEntryPoint;

@@ -4,12 +4,12 @@ use std::sync::Arc;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use chrono::{DateTime, Local};
 use vec1::vec1;
-use warp_completer::completer::MatchedSuggestion;
-use warp_core::command::ExitCode;
-use warp_core::features::FeatureFlag;
-use warp_terminal::model::ansi::ClearMode;
-use warpui::r#async::executor::Background;
-use warpui::text::{SelectionType, str_to_byte_vec};
+use torch_completer::completer::MatchedSuggestion;
+use torch_core::command::ExitCode;
+use torch_core::features::FeatureFlag;
+use torch_terminal::model::ansi::ClearMode;
+use torchui::r#async::executor::Background;
+use torchui::text::{SelectionType, str_to_byte_vec};
 
 use super::*;
 use crate::ai::agent::conversation::AIConversationId;

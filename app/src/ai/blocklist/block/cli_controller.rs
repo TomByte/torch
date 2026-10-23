@@ -4,9 +4,9 @@ use std::sync::Arc;
 use instant::Instant;
 use parking_lot::FairMutex;
 use serde::{Deserialize, Deserializer, Serialize};
-use warp_core::send_telemetry_from_ctx;
-use warp_errors::report_error;
-use warpui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
+use torch_core::send_telemetry_from_ctx;
+use torch_errors::report_error;
+use torchui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
 
 use crate::BlocklistAIHistoryModel;
 use crate::ai::agent::conversation::AIConversationId;

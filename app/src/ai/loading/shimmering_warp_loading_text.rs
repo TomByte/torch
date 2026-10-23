@@ -1,11 +1,11 @@
 //! Shimmering Warp loading text - renders Warp logo with shimmering text for loading states.
 
-use warp_core::ui::appearance::Appearance;
-use warpui::elements::Element;
-use warpui::elements::shimmering_text::{
+use torch_core::ui::appearance::Appearance;
+use torchui::elements::Element;
+use torchui::elements::shimmering_text::{
     ShimmerConfig, ShimmeringTextElement, ShimmeringTextStateHandle,
 };
-use warpui::{AppContext, SingletonEntity};
+use torchui::{AppContext, SingletonEntity};
 
 /// Warp icon glyph character
 const WARP_GLYPH: &str = "\u{E500}";

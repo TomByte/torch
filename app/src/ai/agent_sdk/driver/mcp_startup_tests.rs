@@ -12,18 +12,18 @@ use futures::{FutureExt as _, StreamExt as _};
 use http::StatusCode;
 use instant::Instant;
 use uuid::Uuid;
-use warp_cli::mcp::MCPSpec;
-use warp_core::channel::ChannelState;
-use warp_core::execution_mode::{AppExecutionMode, ExecutionMode};
-use warp_core::features::FeatureFlag;
-use warp_graphql::mutations::create_managed_mcp_client_config::{
+use torch_cli::mcp::MCPSpec;
+use torch_core::channel::ChannelState;
+use torch_core::execution_mode::{AppExecutionMode, ExecutionMode};
+use torch_core::features::FeatureFlag;
+use torch_graphql::mutations::create_managed_mcp_client_config::{
     CreateManagedMcpClientConfigOutput, ManagedMcpTransportKind,
 };
-use warp_graphql::response_context::ResponseContext;
-use warp_managed_secrets::ManagedSecretValue;
-use warp_server_client::base_client::{AMBIENT_WORKLOAD_TOKEN_HEADER, CLOUD_AGENT_ID_HEADER};
-use warpui::r#async::{FutureExt as _, Timer};
-use warpui::{App, ModelContext, ModelHandle, SingletonEntity as _};
+use torch_graphql::response_context::ResponseContext;
+use torch_managed_secrets::ManagedSecretValue;
+use torch_server_client::base_client::{AMBIENT_WORKLOAD_TOKEN_HEADER, CLOUD_AGENT_ID_HEADER};
+use torchui::r#async::{FutureExt as _, Timer};
+use torchui::{App, ModelContext, ModelHandle, SingletonEntity as _};
 
 use super::{
     AgentDriver, AgentDriverError, MANAGED_MCP_RESOLVE_MAX_ATTEMPTS, McpStartupMode,

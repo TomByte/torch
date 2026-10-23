@@ -12,13 +12,13 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use tempfile::NamedTempFile;
 use uuid::Uuid;
-use warp_cli::agent::Harness;
-use warp_core::features::FeatureFlag;
-use warp_core::safe_info;
-use warp_errors::report_error;
-use warp_harness_usage::{CaptureDiagnostics, JsonlReadStatus, extract_codex};
-use warp_managed_secrets::ManagedSecretValue;
-use warpui::{ModelHandle, ModelSpawner, SingletonEntity};
+use torch_cli::agent::Harness;
+use torch_core::features::FeatureFlag;
+use torch_core::safe_info;
+use torch_errors::report_error;
+use torch_harness_usage::{CaptureDiagnostics, JsonlReadStatus, extract_codex};
+use torch_managed_secrets::ManagedSecretValue;
+use torchui::{ModelHandle, ModelSpawner, SingletonEntity};
 
 use super::super::terminal::{CommandHandle, TerminalDriver};
 use super::super::{AgentDriver, AgentDriverError};
@@ -642,7 +642,7 @@ pub(super) fn prepare_codex_environment_config(
 /// existing entry with the same name (see
 /// `skill_dirs_publish::publish_skill`), with the conflict-resolution behavior
 /// depending on whether this run is sandboxed (see
-/// `warp_isolation_platform::detect`).
+/// `torch_isolation_platform::detect`).
 pub(super) fn publish_skills_for_codex(
     workspace_root: &Path,
     harness_working_dir: &Path,
@@ -651,7 +651,7 @@ pub(super) fn publish_skills_for_codex(
     harness_support_skills: HarnessSupportSkills,
 ) -> Result<()> {
     let skill_root = harness_working_dir.join(".agents").join("skills");
-    let is_sandbox = warp_isolation_platform::detect().is_some();
+    let is_sandbox = torch_isolation_platform::detect().is_some();
     let published = super::skill_dirs_publish::publish_skills_for_harness(
         &skill_root,
         workspace_root,

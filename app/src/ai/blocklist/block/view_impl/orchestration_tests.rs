@@ -1,5 +1,5 @@
-use warp_cli::agent::Harness;
-use warpui::{App, EntityId};
+use torch_cli::agent::Harness;
+use torchui::{App, EntityId};
 
 use super::{
     OrchestrationAvatar, OrchestrationParticipant, agent_display_name_from_id,

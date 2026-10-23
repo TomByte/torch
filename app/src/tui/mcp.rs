@@ -3,7 +3,7 @@ use std::fmt;
 use std::path::PathBuf;
 
 use uuid::Uuid;
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torchui::{Entity, ModelContext, SingletonEntity};
 
 use crate::ai::mcp::file_based_manager::FileBasedMCPServerScope;
 use crate::ai::mcp::gallery::MCPGalleryManagerEvent;

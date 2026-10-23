@@ -164,7 +164,7 @@ if ("$CHANNEL" -eq 'local') {
 if ($IS_TUI) {
     $WARP_BIN = switch ($CHANNEL) {
         'local' { 'warp-tui' }
-        'oss' { 'warp-tui-oss' }
+        'oss' { 'torch-tui' }
         Default { "warp-tui-$CHANNEL" }
     }
     $BINARY_NAME = "$WARP_BIN.exe"
@@ -220,7 +220,7 @@ $PDB_BASENAME = if ($IS_TUI) {
     $WARP_BIN
 }
 $PDB_PATH = "$CARGO_TARGET_OUTPUT_DIR\$PDB_BASENAME.pdb"
-$CARGO_PACKAGE = if ($IS_TUI) { 'warp_tui' } else { 'warp' }
+$CARGO_PACKAGE = if ($IS_TUI) { 'torch_tui' } else { 'warp' }
 $INSTALLER_SCRIPT = if ($IS_TUI) {
     "$WINDOWS_INSTALLER_DIR\tui-installer.iss"
 } else {

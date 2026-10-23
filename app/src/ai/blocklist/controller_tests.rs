@@ -8,10 +8,10 @@ use ai::api_keys::{
 };
 use chrono::Local;
 use uuid::Uuid;
-use warp_core::features::FeatureFlag;
-use warp_graphql::ai::{AgentTaskState, PlatformErrorCode};
+use torch_core::features::FeatureFlag;
+use torch_graphql::ai::{AgentTaskState, PlatformErrorCode};
 use warp_multi_agent_api::{AgentType, response_event};
-use warpui::{App, ModelHandle, SingletonEntity, ViewHandle};
+use torchui::{App, ModelHandle, SingletonEntity, ViewHandle};
 
 use super::response_stream::{PendingResume, RecoveryBudget};
 use crate::ai::agent::conversation::AIConversationId;

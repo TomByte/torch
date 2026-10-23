@@ -4,16 +4,16 @@ use std::path::{Component, Path, PathBuf};
 
 use anyhow::Result;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-pub use warp_core::ui::color::blend::Blend;
-use warp_core::ui::color::pick_foreground_color;
-pub use warp_core::ui::theme::*;
-use warpui::assets::asset_cache::AssetSource;
-use warpui::color::ColorU;
-use warpui::elements::{
+pub use torch_core::ui::color::blend::Blend;
+use torch_core::ui::color::pick_foreground_color;
+pub use torch_core::ui::theme::*;
+use torchui::assets::asset_cache::AssetSource;
+use torchui::color::ColorU;
+use torchui::elements::{
     Align, Border, ConstrainedBox, Container, Element, Empty, Flex, ParentElement, Rect,
     Shrinkable, Stack, Text,
 };
-use warpui::fonts::FamilyId;
+use torchui::fonts::FamilyId;
 
 use super::default_themes::*;
 use super::theme_creator::{pick_accent_color_from_options, top_colors_for_image};
@@ -533,7 +533,7 @@ pub struct WarpThemeConfig {
 
 impl WarpThemeConfig {
     pub fn new() -> Self {
-        if warp_core::channel::ChannelState::is_local_only() {
+        if torch_core::channel::ChannelState::is_local_only() {
             return Self {
                 theme_map: HashMap::from_iter([
                     (ThemeKind::Light, light_theme()),
@@ -771,9 +771,9 @@ pub fn render_preview(
         thumbnail.add_child(
             Shrinkable::new(
                 1.,
-                warpui::elements::Image::new(
+                torchui::elements::Image::new(
                     background_image.source(),
-                    warpui::elements::CacheOption::BySize,
+                    torchui::elements::CacheOption::BySize,
                 )
                 .cover()
                 .finish(),

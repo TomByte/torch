@@ -10,11 +10,11 @@ use aho_corasick::{AhoCorasick, MatchKind};
 use anyhow::{Context, anyhow};
 #[cfg(feature = "local_fs")]
 use futures::AsyncWriteExt;
-use warp_util::path::ShellFamily;
-use warpui::r#async::SpawnedFutureHandle;
-use warpui::platform::file_picker::FilePickerError;
-use warpui::platform::{FilePickerConfiguration, OperatingSystem};
-use warpui::{AppContext, Entity, ModelContext, SingletonEntity, WindowId};
+use torch_util::path::ShellFamily;
+use torchui::r#async::SpawnedFutureHandle;
+use torchui::platform::file_picker::FilePickerError;
+use torchui::platform::{FilePickerConfiguration, OperatingSystem};
+use torchui::{AppContext, Entity, ModelContext, SingletonEntity, WindowId};
 
 use super::CloudObjectTypeAndId;
 use crate::cloud_object::Space;

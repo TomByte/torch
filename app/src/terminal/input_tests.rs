@@ -16,16 +16,16 @@ use smol_str::SmolStr;
 use unindent::Unindent;
 #[cfg(feature = "voice_input")]
 use voice_input::VoiceInputToggledFrom;
-use warp_completer::completer::{
+use torch_completer::completer::{
     EngineFileType, Match, MatchStrategy, MatchedSuggestion, PathSeparators, Priority, Suggestion,
     SuggestionResults, SuggestionType,
 };
-use warp_completer::meta::Span;
-use warp_util::standardized_path::StandardizedPath;
-use warp_util::user_input::UserInput;
-use warpui::platform::WindowStyle;
-use warpui::text::SelectionType;
-use warpui::{App, ReadModel, UpdateView, WindowId};
+use torch_completer::meta::Span;
+use torch_util::standardized_path::StandardizedPath;
+use torch_util::user_input::UserInput;
+use torchui::platform::WindowStyle;
+use torchui::text::SelectionType;
+use torchui::{App, ReadModel, UpdateView, WindowId};
 use watcher::HomeDirectoryWatcher;
 use workflows::workflow::{Argument, ArgumentType, Workflow};
 
@@ -3247,7 +3247,7 @@ fn slash_compact_still_queues_while_in_progress() {
 }
 
 fn selected_inline_history_command(
-    history_menu: &warpui::ViewHandle<super::inline_history::InlineHistoryMenuView>,
+    history_menu: &torchui::ViewHandle<super::inline_history::InlineHistoryMenuView>,
     app: &App,
 ) -> Option<String> {
     history_menu.read(app, |view, ctx| {
@@ -3698,7 +3698,7 @@ impl CommandExecutor for CancellationTrackingExecutor {
         _current_directory_path: Option<&str>,
         _environment_variables: Option<HashMap<String, String>>,
         _execute_command_options: ExecuteCommandOptions,
-    ) -> anyhow::Result<warp_completer::completer::CommandOutput> {
+    ) -> anyhow::Result<torch_completer::completer::CommandOutput> {
         anyhow::bail!("no executor command expected")
     }
 
@@ -10040,7 +10040,7 @@ fn test_custom_terminal_page_scroll_binding_applies_when_prompt_is_focused() {
         app.update(|ctx| {
             ctx.set_custom_trigger(
                 "terminal:scroll_up_one_page".to_owned(),
-                warpui::keymap::Trigger::Keystrokes(vec![
+                torchui::keymap::Trigger::Keystrokes(vec![
                     Keystroke::parse("shift-pageup").unwrap(),
                 ]),
             );

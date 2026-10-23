@@ -6,19 +6,19 @@ use std::sync::Arc;
 use pathfinder_geometry::vector::{Vector2F, vec2f};
 use serde_yaml::Mapping;
 use uuid::Uuid;
-use warp_editor::content::markdown::MarkdownStyle;
-use warp_editor::editor::EmbeddedItemModel;
-use warp_editor::render::element::{RenderContext, RenderableBlock};
-use warp_editor::render::layout::TextLayout;
-use warp_editor::render::model::viewport::ViewportItem;
-use warp_editor::render::model::{
+use torch_editor::content::markdown::MarkdownStyle;
+use torch_editor::editor::EmbeddedItemModel;
+use torch_editor::render::element::{RenderContext, RenderableBlock};
+use torch_editor::render::layout::TextLayout;
+use torch_editor::render::model::viewport::ViewportItem;
+use torch_editor::render::model::{
     BlockSpacing, EmbeddedItem, EmbeddedItemHTMLRepresentation, EmbeddedItemRichFormat,
     LaidOutEmbeddedItem, RenderState,
 };
-use warp_errors::report_error;
-use warpui::event::DispatchedEvent;
-use warpui::units::Pixels;
-use warpui::{AppContext, EntityId, EventContext, LayoutContext, ViewHandle, WindowId};
+use torch_errors::report_error;
+use torchui::event::DispatchedEvent;
+use torchui::units::Pixels;
+use torchui::{AppContext, EntityId, EventContext, LayoutContext, ViewHandle, WindowId};
 
 use crate::code::editor::comment_editor::CommentEditor;
 use crate::code_review::comments::CommentId;

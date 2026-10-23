@@ -1,13 +1,13 @@
-use warp_core::ui::icons::ICON_DIMENSIONS;
-use warp_core::ui::theme::Fill;
-use warpui::Element;
-use warpui::elements::{
+use torch_core::ui::icons::ICON_DIMENSIONS;
+use torch_core::ui::theme::Fill;
+use torchui::Element;
+use torchui::elements::{
     Align, Clipped, ConstrainedBox, Container, CrossAxisAlignment, Flex, Hoverable,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, SavePosition, Shrinkable,
     Text,
 };
-use warpui::text_layout::ClipConfig;
-use warpui::ui_components::components::UiComponent;
+use torchui::text_layout::ClipConfig;
+use torchui::ui_components::components::UiComponent;
 
 use super::super::header_content::HeaderRenderContext;
 use super::{ActionPayload, PaneHeaderAction};

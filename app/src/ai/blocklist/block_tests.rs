@@ -3,11 +3,11 @@ use std::path::PathBuf;
 use ai::agent::action::{RunAgentsAgentRunConfig, RunAgentsExecutionMode};
 use ai::skills::SkillReference;
 use settings::Setting;
-use warp_core::channel::ChannelState;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
+use torch_core::channel::ChannelState;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
 #[cfg(feature = "local_fs")]
-use warp_util::path::LineAndColumnArg;
-use warpui::{App, SingletonEntity};
+use torch_util::path::LineAndColumnArg;
+use torchui::{App, SingletonEntity};
 
 #[cfg(feature = "local_fs")]
 use super::{AIBlockEvent, open_code_action_event};

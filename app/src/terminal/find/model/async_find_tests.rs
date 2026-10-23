@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use parking_lot::FairMutex;
-use warpui::{App, EntityId};
+use torchui::{App, EntityId};
 
 use super::{
     AbsoluteMatch, AsyncFindConfig, AsyncFindController, AsyncFindStatus, BlockFindResults,

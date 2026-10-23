@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use warp_util::path::user_friendly_path;
-use warpui::{AppContext, SingletonEntity};
+use torch_util::path::user_friendly_path;
+use torchui::{AppContext, SingletonEntity};
 
 use super::builtins::remote_login;
 use super::current_prompt::CurrentPrompt;

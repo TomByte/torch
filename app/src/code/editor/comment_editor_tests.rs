@@ -2,9 +2,9 @@ use std::sync::Arc;
 
 use repo_metadata::RepoMetadataModel;
 use repo_metadata::repositories::DetectedRepositories;
-use warpui::platform::WindowStyle;
-use warpui::presenter::ChildView;
-use warpui::{App, Element, Entity, TypedActionView, View, ViewHandle, WindowId};
+use torchui::platform::WindowStyle;
+use torchui::presenter::ChildView;
+use torchui::{App, Element, Entity, TypedActionView, View, ViewHandle, WindowId};
 
 use super::{create_editable_comment_markdown_editor, create_readonly_comment_markdown_editor};
 use crate::appearance::Appearance;
@@ -40,7 +40,7 @@ impl View for TestView {
         "CommentEditorTestView"
     }
 
-    fn render(&self, _app: &warpui::AppContext) -> Box<dyn warpui::Element> {
+    fn render(&self, _app: &torchui::AppContext) -> Box<dyn torchui::Element> {
         ChildView::new(&self.editor).finish()
     }
 }

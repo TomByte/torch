@@ -6,8 +6,8 @@ use std::sync::Arc;
 use anyhow::{Context, Result};
 use shell_words::quote as shell_quote;
 use uuid::Uuid;
-use warp_cli::agent::Harness;
-use warp_graphql::ai::AgentTaskState;
+use torch_cli::agent::Harness;
+use torch_graphql::ai::AgentTaskState;
 
 use super::super::claude_transcript::{
     ClaudeTranscriptEnvelope, claude_config_dir, write_envelope, write_session_index_entry,

@@ -6,7 +6,7 @@ mod virtual_fs;
 
 pub use terminal::add_window_with_terminal;
 pub use virtual_fs::{Stub, VirtualFS};
-pub use warp_terminal::test_util::mock_blockgrid;
+pub use torch_terminal::test_util::mock_blockgrid;
 
 macro_rules! assert_eventually {
     ($cond:expr_2021, $($arg:tt)+) => {
@@ -21,7 +21,7 @@ macro_rules! assert_eventually {
                 pass = true;
                 break;
             }
-            warpui::r#async::Timer::after(std::time::Duration::from_millis(5)).await;
+            torchui::r#async::Timer::after(std::time::Duration::from_millis(5)).await;
         }
         if !pass {
             panic!("{}", format_args!($($arg)+));

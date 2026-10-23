@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 use strum_macros::EnumDiscriminants;
 use uuid::Uuid;
 pub use warp_multi_agent_api::LifecycleEventType;
-use warp_terminal::model::BlockId;
+use torch_terminal::model::BlockId;
 
 use crate::agent::action_result::{
     AIAgentActionResultType, AskUserQuestionResult, CallMCPToolResult, CreateDocumentsResult,
@@ -838,7 +838,7 @@ impl AIAgentPtyWriteMode {
         bytes: impl Into<Vec<u8>>,
         is_bracketed_paste_enabled: bool,
     ) -> Vec<u8> {
-        use warp_terminal::model::escape_sequences;
+        use torch_terminal::model::escape_sequences;
 
         let bytes = bytes.into();
         match self {

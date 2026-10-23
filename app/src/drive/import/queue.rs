@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use warp_errors::report_error;
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torch_errors::report_error;
+use torchui::{Entity, ModelContext, SingletonEntity};
 
 use super::nodes::{self, FileId};
 use crate::cloud_object::model::persistence::CloudModel;

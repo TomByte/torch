@@ -1,16 +1,16 @@
 use pathfinder_geometry::vector::vec2f;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::color::blend::Blend as _;
-use warp_core::ui::{self};
-use warpui::elements::{
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::color::blend::Blend as _;
+use torch_core::ui::{self};
+use torchui::elements::{
     Align, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Flex, Icon,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement as _, Radius,
 };
-use warpui::keymap::EditableBinding;
-use warpui::platform::Cursor;
-use warpui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::keymap::EditableBinding;
+use torchui::platform::Cursor;
+use torchui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity as _, TypedActionView, View,
     ViewContext, ViewHandle,
 };
@@ -29,7 +29,7 @@ use crate::workspace::{ToastStack, Workspace, WorkspaceAction};
 use crate::{TelemetryEvent, send_telemetry_from_ctx};
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_editable_bindings([EditableBinding::new(
         "workspace:new_tab",

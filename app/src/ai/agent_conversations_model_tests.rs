@@ -6,10 +6,10 @@ use chrono::{DateTime, Duration, Utc};
 use instant::Instant;
 use parking_lot::Mutex;
 use persistence::model::{AgentConversationData, ChargedUsageTotals, ConversationUsageMetadata};
-use warp_cli::agent::Harness;
-use warp_core::execution_mode::{AppExecutionMode, ExecutionMode};
-use warp_core::features::FeatureFlag;
-use warpui::{App, EntityId, ModelHandle, SingletonEntity};
+use torch_cli::agent::Harness;
+use torch_core::execution_mode::{AppExecutionMode, ExecutionMode};
+use torch_core::features::FeatureFlag;
+use torchui::{App, EntityId, ModelHandle, SingletonEntity};
 
 use super::entry::{
     AgentConversationEntryId, AgentConversationNavigationSubject, AgentConversationProvenance,

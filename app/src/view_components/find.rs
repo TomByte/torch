@@ -1,18 +1,18 @@
 use pathfinder_color::ColorU;
 use serde::Serialize;
-pub use warpui::AppContext;
-pub use warpui::accessibility::{AccessibilityContent, WarpA11yRole};
-use warpui::elements::{
+pub use torchui::AppContext;
+pub use torchui::accessibility::{AccessibilityContent, WarpA11yRole};
+use torchui::elements::{
     Align, Border, ChildAnchor, Clipped, ConstrainedBox, Container, CornerRadius,
     CrossAxisAlignment, DropShadow, Element, Flex, Hoverable, MouseStateHandle, OffsetPositioning,
     ParentAnchor, ParentOffsetBounds, Radius, SavePosition, Shrinkable, Text,
 };
-pub use warpui::elements::{ParentElement as _, Stack};
-pub use warpui::geometry::vector::vec2f;
-use warpui::keymap::EditableBinding;
-use warpui::presenter::ChildView;
-use warpui::ui_components::components::UiComponent;
-use warpui::{
+pub use torchui::elements::{ParentElement as _, Stack};
+pub use torchui::geometry::vector::vec2f;
+use torchui::keymap::EditableBinding;
+use torchui::presenter::ChildView;
+use torchui::ui_components::components::UiComponent;
+use torchui::{
     Entity, FocusContext, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };
@@ -129,7 +129,7 @@ pub enum FindAction {
 }
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_editable_bindings([
         EditableBinding::new(

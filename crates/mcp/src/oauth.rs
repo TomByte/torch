@@ -11,9 +11,9 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use url::Url;
 use uuid::Uuid;
-use warp_core::channel::ChannelState;
-use warp_errors::report_error;
-use warpui_extras::secure_storage::AppContextExt as _;
+use torch_core::channel::ChannelState;
+use torch_errors::report_error;
+use torchui_extras::secure_storage::AppContextExt as _;
 mod loopback;
 
 pub const TEMPLATABLE_MCP_CREDENTIALS_KEY: &str = "TemplatableMcpCredentials";
@@ -447,13 +447,13 @@ pub async fn make_authenticated_client(
 
 /// Loads credentials from secure storage at the provided key.
 pub fn load_credentials_from_secure_storage<T: DeserializeOwned + Default>(
-    app: &mut warpui::AppContext,
+    app: &mut torchui::AppContext,
     key: &str,
 ) -> T {
     app.secure_storage()
         .read_value(key)
         .inspect_err(|err| {
-            if !matches!(err, warpui_extras::secure_storage::Error::NotFound) {
+            if !matches!(err, torchui_extras::secure_storage::Error::NotFound) {
                 log::warn!("Failed to read MCP credentials from secure storage: {err:#}");
             }
         })
@@ -464,7 +464,7 @@ pub fn load_credentials_from_secure_storage<T: DeserializeOwned + Default>(
 
 /// Writes credentials to secure storage at the provided key.
 pub fn write_to_secure_storage<T: Serialize>(
-    app: &mut warpui::AppContext,
+    app: &mut torchui::AppContext,
     key: &str,
     credentials: &T,
 ) {

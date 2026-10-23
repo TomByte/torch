@@ -4,20 +4,20 @@ use std::ops::Range;
 use std::sync::Arc;
 
 use string_offset::{ByteOffset, CharOffset};
-use warp_completer::signatures::CommandRegistry;
-use warp_editor::content::anchor::Anchor;
-use warp_editor::content::buffer::Buffer;
-use warp_editor::content::selection_model::BufferSelectionModel;
-use warp_editor::editor::EmbeddedItemModel;
-use warp_util::user_input::UserInput;
-use warpui::elements::{
+use torch_completer::signatures::CommandRegistry;
+use torch_editor::content::anchor::Anchor;
+use torch_editor::content::buffer::Buffer;
+use torch_editor::content::selection_model::BufferSelectionModel;
+use torch_editor::editor::EmbeddedItemModel;
+use torch_util::user_input::UserInput;
+use torchui::elements::{
     Align, Border, Container, CrossAxisAlignment, Empty, Flex, MainAxisAlignment, MouseStateHandle,
     ParentElement, Shrinkable,
 };
-use warpui::platform::Cursor;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::UiComponent;
-use warpui::{AppContext, Element, Entity, ModelAsRef, ModelContext, ModelHandle, SingletonEntity};
+use torchui::platform::Cursor;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::UiComponent;
+use torchui::{AppContext, Element, Entity, ModelAsRef, ModelContext, ModelHandle, SingletonEntity};
 
 use super::embedded_item::EmbeddedWorkflow;
 use super::keys::{NotebookKeybindings, custom_action_to_display};

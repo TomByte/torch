@@ -6,11 +6,11 @@ use chrono::{DateTime, Local, Utc};
 use futures::channel::oneshot::{self, Receiver};
 use instant::Instant;
 use serde::{Deserialize, Serialize};
-use warp_core::user_preferences::GetUserPreferences as _;
-use warp_errors::report_error;
-pub use warp_graphql::billing::BonusGrantType;
-use warp_graphql::scalars::time::ServerTimestamp;
-use warpui::{AppContext, Entity, ModelContext, SingletonEntity};
+use torch_core::user_preferences::GetUserPreferences as _;
+use torch_errors::report_error;
+pub use torch_graphql::billing::BonusGrantType;
+use torch_graphql::scalars::time::ServerTimestamp;
+use torchui::{AppContext, Entity, ModelContext, SingletonEntity};
 
 use crate::BlocklistAIHistoryModel;
 use crate::ai::agent::AIAgentExchangeId;

@@ -6,8 +6,8 @@ use std::time::Duration;
 
 use command::blocking::Command;
 use prost::Message;
-use warpui::integration::{AssertionOutcome, TestStep};
-use warpui::{SingletonEntity, async_assert};
+use torchui::integration::{AssertionOutcome, TestStep};
+use torchui::{SingletonEntity, async_assert};
 
 use crate::BlocklistAIHistoryModel;
 use crate::ai::agent::conversation::AIConversation;
@@ -301,7 +301,7 @@ fn collect_edited_files(conversation: &AIConversation) -> HashSet<String> {
 /// Returns an assertion that prints the conversation ID to stdout once available.
 /// This assertion will poll until the conversation token is received from the server.
 fn print_conversation_id_assertion()
--> impl FnMut(&mut warpui::App, warpui::WindowId) -> warpui::integration::AssertionOutcome {
+-> impl FnMut(&mut torchui::App, torchui::WindowId) -> torchui::integration::AssertionOutcome {
     |app, window_id| {
         let terminal_view = terminal_view(app, window_id, 0, 0);
         BlocklistAIHistoryModel::handle(app).read(app, |history_model, _| {

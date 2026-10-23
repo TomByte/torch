@@ -1,8 +1,8 @@
 //! Procedural geometry for supported solid Unicode box-drawing glyphs.
 
 use smallvec::SmallVec;
-use warpui::geometry::rect::RectF;
-use warpui::geometry::vector::vec2f;
+use torchui::geometry::rect::RectF;
+use torchui::geometry::vector::vec2f;
 
 /// Weight of a box-drawing stroke.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

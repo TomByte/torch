@@ -4,14 +4,14 @@ use std::borrow::Cow;
 use std::time::Duration;
 
 use pathfinder_geometry::vector::vec2f;
-use warp_core::ui::Icon;
-use warp_core::ui::appearance::Appearance;
-use warpui::elements::{
+use torch_core::ui::Icon;
+use torch_core::ui::appearance::Appearance;
+use torchui::elements::{
     Border, ChildAnchor, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Flex,
     MainAxisAlignment, MainAxisSize, OffsetPositioning, ParentElement, PositionedElementAnchor,
     PositionedElementOffsetBounds, Radius, Rect, SavePosition, Stack, Text,
 };
-use warpui::{AppContext, Element, WindowId};
+use torchui::{AppContext, Element, WindowId};
 
 /// The state of a progress step.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -5,7 +5,7 @@ use cloud_objects::cloud_object::{
 };
 use cloud_objects::ids::GenericStringObjectId;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use warp_cli::agent::Harness;
+use torch_cli::agent::Harness;
 
 use crate::cloud_environment::SourceRepo;
 use crate::{JsonModel, JsonSerializer};

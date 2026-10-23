@@ -11,7 +11,7 @@ use async_trait::async_trait;
 use instant::Instant;
 pub use recording::Recorder;
 pub(crate) use recording::spawn_abandoned_cleanup;
-use warpui_core::r#async::Timer;
+use torchui_core::r#async::Timer;
 use windows::Win32::System::StationsAndDesktops::{
     CloseDesktop, DESKTOP_ACCESS_FLAGS, DESKTOP_CONTROL_FLAGS, HDESK, OpenInputDesktop,
 };

@@ -9,7 +9,7 @@ use repo_metadata::file_tree_update::{
     RepoNodeMetadata,
 };
 use repo_metadata::{StandingQueryContent, StandingQueryResultsDelta};
-use warp_util::standardized_path::StandardizedPath;
+use torch_util::standardized_path::StandardizedPath;
 
 use crate::proto;
 

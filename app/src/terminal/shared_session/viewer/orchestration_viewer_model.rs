@@ -13,8 +13,8 @@
 use std::collections::{HashMap, HashSet};
 use std::time::Duration;
 
-use warpui::r#async::{SpawnedFutureHandle, Timer};
-use warpui::{Entity, EntityId, ModelContext, SingletonEntity};
+use torchui::r#async::{SpawnedFutureHandle, Timer};
+use torchui::{Entity, EntityId, ModelContext, SingletonEntity};
 
 use crate::ai::agent::conversation::{AIConversationId, ConversationStatus};
 use crate::ai::agent_conversations_model::{AgentConversationsModel, AgentConversationsModelEvent};

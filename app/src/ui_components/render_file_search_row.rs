@@ -15,13 +15,13 @@
 use std::path::Path;
 
 use fuzzy_match::FuzzyMatchResult;
-use warp_core::ui::theme::Fill;
-use warpui::elements::{
+use torch_core::ui::theme::Fill;
+use torchui::elements::{
     Container, CrossAxisAlignment, Flex, Highlight, MainAxisSize, ParentElement, Shrinkable, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::text_layout::{ClipConfig, ClipDirection, ClipStyle};
-use warpui::{AppContext, Element, SingletonEntity};
+use torchui::fonts::{Properties, Weight};
+use torchui::text_layout::{ClipConfig, ClipDirection, ClipStyle};
+use torchui::{AppContext, Element, SingletonEntity};
 
 use crate::appearance::Appearance;
 use crate::search::ItemHighlightState;

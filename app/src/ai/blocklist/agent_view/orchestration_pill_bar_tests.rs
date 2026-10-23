@@ -7,13 +7,13 @@ use super::*;
 #[test]
 fn pill_bar_scrollable_finite_under_capped_drag_preview() {
     use pathfinder_geometry::vector::vec2f;
-    use warpui::elements::new_scrollable::{NewScrollable, SingleAxisConfig};
-    use warpui::elements::{
+    use torchui::elements::new_scrollable::{NewScrollable, SingleAxisConfig};
+    use torchui::elements::{
         ClippedScrollStateHandle, ConstrainedBox, Container, CrossAxisAlignment, Fill, Flex,
         MainAxisSize, ParentElement, Rect,
     };
-    use warpui::platform::WindowStyle;
-    use warpui::{
+    use torchui::platform::WindowStyle;
+    use torchui::{
         App, Element, Entity, Presenter, TypedActionView, View, ViewContext, WindowInvalidation,
     };
 
@@ -42,7 +42,7 @@ fn pill_bar_scrollable_finite_under_capped_drag_preview() {
             "DragPreviewTestView"
         }
 
-        fn render(&self, _app: &warpui::AppContext) -> Box<dyn Element> {
+        fn render(&self, _app: &torchui::AppContext) -> Box<dyn Element> {
             // Overflowing content so the clipped scrollable has something to clip.
             let content = ConstrainedBox::new(Rect::new().finish())
                 .with_width(2000.)
@@ -135,7 +135,7 @@ fn pill_bar_scrollable_finite_under_capped_drag_preview() {
 fn pill_bar_data_layer_finds_restored_children_before_pane_creation() {
     use chrono::Utc;
     use uuid::Uuid;
-    use warpui::App;
+    use torchui::App;
 
     use crate::ai::blocklist::BlocklistAIHistoryModel;
     use crate::ai::blocklist::orchestration_topology::descendant_conversation_ids_in_spawn_order;
@@ -323,14 +323,14 @@ fn navigation_action_for_orchestrator_pill_switches_in_place() {
 /// Builds a 3-level tree (root → mid → grandchild) and returns the history
 /// handle plus the ids.
 fn build_three_level_tree(
-    app: &mut warpui::App,
+    app: &mut torchui::App,
 ) -> (
     ModelHandle<BlocklistAIHistoryModel>,
     AIConversationId,
     AIConversationId,
     AIConversationId,
 ) {
-    use warpui::EntityId;
+    use torchui::EntityId;
 
     use crate::test_util::settings::initialize_history_persistence_for_tests;
 
@@ -365,7 +365,7 @@ fn build_three_level_tree(
 
 #[test]
 fn breadcrumb_ids_show_only_root_when_parent_is_root() {
-    use warpui::App;
+    use torchui::App;
 
     App::test((), |mut app| async move {
         let (history_model, root_id, mid_id, _grandchild_id) = build_three_level_tree(&mut app);
@@ -377,7 +377,7 @@ fn breadcrumb_ids_show_only_root_when_parent_is_root() {
 
 #[test]
 fn breadcrumb_ids_show_root_and_parent_when_two_levels_deep() {
-    use warpui::App;
+    use torchui::App;
 
     App::test((), |mut app| async move {
         let (history_model, root_id, mid_id, grandchild_id) = build_three_level_tree(&mut app);
@@ -392,7 +392,7 @@ fn breadcrumb_ids_show_root_and_parent_when_two_levels_deep() {
 
 #[test]
 fn breadcrumb_ids_are_empty_at_the_root() {
-    use warpui::App;
+    use torchui::App;
 
     App::test((), |mut app| async move {
         let (history_model, root_id, _mid_id, _grandchild_id) = build_three_level_tree(&mut app);
@@ -404,7 +404,7 @@ fn breadcrumb_ids_are_empty_at_the_root() {
 
 #[test]
 fn drill_down_anchor_is_the_parent_level_for_a_leaf() {
-    use warpui::App;
+    use torchui::App;
 
     App::test((), |mut app| async move {
         let (_history_model, _root_id, mid_id, grandchild_id) = build_three_level_tree(&mut app);
@@ -423,7 +423,7 @@ fn drill_down_anchor_is_the_parent_level_for_a_leaf() {
 
 #[test]
 fn drill_down_anchor_is_the_node_itself_when_it_has_children() {
-    use warpui::App;
+    use torchui::App;
 
     App::test((), |mut app| async move {
         let (_history_model, root_id, mid_id, _grandchild_id) = build_three_level_tree(&mut app);
@@ -450,7 +450,7 @@ fn drill_down_anchor_is_the_node_itself_when_it_has_children() {
 /// children anchor the root's level.
 #[test]
 fn drill_down_anchor_matches_root_anchoring_at_depth_one() {
-    use warpui::{App, EntityId};
+    use torchui::{App, EntityId};
 
     use crate::test_util::settings::initialize_history_persistence_for_tests;
 
@@ -495,7 +495,7 @@ fn drill_down_anchor_matches_root_anchoring_at_depth_one() {
 #[test]
 fn breadcrumbs_resolve_token_only_parent_linkage_after_restore() {
     use chrono::Utc;
-    use warpui::App;
+    use torchui::App;
 
     use crate::ai::blocklist::BlocklistAIHistoryModel;
     use crate::persistence::model::{
@@ -636,9 +636,9 @@ fn conversation_server_token_assignment_rerenders_the_pill_bar() {
     use std::sync::Arc;
 
     use parking_lot::FairMutex;
-    use warpui::App;
-    use warpui::r#async::executor::Background;
-    use warpui::platform::WindowStyle;
+    use torchui::App;
+    use torchui::r#async::executor::Background;
+    use torchui::platform::WindowStyle;
 
     use crate::ai::blocklist::agent_view::{AgentViewEntryOrigin, EphemeralMessageModel};
     use crate::terminal::TerminalModel;

@@ -2,8 +2,8 @@ use ai::LLMId;
 use chrono::{DateTime, Utc};
 use onboarding::slides::{AgentAutonomy, AgentDevelopmentSettings};
 use onboarding::{SelectedSettings, UICustomizationSettings};
-use warp_core::features::FeatureFlag;
-use warpui::{App, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torchui::{App, SingletonEntity};
 
 use crate::LaunchMode;
 use crate::ai::execution_profiles::profiles::AIExecutionProfilesModel;

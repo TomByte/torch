@@ -1,6 +1,6 @@
-use warp_core::ui::color::contrast::{MinimumAllowedContrast, high_enough_contrast};
-use warp_core::ui::theme::{Details, Fill};
-use warpui::TypedActionView;
+use torch_core::ui::color::contrast::{MinimumAllowedContrast, high_enough_contrast};
+use torch_core::ui::theme::{Details, Fill};
+use torchui::TypedActionView;
 
 use super::*;
 
@@ -50,7 +50,7 @@ fn permission_requests_keep_attention_even_after_being_read() {
 #[test]
 fn unavailable_project_does_not_create_a_session_or_expand_its_group() {
     use crate::workspace::view::tests::{initialize_app, mock_workspace};
-    warpui::App::test((), |mut app| async move {
+    torchui::App::test((), |mut app| async move {
         initialize_app(&mut app);
         let workspace = mock_workspace(&mut app);
         let temporary = tempfile::tempdir().unwrap();
@@ -81,7 +81,7 @@ fn unavailable_project_does_not_create_a_session_or_expand_its_group() {
 #[test]
 fn collapsing_sidebar_group_keeps_sessions_alive_and_activation_reveals_them() {
     use crate::workspace::view::tests::{initialize_app, mock_workspace};
-    warpui::App::test((), |mut app| async move {
+    torchui::App::test((), |mut app| async move {
         initialize_app(&mut app);
         let workspace = mock_workspace(&mut app);
         workspace.update(&mut app, |workspace, ctx| {
@@ -215,7 +215,7 @@ fn activity_labels_remain_compact_across_time_boundaries() {
 
 #[test]
 fn quiet_command_surfaces_preserve_text_contrast_in_both_themes() {
-    use warp_core::ui::color::blend::Blend;
+    use torch_core::ui::color::blend::Blend;
     for theme in [
         crate::themes::default_themes::light_theme(),
         crate::themes::default_themes::dark_theme(),
@@ -283,7 +283,7 @@ fn themed_sidebars_keep_sidebar_and_command_text_readable() {
 #[test]
 fn new_session_has_its_project_before_the_shell_reports_a_directory() {
     use crate::workspace::view::tests::{initialize_app, mock_workspace};
-    warpui::App::test((), |mut app| async move {
+    torchui::App::test((), |mut app| async move {
         initialize_app(&mut app);
         let temporary = tempfile::tempdir().unwrap();
         let root = dunce::canonicalize(temporary.path()).unwrap();
@@ -572,13 +572,13 @@ struct MotionLayoutTestView {
     motion: Motion,
     started: Instant,
 }
-impl warpui::Entity for MotionLayoutTestView {
+impl torchui::Entity for MotionLayoutTestView {
     type Event = ();
 }
-impl warpui::TypedActionView for MotionLayoutTestView {
+impl torchui::TypedActionView for MotionLayoutTestView {
     type Action = ();
 }
-impl warpui::View for MotionLayoutTestView {
+impl torchui::View for MotionLayoutTestView {
     fn ui_name() -> &'static str {
         "MotionLayoutTest"
     }
@@ -622,17 +622,17 @@ impl warpui::View for MotionLayoutTestView {
 fn motion_layout(motion: Motion, elapsed: Duration) -> (Option<f32>, f32, f32) {
     let result = std::rc::Rc::new(std::cell::Cell::new((None, 0., 0.)));
     let output = result.clone();
-    warpui::App::test((), |mut app| async move {
+    torchui::App::test((), |mut app| async move {
         let started = Instant::now() - elapsed;
         let (window_id, _view) = app
-            .add_window(warpui::platform::WindowStyle::NotStealFocus, |_| {
+            .add_window(torchui::platform::WindowStyle::NotStealFocus, |_| {
                 MotionLayoutTestView { motion, started }
             });
         let root = app.root_view_id(window_id).unwrap();
-        let mut presenter = warpui::Presenter::new(window_id);
+        let mut presenter = torchui::Presenter::new(window_id);
         app.update(|ctx| {
             presenter.invalidate(
-                warpui::WindowInvalidation {
+                torchui::WindowInvalidation {
                     updated: [root].into_iter().collect(),
                     ..Default::default()
                 },
@@ -784,7 +784,7 @@ fn keyboard_navigation_follows_sidebar_rows_and_skips_collapsed_groups() {
 #[test]
 fn moving_a_session_keeps_it_in_its_group_and_groups_in_order() {
     use crate::workspace::view::tests::{initialize_app, mock_workspace};
-    warpui::App::test((), |mut app| async move {
+    torchui::App::test((), |mut app| async move {
         initialize_app(&mut app);
         let workspace = mock_workspace(&mut app);
         workspace.update(&mut app, |workspace, ctx| {

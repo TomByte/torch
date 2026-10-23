@@ -5,7 +5,7 @@ use cloud_objects::cloud_object::{
     GenericServerObject, GenericStringModel, Serializer, ServerMetadata,
 };
 use cloud_objects::ids::{GenericStringObjectId, ObjectUid, ServerId, SyncId};
-use warp_graphql::object::CloudObjectWithDescendants;
+use torch_graphql::object::CloudObjectWithDescendants;
 
 use crate::{
     AIExecutionProfile, AIFact, AmbientAgentEnvironment, CloudFolderModel, CloudNotebookModel,
@@ -151,7 +151,7 @@ where
     T: std::fmt::Debug + Clone + Send + Sync + 'static,
     S: Serializer<T>,
 {
-    type GqlType = warp_graphql::generic_string_object::GenericStringObject;
+    type GqlType = torch_graphql::generic_string_object::GenericStringObject;
 
     fn try_from_gql(value: Self::GqlType) -> Result<Self> {
         let uid = ServerId::from_string_lossy(value.metadata.uid.inner());
@@ -166,7 +166,7 @@ where
 }
 
 impl TryFromGql for ServerFolder {
-    type GqlType = warp_graphql::folder::Folder;
+    type GqlType = torch_graphql::folder::Folder;
 
     fn try_from_gql(value: Self::GqlType) -> Result<Self> {
         let uid = ServerId::from_string_lossy(value.metadata.uid.inner());
@@ -180,7 +180,7 @@ impl TryFromGql for ServerFolder {
 }
 
 impl TryFromGql for ServerNotebook {
-    type GqlType = warp_graphql::notebook::Notebook;
+    type GqlType = torch_graphql::notebook::Notebook;
 
     fn try_from_gql(value: Self::GqlType) -> Result<Self> {
         let uid = ServerId::from_string_lossy(value.metadata.uid.inner());
@@ -203,7 +203,7 @@ impl TryFromGql for ServerNotebook {
 }
 
 impl TryFromGql for ServerWorkflow {
-    type GqlType = warp_graphql::workflow::Workflow;
+    type GqlType = torch_graphql::workflow::Workflow;
 
     fn try_from_gql(value: Self::GqlType) -> Result<Self> {
         let uid = ServerId::from_string_lossy(value.metadata.uid.inner());
@@ -217,27 +217,27 @@ impl TryFromGql for ServerWorkflow {
     }
 }
 
-impl TryFrom<warp_graphql::object::CloudObject> for ServerCloudObject {
+impl TryFrom<torch_graphql::object::CloudObject> for ServerCloudObject {
     type Error = anyhow::Error;
 
-    fn try_from(value: warp_graphql::object::CloudObject) -> Result<Self, Self::Error> {
+    fn try_from(value: torch_graphql::object::CloudObject) -> Result<Self, Self::Error> {
         match value {
-            warp_graphql::object::CloudObject::AIConversation(_) => Err(anyhow::anyhow!(
+            torch_graphql::object::CloudObject::AIConversation(_) => Err(anyhow::anyhow!(
                 "AIConversation is not a supported object type for this operation"
             )),
-            warp_graphql::object::CloudObject::Folder(folder) => Ok(ServerCloudObject::Folder(
+            torch_graphql::object::CloudObject::Folder(folder) => Ok(ServerCloudObject::Folder(
                 ServerFolder::try_from_gql(folder)?,
             )),
-            warp_graphql::object::CloudObject::GenericStringObject(gso) => {
+            torch_graphql::object::CloudObject::GenericStringObject(gso) => {
                 server_gso_to_cloud_object(gso)
             }
-            warp_graphql::object::CloudObject::Notebook(notebook) => Ok(
+            torch_graphql::object::CloudObject::Notebook(notebook) => Ok(
                 ServerCloudObject::Notebook(ServerNotebook::try_from_gql(notebook)?),
             ),
-            warp_graphql::object::CloudObject::Workflow(workflow) => Ok(
+            torch_graphql::object::CloudObject::Workflow(workflow) => Ok(
                 ServerCloudObject::Workflow(Box::new(ServerWorkflow::try_from_gql(workflow)?)),
             ),
-            warp_graphql::object::CloudObject::Unknown => {
+            torch_graphql::object::CloudObject::Unknown => {
                 Err(anyhow::anyhow!("Unable to convert cloud object type"))
             }
         }
@@ -270,57 +270,57 @@ impl TryFrom<CloudObjectWithDescendants> for ServerCloudObject {
 }
 
 fn server_gso_to_cloud_object(
-    gso: warp_graphql::generic_string_object::GenericStringObject,
+    gso: torch_graphql::generic_string_object::GenericStringObject,
 ) -> Result<ServerCloudObject> {
     match gso.format {
-        warp_graphql::generic_string_object::GenericStringObjectFormat::JsonEnvVarCollection => {
+        torch_graphql::generic_string_object::GenericStringObjectFormat::JsonEnvVarCollection => {
             Ok(ServerCloudObject::EnvVarCollection(
                 GenericServerObject::<GenericStringObjectId, GenericStringModel<EnvVarCollection, JsonSerializer>>::try_from_gql(gso)?,
             ))
         }
-        warp_graphql::generic_string_object::GenericStringObjectFormat::JsonPreference => Ok(
+        torch_graphql::generic_string_object::GenericStringObjectFormat::JsonPreference => Ok(
             ServerCloudObject::Preference(
                 GenericServerObject::<GenericStringObjectId, GenericStringModel<Preference, JsonSerializer>>::try_from_gql(gso)?,
             ),
         ),
-        warp_graphql::generic_string_object::GenericStringObjectFormat::JsonWorkflowEnum => Ok(
+        torch_graphql::generic_string_object::GenericStringObjectFormat::JsonWorkflowEnum => Ok(
             ServerCloudObject::WorkflowEnum(
                 GenericServerObject::<GenericStringObjectId, GenericStringModel<WorkflowEnum, JsonSerializer>>::try_from_gql(gso)?,
             ),
         ),
-        warp_graphql::generic_string_object::GenericStringObjectFormat::JsonAIFact => Ok(
+        torch_graphql::generic_string_object::GenericStringObjectFormat::JsonAIFact => Ok(
             ServerCloudObject::AIFact(
                 GenericServerObject::<GenericStringObjectId, GenericStringModel<AIFact, JsonSerializer>>::try_from_gql(gso)?,
             ),
         ),
-        warp_graphql::generic_string_object::GenericStringObjectFormat::JsonMCPServer => Ok(
+        torch_graphql::generic_string_object::GenericStringObjectFormat::JsonMCPServer => Ok(
             ServerCloudObject::MCPServer(
                 GenericServerObject::<GenericStringObjectId, GenericStringModel<MCPServer, JsonSerializer>>::try_from_gql(gso)?,
             ),
         ),
-        warp_graphql::generic_string_object::GenericStringObjectFormat::JsonAIExecutionProfile => {
+        torch_graphql::generic_string_object::GenericStringObjectFormat::JsonAIExecutionProfile => {
             Ok(ServerCloudObject::AIExecutionProfile(
                 GenericServerObject::<GenericStringObjectId, GenericStringModel<AIExecutionProfile, JsonSerializer>>::try_from_gql(gso)?,
             ))
         }
-        warp_graphql::generic_string_object::GenericStringObjectFormat::JsonTemplatableMCPServer => {
+        torch_graphql::generic_string_object::GenericStringObjectFormat::JsonTemplatableMCPServer => {
             Ok(ServerCloudObject::TemplatableMCPServer(
                 GenericServerObject::<GenericStringObjectId, GenericStringModel<TemplatableMCPServer, JsonSerializer>>::try_from_gql(gso)?,
             ))
         }
-        warp_graphql::generic_string_object::GenericStringObjectFormat::JsonCloudEnvironment => {
+        torch_graphql::generic_string_object::GenericStringObjectFormat::JsonCloudEnvironment => {
             Ok(ServerCloudObject::AmbientAgentEnvironment(
                 GenericServerObject::<GenericStringObjectId, GenericStringModel<AmbientAgentEnvironment, JsonSerializer>>::try_from_gql(gso)?,
             ))
         }
-        warp_graphql::generic_string_object::GenericStringObjectFormat::JsonScheduledAmbientAgent => {
+        torch_graphql::generic_string_object::GenericStringObjectFormat::JsonScheduledAmbientAgent => {
             Ok(ServerCloudObject::ScheduledAmbientAgent(
                 GenericServerObject::<GenericStringObjectId, GenericStringModel<ScheduledAmbientAgent, JsonSerializer>>::try_from_gql(gso)?,
             ))
         }
         // Formats unknown to this client build (e.g. the server-only `JsonRunner`).
         // Returning an error lets callers skip the object rather than failing.
-        warp_graphql::generic_string_object::GenericStringObjectFormat::Unknown => Err(anyhow::anyhow!(
+        torch_graphql::generic_string_object::GenericStringObjectFormat::Unknown => Err(anyhow::anyhow!(
             "unsupported generic string object format (unknown to this client build)"
         )),
     }

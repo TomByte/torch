@@ -25,8 +25,8 @@ tempfile.workspace = true
 thiserror.workspace = true
 tokio = { workspace = true, features = ["rt", "sync"] }
 tracing.workspace = true
-warp_core.workspace = true
-warp_errors.workspace = true
+torch_core.workspace = true
+torch_errors.workspace = true
 walkdir.workspace = true
 
 [dev-dependencies]

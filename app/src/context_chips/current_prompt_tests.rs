@@ -7,10 +7,10 @@ use parking_lot::Mutex;
 #[cfg(feature = "local_fs")]
 use repo_metadata::DirectoryWatcher;
 use settings::Setting as _;
-use warp_completer::completer::{CommandExitStatus, CommandOutput};
-use warp_core::command::ExitCode;
-use warpui::{App, SingletonEntity};
-use warpui_extras::user_preferences;
+use torch_completer::completer::{CommandExitStatus, CommandOutput};
+use torch_core::command::ExitCode;
+use torchui::{App, SingletonEntity};
+use torchui_extras::user_preferences;
 
 use super::{ActiveChipSurfaces, ChipUpdateStatus, CurrentPrompt, PromptContext};
 use crate::CLIAgentSessionsModel;
@@ -107,7 +107,7 @@ fn cli_agent_session(agent: CLIAgent) -> CLIAgentSession {
 /// prompt runs those chips.
 fn show_cli_agent_footer(
     app: &mut App,
-    current_prompt: &warpui::ModelHandle<CurrentPrompt>,
+    current_prompt: &torchui::ModelHandle<CurrentPrompt>,
     chips: impl IntoIterator<Item = ContextChipKind>,
 ) {
     let left = chips
@@ -539,7 +539,7 @@ fn test_externally_driven_chip_skips_periodic_timer() {
         let repo_handle = watcher_handle.update(&mut app, |watcher, ctx| {
             watcher
                 .add_directory(
-                    warp_util::standardized_path::StandardizedPath::from_local_canonicalized(
+                    torch_util::standardized_path::StandardizedPath::from_local_canonicalized(
                         temp_dir.path(),
                     )
                     .unwrap(),
@@ -584,7 +584,7 @@ fn test_git_status_change_updates_chip_value() {
         let repo_handle = watcher_handle.update(&mut app, |watcher, ctx| {
             watcher
                 .add_directory(
-                    warp_util::standardized_path::StandardizedPath::from_local_canonicalized(
+                    torch_util::standardized_path::StandardizedPath::from_local_canonicalized(
                         temp_dir.path(),
                     )
                     .unwrap(),
@@ -639,7 +639,7 @@ fn test_git_status_change_updates_branch_status_chip_value() {
         let repo_handle = watcher_handle.update(&mut app, |watcher, ctx| {
             watcher
                 .add_directory(
-                    warp_util::standardized_path::StandardizedPath::from_local_canonicalized(
+                    torch_util::standardized_path::StandardizedPath::from_local_canonicalized(
                         temp_dir.path(),
                     )
                     .unwrap(),
@@ -708,7 +708,7 @@ fn test_git_status_pr_info_updates_github_pr_chip_value() {
         let repo_handle = watcher_handle.update(&mut app, |watcher, ctx| {
             watcher
                 .add_directory(
-                    warp_util::standardized_path::StandardizedPath::from_local_canonicalized(
+                    torch_util::standardized_path::StandardizedPath::from_local_canonicalized(
                         temp_dir.path(),
                     )
                     .unwrap(),

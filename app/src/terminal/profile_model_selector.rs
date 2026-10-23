@@ -6,17 +6,17 @@ use instant::{Duration, Instant};
 use parking_lot::FairMutex;
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
-use warpui::elements::{
+use torchui::elements::{
     Border, ChildAnchor, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     DEFAULT_UI_LINE_HEIGHT_RATIO, DropShadow, Empty, Expanded, Flex, Hoverable, MainAxisAlignment,
     MainAxisSize, MouseStateHandle, OffsetPositioning, ParentAnchor, ParentElement as _,
     ParentOffsetBounds, Percentage, PositionedElementAnchor, PositionedElementOffsetBounds, Radius,
     Rect, SavePosition, Stack, Text,
 };
-use warpui::platform::Cursor;
-use warpui::text_layout::ClipConfig;
-use warpui::ui_components::components::UiComponent;
-use warpui::{
+use torchui::platform::Cursor;
+use torchui::text_layout::ClipConfig;
+use torchui::ui_components::components::UiComponent;
+use torchui::{
     AppContext, Element, Entity, EntityId, ModelHandle, SingletonEntity as _, TypedActionView,
     View, ViewContext, ViewHandle, WeakViewHandle,
 };
@@ -24,11 +24,11 @@ use warpui::{
 const SIDECAR_HORIZONTAL_GAP: f32 = 8.;
 const SIDECAR_POSITION_ID: &str = "model_sidecar_panel";
 
-use warp_cli::agent::Harness;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::color::{Opacity, coloru_with_opacity};
-use warp_core::ui::theme::Fill;
-use warp_core::ui::theme::color::internal_colors;
+use torch_cli::agent::Harness;
+use torch_core::features::FeatureFlag;
+use torch_core::ui::color::{Opacity, coloru_with_opacity};
+use torch_core::ui::theme::Fill;
+use torch_core::ui::theme::color::internal_colors;
 
 use crate::ai::blocklist::prompt::PromptIconButtonTheme;
 use crate::ai::blocklist::{
@@ -101,7 +101,7 @@ const MODEL_LOCKED_FOR_FOLLOWUP_TOOLTIP: &str = "Follow-ups use the original run
 const MODEL_REQUIRES_EDIT_ACCESS_TOOLTIP: &str = "Request edit access to change model";
 const HARNESS_DEFAULT_MODEL_LABEL: &str = "default";
 
-pub fn calculate_scaled_font_size(appearance: &warp_core::ui::appearance::Appearance) -> f32 {
+pub fn calculate_scaled_font_size(appearance: &torch_core::ui::appearance::Appearance) -> f32 {
     if FeatureFlag::AgentView.is_enabled() {
         udi_font_size(appearance)
     } else {
@@ -110,7 +110,7 @@ pub fn calculate_scaled_font_size(appearance: &warp_core::ui::appearance::Appear
 }
 
 /// Calculate the maximum width for profile name text (we will clip to this width)
-pub fn calculate_max_profile_name_width(appearance: &warp_core::ui::appearance::Appearance) -> f32 {
+pub fn calculate_max_profile_name_width(appearance: &torch_core::ui::appearance::Appearance) -> f32 {
     let scaled_font_size = calculate_scaled_font_size(appearance);
     scaled_font_size * MAX_PROFILE_NAME_WIDTH_SCALE_FACTOR
 }
@@ -159,10 +159,10 @@ impl ActionButtonTheme for SelectorChipTheme {
         }
     }
 
-    fn font_properties(&self) -> Option<warpui::fonts::Properties> {
+    fn font_properties(&self) -> Option<torchui::fonts::Properties> {
         if FeatureFlag::CloudModeInputV2.is_enabled() {
-            Some(warpui::fonts::Properties {
-                weight: warpui::fonts::Weight::Semibold,
+            Some(torchui::fonts::Properties {
+                weight: torchui::fonts::Weight::Semibold,
                 ..Default::default()
             })
         } else {
@@ -457,7 +457,7 @@ impl ProfileModelSelector {
                     llm_preferences.hide_llm_popup(terminal_view_id);
                 } else if config.input_type.is_ai() {
                     ctx.spawn(
-                        warpui::r#async::Timer::after(NEW_MODEL_CHOICES_POPUP_DELAY),
+                        torchui::r#async::Timer::after(NEW_MODEL_CHOICES_POPUP_DELAY),
                         |_, _, ctx| {
                             ctx.notify();
                         },
@@ -2486,7 +2486,7 @@ impl View for ProfileModelSelector {
             crate::settings::InputSettings::as_ref(app).is_universal_developer_input_enabled(app);
 
         // The popup overflows the viewport on wasm mobile.
-        let is_wasm_mobile = warpui::platform::is_mobile_device();
+        let is_wasm_mobile = torchui::platform::is_mobile_device();
 
         if !is_wasm_mobile
             && (is_udi_enabled

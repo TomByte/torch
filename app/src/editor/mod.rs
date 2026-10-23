@@ -10,10 +10,10 @@ use std::ops::Range;
 /// They should _not_ be able to interface with the internal
 /// details of the editor (e.g. the [`Buffer`]).
 pub use view::*;
-use warpui::AppContext;
-pub use warpui::text::point::Point;
+use torchui::AppContext;
+pub use torchui::text::point::Point;
 
-// Re-exported for use by the `warp_tui` TUI front-end, which needs to
+// Re-exported for use by the `torch_tui` TUI front-end, which needs to
 // construct and subscribe to `CodeEditorModel` in char-cell mode.
 pub use crate::code::editor::model::{CodeEditorModel, CodeEditorModelEvent, LineBound};
 

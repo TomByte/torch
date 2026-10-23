@@ -19,11 +19,11 @@ use parking_lot::FairMutex;
 use pathfinder_geometry::vector::Vector2F;
 use settings::Setting as _;
 use uuid::Uuid;
-use warp_core::SessionId;
-use warp_errors::report_error;
-use warpui::r#async::Timer;
-use warpui::r#async::executor::Background;
-use warpui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity, ViewHandle};
+use torch_core::SessionId;
+use torch_errors::report_error;
+use torchui::r#async::Timer;
+use torchui::r#async::executor::Background;
+use torchui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity, ViewHandle};
 
 use super::event_loop::EventLoop;
 use super::shell::{ShellStarter, ShellStarterSource};
@@ -1418,7 +1418,7 @@ pub fn get_shell_starter(
     // TODO(alokedesai): Further refactor this function to make it clear that it's expensive.
     shell_starter_or_wsl_name
         .and_then(|starter| {
-            warpui::r#async::block_on(async { starter.to_shell_starter_source().await })
+            torchui::r#async::block_on(async { starter.to_shell_starter_source().await })
         })
         .map(|starter_source| {
             get_shell_starter_internal(

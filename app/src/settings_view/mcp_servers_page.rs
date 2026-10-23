@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
 use uuid::Uuid;
-use warp_errors::report_error;
-use warpui::elements::{ChildView, Container};
-use warpui::ui_components::components::{Coords, UiComponentStyles};
-use warpui::{
+use torch_errors::report_error;
+use torchui::elements::{ChildView, Container};
+use torchui::ui_components::components::{Coords, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 

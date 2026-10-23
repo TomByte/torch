@@ -1,6 +1,6 @@
-use warpui::elements::{CornerRadius, MouseStateHandle, Radius};
-use warpui::ui_components::button::Button;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::elements::{CornerRadius, MouseStateHandle, Radius};
+use torchui::ui_components::button::Button;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 
 use super::icons::{ICON_DIMENSIONS, Icon};
 use super::{BORDER_RADIUS, blended_colors};

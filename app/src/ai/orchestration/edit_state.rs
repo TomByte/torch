@@ -11,8 +11,8 @@
 use std::collections::HashMap;
 
 use ai::agent::action::RunAgentsExecutionMode;
-use warp_cli::agent::Harness;
-use warpui::{AppContext, SingletonEntity};
+use torch_cli::agent::Harness;
+use torchui::{AppContext, SingletonEntity};
 
 use super::config_state::{AuthSecretSelection, OrchestrationConfigState};
 use super::providers::{

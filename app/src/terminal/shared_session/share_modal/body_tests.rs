@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use parking_lot::FairMutex;
-use warpui::App;
+use torchui::App;
 
 use super::Body;
 use crate::terminal::TerminalModel;

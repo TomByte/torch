@@ -116,7 +116,7 @@ impl CustomModelRouter {
             Some(path) => {
                 format!(
                     "{routing_kind} · {}",
-                    warp_core::paths::home_relative_path(path)
+                    torch_core::paths::home_relative_path(path)
                 )
             }
             None => routing_kind.to_owned(),

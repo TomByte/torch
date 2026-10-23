@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use ai::skills::parse_skill;
 use anyhow::anyhow;
 use tempfile::TempDir;
-use warpui::{App, SingletonEntity as _};
+use torchui::{App, SingletonEntity as _};
 
 use super::{
     CloudAgentStartupAuthFlow, CloudAgentStartupBlocker, CloudAgentStartupFailure,
@@ -89,11 +89,11 @@ fn config(harness_type: &str) -> RemoteChildLaunchConfig {
 fn orchestration_harness_defaults_to_oz_and_parses_known_harnesses() {
     assert_eq!(
         config("").orchestration_harness(),
-        warp_cli::agent::Harness::Oz
+        torch_cli::agent::Harness::Oz
     );
     assert_eq!(
         config("claude").orchestration_harness(),
-        warp_cli::agent::Harness::Claude
+        torch_cli::agent::Harness::Claude
     );
 }
 
@@ -198,13 +198,13 @@ fn repo_qualified_skill_spec_resolves_into_runtime_skills() {
             );
         });
         let skill_references = vec![
-            SkillReference::Path(warp_util::local_or_remote_path::LocalOrRemotePath::Local(
+            SkillReference::Path(torch_util::local_or_remote_path::LocalOrRemotePath::Local(
                 PathBuf::from(&skill_spec),
             )),
-            SkillReference::Path(warp_util::local_or_remote_path::LocalOrRemotePath::Local(
+            SkillReference::Path(torch_util::local_or_remote_path::LocalOrRemotePath::Local(
                 PathBuf::from("myrepo:my-skill"),
             )),
-            SkillReference::Path(warp_util::local_or_remote_path::LocalOrRemotePath::Local(
+            SkillReference::Path(torch_util::local_or_remote_path::LocalOrRemotePath::Local(
                 skill_path.clone(),
             )),
             SkillReference::BundledSkillId("bundled-test".to_string()),
@@ -289,7 +289,7 @@ fn missing_repo_qualified_skill_reports_repository_and_reason() {
                 &request,
                 RemoteChildLaunchConfig {
                     skill_references: vec![SkillReference::Path(
-                        warp_util::local_or_remote_path::LocalOrRemotePath::Local(
+                        torch_util::local_or_remote_path::LocalOrRemotePath::Local(
                             "missing-repo:missing-skill".into(),
                         ),
                     )],

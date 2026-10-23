@@ -6,18 +6,18 @@
 
 use itertools::Itertools;
 use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
-use warpui::elements::{
+use torchui::elements::{
     ChildView, ClippedScrollStateHandle, ClippedScrollable, ConstrainedBox, Container,
     CornerRadius, CrossAxisAlignment, Empty, Expanded, Fill as UiFill, Flex, FormattedTextElement,
     HighlightedHyperlink, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle,
     ParentElement, Radius, ScrollbarWidth, Text,
 };
-use warpui::platform::Cursor;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::ui_components::segmented_control::{
+use torchui::platform::Cursor;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::ui_components::segmented_control::{
     LabelConfig, RenderableOptionConfig, SegmentedControl, SegmentedControlEvent,
 };
-use warpui::{
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 
@@ -110,7 +110,7 @@ struct PromptRuleRow {
 
 pub struct CustomRouterEditorView {
     existing: Option<CustomModelRouter>,
-    pane_configuration: warpui::ModelHandle<PaneConfiguration>,
+    pane_configuration: torchui::ModelHandle<PaneConfiguration>,
     focus_handle: Option<PaneFocusHandle>,
     scroll_state: ClippedScrollStateHandle,
 
@@ -374,7 +374,7 @@ impl CustomRouterEditorView {
         view
     }
 
-    pub fn pane_configuration(&self) -> warpui::ModelHandle<PaneConfiguration> {
+    pub fn pane_configuration(&self) -> torchui::ModelHandle<PaneConfiguration> {
         self.pane_configuration.clone()
     }
 
@@ -831,7 +831,7 @@ impl CustomRouterEditorView {
 
         // Error
         if let Some(msg) = &self.save_error {
-            let err_color = warp_core::ui::theme::Fill::Solid(appearance.theme().ui_error_color());
+            let err_color = torch_core::ui::theme::Fill::Solid(appearance.theme().ui_error_color());
             col.add_child(
                 Container::new(
                     Text::new(msg.clone(), appearance.ui_font_family(), 12.)
@@ -874,7 +874,7 @@ impl View for CustomRouterEditorView {
             ScrollbarWidth::Auto,
             appearance.theme().nonactive_ui_detail().into(),
             appearance.theme().active_ui_detail().into(),
-            warpui::elements::Fill::None,
+            torchui::elements::Fill::None,
         )
         .finish()
     }
@@ -953,7 +953,7 @@ impl BackingView for CustomRouterEditorView {
             title: HEADER_TEXT.into(),
             title_secondary: None,
             title_style: None,
-            title_clip_config: warpui::text_layout::ClipConfig::start(),
+            title_clip_config: torchui::text_layout::ClipConfig::start(),
             title_max_width: None,
             left_of_title: None,
             right_of_title: None,
@@ -1039,7 +1039,7 @@ fn repopulate_filterable<F>(
 
 /// Inner helper: fills a [`FilterableDropdown`] with rich model items.
 fn fill_filterable_dropdown<F>(
-    ctx: &mut warpui::ViewContext<FilterableDropdown<CustomRouterEditorAction>>,
+    ctx: &mut torchui::ViewContext<FilterableDropdown<CustomRouterEditorAction>>,
     dropdown: &mut FilterableDropdown<CustomRouterEditorAction>,
     selected_id: &str,
     make_action: F,

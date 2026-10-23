@@ -15,14 +15,14 @@ use ::channel_versions::{ParsedVersion, VersionInfo};
 use anyhow::{Context as _, Result, anyhow};
 use chrono::{DateTime, FixedOffset, NaiveDate};
 use rand::Rng as _;
-use warp_core::execution_mode::AppExecutionMode;
-use warp_errors::report_if_error;
-use warpui::accessibility::{AccessibilityContent, WarpA11yRole};
-use warpui::r#async::Timer;
-use warpui::platform::TerminationMode;
-use warpui::windowing::state::ApplicationStage;
-use warpui::windowing::{self, WindowManager};
-use warpui::{AppContext, Entity, ModelContext, SingletonEntity, ViewContext};
+use torch_core::execution_mode::AppExecutionMode;
+use torch_errors::report_if_error;
+use torchui::accessibility::{AccessibilityContent, WarpA11yRole};
+use torchui::r#async::Timer;
+use torchui::platform::TerminationMode;
+use torchui::windowing::state::ApplicationStage;
+use torchui::windowing::{self, WindowManager};
+use torchui::{AppContext, Entity, ModelContext, SingletonEntity, ViewContext};
 
 pub use self::changelog::get_current_changelog;
 use self::channel_versions::fetch_channel_versions;
@@ -981,7 +981,7 @@ where
                         autoupdate_state.relaunch_failed(ctx);
 
                         let err = anyhow!(err).context("Error applying installed update");
-                        warp_errors::report_error!(&err);
+                        torch_errors::report_error!(&err);
                         callback(Err(err), ctx);
                     }
                 }

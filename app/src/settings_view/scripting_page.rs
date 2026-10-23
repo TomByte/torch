@@ -4,14 +4,14 @@ use std::collections::HashMap;
 
 use settings::Setting as _;
 #[cfg(target_os = "macos")]
-use warp_core::channel::ChannelState;
-use warp_errors::report_if_error;
-use warpui::elements::{ChildView, Element, MouseStateHandle};
+use torch_core::channel::ChannelState;
+use torch_errors::report_if_error;
+use torchui::elements::{ChildView, Element, MouseStateHandle};
 #[cfg(target_os = "macos")]
-use warpui::ui_components::button::ButtonVariant;
+use torchui::ui_components::button::ButtonVariant;
 #[cfg(target_os = "macos")]
-use warpui::ui_components::components::UiComponent;
-use warpui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
+use torchui::ui_components::components::UiComponent;
+use torchui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
 
 use super::settings_page::{
     LocalOnlyIconState, MatchData, PageTitle, PageType, SettingsPageMeta, SettingsPageViewHandle,

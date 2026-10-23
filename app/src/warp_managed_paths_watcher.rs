@@ -9,8 +9,8 @@ use repo_metadata::RepositoryUpdate;
 #[cfg(any(not(target_family = "wasm"), test))]
 use repo_metadata::TargetFile;
 #[cfg(not(target_family = "wasm"))]
-use warpui::ModelHandle;
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torchui::ModelHandle;
+use torchui::{Entity, ModelContext, SingletonEntity};
 #[cfg(not(target_family = "wasm"))]
 use watcher::{BulkFilesystemWatcher, BulkFilesystemWatcherEvent};
 
@@ -19,7 +19,7 @@ use watcher::{BulkFilesystemWatcher, BulkFilesystemWatcherEvent};
 const WARP_MANAGED_PATHS_WATCHER_DEBOUNCE_MILLI_SECS: u64 = 500;
 
 pub(crate) fn warp_data_dir() -> PathBuf {
-    warp_core::paths::data_dir()
+    torch_core::paths::data_dir()
 }
 
 #[cfg(target_family = "wasm")]
@@ -35,7 +35,7 @@ pub(crate) fn ensure_warp_watch_roots_exist() {
         );
     }
 
-    let config_local_dir = warp_core::paths::config_local_dir();
+    let config_local_dir = torch_core::paths::config_local_dir();
     if config_local_dir != data_dir
         && let Err(err) = fs::create_dir_all(&config_local_dir)
     {
@@ -46,11 +46,11 @@ pub(crate) fn ensure_warp_watch_roots_exist() {
     }
 
     // The TUI surface stores its settings in a separate config directory
-    // (see `warp_core::paths::tui_config_local_dir`). Create it up front — only
+    // (see `torch_core::paths::tui_config_local_dir`). Create it up front — only
     // for that surface — so the watcher can register it at startup and pick up
     // the first settings write.
     if settings::settings_mode() == settings::SettingsMode::Tui {
-        let tui_config_local_dir = warp_core::paths::tui_config_local_dir();
+        let tui_config_local_dir = torch_core::paths::tui_config_local_dir();
         if let Err(err) = fs::create_dir_all(&tui_config_local_dir) {
             log::warn!(
                 "Failed to create Torch TUI config directory {}: {err}",
@@ -62,18 +62,18 @@ pub(crate) fn ensure_warp_watch_roots_exist() {
 
 #[cfg_attr(target_family = "wasm", allow(dead_code))]
 pub(crate) fn warp_home_skills_dir() -> Option<PathBuf> {
-    warp_core::paths::warp_home_skills_dir()
+    torch_core::paths::warp_home_skills_dir()
 }
 
 #[cfg_attr(target_family = "wasm", allow(dead_code))]
 pub(crate) fn warp_home_mcp_config_file_path() -> Option<PathBuf> {
-    warp_core::paths::warp_home_mcp_config_file_path()
+    torch_core::paths::warp_home_mcp_config_file_path()
 }
 #[cfg_attr(target_family = "wasm", allow(dead_code))]
 pub(crate) fn active_mcp_config_file_path() -> Option<PathBuf> {
     match settings::settings_mode() {
         settings::SettingsMode::Gui => warp_home_mcp_config_file_path(),
-        settings::SettingsMode::Tui => Some(warp_core::paths::tui_mcp_config_file_path()),
+        settings::SettingsMode::Tui => Some(torch_core::paths::tui_mcp_config_file_path()),
     }
 }
 
@@ -261,7 +261,7 @@ impl WarpManagedPathsWatcher {
 
         if should_register_watcher {
             let data_dir = warp_data_dir();
-            let config_local_dir = warp_core::paths::config_local_dir();
+            let config_local_dir = torch_core::paths::config_local_dir();
             let should_register_config_local_dir = config_local_dir != data_dir;
             let worktrees_dir = data_dir.join("worktrees");
             // Safe to use for both directory registration and event emission.
@@ -287,12 +287,12 @@ impl WarpManagedPathsWatcher {
                 );
             }
             // Watch the TUI settings directory for that surface. On macOS it's
-            // a sibling `.warp_cli*` directory outside `config_local_dir`; on
+            // a sibling `.torch_cli*` directory outside `config_local_dir`; on
             // other platforms it nests under `config_local_dir` and is already
             // covered by the recursive watch above (the `starts_with` guard
             // skips the redundant registration).
             if settings::settings_mode() == settings::SettingsMode::Tui {
-                let tui_config_local_dir = warp_core::paths::tui_config_local_dir();
+                let tui_config_local_dir = torch_core::paths::tui_config_local_dir();
                 if tui_config_local_dir.exists()
                     && !tui_config_local_dir.starts_with(&data_dir)
                     && (!should_register_config_local_dir
@@ -334,7 +334,7 @@ impl WarpManagedPathsWatcher {
             let is_covered_by_tui_config_watcher = settings::settings_mode()
                 == settings::SettingsMode::Tui
                 && active_mcp_config_dir.as_deref()
-                    == Some(warp_core::paths::tui_config_local_dir().as_path());
+                    == Some(torch_core::paths::tui_config_local_dir().as_path());
 
             if let Some(active_mcp_config_path) = active_mcp_config_path
                 && let Some(active_mcp_config_dir) = active_mcp_config_dir

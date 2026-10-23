@@ -3,15 +3,15 @@
 use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
-use warp_errors::report_error;
-use warpui::elements::{
+use torch_errors::report_error;
+use torchui::elements::{
     ChildAnchor, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Empty, Flex,
     FormattedTextElement, Hoverable, OffsetPositioning, ParentAnchor, ParentElement,
     ParentOffsetBounds, Radius, Shrinkable, Stack, Text,
 };
-use warpui::platform::Cursor;
-use warpui::ui_components::components::UiComponent;
-use warpui::{AppContext, Element, SingletonEntity};
+use torchui::platform::Cursor;
+use torchui::ui_components::components::UiComponent;
+use torchui::{AppContext, Element, SingletonEntity};
 
 use super::WithContentItemSpacing;
 use super::common::render_scrollable_collapsible_content;

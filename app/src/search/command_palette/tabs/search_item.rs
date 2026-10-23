@@ -1,7 +1,7 @@
 use ordered_float::OrderedFloat;
-use warpui::elements::{ConstrainedBox, Container, Flex, ParentElement, Text};
-use warpui::fonts::{Properties, Weight};
-use warpui::{AppContext, Element, SingletonEntity};
+use torchui::elements::{ConstrainedBox, Container, Flex, ParentElement, Text};
+use torchui::fonts::{Properties, Weight};
+use torchui::{AppContext, Element, SingletonEntity};
 
 use crate::appearance::Appearance;
 use crate::search::command_palette::mixer::CommandPaletteItemAction;

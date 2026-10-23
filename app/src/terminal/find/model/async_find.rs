@@ -14,8 +14,8 @@ use std::time::Duration;
 use background_task::spawn_find_task;
 use parking_lot::FairMutex;
 use sum_tree::SeekBias;
-use warpui::r#async::SpawnedFutureHandle;
-use warpui::{EntityId, ModelContext};
+use torchui::r#async::SpawnedFutureHandle;
+use torchui::{EntityId, ModelContext};
 use work_queue::FindWorkQueue;
 
 use super::FindOptions;
@@ -1351,7 +1351,7 @@ pub fn collect_block_info(block_list: &BlockList, config: &AsyncFindConfig) -> V
     while let Some(item) = cursor.item() {
         match item {
             BlockHeightItem::Block(height)
-                if height.into_lines() > warpui::units::Lines::zero() =>
+                if height.into_lines() > torchui::units::Lines::zero() =>
             {
                 let summary = cursor.start();
                 block_info.push(BlockInfo::Terminal {
@@ -1361,7 +1361,7 @@ pub fn collect_block_info(block_list: &BlockList, config: &AsyncFindConfig) -> V
             }
             BlockHeightItem::RichContent(rich_content_item)
                 if rich_content_item.last_laid_out_height.into_lines()
-                    > warpui::units::Lines::zero() =>
+                    > torchui::units::Lines::zero() =>
             {
                 block_info.push(BlockInfo::RichContent {
                     view_id: rich_content_item.view_id,

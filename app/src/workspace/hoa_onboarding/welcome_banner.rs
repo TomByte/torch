@@ -1,14 +1,14 @@
 use pathfinder_geometry::vector::vec2f;
-use warp_core::ui::theme::Fill;
-use warp_core::ui::theme::phenomenon::PhenomenonStyle;
-use warpui::assets::asset_cache::AssetSource;
-use warpui::elements::{
+use torch_core::ui::theme::Fill;
+use torch_core::ui::theme::phenomenon::PhenomenonStyle;
+use torchui::assets::asset_cache::AssetSource;
+use torchui::elements::{
     CacheOption, ChildAnchor, ChildView, ConstrainedBox, Container, CornerRadius,
     CrossAxisAlignment, Expanded, Flex, Image, MainAxisSize, OffsetPositioning, ParentAnchor,
     ParentElement, ParentOffsetBounds, Radius, Stack, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::{Element, ViewHandle};
+use torchui::fonts::{Properties, Weight};
+use torchui::{Element, ViewHandle};
 
 use crate::appearance::Appearance;
 use crate::ui_components::icons::Icon;

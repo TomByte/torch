@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use anyhow::anyhow;
 use command::r#async::Command;
-use warpui_core::r#async::FutureExt as _;
+use torchui_core::r#async::FutureExt as _;
 
 use crate::transport::ControlPath;
 

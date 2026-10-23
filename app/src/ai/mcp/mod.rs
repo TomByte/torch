@@ -12,8 +12,8 @@ use strum_macros::EnumIter;
 #[cfg(not(target_family = "wasm"))]
 pub use templatable_manager::McpIntegration;
 pub use templatable_manager::TemplatableMCPServerManager;
-use warp_core::ui::Icon;
-use warp_core::ui::appearance::Appearance;
+use torch_core::ui::Icon;
+use torch_core::ui::appearance::Appearance;
 
 use crate::cloud_object::model::generic_string_model::StringModel;
 use crate::cloud_object::model::json_model::JsonModel;
@@ -69,7 +69,7 @@ pub mod parsing;
 #[cfg(not(target_family = "wasm"))]
 pub use parsing::ParsedTemplatableMCPServerResult;
 #[cfg(not(target_family = "wasm"))]
-use warp_errors::report_error;
+use torch_errors::report_error;
 #[cfg(not(target_family = "wasm"))]
 pub mod reconnecting_peer;
 
@@ -506,7 +506,7 @@ pub(crate) fn home_dir() -> Option<PathBuf> {
 
 pub(crate) fn home_config_file_path(provider: MCPProvider) -> Option<PathBuf> {
     match provider {
-        MCPProvider::Warp => warp_core::paths::warp_home_mcp_config_file_path(),
+        MCPProvider::Warp => torch_core::paths::warp_home_mcp_config_file_path(),
         _ => home_dir().map(|home_dir| home_dir.join(provider.home_config_path())),
     }
 }

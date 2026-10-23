@@ -3,14 +3,14 @@ use std::sync::Arc;
 
 use bytes::Bytes;
 use chrono::{TimeZone, Utc};
-use warp_cli::SortOrderArg;
-use warp_cli::json_filter::{JsonOutput, parse_jq_filter};
-use warp_cli::scope::TeamSelection;
-use warp_cli::task::{
+use torch_cli::SortOrderArg;
+use torch_cli::json_filter::{JsonOutput, parse_jq_filter};
+use torch_cli::scope::TeamSelection;
+use torch_cli::task::{
     ArtifactTypeArg, ExecutionLocationArg, ListTasksArgs, RunSortByArg, RunSourceArg, RunStateArg,
 };
-use warp_server_client::HttpStatusError;
-use warpui::App;
+use torch_server_client::HttpStatusError;
+use torchui::App;
 
 use super::*;
 use crate::auth::AuthStateProvider;
@@ -402,12 +402,12 @@ fn task_id_from_run_id_ignores_non_task_ids() {
 #[serial_test::serial]
 fn task_id_for_message_send_prefers_sender_run_id() {
     // TODO: Audit that the environment access only happens in single-threaded code.
-    unsafe { std::env::set_var(warp_cli::OZ_RUN_ID_ENV, OTHER_TASK_ID) };
+    unsafe { std::env::set_var(torch_cli::OZ_RUN_ID_ENV, OTHER_TASK_ID) };
     let task_id = task_id_for_message_send(TASK_ID)
         .expect("valid task id")
         .expect("task id");
     // TODO: Audit that the environment access only happens in single-threaded code.
-    unsafe { std::env::remove_var(warp_cli::OZ_RUN_ID_ENV) };
+    unsafe { std::env::remove_var(torch_cli::OZ_RUN_ID_ENV) };
 
     assert_eq!(task_id.to_string(), TASK_ID);
 }
@@ -416,12 +416,12 @@ fn task_id_for_message_send_prefers_sender_run_id() {
 #[serial_test::serial]
 fn task_id_for_message_send_falls_back_to_oz_run_id() {
     // TODO: Audit that the environment access only happens in single-threaded code.
-    unsafe { std::env::set_var(warp_cli::OZ_RUN_ID_ENV, TASK_ID) };
+    unsafe { std::env::set_var(torch_cli::OZ_RUN_ID_ENV, TASK_ID) };
     let task_id = task_id_for_message_send("local-child-run")
         .expect("valid env task id")
         .expect("task id");
     // TODO: Audit that the environment access only happens in single-threaded code.
-    unsafe { std::env::remove_var(warp_cli::OZ_RUN_ID_ENV) };
+    unsafe { std::env::remove_var(torch_cli::OZ_RUN_ID_ENV) };
 
     assert_eq!(task_id.to_string(), TASK_ID);
 }
@@ -430,10 +430,10 @@ fn task_id_for_message_send_falls_back_to_oz_run_id() {
 #[serial_test::serial]
 fn task_id_from_oz_run_id_env_rejects_invalid_value() {
     // TODO: Audit that the environment access only happens in single-threaded code.
-    unsafe { std::env::set_var(warp_cli::OZ_RUN_ID_ENV, "not-a-task-id") };
+    unsafe { std::env::set_var(torch_cli::OZ_RUN_ID_ENV, "not-a-task-id") };
     let err = task_id_from_oz_run_id_env().expect_err("invalid task id");
     // TODO: Audit that the environment access only happens in single-threaded code.
-    unsafe { std::env::remove_var(warp_cli::OZ_RUN_ID_ENV) };
+    unsafe { std::env::remove_var(torch_cli::OZ_RUN_ID_ENV) };
 
     assert!(err.to_string().contains("Invalid OZ_RUN_ID"));
 }

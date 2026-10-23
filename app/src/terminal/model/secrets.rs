@@ -1,6 +1,6 @@
 use string_offset::StringRange;
-pub use warp_terminal::model::secrets::*;
-use warpui::EntityId;
+pub use torch_terminal::model::secrets::*;
+use torchui::EntityId;
 
 use crate::ai::blocklist::block::TextLocation;
 #[derive(Clone, Debug)]

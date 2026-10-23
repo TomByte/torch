@@ -24,9 +24,9 @@
 
 use std::collections::HashMap;
 
-use warp_core::ui::appearance::Appearance;
-use warpui::App;
-use warpui::platform::WindowStyle;
+use torch_core::ui::appearance::Appearance;
+use torchui::App;
+use torchui::platform::WindowStyle;
 
 use super::*;
 use crate::persistence::model::{ModelTokenUsage, PRIMARY_AGENT_CATEGORY};
@@ -64,7 +64,7 @@ fn initialize_test_app(app: &mut App) {
     app.add_singleton_model(UserWorkspaces::default_mock);
 }
 
-fn build_view(_ctx: &mut warpui::ViewContext<ConversationUsageView>) -> ConversationUsageView {
+fn build_view(_ctx: &mut torchui::ViewContext<ConversationUsageView>) -> ConversationUsageView {
     ConversationUsageView::new(
         placeholder_usage_info(),
         DisplayMode::Footer,

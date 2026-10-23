@@ -8,21 +8,21 @@ use bytes::Bytes;
 use comfy_table::Cell;
 use futures::{StreamExt, future};
 use serde::{Deserialize, Serialize};
-use warp_cli::agent::{Harness, OutputFormat, Prompt, RunCloudArgs};
-use warp_cli::json_filter::JsonOutput;
-use warp_cli::scope::TeamSelection;
-use warp_cli::task::{
+use torch_cli::agent::{Harness, OutputFormat, Prompt, RunCloudArgs};
+use torch_cli::json_filter::JsonOutput;
+use torch_cli::scope::TeamSelection;
+use torch_cli::task::{
     ArtifactTypeArg, ExecutionLocationArg, ListTasksArgs, MessageCommand, MessageDeliveredArgs,
     MessageListArgs, MessageReadArgs, MessageSendArgs, MessageWatchArgs, RunSortByArg,
     RunSourceArg, RunStateArg, TaskGetArgs,
 };
-use warp_cli::{GlobalOptions, SortOrderArg};
-use warp_core::channel::ChannelState;
-use warp_core::features::FeatureFlag;
-use warp_server_client::HttpStatusError;
-use warpui::r#async::{Spawnable, Timer};
-use warpui::platform::TerminationMode;
-use warpui::{AppContext, ModelContext, SingletonEntity};
+use torch_cli::{GlobalOptions, SortOrderArg};
+use torch_core::channel::ChannelState;
+use torch_core::features::FeatureFlag;
+use torch_server_client::HttpStatusError;
+use torchui::r#async::{Spawnable, Timer};
+use torchui::platform::TerminationMode;
+use torchui::{AppContext, ModelContext, SingletonEntity};
 
 use super::common::{EnvironmentChoice, ResolveConfigurationError, parse_ambient_task_id};
 use crate::ServerApiProvider;
@@ -1159,12 +1159,12 @@ fn task_id_from_run_id(run_id: &str) -> Option<AmbientAgentTaskId> {
 }
 
 fn task_id_from_oz_run_id_env() -> anyhow::Result<Option<AmbientAgentTaskId>> {
-    match std::env::var(warp_cli::OZ_RUN_ID_ENV) {
+    match std::env::var(torch_cli::OZ_RUN_ID_ENV) {
         Ok(run_id) => parse_ambient_task_id(&run_id, "Invalid OZ_RUN_ID").map(Some),
         Err(std::env::VarError::NotPresent) => Ok(None),
         Err(std::env::VarError::NotUnicode(_)) => Err(anyhow!(
             "{} is set but is not valid Unicode",
-            warp_cli::OZ_RUN_ID_ENV
+            torch_cli::OZ_RUN_ID_ENV
         )),
     }
 }
@@ -1698,7 +1698,7 @@ impl AmbientAgentRunner {
     }
 }
 
-impl warpui::Entity for AmbientAgentRunner {
+impl torchui::Entity for AmbientAgentRunner {
     type Event = ();
 }
 

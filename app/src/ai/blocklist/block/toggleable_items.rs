@@ -1,14 +1,14 @@
-use warpui::elements::{
+use torchui::elements::{
     Border, Container, CornerRadius, CrossAxisAlignment, Expanded, Flex, Hoverable,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius,
 };
-use warpui::keymap::macros::*;
-use warpui::keymap::{FixedBinding, Keystroke};
-use warpui::platform::Cursor;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::ui_components::keyboard_shortcut::KeyboardShortcut;
-use warpui::ui_components::text::Span;
-use warpui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
+use torchui::keymap::macros::*;
+use torchui::keymap::{FixedBinding, Keystroke};
+use torchui::platform::Cursor;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::ui_components::keyboard_shortcut::KeyboardShortcut;
+use torchui::ui_components::text::Span;
+use torchui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
 
 use crate::appearance::Appearance;
 use crate::ui_components::blended_colors;
@@ -121,7 +121,7 @@ impl<T: 'static> View for ToggleableItemsView<T> {
         "ToggleableItemsView"
     }
 
-    fn keymap_context(&self, _app: &AppContext) -> warpui::keymap::Context {
+    fn keymap_context(&self, _app: &AppContext) -> torchui::keymap::Context {
         let mut context = Self::default_keymap_context();
         if !self.items.is_empty() {
             context.set.insert(HAS_ITEMS);

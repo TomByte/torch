@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 #[cfg(feature = "local_fs")]
 use repo_metadata::repositories::DetectedRepositories;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warpui::{Entity, ModelContext, ModelHandle, SingletonEntity, WeakModelHandle};
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torchui::{Entity, ModelContext, ModelHandle, SingletonEntity, WeakModelHandle};
 
 #[cfg(feature = "local_fs")]
 use super::git_repo_model::new_local_git_repo_status_model;

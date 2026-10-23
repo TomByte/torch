@@ -5,7 +5,7 @@ use std::time::Duration;
 use chrono::TimeZone;
 use float_cmp::assert_approx_eq;
 use futures_lite::stream::StreamExt;
-use warp_core::features::FeatureFlag;
+use torch_core::features::FeatureFlag;
 
 use super::*;
 use crate::terminal::model::ansi::{Attr, Handler};
@@ -274,7 +274,7 @@ pub fn test_find() {
 
 #[test]
 pub fn test_long_running_block_bottom_padding() {
-    warpui::r#async::block_on(async {
+    torchui::r#async::block_on(async {
         let mut block = TestBlockBuilder::new().build();
 
         block.prompt_only_precmd(PromptMetadata::default());
@@ -293,7 +293,7 @@ pub fn test_long_running_block_bottom_padding() {
 
         // After the long running duration, the block should switch
         let duration = LONG_RUNNING_COMMAND_DURATION_MS + 1;
-        warpui::r#async::Timer::after(Duration::from_millis(duration)).await;
+        torchui::r#async::Timer::after(Duration::from_millis(duration)).await;
 
         assert!(block.is_active_and_long_running());
         assert!(block.padding_bottom() == LONG_RUNNING_BOTTOM_PADDING_LINES.into_lines());
@@ -302,7 +302,7 @@ pub fn test_long_running_block_bottom_padding() {
 
 #[test]
 pub fn empty_pre_bootstrap_block_is_not_long_running() {
-    warpui::r#async::block_on(async {
+    torchui::r#async::block_on(async {
         let mut block = TestBlockBuilder::new()
             .with_bootstrap_stage(BootstrapStage::ScriptExecution)
             .build();
@@ -310,7 +310,7 @@ pub fn empty_pre_bootstrap_block_is_not_long_running() {
         block.start();
 
         let duration = LONG_RUNNING_COMMAND_DURATION_MS + 1;
-        warpui::r#async::Timer::after(Duration::from_millis(duration)).await;
+        torchui::r#async::Timer::after(Duration::from_millis(duration)).await;
 
         assert!(!block.is_active_and_long_running());
     });
@@ -318,7 +318,7 @@ pub fn empty_pre_bootstrap_block_is_not_long_running() {
 
 #[test]
 pub fn non_empty_pre_bootstrap_block_can_be_long_running() {
-    warpui::r#async::block_on(async {
+    torchui::r#async::block_on(async {
         let mut block = TestBlockBuilder::new()
             .with_bootstrap_stage(BootstrapStage::ScriptExecution)
             .build();
@@ -327,7 +327,7 @@ pub fn non_empty_pre_bootstrap_block_can_be_long_running() {
         block.input('x');
 
         let duration = LONG_RUNNING_COMMAND_DURATION_MS + 1;
-        warpui::r#async::Timer::after(Duration::from_millis(duration)).await;
+        torchui::r#async::Timer::after(Duration::from_millis(duration)).await;
 
         assert!(block.is_active_and_long_running());
     });
@@ -624,7 +624,7 @@ pub fn test_set_current_working_directory_updates_pwd_and_emits_cwd_event() {
     events_rx.close();
     let mut received_paths = Vec::new();
     let mut received_block_metadata_events = 0usize;
-    warpui::r#async::block_on(pin!(events_rx).for_each(|event| match event {
+    torchui::r#async::block_on(pin!(events_rx).for_each(|event| match event {
         Event::BlockWorkingDirectoryUpdated(event) => {
             received_paths.push(
                 event
@@ -756,7 +756,7 @@ pub fn test_block_emits_block_completed_event_for_in_band_command() {
 
     events_rx.close();
     let block_completed_event =
-        warpui::r#async::block_on(pin!(events_rx).find(|event| match event {
+        torchui::r#async::block_on(pin!(events_rx).find(|event| match event {
             Event::BlockCompleted(event) => matches!(event.block_type, BlockType::InBandCommand),
             _ => false,
         }));
@@ -1607,7 +1607,7 @@ fn test_top_level_command_with_aliases() {
 
 #[test]
 fn test_mark_end_of_prompt_with_some_rows_in_flat_storage() {
-    use warp_terminal::model::grid::Dimensions as _;
+    use torch_terminal::model::grid::Dimensions as _;
 
     let mut block = TestBlockBuilder::new()
         // Set the number of visible rows to 1, so that the first row of the

@@ -14,28 +14,28 @@ use syntect::highlighting::{self, Theme, ThemeSet};
 use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
 use ui_components::lightbox::{LightboxImage, LightboxImageSource};
-use warp_completer::signatures::CommandRegistry;
-use warp_core::r#async::debounce;
-use warp_editor::content::anchor::Anchor;
-use warp_editor::content::buffer::{Buffer, BufferEvent, EditOrigin};
-use warp_editor::content::mermaid_diagram::mermaid_asset_source;
-use warp_editor::content::selection_model::BufferSelectionModel;
-use warp_editor::content::text::{
+use torch_completer::signatures::CommandRegistry;
+use torch_core::r#async::debounce;
+use torch_editor::content::anchor::Anchor;
+use torch_editor::content::buffer::{Buffer, BufferEvent, EditOrigin};
+use torch_editor::content::mermaid_diagram::mermaid_asset_source;
+use torch_editor::content::selection_model::BufferSelectionModel;
+use torch_editor::content::text::{
     BlockType, BufferBlockStyle, CODE_BLOCK_DEFAULT_DISPLAY_LANG, CODE_BLOCK_SHELL_DISPLAY_LANG,
     CodeBlockType,
 };
-use warp_editor::editor::RunnableCommandModel;
-use warp_util::user_input::UserInput;
-use warpui::r#async::SpawnedFutureHandle;
-use warpui::elements::{
+use torch_editor::editor::RunnableCommandModel;
+use torch_util::user_input::UserInput;
+use torchui::r#async::SpawnedFutureHandle;
+use torchui::elements::{
     Align, Border, Container, CornerRadius, CrossAxisAlignment, Empty, Flex, MainAxisAlignment,
     MouseStateHandle, ParentElement, Radius, Shrinkable, Text,
 };
-use warpui::fonts::Properties;
-use warpui::platform::Cursor;
-use warpui::presenter::ChildView;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::fonts::Properties;
+use torchui::platform::Cursor;
+use torchui::presenter::ChildView;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, AssetProvider as _, Element, Entity, ModelAsRef, ModelContext, ModelHandle,
     SingletonEntity, ViewHandle, WeakModelHandle, WindowId,
 };
@@ -648,7 +648,7 @@ impl RunnableCommandModel for NotebookCommand {
                         appearance.ui_font_size(),
                     )
                     .with_style(Properties {
-                        weight: warpui::fonts::Weight::Light,
+                        weight: torchui::fonts::Weight::Light,
                         ..Default::default()
                     })
                     .with_color(

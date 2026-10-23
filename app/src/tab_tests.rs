@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use warpui::platform::keyboard::KeyCode;
+use torchui::platform::keyboard::KeyCode;
 
 use super::{
     SelectedTabColor, ShortcutModifierKind, TAB_ACTIVATE_BINDING_NAMES,

@@ -3,8 +3,8 @@ use std::path::PathBuf;
 use anyhow::{Result, anyhow, bail};
 use ordered_float::OrderedFloat;
 use regex::Regex;
-use warp_errors::report_error;
-use warp_graphql::billing::{
+use torch_errors::report_error;
+use torch_graphql::billing::{
     AiAutonomyPolicy as GqlAiAutonomyPolicy, AmbientAgentsPolicy as GqlAmbientAgentsPolicy,
     BillingCycleUsageHistory as GqlBillingCycleUsageHistory, BillingMetadata as GqlBillingMetadata,
     BonusGrant as GqlBonusGrant, BonusGrantScope as GqlBonusGrantScope,
@@ -26,14 +26,14 @@ use warp_graphql::billing::{
     UsageVisibilityGranularity as GqlUsageVisibilityGranularity,
     UsageVisibilityPolicy as GqlUsageVisibilityPolicy, WarpAiPolicy as GqlWarpAiPolicy,
 };
-use warp_graphql::queries::get_conversation_usage as gql_usage;
-use warp_graphql::queries::get_workspaces_metadata_for_user::User as GqlUser;
-use warp_graphql::subscriptions::get_warp_drive_updates::WarpDriveUpdate;
-use warp_graphql::user::{
+use torch_graphql::queries::get_conversation_usage as gql_usage;
+use torch_graphql::queries::get_workspaces_metadata_for_user::User as GqlUser;
+use torch_graphql::subscriptions::get_warp_drive_updates::WarpDriveUpdate;
+use torch_graphql::user::{
     DiscoverableTeamData as GqlDiscoverableTeamData,
     DiscoverableWorkspaceData as GqlDiscoverableWorkspaceData,
 };
-use warp_graphql::workspace::{
+use torch_graphql::workspace::{
     AddonCreditsSettings as GqlAddonCreditsSettings,
     AdminEnablementSetting as GqlAdminEnablementSetting, AiAutonomyValue as GqlAiAutonomyValue,
     AiPermissionsSettings as GqlAiPermissionsSettings,
@@ -239,7 +239,7 @@ impl From<GqlTeamVisibility> for TeamVisibility {
                 report_error!(
                     "Invalid TeamVisibility from server; treating as Private",
                     extra: { "value" => %value },
-                    warp_errors::ReportErrorLogMode::OncePerRun
+                    torch_errors::ReportErrorLogMode::OncePerRun
                 );
                 // Fail closed: an unrecognized value must not be treated as Open,
                 // since that would surface the invite-by-link control.
@@ -377,7 +377,7 @@ impl From<GqlUgcCollectionEnablementSetting> for UgcCollectionEnablementSetting 
                 report_error!(
                     "Invalid UgcCollectionEnablementSetting. Make sure to update client GraphQL types!",
                     extra: { "value" => %value },
-                    warp_errors::ReportErrorLogMode::OncePerRun
+                    torch_errors::ReportErrorLogMode::OncePerRun
                 );
                 UgcCollectionEnablementSetting::RespectUserSetting
             }
@@ -430,7 +430,7 @@ impl From<GqlAdminEnablementSetting> for AdminEnablementSetting {
                 report_error!(
                     "Invalid AdminEnablementSetting. Make sure to update client GraphQL types!",
                     extra: { "value" => %value },
-                    warp_errors::ReportErrorLogMode::OncePerRun
+                    torch_errors::ReportErrorLogMode::OncePerRun
                 );
                 AdminEnablementSetting::RespectUserSetting
             }
@@ -449,7 +449,7 @@ impl From<GqlHostEnablementSetting> for HostEnablementSetting {
                 report_error!(
                     "Invalid HostEnablementSetting. Make sure to update client GraphQL types!",
                     extra: { "value" => %value },
-                    warp_errors::ReportErrorLogMode::OncePerRun
+                    torch_errors::ReportErrorLogMode::OncePerRun
                 );
                 HostEnablementSetting::RespectUserSetting
             }
@@ -485,7 +485,7 @@ fn compile_remote_session_regex_list(patterns: impl IntoIterator<Item = String>)
                 report_error!(
                     "Invalid regex pattern for remote session detection",
                     extra: { "pattern" => %pattern },
-                    warp_errors::ReportErrorLogMode::OncePerRun
+                    torch_errors::ReportErrorLogMode::OncePerRun
                 );
                 None
             }
@@ -644,7 +644,7 @@ impl From<GqlUsageVisibilityGranularity> for UsageVisibilityGranularity {
                 report_error!(
                     "Invalid UsageVisibilityGranularity. Make sure to update client GraphQL types!",
                     extra: { "value" => %value },
-                    warp_errors::ReportErrorLogMode::OncePerRun
+                    torch_errors::ReportErrorLogMode::OncePerRun
                 );
                 // Fail closed to the most restrictive granularity.
                 UsageVisibilityGranularity::OwnOnly
@@ -716,7 +716,7 @@ impl From<GqlChargeUnit> for ChargeUnit {
                 report_error!(
                     "Invalid ChargeUnit. Make sure to update client GraphQL types!",
                     extra: { "value" => %value },
-                    warp_errors::ReportErrorLogMode::OncePerRun
+                    torch_errors::ReportErrorLogMode::OncePerRun
                 );
                 // Fail closed to the unit every server supports.
                 ChargeUnit::Credits
@@ -808,7 +808,7 @@ fn bonus_grant_scope_from_gql(
                 anyhow!(
                     "Team/Workspace-scoped bonus grant fetched without a workspace uid; treating as user scope"
                 ),
-                warp_errors::ReportErrorLogMode::OncePerRun
+                torch_errors::ReportErrorLogMode::OncePerRun
             );
             BonusGrantScope::User
         }
@@ -914,7 +914,7 @@ fn convert_gql_ai_autonomy_value_to_action_permission(
             report_error!(
                 "Invalid AiAutonomyValue. Make sure to update client GraphQL types!",
                 extra: { "value" => %value },
-                warp_errors::ReportErrorLogMode::OncePerRun
+                torch_errors::ReportErrorLogMode::OncePerRun
             );
             None
         }
@@ -933,7 +933,7 @@ fn convert_gql_write_to_pty_autonomy_value_to_write_to_pty_permission(
             report_error!(
                 "Invalid WriteToPtyAutonomyValue. Make sure to update client GraphQL types!",
                 extra: { "value" => %value },
-                warp_errors::ReportErrorLogMode::OncePerRun
+                torch_errors::ReportErrorLogMode::OncePerRun
             );
             None
         }
@@ -952,7 +952,7 @@ fn convert_gql_computer_use_autonomy_value_to_computer_use_permission(
             report_error!(
                 "Invalid ComputerUseAutonomyValue. Make sure to update client GraphQL types!",
                 extra: { "value" => %value },
-                warp_errors::ReportErrorLogMode::OncePerRun
+                torch_errors::ReportErrorLogMode::OncePerRun
             );
             None
         }
@@ -990,9 +990,9 @@ impl ToPathBufs for Vec<String> {
         self.into_iter().map(PathBuf::from).collect()
     }
 }
-impl From<warp_graphql::workspace::LlmModelHost> for crate::ai::llms::LLMModelHost {
-    fn from(gql_host: warp_graphql::workspace::LlmModelHost) -> Self {
-        use warp_graphql::workspace::LlmModelHost as GqlLlmModelHost;
+impl From<torch_graphql::workspace::LlmModelHost> for crate::ai::llms::LLMModelHost {
+    fn from(gql_host: torch_graphql::workspace::LlmModelHost) -> Self {
+        use torch_graphql::workspace::LlmModelHost as GqlLlmModelHost;
         match gql_host {
             GqlLlmModelHost::DirectApi => Self::DirectApi,
             GqlLlmModelHost::AwsBedrock => Self::AwsBedrock,
@@ -1008,8 +1008,8 @@ impl From<warp_graphql::workspace::LlmModelHost> for crate::ai::llms::LLMModelHo
     }
 }
 
-impl From<warp_graphql::workspace::LlmHostSettings> for super::workspace::LlmHostSettings {
-    fn from(gql_settings: warp_graphql::workspace::LlmHostSettings) -> Self {
+impl From<torch_graphql::workspace::LlmHostSettings> for super::workspace::LlmHostSettings {
+    fn from(gql_settings: torch_graphql::workspace::LlmHostSettings) -> Self {
         Self {
             enabled: gql_settings.enabled,
             enablement_setting: gql_settings
@@ -1022,8 +1022,8 @@ impl From<warp_graphql::workspace::LlmHostSettings> for super::workspace::LlmHos
     }
 }
 
-impl From<warp_graphql::workspace::LlmSettings> for LlmSettings {
-    fn from(gql_settings: warp_graphql::workspace::LlmSettings) -> Self {
+impl From<torch_graphql::workspace::LlmSettings> for LlmSettings {
+    fn from(gql_settings: torch_graphql::workspace::LlmSettings) -> Self {
         let mut host_configs = std::collections::HashMap::new();
         for entry in gql_settings.host_configs {
             let host: crate::ai::llms::LLMModelHost = entry.host.into();
@@ -1186,7 +1186,7 @@ fn split_string_list(info: GqlStringListSettingInfo) -> SplitListSetting<String>
 impl From<GqlTeamSettings> for TeamSettings {
     fn from(gql_team_settings: GqlTeamSettings) -> TeamSettings {
         let map_regexes =
-            |regexes: Vec<warp_graphql::workspace::SecretRedactionRegex>| -> Vec<EnterpriseSecretRegex> {
+            |regexes: Vec<torch_graphql::workspace::SecretRedactionRegex>| -> Vec<EnterpriseSecretRegex> {
                 regexes
                     .into_iter()
                     .map(|gql_regex| EnterpriseSecretRegex {

@@ -2,7 +2,7 @@ use std::sync::OnceLock;
 use std::{env, path};
 
 use anyhow::{Result, anyhow};
-use warpui::{AppContext, SingletonEntity};
+use torchui::{AppContext, SingletonEntity};
 
 use crate::system::SystemInfo;
 

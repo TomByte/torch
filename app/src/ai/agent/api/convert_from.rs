@@ -11,7 +11,7 @@ use ai::skills::{
     skill_reference_from_read_skill_ref,
 };
 use api::ask_user_question::question::QuestionType;
-use warp_core::channel::ChannelState;
+use torch_core::channel::ChannelState;
 use warp_multi_agent_api as api;
 
 use crate::ai::agent::api::convert_conversation::{

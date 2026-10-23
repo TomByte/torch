@@ -3,8 +3,8 @@ use std::time::Duration;
 
 use futures::io::{AsyncRead, AsyncWrite, AsyncWriteExt};
 use tokio_util::compat::{TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
-use warp_core::SessionId;
-use warpui_core::r#async::executor;
+use torch_core::SessionId;
+use torchui_core::r#async::executor;
 
 use super::*;
 use crate::proto::{

@@ -1,4 +1,4 @@
-use warpui::{AppContext, Entity, ModelContext, ModelHandle};
+use torchui::{AppContext, Entity, ModelContext, ModelHandle};
 
 #[cfg(feature = "local_fs")]
 mod local;

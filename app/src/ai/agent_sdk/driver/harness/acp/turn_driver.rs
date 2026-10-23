@@ -23,7 +23,7 @@ use parking_lot::Mutex;
 use session_sharing_protocol::common::ParticipantId;
 use warp_multi_agent_api::ClientAction;
 use warp_multi_agent_api::response_event::{StreamFinished, stream_finished};
-use warpui::r#async::Timer;
+use torchui::r#async::Timer;
 
 use super::super::SavePoint;
 use super::attachments::AttachmentResolver;

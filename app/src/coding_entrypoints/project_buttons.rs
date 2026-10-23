@@ -2,22 +2,22 @@ use std::borrow::Cow;
 
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::Vector2F;
-use warp_core::features::FeatureFlag;
-use warp_core::ui::Icon;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::color::blend::Blend as _;
-use warp_core::ui::theme::color::internal_colors;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::ui::Icon;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::color::blend::Blend as _;
+use torch_core::ui::theme::color::internal_colors;
+use torchui::elements::{
     ChildAnchor, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, DropShadow, Expanded,
     Flex, Hoverable, MouseStateHandle, OffsetPositioning, ParentAnchor, ParentElement as _,
     ParentOffsetBounds, Radius, Stack,
 };
-use warpui::fonts::Weight;
-use warpui::keymap::EditableBinding;
-use warpui::platform::file_picker::FilePickerError;
-use warpui::platform::{Cursor, FilePickerConfiguration};
-use warpui::ui_components::components::{UiComponent as _, UiComponentStyles};
-use warpui::{
+use torchui::fonts::Weight;
+use torchui::keymap::EditableBinding;
+use torchui::platform::file_picker::FilePickerError;
+use torchui::platform::{Cursor, FilePickerConfiguration};
+use torchui::ui_components::components::{UiComponent as _, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, SingletonEntity as _, TypedActionView, View, ViewContext,
 };
 
@@ -27,7 +27,7 @@ use crate::util::bindings::{BindingGroup, CustomAction, keybinding_name_to_displ
 const BUTTON_MIN_WIDTH: f32 = 149.;
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_editable_bindings([
         EditableBinding::new(

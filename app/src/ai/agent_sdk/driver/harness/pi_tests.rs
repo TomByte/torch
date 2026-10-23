@@ -4,7 +4,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use serde_json::{Value, json};
-use warp_cli::agent::{Harness, HarnessTransport};
+use torch_cli::agent::{Harness, HarnessTransport};
 
 use super::super::harness_env_vars;
 use super::{

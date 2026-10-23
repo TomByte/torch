@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use warp_cli::environment::EnvironmentCreateArgs;
-use warpui::App;
+use torch_cli::environment::EnvironmentCreateArgs;
+use torchui::App;
 
 use super::{
     EnvironmentChoice, classify_agent_mode_base_model_id, parse_ambient_task_id,

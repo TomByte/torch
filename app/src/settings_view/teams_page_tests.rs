@@ -6,7 +6,7 @@ use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering as AtomicOrdering};
 
 #[cfg(not(target_family = "wasm"))]
-use warpui::App;
+use torchui::App;
 
 use super::*;
 #[cfg(not(target_family = "wasm"))]

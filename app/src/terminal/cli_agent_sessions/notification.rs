@@ -1,5 +1,5 @@
 //! Desktop notification text for CLI agent sessions in local-only builds.
-use warpui::notification::UserNotification;
+use torchui::notification::UserNotification;
 
 use super::{BlockedSource, CLIAgentSessionStatus};
 

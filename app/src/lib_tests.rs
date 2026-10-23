@@ -4,9 +4,9 @@ use super::*;
 
 fn command_line_launch_mode(arguments: &[&str]) -> LaunchMode {
     let args =
-        warp_cli::Args::try_parse_from(std::iter::once("oz").chain(arguments.iter().copied()))
+        torch_cli::Args::try_parse_from(std::iter::once("oz").chain(arguments.iter().copied()))
             .expect("arguments should parse");
-    let Some(warp_cli::Command::CommandLine(command)) = args.command() else {
+    let Some(torch_cli::Command::CommandLine(command)) = args.command() else {
         panic!("expected a CLI command: {arguments:?}");
     };
     LaunchMode::command_line(

@@ -3,10 +3,10 @@
 //! This module provides common styling functions used across all inline menu
 //! implementations (models, slash commands, conversations) to ensure consistent
 //! visual design matching the Figma specifications.
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::{Fill, WarpTheme};
-use warpui::color::ColorU;
-use warpui::{AppContext, SingletonEntity};
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::{Fill, WarpTheme};
+use torchui::color::ColorU;
+use torchui::{AppContext, SingletonEntity};
 
 use crate::search::result_renderer::ItemHighlightState;
 

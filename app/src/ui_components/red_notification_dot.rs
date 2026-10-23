@@ -1,11 +1,11 @@
 use pathfinder_geometry::vector::vec2f;
-use warp_core::ui::theme::AnsiColorIdentifier;
-use warpui::Element;
-use warpui::elements::{
+use torch_core::ui::theme::AnsiColorIdentifier;
+use torchui::Element;
+use torchui::elements::{
     ChildAnchor, ConstrainedBox, Container, CornerRadius, Empty, Fill, OffsetPositioning,
     ParentAnchor, ParentElement as _, ParentOffsetBounds, Radius, Stack,
 };
-use warpui::ui_components::components::UiComponentStyles;
+use torchui::ui_components::components::UiComponentStyles;
 
 use crate::appearance::Appearance;
 

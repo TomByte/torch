@@ -1,5 +1,5 @@
 use prost::Message as _;
-use warp_terminal::event::ObservedExitStatus;
+use torch_terminal::event::ObservedExitStatus;
 
 use super::*;
 #[test]

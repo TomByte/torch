@@ -1,6 +1,6 @@
-use warp_core::safe_info;
-use warpui_core::keymap::Keystroke;
-use warpui_core::{Entity, ModelContext, ModelHandle, ViewContext};
+use torch_core::safe_info;
+use torchui_core::keymap::Keystroke;
+use torchui_core::{Entity, ModelContext, ModelHandle, ViewContext};
 
 use crate::register::{BLACK_HOLE_REGISTER, valid_register_name};
 
@@ -1958,8 +1958,8 @@ pub struct VimState<'a> {
     pub showcmd: &'a str,
 }
 
-/// This struct is a wrapper around the VimFSA that turns it into a warpui_core::Entity. We want to keep
-/// the VimFSA independent of our UI framework, so anything involving warpui should live here
+/// This struct is a wrapper around the VimFSA that turns it into a torchui_core::Entity. We want to keep
+/// the VimFSA independent of our UI framework, so anything involving torchui should live here
 /// instead.
 #[derive(Default)]
 pub struct VimModel {

@@ -4,8 +4,8 @@ use std::path::PathBuf;
 
 use pathfinder_geometry::rect::RectF;
 use pathfinder_geometry::vector::Vector2F;
-use warpui::EntityId;
-use warpui::elements::PositionedElementOffsetBounds;
+use torchui::EntityId;
+use torchui::elements::PositionedElementOffsetBounds;
 
 use super::{
     AgentTabTextPreference, SummaryPaneKind, SummaryPaneKindIcons, TerminalAgentText,

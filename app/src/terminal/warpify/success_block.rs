@@ -3,14 +3,14 @@ use std::sync::Arc;
 
 use channel_versions::overrides::TargetOS;
 use parking_lot::RwLock;
-use warp_core::semantic_selection::SemanticSelection;
-use warp_core::ui::theme::WarpTheme;
-use warpui::elements::{
+use torch_core::semantic_selection::SemanticSelection;
+use torch_core::ui::theme::WarpTheme;
+use torchui::elements::{
     Border, Container, CrossAxisAlignment, Flex, Icon, MainAxisAlignment, MainAxisSize,
     MouseStateHandle, ParentElement, SelectableArea, SelectionHandle, Text,
 };
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
 
 use super::render::{HORIZONTAL_TEXT_MARGIN, SSH_DOCS_URL, SUBSHELL_DOCS_URL};
 use super::settings::WarpifySettings;

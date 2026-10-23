@@ -1,4 +1,4 @@
-use warpui::App;
+use torchui::App;
 
 use super::*;
 use crate::auth::AuthStateProvider;

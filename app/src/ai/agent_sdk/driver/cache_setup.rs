@@ -6,10 +6,10 @@ use std::time::Duration;
 use build_cache::metadata::CacheUsage;
 use build_cache::{CacheSetupError, CacheSetupReport, RepoIdentity, RepositoryCacheSource};
 use cloud_object_models::SourceRepo;
-use warp_completer::completer::CommandExitStatus;
-use warp_errors::report_error;
-use warp_isolation_platform::IsolationPlatformType;
-use warpui::ModelSpawner;
+use torch_completer::completer::CommandExitStatus;
+use torch_errors::report_error;
+use torch_isolation_platform::IsolationPlatformType;
+use torchui::ModelSpawner;
 
 use super::environment::RepositoryCloneRequest;
 use super::terminal::TerminalDriver;
@@ -35,7 +35,7 @@ pub(crate) fn should_setup_cache(
 /// Returns the persistent cache location, if enabled.
 pub(crate) fn enabled_cache_root() -> Option<PathBuf> {
     let root = std::env::var_os(BUILD_CACHE_ROOT_ENV);
-    if should_setup_cache(warp_isolation_platform::detect(), root.as_deref()) {
+    if should_setup_cache(torch_isolation_platform::detect(), root.as_deref()) {
         root.map(Into::into)
     } else {
         None

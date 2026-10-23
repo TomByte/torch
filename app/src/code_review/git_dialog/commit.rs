@@ -4,16 +4,16 @@
 
 use std::path::Path;
 
-use warp_core::send_telemetry_from_ctx;
-use warp_core::ui::appearance::Appearance;
-use warp_errors::report_error;
-use warpui::elements::{
+use torch_core::send_telemetry_from_ctx;
+use torch_core::ui::appearance::Appearance;
+use torch_errors::report_error;
+use torchui::elements::{
     ChildView, ClippedScrollStateHandle, Container, CornerRadius, CrossAxisAlignment, Element,
     Flex, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, Text,
 };
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::ui_components::switch::SwitchStateHandle;
-use warpui::{AppContext, SingletonEntity, ViewContext, ViewHandle};
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::ui_components::switch::SwitchStateHandle;
+use torchui::{AppContext, SingletonEntity, ViewContext, ViewHandle};
 
 use crate::code_review::diff_state::CommitChainMode;
 use crate::code_review::git_dialog::pr::show_pr_created_toast;

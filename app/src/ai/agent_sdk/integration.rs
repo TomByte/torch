@@ -1,13 +1,13 @@
 use futures::future;
-use warp_cli::GlobalOptions;
-use warp_cli::integration::{CreateIntegrationArgs, IntegrationCommand, UpdateIntegrationArgs};
-use warp_cli::provider::ProviderType;
-use warp_cli::scope::TeamSelection;
-use warp_graphql::mutations::create_simple_integration::CreateSimpleIntegrationOutput;
-use warp_graphql::queries::get_oauth_connect_tx_status::OauthConnectTxStatus;
-use warp_graphql::queries::get_simple_integrations::SimpleIntegrationsOutput;
-use warpui::platform::TerminationMode;
-use warpui::{AppContext, ModelContext, SingletonEntity};
+use torch_cli::GlobalOptions;
+use torch_cli::integration::{CreateIntegrationArgs, IntegrationCommand, UpdateIntegrationArgs};
+use torch_cli::provider::ProviderType;
+use torch_cli::scope::TeamSelection;
+use torch_graphql::mutations::create_simple_integration::CreateSimpleIntegrationOutput;
+use torch_graphql::queries::get_oauth_connect_tx_status::OauthConnectTxStatus;
+use torch_graphql::queries::get_simple_integrations::SimpleIntegrationsOutput;
+use torchui::platform::TerminationMode;
+use torchui::{AppContext, ModelContext, SingletonEntity};
 
 use super::common::{EnvironmentChoice, ResolveConfigurationError};
 use super::integration_output;
@@ -534,7 +534,7 @@ impl IntegrationCommandRunner {
     }
 }
 
-impl warpui::Entity for IntegrationCommandRunner {
+impl torchui::Entity for IntegrationCommandRunner {
     type Event = ();
 }
 impl SingletonEntity for IntegrationCommandRunner {}

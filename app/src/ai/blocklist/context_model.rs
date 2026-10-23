@@ -7,9 +7,9 @@ use std::sync::Arc;
 
 use ai::project_context::model::ProjectContextModel;
 use parking_lot::FairMutex;
-use warp_core::features::FeatureFlag;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warpui::{
+use torch_core::features::FeatureFlag;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torchui::{
     AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity, WeakModelHandle,
 };
 

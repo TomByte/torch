@@ -27,8 +27,8 @@ impl RenderableBlock for RenderableHeader {
     fn layout(
         &mut self,
         model: &RenderState,
-        ctx: &mut warpui_core::LayoutContext,
-        app: &warpui_core::AppContext,
+        ctx: &mut torchui_core::LayoutContext,
+        app: &torchui_core::AppContext,
     ) {
         self.placeholder.layout(
             &self.viewport_item,
@@ -58,7 +58,7 @@ impl RenderableBlock for RenderableHeader {
         &mut self,
         model: &RenderState,
         ctx: &mut RenderContext,
-        _app: &warpui_core::AppContext,
+        _app: &torchui_core::AppContext,
     ) {
         let content = model.content();
         let (paragraph, header_size) = extract_block!(

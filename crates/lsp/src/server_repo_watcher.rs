@@ -6,8 +6,8 @@ use async_channel::Sender;
 use lsp_types::FileChangeType;
 use repo_metadata::repository::{RepositorySubscriber, SubscriberId};
 use repo_metadata::{DirectoryWatcher, Repository, RepositoryUpdate, RepositoryWatchMode};
-use warp_util::standardized_path::StandardizedPath;
-use warpui_core::{ModelContext, SingletonEntity, WeakModelHandle};
+use torch_util::standardized_path::StandardizedPath;
+use torchui_core::{ModelContext, SingletonEntity, WeakModelHandle};
 
 use crate::LspServerConfig;
 use crate::model::LspServerModel;

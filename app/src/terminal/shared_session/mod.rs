@@ -3,8 +3,8 @@ use instant::Duration;
 use serde::{Deserialize, Serialize};
 use session_sharing_protocol::common::{Role, Scrollback, ScrollbackBlock, SessionId};
 use session_sharing_protocol::sharer::SessionSourceType;
-use warpui::keymap::ContextPredicate;
-use warpui::{AppContext, WindowId, id};
+use torchui::keymap::ContextPredicate;
+use torchui::{AppContext, WindowId, id};
 
 use super::model::block::SerializedBlock;
 use super::model::terminal_model::BlockIndex;
@@ -284,7 +284,7 @@ impl SharedSessionScrollbackType {
 
 #[cfg(not(test))]
 pub fn max_session_size(window_id: WindowId, app: &AppContext) -> Byte {
-    use warpui::SingletonEntity;
+    use torchui::SingletonEntity;
 
     use crate::workspaces::user_workspaces::UserWorkspaces;
     UserWorkspaces::as_ref(app)

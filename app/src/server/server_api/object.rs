@@ -14,113 +14,113 @@ use cloud_object_client::{
 pub use cloud_object_client::{GuestIdentifier, ObjectClient};
 use cloud_object_models::JsonSerializer;
 use cynic::{MutationBuilder, QueryBuilder, SubscriptionBuilder};
-use warp_errors::report_error;
-use warp_graphql::error::UserFacingErrorInterface;
-use warp_graphql::generic_string_object::GenericStringObjectInput;
-use warp_graphql::mutations::add_object_guests::{
+use torch_errors::report_error;
+use torch_graphql::error::UserFacingErrorInterface;
+use torch_graphql::generic_string_object::GenericStringObjectInput;
+use torch_graphql::mutations::add_object_guests::{
     AddObjectGuests, AddObjectGuestsInput, AddObjectGuestsResult, AddObjectGuestsVariables,
 };
-use warp_graphql::mutations::bulk_create_objects::{
+use torch_graphql::mutations::bulk_create_objects::{
     BulkCreateGenericStringObjectsInput, BulkCreateObjects, BulkCreateObjectsInput,
     BulkCreateObjectsResult, BulkCreateObjectsVariables,
 };
-use warp_graphql::mutations::create_folder::{
+use torch_graphql::mutations::create_folder::{
     CreateFolder, CreateFolderInput, CreateFolderResult, CreateFolderVariables,
 };
-use warp_graphql::mutations::create_generic_string_object::{
+use torch_graphql::mutations::create_generic_string_object::{
     CreateGenericStringObject, CreateGenericStringObjectInput, CreateGenericStringObjectResult,
     CreateGenericStringObjectVariables,
 };
-use warp_graphql::mutations::create_notebook::{
+use torch_graphql::mutations::create_notebook::{
     CreateNotebook, CreateNotebookInput, CreateNotebookResult, CreateNotebookVariables,
 };
-use warp_graphql::mutations::create_workflow::{
+use torch_graphql::mutations::create_workflow::{
     CreateWorkflow, CreateWorkflowInput, CreateWorkflowResult, CreateWorkflowVariables,
 };
-use warp_graphql::mutations::delete_object::{
+use torch_graphql::mutations::delete_object::{
     DeleteObject, DeleteObjectInput, DeleteObjectResult, DeleteObjectVariables,
 };
-use warp_graphql::mutations::empty_trash::{
+use torch_graphql::mutations::empty_trash::{
     EmptyTrash, EmptyTrashInput, EmptyTrashResult, EmptyTrashVariables,
 };
-use warp_graphql::mutations::give_up_notebook_edit_access::{
+use torch_graphql::mutations::give_up_notebook_edit_access::{
     GiveUpNotebookEditAccess, GiveUpNotebookEditAccessVariables,
 };
-use warp_graphql::mutations::grab_notebook_edit_access::{
+use torch_graphql::mutations::grab_notebook_edit_access::{
     GrabNotebookEditAccess, GrabNotebookEditAccessVariables,
 };
-use warp_graphql::mutations::leave_object::{
+use torch_graphql::mutations::leave_object::{
     LeaveObject, LeaveObjectInput, LeaveObjectResult, LeaveObjectVariables,
 };
-use warp_graphql::mutations::move_object::{
+use torch_graphql::mutations::move_object::{
     MoveObject, MoveObjectInput, MoveObjectResult, MoveObjectVariables,
 };
-use warp_graphql::mutations::record_object_action::{
+use torch_graphql::mutations::record_object_action::{
     RecordObjectAction, RecordObjectActionInput, RecordObjectActionResult,
     RecordObjectActionVariables,
 };
-use warp_graphql::mutations::remove_object_guest::{
+use torch_graphql::mutations::remove_object_guest::{
     RemoveObjectGuest, RemoveObjectGuestInput, RemoveObjectGuestResult, RemoveObjectGuestVariables,
 };
-use warp_graphql::mutations::remove_object_link_permissions::{
+use torch_graphql::mutations::remove_object_link_permissions::{
     RemoveObjectLinkPermissions, RemoveObjectLinkPermissionsInput,
     RemoveObjectLinkPermissionsResult, RemoveObjectLinkPermissionsVariables,
 };
-use warp_graphql::mutations::set_object_link_permissions::{
+use torch_graphql::mutations::set_object_link_permissions::{
     SetObjectLinkPermissions, SetObjectLinkPermissionsInput, SetObjectLinkPermissionsResult,
     SetObjectLinkPermissionsVariables,
 };
-use warp_graphql::mutations::transfer_generic_string_object_owner::{
+use torch_graphql::mutations::transfer_generic_string_object_owner::{
     TransferGenericStringObjectOwner, TransferGenericStringObjectOwnerInput,
     TransferGenericStringObjectOwnerResult, TransferGenericStringObjectOwnerVariables,
 };
-use warp_graphql::mutations::transfer_notebook_owner::{
+use torch_graphql::mutations::transfer_notebook_owner::{
     TransferNotebookOwner, TransferNotebookOwnerInput, TransferNotebookOwnerResult,
     TransferNotebookOwnerVariables,
 };
-use warp_graphql::mutations::transfer_workflow_owner::{
+use torch_graphql::mutations::transfer_workflow_owner::{
     TransferWorkflowOwner, TransferWorkflowOwnerInput, TransferWorkflowOwnerResult,
     TransferWorkflowOwnerVariables,
 };
-use warp_graphql::mutations::trash_object::{
+use torch_graphql::mutations::trash_object::{
     TrashObject, TrashObjectInput, TrashObjectResult, TrashObjectVariables,
 };
-use warp_graphql::mutations::untrash_object::{
+use torch_graphql::mutations::untrash_object::{
     UntrashObject, UntrashObjectInput, UntrashObjectVariables,
 };
-use warp_graphql::mutations::update_folder::{
+use torch_graphql::mutations::update_folder::{
     UpdateFolder, UpdateFolderInput, UpdateFolderResult, UpdateFolderVariables,
 };
-use warp_graphql::mutations::update_generic_string_object::{
+use torch_graphql::mutations::update_generic_string_object::{
     UpdateGenericStringObject, UpdateGenericStringObjectInput, UpdateGenericStringObjectVariables,
 };
-use warp_graphql::mutations::update_notebook::{
+use torch_graphql::mutations::update_notebook::{
     NotebookUpdate, UpdateNotebook, UpdateNotebookInput, UpdateNotebookResult,
     UpdateNotebookVariables,
 };
-use warp_graphql::mutations::update_object_guests::{
+use torch_graphql::mutations::update_object_guests::{
     UpdateObjectGuests, UpdateObjectGuestsInput, UpdateObjectGuestsResult,
     UpdateObjectGuestsVariables,
 };
-use warp_graphql::mutations::update_workflow::{
+use torch_graphql::mutations::update_workflow::{
     UpdateWorkflow, UpdateWorkflowInput, UpdateWorkflowResult, UpdateWorkflowVariables,
     WorkflowUpdate,
 };
-use warp_graphql::notebook::{UpdateNotebookEditAccessInput, UpdateNotebookEditAccessResult};
-use warp_graphql::object::CloudObjectWithDescendants;
-use warp_graphql::object_permissions::AccessLevel;
-use warp_graphql::queries::get_cloud_environments::{
+use torch_graphql::notebook::{UpdateNotebookEditAccessInput, UpdateNotebookEditAccessResult};
+use torch_graphql::object::CloudObjectWithDescendants;
+use torch_graphql::object_permissions::AccessLevel;
+use torch_graphql::queries::get_cloud_environments::{
     GetCloudEnvironmentsQuery, GetCloudEnvironmentsQueryVariables, GetCloudEnvironmentsResult,
 };
-use warp_graphql::queries::get_cloud_object::{
+use torch_graphql::queries::get_cloud_object::{
     CloudObjectInput, CloudObjectResult, GetCloudObject, GetCloudObjectVariables,
 };
-use warp_graphql::queries::get_updated_cloud_objects::{
+use torch_graphql::queries::get_updated_cloud_objects::{
     GetUpdatedCloudObjects, GetUpdatedCloudObjectsVariables, UpdatedCloudObjectsInput,
     UpdatedCloudObjectsResult,
 };
-use warp_graphql::subscriptions::get_warp_drive_updates::GetWarpDriveUpdates;
-use warp_graphql::subscriptions::start_graphql_streaming_operation;
+use torch_graphql::subscriptions::get_warp_drive_updates::GetWarpDriveUpdates;
+use torch_graphql::subscriptions::start_graphql_streaming_operation;
 
 use crate::ai::ambient_agents::scheduled::ScheduledAmbientAgent;
 use crate::ai::cloud_environments::AmbientAgentEnvironment;
@@ -769,63 +769,63 @@ impl ObjectClient for ServerApi {
                 if let Some(objects) = output.generic_string_objects {
                     for gso in objects {
                         match gso.format {
-                            warp_graphql::generic_string_object::GenericStringObjectFormat::JsonEnvVarCollection => {
+                            torch_graphql::generic_string_object::GenericStringObjectFormat::JsonEnvVarCollection => {
                                 parse_server_gso::<EnvVarCollection, JsonSerializer>(
                                     &mut updated_generic_string_objects,
                                     GenericStringObjectFormat::Json(JsonObjectType::EnvVarCollection),
                                     gso,
                                 );
                             }
-                            warp_graphql::generic_string_object::GenericStringObjectFormat::JsonPreference => {
+                            torch_graphql::generic_string_object::GenericStringObjectFormat::JsonPreference => {
                                 parse_server_gso::<Preference, JsonSerializer>(
                                     &mut updated_generic_string_objects,
                                     GenericStringObjectFormat::Json(JsonObjectType::Preference),
                                     gso,
                                 );
                             }
-                            warp_graphql::generic_string_object::GenericStringObjectFormat::JsonWorkflowEnum => {
+                            torch_graphql::generic_string_object::GenericStringObjectFormat::JsonWorkflowEnum => {
                                 parse_server_gso::<WorkflowEnum, JsonSerializer>(
                                     &mut updated_generic_string_objects,
                                     GenericStringObjectFormat::Json(JsonObjectType::WorkflowEnum),
                                     gso,
                                 );
                             }
-                            warp_graphql::generic_string_object::GenericStringObjectFormat::JsonAIFact => {
+                            torch_graphql::generic_string_object::GenericStringObjectFormat::JsonAIFact => {
                                 parse_server_gso::<AIFact, JsonSerializer>(
                                     &mut updated_generic_string_objects,
                                     GenericStringObjectFormat::Json(JsonObjectType::AIFact),
                                     gso,
                                 );
                             }
-                            warp_graphql::generic_string_object::GenericStringObjectFormat::JsonMCPServer => {
+                            torch_graphql::generic_string_object::GenericStringObjectFormat::JsonMCPServer => {
                                 parse_server_gso::<MCPServer, JsonSerializer>(
                                     &mut updated_generic_string_objects,
                                     GenericStringObjectFormat::Json(JsonObjectType::MCPServer),
                                     gso,
                                 );
                             }
-                            warp_graphql::generic_string_object::GenericStringObjectFormat::JsonAIExecutionProfile => {
+                            torch_graphql::generic_string_object::GenericStringObjectFormat::JsonAIExecutionProfile => {
                                 parse_server_gso::<AIExecutionProfile, JsonSerializer>(
                                     &mut updated_generic_string_objects,
                                     GenericStringObjectFormat::Json(JsonObjectType::AIExecutionProfile),
                                     gso,
                                 );
                             }
-                            warp_graphql::generic_string_object::GenericStringObjectFormat::JsonTemplatableMCPServer => {
+                            torch_graphql::generic_string_object::GenericStringObjectFormat::JsonTemplatableMCPServer => {
                                 parse_server_gso::<TemplatableMCPServer, JsonSerializer>(
                                     &mut updated_generic_string_objects,
                                     GenericStringObjectFormat::Json(JsonObjectType::TemplatableMCPServer),
                                     gso,
                                 );
                             }
-                            warp_graphql::generic_string_object::GenericStringObjectFormat::JsonCloudEnvironment => {
+                            torch_graphql::generic_string_object::GenericStringObjectFormat::JsonCloudEnvironment => {
                                 parse_server_gso::<AmbientAgentEnvironment, JsonSerializer>(
                                     &mut updated_generic_string_objects,
                                     GenericStringObjectFormat::Json(JsonObjectType::CloudEnvironment),
                                     gso,
                                 );
                             }
-                            warp_graphql::generic_string_object::GenericStringObjectFormat::JsonScheduledAmbientAgent => {
+                            torch_graphql::generic_string_object::GenericStringObjectFormat::JsonScheduledAmbientAgent => {
                                 parse_server_gso::<ScheduledAmbientAgent, JsonSerializer>(
                                     &mut updated_generic_string_objects,
                                     GenericStringObjectFormat::Json(JsonObjectType::ScheduledAmbientAgent),
@@ -836,7 +836,7 @@ impl ObjectClient for ServerApi {
                             // server-only `JsonRunner`) are skipped so syncing of
                             // known objects still succeeds instead of failing to
                             // decode the whole response.
-                            warp_graphql::generic_string_object::GenericStringObjectFormat::Unknown => {}
+                            torch_graphql::generic_string_object::GenericStringObjectFormat::Unknown => {}
                         }
                     }
                 }
@@ -1057,7 +1057,7 @@ impl ObjectClient for ServerApi {
         let response = self.send_graphql_request(operation, None).await?;
 
         let result = match response.untrash_object {
-            warp_graphql::mutations::untrash_object::UntrashObjectResult::UntrashObjectOutput(
+            torch_graphql::mutations::untrash_object::UntrashObjectResult::UntrashObjectOutput(
                 output,
             ) => {
                 if output.success {
@@ -1398,7 +1398,7 @@ impl ObjectClient for ServerApi {
 fn parse_server_gso<T, S>(
     map: &mut HashMap<GenericStringObjectFormat, Vec<Box<dyn ServerObject>>>,
     format: GenericStringObjectFormat,
-    gso: warp_graphql::generic_string_object::GenericStringObject,
+    gso: torch_graphql::generic_string_object::GenericStringObject,
 ) where
     T: StringModel<
         CloudObjectType = GenericCloudObject<GenericStringObjectId, GenericStringModel<T, S>>,

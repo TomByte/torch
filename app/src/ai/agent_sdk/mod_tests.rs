@@ -12,19 +12,19 @@ use futures::FutureExt;
 use http::StatusCode;
 use mockito::{Matcher, Server};
 use serde_json::json;
-use warp_cli::agent::{
+use torch_cli::agent::{
     AgentCommand, Harness, HarnessTransport, OutputFormat, RepositoryForge, RepositoryHeadRef,
     RepositoryPreparationOverride, RunAgentArgs,
 };
-use warp_cli::artifact::{
+use torch_cli::artifact::{
     ArtifactCommand, DownloadArtifactArgs, GetArtifactArgs, UploadArtifactArgs,
 };
-use warp_cli::task::{MessageCommand, MessageSendArgs, MessageWatchArgs, TaskCommand};
-use warp_cli::{Args, CliCommand, Command};
-use warp_core::features::FeatureFlag;
-use warp_core::telemetry::TelemetryEvent;
-use warp_graphql::ai::AgentTaskState;
-use warpui::{App, SingletonEntity, WindowId};
+use torch_cli::task::{MessageCommand, MessageSendArgs, MessageWatchArgs, TaskCommand};
+use torch_cli::{Args, CliCommand, Command};
+use torch_core::features::FeatureFlag;
+use torch_core::telemetry::TelemetryEvent;
+use torch_graphql::ai::AgentTaskState;
+use torchui::{App, SingletonEntity, WindowId};
 
 use super::driver::agent_setup::configured_skills::selected_execution_skills;
 use super::{
@@ -311,7 +311,7 @@ fn deferred_capability_bootstrap_subprocess() {
     if supports_deferred_repositories && scenario != "missing" {
         config["deferredRepositories"] = deferred;
     }
-    let mut server = warp_core::channel::ChannelState::mock_server();
+    let mut server = torch_core::channel::ChannelState::mock_server();
     let bootstrap = server
         .mock("POST", "/graphql/v2")
         .match_query(Matcher::UrlEncoded(
@@ -474,7 +474,7 @@ fn paired_task_data_downloads_listed_attachment_without_refetching_it() {
             TASK_ID.parse().unwrap(),
             std::collections::HashMap::from([(
                 "API_KEY".to_owned(),
-                warp_managed_secrets::ManagedSecretValue::raw_value("secret"),
+                torch_managed_secrets::ManagedSecretValue::raw_value("secret"),
             )]),
             Ok(vec![attachment]),
             &mut options,
@@ -574,7 +574,7 @@ fn driver_validation_uses_live_repository_membership() {
         repo_owner: "WarpDotDev".to_string(),
         repo_name: "Warp".to_string(),
         head: RepositoryHeadRef::CommitSha("0123456789abcdef0123456789abcdef01234567".to_string()),
-        clone_from: Some(warp_cli::agent::RepositoryIdentity {
+        clone_from: Some(torch_cli::agent::RepositoryIdentity {
             code_forge: RepositoryForge::GitHub,
             repo_owner: "warpdotdev".to_string(),
             repo_name: "warp-for-benchmarks".to_string(),
@@ -850,7 +850,7 @@ fn factory_experiment_bootstrap_subprocess() {
 
 #[cfg(not(target_family = "wasm"))]
 fn test_with_paused_time<F: Future<Output = ()> + 'static>(test: impl FnOnce(App) -> F) {
-    drop(warp_core::channel::ChannelState::mock_server());
+    drop(torch_core::channel::ChannelState::mock_server());
     let app = App::test((), |app| async move { app });
     let executor = app.foreground_executor();
     let runtime = tokio::runtime::Builder::new_current_thread()

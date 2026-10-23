@@ -9,8 +9,8 @@
 mod warpify;
 
 pub use warpify::*;
-use warpui::Element;
-use warpui::elements::{
+use torchui::Element;
+use torchui::elements::{
     ConstrainedBox, Container, CornerRadius, Hoverable, MouseState, MouseStateHandle,
     ParentElement, Radius, Stack,
 };

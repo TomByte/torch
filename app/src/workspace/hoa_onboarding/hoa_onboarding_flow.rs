@@ -5,20 +5,20 @@ use markdown_parser::{
 };
 use pathfinder_color::ColorU;
 use settings::Setting;
-use warp_core::ui::theme::Fill;
-use warp_core::ui::theme::phenomenon::PhenomenonStyle;
-use warpui::elements::{
+use torch_core::ui::theme::Fill;
+use torch_core::ui::theme::phenomenon::PhenomenonStyle;
+use torchui::elements::{
     Align, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Empty, Flex,
     FormattedTextElement, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius,
     Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::geometry::vector::Vector2F;
-use warpui::keymap::{FixedBinding, Keystroke};
-use warpui::platform::Cursor;
-use warpui::platform::file_picker::{FilePickerConfiguration, FilePickerError};
-use warpui::ui_components::components::UiComponent;
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::geometry::vector::Vector2F;
+use torchui::keymap::{FixedBinding, Keystroke};
+use torchui::platform::Cursor;
+use torchui::platform::file_picker::{FilePickerConfiguration, FilePickerError};
+use torchui::ui_components::components::UiComponent;
+use torchui::{
     AppContext, Element, Entity, EventContext, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };
@@ -117,8 +117,8 @@ impl HoaOnboardingStep {
     }
 }
 
-pub fn init(app: &mut warpui::AppContext) {
-    use warpui::keymap::macros::*;
+pub fn init(app: &mut torchui::AppContext) {
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings([FixedBinding::new(
         "enter",
@@ -567,7 +567,7 @@ impl View for HoaOnboardingFlow {
         "HoaOnboardingFlow"
     }
 
-    fn on_focus(&mut self, _focus_ctx: &warpui::FocusContext, ctx: &mut ViewContext<Self>) {
+    fn on_focus(&mut self, _focus_ctx: &torchui::FocusContext, ctx: &mut ViewContext<Self>) {
         ctx.focus_self();
     }
 

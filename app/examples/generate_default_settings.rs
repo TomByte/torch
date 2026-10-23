@@ -18,9 +18,9 @@ use std::path::PathBuf;
 
 use settings::SettingsMode;
 use settings::schema::SettingSchemaEntry;
-use warp_core::features::{DEBUG_FLAGS, DOGFOOD_FLAGS, FeatureFlag, PREVIEW_FLAGS, RELEASE_FLAGS};
-use warpui_extras::user_preferences::UserPreferences as _;
-use warpui_extras::user_preferences::toml_backed::TomlBackedUserPreferences;
+use torch_core::features::{DEBUG_FLAGS, DOGFOOD_FLAGS, FeatureFlag, PREVIEW_FLAGS, RELEASE_FLAGS};
+use torchui_extras::user_preferences::UserPreferences as _;
+use torchui_extras::user_preferences::toml_backed::TomlBackedUserPreferences;
 
 /// Ensures all `inventory::submit!` registrations from the app crate's
 /// dependency tree are linked into the binary.
@@ -30,7 +30,7 @@ use warpui_extras::user_preferences::toml_backed::TomlBackedUserPreferences;
 /// not include most of the app's object files and the `inventory`
 /// submissions they contain.
 fn ensure_settings_linked() {
-    let _ = std::hint::black_box(warp::settings::RESTORE_SESSION);
+    let _ = std::hint::black_box(torch::settings::RESTORE_SESSION);
 }
 
 fn active_flags_for_channel(channel: &str) -> HashSet<FeatureFlag> {

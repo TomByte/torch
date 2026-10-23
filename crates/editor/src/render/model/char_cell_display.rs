@@ -34,7 +34,7 @@ use std::cell::Ref;
 use std::ops::Range;
 
 use string_offset::CharOffset;
-use warpui_core::text::TuiGridPoint;
+use torchui_core::text::TuiGridPoint;
 
 use super::{CharCellTemporaryBlock, CharCellTextIndex};
 

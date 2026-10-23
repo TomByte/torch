@@ -1,8 +1,8 @@
 use std::time::Duration;
 
-use warp_core::execution_mode::{AppExecutionMode, ExecutionMode};
-use warpui::r#async::Timer;
-use warpui::{App, EntityId};
+use torch_core::execution_mode::{AppExecutionMode, ExecutionMode};
+use torchui::r#async::Timer;
+use torchui::{App, EntityId};
 
 use super::event::{
     CLIAgentEvent, CLIAgentEventPayload, CLIAgentEventSource, CLIAgentEventType, parse_event,

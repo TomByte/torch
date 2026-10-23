@@ -1,5 +1,5 @@
 use serde::Serialize;
-use warp_managed_secrets::{ManagedSecretValue, UploadKey, init_envelope};
+use torch_managed_secrets::{ManagedSecretValue, UploadKey, init_envelope};
 use wasm_bindgen::prelude::*;
 
 /// Called once when the WASM module is instantiated.

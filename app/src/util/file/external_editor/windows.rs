@@ -7,9 +7,9 @@ use std::sync::OnceLock;
 
 use command::r#async::Command;
 use enum_iterator::{all, cardinality};
-use warp_errors::report_error;
-use warp_util::path::LineAndColumnArg;
-use warpui::AppContext;
+use torch_errors::report_error;
+use torch_util::path::LineAndColumnArg;
+use torchui::AppContext;
 use winreg::enums::{HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE};
 use winreg::{HKEY, RegKey};
 

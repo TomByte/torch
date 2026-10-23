@@ -4,12 +4,12 @@ use std::path::{Path, PathBuf};
 
 use fuzzy_match::FuzzyMatchResult;
 use ordered_float::OrderedFloat;
-use warp_core::ui::Icon;
-use warp_core::ui::theme::{AnsiColorIdentifier, Fill};
-use warpui::elements::{ConstrainedBox, Container, Highlight, Text};
-use warpui::fonts::{Properties, Weight};
-use warpui::text_layout::ClipConfig;
-use warpui::{AppContext, Element, SingletonEntity};
+use torch_core::ui::Icon;
+use torch_core::ui::theme::{AnsiColorIdentifier, Fill};
+use torchui::elements::{ConstrainedBox, Container, Highlight, Text};
+use torchui::fonts::{Properties, Weight};
+use torchui::text_layout::ClipConfig;
+use torchui::{AppContext, Element, SingletonEntity};
 
 use crate::appearance::Appearance;
 use crate::search::SearchItem;

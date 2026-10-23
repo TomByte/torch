@@ -8,10 +8,10 @@ use itertools::Itertools;
 use lazy_static::lazy_static;
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::Vector2F;
-use warp_core::features::FeatureFlag;
-use warp_errors::report_error;
-use warpui::accessibility::{AccessibilityContent, WarpA11yRole};
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_errors::report_error;
+use torchui::accessibility::{AccessibilityContent, WarpA11yRole};
+use torchui::elements::{
     Align, AnchorPair, Border, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     Dismiss, Fill, Flex, MouseStateHandle, OffsetPositioning, OffsetType, ParentElement,
     ParentOffsetBounds, PositionedElementOffsetBounds, PositioningAxis, Radius, Resizable,
@@ -19,9 +19,9 @@ use warpui::elements::{
     Shrinkable, Stack, UniformList, UniformListState, XAxisAnchor, YAxisAnchor,
     resizable_state_handle,
 };
-use warpui::presenter::ChildView;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::presenter::ChildView;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, FocusContext, ModelHandle, SingletonEntity, TypedActionView, View,
     ViewContext, ViewHandle, WeakViewHandle,
 };
@@ -555,7 +555,7 @@ impl CommandSearchView {
             .build()
             .finish();
         let row = Flex::row()
-            .with_main_axis_size(warpui::elements::MainAxisSize::Max)
+            .with_main_axis_size(torchui::elements::MainAxisSize::Max)
             .with_cross_axis_alignment(CrossAxisAlignment::Center)
             .with_child(Shrinkable::new(1., text).finish());
 
@@ -619,7 +619,7 @@ impl CommandSearchView {
 
         Container::new(
             Flex::row()
-                .with_main_axis_size(warpui::elements::MainAxisSize::Max)
+                .with_main_axis_size(torchui::elements::MainAxisSize::Max)
                 .with_cross_axis_alignment(CrossAxisAlignment::Center)
                 .with_child(Shrinkable::new(1., text).finish())
                 .finish(),
@@ -638,7 +638,7 @@ impl CommandSearchView {
         user_id: UserUid,
     ) -> Box<dyn Element> {
         let mut row = Flex::row()
-            .with_main_axis_size(warpui::elements::MainAxisSize::Max)
+            .with_main_axis_size(torchui::elements::MainAxisSize::Max)
             .with_cross_axis_alignment(CrossAxisAlignment::Center);
 
         let upgrade_link = team_uid
@@ -977,7 +977,7 @@ impl View for CommandSearchView {
         ))
     }
 
-    fn render(&self, app: &AppContext) -> Box<dyn warpui::Element> {
+    fn render(&self, app: &AppContext) -> Box<dyn torchui::Element> {
         let appearance = Appearance::as_ref(app);
         let mixer = self.mixer.as_ref(app);
 
@@ -1095,7 +1095,7 @@ impl CommandSearchView {
 pub mod styles {
     use lazy_static::lazy_static;
     use pathfinder_color::ColorU;
-    use warpui::elements::{Border, DropShadow, ScrollbarWidth};
+    use torchui::elements::{Border, DropShadow, ScrollbarWidth};
 
     use crate::appearance::Appearance;
     use crate::themes::theme::Fill;

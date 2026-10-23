@@ -1,10 +1,10 @@
 //! Commands to interact with available agents via the public API.
 
-use warp_cli::agent::ListAgentSkillsArgs;
-use warp_graphql::queries::get_oauth_connect_tx_status::OauthConnectTxStatus;
-use warp_graphql::queries::user_repo_auth_status::UserRepoAuthStatusEnum;
-use warpui::platform::TerminationMode;
-use warpui::{AppContext, ModelContext, SingletonEntity};
+use torch_cli::agent::ListAgentSkillsArgs;
+use torch_graphql::queries::get_oauth_connect_tx_status::OauthConnectTxStatus;
+use torch_graphql::queries::user_repo_auth_status::UserRepoAuthStatusEnum;
+use torchui::platform::TerminationMode;
+use torchui::{AppContext, ModelContext, SingletonEntity};
 
 use crate::ai::agent_sdk::oauth_flow::poll_oauth_until_terminal;
 use crate::ai::cloud_environments::GithubRepo;
@@ -339,7 +339,7 @@ impl AgentConfigRunner {
     }
 }
 
-impl warpui::Entity for AgentConfigRunner {
+impl torchui::Entity for AgentConfigRunner {
     type Event = ();
 }
 

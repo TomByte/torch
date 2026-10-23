@@ -1,4 +1,4 @@
-use warp_core::telemetry::TelemetryEvent as _;
+use torch_core::telemetry::TelemetryEvent as _;
 
 use super::*;
 

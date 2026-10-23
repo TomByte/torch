@@ -26,25 +26,25 @@ use toolbar_item::AgentToolbarItemKind;
 use voice_input::{
     StartListeningError, VoiceInputLifecycle, VoiceInputLifecycleState, VoiceSessionResult,
 };
-use warp_cli::agent::Harness;
-use warp_core::channel::ChannelState;
-use warp_core::context_flag::ContextFlag;
-use warp_core::ui::color::ContrastingColor;
-use warp_core::ui::color::blend::Blend;
-use warp_core::ui::color::contrast::MinimumAllowedContrast;
-use warp_core::ui::theme::color::internal_colors;
-use warp_core::ui::theme::{AnsiColorIdentifier, Fill};
+use torch_cli::agent::Harness;
+use torch_core::channel::ChannelState;
+use torch_core::context_flag::ContextFlag;
+use torch_core::ui::color::ContrastingColor;
+use torch_core::ui::color::blend::Blend;
+use torch_core::ui::color::contrast::MinimumAllowedContrast;
+use torch_core::ui::theme::color::internal_colors;
+use torch_core::ui::theme::{AnsiColorIdentifier, Fill};
 #[cfg(any(not(target_family = "wasm"), feature = "voice_input"))]
-use warp_errors::report_error;
-use warp_errors::report_if_error;
-use warpui::r#async::{SpawnedFutureHandle, Timer};
-use warpui::elements::{
+use torch_errors::report_error;
+use torch_errors::report_if_error;
+use torchui::r#async::{SpawnedFutureHandle, Timer};
+use torchui::elements::{
     ChildAnchor, ChildView, Clipped, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     DispatchEventResult, Element, Empty, EventHandler, Flex, MainAxisAlignment, MainAxisSize,
     OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, SavePosition,
     Shrinkable, Stack, Wrap, WrapFill, WrapFillEntireRun,
 };
-use warpui::{
+use torchui::{
     AppContext, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };
@@ -1204,7 +1204,7 @@ impl AgentInputFooter {
     fn select_cli_file(&mut self, ctx: &mut ViewContext<Self>) {
         let window_id = ctx.window_id();
         let view_id = ctx.view_id();
-        let file_picker_config = warpui::platform::FilePickerConfiguration::new();
+        let file_picker_config = torchui::platform::FilePickerConfiguration::new();
 
         ctx.open_file_picker(
             move |result, ctx| match result {
@@ -1969,8 +1969,8 @@ impl AgentInputFooter {
         // For key-based toggling, validate the key state against current voice state.
         if let voice_input::VoiceInputToggledFrom::Key { state } = source {
             match (self.cli_voice_input_lifecycle.state(), state) {
-                (VoiceInputLifecycleState::Idle, warpui::event::KeyState::Released) => return,
-                (VoiceInputLifecycleState::Listening, warpui::event::KeyState::Pressed) => return,
+                (VoiceInputLifecycleState::Idle, torchui::event::KeyState::Released) => return,
+                (VoiceInputLifecycleState::Listening, torchui::event::KeyState::Pressed) => return,
                 _ => {}
             }
         }
@@ -2470,8 +2470,8 @@ impl AgentInputFooter {
                             OffsetPositioning::offset_from_save_position_element(
                                 USAGE_BUTTON_SAVE_POSITION_ID,
                                 vec2f(0., 4.),
-                                warpui::elements::PositionedElementOffsetBounds::WindowByPosition,
-                                warpui::elements::PositionedElementAnchor::BottomRight,
+                                torchui::elements::PositionedElementOffsetBounds::WindowByPosition,
+                                torchui::elements::PositionedElementAnchor::BottomRight,
                                 ChildAnchor::TopRight,
                             )
                         }
@@ -2479,8 +2479,8 @@ impl AgentInputFooter {
                             OffsetPositioning::offset_from_save_position_element(
                                 USAGE_BUTTON_SAVE_POSITION_ID,
                                 vec2f(0., -4.),
-                                warpui::elements::PositionedElementOffsetBounds::WindowByPosition,
-                                warpui::elements::PositionedElementAnchor::TopRight,
+                                torchui::elements::PositionedElementOffsetBounds::WindowByPosition,
+                                torchui::elements::PositionedElementAnchor::TopRight,
                                 ChildAnchor::BottomRight,
                             )
                         }
@@ -2583,7 +2583,7 @@ impl View for AgentInputFooter {
         "AgentViewFooter"
     }
 
-    fn render(&self, app: &warpui::AppContext) -> Box<dyn warpui::Element> {
+    fn render(&self, app: &torchui::AppContext) -> Box<dyn torchui::Element> {
         if self.should_render_cloud_mode_v2(app) {
             return self.render_cloud_mode_v2_footer(app);
         }
@@ -2737,7 +2737,7 @@ pub enum AgentInputFooterAction {
 impl TypedActionView for AgentInputFooter {
     type Action = AgentInputFooterAction;
 
-    fn handle_action(&mut self, action: &Self::Action, ctx: &mut warpui::ViewContext<Self>) {
+    fn handle_action(&mut self, action: &Self::Action, ctx: &mut torchui::ViewContext<Self>) {
         match action {
             #[cfg(feature = "voice_input")]
             AgentInputFooterAction::ToggleVoiceInput => {
@@ -3050,10 +3050,10 @@ impl ActionButtonTheme for AgentInputButtonTheme {
         true
     }
 
-    fn font_properties(&self) -> Option<warpui::fonts::Properties> {
+    fn font_properties(&self) -> Option<torchui::fonts::Properties> {
         if crate::features::FeatureFlag::CloudModeInputV2.is_enabled() {
-            Some(warpui::fonts::Properties {
-                weight: warpui::fonts::Weight::Semibold,
+            Some(torchui::fonts::Properties {
+                weight: torchui::fonts::Weight::Semibold,
                 ..Default::default()
             })
         } else {
@@ -3120,7 +3120,7 @@ impl ActionButtonTheme for ActiveMicButtonTheme {
         true
     }
 
-    fn font_properties(&self) -> Option<warpui::fonts::Properties> {
+    fn font_properties(&self) -> Option<torchui::fonts::Properties> {
         AgentInputButtonTheme.font_properties()
     }
 }

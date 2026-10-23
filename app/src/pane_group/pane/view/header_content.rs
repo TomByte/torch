@@ -3,11 +3,11 @@
 //! This module provides the infrastructure for backing views to declaratively
 //! specify their header content without worrying about draggable behavior.
 
-use warp_core::ui::theme::Fill;
-use warpui::elements::{DraggableState, MouseStateHandle};
-use warpui::fonts::Properties;
-use warpui::text_layout::ClipConfig;
-use warpui::{AppContext, Element};
+use torch_core::ui::theme::Fill;
+use torchui::elements::{DraggableState, MouseStateHandle};
+use torchui::fonts::Properties;
+use torchui::text_layout::ClipConfig;
+use torchui::{AppContext, Element};
 
 /// Closure that renders sharing controls (share button, view-only indicator) for a pane header.
 /// Accepts optional icon color and button size overrides.

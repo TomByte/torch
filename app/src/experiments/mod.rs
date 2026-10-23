@@ -21,9 +21,9 @@ use dashmap::DashMap;
 pub use improved_palette_search_layer::{IMPROVED_PALETTE_SEARCH_LAYER, ImprovedPaletteSearch};
 use lazy_static::lazy_static;
 pub use login_layer::{AuthFlowInstructions, LOGIN_LAYER};
-use warp_core::user_preferences::GetUserPreferences as _;
-use warp_errors::report_error;
-use warpui::{AppContext, SingletonEntity};
+use torch_core::user_preferences::GetUserPreferences as _;
+use torch_errors::report_error;
+use torchui::{AppContext, SingletonEntity};
 
 use crate::auth::auth_state::AuthStateProvider;
 use crate::channel::{Channel, ChannelState};

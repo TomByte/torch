@@ -12,19 +12,19 @@ use markdown_parser::{
 use pathfinder_geometry::vector::Vector2F;
 use string_offset::CharOffset;
 use vec1::vec1;
-use warp_core::features::FeatureFlag;
-use warp_editor::content::buffer::{AutoScrollBehavior, BufferSelectAction, SelectionOffsets};
-use warp_editor::content::text::{BlockType, BufferBlockStyle, CodeBlockType, TextStyles};
-use warp_editor::model::{CoreEditorModel, RichTextEditorModel};
-use warp_editor::render::model::viewport::SizeInfo;
-use warp_editor::render::model::{BlockItem, RenderEvent};
-use warp_editor::selection::{TextDirection, TextUnit};
-use warpui::r#async::{FutureId, Timer, block_on};
-use warpui::elements::ListIndentLevel;
-use warpui::platform::WindowStyle;
-use warpui::presenter::ChildView;
-use warpui::text::word_boundaries::WordBoundariesPolicy;
-use warpui::{
+use torch_core::features::FeatureFlag;
+use torch_editor::content::buffer::{AutoScrollBehavior, BufferSelectAction, SelectionOffsets};
+use torch_editor::content::text::{BlockType, BufferBlockStyle, CodeBlockType, TextStyles};
+use torch_editor::model::{CoreEditorModel, RichTextEditorModel};
+use torch_editor::render::model::viewport::SizeInfo;
+use torch_editor::render::model::{BlockItem, RenderEvent};
+use torch_editor::selection::{TextDirection, TextUnit};
+use torchui::r#async::{FutureId, Timer, block_on};
+use torchui::elements::ListIndentLevel;
+use torchui::platform::WindowStyle;
+use torchui::presenter::ChildView;
+use torchui::text::word_boundaries::WordBoundariesPolicy;
+use torchui::{
     AddSingletonModel, App, AppContext, Element, Entity, ModelHandle, SingletonEntity,
     TypedActionView, View, ViewHandle,
 };
@@ -69,7 +69,7 @@ impl View for TestView {
         "TestView"
     }
 
-    fn render(&self, _app: &warpui::AppContext) -> Box<dyn warpui::Element> {
+    fn render(&self, _app: &torchui::AppContext) -> Box<dyn torchui::Element> {
         ChildView::new(&self.editor).finish()
     }
 }
@@ -97,7 +97,7 @@ fn model_from_markdown(
 
 /// Register the singletons and host window that a [`NotebooksEditorModel`] depends on, returning
 /// the window a model should bind to.
-fn setup_editor_window(app: &mut App, should_initialize_cloud_model: bool) -> warpui::WindowId {
+fn setup_editor_window(app: &mut App, should_initialize_cloud_model: bool) -> torchui::WindowId {
     let global_resources = GlobalResourceHandles::mock(app);
     app.add_singleton_model(|_| GlobalResourceHandlesProvider::new(global_resources));
     app.add_singleton_model(|_| ActiveSession::default());

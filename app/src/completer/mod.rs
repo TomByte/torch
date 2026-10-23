@@ -10,14 +10,14 @@ use async_trait::async_trait;
 use lazy_static::lazy_static;
 use smol_str::SmolStr;
 use typed_path::{TypedPath, TypedPathBuf};
-use warp_completer::completer::{
+use torch_completer::completer::{
     CommandExitStatus, CommandOutput, CompletionContext, EngineDirEntry, EngineFileType,
     GeneratorContext, PathCompletionContext, PathSeparators, TopLevelCommandCaseSensitivity,
 };
-use warp_completer::signatures::CommandRegistry;
-use warp_core::features::FeatureFlag;
-use warp_util::path::{EscapeChar, ShellFamily};
-use warpui::{AppContext, SingletonEntity};
+use torch_completer::signatures::CommandRegistry;
+use torch_core::features::FeatureFlag;
+use torch_util::path::{EscapeChar, ShellFamily};
+use torchui::{AppContext, SingletonEntity};
 
 use crate::safe_warn;
 use crate::terminal::model::session::{ExecuteCommandOptions, Session, SessionType};
@@ -434,7 +434,7 @@ fn ls_script_for_dir(directory: &TypedPath) -> Option<String> {
         log::warn!("Non-unicode character found in path: `{directory:?}`");
         return None;
     };
-    let escaped_dir = warp_util::path::ShellFamily::Posix.shell_escape(dir_str);
+    let escaped_dir = torch_util::path::ShellFamily::Posix.shell_escape(dir_str);
 
     // Get all directories with -print0, which makes all items end in `\0` (null character)
     // Get all files with -print0, which makes all items end in `\0`

@@ -1,11 +1,11 @@
-use warp::features::FeatureFlag;
-use warp::integration_testing::cloud_shell_recovery::{
+use torch::features::FeatureFlag;
+use torch::integration_testing::cloud_shell_recovery::{
     add_shared_ambient_bash_tab, execute_agent_command, execute_agent_shell_exit,
     sync_session_environment_variable, wait_for_agent_command_result,
     wait_for_recovered_command_result, wait_for_recovery, wait_for_shared_ambient_session,
     wait_for_tab_count,
 };
-use warp::integration_testing::terminal::wait_until_bootstrapped_single_pane_for_tab;
+use torch::integration_testing::terminal::wait_until_bootstrapped_single_pane_for_tab;
 
 use super::new_builder;
 use crate::Builder;

@@ -1,7 +1,7 @@
 use serde::Serialize;
 use serde_json::json;
 use strum_macros::{EnumDiscriminants, EnumIter};
-use warp_core::telemetry::{EnablementState, TelemetryEvent, TelemetryEventDesc};
+use torch_core::telemetry::{EnablementState, TelemetryEvent, TelemetryEventDesc};
 
 use crate::features::FeatureFlag;
 
@@ -91,7 +91,7 @@ impl TelemetryEvent for RecordingTelemetryEvent {
     }
 
     fn event_descs() -> impl Iterator<Item = Box<dyn TelemetryEventDesc>> {
-        warp_core::telemetry::enum_events::<Self>()
+        torch_core::telemetry::enum_events::<Self>()
     }
 }
 
@@ -118,7 +118,7 @@ impl TelemetryEventDesc for RecordingTelemetryEventDiscriminants {
     }
 }
 
-warp_core::register_telemetry_event!(RecordingTelemetryEvent);
+torch_core::register_telemetry_event!(RecordingTelemetryEvent);
 
 #[cfg(test)]
 #[path = "recording_telemetry_tests.rs"]

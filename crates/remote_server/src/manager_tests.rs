@@ -1,7 +1,7 @@
 use futures::channel::oneshot;
-use warp_core::SessionId;
-use warp_util::standardized_path::StandardizedPath;
-use warpui_core::App;
+use torch_core::SessionId;
+use torch_util::standardized_path::StandardizedPath;
+use torchui_core::App;
 
 use super::{
     HostRequestError, PendingHostRequest, RemoteServerManager, RemoteServerManagerEvent,

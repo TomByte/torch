@@ -2,9 +2,9 @@ use std::sync::Arc;
 
 use chrono::Utc;
 use persistence::model::ConversationUsageMetadata;
-use warp_cli::agent::Harness;
-use warp_graphql::object_permissions::AccessLevel;
-use warpui::{App, EntityId, SingletonEntity};
+use torch_cli::agent::Harness;
+use torch_graphql::object_permissions::AccessLevel;
+use torchui::{App, EntityId, SingletonEntity};
 
 use super::*;
 use crate::FeatureFlag;

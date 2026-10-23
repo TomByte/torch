@@ -2,11 +2,11 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use anyhow::Result;
-use warp_core::features::FeatureFlag;
-use warp_core::settings::{ChangeEventReason, Setting};
-use warp_core::user_preferences::GetUserPreferences;
-use warp_errors::report_error;
-use warpui::{
+use torch_core::features::FeatureFlag;
+use torch_core::settings::{ChangeEventReason, Setting};
+use torch_core::user_preferences::GetUserPreferences;
+use torch_errors::report_error;
+use torchui::{
     AppContext, Entity, ModelContext, SingletonEntity, Tracked, ViewContext, WeakViewHandle,
     WindowId,
 };
@@ -162,7 +162,7 @@ pub struct WorkspacesMetadataResponse {
 // independent queries.
 pub struct WorkspacesMetadataWithPricing {
     pub metadata: WorkspacesMetadataResponse,
-    pub pricing_info: Option<warp_graphql::billing::PricingInfo>,
+    pub pricing_info: Option<torch_graphql::billing::PricingInfo>,
 }
 
 pub struct CreateTeamResponse {

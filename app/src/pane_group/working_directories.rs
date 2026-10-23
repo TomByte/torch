@@ -12,14 +12,14 @@ use indexmap::IndexSet;
 use remote_server::manager::RemoteServerManager;
 #[cfg(feature = "local_fs")]
 use repo_metadata::repositories::DetectedRepositories;
-use warp_core::SessionId;
+use torch_core::SessionId;
 #[cfg(feature = "local_fs")]
-use warp_errors::report_error;
+use torch_errors::report_error;
 #[cfg(feature = "local_fs")]
-use warp_util::remote_path::RemotePath;
+use torch_util::remote_path::RemotePath;
 #[cfg(feature = "local_fs")]
-use warpui::{AppContext, SingletonEntity as _};
-use warpui::{Entity, EntityId, ModelContext, ModelHandle, ViewHandle};
+use torchui::{AppContext, SingletonEntity as _};
+use torchui::{Entity, EntityId, ModelContext, ModelHandle, ViewHandle};
 
 use crate::code::buffer_location::LocalOrRemotePath;
 #[cfg(feature = "local_fs")]

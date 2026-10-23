@@ -3,9 +3,9 @@ use std::sync::{Arc, Weak};
 use std::time::Duration;
 
 use anyhow::{Context, Error, Result, anyhow};
-use warp_errors::report_if_error;
-use warpui::ModelSpawner;
-use warpui::r#async::executor::Background;
+use torch_errors::report_if_error;
+use torchui::ModelSpawner;
+use torchui::r#async::executor::Background;
 
 use super::save_coordinator::{SaveCoordinator, SaveOperation, final_save_budget};
 use super::transcript_persistence::UploadedTranscriptUsage;

@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use warp_util::path::LineAndColumnArg;
+use torch_util::path::LineAndColumnArg;
 
 use super::generate_editor_command;
 

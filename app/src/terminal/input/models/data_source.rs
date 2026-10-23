@@ -2,21 +2,21 @@ use fuzzy_match::{FuzzyMatchResult, match_indices_case_insensitive};
 use itertools::Itertools;
 use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
 use ordered_float::OrderedFloat;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::icons::Icon;
-use warp_core::ui::theme::Fill;
-use warp_core::ui::theme::color::internal_colors;
-use warpui::elements::{
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::icons::Icon;
+use torch_core::ui::theme::Fill;
+use torch_core::ui::theme::color::internal_colors;
+use torchui::elements::{
     ConstrainedBox, Container, CornerRadius, FormattedTextElement, Highlight, HighlightedHyperlink,
     MouseStateHandle, Radius, Text,
 };
-use warpui::fonts::{Properties, Style, Weight};
-use warpui::keymap::Keystroke;
-use warpui::platform::{Cursor, OperatingSystem};
-use warpui::text_layout::ClipConfig;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::fonts::{Properties, Style, Weight};
+use torchui::keymap::Keystroke;
+use torchui::platform::{Cursor, OperatingSystem};
+use torchui::text_layout::ClipConfig;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity as _,
 };
 
@@ -464,8 +464,8 @@ impl SearchItem for ModelSearchItem {
         _highlight_state: ItemHighlightState,
         app: &AppContext,
     ) -> Box<dyn Element> {
-        use warpui::elements::{Flex, ParentElement as _};
-        use warpui::prelude::CrossAxisAlignment;
+        use torchui::elements::{Flex, ParentElement as _};
+        use torchui::prelude::CrossAxisAlignment;
 
         let appearance = crate::appearance::Appearance::as_ref(app);
         let theme = appearance.theme();
@@ -590,7 +590,7 @@ impl SearchItem for ModelSearchItem {
     }
 
     fn render_details(&self, app: &AppContext) -> Option<Box<dyn Element>> {
-        use warpui::elements::{Flex, ParentElement as _};
+        use torchui::elements::{Flex, ParentElement as _};
 
         let appearance = crate::appearance::Appearance::as_ref(app);
         let theme = appearance.theme();
@@ -751,10 +751,10 @@ impl SearchItem for ModelSearchItem {
             .with_hyperlink_font_color(theme.accent().into_solid())
             .register_default_click_handlers_with_action_support(|hyperlink_lens, event, ctx| {
                 match hyperlink_lens {
-                    warpui::elements::HyperlinkLens::Url(url) => {
+                    torchui::elements::HyperlinkLens::Url(url) => {
                         ctx.open_url(url);
                     }
-                    warpui::elements::HyperlinkLens::Action(action_ref) => {
+                    torchui::elements::HyperlinkLens::Action(action_ref) => {
                         if let Some(action) = action_ref.as_any().downcast_ref::<WorkspaceAction>()
                         {
                             event.dispatch_typed_action(action.clone());

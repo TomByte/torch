@@ -7,9 +7,9 @@ use command::blocking::Command;
 use rand::distributions::Alphanumeric;
 use rand::{Rng, thread_rng};
 use regex::Regex;
-use warp_core::command::ExitCode;
+use torch_core::command::ExitCode;
 #[cfg(windows)]
-use warp_core::paths::base_config_dir;
+use torch_core::paths::base_config_dir;
 
 use crate::terminal::local_tty::shell::{DirectShellStarter, ShellStarter, ShellStarterSource};
 use crate::terminal::shell;

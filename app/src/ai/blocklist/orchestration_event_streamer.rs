@@ -6,10 +6,10 @@ use anyhow::anyhow;
 use async_trait::async_trait;
 use futures::channel::mpsc;
 use uuid::Uuid;
-use warp_cli::agent::Harness;
+use torch_cli::agent::Harness;
 use warp_multi_agent_api as api;
-use warpui::r#async::{SpawnedFutureHandle, Timer};
-use warpui::{
+use torchui::r#async::{SpawnedFutureHandle, Timer};
+use torchui::{
     Entity, EntityId, GetSingletonModelHandle, ModelContext, SingletonEntity, UpdateModel,
 };
 
@@ -1108,7 +1108,7 @@ impl OrchestrationEventStreamer {
     fn should_register_parent_on_wait(
         &self,
         conversation_id: AIConversationId,
-        ctx: &warpui::AppContext,
+        ctx: &torchui::AppContext,
     ) -> bool {
         !self.is_remote_run_view(conversation_id, ctx)
             && !self.is_parent_agent_conversation(conversation_id, ctx)
@@ -1686,7 +1686,7 @@ impl OrchestrationEventStreamer {
     fn ensure_self_run_id_watched(
         &mut self,
         conversation_id: AIConversationId,
-        ctx: &warpui::AppContext,
+        ctx: &torchui::AppContext,
     ) -> bool {
         let (run_id, is_child) = {
             let history = BlocklistAIHistoryModel::as_ref(ctx);
@@ -2044,7 +2044,7 @@ impl OrchestrationEventStreamer {
     fn self_run_id(
         &self,
         conversation_id: AIConversationId,
-        ctx: &warpui::AppContext,
+        ctx: &torchui::AppContext,
     ) -> Option<String> {
         BlocklistAIHistoryModel::as_ref(ctx)
             .conversation(&conversation_id)
@@ -2056,7 +2056,7 @@ impl OrchestrationEventStreamer {
     fn is_parent_agent_conversation(
         &self,
         conversation_id: AIConversationId,
-        ctx: &warpui::AppContext,
+        ctx: &torchui::AppContext,
     ) -> bool {
         let Some(stream) = self.streams.get(&conversation_id) else {
             return false;
@@ -2083,7 +2083,7 @@ impl OrchestrationEventStreamer {
     fn is_remote_run_view(
         &self,
         conversation_id: AIConversationId,
-        ctx: &warpui::AppContext,
+        ctx: &torchui::AppContext,
     ) -> bool {
         BlocklistAIHistoryModel::as_ref(ctx)
             .conversation(&conversation_id)
@@ -2098,7 +2098,7 @@ impl OrchestrationEventStreamer {
     fn owns_turn_lifecycle(
         &self,
         conversation_id: AIConversationId,
-        ctx: &warpui::AppContext,
+        ctx: &torchui::AppContext,
     ) -> bool {
         BlocklistAIHistoryModel::as_ref(ctx)
             .conversation(&conversation_id)
@@ -2108,7 +2108,7 @@ impl OrchestrationEventStreamer {
     fn should_skip_sse_for_dormant_local_claude_child(
         &self,
         conversation_id: AIConversationId,
-        ctx: &warpui::AppContext,
+        ctx: &torchui::AppContext,
     ) -> bool {
         let Some(conversation) =
             BlocklistAIHistoryModel::as_ref(ctx).conversation(&conversation_id)
@@ -2133,7 +2133,7 @@ impl OrchestrationEventStreamer {
     /// this process (an open agent view or an agent_sdk driver) AND the
     /// conversation has a real role to consume events for. Passive views
     /// of agent runs hosted elsewhere are excluded regardless of state.
-    fn is_eligible(&self, conversation_id: AIConversationId, ctx: &warpui::AppContext) -> bool {
+    fn is_eligible(&self, conversation_id: AIConversationId, ctx: &torchui::AppContext) -> bool {
         if !self.has_active_consumer(conversation_id) {
             return false;
         }
@@ -2159,7 +2159,7 @@ impl OrchestrationEventStreamer {
     fn is_dormant_claude_wake_listener_eligible(
         &self,
         conversation_id: AIConversationId,
-        ctx: &warpui::AppContext,
+        ctx: &torchui::AppContext,
     ) -> bool {
         self.has_active_consumer(conversation_id)
             && !self.is_remote_run_view(conversation_id, ctx)
@@ -2183,7 +2183,7 @@ impl OrchestrationEventStreamer {
     fn desired_sse_filter(
         &self,
         conversation_id: AIConversationId,
-        ctx: &warpui::AppContext,
+        ctx: &torchui::AppContext,
     ) -> DesiredSseFilter {
         if self.is_parent_agent_conversation(conversation_id, ctx) {
             // A parent always has self_run_id by the time it has children
@@ -2471,7 +2471,7 @@ impl OrchestrationEventStreamer {
     fn stream_filter_stale(
         &self,
         conversation_id: AIConversationId,
-        ctx: &warpui::AppContext,
+        ctx: &torchui::AppContext,
     ) -> bool {
         let Some(stream) = self.streams.get(&conversation_id) else {
             return false;

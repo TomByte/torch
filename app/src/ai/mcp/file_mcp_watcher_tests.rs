@@ -8,7 +8,7 @@ use futures::stream::AbortHandle;
 use repo_metadata::repositories::RepoDetectionSource;
 use repo_metadata::{RepositoryUpdate, TargetFile};
 use settings::SettingsMode;
-use warpui::{App, Entity, ModelHandle};
+use torchui::{App, Entity, ModelHandle};
 
 use super::{
     FileMCPConfigDiagnosticKind, FileMCPConfigParseOutcome, FileMCPWatcher, FileMCPWatcherEvent,

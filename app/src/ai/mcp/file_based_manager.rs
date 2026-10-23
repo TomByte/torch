@@ -5,9 +5,9 @@ use std::path::{Path, PathBuf};
 use itertools::Itertools as _;
 use repo_metadata::repositories::DetectedRepositories;
 use uuid::Uuid;
-use warp_core::features::FeatureFlag;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warpui::{AppContext, Entity, ModelContext, SingletonEntity};
+use torch_core::features::FeatureFlag;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torchui::{AppContext, Entity, ModelContext, SingletonEntity};
 
 use super::file_mcp_watcher::{FileMCPConfigDiagnostic, PendingScan};
 use super::{FileMCPWatcher, FileMCPWatcherEvent, MCPProvider, home_dir};

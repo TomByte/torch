@@ -3,12 +3,12 @@ use std::sync::Arc;
 use anyhow::Result;
 use async_trait::async_trait;
 pub use cloud_object_models::{CloudFolder, CloudFolderModel};
-// Re-exported from warp_server_client.
-pub use warp_server_client::ids::FolderId;
+// Re-exported from torch_server_client.
+pub use torch_server_client::ids::FolderId;
 
 use super::CloudObjectTypeAndId;
 use super::items::WarpDriveItem;
-// Re-exported from warp_server_client.
+// Re-exported from torch_server_client.
 use super::items::folder::WarpDriveFolder;
 use crate::appearance::Appearance;
 use crate::cloud_object::{

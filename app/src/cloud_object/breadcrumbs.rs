@@ -1,4 +1,4 @@
-use warpui::AppContext;
+use torchui::AppContext;
 
 use super::{CloudObject, Space};
 use crate::drive::CloudObjectTypeAndId;

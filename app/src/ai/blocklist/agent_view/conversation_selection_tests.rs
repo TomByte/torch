@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use parking_lot::FairMutex;
-use warpui::r#async::executor::Background;
-use warpui::{App, EntityId};
+use torchui::r#async::executor::Background;
+use torchui::{App, EntityId};
 
 use super::{AgentViewConversationSelection, classify_gui_list_entry};
 use crate::ai::agent::conversation::AIConversationId;

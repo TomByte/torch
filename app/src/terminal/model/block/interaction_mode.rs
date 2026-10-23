@@ -1,6 +1,6 @@
 use anyhow::anyhow;
-use warp_terminal::model::Point;
-use warp_terminal::model::grid::Dimensions;
+use torch_terminal::model::Point;
+use torch_terminal::model::grid::Dimensions;
 
 use super::{Block, SerializedAIMetadata};
 use crate::ai::agent::AIAgentActionId;

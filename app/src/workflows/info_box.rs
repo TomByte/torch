@@ -2,24 +2,24 @@ use std::collections::HashMap;
 use std::ops::Range;
 
 use string_offset::CharOffset;
-use warp_core::features::FeatureFlag;
-use warp_core::settings::Setting;
-use warp_errors::report_error;
-use warpui::color::ColorU;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torch_core::settings::Setting;
+use torch_errors::report_error;
+use torchui::color::ColorU;
+use torchui::elements::{
     self, Align, Border, Clipped, ClippedScrollStateHandle, ClippedScrollable, ConstrainedBox,
     Container, CornerRadius, CrossAxisAlignment, DropShadow, Flex, Highlight, Icon,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, Rect, Shrinkable,
     Stack, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::geometry::vector::Vector2F;
-use warpui::keymap::Keystroke;
-use warpui::presenter::ChildView;
-use warpui::text_layout::{ClipConfig, TextStyle};
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::geometry::vector::Vector2F;
+use torchui::keymap::Keystroke;
+use torchui::presenter::ChildView;
+use torchui::text_layout::{ClipConfig, TextStyle};
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, Element, Entity, EventContext, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };
@@ -261,7 +261,7 @@ impl WorkflowsMoreInfoView {
             icons::Icon::Rename,
             Some(label.to_owned()),
             self.button_mouse_states.edit_cloud_workflow.clone(),
-            move |ctx: &mut warpui::EventContext<'_>, _, _| {
+            move |ctx: &mut torchui::EventContext<'_>, _, _| {
                 ctx.dispatch_typed_action(TerminalAction::OpenWorkflowModalWithCloudWorkflow(
                     workflow.id,
                 ))

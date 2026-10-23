@@ -1,6 +1,6 @@
-use warpui::elements::{ChildView, Container, Dismiss, Empty};
-use warpui::ui_components::components::UiComponent;
-use warpui::{
+use torchui::elements::{ChildView, Container, Dismiss, Empty};
+use torchui::ui_components::components::UiComponent;
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 

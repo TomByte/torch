@@ -7,10 +7,10 @@ use futures::FutureExt;
 use futures::future::BoxFuture;
 #[cfg(not(target_family = "wasm"))]
 use futures::future::Either;
-use warp_core::send_telemetry_from_ctx;
+use torch_core::send_telemetry_from_ctx;
 #[cfg(not(target_family = "wasm"))]
-use warpui::r#async::Timer;
-use warpui::{AppContext, Entity, ModelContext, SingletonEntity};
+use torchui::r#async::Timer;
+use torchui::{AppContext, Entity, ModelContext, SingletonEntity};
 
 use super::{ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessActionInput};
 use crate::ai::agent::conversation::AIConversationId;

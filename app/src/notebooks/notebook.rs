@@ -8,23 +8,23 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use settings::Setting as _;
 use url::Url;
-use warp_core::context_flag::ContextFlag;
-use warp_editor::editor::NavigationKey;
-use warp_editor::model::{CoreEditorModel, RichTextEditorModel};
-use warp_errors::{report_error, report_if_error};
-use warpui::accessibility::{AccessibilityContent, WarpA11yRole};
-use warpui::r#async::{SpawnedFutureHandle, Timer};
-use warpui::clipboard::ClipboardContent;
-use warpui::elements::{
+use torch_core::context_flag::ContextFlag;
+use torch_editor::editor::NavigationKey;
+use torch_editor::model::{CoreEditorModel, RichTextEditorModel};
+use torch_errors::{report_error, report_if_error};
+use torchui::accessibility::{AccessibilityContent, WarpA11yRole};
+use torchui::r#async::{SpawnedFutureHandle, Timer};
+use torchui::clipboard::ClipboardContent;
+use torchui::elements::{
     Align, Clipped, ConstrainedBox, Container, CrossAxisAlignment, DispatchEventResult, Empty,
     EventHandler, Flex, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement,
     SavePosition, Shrinkable, Stack,
 };
-use warpui::keymap::{EditableBinding, FixedBinding};
-use warpui::presenter::ChildView;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{
+use torchui::keymap::{EditableBinding, FixedBinding};
+use torchui::presenter::ChildView;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{
     AppContext, BlurContext, Element, Entity, FocusContext, ModelAsRef, ModelHandle,
     SingletonEntity, TypedActionView, View, ViewContext, ViewHandle, WindowId,
 };
@@ -132,7 +132,7 @@ lazy_static! {
 }
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_editable_bindings([
         EditableBinding::new(
@@ -1425,7 +1425,7 @@ impl NotebookView {
             );
         }
 
-        if !warpui::platform::is_mobile_device()
+        if !torchui::platform::is_mobile_device()
             && !ContextFlag::HideOpenOnDesktopButton.is_enabled()
             && *UserAppInstallDetectionSettings::as_ref(ctx)
                 .user_app_installation_detected
@@ -2185,7 +2185,7 @@ impl View for NotebookView {
         }
     }
 
-    fn render(&self, app: &AppContext) -> Box<dyn warpui::Element> {
+    fn render(&self, app: &AppContext) -> Box<dyn torchui::Element> {
         let mut content = Flex::column();
         content.extend(self.render_trash_banner(app));
         content.add_child(self.render_title(app));
@@ -2238,7 +2238,7 @@ impl View for NotebookView {
         SavePosition::new(stack.finish(), &self.view_position_id).finish()
     }
 
-    fn keymap_context(&self, app: &AppContext) -> warpui::keymap::Context {
+    fn keymap_context(&self, app: &AppContext) -> torchui::keymap::Context {
         let mut context = Self::default_keymap_context();
 
         match self.mode_app_ctx(app) {

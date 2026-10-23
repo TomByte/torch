@@ -20,14 +20,14 @@ use serde_yaml::Mapping;
 use string_offset::{ByteOffset, CharOffset};
 use sum_tree::{SeekBias, SumTree};
 use vec1::{Vec1, vec1};
-use warp_core::platform::SessionPlatform;
-use warp_core::safe_error;
-use warp_util::content_version::ContentVersion;
-use warpui_core::elements::ListIndentLevel;
-use warpui_core::fonts::Weight;
-use warpui_core::text::point::Point;
-use warpui_core::text::{TextBuffer, char_slice};
-use warpui_core::{AppContext, Entity, EntityId, ModelContext, ModelHandle};
+use torch_core::platform::SessionPlatform;
+use torch_core::safe_error;
+use torch_util::content_version::ContentVersion;
+use torchui_core::elements::ListIndentLevel;
+use torchui_core::fonts::Weight;
+use torchui_core::text::point::Point;
+use torchui_core::text::{TextBuffer, char_slice};
+use torchui_core::{AppContext, Entity, EntityId, ModelContext, ModelHandle};
 
 use super::anchor::{Anchor, AnchorSide, Anchors};
 use super::cursor::BufferCursor;
@@ -847,7 +847,7 @@ impl Buffer {
         selection_model: ModelHandle<BufferSelectionModel>,
         ctx: &mut ModelContext<Self>,
     ) -> Self {
-        let parse_fn = if warp_core::features::FeatureFlag::MarkdownTables.is_enabled() {
+        let parse_fn = if torch_core::features::FeatureFlag::MarkdownTables.is_enabled() {
             parse_markdown_with_gfm_tables
         } else {
             parse_markdown
@@ -887,7 +887,7 @@ impl Buffer {
         selection_model: ModelHandle<BufferSelectionModel>,
         ctx: &mut ModelContext<Self>,
     ) -> Result<Self, ipynb_parser::IpynbError> {
-        let gfm_tables = warp_core::features::FeatureFlag::MarkdownTables.is_enabled();
+        let gfm_tables = torch_core::features::FeatureFlag::MarkdownTables.is_enabled();
         let formatted_text = ipynb_parser::ipynb_to_formatted_text(ipynb, gfm_tables)?;
         Ok(Self::from_formatted_text(
             formatted_text,

@@ -1,16 +1,16 @@
 use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
 use pathfinder_color::ColorU;
-use warp_core::ui::Icon;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::Fill;
-use warpui::elements::{
+use torch_core::ui::Icon;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::Fill;
+use torchui::elements::{
     Border, CacheOption, Clipped, Container, CornerRadius, DEFAULT_UI_LINE_HEIGHT_RATIO, Element,
     FormattedTextElement, Hoverable, Image, ParentElement, Radius, Wrap, WrapFill,
 };
-use warpui::platform::Cursor;
-use warpui::prelude::{Align, ConstrainedBox, CrossAxisAlignment, Flex, MainAxisSize, Text};
-use warpui::ui_components::keyboard_shortcut::keystroke_to_keys;
-use warpui::{AppContext, SingletonEntity};
+use torchui::platform::Cursor;
+use torchui::prelude::{Align, ConstrainedBox, CrossAxisAlignment, Flex, MainAxisSize, Text};
+use torchui::ui_components::keyboard_shortcut::keystroke_to_keys;
+use torchui::{AppContext, SingletonEntity};
 
 use crate::ai::blocklist::agent_view::shortcuts::render_keystroke_with_color_overrides;
 use crate::terminal;
@@ -29,7 +29,7 @@ pub fn render_standard_message_bar(
     right_element: Option<Box<dyn Element>>,
     app: &AppContext,
 ) -> Box<dyn Element> {
-    use warpui::prelude::MainAxisAlignment;
+    use torchui::prelude::MainAxisAlignment;
 
     let (left_items, right_chips): (Vec<_>, Vec<_>) = message.items.into_iter().partition(|item| {
         !matches!(
@@ -516,8 +516,8 @@ pub fn disableable_message_item_color_overrides(
 
 pub mod styles {
     use pathfinder_color::ColorU;
-    use warp_core::ui::appearance::Appearance;
-    use warpui::{AppContext, SingletonEntity};
+    use torch_core::ui::appearance::Appearance;
+    use torchui::{AppContext, SingletonEntity};
 
     use crate::ui_components::blended_colors;
 

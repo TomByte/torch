@@ -12,12 +12,12 @@ use markdown_parser::parse_markdown;
 use pathfinder_color::ColorU;
 use serde::{Deserialize, Serialize};
 use smol_str::SmolStr;
-use warp_cli::agent::Harness;
-use warp_completer::parsers::simple::top_level_command;
-use warp_editor::content::buffer::Buffer;
-use warp_editor::content::markdown::MarkdownStyle;
-use warp_util::path::EscapeChar;
-use warpui::{AppContext, SingletonEntity};
+use torch_cli::agent::Harness;
+use torch_completer::parsers::simple::top_level_command;
+use torch_editor::content::buffer::Buffer;
+use torch_editor::content::markdown::MarkdownStyle;
+use torch_util::path::EscapeChar;
+use torchui::{AppContext, SingletonEntity};
 
 use crate::ai::agent::{AgentReviewCommentBatch, DiffSetHunk};
 use crate::ai::blocklist::CLAUDE_ORANGE;
@@ -234,7 +234,7 @@ impl CLIAgent {
                 "warp-preview",
                 "warp-dev",
                 "warp-tui",
-                "warp-tui-oss",
+                "torch-tui",
                 "run-tui",
             ],
             CLIAgent::Grok => &["grok"],

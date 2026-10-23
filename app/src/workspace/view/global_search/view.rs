@@ -10,18 +10,18 @@ use instant::Instant;
 use pathfinder_geometry::vector::vec2f;
 use remote_server::HostId;
 use string_offset::{ByteOffset, CharCounter};
-use warp_core::r#async::debounce;
-use warp_core::send_telemetry_from_ctx;
-use warp_core::ui::Icon;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::color::internal_colors;
-use warp_core::ui::theme::{AnsiColorIdentifier, Fill as ThemeFill};
-use warp_editor::editor::NavigationKey;
-use warp_ripgrep::search::Submatch;
-use warp_util::local_or_remote_path::LocalOrRemotePath;
-use warp_util::remote_path::RemotePath;
-use warp_util::standardized_path::StandardizedPath;
-use warpui::elements::{
+use torch_core::r#async::debounce;
+use torch_core::send_telemetry_from_ctx;
+use torch_core::ui::Icon;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::color::internal_colors;
+use torch_core::ui::theme::{AnsiColorIdentifier, Fill as ThemeFill};
+use torch_editor::editor::NavigationKey;
+use torch_ripgrep::search::Submatch;
+use torch_util::local_or_remote_path::LocalOrRemotePath;
+use torch_util::remote_path::RemotePath;
+use torch_util::standardized_path::StandardizedPath;
+use torchui::elements::{
     Border, ChildAnchor, ChildView, Clipped, ConstrainedBox, Container, CornerRadius,
     CrossAxisAlignment, DispatchEventResult, Empty, EventHandler, Fill, Flex, FormattedTextElement,
     Highlight, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning,
@@ -29,13 +29,13 @@ use warpui::elements::{
     Scrollable, ScrollableElement, ScrollbarWidth, Shrinkable, Stack, Text, UniformList,
     UniformListState,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::keymap::FixedBinding;
-use warpui::platform::Cursor;
-use warpui::text_layout::{TextAlignment, TextStyle};
-use warpui::ui_components::components::{UiComponent as _, UiComponentStyles};
-use warpui::ui_components::text::Span;
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::keymap::FixedBinding;
+use torchui::platform::Cursor;
+use torchui::text_layout::{TextAlignment, TextStyle};
+use torchui::ui_components::components::{UiComponent as _, UiComponentStyles};
+use torchui::ui_components::text::Span;
+use torchui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle, WeakViewHandle,
 };
@@ -602,7 +602,7 @@ impl GlobalSearchView {
     }
 
     pub fn init(app: &mut AppContext) {
-        use warpui::keymap::macros::*;
+        use torchui::keymap::macros::*;
 
         app.register_fixed_bindings([
             FixedBinding::new(
@@ -1026,7 +1026,7 @@ impl GlobalSearchView {
             .iter()
             .filter_map(|root| root.to_local_path().map(Path::to_path_buf))
             .collect();
-        let deduped_local = warp_util::path::group_roots_by_common_ancestor(&local_roots).roots;
+        let deduped_local = torch_util::path::group_roots_by_common_ancestor(&local_roots).roots;
 
         let mut remote_roots_by_host: Vec<(HostId, Vec<StandardizedPath>)> = Vec::new();
         for root in &roots {
@@ -1046,7 +1046,7 @@ impl GlobalSearchView {
         let deduped_remote = remote_roots_by_host
             .into_iter()
             .flat_map(|(host_id, paths)| {
-                warp_util::path::group_roots_by_common_ancestor(&paths)
+                torch_util::path::group_roots_by_common_ancestor(&paths)
                     .roots
                     .into_iter()
                     .map(move |path| {
@@ -1148,7 +1148,7 @@ impl GlobalSearchView {
         directory_path: &LocalOrRemotePath,
         matched_path: &MatchedPath,
         appearance: &Appearance,
-        theme: &warp_core::ui::theme::WarpTheme,
+        theme: &torch_core::ui::theme::WarpTheme,
         app: &AppContext,
     ) -> Box<dyn Element> {
         let is_selected = self.is_row_at_index_selected(index);
@@ -1323,7 +1323,7 @@ impl GlobalSearchView {
         matched: &Match,
         match_index: usize,
         appearance: &Appearance,
-        theme: &warp_core::ui::theme::WarpTheme,
+        theme: &torch_core::ui::theme::WarpTheme,
     ) -> Box<dyn Element> {
         let is_selected = self.is_row_at_index_selected(index);
         let line_number = matched.line_number;
@@ -1922,7 +1922,7 @@ impl GlobalSearchView {
         index: usize,
         dir_entry: &DirectoryEntry,
         appearance: &Appearance,
-        theme: &warp_core::ui::theme::WarpTheme,
+        theme: &torch_core::ui::theme::WarpTheme,
         app: &AppContext,
     ) -> Box<dyn Element> {
         let is_selected = self.is_row_at_index_selected(index);

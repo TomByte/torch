@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use chrono::{Duration, Local};
 use settings::Setting;
-use warp_core::SessionId;
-use warpui::{App, AppContext, EntityId, SingletonEntity};
+use torch_core::SessionId;
+use torchui::{App, AppContext, EntityId, SingletonEntity};
 
 use super::{UpArrowHistoryConfig, prompt_history_for_terminal_surface};
 use crate::ai::agent::AIAgentExchangeId;

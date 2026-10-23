@@ -1,6 +1,6 @@
 use serde_json::json;
-use warp_core::features::FeatureFlag;
-use warp_core::telemetry::TelemetryEvent;
+use torch_core::features::FeatureFlag;
+use torch_core::telemetry::TelemetryEvent;
 
 use super::{ACCOUNT_FIRST_FLOW_VERSION, OnboardingEvent};
 

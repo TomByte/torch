@@ -3,7 +3,7 @@ use crate::workspace::view::tests::initialize_app;
 
 #[test]
 fn a_burst_of_save_requests_waits_for_one_snapshot_until_flushed() {
-    warpui::App::test((), |mut app| async move {
+    torchui::App::test((), |mut app| async move {
         initialize_app(&mut app);
         app.update(|ctx| {
             assert!(!PendingAppSave::as_ref(ctx).scheduled);
@@ -26,7 +26,7 @@ fn a_burst_of_save_requests_waits_for_one_snapshot_until_flushed() {
 
 #[test]
 fn a_waiting_save_is_written_when_its_window_ends() {
-    warpui::App::test((), |mut app| async move {
+    torchui::App::test((), |mut app| async move {
         initialize_app(&mut app);
         app.update(|ctx| save_app(&(), ctx));
 

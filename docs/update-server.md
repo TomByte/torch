@@ -33,12 +33,12 @@ This is development work that must happen once. Uploading files or passing `--fe
 | Current code | Required Torch change |
 | --- | --- |
 | [`app/src/bin/oss.rs`](../app/src/bin/oss.rs) sets `autoupdate_config: None`. | Configure your HTTPS release base URL and enable update menu items for distribution builds. |
-| [`crates/warp_features/src/lib.rs`](../crates/warp_features/src/lib.rs) forces `Autoupdate` off under `local_only`. | Permit only Torch's independent updater in the intended release builds. Keep the other local-only restrictions. |
+| [`crates/torch_features/src/lib.rs`](../crates/torch_features/src/lib.rs) forces `Autoupdate` off under `local_only`. | Permit only Torch's independent updater in the intended release builds. Keep the other local-only restrictions. |
 | [`app/src/features.rs`](../app/src/features.rs) controls the runtime flag from build features. | Make release feature selection and runtime policy agree; leave ordinary development builds out of polling. |
 | [`app/src/autoupdate/channel_versions.rs`](../app/src/autoupdate/channel_versions.rs) calls the account-oriented server API before its JSON fallback. | For Torch, fetch the static JSON directly with a plain HTTP client. Do not route through login, token refresh, experiment headers, or Warp endpoints. |
 | [`app/src/autoupdate/mod.rs`](../app/src/autoupdate/mod.rs) rejects `Channel::Oss` in version selection and asset paths. | Explicitly support Torch's existing `Oss` channel. For the layout below, map it to the JSON `stable` entry and `/stable/{version}` asset directory. |
 | [`app/src/autoupdate/mac.rs`](../app/src/autoupdate/mac.rs) uses `warp-oss` names for `Oss`. | Use `Torch.app`, executable `torch`, and the DMG names below. Ensure bundled executable lookup resolves to `Contents/MacOS/torch`. |
-| [`crates/warp_core/src/macos.rs`](../crates/warp_core/src/macos.rs) contains Warp's Apple Team ID. | Configure your Team ID and verify downloaded bundles against your identity. Never remove signature verification to make an update install. |
+| [`crates/torch_core/src/macos.rs`](../crates/torch_core/src/macos.rs) contains Warp's Apple Team ID. | Configure your Team ID and verify downloaded bundles against your identity. Never remove signature verification to make an update install. |
 | [`script/macos/bundle`](../script/macos/bundle) and [`script/Entitlements.plist`](../script/Entitlements.plist) retain upstream release assumptions. | Create a Torch-specific distribution path: your identity, credentials, app names, necessary entitlements, and no upstream services. |
 
 Keep `dev.tombyte.Torch`, the existing data locations, and `local_only`. Do not switch the whole application to Warp's `Stable` channel just to make updates work. The stable *feed* mapping can be explicit without changing the app's channel or identity.

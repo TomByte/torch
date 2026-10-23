@@ -1,7 +1,7 @@
 use std::time::Duration;
 
-use warpui::App;
-use warpui::r#async::Timer;
+use torchui::App;
+use torchui::r#async::Timer;
 
 use super::{Event, Heartbeat};
 
@@ -67,7 +67,7 @@ fn test_idle_timeout() {
         // Reset the idle timeout.
         heartbeat.update(
             &mut app,
-            |heartbeat, ctx: &mut warpui::ModelContext<Heartbeat>| {
+            |heartbeat, ctx: &mut torchui::ModelContext<Heartbeat>| {
                 heartbeat.reset_idle_timeout(ctx)
             },
         );

@@ -1,5 +1,5 @@
-use warp_errors::report_error;
-use warpui::{AppContext, EntityId, ModelContext, ModelHandle, SingletonEntity};
+use torch_errors::report_error;
+use torchui::{AppContext, EntityId, ModelContext, ModelHandle, SingletonEntity};
 
 use super::{
     AgentViewController, AgentViewControllerEvent, AgentViewEntryOrigin, EnterAgentViewError,
@@ -25,7 +25,7 @@ pub(crate) struct AgentViewConversationSelection {
 impl AgentViewConversationSelection {
     /// Creates GUI conversation selection for a terminal view.
     pub(crate) fn new(
-        terminal_surface_id: warpui::EntityId,
+        terminal_surface_id: torchui::EntityId,
         agent_view_controller: ModelHandle<AgentViewController>,
         ctx: &mut ModelContext<Box<dyn ConversationSelection>>,
     ) -> Self {

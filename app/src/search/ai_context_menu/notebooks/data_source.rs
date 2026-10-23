@@ -1,5 +1,5 @@
 use fuzzy_match::FuzzyMatchResult;
-use warpui::{AppContext, SingletonEntity};
+use torchui::{AppContext, SingletonEntity};
 
 use super::search_item::NotebookSearchItem;
 use crate::cloud_object::CloudModelType;
@@ -153,7 +153,7 @@ impl SyncDataSource for NotebookDataSource {
     }
 }
 
-impl warpui::Entity for NotebookDataSource {
+impl torchui::Entity for NotebookDataSource {
     type Event = ();
 }
 

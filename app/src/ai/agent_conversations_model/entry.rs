@@ -1,8 +1,8 @@
 use chrono::{DateTime, Utc};
 use session_sharing_protocol::common::SessionId;
-use warp_cli::agent::Harness;
-use warp_core::features::FeatureFlag;
-use warpui::{AppContext, SingletonEntity};
+use torch_cli::agent::Harness;
+use torch_core::features::FeatureFlag;
+use torchui::{AppContext, SingletonEntity};
 
 use super::{
     AgentManagementFilters, AgentRunDisplayStatus, ArtifactFilter, ConversationMetadata,

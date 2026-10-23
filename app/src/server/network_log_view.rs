@@ -8,14 +8,14 @@
 //! so the user can pick up items captured since the pane was opened. The
 //! pane header also exposes a refresh icon that reloads the snapshot in
 //! place.
-use warp_editor::content::buffer::InitialBufferState;
-use warp_editor::render::element::VerticalExpansionBehavior;
-use warp_server_client::network_logging::NetworkLogModel;
-use warp_util::path::LineAndColumnArg;
-use warpui::elements::{ChildView, MouseStateHandle};
-use warpui::text_layout::ClipConfig;
-use warpui::ui_components::components::UiComponent;
-use warpui::{
+use torch_editor::content::buffer::InitialBufferState;
+use torch_editor::render::element::VerticalExpansionBehavior;
+use torch_server_client::network_logging::NetworkLogModel;
+use torch_util::path::LineAndColumnArg;
+use torchui::elements::{ChildView, MouseStateHandle};
+use torchui::text_layout::ClipConfig;
+use torchui::ui_components::components::UiComponent;
+use torchui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };

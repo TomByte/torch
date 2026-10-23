@@ -1,6 +1,6 @@
 # Torch-specific guidance
 
-This is the independent Torch fork. The guidance below documents inherited architecture. Torch builds use `cargo check -p warp --bin torch --features gui` and `./script/run`; the Cargo package is still `warp`. Keep `local_only` enabled. Do not add Warp login, AI prediction, cloud integration, telemetry, or upstream release/sync automation. Preserve ordinary completions and shell behavior, plus original licence/copyright notices. The only Git remote is `TomByte/torch`.
+This is the independent Torch fork. The guidance below documents inherited architecture. Torch builds use `cargo check -p torch --bin torch --features gui` and `./script/run`; the Cargo package is still `warp`. Keep `local_only` enabled. Do not add Warp login, AI prediction, cloud integration, telemetry, or upstream release/sync automation. Preserve ordinary completions and shell behavior, plus original licence/copyright notices. The only Git remote is `TomByte/torch`.
 
 Treat Torch as a distributable app: local integrations must ship with the normal app bundle, resolve user/install paths at runtime, and provide setup/removal without this checkout or developer-machine dependencies. Preserve unrelated user configuration, test clean/custom installation paths, and state which platforms were actually verified.
 
@@ -12,7 +12,7 @@ This file provides guidance when working with code in this repository.
 
 ### Build and Run
 - `cargo run` / `./script/run` - Build and run the GUI desktop app locally
-- `./script/run-tui` - Build and run the headless TUI front-end (`crates/warp_tui`)
+- `./script/run-tui` - Build and run the headless TUI front-end (`crates/torch_tui`)
 - `cargo bundle --bin warp` - Bundle the main (GUI) app
 - `./script/release` - Build a signed, notarized, universal Torch release into `dist/` as a DMG and an optional zip; `--help` lists its options
 
@@ -40,8 +40,8 @@ Environment variables:
 - `./script/presubmit` - Run the full local presubmit only when explicitly requested
 - `./script/format` - Format code
 - `cargo clippy -p <package> --all-targets --tests -- -D warnings` - Run targeted Clippy
-- `./script/run-clang-format.py -r --extensions 'c,h,cpp,m' ./crates/warpui/src/ ./app/src/` - Check C/C++/Obj-C formatting
-- `./script/run-clang-format.py -i -r --extensions 'c,h,cpp,m' ./crates/warpui/src/ ./app/src/` - Format C/C++/Obj-C code in place
+- `./script/run-clang-format.py -r --extensions 'c,h,cpp,m' ./crates/torchui/src/ ./app/src/` - Check C/C++/Obj-C formatting
+- `./script/run-clang-format.py -i -r --extensions 'c,h,cpp,m' ./crates/torchui/src/ ./app/src/` - Format C/C++/Obj-C code in place
 - `find . -name "*.wgsl" -exec wgslfmt --check {} +` - Check WGSL shader formatting
 - `find . -name "*.wgsl" -exec wgslfmt {} +` - Format WGSL shaders in place
 
@@ -79,24 +79,24 @@ This is a Rust-based terminal emulator with a custom UI framework called **WarpU
 
 ### Front-ends: GUI and TUI
 
-Warp has two front-ends that share the `warp_core`/`warpui` Entity/model core (App/Entity/`AppContext`, actions, `Appearance`, `FeatureFlag`, telemetry, logging) but differ in UI framework, rendering, input, and verification:
-- **GUI desktop app** — the `app/` crate on the WarpUI pixel/GPU framework (`warpui`, `crates/warpui_core`): `Element`/`View` layout, GPU/WGSL rendering, mouse input, `.app` bundles. Run with `cargo run` / `./script/run`; verify visually with `computer_use` or the real-display integration framework (`crates/integration`).
-- **Headless TUI** — the `crates/warp_tui` crate: a console app (run with `./script/run-tui`; no `.app`/GPU) rendered with a parallel cell-grid element library at `crates/warpui_core/src/elements/tui` (the `TuiElement` trait), behind the `tui` cargo feature. Verify by running it in a real terminal and observing output; test with render-to-lines unit tests.
+Warp has two front-ends that share the `torch_core`/`torchui` Entity/model core (App/Entity/`AppContext`, actions, `Appearance`, `FeatureFlag`, telemetry, logging) but differ in UI framework, rendering, input, and verification:
+- **GUI desktop app** — the `app/` crate on the WarpUI pixel/GPU framework (`torchui`, `crates/torchui_core`): `Element`/`View` layout, GPU/WGSL rendering, mouse input, `.app` bundles. Run with `cargo run` / `./script/run`; verify visually with `computer_use` or the real-display integration framework (`crates/integration`).
+- **Headless TUI** — the `crates/torch_tui` crate: a console app (run with `./script/run-tui`; no `.app`/GPU) rendered with a parallel cell-grid element library at `crates/torchui_core/src/elements/tui` (the `TuiElement` trait), behind the `tui` cargo feature. Verify by running it in a real terminal and observing output; test with render-to-lines unit tests.
 
 **Skill convention:** a skill specific to one front-end says so in its name and/or description (e.g. `gui-ui-guidelines` / `gui-integration-test` are GUI-only; `tui-ui-guidelines`, `tui-testing`, and `tui-verify-change` are TUI-specific). Skills with no front-end call-out are surface-agnostic and apply to both. For TUI work prefer the `tui-*` skills and ignore GUI-only ones — and vice versa.
 
 ### Key Components
 
-**Shared UI core** (`crates/warpui`, `crates/warpui_core`) — used by **both** front-ends:
+**Shared UI core** (`crates/torchui`, `crates/torchui_core`) — used by **both** front-ends:
 - Entity-Component-Handle pattern: a global `App` object owns all views/models (entities); views hold `ViewHandle<T>` references to other views; `AppContext` provides temporary access to handles during render/events.
 - Actions system for event handling.
-- `crates/warpui_core` also hosts the TUI cell-grid element library under `src/elements/tui` (behind the `tui` feature).
+- `crates/torchui_core` also hosts the TUI cell-grid element library under `src/elements/tui` (behind the `tui` feature).
 
 **GUI rendering** (WarpUI GUI elements — GUI-specific):
 - `Element`s describe visual layout (Flutter-inspired), rendered on the GPU (WGSL).
 - Mouse input uses `MouseStateHandle`: create it once during construction and reference/clone it wherever mouse input is tracked. An inline `MouseStateHandle::default()` while rendering means no mouse interactions work. (The TUI's hover/click elements — `TuiHoverable`, `tui_collapsible` — also build on `MouseStateHandle`, so the same ownership rule applies there.)
 
-**TUI rendering** (`crates/warp_tui` + `crates/warpui_core/src/elements/tui` — TUI-specific):
+**TUI rendering** (`crates/torch_tui` + `crates/torchui_core/src/elements/tui` — TUI-specific):
 - Headless console front-end. The `TuiElement` trait lays out and paints into a cell-grid `TuiBuffer`; crossterm input is converted to `TuiEvent`. No GPU/WGSL, pixel geometry, or `.app` bundle.
 
 **Main app / shared surfaces** (`app/`) — the GUI desktop app plus feature surfaces the TUI reuses:
@@ -108,10 +108,10 @@ Warp has two front-ends that share the `warp_core`/`warpui` Entity/model core (A
 - Workspace and session management (`workspace/`)
 
 **Core Libraries**:
-- `crates/warp_core/` - Core utilities and platform abstractions (shared)
-- `crates/warp_tui/` - Headless TUI front-end
+- `crates/torch_core/` - Core utilities and platform abstractions (shared)
+- `crates/torch_tui/` - Headless TUI front-end
 - `crates/editor/` - Text editing functionality
-- `crates/warpui/` and `crates/warpui_core/` - Custom UI framework (shared core plus the GUI and TUI element libraries)
+- `crates/torchui/` and `crates/torchui_core/` - Custom UI framework (shared core plus the GUI and TUI element libraries)
 - `crates/ipc/` - Inter-process communication
 - `crates/graphql/` - GraphQL client and schema
 
@@ -127,7 +127,7 @@ Warp has two front-ends that share the `warp_core`/`warpui` Entity/model core (A
 
 **Workspace Structure**:
 - This is a Cargo workspace with 60+ member crates
-- Main binary is in `app/`, UI framework in `crates/warpui/`
+- Main binary is in `app/`, UI framework in `crates/torchui/`
 - Platform-specific code is conditionally compiled
 - Integration tests are in `crates/integration/`
 
@@ -217,7 +217,7 @@ for itself.
 - Schema defined in `crates/persistence/src/schema.rs`
 
 **GraphQL**:
-- Schema and client code generation from `crates/warp_graphql_schema/api/schema.graphql`
+- Schema and client code generation from `crates/torch_graphql_schema/api/schema.graphql`
 - TypeScript types generated for frontend integration
 
 ### Feature Flags
@@ -225,7 +225,7 @@ for itself.
 Warp uses compile-time feature flags with a small runtime plumbing layer.
 
 How to add a feature flag:
-- Add a new variant to `warp_core/src/features.rs` in the `FeatureFlag` enum
+- Add a new variant to `torch_core/src/features.rs` in the `FeatureFlag` enum
 - (Optional) Enable it by default for dogfood builds by listing it in `DOGFOOD_FLAGS`
 - Gate code paths with `FeatureFlag::YourFlag.is_enabled()`
 - For preview or release rollout, add to `PREVIEW_FLAGS` or `RELEASE_FLAGS` respectively (as appropriate)

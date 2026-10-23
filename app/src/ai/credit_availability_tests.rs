@@ -1,4 +1,4 @@
-use warp_graphql::ai::{
+use torch_graphql::ai::{
     AICreditAvailability as GqlAICreditAvailability,
     AICreditAvailabilityDenialReason as GqlDenialReason, AICreditAvailabilitySource as GqlSource,
 };

@@ -1,8 +1,8 @@
 use futures::FutureExt;
 use futures::channel::oneshot;
 use futures::future::BoxFuture;
-use warp_core::features::FeatureFlag;
-use warpui::{Entity, ModelContext};
+use torch_core::features::FeatureFlag;
+use torchui::{Entity, ModelContext};
 
 use crate::AIAgentActionResultType;
 use crate::ai::agent::conversation::AIConversationId;

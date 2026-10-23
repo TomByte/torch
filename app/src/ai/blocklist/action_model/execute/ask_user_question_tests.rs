@@ -1,6 +1,6 @@
 use ai::agent::action::AskUserQuestionItem;
 use ai::agent::action_result::{AskUserQuestionAnswerItem, AskUserQuestionResult};
-use warpui::{App, EntityId, ModelHandle};
+use torchui::{App, EntityId, ModelHandle};
 
 use super::*;
 use crate::LaunchMode;

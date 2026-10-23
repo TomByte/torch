@@ -9,11 +9,11 @@ use std::sync::Arc;
 use chrono::{Local, Utc};
 use parking_lot::FairMutex;
 use session_sharing_protocol::common::CLIAgentSessionState;
-use warp_cli::agent::Harness;
-use warp_terminal::model::escape_sequences::{BRACKETED_PASTE_END, BRACKETED_PASTE_START, C0};
-use warpui::notification::UserNotification;
-use warpui::platform::WindowStyle;
-use warpui::{App, EntityIdSet, Presenter, ReadModel, WindowInvalidation};
+use torch_cli::agent::Harness;
+use torch_terminal::model::escape_sequences::{BRACKETED_PASTE_END, BRACKETED_PASTE_START, C0};
+use torchui::notification::UserNotification;
+use torchui::platform::WindowStyle;
+use torchui::{App, EntityIdSet, Presenter, ReadModel, WindowInvalidation};
 
 use super::*;
 use crate::ActiveAgentViewsModel;
@@ -837,7 +837,7 @@ fn block_list_right_click_forwards_to_pty_when_long_running_block_owns_mouse() {
             rerender!();
             app.update(enclose!((presenter) move |ctx| {
                 ctx.simulate_window_event(
-                    warpui::Event::RightMouseDown {
+                    torchui::Event::RightMouseDown {
                         position,
                         cmd: false,
                         shift: false,
@@ -943,7 +943,7 @@ fn block_list_shift_right_click_opens_context_menu_when_right_click_pastes() {
         rerender!();
         app.update(enclose!((presenter) move |ctx| {
             ctx.simulate_window_event(
-                warpui::Event::RightMouseDown {
+                torchui::Event::RightMouseDown {
                     position,
                     cmd: false,
                     shift: true,
@@ -1044,7 +1044,7 @@ fn alt_screen_shift_right_click_opens_context_menu_when_right_click_pastes() {
         rerender!();
         app.update(enclose!((presenter) move |ctx| {
             ctx.simulate_window_event(
-                warpui::Event::RightMouseDown {
+                torchui::Event::RightMouseDown {
                     position,
                     cmd: false,
                     shift: true,
@@ -1135,7 +1135,7 @@ fn input_shift_right_click_opens_context_menu_when_right_click_pastes() {
         rerender!();
         app.update(enclose!((presenter) move |ctx| {
             ctx.simulate_window_event(
-                warpui::Event::RightMouseDown {
+                torchui::Event::RightMouseDown {
                     position,
                     cmd: false,
                     shift: true,
@@ -1231,7 +1231,7 @@ fn waterfall_background_right_click_honors_right_click_pastes_setting() {
         rerender!();
         app.update(enclose!((presenter) move |ctx| {
             ctx.simulate_window_event(
-                warpui::Event::RightMouseDown {
+                torchui::Event::RightMouseDown {
                     position,
                     cmd: false,
                     shift: false,
@@ -1262,7 +1262,7 @@ fn waterfall_background_right_click_honors_right_click_pastes_setting() {
         rerender!();
         app.update(enclose!((presenter) move |ctx| {
             ctx.simulate_window_event(
-                warpui::Event::RightMouseDown {
+                torchui::Event::RightMouseDown {
                     position,
                     cmd: false,
                     shift: true,
@@ -4017,7 +4017,7 @@ fn cmd_enter_from_terminal_without_selected_block_enters_agent_view() {
             .dispatch_keystroke(
                 window_id,
                 &[terminal.id()],
-                &warpui::keymap::Keystroke::parse(keystroke).expect("valid keystroke"),
+                &torchui::keymap::Keystroke::parse(keystroke).expect("valid keystroke"),
                 false,
             )
             .expect("dispatch should succeed");
@@ -4089,7 +4089,7 @@ fn cmd_enter_from_terminal_with_selected_block_enters_agent_view_with_context() 
             .dispatch_keystroke(
                 window_id,
                 &[terminal.id()],
-                &warpui::keymap::Keystroke::parse(keystroke).expect("valid keystroke"),
+                &torchui::keymap::Keystroke::parse(keystroke).expect("valid keystroke"),
                 false,
             )
             .expect("dispatch should succeed");
@@ -4161,7 +4161,7 @@ fn cmd_enter_from_active_non_empty_agent_view_requires_confirmation() {
         } else {
             "ctrl-shift-enter"
         };
-        let keystroke = warpui::keymap::Keystroke::parse(keystroke).expect("valid keystroke");
+        let keystroke = torchui::keymap::Keystroke::parse(keystroke).expect("valid keystroke");
 
         let handled = app
             .dispatch_keystroke(window_id, &[terminal.id()], &keystroke, false)
@@ -4391,7 +4391,7 @@ fn pending_cloud_mode_query_clears_when_streaming_exchange_becomes_renderable() 
 /// Test clearing of session flag state when terminal is cleared
 #[test]
 fn test_clear_session_flag_state() {
-    use warp_terminal::shell::ShellType;
+    use torch_terminal::shell::ShellType;
 
     use crate::ai::blocklist::SerializedBlockListItem;
     use crate::terminal::ShellHost;
@@ -5012,7 +5012,7 @@ fn test_alt_screen_select_with_sgr_mouse() {
         rerender!(app, presenter, invalidation, size_info);
         app.update(enclose!((presenter) move |ctx| {
             ctx.simulate_window_event(
-                warpui::Event::LeftMouseDown {
+                torchui::Event::LeftMouseDown {
                     position: start_position,
                     modifiers: Default::default(),
                     click_count: 1,
@@ -5025,7 +5025,7 @@ fn test_alt_screen_select_with_sgr_mouse() {
         rerender!(app, presenter, invalidation, size_info);
         app.update(enclose!((presenter) move |ctx| {
             ctx.simulate_window_event(
-                warpui::Event::LeftMouseDragged {
+                torchui::Event::LeftMouseDragged {
                     position: end_position,
                     modifiers: Default::default(),
                 },
@@ -5036,7 +5036,7 @@ fn test_alt_screen_select_with_sgr_mouse() {
         rerender!(app, presenter, invalidation, size_info);
         app.update(enclose!((presenter) move |ctx| {
             ctx.simulate_window_event(
-                warpui::Event::LeftMouseUp {
+                torchui::Event::LeftMouseUp {
                     position: end_position,
                     modifiers: Default::default(),
                 },
@@ -5058,7 +5058,7 @@ fn test_alt_screen_select_with_sgr_mouse() {
         rerender!(app, presenter, invalidation, size_info);
         app.update(enclose!((presenter) move |ctx| {
             ctx.simulate_window_event(
-                warpui::Event::LeftMouseDown {
+                torchui::Event::LeftMouseDown {
                     position: start_position,
                     modifiers: ModifiersState {
                         shift: true,
@@ -5074,7 +5074,7 @@ fn test_alt_screen_select_with_sgr_mouse() {
         rerender!(app, presenter, invalidation, size_info);
         app.update(enclose!((presenter) move |ctx| {
             ctx.simulate_window_event(
-                warpui::Event::LeftMouseDragged {
+                torchui::Event::LeftMouseDragged {
                     position: end_position,
                     modifiers: ModifiersState {
                         shift: true,
@@ -5088,7 +5088,7 @@ fn test_alt_screen_select_with_sgr_mouse() {
         rerender!(app, presenter, invalidation, size_info);
         app.update(enclose!((presenter) move |ctx| {
             ctx.simulate_window_event(
-                warpui::Event::LeftMouseUp {
+                torchui::Event::LeftMouseUp {
                     position: end_position,
                     modifiers: ModifiersState {
                         shift: true,
@@ -8513,7 +8513,7 @@ fn ctrl_g_closes_cli_agent_rich_input_when_editor_is_focused() {
             .dispatch_keystroke(
                 window_id,
                 &[terminal.id(), input_id, editor_id],
-                &warpui::keymap::Keystroke::parse("ctrl-g").expect("valid keystroke"),
+                &torchui::keymap::Keystroke::parse("ctrl-g").expect("valid keystroke"),
                 false,
             )
             .expect("dispatch should succeed");
@@ -8558,7 +8558,7 @@ fn ctrl_g_closes_cli_agent_rich_input_from_terminal_context() {
             .dispatch_keystroke(
                 window_id,
                 &[terminal.id()],
-                &warpui::keymap::Keystroke::parse("ctrl-g").expect("valid keystroke"),
+                &torchui::keymap::Keystroke::parse("ctrl-g").expect("valid keystroke"),
                 false,
             )
             .expect("dispatch should succeed");
@@ -8596,7 +8596,7 @@ fn ctrl_g_toggles_cli_agent_rich_input_from_terminal_context() {
         let (window_id, terminal) =
             open_cli_agent_rich_input_for_agent_with_window_id(&mut app, CLIAgent::OpenCode);
 
-        let keystroke = warpui::keymap::Keystroke::parse("ctrl-g").expect("valid keystroke");
+        let keystroke = torchui::keymap::Keystroke::parse("ctrl-g").expect("valid keystroke");
 
         // First close: rich input is open → Ctrl-G should close.
         let handled = app
@@ -8988,7 +8988,7 @@ fn paste_raw_image_clipboard_in_cli_agent_sends_correct_bytes() {
 
                 // Write image-only data to the clipboard (no text, no paths).
                 ctx.clipboard().write(ClipboardContent {
-                    images: Some(vec![warpui::clipboard::ImageData {
+                    images: Some(vec![torchui::clipboard::ImageData {
                         data: vec![0x89, 0x50, 0x4E, 0x47], // PNG magic bytes
                         mime_type: "image/png".to_string(),
                         filename: None,

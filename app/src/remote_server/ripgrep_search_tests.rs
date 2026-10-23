@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use string_offset::ByteOffset;
-use warp_ripgrep::search::{Match as RipgrepMatch, Submatch};
+use torch_ripgrep::search::{Match as RipgrepMatch, Submatch};
 
 use super::ripgrep_match_to_proto;
 

@@ -3,17 +3,17 @@ use std::collections::{HashMap, HashSet};
 use itertools::Itertools as _;
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
-use warp_core::channel::ChannelState;
-use warp_core::ui::appearance::Appearance;
-use warpui::elements::{
+use torch_core::channel::ChannelState;
+use torch_core::ui::appearance::Appearance;
+use torchui::elements::{
     Border, ChildAnchor, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, DropShadow,
     Empty, Expanded, Flex, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle,
     OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Shrinkable, Stack,
     Text,
 };
-use warpui::platform::Cursor;
-use warpui::ui_components::components::UiComponent;
-use warpui::{AppContext, Element, EventContext, SingletonEntity};
+use torchui::platform::Cursor;
+use torchui::ui_components::components::UiComponent;
+use torchui::{AppContext, Element, EventContext, SingletonEntity};
 
 use crate::ai::AIRequestUsageModel;
 use crate::auth::AuthStateProvider;

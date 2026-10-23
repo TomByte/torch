@@ -7,31 +7,31 @@ use std::time::Duration;
 use ::settings::{Setting, ToggleableSetting};
 use lazy_static::lazy_static;
 use strum::IntoEnumIterator;
-use warp_core::channel::ChannelState;
-use warp_core::context_flag::ContextFlag;
-use warp_core::semantic_selection::{
+use torch_core::channel::ChannelState;
+use torch_core::context_flag::ContextFlag;
+use torch_core::semantic_selection::{
     SemanticSelection, SemanticSelectionChangedEvent, SmartSelectEnabled,
 };
-use warp_errors::{report_error, report_if_error};
-use warpui::elements::{
+use torch_errors::{report_error, report_if_error};
+use torchui::elements::{
     Align, Border, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Dismiss,
     DispatchEventResult, Element, Empty, EventHandler, Fill, Flex, Hoverable, MainAxisAlignment,
     MainAxisSize, MouseState, MouseStateHandle, ParentElement, Radius, Shrinkable, Text,
 };
-use warpui::keymap::{ContextPredicate, FixedBinding, Keystroke};
-use warpui::platform::{Cursor, GraphicsBackend};
-use warpui::rendering::GPUPowerPreference;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::ui_components::switch::SwitchStateHandle;
-use warpui::{
+use torchui::keymap::{ContextPredicate, FixedBinding, Keystroke};
+use torchui::platform::{Cursor, GraphicsBackend};
+use torchui::rendering::GPUPowerPreference;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::ui_components::switch::SwitchStateHandle;
+use torchui::{
     Action, AppContext, DisplayIdx, Entity, EventContext, ModelHandle, SingletonEntity, Tracked,
     TypedActionView, View, ViewContext, ViewHandle, WindowId,
 };
 #[cfg(any(target_os = "linux", target_os = "freebsd"))]
 use {
     crate::settings::ForceX11, crate::settings::LinuxAppConfiguration,
-    warpui::platform::linux::windowing_system_is_customizable,
+    torchui::platform::linux::windowing_system_is_customizable,
 };
 
 use super::keybindings::KeyBindingModifyingState;
@@ -128,7 +128,7 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
     context: &ContextPredicate,
     builder: fn(SettingsAction) -> T,
 ) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     // Add all of the toggle settings from the Features Page that you want to show up on the Command Palette here.
     let mut toggle_binding_pairs = vec![
@@ -2157,7 +2157,7 @@ impl TypedActionView for FeaturesPageView {
                 self.force_x11_changed = true;
                 // This is a workaround to make sure the user sees the new text that is added to the description after changing the setting.
                 // Without scrolling, the new description text gets cut off.
-                self.page.scroll_by(warpui::units::Pixels::new(40.));
+                self.page.scroll_by(torchui::units::Pixels::new(40.));
                 ctx.notify();
             }
             ToggleQuitOnLastWindowClosed => {
@@ -4471,7 +4471,7 @@ impl SettingsPageMeta for FeaturesPageView {
     }
 
     fn on_page_selected(&mut self, _: bool, ctx: &mut ViewContext<Self>) {
-        // On MacOS, we rely on [`warpui::platform::AppCallbacks::on_screen_changed`] to update and
+        // On MacOS, we rely on [`torchui::platform::AppCallbacks::on_screen_changed`] to update and
         // notify on the [`DisplayCount`] model. However, no mechanism exists on Linux to trigger
         // that callback. As a workaround, we check for updates here where quake mode is
         // configured.

@@ -1,9 +1,9 @@
 use ui_components::Component;
-use warp_core::ui::appearance::Appearance;
-use warpui_core::elements::Empty;
-use warpui_core::keymap::macros::*;
-use warpui_core::keymap::{FixedBinding, Keystroke};
-use warpui_core::{
+use torch_core::ui::appearance::Appearance;
+use torchui_core::elements::Empty;
+use torchui_core::keymap::macros::*;
+use torchui_core::keymap::{FixedBinding, Keystroke};
+use torchui_core::{
     AppContext, Element, Entity, EventContext, ModelHandle, SingletonEntity, TypedActionView, View,
     ViewContext,
 };

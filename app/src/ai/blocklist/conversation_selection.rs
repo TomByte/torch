@@ -1,6 +1,6 @@
 //! Generic next-prompt conversation-selection behavior.
 
-use warpui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
+use torchui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
 
 use super::agent_view::{AgentViewEntryOrigin, EnterAgentViewError};
 use super::{BlocklistAIHistoryEvent, BlocklistAIHistoryModel};

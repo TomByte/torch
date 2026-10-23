@@ -7,7 +7,7 @@ use ::local_control::auth::CredentialGrant;
 use ::local_control::{
     Action, ActionKind, ControlError, ErrorCode, InstanceId, RequestEnvelope, ResponseEnvelope,
 };
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torchui::{Entity, ModelContext, SingletonEntity};
 
 use crate::local_control::handlers::{
     app_state, close, metadata, metadata_config, settings_surfaces,

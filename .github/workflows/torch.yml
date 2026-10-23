@@ -10,5 +10,5 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.92.0
         with:
           components: clippy
-      - run: cargo test -p warp_features --features local_only,test-util
-      - run: cargo clippy -p warp_features --features local_only,test-util --all-targets -- -D warnings
+      - run: cargo test -p torch_features --features local_only,test-util
+      - run: cargo clippy -p torch_features --features local_only,test-util --all-targets -- -D warnings

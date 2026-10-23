@@ -1,8 +1,8 @@
-use warp_core::ui::appearance::Appearance;
-use warpui::elements::Element;
-use warpui::prelude::Container;
-use warpui::scene::Border;
-use warpui::{AppContext, Entity, ModelHandle, SingletonEntity, View, ViewContext};
+use torch_core::ui::appearance::Appearance;
+use torchui::elements::Element;
+use torchui::prelude::Container;
+use torchui::scene::Border;
+use torchui::{AppContext, Entity, ModelHandle, SingletonEntity, View, ViewContext};
 
 use crate::ai::blocklist::agent_view::{AgentViewController, AgentViewControllerEvent};
 use crate::terminal::input::inline_menu::model::InlineMenuModel;

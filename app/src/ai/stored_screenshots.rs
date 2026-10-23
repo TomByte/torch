@@ -5,7 +5,7 @@
 use std::sync::Arc;
 
 use warp_multi_agent_api::StoredScreenshotRef;
-use warpui::assets::asset_cache::{AssetSource, AsyncAssetId, AsyncAssetType};
+use torchui::assets::asset_cache::{AssetSource, AsyncAssetId, AsyncAssetType};
 
 use crate::server::server_api::ai::AIClient;
 

@@ -1,15 +1,15 @@
 use pathfinder_color::ColorU;
-use warp_core::ui::theme::Fill;
-use warpui::elements::{
+use torch_core::ui::theme::Fill;
+use torchui::elements::{
     ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Flex, MouseStateHandle,
     ParentElement, Radius, Shrinkable,
 };
-use warpui::fonts::Weight;
-use warpui::platform::Cursor;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::ui_components::text_input::TextInput;
-use warpui::{Action, AppContext, Element, SingletonEntity, ViewHandle};
+use torchui::fonts::Weight;
+use torchui::platform::Cursor;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::ui_components::text_input::TextInput;
+use torchui::{Action, AppContext, Element, SingletonEntity, ViewHandle};
 
 use crate::appearance::Appearance;
 use crate::editor::EditorView;

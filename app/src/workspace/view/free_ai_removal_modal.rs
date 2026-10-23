@@ -2,21 +2,21 @@ use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use serde_json::{Value, json};
 use strum_macros::{EnumDiscriminants, EnumIter};
-use warp_core::send_telemetry_from_ctx;
-use warp_core::telemetry::{EnablementState, TelemetryEvent, TelemetryEventDesc};
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::Fill;
-use warpui::elements::{
+use torch_core::send_telemetry_from_ctx;
+use torch_core::telemetry::{EnablementState, TelemetryEvent, TelemetryEventDesc};
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::Fill;
+use torchui::elements::{
     Align, Border, ChildAnchor, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     DropShadow, Flex, FormattedTextElement, MainAxisAlignment, MainAxisSize, MouseStateHandle,
     OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Stack,
 };
-use warpui::fonts::Weight;
-use warpui::keymap::FixedBinding;
-use warpui::platform::Cursor;
-use warpui::ui_components::button::ButtonVariant;
-use warpui::ui_components::components::{UiComponent, UiComponentStyles};
-use warpui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
+use torchui::fonts::Weight;
+use torchui::keymap::FixedBinding;
+use torchui::platform::Cursor;
+use torchui::ui_components::button::ButtonVariant;
+use torchui::ui_components::components::{UiComponent, UiComponentStyles};
+use torchui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
 
 use crate::auth::AuthStateProvider;
 use crate::settings_view::SettingsSection;
@@ -84,7 +84,7 @@ impl FreeAiRemovalModalVariant {
 }
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings([FixedBinding::new(
         "escape",
@@ -402,7 +402,7 @@ impl TelemetryEvent for FreeAiRemovalModalTelemetryEvent {
     }
 
     fn event_descs() -> impl Iterator<Item = Box<dyn TelemetryEventDesc>> {
-        warp_core::telemetry::enum_events::<Self>()
+        torch_core::telemetry::enum_events::<Self>()
     }
 }
 
@@ -430,4 +430,4 @@ impl TelemetryEventDesc for FreeAiRemovalModalTelemetryEventDiscriminants {
     }
 }
 
-warp_core::register_telemetry_event!(FreeAiRemovalModalTelemetryEvent);
+torch_core::register_telemetry_event!(FreeAiRemovalModalTelemetryEvent);

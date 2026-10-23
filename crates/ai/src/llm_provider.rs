@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
-use warp_core::ui::icons::Icon;
-use warp_errors::report_error;
+use torch_core::ui::icons::Icon;
+use torch_errors::report_error;
 
 use crate::api_keys::ApiKeys;
 
@@ -90,21 +90,21 @@ impl LLMProvider {
     }
 }
 
-impl From<warp_graphql::queries::get_feature_model_choices::LlmProvider> for LLMProvider {
-    fn from(value: warp_graphql::queries::get_feature_model_choices::LlmProvider) -> Self {
+impl From<torch_graphql::queries::get_feature_model_choices::LlmProvider> for LLMProvider {
+    fn from(value: torch_graphql::queries::get_feature_model_choices::LlmProvider) -> Self {
         match value {
-            warp_graphql::queries::get_feature_model_choices::LlmProvider::Openai => Self::OpenAI,
-            warp_graphql::queries::get_feature_model_choices::LlmProvider::Anthropic => {
+            torch_graphql::queries::get_feature_model_choices::LlmProvider::Openai => Self::OpenAI,
+            torch_graphql::queries::get_feature_model_choices::LlmProvider::Anthropic => {
                 Self::Anthropic
             }
-            warp_graphql::queries::get_feature_model_choices::LlmProvider::Google => Self::Google,
-            warp_graphql::queries::get_feature_model_choices::LlmProvider::Xai => Self::Xai,
-            warp_graphql::queries::get_feature_model_choices::LlmProvider::Unknown => Self::Unknown,
-            warp_graphql::queries::get_feature_model_choices::LlmProvider::Other(value) => {
+            torch_graphql::queries::get_feature_model_choices::LlmProvider::Google => Self::Google,
+            torch_graphql::queries::get_feature_model_choices::LlmProvider::Xai => Self::Xai,
+            torch_graphql::queries::get_feature_model_choices::LlmProvider::Unknown => Self::Unknown,
+            torch_graphql::queries::get_feature_model_choices::LlmProvider::Other(value) => {
                 report_error!(
                     "Invalid LlmProvider; update client GraphQL types",
                     extra: { "provider" => %value },
-                    warp_errors::ReportErrorLogMode::OncePerRun
+                    torch_errors::ReportErrorLogMode::OncePerRun
                 );
                 Self::Unknown
             }
@@ -112,19 +112,19 @@ impl From<warp_graphql::queries::get_feature_model_choices::LlmProvider> for LLM
     }
 }
 
-impl From<warp_graphql::workspace::LlmProvider> for LLMProvider {
-    fn from(value: warp_graphql::workspace::LlmProvider) -> Self {
+impl From<torch_graphql::workspace::LlmProvider> for LLMProvider {
+    fn from(value: torch_graphql::workspace::LlmProvider) -> Self {
         match value {
-            warp_graphql::workspace::LlmProvider::Openai => Self::OpenAI,
-            warp_graphql::workspace::LlmProvider::Anthropic => Self::Anthropic,
-            warp_graphql::workspace::LlmProvider::Google => Self::Google,
-            warp_graphql::workspace::LlmProvider::Xai => Self::Xai,
-            warp_graphql::workspace::LlmProvider::Unknown => Self::Unknown,
-            warp_graphql::workspace::LlmProvider::Other(value) => {
+            torch_graphql::workspace::LlmProvider::Openai => Self::OpenAI,
+            torch_graphql::workspace::LlmProvider::Anthropic => Self::Anthropic,
+            torch_graphql::workspace::LlmProvider::Google => Self::Google,
+            torch_graphql::workspace::LlmProvider::Xai => Self::Xai,
+            torch_graphql::workspace::LlmProvider::Unknown => Self::Unknown,
+            torch_graphql::workspace::LlmProvider::Other(value) => {
                 report_error!(
                     "Invalid LlmProvider; update client GraphQL types",
                     extra: { "provider" => %value },
-                    warp_errors::ReportErrorLogMode::OncePerRun
+                    torch_errors::ReportErrorLogMode::OncePerRun
                 );
                 Self::Unknown
             }

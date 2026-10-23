@@ -1,4 +1,4 @@
-use warp_graphql::billing::{OveragesPricing, PricingInfo};
+use torch_graphql::billing::{OveragesPricing, PricingInfo};
 
 use super::PricingInfoModel;
 

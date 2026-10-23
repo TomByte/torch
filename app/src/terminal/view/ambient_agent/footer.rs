@@ -1,11 +1,11 @@
 use pathfinder_color::ColorU;
-use warp_core::ui::appearance::Appearance;
-use warpui::Element;
-use warpui::elements::{
+use torch_core::ui::appearance::Appearance;
+use torchui::Element;
+use torchui::elements::{
     Border, ConstrainedBox, Container, CrossAxisAlignment, Flex, MainAxisAlignment, MainAxisSize,
     ParentElement, Text,
 };
-use warpui::fonts::{Properties, Weight};
+use torchui::fonts::{Properties, Weight};
 
 use crate::ui_components::blended_colors;
 
@@ -98,7 +98,7 @@ pub fn render_error_footer(error_message: &str, appearance: &Appearance) -> Box<
     let header_color = theme.ui_error_color();
     let body_color = blended_colors::text_main(theme, theme.background());
     let background: ColorU = {
-        let red: warp_core::ui::theme::Fill = theme.ui_error_color().into();
+        let red: torch_core::ui::theme::Fill = theme.ui_error_color().into();
         red.with_opacity(50).into()
     };
     let border_color = theme.ui_error_color();

@@ -1,13 +1,13 @@
 use std::path::PathBuf;
 
 use uuid::Uuid;
-use warp_core::features::FeatureFlag;
-use warpui::elements::{
+use torch_core::features::FeatureFlag;
+use torchui::elements::{
     ConstrainedBox, Container, CrossAxisAlignment, Flex, MainAxisAlignment, MainAxisSize,
     ParentElement, Shrinkable, Text, Wrap,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
     WeakViewHandle,
 };
@@ -405,10 +405,10 @@ impl View for ExecutionProfileView {
         )
         .with_background(appearance.theme().surface_2())
         .with_border(
-            warpui::elements::Border::new(1.).with_border_fill(appearance.theme().outline()),
+            torchui::elements::Border::new(1.).with_border_fill(appearance.theme().outline()),
         )
-        .with_corner_radius(warpui::elements::CornerRadius::with_all(
-            warpui::elements::Radius::Pixels(4.),
+        .with_corner_radius(torchui::elements::CornerRadius::with_all(
+            torchui::elements::Radius::Pixels(4.),
         ))
         .with_horizontal_padding(16.)
         .with_vertical_padding(12.)
@@ -464,11 +464,11 @@ where
                         )
                         .with_background(appearance.theme().surface_2())
                         .with_border(
-                            warpui::elements::Border::all(1.)
+                            torchui::elements::Border::all(1.)
                                 .with_border_fill(appearance.theme().outline()),
                         )
-                        .with_corner_radius(warpui::elements::CornerRadius::with_all(
-                            warpui::elements::Radius::Pixels(3.),
+                        .with_corner_radius(torchui::elements::CornerRadius::with_all(
+                            torchui::elements::Radius::Pixels(3.),
                         ))
                         .with_horizontal_padding(6.)
                         .with_vertical_padding(2.)
@@ -533,7 +533,7 @@ fn render_allowlist_denylist_row(
             .finish(),
     )
     .with_margin_left(8.)
-    .with_border(warpui::elements::Border::left(1.).with_border_fill(appearance.theme().outline()))
+    .with_border(torchui::elements::Border::left(1.).with_border_fill(appearance.theme().outline()))
     .with_padding_left(8.)
     .finish()
 }

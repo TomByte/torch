@@ -12,11 +12,11 @@ use rubato::{
     Resampler, SincFixedIn, SincInterpolationParameters, SincInterpolationType, WindowFunction,
 };
 use thiserror::Error;
-use warp_errors::report_error;
-use warpui_core::r#async::SpawnedFutureHandle;
-use warpui_core::event::KeyState;
-use warpui_core::platform::MicrophoneAccessState;
-use warpui_core::{Entity, ModelContext, SingletonEntity};
+use torch_errors::report_error;
+use torchui_core::r#async::SpawnedFutureHandle;
+use torchui_core::event::KeyState;
+use torchui_core::platform::MicrophoneAccessState;
+use torchui_core::{Entity, ModelContext, SingletonEntity};
 
 const DEFAULT_CHUNK_SIZE: u32 = 512;
 // We only support mono for now.
@@ -306,7 +306,7 @@ impl VoiceInput {
                         .collect();
 
                     // This is blocking, but we aren't on the main thread.
-                    let _ = warpui_core::r#async::block_on(audio_frame_tx.send(mono_samples));
+                    let _ = torchui_core::r#async::block_on(audio_frame_tx.send(mono_samples));
                 },
                 move |err| {
                     if has_logged_stream_error {

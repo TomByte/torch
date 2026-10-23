@@ -2,9 +2,9 @@ use std::sync::Arc;
 
 use futures_lite::future::yield_now;
 use ordered_float::OrderedFloat;
-use warp_core::ui::appearance::Appearance;
-use warpui::fonts::FamilyId;
-use warpui::{AppContext, SingletonEntity};
+use torch_core::ui::appearance::Appearance;
+use torchui::fonts::FamilyId;
+use torchui::{AppContext, SingletonEntity};
 
 use crate::cloud_object::CloudObject;
 use crate::cloud_object::model::persistence::CloudModel;

@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use warp_core::command::ExitCode;
-use warpui::r#async::executor::Background;
+use torch_core::command::ExitCode;
+use torchui::r#async::executor::Background;
 
 use super::{
     ambient_credits_banner_label, display_working_directory, format_session_location,

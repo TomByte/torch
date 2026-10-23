@@ -2,11 +2,11 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use ai::LLMId;
-use warp_core::telemetry::testing::MockTelemetryContextProvider;
-use warp_core::ui::appearance::Appearance;
-use warpui_core::elements::Empty;
-use warpui_core::platform::WindowStyle;
-use warpui_core::{App, AppContext, Element, Entity, ModelHandle, TypedActionView, View as _};
+use torch_core::telemetry::testing::MockTelemetryContextProvider;
+use torch_core::ui::appearance::Appearance;
+use torchui_core::elements::Empty;
+use torchui_core::platform::WindowStyle;
+use torchui_core::{App, AppContext, Element, Entity, ModelHandle, TypedActionView, View as _};
 
 use super::{OfferChoice, OfferSlide, OfferSlideAction, OfferVariant, OnboardingSlide as _};
 use crate::model::{OnboardingAuthState, OnboardingStateModel};
@@ -20,7 +20,7 @@ impl Entity for EventObserver {
     type Event = ();
 }
 
-impl warpui_core::View for EventObserver {
+impl torchui_core::View for EventObserver {
     fn ui_name() -> &'static str {
         "EventObserver"
     }

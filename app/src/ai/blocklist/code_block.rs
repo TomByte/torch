@@ -1,14 +1,14 @@
 use std::iter;
 use std::path::Path;
 
-use warp_core::ui::theme::Fill;
-use warpui::elements::{
+use torch_core::ui::theme::Fill;
+use torchui::elements::{
     Border, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Empty,
     Expanded, Flex, HighlightedRange, MainAxisAlignment, MainAxisSize, MouseStateHandle,
     ParentElement, Radius, Shrinkable, Text,
 };
-use warpui::ui_components::components::UiComponent;
-use warpui::{AppContext, Element, EventContext, SingletonEntity, ViewHandle};
+use torchui::ui_components::components::UiComponent;
+use torchui::{AppContext, Element, EventContext, SingletonEntity, ViewHandle};
 
 use crate::ai::agent::ProgrammingLanguage;
 use crate::ai::blocklist::inline_action::inline_action_header::{

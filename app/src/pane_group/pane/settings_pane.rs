@@ -1,4 +1,4 @@
-use warpui::{AppContext, ModelHandle, SingletonEntity, View, ViewContext, ViewHandle, WindowId};
+use torchui::{AppContext, ModelHandle, SingletonEntity, View, ViewContext, ViewHandle, WindowId};
 
 use super::view::PaneView;
 use super::{

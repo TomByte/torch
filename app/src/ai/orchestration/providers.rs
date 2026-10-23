@@ -3,9 +3,9 @@
 
 use ai::agent::action::RunAgentsRequest;
 use settings::Setting;
-use warp_cli::agent::Harness;
-use warp_errors::report_if_error;
-use warpui::{AppContext, SingletonEntity};
+use torch_cli::agent::Harness;
+use torch_errors::report_if_error;
+use torchui::{AppContext, SingletonEntity};
 
 use crate::LLMPreferences;
 use crate::ai::auth_secret_types::auth_secret_types_for_harness;

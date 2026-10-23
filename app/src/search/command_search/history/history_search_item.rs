@@ -1,14 +1,14 @@
 use std::sync::Arc;
 
 use ordered_float::OrderedFloat;
-use warp_core::ui::builder;
-use warpui::elements::{
+use torch_core::ui::builder;
+use torchui::elements::{
     Align, ConstrainedBox, Container, CrossAxisAlignment, Flex, Highlight, Icon, MainAxisAlignment,
     MainAxisSize, ParentElement, Shrinkable, Text,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
-use warpui::{AppContext, Element, SingletonEntity};
+use torchui::fonts::{Properties, Weight};
+use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use torchui::{AppContext, Element, SingletonEntity};
 
 use crate::appearance::Appearance;
 use crate::search::command_search::searcher::{AcceptedHistoryItem, CommandSearchItemAction};

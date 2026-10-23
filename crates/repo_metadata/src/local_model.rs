@@ -14,10 +14,10 @@ use std::sync::Arc;
 
 use futures::channel::oneshot;
 use futures::future::{self, BoxFuture, FutureExt as _};
-use warp_core::{safe_warn, send_telemetry_from_ctx};
-use warp_util::sync::Condition;
-use warpui_core::ModelHandle;
-use warpui_core::r#async::{FutureId, SpawnedFutureHandle};
+use torch_core::{safe_warn, send_telemetry_from_ctx};
+use torch_util::sync::Condition;
+use torchui_core::ModelHandle;
+use torchui_core::r#async::{FutureId, SpawnedFutureHandle};
 
 /// Represents either a file or directory in a repository.
 #[derive(Debug, Clone)]
@@ -40,7 +40,7 @@ pub struct RepoContents<'a> {
     pub truncated: bool,
 }
 
-use warp_util::standardized_path::StandardizedPath;
+use torch_util::standardized_path::StandardizedPath;
 
 #[cfg(feature = "local_fs")]
 use crate::entry::LAZY_LOAD_FILE_LIMIT;
@@ -61,7 +61,7 @@ cfg_if::cfg_if! {
         use crate::repositories::{DetectedRepositories, DetectedRepositoriesEvent};
         use crate::watcher::DirectoryWatcher;
         use watcher::{BulkFilesystemWatcher, BulkFilesystemWatcherEvent};
-        use warpui_core::SingletonEntity as _;
+        use torchui_core::SingletonEntity as _;
 
         /// Duration between filesystem watch events in seconds
         const FILESYSTEM_WATCHER_DEBOUNCE_SECS: u64 = 1;
@@ -69,7 +69,7 @@ cfg_if::cfg_if! {
 }
 
 use ignore::gitignore::Gitignore;
-use warpui_core::ModelContext;
+use torchui_core::ModelContext;
 
 use crate::file_tree_store::{
     FileTreeDirectoryEntryState, FileTreeEntry, FileTreeEntryState, FileTreeFileMetadata,
@@ -2146,7 +2146,7 @@ impl LocalRepoMetadataModel {
     }
 }
 
-impl warpui_core::Entity for LocalRepoMetadataModel {
+impl torchui_core::Entity for LocalRepoMetadataModel {
     type Event = RepositoryMetadataEvent;
 }
 

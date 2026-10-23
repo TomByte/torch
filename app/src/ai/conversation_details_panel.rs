@@ -9,25 +9,25 @@ use instant::Instant;
 use parking_lot::RwLock;
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
-use warp_cli::agent::Harness;
-use warp_cli::skill::SkillSpec;
-use warp_core::channel::ChannelState;
-use warp_core::ui::color::coloru_with_opacity;
-use warp_graphql::queries::get_runners::Runner;
-use warpui::clipboard::ClipboardContent;
-use warpui::elements::new_scrollable::{NewScrollable, SingleAxisConfig};
-use warpui::elements::{
+use torch_cli::agent::Harness;
+use torch_cli::skill::SkillSpec;
+use torch_core::channel::ChannelState;
+use torch_core::ui::color::coloru_with_opacity;
+use torch_graphql::queries::get_runners::Runner;
+use torchui::clipboard::ClipboardContent;
+use torchui::elements::new_scrollable::{NewScrollable, SingleAxisConfig};
+use torchui::elements::{
     Border, ChildAnchor, ChildView, ClippedScrollStateHandle, ConstrainedBox, Container,
     CornerRadius, CrossAxisAlignment, DragBarSide, Empty, Expanded, Flex, Hoverable,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning, ParentAnchor,
     ParentElement, ParentOffsetBounds, Radius, Resizable, ResizableStateHandle, SelectableArea,
     SelectionHandle, Shrinkable, Stack, Text, Wrap, resizable_state_handle,
 };
-use warpui::fonts::{Properties, Weight};
-use warpui::keymap::FixedBinding;
-use warpui::platform::Cursor;
-use warpui::ui_components::components::UiComponent;
-use warpui::{
+use torchui::fonts::{Properties, Weight};
+use torchui::keymap::FixedBinding;
+use torchui::platform::Cursor;
+use torchui::ui_components::components::UiComponent;
+use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 
@@ -672,7 +672,7 @@ enum DetailsPanelLocalContinuationInfo {
 }
 
 pub fn init(app: &mut AppContext) {
-    use warpui::keymap::macros::*;
+    use torchui::keymap::macros::*;
 
     app.register_fixed_bindings([FixedBinding::custom(
         CustomAction::Copy,
@@ -1149,16 +1149,16 @@ impl ConversationDetailsPanel {
             .unwrap_or_else(|| AvatarContent::DisplayName(creator.display_name.clone()));
         let avatar = Avatar::new(
             avatar_content,
-            warpui::ui_components::components::UiComponentStyles {
+            torchui::ui_components::components::UiComponentStyles {
                 width: Some(20.),
                 height: Some(20.),
-                border_radius: Some(warpui::elements::CornerRadius::with_all(
-                    warpui::elements::Radius::Percentage(50.),
+                border_radius: Some(torchui::elements::CornerRadius::with_all(
+                    torchui::elements::Radius::Percentage(50.),
                 )),
                 background: Some(blended_colors::accent(theme).into()),
                 font_color: Some(ColorU::black()),
                 font_family_id: Some(appearance.ui_font_family()),
-                font_weight: Some(warpui::fonts::Weight::Bold),
+                font_weight: Some(torchui::fonts::Weight::Bold),
                 font_size: Some(small_font_size),
                 ..Default::default()
             },
@@ -2024,7 +2024,7 @@ impl ConversationDetailsPanel {
         let duration = COPY_FEEDBACK_DURATION;
         ctx.spawn(
             async move {
-                warpui::r#async::Timer::after(duration).await;
+                torchui::r#async::Timer::after(duration).await;
             },
             |me, _, ctx| {
                 ctx.notify();
@@ -2369,7 +2369,7 @@ impl View for ConversationDetailsPanel {
             },
             theme.nonactive_ui_detail().into(),
             theme.active_ui_detail().into(),
-            warpui::elements::Fill::None,
+            torchui::elements::Fill::None,
         )
         .finish();
 
@@ -2402,7 +2402,7 @@ impl View for ConversationDetailsPanel {
 
         // On mobile, add background and skip Resizable
         #[cfg(target_family = "wasm")]
-        if warpui::platform::wasm::is_mobile_device() {
+        if torchui::platform::wasm::is_mobile_device() {
             return Container::new(panel_content)
                 .with_background(theme.surface_1())
                 .finish();

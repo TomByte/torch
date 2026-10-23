@@ -6,9 +6,9 @@ use futures::io::{AsyncBufReadExt as _, AsyncRead, AsyncWrite, AsyncWriteExt as 
 use serde_json::json;
 use tempfile::TempDir;
 use url::Url;
-use warp_cli::agent::HarnessTransport;
-use warpui::App;
-use warpui::r#async::FutureExt as _;
+use torch_cli::agent::HarnessTransport;
+use torchui::App;
+use torchui::r#async::FutureExt as _;
 
 use super::attachments::ResolvedFile;
 use super::protocol::{ContentBlock, PromptCapabilities};

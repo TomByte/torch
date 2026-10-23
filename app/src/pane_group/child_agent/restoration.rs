@@ -3,9 +3,9 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use instant::Instant;
-use warp_errors::report_error;
-use warpui::r#async::Timer;
-use warpui::{SingletonEntity, ViewContext};
+use torch_errors::report_error;
+use torchui::r#async::Timer;
+use torchui::{SingletonEntity, ViewContext};
 
 use super::{HiddenChildAgentTaskContext, apply_hidden_child_agent_task_context};
 use crate::ai::agent::conversation::{AIConversation, AIConversationId};

@@ -6,9 +6,9 @@ use std::time::Duration;
 use futures::channel::mpsc;
 use futures::{FutureExt as _, StreamExt as _};
 use virtual_fs::{Stub, VirtualFS};
-use warp_util::standardized_path::StandardizedPath;
-use warpui_core::r#async::Timer;
-use warpui_core::{App, ModelContext};
+use torch_util::standardized_path::StandardizedPath;
+use torchui_core::r#async::Timer;
+use torchui_core::{App, ModelContext};
 
 use super::{
     Repository, RepositorySubscriber, RepositorySubscription, RepositoryWatchMode,

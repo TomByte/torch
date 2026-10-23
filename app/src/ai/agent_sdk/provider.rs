@@ -1,11 +1,11 @@
 //! Provider command for linking third-party services.
 use comfy_table::Cell;
 use serde::Serialize;
-use warp_cli::GlobalOptions;
-use warp_cli::provider::{ProviderCommand, ProviderType};
-use warp_core::channel::ChannelState;
-use warpui::platform::TerminationMode;
-use warpui::{AppContext, ModelContext, SingletonEntity};
+use torch_cli::GlobalOptions;
+use torch_cli::provider::{ProviderCommand, ProviderType};
+use torch_core::channel::ChannelState;
+use torchui::platform::TerminationMode;
+use torchui::{AppContext, ModelContext, SingletonEntity};
 
 use crate::ai::agent_sdk::common::describe_sole_team_error;
 use crate::ai::agent_sdk::output::{self, TableFormat};
@@ -120,7 +120,7 @@ impl ProviderCommandRunner {
     }
 }
 
-impl warpui::Entity for ProviderCommandRunner {
+impl torchui::Entity for ProviderCommandRunner {
     type Event = ();
 }
 impl SingletonEntity for ProviderCommandRunner {}

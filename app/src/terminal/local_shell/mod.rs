@@ -7,7 +7,7 @@ use anyhow::{Result, anyhow};
 use command::r#async::Command;
 #[cfg(feature = "local_tty")]
 use futures::future::{BoxFuture, FutureExt};
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torchui::{Entity, ModelContext, SingletonEntity};
 
 use super::local_tty::shell::ShellStarter;
 #[cfg(feature = "local_tty")]

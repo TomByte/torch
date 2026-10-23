@@ -1,4 +1,4 @@
-use warpui::{SingletonEntity, UpdateView};
+use torchui::{SingletonEntity, UpdateView};
 
 use super::{
     AIAgentExchangeId, AIConversationId, AgentModeRewindEntrypoint, AppContext,

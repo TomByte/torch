@@ -8,20 +8,20 @@ use chrono::{DateTime, Local, TimeZone};
 use indexmap::IndexMap;
 use itertools::Itertools as _;
 use vec1::{Size0Error, Vec1};
-use warp_cli::agent::Harness;
-use warp_core::command::ExitCode;
-use warp_core::execution_mode::AppExecutionMode;
-use warp_core::features::FeatureFlag;
-use warp_core::send_telemetry_from_ctx;
-use warp_core::ui::appearance::Appearance;
-use warp_core::ui::theme::WarpTheme;
-use warp_core::ui::theme::color::internal_colors;
-use warp_errors::report_error;
+use torch_cli::agent::Harness;
+use torch_core::command::ExitCode;
+use torch_core::execution_mode::AppExecutionMode;
+use torch_core::features::FeatureFlag;
+use torch_core::send_telemetry_from_ctx;
+use torch_core::ui::appearance::Appearance;
+use torch_core::ui::theme::WarpTheme;
+use torch_core::ui::theme::color::internal_colors;
+use torch_errors::report_error;
 use warp_multi_agent_api::response_event::stream_finished;
 use warp_multi_agent_api::response_event::stream_finished::TokenUsage;
 use warp_multi_agent_api::{self as api};
-use warpui::color::ColorU;
-use warpui::{AppContext, EntityId, ModelContext, SingletonEntity};
+use torchui::color::ColorU;
+use torchui::{AppContext, EntityId, ModelContext, SingletonEntity};
 
 use super::api::ServerConversationToken;
 pub use super::conversation_driver::ConversationDriver;
@@ -5106,7 +5106,7 @@ impl std::fmt::Display for ConversationStatus {
 }
 
 impl ConversationStatus {
-    pub fn render_icon(&self, appearance: &Appearance) -> warpui::elements::Icon {
+    pub fn render_icon(&self, appearance: &Appearance) -> torchui::elements::Icon {
         match self {
             ConversationStatus::InProgress => in_progress_icon(appearance),
             ConversationStatus::Success => succeeded_icon(appearance),

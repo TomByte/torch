@@ -1,5 +1,5 @@
 use url::Url;
-use warp_errors::report_error;
+use torch_errors::report_error;
 
 use super::browser_url_resolution::resolve_browser_url;
 

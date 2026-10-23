@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use fuzzy_match::match_indices_case_insensitive;
-use warpui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
+use torchui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
 
 use crate::launch_configs::launch_config::LaunchConfig;
 use crate::search::command_palette::launch_config::search_item::SearchItem;
@@ -19,7 +19,7 @@ pub struct DataSource {
 impl DataSource {
     #[cfg(not(target_family = "wasm"))]
     pub fn new(ctx: &mut ModelContext<Self>) -> Self {
-        if warp_core::features::FeatureFlag::UseTantivySearch.is_enabled() {
+        if torch_core::features::FeatureFlag::UseTantivySearch.is_enabled() {
             Self::new_full_text(ctx)
         } else {
             Self::new_fuzzy(ctx)
@@ -126,9 +126,9 @@ mod full_text_searcher {
     use std::sync::Arc;
 
     use fuzzy_match::FuzzyMatchResult;
-    use warp_search_core::define_search_schema;
-    use warpui::r#async::executor::Background;
-    use warpui::{AppContext, SingletonEntity};
+    use torch_search_core::define_search_schema;
+    use torchui::r#async::executor::Background;
+    use torchui::{AppContext, SingletonEntity};
 
     use crate::launch_configs::launch_config::LaunchConfig;
     use crate::search::command_palette::launch_config::data_source::LaunchConfigSearcher;
@@ -193,7 +193,7 @@ mod full_text_searcher {
                 .map(|config| (config.name.to_lowercase(), config.clone()))
                 .collect();
             if self.rebuild_search_index().is_err() {
-                warp_errors::report_error!(
+                torch_errors::report_error!(
                     "Failed to create search index writer for launch configs"
                 );
                 self.clear_search_index();

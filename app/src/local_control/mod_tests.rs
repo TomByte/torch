@@ -12,8 +12,8 @@ use axum::http::header::{AUTHORIZATION, HOST, ORIGIN};
 use axum::http::{HeaderMap, HeaderValue};
 use chrono::Duration;
 use settings::Setting as _;
-use warp_core::features::FeatureFlag;
-use warpui::SingletonEntity as _;
+use torch_core::features::FeatureFlag;
+use torchui::SingletonEntity as _;
 
 #[cfg(unix)]
 use super::ensure_peer_uid;
@@ -189,7 +189,7 @@ fn scripting_mode_controls_local_control() {
 
 #[test]
 fn tab_create_requires_active_window() {
-    let active = warpui::WindowId::from_usize(1);
+    let active = torchui::WindowId::from_usize(1);
 
     assert_eq!(
         require_active_window_id(Some(active)).expect("active"),
@@ -206,8 +206,8 @@ fn window_title_resolution_distinguishes_missing_and_ambiguous_targets() {
     assert_eq!(missing.code, ErrorCode::MissingTarget);
 
     let matches = [
-        warpui::WindowId::from_usize(1),
-        warpui::WindowId::from_usize(2),
+        torchui::WindowId::from_usize(1),
+        torchui::WindowId::from_usize(2),
     ];
     let ambiguous = resolve_title_from_matches(&matches, ActionKind::TabCreate)
         .expect_err("multi-match title is ambiguous");
@@ -229,7 +229,7 @@ fn feature_flag_disabled_denies_local_control() {
 }
 #[test]
 fn duplicate_server_start_is_rejected() {
-    warpui::App::test((), |mut app| async move {
+    torchui::App::test((), |mut app| async move {
         let runtime = tokio::runtime::Builder::new_current_thread()
             .build()
             .expect("runtime");
@@ -380,7 +380,7 @@ fn expired_credential_is_rejected_and_pruned_before_request_decode() {
 #[test]
 fn disabling_scripting_invalidates_existing_grant_and_prevents_new_grants() {
     let _flag = FeatureFlag::WarpControlCli.override_enabled(true);
-    warpui::App::test((), |mut app| async move {
+    torchui::App::test((), |mut app| async move {
         crate::test_util::settings::initialize_settings_for_tests(&mut app);
         app.update(|ctx| {
             LocalControlSettings::handle(ctx).update(ctx, |settings, ctx| {

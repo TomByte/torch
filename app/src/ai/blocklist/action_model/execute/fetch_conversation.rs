@@ -1,8 +1,8 @@
 use ai::agent::action_result::FetchConversationResult;
 use futures::FutureExt;
 use futures::future::BoxFuture;
-use warp_errors::report_error;
-use warpui::{Entity, ModelContext, SingletonEntity};
+use torch_errors::report_error;
+use torchui::{Entity, ModelContext, SingletonEntity};
 
 use super::{ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessActionInput};
 use crate::BlocklistAIHistoryModel;

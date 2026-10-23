@@ -7,8 +7,8 @@ use arrayvec::ArrayVec;
 use num_traits::SaturatingSub;
 use string_offset::{ByteOffset, CharOffset};
 use sum_tree::{self, SeekBias, SumTree};
-use warpui::text::point::Point;
-use warpui::text_layout::TextStyle;
+use torchui::text::point::Point;
+use torchui::text_layout::TextStyle;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 enum Run {
