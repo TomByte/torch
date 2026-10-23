@@ -367,7 +367,7 @@ if [[ $RELEASE_CHANNEL = "oss" ]]; then
     BUNDLE_ID="dev.tombyte.Torch"
     TORCH_APP_NAME="Torch"
     TORCH_SCHEME_NAME="torch"
-    FEATURES="release_bundle,extern_plist,local_only"
+    FEATURES="$FEATURES,local_only"
 fi
 
 OUT_DIR="target/$TARGET_PROFILE_DIR/bundle/osx"
@@ -850,8 +850,9 @@ if [[ "$ARTIFACT" = app ]]; then
     )
 
     # Skip running an AppleScript to format the DMG contents if running in Namespace - this consistently times out.
+    # TORCH_DMG_SKIP_FINDER=1 does the same on other hosts where Finder scripting hangs.
     # See https://github.com/create-dmg/create-dmg/issues/72
-    if [[ "${RUNNER_NAME:-}" == nsc-* ]]; then
+    if [[ "${RUNNER_NAME:-}" == nsc-* || "${TORCH_DMG_SKIP_FINDER:-}" == 1 ]]; then
       args+=(--skip-jenkins)
     fi
 

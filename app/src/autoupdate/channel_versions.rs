@@ -26,6 +26,10 @@ pub async fn fetch_channel_versions(
             .context("Failed to parse channel versions JSON");
     }
 
+    if ChannelState::channel() == Channel::Oss {
+        return fetch_channel_versions_from_github_release(server_api.external_http_client()).await;
+    }
+
     let channel_versions = server_api
         .fetch_channel_versions(include_changelogs, is_daily)
         .await
@@ -46,6 +50,28 @@ pub async fn fetch_channel_versions(
             fetch_channel_versions_from_json_storage(server_api.http_client(), nonce).await
         }
     }
+}
+
+/// Fetches the [`ChannelVersions`] published with the latest GitHub release. GitHub's `latest`
+/// skips drafts and prereleases, so only full releases are offered as updates.
+async fn fetch_channel_versions_from_github_release(
+    client: &http_client::Client,
+) -> Result<ChannelVersions> {
+    let url = format!(
+        "{}/latest/download/channel_versions.json",
+        ChannelState::releases_base_url()
+    );
+    log::info!("Fetching channel versions from {url}");
+    let versions: ChannelVersions = client
+        .get(url.as_str())
+        .timeout(FETCH_CHANNEL_VERSIONS_TIMEOUT)
+        .send()
+        .await?
+        .error_for_status()?
+        .json()
+        .await?;
+    log::info!("Received channel versions from the latest release: {versions}");
+    Ok(versions)
 }
 
 // Synchronously fetches updated Torch [`ChannelVersions`] from GCP JSON storage. This will soon

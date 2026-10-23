@@ -140,6 +140,10 @@ pub struct VersionInfo {
     /// The version to use for TUI downloads, falling back to `version` if not set.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tui_version: Option<String>,
+    /// The tag of the GitHub release that holds this version's downloads, when it differs from
+    /// `version`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub release_tag: Option<String>,
 }
 
 impl VersionInfo {
@@ -153,6 +157,7 @@ impl VersionInfo {
             is_rollback: None,
             cli_version: None,
             tui_version: None,
+            release_tag: None,
         }
     }
 
@@ -164,6 +169,11 @@ impl VersionInfo {
     /// Returns the TUI version, falling back to the app version if not set.
     pub fn tui_version(&self) -> &str {
         self.tui_version.as_deref().unwrap_or(&self.version)
+    }
+
+    /// Returns the release tag, falling back to the app version if not set.
+    pub fn release_tag(&self) -> &str {
+        self.release_tag.as_deref().unwrap_or(&self.version)
     }
 }
 

@@ -75,7 +75,7 @@ pub(super) fn manually_download_version(
     version_info: &VersionInfo,
     ctx: &mut AppContext,
 ) {
-    let url = update_url(*channel, version_info.version.as_str());
+    let url = update_url(*channel, version_info);
     ctx.open_url(&url);
 }
 
@@ -632,13 +632,14 @@ async fn download_dmg(
     client: &http_client::Client,
 ) -> Result<PathBuf> {
     // TODO: Use a streaming fetch and and provide an api for tracking progress
-    let update_url = update_url(*channel, &version_info.version);
+    let update_url = update_url(*channel, version_info);
     log::info!("Fetching new dmg at {update_url}");
     let res = client
         .get(&update_url)
         .timeout(Duration::from_secs(DMG_TIMEOUT_S))
         .send()
-        .await?;
+        .await?
+        .error_for_status()?;
     let dmg_file = dmg_path(channel, version_info, update_id);
 
     let mut file = async_fs::File::create(&dmg_file).await?;
@@ -692,10 +693,18 @@ async fn mount_dmg(dmg_dir: &Path, update_id: &str) -> Result<PathBuf> {
     Ok(volume)
 }
 
-fn update_url(channel: Channel, version: &str) -> String {
+fn update_url(channel: Channel, version_info: &VersionInfo) -> String {
+    let directory = match channel {
+        Channel::Oss => version_info.release_tag(),
+        Channel::Stable
+        | Channel::Preview
+        | Channel::Dev
+        | Channel::Local
+        | Channel::Integration => &version_info.version,
+    };
     format!(
         "{}/{}",
-        release_assets_directory_url(channel, version),
+        release_assets_directory_url(channel, directory),
         dmg_name(channel)
     )
 }
@@ -709,6 +718,11 @@ fn versioned_app_name(channel: Channel, version: &str) -> String {
 }
 
 fn dmg_name(channel: Channel) -> String {
+    // Torch releases ship one universal DMG.
+    if channel == Channel::Oss {
+        return format!("{}.dmg", app_name_prefix(channel));
+    }
+
     // If the user is on an Apple Silicon Mac, download an arm64-only bundle.
     let is_arm64 = command::blocking::Command::new("uname")
         .arg("-m")
@@ -729,7 +743,7 @@ fn app_name_prefix(channel: Channel) -> &'static str {
         Channel::Local => "warp",
         Channel::Integration => "integration",
         Channel::Dev => "WarpDev",
-        Channel::Oss => "warp-oss",
+        Channel::Oss => "Torch",
     }
 }
 
@@ -740,7 +754,7 @@ fn executable_name(channel: Channel) -> &'static str {
         Channel::Local => "warp",
         Channel::Integration => "integration",
         Channel::Dev => "dev",
-        Channel::Oss => "warp-oss",
+        Channel::Oss => "torch",
     }
 }
 

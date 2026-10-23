@@ -1,0 +1,107 @@
+# Builds a signed, notarized macOS DMG when a GitHub release is published, and attaches it to the
+# release with channel_versions.json, which installed copies of Torch read to find updates.
+# docs/releasing.md lists the secrets this needs.
+name: Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag of an existing release to build and upload to
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  macos:
+    runs-on: ${{ vars.MACOS_RELEASE_RUNNER || 'macos-26' }}
+    timeout-minutes: 300
+    env:
+      RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      TORCH_DMG_SKIP_FINDER: ${{ vars.TORCH_DMG_SKIP_FINDER }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          lfs: true
+
+      - name: Choose the build version
+        # Torch's updater compares versions in this dated form, so the release tag itself can be
+        # anything. Prereleases get the same treatment but are never offered as updates.
+        run: |
+          echo "TORCH_VERSION=v0.$(date -u +%Y.%m.%d.%H.%M).oss_00" >> "$GITHUB_ENV"
+          echo "KEYCHAIN_PATH=$RUNNER_TEMP/torch-release.keychain-db" >> "$GITHUB_ENV"
+
+      - name: Install build tools
+        run: |
+          brew install create-dmg protobuf
+          ./script/install_cargo_bundle
+          ./script/install_cargo_release_deps --no-build-deps
+          ./script/macos/install_build_deps
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: release
+
+      - name: Import the signing certificate
+        env:
+          CERTIFICATE_P12: ${{ secrets.MACOS_CERTIFICATE_P12 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          KEYCHAIN_PASSWORD="$(openssl rand -base64 24)"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          printf '%s' "$CERTIFICATE_P12" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          security import "$RUNNER_TEMP/certificate.p12" -k "$KEYCHAIN_PATH" \
+            -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          rm "$RUNNER_TEMP/certificate.p12"
+          security set-key-partition-list -S apple-tool:,apple: -s \
+            -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH" > /dev/null
+          read -r -a existing_keychains <<< "$(security list-keychains -d user | tr -d '"')"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" "${existing_keychains[@]}"
+          security default-keychain -s "$KEYCHAIN_PATH"
+
+      - name: Store the notarization key
+        env:
+          API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+          API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+        run: |
+          printf '%s' "$API_KEY_P8" > "$RUNNER_TEMP/AuthKey.p8"
+          xcrun notarytool store-credentials torch \
+            --key "$RUNNER_TEMP/AuthKey.p8" --key-id "$API_KEY_ID" --issuer "$API_ISSUER_ID" \
+            --keychain "$KEYCHAIN_PATH"
+          rm "$RUNNER_TEMP/AuthKey.p8"
+
+      - name: Build, sign and notarize
+        run: ./script/macos/bundle --channel oss --release-tag "$TORCH_VERSION"
+
+      - name: Upload to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p upload
+          cp target/release-lto/bundle/osx/Torch.dmg upload/Torch.dmg
+          cat > upload/channel_versions.json <<EOF
+          {
+            "dev": { "version": "$TORCH_VERSION", "release_tag": "$RELEASE_TAG" },
+            "preview": { "version": "$TORCH_VERSION", "release_tag": "$RELEASE_TAG" },
+            "stable": { "version": "$TORCH_VERSION", "release_tag": "$RELEASE_TAG" }
+          }
+          EOF
+          (cd upload && shasum -a 256 Torch.dmg > SHA256SUMS)
+          # The DMG goes up first so an update is never announced before its download exists.
+          gh release upload "$RELEASE_TAG" upload/Torch.dmg upload/SHA256SUMS --clobber
+          gh release upload "$RELEASE_TAG" upload/channel_versions.json --clobber
+
+      - name: Remove the signing keychain
+        if: always()
+        run: security delete-keychain "$KEYCHAIN_PATH" || true

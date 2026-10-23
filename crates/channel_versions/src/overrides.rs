@@ -117,6 +117,7 @@ impl VersionInfo {
 
     fn apply_override(&mut self, other: VersionInfo) {
         self.version = other.version;
+        self.release_tag = other.release_tag;
         if let Some(soft_cutoff) = other.soft_cutoff {
             self.soft_cutoff = Some(soft_cutoff);
         }

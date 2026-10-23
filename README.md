@@ -38,7 +38,7 @@ Claude Code and Codex report their status through hooks that ship inside Torch. 
 - **Telemetry and crash reporting.** Telemetry calls compile to no-ops, and no crash reporter is linked.
 - **Warp's AI.** No Agent Mode, AI command suggestions or natural-language detection.
 - **Cloud features.** No Warp Drive, cloud sync, session sharing, teams or billing.
-- **Auto-updates.** No update checks and no Warp release servers.
+- **Warp's updater.** Torch checks its own GitHub releases instead, on macOS only. See [docs/releasing.md](docs/releasing.md).
 
 These are switched off by the `local_only` feature, which every Torch build uses, and Warp's server addresses point at an unreachable `.invalid` domain. Some inherited cloud and AI code stays in the source so shared types still compile, but it can't run. Torch has its own app identity (`dev.tombyte.Torch`) and keeps its settings in `~/.torch` on macOS.
 
@@ -53,7 +53,7 @@ git lfs install --local && git lfs pull
 ./script/run
 ```
 
-`./script/run` builds and opens `target/debug/bundle/osx/Torch.app`. For a signed, notarised release build, see `./script/release --help`.
+`./script/run` builds and opens `target/debug/bundle/osx/Torch.app`. For a signed, notarised release build, see `./script/release --help`. Publishing a GitHub release builds and attaches the DMG automatically; [docs/releasing.md](docs/releasing.md) covers the one-time setup.
 
 ## Screenshots
 

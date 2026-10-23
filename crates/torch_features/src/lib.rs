@@ -1128,7 +1128,6 @@ impl FeatureFlag {
                     | Self::AIGeneratedOnboardingSuggestions
                     | Self::Changelog
                     | Self::OzChangelogUpdates
-                    | Self::Autoupdate
                     | Self::GlobalAIAnalyticsBanner
                     | Self::GlobalAIAnalyticsCollection
                     | Self::AgentCliLaunchModal

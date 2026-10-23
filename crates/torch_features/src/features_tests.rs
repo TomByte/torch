@@ -38,13 +38,20 @@ fn torch_cannot_reenable_accounts_ai_or_cloud_with_runtime_overrides() {
         FeatureFlag::AgentViewPromptChip,
         FeatureFlag::CloudObjects,
         FeatureFlag::CloudConversations,
-        FeatureFlag::Autoupdate,
     ] {
         let _enabled = flag.override_enabled(true);
         assert!(!flag.is_enabled(), "{flag:?} must stay disabled in Torch");
     }
     let _disabled = FeatureFlag::SkipFirebaseAnonymousUser.override_enabled(false);
     assert!(FeatureFlag::SkipFirebaseAnonymousUser.is_enabled());
+}
+
+/// Torch's updater only reads its own GitHub releases, so release builds may enable it.
+#[cfg(all(feature = "local_only", feature = "test-util"))]
+#[test]
+fn torch_allows_its_own_updater() {
+    let _enabled = FeatureFlag::Autoupdate.override_enabled(true);
+    assert!(FeatureFlag::Autoupdate.is_enabled());
 }
 
 #[cfg(all(feature = "local_only", feature = "test-util"))]

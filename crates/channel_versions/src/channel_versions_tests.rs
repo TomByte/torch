@@ -102,3 +102,20 @@ fn changelog_tui_updates_are_backward_compatible() {
         serde_json::from_str(new_payload).expect("new changelog payload should deserialize");
     assert_eq!(changelog.tui_updates, ["Added inline TUI menus"]);
 }
+
+#[test]
+fn release_manifest_parses_with_and_without_release_tag() {
+    let payload = r#"{
+        "dev": { "version": "v0.2026.10.23.14.05.oss_00", "release_tag": "v0.1.0" },
+        "preview": { "version": "v0.2026.10.23.14.05.oss_00", "release_tag": "v0.1.0" },
+        "stable": { "version": "v0.2026.10.23.14.05.oss_00", "release_tag": "v0.1.0" }
+    }"#;
+    let versions: ChannelVersions =
+        serde_json::from_str(payload).expect("release manifest should deserialize");
+    let stable = versions.stable.version_info();
+    assert_eq!(stable.release_tag(), "v0.1.0");
+    assert!(ParsedVersion::try_from(stable.version.as_str()).is_ok());
+
+    let untagged = VersionInfo::new("v0.2026.10.23.14.05.oss_00".to_owned());
+    assert_eq!(untagged.release_tag(), "v0.2026.10.23.14.05.oss_00");
+}
