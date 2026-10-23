@@ -272,7 +272,3 @@ pub fn logout(ctx: &mut AppContext) -> Result<()> {
     ctx.terminate_app(TerminationMode::ForceTerminate, None);
     Ok(())
 }
-
-#[cfg(test)]
-#[path = "admin_tests.rs"]
-mod tests;

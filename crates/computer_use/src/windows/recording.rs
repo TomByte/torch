@@ -484,7 +484,3 @@ fn diagnostic_tail(text: &str) -> String {
     };
     format!(" ({tail})")
 }
-
-#[cfg(test)]
-#[path = "recording_tests.rs"]
-mod tests;

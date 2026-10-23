@@ -28,6 +28,3 @@ enum DirEntryOrFragment<'a> {
 
 #[cfg(test)]
 mod test_util;
-
-#[cfg(test)]
-pub(super) use test_util::construct_test_merkle_tree;

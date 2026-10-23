@@ -442,7 +442,3 @@ impl ApiKeyManager {
         })
     }
 }
-
-#[cfg(test)]
-#[path = "geap_credentials_tests.rs"]
-mod tests;

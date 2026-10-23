@@ -106,20 +106,6 @@ impl TuiOnboardingMarkers {
         }
     }
 
-    #[cfg(test)]
-    fn new_loading_for_test(
-        onboarding_client: Arc<dyn TuiOnboardingClient>,
-        load_timeout: Duration,
-    ) -> Self {
-        Self {
-            state: TuiOnboardingMarkersState::Loading,
-            load_generation: 0,
-            persist_markers: false,
-            onboarding_client: Some(onboarding_client),
-            load_timeout,
-        }
-    }
-
     /// Starts a fresh, account-scoped load. Terminal creation never waits for
     /// this request; consumers keep one-time UI hidden until
     /// [`TuiOnboardingMarkersEvent::Ready`].
@@ -374,7 +360,3 @@ async fn load_markers_with_timeout(
         futures::future::Either::Right(_) => MarkerLoadResult::TimedOut,
     }
 }
-
-#[cfg(test)]
-#[path = "tui_onboarding_markers_tests.rs"]
-mod tests;

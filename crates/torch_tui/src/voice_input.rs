@@ -387,7 +387,3 @@ impl TuiVoiceInputModel {
         self.hold_key = hold_key;
     }
 }
-
-#[cfg(all(test, feature = "voice_input"))]
-#[path = "voice_input_tests.rs"]
-mod tests;

@@ -49,11 +49,6 @@ impl PersistenceOutcome {
             uploaded_usage: None,
         }
     }
-
-    #[cfg(test)]
-    pub(super) fn into_result(self) -> Result<()> {
-        self.result
-    }
 }
 
 #[derive(Default)]
@@ -228,7 +223,3 @@ async fn save_transcript_and_artifact(
         },
     }
 }
-
-#[cfg(test)]
-#[path = "harness_persistence_tests.rs"]
-mod tests;

@@ -980,7 +980,3 @@ fn convert_api_question(
         },
     })
 }
-
-#[cfg(test)]
-#[path = "convert_from_tests.rs"]
-mod tests;

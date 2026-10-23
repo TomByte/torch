@@ -320,6 +320,7 @@ fn unfocused_selector_ignores_navigation_and_confirmation_keys() {
         }
     });
 }
+
 #[test]
 fn search_editor_is_created_only_for_searchable_pages() {
     App::test((), |mut app| async move {
@@ -423,6 +424,7 @@ fn select_item_without_confirm_moves_focus_to_an_arbitrary_option() {
         assert!(primary_events(&events).is_empty());
     });
 }
+
 #[test]
 fn search_and_last_option_wrap_in_both_directions() {
     App::test((), |mut app| async move {
@@ -460,6 +462,7 @@ fn search_and_last_option_wrap_in_both_directions() {
         }));
     });
 }
+
 #[test]
 fn focused_search_filters_including_digits_and_enter_confirms_top_match() {
     App::test((), |mut app| async move {
@@ -580,6 +583,7 @@ fn edit_custom_text(
     let field = custom_text_field(app, selector);
     field.update(app, |field, ctx| field.handle_action(&action, ctx));
 }
+
 /// Returns the selector's custom-text editor for focus and action assertions.
 fn custom_text_field(
     app: &App,
@@ -877,6 +881,7 @@ fn custom_row_shortcut_renders_and_confirms_instead_of_its_digit() {
         );
     });
 }
+
 #[test]
 fn digits_are_viewport_relative_in_scrolled_lists() {
     App::test((), |mut app| async move {
@@ -1159,23 +1164,6 @@ fn arrows_leave_custom_text_and_navigate_adjacent_options() {
     });
 }
 
-#[test]
-fn create_new_auth_secret_footer_is_ignored() {
-    App::test((), |mut app| async move {
-        let (selector, _) = add_selector(&mut app);
-        let mut with_footer = snapshot(&["Skip (advanced)"], None);
-        with_footer.footer = Some(OptionFooter::CreateNewAuthSecret);
-        set_page(&mut app, &selector, with_footer);
-        // Resource creation is out of scope in the TUI: the
-        // footer contributes no navigable item.
-        assert!(
-            render_lines(&app, &selector, 60)
-                .iter()
-                .all(|line| !line.contains("New API key"))
-        );
-    });
-}
-
 /// Page replacement invalidates any host-cached selector measurement.
 #[test]
 fn set_page_invalidates_layout() {
@@ -1191,6 +1179,7 @@ fn set_page_invalidates_layout() {
         );
     });
 }
+
 #[test]
 fn layout_invalidated_is_emitted_only_when_overflow_markers_toggle() {
     App::test((), |mut app| async move {

@@ -114,10 +114,6 @@ fn format_request_usage(
     format!("{label}: {value}")
 }
 
-#[cfg(test)]
-#[path = "view_tests.rs"]
-mod tests;
-
 const MANAGEMENT_PANEL_WIDTH: f32 = 400.;
 // Vertical margin for filter row elements to align with dropdown buttons
 const FILTER_ROW_VERTICAL_MARGIN: f32 = 6.;

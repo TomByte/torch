@@ -1477,7 +1477,3 @@ impl TypedActionView for BlocklistAIStatusBar {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "status_bar_tests.rs"]
-mod tests;

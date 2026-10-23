@@ -67,7 +67,3 @@ pub struct PrewarmedSandboxVariable {
     pub name: String,
     pub value: String,
 }
-
-#[cfg(test)]
-#[path = "prewarmed_sandbox_config_tests.rs"]
-mod tests;

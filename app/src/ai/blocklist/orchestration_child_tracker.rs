@@ -499,21 +499,4 @@ impl OrchestrationChildTracker {
             .last_lifecycle
             .map(conversation_status_from_lifecycle_event_type)
     }
-
-    /// Test-only: number of metadata-fetch dispatches issued so far.
-    #[cfg(test)]
-    pub(crate) fn metadata_fetch_dispatch_count(&self) -> usize {
-        self.metadata_fetch_dispatch_count
-    }
-
-    /// Test-only: whether metadata has been requested but not yet applied for
-    /// `run_id`.
-    #[cfg(test)]
-    pub(crate) fn is_awaiting_metadata(&self, run_id: &str) -> bool {
-        self.children_awaiting_metadata.contains(run_id)
-    }
 }
-
-#[cfg(test)]
-#[path = "orchestration_child_tracker_tests.rs"]
-mod tests;

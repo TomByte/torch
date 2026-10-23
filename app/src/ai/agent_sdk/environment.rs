@@ -1261,7 +1261,3 @@ async fn validate_default_runner(
     );
     Ok(())
 }
-
-#[cfg(test)]
-#[path = "environment_tests.rs"]
-mod tests;

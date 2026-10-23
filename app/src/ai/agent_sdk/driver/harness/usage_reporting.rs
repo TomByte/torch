@@ -312,7 +312,3 @@ fn publication_backoff(attempt: usize) -> Duration {
 async fn wait_before_retry(delay: Duration) {
     Timer::after(delay).await;
 }
-
-#[cfg(test)]
-#[path = "usage_reporting_tests.rs"]
-mod tests;

@@ -276,7 +276,3 @@ fn blend_overlay(frame: &mut RgbaImage, overlay: &RgbaImage) {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "thumbnail_tests.rs"]
-mod tests;

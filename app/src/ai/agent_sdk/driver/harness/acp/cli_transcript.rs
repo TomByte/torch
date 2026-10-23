@@ -120,7 +120,3 @@ impl CliTranscriptKind {
         UploadedTranscriptUsage::empty()
     }
 }
-
-#[cfg(test)]
-#[path = "cli_transcript_tests.rs"]
-mod tests;

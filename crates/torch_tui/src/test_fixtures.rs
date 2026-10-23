@@ -87,11 +87,6 @@ pub(crate) fn add_test_conversation_selection(ctx: &mut AppContext) -> Conversat
     })
 }
 
-/// Builds the action model injected into stateful TUI tool-call views.
-pub(crate) fn add_test_action_model(app: &mut App) -> ModelHandle<BlocklistAIActionModel> {
-    add_test_action_model_and_events(app).0
-}
-
 /// Builds the action model and terminal-event dispatcher injected into TUI agent blocks.
 pub(crate) fn add_test_action_model_and_events(
     app: &mut App,
@@ -147,16 +142,6 @@ pub(crate) fn add_test_terminal_session(
     ModelHandle<Box<dyn TerminalManagerTrait>>,
 ) {
     add_test_terminal_session_with_options(app, window_id, false, None)
-}
-
-pub(crate) fn add_test_terminal_session_with_first_run_onboarding(
-    app: &mut App,
-    window_id: WindowId,
-) -> (
-    ViewHandle<TuiTerminalSessionView>,
-    ModelHandle<Box<dyn TerminalManagerTrait>>,
-) {
-    add_test_terminal_session_with_options(app, window_id, true, None)
 }
 
 pub(crate) fn add_test_terminal_session_with_settings_file_error(

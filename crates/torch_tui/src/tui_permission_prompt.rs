@@ -194,10 +194,6 @@ impl TuiPermissionPrompt {
             selector.handle_action(&TuiOptionSelectorAction::SelectItemWithoutConfirm(0), ctx)
         });
     }
-    #[cfg(test)]
-    pub(crate) fn highlighted_index(&self, app: &AppContext) -> Option<usize> {
-        self.selector.as_ref(app).highlighted_index()
-    }
 
     /// Updates validation copy rendered below the optional body editor.
     pub(crate) fn set_body_error(&self, error: Option<String>, ctx: &mut ViewContext<Self>) {
@@ -379,7 +375,3 @@ impl TypedActionView for TuiPermissionPrompt {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "tui_permission_prompt_tests.rs"]
-mod tests;

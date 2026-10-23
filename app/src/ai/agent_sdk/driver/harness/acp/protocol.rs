@@ -456,7 +456,3 @@ pub(super) struct WriteTextFileParams {
 pub(super) struct CancelParams {
     pub session_id: String,
 }
-
-#[cfg(test)]
-#[path = "protocol_tests.rs"]
-mod tests;

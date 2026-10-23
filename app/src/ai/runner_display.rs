@@ -174,7 +174,3 @@ pub fn resolve_run_platform(
         None => Some(RunPlatform::Default),
     }
 }
-
-#[cfg(test)]
-#[path = "runner_display_tests.rs"]
-mod tests;

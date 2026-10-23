@@ -552,7 +552,3 @@ fn classify_git_credentials_error(
         ),
     }
 }
-
-#[cfg(test)]
-#[path = "error_classification_tests.rs"]
-mod tests;

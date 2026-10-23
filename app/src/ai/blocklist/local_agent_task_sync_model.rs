@@ -151,15 +151,6 @@ impl LocalAgentTaskSyncModel {
         }
     }
 
-    /// Test-only constructor that lets tests inject a mock `AIClient`.
-    #[cfg(test)]
-    pub(super) fn new_with_ai_client_for_test(
-        ai_client: Arc<dyn AIClient>,
-        ctx: &mut ModelContext<Self>,
-    ) -> Self {
-        Self::new_with_ai_client(ai_client, ctx)
-    }
-
     /// Registers a terminal view as a tracked CLI agent session so that
     /// status changes from `CLIAgentSessionsModel` are reported to the
     /// server. Called by `AgentDriver` when setting up a third-party
@@ -183,21 +174,6 @@ impl LocalAgentTaskSyncModel {
             },
             ctx,
         );
-    }
-
-    /// Test-only equivalent of `register_cli_session` that only records the
-    /// `terminal_view_id → task_id` mapping, without enqueuing the
-    /// IN_PROGRESS report that `register_cli_session` sends via the real
-    /// `AIClient`. Use this in tests that only need
-    /// `cli_harness_task_id_for_terminal_view` to resolve (e.g. exercising
-    /// `TerminalView::conversation_id_for_cli_status_updates`).
-    #[cfg(test)]
-    pub(crate) fn register_cli_session_for_test(
-        &mut self,
-        terminal_view_id: EntityId,
-        task_id: AmbientAgentTaskId,
-    ) {
-        self.cli_session_task_ids.insert(terminal_view_id, task_id);
     }
 
     /// Returns the ambient task this terminal pane's CLI-harness session, if
@@ -554,13 +530,6 @@ fn map_conversation_status(
     }
 }
 
-#[cfg(test)]
-pub(crate) fn map_conversation_status_for_test(
-    conversation: &AIConversation,
-) -> (AgentTaskState, Option<TaskStatusUpdate>) {
-    map_conversation_status(conversation)
-}
-
 /// Maps a conversation-level error to a terminal task update. In-flight recoveries
 /// surface as `TransientError`, so an `Error` status is always terminal here — the
 /// `will_attempt_resume` rendering hint is deliberately ignored.
@@ -735,7 +704,3 @@ fn map_cli_session_status(
         ),
     }
 }
-
-#[cfg(test)]
-#[path = "local_agent_task_sync_model_tests.rs"]
-mod tests;

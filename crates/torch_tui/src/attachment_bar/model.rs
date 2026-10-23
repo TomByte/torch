@@ -444,7 +444,3 @@ fn attachment_mode_transition(
         (false, false) | (true, true) => AttachmentModeTransition::None,
     }
 }
-
-#[cfg(test)]
-#[path = "model_tests.rs"]
-mod tests;

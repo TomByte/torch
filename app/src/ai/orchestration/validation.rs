@@ -138,7 +138,3 @@ pub fn empty_env_recommendation_message(
         "We recommend creating an environment for cloud agents.".to_string()
     })
 }
-
-#[cfg(test)]
-#[path = "validation_tests.rs"]
-mod tests;

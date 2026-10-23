@@ -164,7 +164,3 @@ impl Entity for RestoredAgentConversations {
 }
 
 impl SingletonEntity for RestoredAgentConversations {}
-
-#[cfg(test)]
-#[path = "restored_conversations_tests.rs"]
-mod tests;

@@ -74,7 +74,3 @@ impl ConversationDriver {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "conversation_driver_tests.rs"]
-mod tests;

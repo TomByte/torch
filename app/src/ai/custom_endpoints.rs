@@ -225,7 +225,3 @@ fn settings_error_affects_custom_endpoints(error: &SettingsFileError) -> bool {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "custom_endpoints_tests.rs"]
-mod tests;

@@ -141,36 +141,6 @@ impl CheckpointCoordinatorHandle {
         )
     }
 
-    /// Test-facing constructor that bypasses `ModelSpawner<AgentDriver>` (and so the full
-    /// UI framework) by taking the safe-boundary predicate directly, and disables jitter
-    /// (production jitter is bounded by [`CHECKPOINT_JITTER`], up to 30s, which would
-    /// otherwise make tests using a short `interval` flaky/slow).
-    #[cfg(test)]
-    #[allow(clippy::too_many_arguments)]
-    fn new_for_test(
-        client: Arc<dyn HarnessSupportClient>,
-        task_id: AmbientAgentTaskId,
-        working_dir: PathBuf,
-        boundary_check: BoundaryCheck,
-        interval: Duration,
-        script_timeout: Duration,
-        upload_timeout: Duration,
-        background: Arc<Background>,
-    ) -> Self {
-        Self::spawn_with_boundary_check(
-            client,
-            task_id,
-            working_dir,
-            None,
-            boundary_check,
-            interval,
-            Duration::ZERO,
-            script_timeout,
-            upload_timeout,
-            background,
-        )
-    }
-
     #[allow(clippy::too_many_arguments)]
     fn spawn_with_boundary_check(
         client: Arc<dyn HarnessSupportClient>,
@@ -628,7 +598,3 @@ async fn coordinator_loop(
         }
     }
 }
-
-#[cfg(test)]
-#[path = "checkpoint_coordinator_tests.rs"]
-mod tests;

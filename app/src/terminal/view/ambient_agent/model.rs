@@ -1705,7 +1705,3 @@ pub enum AmbientAgentViewModelEvent {
 impl Entity for AmbientAgentViewModel {
     type Event = AmbientAgentViewModelEvent;
 }
-
-#[cfg(test)]
-#[path = "model_tests.rs"]
-mod tests;

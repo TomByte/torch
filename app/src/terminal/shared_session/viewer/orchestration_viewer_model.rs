@@ -505,7 +505,3 @@ impl OrchestrationViewerModel {
         !entry.materialization_metadata_ready
     }
 }
-
-#[cfg(test)]
-#[path = "orchestration_viewer_model_tests.rs"]
-mod tests;

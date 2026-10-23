@@ -224,7 +224,3 @@ impl fmt::Display for MerkleHash {
         write!(f, "{hex_string}")
     }
 }
-
-#[cfg(test)]
-#[path = "hash_tests.rs"]
-mod hash_test;

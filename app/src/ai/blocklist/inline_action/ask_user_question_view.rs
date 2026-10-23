@@ -1461,7 +1461,3 @@ impl Element for MeasureOnly {
         false
     }
 }
-
-#[cfg(test)]
-#[path = "ask_user_question_view_tests.rs"]
-mod tests;

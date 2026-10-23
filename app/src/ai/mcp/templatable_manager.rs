@@ -447,7 +447,3 @@ impl Entity for TemplatableMCPServerManager {
 }
 
 impl SingletonEntity for TemplatableMCPServerManager {}
-
-#[cfg(test)]
-#[path = "templatable_manager_tests.rs"]
-mod tests;

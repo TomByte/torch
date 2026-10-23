@@ -381,7 +381,3 @@ fn resolve_upload_association_from_sources(
         ambient_task_id,
     })
 }
-
-#[cfg(test)]
-#[path = "artifact_upload_tests.rs"]
-mod tests;

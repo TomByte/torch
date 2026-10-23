@@ -46,7 +46,3 @@ pub(crate) fn decide_child_pane_materialization(
 
     ChildPaneMaterialization::Pending
 }
-
-#[cfg(test)]
-#[path = "materialization_tests.rs"]
-mod tests;

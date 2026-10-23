@@ -641,7 +641,3 @@ pub(super) fn stream_finished_for(stop_reason: StopReason) -> StreamFinished {
         ..Default::default()
     }
 }
-
-#[cfg(test)]
-#[path = "turn_driver_tests.rs"]
-mod tests;

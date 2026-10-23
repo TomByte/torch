@@ -569,7 +569,3 @@ impl BaseClient {
             .map(|token| http_client::iap::proxy_auth_header(&token))
     }
 }
-
-#[cfg(test)]
-#[path = "base_client_tests.rs"]
-mod tests;

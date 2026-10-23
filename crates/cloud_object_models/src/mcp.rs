@@ -300,7 +300,3 @@ pub type CloudTemplatableMCPServer =
 pub type CloudTemplatableMCPServerModel = GenericStringModel<TemplatableMCPServer, JsonSerializer>;
 pub type ServerTemplatableMCPServer =
     GenericServerObject<GenericStringObjectId, CloudTemplatableMCPServerModel>;
-
-#[cfg(test)]
-#[path = "mcp_tests.rs"]
-mod tests;

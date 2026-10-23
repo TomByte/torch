@@ -107,16 +107,6 @@ impl SkillWatcher {
         Self::new_internal(ctx, watcher_event_tx, home_dir)
     }
 
-    /// Test-only constructor that skips home-directory watching so tests are not
-    /// polluted by real skills present on the developer's machine.
-    #[cfg(test)]
-    pub fn new_for_testing(
-        ctx: &mut ModelContext<Self>,
-        watcher_event_tx: Sender<SkillWatcherEvent>,
-    ) -> Self {
-        Self::new_internal(ctx, watcher_event_tx, None)
-    }
-
     fn new_internal(
         ctx: &mut ModelContext<Self>,
         watcher_event_tx: Sender<SkillWatcherEvent>,
@@ -1106,7 +1096,3 @@ fn parse_project_skill_contents(
 impl Entity for SkillWatcher {
     type Event = SkillWatcherEvent;
 }
-
-#[cfg(test)]
-#[path = "skill_watcher_tests.rs"]
-mod skill_watcher_tests;

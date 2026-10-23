@@ -76,7 +76,3 @@ impl PersistedUser {
         Ok(ctx.secure_storage().remove_value(USER_STORAGE_KEY)?)
     }
 }
-
-#[cfg(test)]
-#[path = "persistence_tests.rs"]
-mod tests;

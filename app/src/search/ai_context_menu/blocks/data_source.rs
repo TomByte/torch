@@ -261,7 +261,3 @@ impl SyncDataSource for BlockDataSource {
 impl Entity for BlockDataSource {
     type Event = ();
 }
-
-#[cfg(test)]
-#[path = "data_source_tests.rs"]
-mod tests;

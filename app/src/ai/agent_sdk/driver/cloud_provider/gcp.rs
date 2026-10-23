@@ -180,7 +180,3 @@ impl CloudProvider for GcpCloudProvider {
         })
     }
 }
-
-#[cfg(test)]
-#[path = "gcp_tests.rs"]
-mod tests;

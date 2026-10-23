@@ -52,11 +52,6 @@ impl ExitEscalation {
         }
     }
 
-    #[cfg(test)]
-    pub(crate) fn phase(&self) -> ExitEscalationPhase {
-        self.phase
-    }
-
     pub(crate) fn on_event(&mut self, event: ExitEscalationEvent) -> ExitEscalationAction {
         match (self.phase, event) {
             (
@@ -142,7 +137,3 @@ pub(crate) fn driver_result_after_harness_run(
         other => other,
     }
 }
-
-#[cfg(test)]
-#[path = "exit_escalation_tests.rs"]
-mod tests;

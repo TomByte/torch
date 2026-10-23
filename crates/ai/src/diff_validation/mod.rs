@@ -1286,7 +1286,3 @@ fn find_change_context_start(change_context: &[String], file_lines: &[&str]) -> 
     // Return the position after the last change context marker.
     Some(current_pos)
 }
-
-#[cfg(test)]
-#[path = "mod_tests.rs"]
-mod tests;

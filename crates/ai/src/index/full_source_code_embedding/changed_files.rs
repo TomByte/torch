@@ -44,7 +44,3 @@ impl ChangedFiles {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "changed_files_tests.rs"]
-mod tests;

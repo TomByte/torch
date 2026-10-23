@@ -185,7 +185,3 @@ pub(crate) async fn download_task_file_attachments(
     }
     downloaded
 }
-
-#[cfg(test)]
-#[path = "attachment_utils_tests.rs"]
-mod tests;

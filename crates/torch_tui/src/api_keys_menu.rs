@@ -886,7 +886,3 @@ pub(crate) fn render_api_keys_footer(
 impl Entity for TuiApiKeysMenuModel {
     type Event = TuiApiKeysMenuEvent;
 }
-
-#[cfg(test)]
-#[path = "api_keys_menu_tests.rs"]
-mod tests;

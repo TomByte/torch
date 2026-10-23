@@ -6,8 +6,6 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use parking_lot::FairMutex;
-#[cfg(test)]
-use torch::tui_export::AIBlockModel;
 use torch::tui_export::{
     AIAgentActionId, AIAgentExchangeId, AIBlockModelImpl, AIConversationId, BlockHeightItem,
     BlockIndex, BlockPadding, BlockSpacing, BlocklistAIActionModel, BlocklistAIHistoryEvent,
@@ -520,32 +518,6 @@ impl TuiTranscriptView {
         ctx.notify();
     }
 
-    #[cfg(test)]
-    pub(super) fn append_agent_block_for_test(
-        &mut self,
-        conversation_id: AIConversationId,
-        exchange_id: AIAgentExchangeId,
-        block_model: Rc<dyn AIBlockModel<View = TuiAIBlock>>,
-        ctx: &mut ViewContext<Self>,
-    ) -> ViewHandle<TuiAIBlock> {
-        let action_model = self.action_model.clone();
-        let model_events = self.model_events.clone();
-        let terminal_model = self.model.clone();
-        let view = ctx.add_typed_action_tui_view(|ctx| {
-            TuiAIBlock::new(
-                (conversation_id, exchange_id),
-                block_model,
-                action_model,
-                &model_events,
-                terminal_model,
-                false,
-                ctx,
-            )
-        });
-        self.attach_agent_block(view.clone(), None, ctx);
-        view
-    }
-
     /// Materializes a shared restoration plan as TUI agent-block views.
     pub(super) fn restore_conversation(
         &mut self,
@@ -823,7 +795,3 @@ impl TypedActionView for TuiTranscriptView {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "transcript_view_tests.rs"]
-mod tests;

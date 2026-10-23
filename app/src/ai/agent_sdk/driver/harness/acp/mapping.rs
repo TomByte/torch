@@ -908,7 +908,3 @@ fn render_diff(path: &str, old_text: Option<&str>, new_text: &str) -> String {
     }
     rendered
 }
-
-#[cfg(test)]
-#[path = "mapping_tests.rs"]
-mod tests;

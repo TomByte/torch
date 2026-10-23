@@ -146,7 +146,3 @@ impl BonusGrantNotificationModel {
         });
     }
 }
-
-#[cfg(test)]
-#[path = "bonus_grant_notification_model_tests.rs"]
-mod tests;

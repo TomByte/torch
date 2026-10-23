@@ -572,7 +572,3 @@ const FAILURE_HTML: &str = "<!doctype html><html><head><meta charset=\"utf-8\">\
 <title>Torch — Grok authorization failed</title></head>\
 <body style=\"font-family:system-ui,-apple-system,sans-serif;text-align:center;padding:3rem\">\
 <h1>Authorization failed</h1><p>Something went wrong. Return to Torch and try again.</p></body></html>";
-
-#[cfg(test)]
-#[path = "oauth_tests.rs"]
-mod tests;

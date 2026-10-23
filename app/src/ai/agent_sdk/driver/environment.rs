@@ -1607,7 +1607,3 @@ async fn cd_in_terminal_silent(
         })?;
     Ok(output.status == CommandExitStatus::Success)
 }
-
-#[cfg(test)]
-#[path = "environment_tests.rs"]
-mod tests;

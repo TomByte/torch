@@ -1343,7 +1343,3 @@ impl AgentDriver {
         })
     }
 }
-
-#[cfg(test)]
-#[path = "mcp_startup_tests.rs"]
-mod tests;

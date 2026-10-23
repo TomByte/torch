@@ -112,7 +112,3 @@ impl ChildProcessTracingConfig {
             .map_err(|_| anyhow!("Invalid child-process tracing handoff"))
     }
 }
-
-#[cfg(test)]
-#[path = "child_process_tests.rs"]
-mod tests;

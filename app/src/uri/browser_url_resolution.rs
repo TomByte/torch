@@ -1,10 +1,10 @@
-#[cfg(any(target_family = "wasm", test))]
+#[cfg(target_family = "wasm")]
 use url::Url;
 
-#[cfg(any(target_family = "wasm", test))]
+#[cfg(target_family = "wasm")]
 use super::web_intent_parser::WebIntent;
 
-#[cfg(any(target_family = "wasm", test))]
+#[cfg(target_family = "wasm")]
 const BASE_APP_PATH: &str = "/app";
 
 /// Resolves the URL that belongs on the browser address bar. Pure, so the
@@ -14,7 +14,7 @@ const BASE_APP_PATH: &str = "/app";
 /// A `ConversationView`/`SessionView` URL is never replaced by a non-forced
 /// request: that route anchors the web session viewer and must hold
 /// regardless of which pane inside it is focused.
-#[cfg(any(target_family = "wasm", test))]
+#[cfg(target_family = "wasm")]
 pub(crate) fn resolve_browser_url(
     current_url: Option<Url>,
     requested_url: Option<Url>,
@@ -32,7 +32,7 @@ pub(crate) fn resolve_browser_url(
     requested_url.or_else(|| base_app_url(current_url))
 }
 
-#[cfg(any(target_family = "wasm", test))]
+#[cfg(target_family = "wasm")]
 fn base_app_url(current_url: Option<Url>) -> Option<Url> {
     let mut new_url = current_url?;
     new_url.set_path(BASE_APP_PATH);

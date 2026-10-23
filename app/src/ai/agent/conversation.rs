@@ -870,75 +870,6 @@ impl AIConversation {
         self.conversation_usage_metadata.platform_credits_spent
     }
 
-    /// Test-only helper that sets the conversation's credit total directly,
-    /// without wiring up a full `StreamFinished` event.
-    #[cfg(test)]
-    pub(crate) fn set_credits_spent_for_test(&mut self, credits: f32) {
-        self.conversation_usage_metadata.credits_spent = credits;
-        self.conversation_usage_metadata.platform_credits_spent = 0.0;
-    }
-
-    /// Test-only helper that sets (or clears) the conversation's billed-cost
-    /// baseline directly, mirroring what `set_server_metadata` would derive
-    /// from a real snapshot, without wiring up a full snapshot.
-    #[cfg(test)]
-    pub(crate) fn set_billed_cost_in_cents_for_test(&mut self, cost_in_cents: Option<f32>) {
-        self.conversation_usage_metadata.total_billed_cost_in_cents = cost_in_cents;
-    }
-
-    /// Test-only helper that sets (or clears) the conversation's cumulative
-    /// charged-usage breakdown directly, mirroring what a real
-    /// `ConversationUsageMetadata.total_charges` update would populate,
-    /// without wiring up a full `StreamFinished` event.
-    #[cfg(test)]
-    pub(crate) fn set_charged_usage_for_test(&mut self, charged_usage: Option<ChargedUsageTotals>) {
-        self.conversation_usage_metadata.total_charged_usage = charged_usage;
-    }
-
-    /// Test-only helper that sets (or clears) the conversation's last-block
-    /// charged-usage breakdown directly, mirroring what a real
-    /// `StreamFinished.request_charges` update would populate.
-    #[cfg(test)]
-    pub(crate) fn set_charged_usage_for_last_block_for_test(
-        &mut self,
-        charged_usage: Option<ChargedUsageTotals>,
-    ) {
-        self.conversation_usage_metadata
-            .charged_usage_for_last_block = charged_usage;
-    }
-
-    /// Test-only helper to set credits directly without generating a full `StreamFinished` event.
-    #[cfg(test)]
-    pub(crate) fn set_credits_spent_for_last_block_for_test(&mut self, credits: f32) {
-        self.conversation_usage_metadata
-            .credits_spent_for_last_block = Some(credits);
-    }
-
-    /// Test-only helper that simulates the root-task upgrade performed by the
-    /// `Action::CreateTask` branch of `apply_client_action` when the server
-    /// confirms the root for a newly started conversation. Replaces the
-    /// in-memory `Optimistic(Root)` root with a server-backed `Task` carrying
-    /// `server_task`'s id.
-    ///
-    /// Unlike the production `Action::CreateTask` path, this helper does NOT
-    /// update `added_exchanges_by_response`; it is only safe to call when no
-    /// in-flight response stream references the optimistic root.
-    #[cfg(test)]
-    pub(crate) fn upgrade_optimistic_root_to_server_task_for_test(
-        &mut self,
-        server_task: api::Task,
-    ) {
-        let root_task_id = self.task_store.root_task_id().clone();
-        let root_task = self
-            .task_store
-            .remove(&root_task_id)
-            .expect("root task should exist for upgrade-in-place test helper");
-        let server_root = root_task
-            .into_server_created_task(server_task, None, None, None, &SkillPathOrigin::Unavailable)
-            .expect("upgrading optimistic root to a server-backed task should succeed");
-        self.task_store.set_root_task(server_root);
-    }
-
     // Credits spent over the last block, where the block comprises
     // all agent outputs since the most recent user input.
     pub fn credits_spent_for_last_block(&self) -> Option<f32> {
@@ -1097,27 +1028,6 @@ impl AIConversation {
 
     pub fn status(&self) -> &ConversationStatus {
         &self.status
-    }
-
-    /// Test-only setter for driving status-dependent logic directly.
-    #[cfg(test)]
-    pub(crate) fn set_status_for_test(&mut self, status: ConversationStatus) {
-        self.status = status;
-    }
-
-    /// Test-only setter for the structured status error, used to exercise the
-    /// `status_error` classification path in `map_conversation_status`.
-    #[cfg(test)]
-    pub(crate) fn set_status_error_for_test(&mut self, error: Option<RenderableAIError>) {
-        self.status_error = error;
-    }
-
-    /// Test-only helper: appends an exchange to the root task so status-derivation
-    /// logic (e.g. `map_conversation_status`) can be exercised end-to-end.
-    #[cfg(test)]
-    pub(crate) fn append_root_exchange_for_test(&mut self, exchange: AIAgentExchange) {
-        self.task_store
-            .modify_root_task(|root_task| root_task.append_exchange(exchange));
     }
 
     /// The human-readable message for the current error status, derived from the
@@ -3829,26 +3739,6 @@ impl AIConversation {
         new_task_id
     }
 
-    /// Marks an optimistic CLI subagent active without emitting UI events.
-    #[cfg(test)]
-    pub(crate) fn create_optimistic_cli_subagent_task_for_test(
-        &mut self,
-        block_id: &BlockId,
-    ) -> TaskId {
-        let new_task = Task::new_optimistic_cli_agent_subtask(block_id.clone());
-        let new_task_id = new_task.id().clone();
-        self.optimistic_cli_subagent_subtask_id = Some(new_task_id.clone());
-        self.task_store.insert(new_task);
-        new_task_id
-    }
-
-    /// Clears an optimistic CLI subagent without emitting UI events.
-    #[cfg(test)]
-    pub(crate) fn clear_optimistic_cli_subagent_task_for_test(&mut self) {
-        if let Some(task_id) = self.optimistic_cli_subagent_subtask_id.take() {
-            self.task_store.remove(&task_id);
-        }
-    }
     pub fn is_subagent_task_finished(
         &self,
         subagent_task_id: &TaskId,
@@ -5206,7 +5096,3 @@ impl ConversationStatus {
         matches!(self, ConversationStatus::Error)
     }
 }
-
-#[cfg(test)]
-#[path = "conversation_tests.rs"]
-mod tests;

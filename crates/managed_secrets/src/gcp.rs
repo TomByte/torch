@@ -284,7 +284,3 @@ fn generate_gcp_credential_config(
 
     Ok(cred_config)
 }
-
-#[cfg(test)]
-#[path = "gcp_tests.rs"]
-mod tests;

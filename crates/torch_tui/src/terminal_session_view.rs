@@ -5804,8 +5804,5 @@ impl TerminalSurface for TuiTerminalSessionView {
 }
 
 #[cfg(test)]
-#[path = "handoff/tests.rs"]
-mod handoff_tests;
-#[cfg(test)]
 #[path = "terminal_session_view_tests.rs"]
 mod tests;

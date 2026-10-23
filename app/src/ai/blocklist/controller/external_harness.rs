@@ -347,7 +347,3 @@ impl BlocklistAIController {
         self.apply_response_event(stream_id, conversation_id, event, None, ctx);
     }
 }
-
-#[cfg(test)]
-#[path = "external_harness_tests.rs"]
-mod tests;

@@ -150,7 +150,3 @@ impl Iterator for SentenceParser<'_> {
         Some(mem::take(&mut self.active_token))
     }
 }
-
-#[cfg(test)]
-#[path = "parser_tests.rs"]
-pub mod tests;

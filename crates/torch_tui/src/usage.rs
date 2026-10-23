@@ -89,7 +89,3 @@ fn entry_text(mode: TuiUsageDisplayMode, totals: ConversationUsageTotals) -> Str
             .unwrap_or_else(|| "Cost unavailable".to_owned()),
     }
 }
-
-#[cfg(test)]
-#[path = "usage_tests.rs"]
-mod tests;

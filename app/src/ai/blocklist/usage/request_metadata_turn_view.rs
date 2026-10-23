@@ -74,11 +74,6 @@ impl RequestMetadataTurnView {
         Self::build(data)
     }
 
-    #[cfg(test)]
-    pub(crate) fn new_for_test(data: impl Into<TurnPanelData>) -> Self {
-        Self::build(data.into())
-    }
-
     fn build(data: TurnPanelData) -> Self {
         let (records, legacy_charges) = match data {
             TurnPanelData::Records(records) => (records, None),
@@ -105,11 +100,6 @@ impl RequestMetadataTurnView {
             close_button_mouse_state: MouseStateHandle::default(),
             model_rows,
         }
-    }
-
-    #[cfg(test)]
-    pub(crate) fn records(&self) -> &[RequestMetadataRecord] {
-        &self.summary.records
     }
 
     fn render_header(&self, appearance: &Appearance) -> Box<dyn Element> {
@@ -802,7 +792,3 @@ pub(crate) fn format_web_searches(count: u32) -> String {
 fn format_seconds(ms: i64) -> String {
     format!("{:.1} seconds", ms as f64 / 1000.0)
 }
-
-#[cfg(test)]
-#[path = "request_metadata_turn_view_tests.rs"]
-mod tests;

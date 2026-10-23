@@ -763,7 +763,3 @@ impl TuiHandoffModel {
 impl Entity for TuiHandoffModel {
     type Event = TuiHandoffModelEvent;
 }
-
-#[cfg(test)]
-#[path = "model_tests.rs"]
-mod tests;

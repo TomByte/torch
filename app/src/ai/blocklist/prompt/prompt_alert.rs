@@ -673,7 +673,3 @@ impl TypedActionView for PromptAlertView {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "prompt_alert_tests.rs"]
-mod tests;

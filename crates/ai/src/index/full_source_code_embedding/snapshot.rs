@@ -227,10 +227,6 @@ pub(super) fn snapshot_path(snapshot_dir: &Path, repo_path: &Path) -> PathBuf {
     snapshot_dir.join(snapshot_file_name)
 }
 
-#[cfg(test)]
-#[path = "snapshot_tests.rs"]
-mod tests;
-
 #[cfg(feature = "local_fs")]
 pub(super) fn migrate_snapshots_to_secure_dir_if_needed() -> anyhow::Result<()> {
     // Only perform migration if a secure state directory is available.

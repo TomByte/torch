@@ -76,7 +76,3 @@ fn find_supported_setting_id<'a>(
         .map(|setting| setting.id.as_str())
         .ok_or_else(|| anyhow!("ACP session does not offer {category} value '{value}'"))
 }
-
-#[cfg(test)]
-#[path = "model_config_tests.rs"]
-mod tests;

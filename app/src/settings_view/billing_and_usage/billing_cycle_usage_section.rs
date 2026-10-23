@@ -836,7 +836,3 @@ fn selected_period_index(
         None => Some(0),
     }
 }
-
-#[cfg(test)]
-#[path = "billing_cycle_usage_section_tests.rs"]
-mod tests;

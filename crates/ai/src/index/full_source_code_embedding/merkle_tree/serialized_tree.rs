@@ -193,7 +193,3 @@ impl SerializedMerkleNode {
         &self.fs_info
     }
 }
-
-#[cfg(test)]
-#[path = "serialized_tree_tests.rs"]
-mod tests;

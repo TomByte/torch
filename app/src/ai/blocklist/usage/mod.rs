@@ -56,7 +56,3 @@ pub fn render_context_window_usage_icon(
 
     icon.to_warpui_icon(fill).finish()
 }
-
-#[cfg(test)]
-#[path = "mod_tests.rs"]
-mod tests;

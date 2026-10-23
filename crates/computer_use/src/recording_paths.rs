@@ -24,7 +24,3 @@ pub(super) fn new_recording_path() -> Result<(PathBuf, PathBuf, File), Recording
     })?;
     Ok((path, log_path, log_file))
 }
-
-#[cfg(test)]
-#[path = "recording_paths_tests.rs"]
-mod tests;

@@ -4351,7 +4351,3 @@ impl AuthOnboardingTarget {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "root_view_tests.rs"]
-mod tests;

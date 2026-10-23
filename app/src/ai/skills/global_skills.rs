@@ -106,7 +106,3 @@ fn matching_simple_skill_path(
     });
     matches.into_iter().map(|skill| skill.path.clone()).next()
 }
-
-#[cfg(test)]
-#[path = "global_skills_tests.rs"]
-mod tests;

@@ -246,7 +246,3 @@ impl SearchItem for PromptSearchItem {
         format!("Prompt: {}", self.name)
     }
 }
-
-#[cfg(test)]
-#[path = "data_source_tests.rs"]
-mod tests;

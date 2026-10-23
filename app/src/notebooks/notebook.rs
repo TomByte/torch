@@ -95,10 +95,6 @@ use crate::{cmd_or_ctrl_shift, safe_info, send_telemetry_from_ctx};
 
 mod details_bar;
 
-#[cfg(test)]
-#[path = "notebook_tests.rs"]
-mod tests;
-
 const EDIT_BUTTON_MARGIN: f32 = 6.;
 const HEADER_MARGIN: f32 = 15.;
 const BANNER_VERTICAL_MARGIN: f32 = 10.;

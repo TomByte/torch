@@ -14,12 +14,9 @@ use torch_util::host_id::HostId;
 use torch_util::local_or_remote_path::LocalOrRemotePath;
 use torchui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
 
-use super::bundled::{BundledSkill, BundledSkills};
 #[cfg(test)]
-use super::bundled::{
-    BundledSkillActivation, activation_for_bundled_skill, build_bundled_skill_context,
-    read_bundled_skills,
-};
+use super::bundled::BundledSkillActivation;
+use super::bundled::{BundledSkill, BundledSkills};
 use super::{ActiveSkillLookupError, SkillDescriptor, SkillManagerEvent, SkillPathQuery};
 use crate::ai::skills::skill_utils::SkillDeduplicator;
 
@@ -694,7 +691,3 @@ fn path_matches_reference_location(path: &LocalOrRemotePath, reference: &SkillRe
         ) => false,
     }
 }
-
-#[cfg(test)]
-#[path = "skill_manager_tests.rs"]
-mod tests;

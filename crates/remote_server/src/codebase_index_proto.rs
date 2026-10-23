@@ -113,7 +113,3 @@ fn proto_to_state(state: proto::CodebaseIndexStatusState) -> Option<RemoteCodeba
         proto::CodebaseIndexStatusState::Unspecified => None,
     }
 }
-
-#[cfg(test)]
-#[path = "codebase_index_proto_tests.rs"]
-mod tests;

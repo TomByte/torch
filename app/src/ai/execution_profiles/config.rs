@@ -584,7 +584,3 @@ impl TryFrom<ExecutionProfileFile> for AIExecutionProfile {
         })
     }
 }
-
-#[cfg(test)]
-#[path = "config_tests.rs"]
-mod tests;

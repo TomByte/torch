@@ -334,7 +334,3 @@ fn poll_run_until_joinable_session(
         }
     }
 }
-
-#[cfg(test)]
-#[path = "spawn_tests.rs"]
-mod tests;

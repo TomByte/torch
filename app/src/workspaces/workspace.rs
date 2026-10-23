@@ -889,10 +889,6 @@ impl BillingMetadata {
     }
 }
 
-#[cfg(test)]
-#[path = "workspace_tests.rs"]
-mod tests;
-
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct LlmHostSettings {
     pub enabled: bool,

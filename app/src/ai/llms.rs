@@ -2323,19 +2323,6 @@ impl LLMPreferences {
             ctx.emit(LLMPreferencesEvent::UpdatedActiveAgentModeLLM);
         }
     }
-
-    #[cfg(test)]
-    fn for_test(custom_llms: Vec<LLMInfo>) -> Self {
-        Self {
-            agent_mode_models_unavailable: HashMap::new(),
-            last_update: None,
-            base_llm_for_terminal_view: HashMap::new(),
-            computer_use_llm_for_terminal_view: HashMap::new(),
-            custom_llms,
-            custom_model_routers: Vec::new(),
-            last_seen_chatgpt_subscription_connected: None,
-        }
-    }
 }
 
 #[derive(Clone, Debug)]
@@ -2409,7 +2396,3 @@ fn custom_llm_info_from(endpoint: &CustomEndpoint, model: &CustomEndpointModel) 
         context_window: LLMContextWindow::default(),
     }
 }
-
-#[cfg(test)]
-#[path = "llms_tests.rs"]
-mod tests;

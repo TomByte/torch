@@ -29,9 +29,6 @@ pub(super) mod shared_handlers;
 pub mod sharer;
 pub mod viewer;
 
-#[cfg(test)]
-pub use tests::MAX_BYTES_SHAREABLE;
-
 /// The toast copy when copying a shared session link.
 pub const COPY_LINK_TEXT: &str = "Sharing link copied";
 
@@ -296,7 +293,7 @@ pub fn max_session_size(window_id: WindowId, app: &AppContext) -> Byte {
 
 #[cfg(test)]
 pub fn max_session_size(_window_id: WindowId, _app: &AppContext) -> Byte {
-    Byte::from_u64(MAX_BYTES_SHAREABLE as u64)
+    Byte::from_u64(5000)
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq)]
@@ -452,7 +449,3 @@ pub(crate) fn decode_scrollback(scrollback: &Scrollback) -> Vec<SerializedBlock>
         .filter_map(|block| serde_json::from_slice(&block.raw).ok())
         .collect()
 }
-
-#[cfg(test)]
-#[path = "mod_tests.rs"]
-mod tests;

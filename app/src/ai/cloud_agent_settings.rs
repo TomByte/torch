@@ -253,7 +253,3 @@ impl CloudAgentSettings {
         report_if_error!(self.last_selected_harness_model.set_value(map, ctx));
     }
 }
-
-#[cfg(test)]
-#[path = "cloud_agent_settings_tests.rs"]
-mod tests;

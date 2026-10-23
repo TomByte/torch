@@ -208,7 +208,3 @@ pub struct SessionSharingAclSpec {
     pub email: Option<String>,
     pub access: SessionSharingAccessLevel,
 }
-
-#[cfg(test)]
-#[path = "execution_config_tests.rs"]
-mod tests;

@@ -856,14 +856,6 @@ impl ConversationDetailsPanel {
         );
     }
 
-    #[cfg(test)]
-    pub(crate) fn task_display_status_for_test(&self) -> Option<AgentRunDisplayStatus> {
-        match &self.data.mode {
-            PanelMode::Task { display_status, .. } => display_status.clone(),
-            PanelMode::Conversation { .. } => None,
-        }
-    }
-
     #[cfg(not(target_family = "wasm"))]
     fn local_continuation_info(
         &self,
@@ -2566,6 +2558,3 @@ impl TypedActionView for ConversationDetailsPanel {
         }
     }
 }
-#[cfg(test)]
-#[path = "conversation_details_panel_tests.rs"]
-mod tests;

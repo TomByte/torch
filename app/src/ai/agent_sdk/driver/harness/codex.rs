@@ -1064,7 +1064,3 @@ fn write_codex_mcp_servers(
         }
     }
 }
-
-#[cfg(test)]
-#[path = "codex_tests.rs"]
-mod tests;

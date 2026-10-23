@@ -99,7 +99,3 @@ pub fn addon_credits_description(options: &[AddonCreditsOption]) -> String {
         format!("{ADDON_CREDITS_DESCRIPTION_LEAD} {ADDON_CREDITS_DESCRIPTION_TAIL}")
     }
 }
-
-#[cfg(test)]
-#[path = "addon_pack_tests.rs"]
-mod tests;

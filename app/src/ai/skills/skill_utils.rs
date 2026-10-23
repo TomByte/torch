@@ -90,26 +90,6 @@ impl SkillDeduplicator {
     }
 }
 
-/// Deduplicates paths from one indexed catalog when identical content is installed under the
-/// same directory across multiple providers, keeping the single best representative per
-/// [`SKILL_PROVIDER_DEFINITIONS`] (index 0 = highest priority).
-///
-/// Two skills are considered duplicates only when they share the same owning directory
-/// **and** identical content — which is the common case when a tool like `npx skills`
-/// symlinks the same skill under `~/.agents/skills/`, `~/.warp/skills/`, `~/.claude/skills/`, etc.
-///
-/// Each element of `skill_paths` is a `(dir_path, skill_file_path)` tuple where
-/// `dir_path` is the directory that owns the skill.
-#[cfg(test)]
-pub(crate) fn unique_skills(
-    skill_paths: &[(LocalOrRemotePath, LocalOrRemotePath)],
-    skills_by_path: &HashMap<LocalOrRemotePath, ParsedSkill>,
-) -> Vec<SkillDescriptor> {
-    let mut deduplicator = SkillDeduplicator::default();
-    deduplicator.extend_paths(skill_paths, skills_by_path);
-    deduplicator.into_descriptors()
-}
-
 /// Returns the list of skills if they have changed since the last time we sent them to the server.
 /// Skills are always included except when the current list matches the last list sent.
 pub fn list_skills_if_changed(
@@ -206,7 +186,3 @@ pub fn skill_path_from_location(location: &LocalOrRemotePath) -> Option<LocalOrR
     }
     None
 }
-
-#[cfg(test)]
-#[path = "skill_utils_tests.rs"]
-mod tests;

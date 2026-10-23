@@ -587,11 +587,6 @@ impl TuiOptionSelector {
             .flatten()
     }
 
-    #[cfg(test)]
-    pub(crate) fn search_field_for_test(&self) -> Option<ViewHandle<TuiEditorView>> {
-        self.search_field.clone()
-    }
-
     /// Moves focus and highlight to an item without confirming it.
     pub(crate) fn select_item_without_confirm(
         &mut self,
@@ -620,19 +615,6 @@ impl TuiOptionSelector {
                 .trim()
                 .to_owned()
         })
-    }
-
-    #[cfg(test)]
-    pub(crate) fn set_active_custom_text_for_test(
-        &mut self,
-        text: &str,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        if self.custom_text.is_editing() {
-            self.custom_text
-                .editor
-                .update(ctx, |editor, ctx| editor.set_text(text, ctx));
-        }
     }
 
     /// Refreshes the snapshot in place after a live catalog change,

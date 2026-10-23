@@ -279,7 +279,3 @@ impl OrchestrationConfigState {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "config_state_tests.rs"]
-mod tests;

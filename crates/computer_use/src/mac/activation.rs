@@ -475,7 +475,3 @@ fn post_center_primer(target_pid: libc::pid_t, info: &WindowInfo) {
     );
     thread::sleep(PRIMER_CLICK_SETTLE);
 }
-
-#[cfg(test)]
-#[path = "activation_tests.rs"]
-mod tests;

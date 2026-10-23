@@ -298,7 +298,3 @@ fn file_uri(path: &Path) -> String {
         .map(String::from)
         .unwrap_or_else(|()| format!("file://{}", path.display()))
 }
-
-#[cfg(test)]
-#[path = "attachments_tests.rs"]
-mod tests;

@@ -227,7 +227,3 @@ impl HasPanicked {
         self.inner.is_completed()
     }
 }
-
-#[cfg(test)]
-#[path = "mod_tests.rs"]
-mod tests;

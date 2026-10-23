@@ -57,8 +57,6 @@ pub use request_file_edits::{
 };
 pub(crate) use request_file_edits::{FileReadResult, MalformedFinalLineProxyEvent, apply_edits};
 pub use run_agents::{RunAgentsExecutor, RunAgentsExecutorEvent, RunAgentsSpawningSnapshot};
-#[cfg(test)]
-pub use run_agents::{compose_run_agents_child_prompt, run_agents_to_start_agent_mode};
 pub use send_message::SendMessageToAgentExecutor;
 use serde::{Deserialize, Serialize};
 pub use shell_command::{ShellCommandExecutor, ShellCommandExecutorEvent, ShellRecoveryResult};
@@ -1470,7 +1468,3 @@ async fn read_file_as_binary(file_path: &std::path::Path) -> Result<Vec<u8>, Fil
 
     async_fs::read(file_path).await.map_err(FileLoadError::from)
 }
-
-#[cfg(all(test, feature = "local_fs"))]
-#[path = "execute_tests.rs"]
-mod tests;

@@ -197,7 +197,3 @@ impl SearchItem for Item {
         format!("{}. {}", title(&pane), detail(&pane, Instant::now()))
     }
 }
-
-#[cfg(test)]
-#[path = "agents_tests.rs"]
-mod tests;

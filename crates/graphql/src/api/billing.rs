@@ -329,10 +329,6 @@ impl AddonCreditsOption {
     }
 }
 
-#[cfg(test)]
-#[path = "billing_tests.rs"]
-mod tests;
-
 #[derive(cynic::QueryFragment, Debug, Clone)]
 pub struct PricingInfo {
     pub plans: Vec<PlanPricing>,

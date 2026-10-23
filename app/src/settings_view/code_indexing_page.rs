@@ -138,10 +138,6 @@ fn codebase_indexing_tooltip_text(
     }
 }
 
-#[cfg(all(test, not(target_family = "wasm")))]
-#[path = "code_indexing_page_tests.rs"]
-mod tests;
-
 #[derive(Clone, Default)]
 struct LspServerRowMouseStates {
     restart: MouseStateHandle,

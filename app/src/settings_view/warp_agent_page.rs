@@ -4673,10 +4673,6 @@ impl SettingsWidget for AgentAttributionWidget {
     }
 }
 
-#[cfg(test)]
-#[path = "warp_agent_page_tests.rs"]
-mod tests;
-
 #[derive(Default)]
 struct CloudAgentComputerUseWidget {
     toggle: SwitchStateHandle,

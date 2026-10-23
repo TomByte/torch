@@ -984,7 +984,3 @@ fn parse_single_file_grep_output(output: &str) -> Vec<usize> {
 impl Entity for GrepExecutor {
     type Event = ();
 }
-
-#[cfg(test)]
-#[path = "grep_tests.rs"]
-mod tests;

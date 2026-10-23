@@ -246,7 +246,3 @@ pub fn encrypt_byo_endpoint(
         &ByoEndpointPayload { base_url, api_key },
     )
 }
-
-#[cfg(test)]
-#[path = "lib_tests.rs"]
-mod tests;

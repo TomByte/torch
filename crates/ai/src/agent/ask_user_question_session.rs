@@ -544,7 +544,3 @@ impl AskUserQuestionSession {
 fn ask_user_question_auto_advance_enabled(is_multiselect: bool, is_last_question: bool) -> bool {
     is_last_question || !is_multiselect
 }
-
-#[cfg(test)]
-#[path = "ask_user_question_session_tests.rs"]
-mod tests;

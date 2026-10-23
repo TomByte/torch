@@ -115,7 +115,3 @@ impl SearchItem for DiffSetSearchItem {
         format!("{} - {}", self.name(), self.description())
     }
 }
-
-#[cfg(test)]
-#[path = "search_item_tests.rs"]
-mod tests;

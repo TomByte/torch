@@ -559,10 +559,6 @@ impl SettingsPageMeta for MCPServersSettingsPageView {
     }
 }
 
-#[cfg(test)]
-#[path = "mcp_servers_page_tests.rs"]
-mod tests;
-
 #[derive(Default)]
 pub struct MCPServersSettingsWidget {
     // No state yet

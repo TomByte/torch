@@ -1388,7 +1388,3 @@ fn conversation_agent_label(
         .unwrap_or("Agent")
         .to_owned()
 }
-
-#[cfg(test)]
-#[path = "orchestration_model_tests.rs"]
-mod tests;

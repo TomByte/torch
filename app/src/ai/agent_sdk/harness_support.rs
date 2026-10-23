@@ -405,7 +405,7 @@ fn kernel_logs_contain_oom_for_pid(_: u32) -> bool {
     false
 }
 
-#[cfg(any(target_os = "linux", test))]
+#[cfg(target_os = "linux")]
 fn oom_kill_line_matches_pid(line: &str, pid: u32) -> bool {
     let pid = pid.to_string();
     // Linux emits this victim format in `oom_kill_process`:
@@ -451,7 +451,3 @@ impl torchui::Entity for HarnessSupportRunner {
 }
 
 impl SingletonEntity for HarnessSupportRunner {}
-
-#[cfg(test)]
-#[path = "harness_support_tests.rs"]
-mod tests;

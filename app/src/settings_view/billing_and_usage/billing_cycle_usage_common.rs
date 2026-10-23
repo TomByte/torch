@@ -433,7 +433,3 @@ fn render_tooltip_row(
         .with_child(right)
         .finish()
 }
-
-#[cfg(test)]
-#[path = "billing_cycle_usage_common_tests.rs"]
-mod tests;

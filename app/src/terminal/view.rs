@@ -10,9 +10,6 @@ pub mod init;
 pub mod inline_banner;
 pub mod load_ai_conversation;
 pub(crate) mod queued_prompts_panel;
-#[cfg(test)]
-#[path = "view/queued_prompts_tests.rs"]
-mod queued_prompts_tests;
 use ai::agent::action::InsertReviewComment;
 pub use load_ai_conversation::ConversationRestorationInNewPaneType;
 // TODO(advait): if we align on prompt suggestions banner in Input, move code out of inline_banner mod.
@@ -8502,8 +8499,7 @@ impl TerminalView {
 
     /// Whether the WASM workspace-level conversation details panel should be shown for this
     /// terminal view. This is the authoritative predicate: `Workspace::should_show_conversation_details_panel`
-    /// delegates here. The `#[cfg(any(test, target_arch = "wasm32"))]` gate allows this logic
-    /// to be exercised by host-target unit tests even though the WASM render path is compiled out.
+    /// delegates here.
     ///
     /// Note: the pane-header `(i)` button uses a narrower gate
     /// ([`Self::should_show_wasm_pane_header_details_button`]) that additionally excludes shared
@@ -8515,7 +8511,7 @@ impl TerminalView {
     /// - Restored ambient cloud tasks
     /// - Conversation transcript viewers
     /// - Shared sessions with an active conversation
-    #[cfg(any(test, target_arch = "wasm32"))]
+    #[cfg(target_arch = "wasm32")]
     pub(crate) fn should_show_wasm_conversation_details_panel(&self, app: &AppContext) -> bool {
         if self.ambient_agent_task_id_for_details_panel(app).is_some() {
             return true;
@@ -8537,10 +8533,8 @@ impl TerminalView {
     /// Narrower than [`Self::should_show_wasm_conversation_details_panel`]: the pane-header button
     /// appears only on ambient-task panes that lack a tab-bar `(i)` affordance, so shared sessions
     /// and conversation-transcript viewers — which already show the simplified WASM tab-bar `(i)`
-    /// via `get_simplified_wasm_tab_bar_content` — are excluded to avoid a duplicate button. The
-    /// `#[cfg(any(test, target_arch = "wasm32"))]` gate lets host-target unit tests exercise this
-    /// even though the render path is compiled out on the host.
-    #[cfg(any(test, target_arch = "wasm32"))]
+    /// via `get_simplified_wasm_tab_bar_content` — are excluded to avoid a duplicate button.
+    #[cfg(target_arch = "wasm32")]
     pub(crate) fn should_show_wasm_pane_header_details_button(&self, app: &AppContext) -> bool {
         let model = self.model.lock();
         self.ambient_agent_task_id_for_details_panel_from_model(&model, app)
@@ -8569,27 +8563,6 @@ impl TerminalView {
         }
         self.orchestration_child_live_unavailable = unavailable;
         ctx.notify();
-    }
-
-    #[cfg(test)]
-    pub(crate) fn is_orchestration_child_live_unavailable_for_test(&self) -> bool {
-        self.orchestration_child_live_unavailable
-    }
-    #[cfg(test)]
-    pub(crate) fn has_agent_view_zero_state_for_test(&self) -> bool {
-        self.rich_content_views
-            .iter()
-            .any(|view| view.is_agent_view_zero_state())
-    }
-
-    #[cfg(test)]
-    pub(crate) fn is_initial_conversation_details_panel_auto_open_suppressed_for_test(
-        &self,
-    ) -> bool {
-        matches!(
-            self.conversation_details_panel_auto_open_policy,
-            ConversationDetailsPanelAutoOpenPolicy::DefaultClosed
-        )
     }
 
     fn maybe_insert_tombstone_for_non_running_shared_ambient_task(

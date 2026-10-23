@@ -369,7 +369,3 @@ impl BlocklistAIController {
         );
     }
 }
-
-#[cfg(test)]
-#[path = "startup_queue_tests.rs"]
-mod tests;

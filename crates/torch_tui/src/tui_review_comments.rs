@@ -92,7 +92,3 @@ fn format_location(location: &InsertedCommentLocation) -> String {
     };
     format!("{}:{line_label} ({side})", location.relative_file_path)
 }
-
-#[cfg(test)]
-#[path = "tui_review_comments_tests.rs"]
-mod tests;

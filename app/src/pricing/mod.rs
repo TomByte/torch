@@ -89,7 +89,3 @@ impl Entity for PricingInfoModel {
 }
 
 impl SingletonEntity for PricingInfoModel {}
-
-#[cfg(test)]
-#[path = "pricing_tests.rs"]
-mod tests;

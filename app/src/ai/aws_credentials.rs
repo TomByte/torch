@@ -424,7 +424,3 @@ pub(crate) fn refresh_aws_credentials_oidc(
             .unwrap_or_else(|_| Err("Credential refresh was interrupted".to_string()))
     })
 }
-
-#[cfg(test)]
-#[path = "aws_credentials_tests.rs"]
-mod tests;

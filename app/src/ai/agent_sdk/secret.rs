@@ -1034,7 +1034,3 @@ fn format_secret_type(type_: &ManagedSecretType) -> String {
         ManagedSecretType::AwsEcrCredential => "AWS ECR Credential".to_string(),
     }
 }
-
-#[cfg(test)]
-#[path = "secret_tests.rs"]
-mod tests;

@@ -696,7 +696,3 @@ impl AsyncWrite for BridgeWriter {
         Pin::new(&mut &*self.0).poll_close(cx)
     }
 }
-
-#[cfg(test)]
-#[path = "bridge_tests.rs"]
-mod tests;

@@ -1289,7 +1289,3 @@ impl Drop for LrcMonitoringGuard {
         self.monitor.disarm();
     }
 }
-
-#[cfg(test)]
-#[path = "shell_command_tests.rs"]
-mod tests;

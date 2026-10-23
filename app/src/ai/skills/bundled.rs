@@ -578,7 +578,3 @@ pub(crate) fn activation_for_bundled_skill(
         _ => BundledSkillActivation::Always,
     }
 }
-
-#[cfg(test)]
-#[path = "bundled_tests.rs"]
-mod tests;

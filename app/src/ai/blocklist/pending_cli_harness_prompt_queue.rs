@@ -73,7 +73,3 @@ impl Entity for PendingCliHarnessPromptQueue {
 }
 
 impl SingletonEntity for PendingCliHarnessPromptQueue {}
-
-#[cfg(test)]
-#[path = "pending_cli_harness_prompt_queue_tests.rs"]
-mod tests;

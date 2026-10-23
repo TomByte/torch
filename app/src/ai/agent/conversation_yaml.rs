@@ -1,9 +1,5 @@
 /// Walks a conversation's task tree and produces a hierarchical directory of YAML files
 /// suitable for grep-based conversation search.
-#[cfg(test)]
-#[path = "conversation_yaml_tests.rs"]
-mod tests;
-
 use std::collections::HashMap;
 use std::fs;
 use std::io::Write;

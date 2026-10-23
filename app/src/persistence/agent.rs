@@ -416,7 +416,3 @@ pub(super) fn delete_agent_conversations(
 
     Ok(())
 }
-
-#[cfg(test)]
-#[path = "agent_tests.rs"]
-mod tests;

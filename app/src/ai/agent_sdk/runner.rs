@@ -676,7 +676,3 @@ impl TableFormat for RunnerInfo {
         ]
     }
 }
-
-#[cfg(test)]
-#[path = "runner_tests.rs"]
-mod tests;

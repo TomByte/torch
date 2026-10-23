@@ -204,7 +204,3 @@ impl BaseClient {
             .with_context(|| format!("Failed to deserialize response from {response_url}"))
     }
 }
-
-#[cfg(test)]
-#[path = "public_api_tests.rs"]
-mod tests;

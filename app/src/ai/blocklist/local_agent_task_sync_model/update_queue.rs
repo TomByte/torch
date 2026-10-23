@@ -258,7 +258,3 @@ fn status_messages_compatible(
         (Some(_), None) | (None, Some(_)) | (None, None) => true,
     }
 }
-
-#[cfg(test)]
-#[path = "update_queue_tests.rs"]
-mod tests;

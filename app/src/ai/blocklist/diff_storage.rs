@@ -274,7 +274,3 @@ fn clamp_to_file_context_range_start(file_location: &mut FileLocations) {
         range.end = range.end.max(range.start);
     }
 }
-
-#[cfg(all(test, not(target_family = "wasm")))]
-#[path = "diff_storage_tests.rs"]
-mod tests;

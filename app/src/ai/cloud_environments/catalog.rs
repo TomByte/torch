@@ -199,7 +199,3 @@ fn sort_environments_for_orchestration_default(environments: &mut [CloudAmbientA
             })
     });
 }
-
-#[cfg(test)]
-#[path = "catalog_tests.rs"]
-mod tests;

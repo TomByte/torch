@@ -239,35 +239,7 @@ pub struct RulesDelta {
     pub deleted_rules: Vec<PathBuf>,
 }
 
-impl RulesDelta {
-    /// Merge another delta into this one, preserving the ordering of operations.
-    ///
-    /// When the same path appears across sequential deltas the *last* operation
-    /// wins. For example:
-    ///   - (add A, delete A) → net effect is **delete**
-    ///   - (delete A, add A) → net effect is **add**
-    ///
-    /// This is important because consumers (e.g. persistence) apply the delta
-    /// incrementally; a symmetric "cancel both sides" approach would silently
-    /// drop real state changes.
-    #[cfg(test)]
-    fn merge(&mut self, other: RulesDelta) {
-        // Each newly-discovered path supersedes any prior deletion or earlier
-        // discovery of the same path.
-        for discovered in &other.discovered_rules {
-            self.deleted_rules.retain(|p| *p != discovered.path);
-            self.discovered_rules.retain(|r| r.path != discovered.path);
-        }
-        // Each newly-deleted path supersedes any prior discovery or earlier
-        // deletion of the same path.
-        for deleted in &other.deleted_rules {
-            self.discovered_rules.retain(|r| r.path != *deleted);
-            self.deleted_rules.retain(|p| *p != *deleted);
-        }
-        self.discovered_rules.extend(other.discovered_rules);
-        self.deleted_rules.extend(other.deleted_rules);
-    }
-}
+impl RulesDelta {}
 
 #[derive(Default, Debug)]
 pub struct GlobalRulesDelta {
@@ -709,7 +681,3 @@ impl Entity for ProjectContextModel {
 }
 
 impl SingletonEntity for ProjectContextModel {}
-
-#[cfg(test)]
-#[path = "model_tests.rs"]
-mod tests;

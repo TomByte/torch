@@ -172,7 +172,3 @@ pub fn fragments_to_context_locations<'a>(
     result.extend(whole_files.into_iter().map(CodeContextLocation::WholeFile));
     result
 }
-
-#[cfg(test)]
-#[path = "search_shaping_tests.rs"]
-mod tests;

@@ -35,7 +35,3 @@ pub(crate) fn exchanges_for_blocklist(conversation: &AIConversation) -> Vec<&AIA
         .filter(|exchange| !conversation.is_exchange_hidden(exchange.id))
         .collect()
 }
-
-#[cfg(test)]
-#[path = "blocklist_filter_tests.rs"]
-mod tests;

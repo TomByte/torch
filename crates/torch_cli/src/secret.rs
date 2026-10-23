@@ -286,7 +286,3 @@ impl fmt::Display for SecretType {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "secret_tests.rs"]
-mod tests;

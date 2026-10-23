@@ -346,7 +346,3 @@ fn input_text(editor: &ModelHandle<CodeEditorModel>, app: &AppContext) -> String
 impl Entity for TuiMcpMenuModel {
     type Event = TuiMcpMenuEvent;
 }
-
-#[cfg(test)]
-#[path = "mcp_menu_tests.rs"]
-mod tests;

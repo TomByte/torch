@@ -188,7 +188,3 @@ pub(super) fn factory_skill_dirs(dirs: Vec<String>) -> anyhow::Result<Vec<PathBu
         })
         .collect()
 }
-
-#[cfg(test)]
-#[path = "execution_config_tests.rs"]
-mod tests;

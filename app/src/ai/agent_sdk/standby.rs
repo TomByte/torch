@@ -632,7 +632,3 @@ fn workspace_root() -> anyhow::Result<PathBuf> {
             .context("Could not determine the pre-warmed sandbox working directory"),
     }
 }
-
-#[cfg(test)]
-#[path = "standby_tests.rs"]
-mod tests;

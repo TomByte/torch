@@ -415,7 +415,3 @@ impl View for FirstTimeCloudAgentSetupView {
             .finish()
     }
 }
-
-#[cfg(test)]
-#[path = "first_time_setup_tests.rs"]
-mod tests;

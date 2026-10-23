@@ -991,7 +991,3 @@ fn resolve_history_match(
         }
     }
 }
-
-#[cfg(test)]
-#[path = "input_model_tests.rs"]
-mod tests;

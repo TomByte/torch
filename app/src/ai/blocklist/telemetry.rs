@@ -617,7 +617,3 @@ impl TelemetryEventDesc for BlocklistOrchestrationTelemetryEventDiscriminants {
 }
 
 torch_core::register_telemetry_event!(BlocklistOrchestrationTelemetryEvent);
-
-#[cfg(test)]
-#[path = "telemetry_tests.rs"]
-mod tests;

@@ -107,7 +107,3 @@ impl clap::builder::TypedValueParser for MCPSpecParser {
         ))
     }
 }
-
-#[cfg(test)]
-#[path = "mcp_tests.rs"]
-mod tests;

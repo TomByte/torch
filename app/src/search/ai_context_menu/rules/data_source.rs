@@ -104,7 +104,3 @@ impl SyncDataSource for RulesDataSource {
 impl Entity for RulesDataSource {
     type Event = ();
 }
-
-#[cfg(test)]
-#[path = "data_source_tests.rs"]
-mod tests;

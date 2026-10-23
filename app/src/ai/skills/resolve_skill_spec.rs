@@ -571,7 +571,3 @@ fn parse_org_from_git_url(url: &str) -> Option<String> {
 
     None
 }
-
-#[cfg(test)]
-#[path = "resolve_skill_spec_tests.rs"]
-mod tests;

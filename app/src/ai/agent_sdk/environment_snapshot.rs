@@ -135,7 +135,3 @@ async fn publish_with_retry(
 
     unreachable!("environment snapshot reporter always attempts at least once")
 }
-
-#[cfg(test)]
-#[path = "environment_snapshot_tests.rs"]
-mod tests;

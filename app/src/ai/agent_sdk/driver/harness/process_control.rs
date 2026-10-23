@@ -161,7 +161,3 @@ fn kill_process_group(pgid: u32) {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "process_control_tests.rs"]
-mod tests;

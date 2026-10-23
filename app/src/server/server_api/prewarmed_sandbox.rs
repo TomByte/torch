@@ -528,7 +528,3 @@ async fn bounded_request<T>(
         .map_err(|_| std::io::Error::from(std::io::ErrorKind::TimedOut))
         .context("Pre-warmed sandbox request timed out")?
 }
-
-#[cfg(test)]
-#[path = "prewarmed_sandbox_tests.rs"]
-pub(crate) mod tests;

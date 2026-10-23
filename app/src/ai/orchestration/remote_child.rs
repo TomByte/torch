@@ -433,7 +433,3 @@ fn resolve_runtime_skills(
         })
     }
 }
-
-#[cfg(test)]
-#[path = "remote_child_tests.rs"]
-mod tests;

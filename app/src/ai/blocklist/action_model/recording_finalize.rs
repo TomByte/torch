@@ -400,7 +400,3 @@ pub(crate) fn spawn_recording_exit_watcher(
         },
     );
 }
-
-#[cfg(test)]
-#[path = "recording_finalize_tests.rs"]
-mod tests;

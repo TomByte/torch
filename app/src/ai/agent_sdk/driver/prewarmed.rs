@@ -282,7 +282,3 @@ impl AgentDriver {
         spawner.spawn(move |me, ctx| me.run(task, ctx)).await?.await
     }
 }
-
-#[cfg(test)]
-#[path = "prewarmed_tests.rs"]
-mod tests;

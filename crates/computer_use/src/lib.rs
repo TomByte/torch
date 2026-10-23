@@ -546,10 +546,6 @@ pub enum RecordingCompletionStatus {
     StoppedEarly,
 }
 
-#[cfg(test)]
-#[path = "recording_tests.rs"]
-mod recording_tests;
-
 /// A key that can be pressed or released.
 #[derive(Debug, Clone, Eq, Hash, PartialEq, Serialize, Deserialize)]
 pub enum Key {
@@ -952,8 +948,3 @@ mod option_vector2i {
         Ok(Option::<Wrapper>::deserialize(deserializer)?.map(|wrapper| wrapper.0))
     }
 }
-
-#[cfg(test)]
-mod action_serde_tests;
-#[cfg(test)]
-mod pointer_session_tests;

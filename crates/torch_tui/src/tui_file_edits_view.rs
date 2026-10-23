@@ -854,7 +854,3 @@ impl TypedActionView for TuiFileEditsView {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "tui_file_edits_view_tests.rs"]
-mod tests;

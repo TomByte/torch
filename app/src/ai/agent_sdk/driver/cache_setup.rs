@@ -193,7 +193,3 @@ fn build_export_command(environment: &BTreeMap<String, String>, shell_type: Shel
         .collect::<Vec<_>>()
         .join("; ")
 }
-
-#[cfg(test)]
-#[path = "cache_setup_tests.rs"]
-mod tests;

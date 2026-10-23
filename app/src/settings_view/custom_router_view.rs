@@ -430,7 +430,3 @@ pub fn render_router_error_card(
     .with_vertical_padding(10.)
     .finish()
 }
-
-#[cfg(all(test, feature = "local_fs"))]
-#[path = "custom_router_view_tests.rs"]
-mod tests;

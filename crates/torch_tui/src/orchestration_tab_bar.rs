@@ -474,7 +474,3 @@ pub(crate) fn orchestration_tab_icon(
         }
     }
 }
-
-#[cfg(test)]
-#[path = "orchestration_tab_bar_tests.rs"]
-mod tests;

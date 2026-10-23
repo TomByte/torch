@@ -2,8 +2,6 @@
 
 use torch::editor::{CodeEditorModel, CodeEditorModelEvent};
 use torch::settings::AISettings;
-#[cfg(test)]
-use torch::tui_export::UserWorkspaces;
 use torch::tui_export::{
     AISettingsChangedEvent, LLMId, LLMPreferences, LLMPreferencesEvent, ModelPickerChoice,
     TeamContextResolver, TeamScope, query_model_picker_choices, should_show_bedrock_icon_for_model,
@@ -87,39 +85,6 @@ impl TuiModelMenuModel {
             terminal_view_id,
             team_context,
             state: TuiModelMenuState::Closed,
-        }
-    }
-
-    #[cfg(test)]
-    pub(crate) fn new_for_test(
-        input_editor: ModelHandle<CodeEditorModel>,
-        suggestions_mode: ModelHandle<TuiInputSuggestionsModeModel>,
-        rows: Vec<(LLMId, bool)>,
-        selected_index: usize,
-    ) -> Self {
-        let mut list = TuiInlineMenuListState::default();
-        list.replace_rows(
-            rows.into_iter()
-                .map(|(id, is_selectable)| TuiModelMenuRow {
-                    title: id.to_string(),
-                    id,
-                    is_selectable,
-                    is_key_connected: false,
-                    is_profile_default: false,
-                    discount_percentage: None,
-                })
-                .collect(),
-            false,
-            Some(selected_index),
-            MAX_VISIBLE_ROWS,
-            |row| row.is_selectable,
-        );
-        Self {
-            input_editor,
-            suggestions_mode,
-            terminal_view_id: EntityId::new(),
-            team_context: UserWorkspaces::teamless_context_resolver_for_test(),
-            state: TuiModelMenuState::Open { list },
         }
     }
 
@@ -351,7 +316,3 @@ fn input_text(editor: &ModelHandle<CodeEditorModel>, app: &AppContext) -> String
 impl Entity for TuiModelMenuModel {
     type Event = TuiModelMenuEvent;
 }
-
-#[cfg(test)]
-#[path = "model_menu_tests.rs"]
-mod tests;

@@ -194,18 +194,6 @@ impl AcpConnection {
             .with_context(|| format!("Failed to send ACP notification {method}"))
     }
 
-    /// Agent→client requests the handler has not answered yet, in no particular order.
-    // Nothing consults this outside tests yet; `cancel_pending_permission_requests` covers the
-    // only out-of-band answer the harness gives today.
-    #[cfg_attr(not(test), allow(dead_code))]
-    pub(super) fn pending_inbound_requests(&self) -> Vec<PendingInboundRequest> {
-        self.inbound
-            .lock()
-            .values()
-            .map(|entry| entry.request.clone())
-            .collect()
-    }
-
     /// Answers an outstanding agent request in place of the handler, whose own answer is then
     /// discarded. Returns `false` when the request was already answered or never existed.
     pub(super) async fn respond_pending(
@@ -436,7 +424,3 @@ async fn read_loop<R: AsyncRead + Unpin>(
         entry.handler.abort();
     }
 }
-
-#[cfg(test)]
-#[path = "connection_tests.rs"]
-mod tests;

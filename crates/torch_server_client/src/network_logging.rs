@@ -102,12 +102,6 @@ impl NetworkLogModel {
             }));
         }
     }
-
-    /// Number of items currently retained. Exposed for tests.
-    #[cfg(test)]
-    fn len(&self) -> usize {
-        self.items.len()
-    }
 }
 
 impl Entity for NetworkLogModel {
@@ -158,7 +152,3 @@ impl fmt::Display for NetworkLogItem {
         write!(f, "{}", self.0)
     }
 }
-
-#[cfg(test)]
-#[path = "network_logging_tests.rs"]
-mod tests;

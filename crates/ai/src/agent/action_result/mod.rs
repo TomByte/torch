@@ -152,10 +152,6 @@ impl AIAgentActionResultType {
     }
 }
 
-#[cfg(test)]
-#[path = "mod_tests.rs"]
-mod tests;
-
 impl Display for AIAgentActionResultType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {

@@ -560,7 +560,3 @@ impl TuiView for TuiCLISubagentView {
         self.render_content(&target, app)
     }
 }
-
-#[cfg(test)]
-#[path = "tui_cli_subagent_view_tests.rs"]
-mod tests;

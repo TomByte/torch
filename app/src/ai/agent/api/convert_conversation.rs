@@ -2259,7 +2259,3 @@ fn convert_api_window_info(window: &api::WindowInfo) -> computer_use::WindowInfo
         layer: window.layer,
     }
 }
-
-#[cfg(test)]
-#[path = "convert_conversation_tests.rs"]
-mod tests;

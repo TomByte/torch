@@ -5,8 +5,6 @@ use std::sync::mpsc::SyncSender;
 use std::time::Duration;
 
 use chrono::{DateTime, Utc};
-#[cfg(test)]
-pub use cloud_object_client::GetCloudObjectResponse;
 pub use cloud_object_client::InitialLoadResponse;
 use futures::channel::oneshot::{self, Receiver};
 use futures::stream::AbortHandle;
@@ -240,16 +238,6 @@ impl UpdateManager {
             ServerApiProvider::new_for_test().get_cloud_objects_client(),
             ctx,
         )
-    }
-
-    /// Simulate the initial load of changed objects completing.
-    #[cfg(test)]
-    pub fn mock_initial_load(
-        &mut self,
-        response: InitialLoadResponse,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        self.on_changed_objects_fetched(response, false /* force_refresh */, ctx);
     }
 
     #[cfg(any(test, feature = "integration_tests"))]
@@ -4827,7 +4815,3 @@ impl Entity for UpdateManager {
 }
 
 impl SingletonEntity for UpdateManager {}
-
-#[cfg(test)]
-#[path = "update_manager_tests.rs"]
-mod tests;

@@ -185,7 +185,3 @@ pub fn is_home_provider_path(path: &Path) -> bool {
             .is_some_and(|home_skills_path| path == home_skills_path)
     })
 }
-
-#[cfg(test)]
-#[path = "utils_tests.rs"]
-mod tests;

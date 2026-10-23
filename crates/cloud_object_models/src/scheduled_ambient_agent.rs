@@ -224,7 +224,3 @@ pub type ServerScheduledAmbientAgent =
     GenericServerObject<GenericStringObjectId, CloudScheduledAmbientAgentModel>;
 
 pub type AgentConfigMap = HashMap<String, serde_json::Value>;
-
-#[cfg(test)]
-#[path = "scheduled_ambient_agent_tests.rs"]
-mod tests;

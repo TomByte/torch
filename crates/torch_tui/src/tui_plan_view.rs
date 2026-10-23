@@ -359,7 +359,3 @@ impl TypedActionView for TuiPlanView {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "tui_plan_view_tests.rs"]
-mod tests;

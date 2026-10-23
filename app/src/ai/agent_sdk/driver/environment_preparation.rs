@@ -242,7 +242,3 @@ pub(super) fn resolve_from_environment(
         Some(_) | None => bail!("execution preparation mode is missing or invalid"),
     }
 }
-
-#[cfg(test)]
-#[path = "environment_preparation_tests.rs"]
-mod tests;

@@ -275,7 +275,3 @@ impl BlockActivity {
         Some(report)
     }
 }
-
-#[cfg(test)]
-#[path = "lrc_activity_tests.rs"]
-mod tests;

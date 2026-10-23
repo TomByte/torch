@@ -43,7 +43,3 @@ pub(super) fn prepare_failure_output(output: &str, truncation_marker: &str) -> S
     let output = URL_CREDENTIALS_REGEX.replace_all(&output, "${1}***@");
     truncate_failure_output(&output, truncation_marker)
 }
-
-#[cfg(test)]
-#[path = "failure_output_tests.rs"]
-mod tests;

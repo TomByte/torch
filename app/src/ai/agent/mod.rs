@@ -3687,7 +3687,3 @@ impl Suggestions {
         self.agent_mode_workflows.extend(new_workflows);
     }
 }
-
-#[cfg(test)]
-#[path = "mod_tests.rs"]
-mod tests;

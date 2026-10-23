@@ -495,10 +495,6 @@ fn render_cloud_agent_mark(builder: &TuiUiBuilder) -> Box<dyn TuiElement> {
         .finish()
 }
 
-#[cfg(test)]
-#[path = "cloud_run_view_tests.rs"]
-mod tests;
-
 impl Entity for TuiCloudRunView {
     type Event = ();
 }

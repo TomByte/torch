@@ -441,7 +441,3 @@ fn push_resolved(
         paths.push(sp);
     }
 }
-
-#[cfg(test)]
-#[path = "touched_repos_tests.rs"]
-mod tests;

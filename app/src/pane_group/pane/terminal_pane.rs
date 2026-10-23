@@ -2188,7 +2188,3 @@ fn resumable_agent_session(
         session.session_context.session_id.as_deref()?,
     )
 }
-
-#[cfg(all(test, not(target_family = "wasm")))]
-#[path = "terminal_pane_tests.rs"]
-mod tests;

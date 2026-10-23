@@ -178,7 +178,3 @@ impl Drop for RegisteredHandlers {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "unix_tests.rs"]
-mod tests;

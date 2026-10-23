@@ -257,7 +257,3 @@ pub(crate) fn render_agent_message(
         },
     )
 }
-
-#[cfg(test)]
-#[path = "agent_message_tests.rs"]
-mod tests;

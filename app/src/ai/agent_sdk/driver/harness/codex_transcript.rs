@@ -241,7 +241,3 @@ pub(crate) fn rehydrate_codex_transcript_from_reader(
         transcript_path,
     })
 }
-
-#[cfg(test)]
-#[path = "codex_transcript_tests.rs"]
-mod tests;

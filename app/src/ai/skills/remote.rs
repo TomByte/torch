@@ -53,7 +53,3 @@ pub(crate) fn bundled_skill_snapshot_protos(catalog: &BundledSkill) -> Vec<Remot
     protos.sort_by(|a, b| a.path.cmp(&b.path));
     protos
 }
-
-#[cfg(test)]
-#[path = "remote_tests.rs"]
-mod tests;

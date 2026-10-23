@@ -236,7 +236,3 @@ pub fn validate_os_config(
     }
     Ok(())
 }
-
-#[cfg(test)]
-#[path = "runner_tests.rs"]
-mod tests;

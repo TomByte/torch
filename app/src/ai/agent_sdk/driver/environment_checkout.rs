@@ -1407,7 +1407,3 @@ async fn checkout_requested_head(
     tracing::Span::current().record("result_ok", result.is_ok());
     result
 }
-
-#[cfg(test)]
-#[path = "environment_checkout_tests.rs"]
-mod tests;

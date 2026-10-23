@@ -198,7 +198,3 @@ fn recording_stopped_telemetry(
         },
     }
 }
-
-#[cfg(all(test, not(target_family = "wasm")))]
-#[path = "stop_recording_tests.rs"]
-mod tests;

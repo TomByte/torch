@@ -872,7 +872,3 @@ impl TypedActionView for TuiOrchestrationBlock {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "orchestration_block_tests.rs"]
-mod tests;

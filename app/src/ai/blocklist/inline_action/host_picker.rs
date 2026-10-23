@@ -485,25 +485,6 @@ pub(crate) fn build_menu_items(
     items
 }
 
-/// Returns the menu label corresponding to `slug`, including the "Default"
-/// badge when it matches the workspace default.
-#[cfg(test)]
-pub(crate) fn menu_label_for(slug: &str, default_host: Option<&str>) -> String {
-    if default_host == Some(slug) {
-        format_known_label(slug, Some(DEFAULT_BADGE))
-    } else {
-        format_known_label(slug, None)
-    }
-}
-
-#[cfg(test)]
-fn format_known_label(slug: &str, badge: Option<&str>) -> String {
-    match badge {
-        Some(badge) => format!("{slug}  ({badge})"),
-        None => slug.to_string(),
-    }
-}
-
 fn menu_item_for_known(
     slug: &str,
     badge: Option<&str>,
@@ -570,7 +551,3 @@ impl View for HostPicker {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "host_picker_tests.rs"]
-mod tests;

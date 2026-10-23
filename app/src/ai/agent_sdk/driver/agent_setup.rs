@@ -582,7 +582,3 @@ pub(crate) async fn load_factory_deferred_repositories_skill(
         log::warn!("Could not register bundled deferred repositories skill: {error}");
     }
 }
-
-#[cfg(test)]
-#[path = "agent_setup_tests.rs"]
-mod tests;

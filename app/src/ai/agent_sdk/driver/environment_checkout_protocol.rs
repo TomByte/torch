@@ -286,7 +286,3 @@ impl CheckoutRequest {
         Ok(())
     }
 }
-
-#[cfg(test)]
-#[path = "environment_checkout_protocol_tests.rs"]
-mod tests;

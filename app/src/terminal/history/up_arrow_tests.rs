@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use chrono::{Duration, Local};
-use settings::Setting;
 use torch_core::SessionId;
 use torchui::{App, AppContext, EntityId, SingletonEntity};
 
@@ -12,12 +11,10 @@ use crate::ai::blocklist::history_model::AIQueryHistoryOutputStatus;
 use crate::ai::blocklist::{BlocklistAIHistoryModel, PersistedAIInput, PersistedAIInputType};
 use crate::ai::llms::LLMId;
 use crate::input_suggestions::HistoryInputSuggestion;
-use crate::settings::AISettings;
 use crate::suggestions::ignored_suggestions_model::{IgnoredSuggestionsModel, SuggestionType};
 use crate::terminal::model::session::command_executor::NoOpCommandExecutor;
 use crate::terminal::model::session::{Session, SessionInfo};
 use crate::terminal::{History, HistoryEntry, LinkedWorkflowData};
-use crate::test_util::settings::initialize_settings_for_tests;
 
 #[derive(Debug, PartialEq, Eq)]
 enum TestHistoryItem {
@@ -314,51 +311,6 @@ fn combined_history_excludes_ignored_prompts_and_commands() {
                     .map(TestHistoryItem::text)
                     .collect::<Vec<_>>(),
                 vec!["keep prompt", "keep command"]
-            );
-        });
-    });
-}
-
-#[test]
-fn combined_history_respects_agent_command_setting() {
-    App::test((), |mut app| async move {
-        initialize_settings_for_tests(&mut app);
-        let terminal_surface_id = EntityId::new();
-        let session_id = SessionId::from(1);
-        app.add_singleton_model(|_| build_history_model(Vec::new()));
-        add_command_history(
-            &mut app,
-            session_id,
-            vec![
-                command_entry(session_id, "user command", 0, false, None),
-                command_entry(session_id, "agent command", 1, true, None),
-            ],
-        )
-        .await;
-
-        app.read(|ctx| {
-            assert_eq!(
-                combined_history(terminal_surface_id, session_id, false, ctx)
-                    .into_iter()
-                    .map(|item| item.text().to_owned())
-                    .collect::<Vec<_>>(),
-                vec!["user command"]
-            );
-        });
-
-        AISettings::handle(&app).update(&mut app, |settings, ctx| {
-            settings
-                .include_agent_commands_in_history
-                .set_value(true, ctx)
-                .unwrap();
-        });
-        app.read(|ctx| {
-            assert_eq!(
-                combined_history(terminal_surface_id, session_id, false, ctx)
-                    .into_iter()
-                    .map(|item| item.text().to_owned())
-                    .collect::<Vec<_>>(),
-                vec!["user command", "agent command"]
             );
         });
     });

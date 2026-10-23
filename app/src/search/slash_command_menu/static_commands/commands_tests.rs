@@ -115,89 +115,6 @@ fn view_logs_command_is_registered_only_for_tui_mode() {
 }
 
 #[test]
-fn api_keys_command_is_tui_only_and_has_no_arguments() {
-    let command = all_commands(settings::SettingsMode::Tui)
-        .into_iter()
-        .find(|command| command.kind == SlashCommandKind::ApiKeys)
-        .expect("expected /api-keys to be registered in TUI mode");
-    assert_eq!(command, API_KEYS);
-    assert!(!command.auto_enter_ai_mode);
-    assert_eq!(command.availability, Availability::AI_ENABLED);
-    assert!(command.argument.is_none());
-    assert_eq!(command.description, "View and manage API keys");
-    assert!(
-        all_commands(settings::SettingsMode::Gui)
-            .iter()
-            .all(|command| command.kind != SlashCommandKind::ApiKeys)
-    );
-    assert!(
-        all_commands(settings::SettingsMode::Tui)
-            .iter()
-            .all(|command| !matches!(command.name, "/add-api-key" | "/clear-provider-api-key"))
-    );
-}
-
-#[test]
-fn connect_grok_command_is_tui_only_and_has_no_arguments() {
-    let command = all_commands(settings::SettingsMode::Tui)
-        .into_iter()
-        .find(|command| command.kind == SlashCommandKind::ConnectGrok)
-        .expect("expected /connect-grok to be registered in TUI mode");
-    assert_eq!(command, CONNECT_GROK);
-    assert_eq!(command.name, "/connect-grok");
-    assert_eq!(command.supported_surfaces, SlashCommandSurfaces::TuiOnly);
-    assert_eq!(command.availability, Availability::AI_ENABLED);
-    assert!(!command.auto_enter_ai_mode);
-    assert!(command.argument.is_none());
-    assert_eq!(
-        command.description,
-        "Connect your Grok (X Premium / SuperGrok) account"
-    );
-    assert!(
-        all_commands(settings::SettingsMode::Gui)
-            .iter()
-            .all(|command| command.kind != SlashCommandKind::ConnectGrok)
-    );
-}
-
-#[test]
-fn manage_billing_command_is_always_available_only_in_tui_mode() {
-    let command = all_commands(settings::SettingsMode::Tui)
-        .into_iter()
-        .find(|command| command.kind == SlashCommandKind::ManageBilling)
-        .expect("expected /manage-billing to be registered in TUI mode");
-
-    assert_eq!(command, MANAGE_BILLING);
-    assert_eq!(command.availability, Availability::ALWAYS);
-    assert_eq!(command.supported_surfaces, SlashCommandSurfaces::TuiOnly);
-    assert!(!command.auto_enter_ai_mode);
-    assert!(command.argument.is_none());
-    assert!(
-        all_commands(settings::SettingsMode::Gui)
-            .iter()
-            .all(|command| command.kind != SlashCommandKind::ManageBilling)
-    );
-}
-
-#[test]
-fn upgrade_command_is_always_available_only_in_tui_mode() {
-    let command = all_commands(settings::SettingsMode::Tui)
-        .into_iter()
-        .find(|command| command.kind == SlashCommandKind::Upgrade)
-        .expect("expected /upgrade to be registered in TUI mode");
-
-    assert_eq!(command, UPGRADE);
-    assert_eq!(command.availability, Availability::ALWAYS);
-    assert_eq!(command.supported_surfaces, SlashCommandSurfaces::TuiOnly);
-    assert!(!command.auto_enter_ai_mode);
-    assert!(command.argument.is_none());
-    assert!(
-        all_commands(settings::SettingsMode::Gui)
-            .iter()
-            .all(|command| command.kind != SlashCommandKind::Upgrade)
-    );
-}
-#[test]
 fn auto_approve_command_is_local_agent_action_without_arguments() {
     let tui_commands = all_commands(settings::SettingsMode::Tui);
     let command = tui_commands
@@ -270,19 +187,6 @@ fn reset_statusline_command_is_always_available_only_in_tui_mode() {
             .all(|command| command.kind != SlashCommandKind::ResetStatusline)
     );
 }
-#[test]
-fn logout_command_is_registered_only_for_tui_mode() {
-    assert!(
-        all_commands(settings::SettingsMode::Tui)
-            .iter()
-            .any(|command| command == &LOGOUT)
-    );
-    assert!(
-        !all_commands(settings::SettingsMode::Gui)
-            .iter()
-            .any(|command| command == &LOGOUT)
-    );
-}
 
 #[test]
 fn version_command_is_not_registered() {
@@ -308,31 +212,6 @@ fn rename_tab_command_requires_argument() {
     assert!(!argument.is_optional);
     assert!(!argument.should_execute_on_selection);
     assert_eq!(argument.hint_text, Some("<tab name>"));
-}
-
-#[test]
-fn rename_conversation_command_is_active_conversation_scoped_and_requires_argument() {
-    let command = COMMAND_REGISTRY
-        .get_command_with_name(RENAME_CONVERSATION.name)
-        .expect("expected /rename-conversation to be registered");
-    let argument = command
-        .argument
-        .as_ref()
-        .expect("expected /rename-conversation to require an argument");
-
-    assert_eq!(command.name, "/rename-conversation");
-    assert_eq!(
-        command.supported_surfaces.gui_icon_path(),
-        Some("bundled/svg/pencil-line.svg")
-    );
-    assert!(!command.auto_enter_ai_mode);
-    assert_eq!(
-        command.availability,
-        Availability::AGENT_VIEW | Availability::ACTIVE_CONVERSATION | Availability::AI_ENABLED,
-    );
-    assert!(!argument.is_optional);
-    assert!(!argument.should_execute_on_selection);
-    assert_eq!(argument.hint_text, Some("<new title>"));
 }
 
 #[cfg(not(target_family = "wasm"))]

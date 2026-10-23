@@ -195,11 +195,6 @@ impl UsagePopoverView {
         self.conversation_id
     }
 
-    #[cfg(test)]
-    pub fn render_count_for_test(&self) -> usize {
-        self.render_count_for_test.get()
-    }
-
     /// Points this (reused) popover at `conversation_id` and resets all
     /// section-collapse state back to [`Self::new`]'s defaults. Subscriptions
     /// live on the view and must not be re-registered here.
@@ -1821,7 +1816,3 @@ fn render_diffs_row(
         )
         .finish()
 }
-
-#[cfg(test)]
-#[path = "usage_popover_view_tests.rs"]
-mod tests;

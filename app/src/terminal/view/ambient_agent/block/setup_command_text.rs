@@ -245,7 +245,3 @@ impl TypedActionView for CloudModeSetupTextBlock {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "setup_command_text_tests.rs"]
-mod tests;

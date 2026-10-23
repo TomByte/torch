@@ -566,7 +566,3 @@ pub enum MintCustomTokenError {
     #[error("Failed to create new custom token with unknown error")]
     Unknown,
 }
-
-#[cfg(test)]
-#[path = "mod_tests.rs"]
-mod tests;

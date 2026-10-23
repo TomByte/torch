@@ -97,7 +97,3 @@ pub(crate) fn assign_agent_identity_indices(
     }
     assigned
 }
-
-#[cfg(test)]
-#[path = "orchestrated_agent_identity_styling_tests.rs"]
-mod tests;

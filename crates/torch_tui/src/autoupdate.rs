@@ -1519,7 +1519,3 @@ impl Drop for RemoveDirOnDrop {
         let _ = fs::remove_dir_all(&self.0);
     }
 }
-
-#[cfg(test)]
-#[path = "autoupdate_tests.rs"]
-mod tests;

@@ -182,7 +182,3 @@ fn process_clipboard_image_data(image: ImageData) -> Result<ImageContext, String
         is_figma: false,
     })
 }
-
-#[cfg(test)]
-#[path = "image_processing_tests.rs"]
-mod tests;

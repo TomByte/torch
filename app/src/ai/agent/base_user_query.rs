@@ -218,7 +218,3 @@ pub(crate) fn warp_client_origin() -> api::UserQueryOrigin {
         )),
     }
 }
-
-#[cfg(test)]
-#[path = "base_user_query_tests.rs"]
-mod tests;

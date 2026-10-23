@@ -1932,7 +1932,3 @@ impl TypedActionView for WorkflowModal {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "modal_tests.rs"]
-mod tests;

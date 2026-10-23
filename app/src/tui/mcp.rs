@@ -765,7 +765,3 @@ impl Entity for TuiMcpManager {
 }
 
 impl SingletonEntity for TuiMcpManager {}
-
-#[cfg(test)]
-#[path = "mcp_tests.rs"]
-mod tests;

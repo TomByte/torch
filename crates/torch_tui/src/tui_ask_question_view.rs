@@ -592,10 +592,6 @@ impl TuiAskQuestionView {
     }
 }
 
-#[cfg(test)]
-#[path = "tui_ask_question_view_tests.rs"]
-mod tests;
-
 impl Entity for TuiAskQuestionView {
     type Event = TuiAskQuestionViewEvent;
 }

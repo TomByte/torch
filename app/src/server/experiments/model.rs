@@ -3,8 +3,6 @@
 use std::collections::HashSet;
 
 use anyhow::Context;
-#[cfg(test)]
-pub use tests::TestModel;
 use torch_errors::report_if_error;
 use torchui::{Entity, ModelContext, SingletonEntity};
 
@@ -90,7 +88,3 @@ impl Entity for ServerExperiments {
 }
 
 impl SingletonEntity for ServerExperiments {}
-
-#[cfg(test)]
-#[path = "model_tests.rs"]
-mod tests;

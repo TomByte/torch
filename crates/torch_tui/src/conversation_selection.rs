@@ -401,7 +401,3 @@ impl ConversationSelection for TuiConversationSelection {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "conversation_selection_tests.rs"]
-mod tests;

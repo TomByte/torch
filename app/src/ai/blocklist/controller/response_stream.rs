@@ -123,11 +123,6 @@ impl PendingResume {
     pub(crate) fn backoff(self) -> Duration {
         self.backoff
     }
-
-    #[cfg(test)]
-    pub(crate) fn new_for_test(recovery: RecoveryBudget, backoff: Duration) -> Self {
-        Self { recovery, backoff }
-    }
 }
 
 /// What to do about a failed or truncated MAA response attempt.
@@ -1043,7 +1038,3 @@ pub enum ResponseStreamEvent {
 impl Entity for ResponseStream {
     type Event = ResponseStreamEvent;
 }
-
-#[cfg(test)]
-#[path = "response_stream_tests.rs"]
-mod tests;

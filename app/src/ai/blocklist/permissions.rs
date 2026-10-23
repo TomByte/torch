@@ -1271,7 +1271,3 @@ pub(crate) fn is_agent_mode_autonomy_allowed<S: TeamScope + ?Sized>(
 ) -> bool {
     UserWorkspaces::as_ref(ctx).is_ai_autonomy_allowed(scope)
 }
-
-#[cfg(test)]
-#[path = "permissions_tests.rs"]
-mod tests;

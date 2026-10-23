@@ -109,7 +109,3 @@ impl From<GqlAICreditAvailability> for AICreditAvailability {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "credit_availability_tests.rs"]
-mod tests;

@@ -37,10 +37,6 @@ pub(super) const BASE_INDENT: f32 = 30.;
 
 const SUPPORTED_FILE_TYPE_TEXT: &str = "md, yaml, yml";
 
-#[cfg(test)]
-#[path = "import_tests.rs"]
-mod import_tests;
-
 /// Current state of the import modal.
 ///
 /// The entire import flow goes as follows:

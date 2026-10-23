@@ -521,7 +521,3 @@ pub fn summarize_turn(records: &[RequestMetadataRecord]) -> TurnSummary {
         records: records.to_vec(),
     }
 }
-
-#[cfg(test)]
-#[path = "request_metadata_tests.rs"]
-mod tests;

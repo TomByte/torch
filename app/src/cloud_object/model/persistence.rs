@@ -1831,7 +1831,3 @@ impl Entity for CloudModel {
 
 /// Mark CloudModel as global application state.
 impl SingletonEntity for CloudModel {}
-
-#[cfg(test)]
-#[path = "model_tests.rs"]
-mod tests;

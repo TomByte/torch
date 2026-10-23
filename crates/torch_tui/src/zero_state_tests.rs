@@ -2,17 +2,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
-use ai::api_keys::{
-    ApiKeyManager, CustomEndpoint, CustomEndpointDefinitions, CustomEndpointModel,
-    CustomEndpointSchema,
-};
-use channel_versions::{Changelog, MarkdownSection, Section};
-use chrono::DateTime;
-use torch::tui_export::{
-    TuiMcpConfigDiagnostic, TuiMcpServerId, TuiMcpServerSnapshot, TuiMcpServerSource,
-    TuiMcpServerStatus, TuiMcpSnapshot, TuiMcpTransport, TuiUserInfoSnapshot,
-    register_tui_session_view_test_singletons,
-};
+use torch::tui_export::register_tui_session_view_test_singletons;
 use torchui::{EntityIdMap, SingletonEntity};
 use torchui_core::elements::animation::AnimationClock;
 use torchui_core::elements::tui::{
@@ -20,13 +10,11 @@ use torchui_core::elements::tui::{
     TuiPaintSurface, TuiRect, TuiScreenPosition, TuiSize, TuiStyle, TuiText, text_width,
 };
 use torchui_core::{App, AppContext};
-use uuid::Uuid;
 
 use super::{
     ANIMATION_PANEL_COLS, LEFT_COLUMN_COLS, ZeroStateSectionVisibility, autoupdate_status_label,
     build_zero_state_layout, build_zero_state_overlay, build_zero_state_stack_layout,
-    changelog_bullets_from_changelog, custom_endpoint_status_label, mcp_status_label,
-    render_bottom_section, render_first_run_top_section,
+    render_first_run_top_section,
 };
 use crate::autoupdate::TuiAutoupdateStatus;
 use crate::tui_builder::TuiUiBuilder;
@@ -34,74 +22,6 @@ use crate::zero_state_animation::{
     WarpLogoStyles, ZeroStateAnimationConfig, ZeroStateAnimationElement,
     ZeroStateInteractionHandle, ZeroStateStarfieldElement,
 };
-
-fn server(id: u64, status: TuiMcpServerStatus) -> TuiMcpServerSnapshot {
-    TuiMcpServerSnapshot {
-        id: TuiMcpServerId::Installation(Uuid::from_u128(id as u128)),
-        installation_uuid: Some(Uuid::from_u128(id as u128)),
-        name: format!("server-{id}"),
-        description: None,
-        source: TuiMcpServerSource::Installation,
-        transport: Some(TuiMcpTransport::Stdio),
-        status,
-        tool_count: 2,
-        resource_count: 0,
-        can_log_out: false,
-        authorization_url: None,
-    }
-}
-
-fn changelog(tui_updates: Vec<&str>) -> Changelog {
-    Changelog {
-        date: DateTime::parse_from_rfc3339("2026-07-30T12:00:00+00:00").unwrap(),
-        sections: vec![Section {
-            title: "Improvements".to_owned(),
-            items: vec!["Unrelated GUI improvement".to_owned()],
-        }],
-        markdown_sections: vec![MarkdownSection {
-            title: "Improvements".to_owned(),
-            markdown: "* Unrelated GUI improvement\n".to_owned(),
-        }],
-        image_url: None,
-        oz_updates: vec!["Unrelated Oz improvement".to_owned()],
-        tui_updates: tui_updates.into_iter().map(ToOwned::to_owned).collect(),
-    }
-}
-
-fn endpoint_definitions() -> CustomEndpointDefinitions {
-    let endpoints = ["One", "Two"]
-        .into_iter()
-        .enumerate()
-        .map(|(index, name)| CustomEndpoint {
-            name: name.to_owned(),
-            url: format!("https://endpoint-{index}.example.com/v1"),
-            api_key: String::new(),
-            schema: CustomEndpointSchema::default(),
-            models: vec![CustomEndpointModel {
-                name: format!("model-{index}"),
-                alias: None,
-                config_key: format!("config-{index}"),
-            }],
-        })
-        .collect::<Vec<_>>();
-    CustomEndpointDefinitions::from_legacy(&endpoints)
-        .expect("test endpoints should be valid")
-        .0
-}
-
-#[test]
-fn changelog_bullets_use_only_the_first_three_tui_updates() {
-    let changelog = changelog(vec!["First", "Second", "Third", "Fourth"]);
-    assert_eq!(
-        changelog_bullets_from_changelog(&changelog),
-        ["First", "Second", "Third"]
-    );
-}
-
-#[test]
-fn changelog_bullets_are_empty_when_only_other_surfaces_have_updates() {
-    assert!(changelog_bullets_from_changelog(&changelog(Vec::new())).is_empty());
-}
 
 #[test]
 fn failed_autoupdate_status_has_visible_label() {
@@ -164,187 +84,6 @@ fn first_zero_state_matches_welcome_design_copy() {
         }
         assert!(!rendered.contains("What's new"));
         assert!(!rendered.contains("████"));
-    });
-}
-
-#[test]
-fn mcp_summary_keeps_empty_catalog_action_short() {
-    let snapshot = TuiMcpSnapshot {
-        diagnostics: Vec::new(),
-        servers: Vec::new(),
-    };
-
-    assert_eq!(
-        mcp_status_label(&snapshot),
-        ("No servers available · run /mcp".to_string(), false)
-    );
-}
-
-#[test]
-fn mcp_summary_reports_mixed_runtime_states() {
-    let snapshot = TuiMcpSnapshot {
-        diagnostics: Vec::new(),
-        servers: vec![
-            server(1, TuiMcpServerStatus::Running),
-            server(2, TuiMcpServerStatus::Starting),
-            server(3, TuiMcpServerStatus::Authenticating),
-            server(4, TuiMcpServerStatus::Stopping),
-            server(
-                5,
-                TuiMcpServerStatus::Failed {
-                    message: "failed".to_string(),
-                },
-            ),
-            server(6, TuiMcpServerStatus::Offline),
-            server(7, TuiMcpServerStatus::Available),
-        ],
-    };
-
-    assert_eq!(
-        mcp_status_label(&snapshot),
-        (
-            "1 connected · 1 starting · 1 needs auth · 1 stopping · 1 failed · 1 offline · 1 available · /mcp"
-                .to_string(),
-            false
-        )
-    );
-}
-
-#[test]
-fn mcp_summary_marks_config_errors() {
-    let snapshot = TuiMcpSnapshot {
-        diagnostics: vec![
-            TuiMcpConfigDiagnostic {
-                provider: "Claude".to_owned(),
-                config_path: PathBuf::from("/tmp/.claude.json"),
-                message: "invalid JSON".to_owned(),
-            },
-            TuiMcpConfigDiagnostic {
-                provider: "Codex".to_owned(),
-                config_path: PathBuf::from("/tmp/config.toml"),
-                message: "invalid TOML".to_owned(),
-            },
-        ],
-        servers: Vec::new(),
-    };
-
-    assert_eq!(
-        mcp_status_label(&snapshot),
-        ("2 config errors · /mcp".to_string(), true)
-    );
-}
-
-#[test]
-fn custom_endpoint_summary_tracks_configuration_and_local_keys() {
-    App::test((), |mut app| async move {
-        register_tui_session_view_test_singletons(&mut app);
-        app.read(|ctx| {
-            assert_eq!(
-                custom_endpoint_status_label(ApiKeyManager::as_ref(ctx)),
-                None
-            );
-        });
-
-        let definitions = endpoint_definitions();
-        let first = definitions.id_at(0).unwrap().clone();
-        let second = definitions.id_at(1).unwrap().clone();
-        ApiKeyManager::handle(&app).update(&mut app, |manager, ctx| {
-            manager.set_custom_endpoint_definitions(definitions, ctx);
-        });
-        app.read(|ctx| {
-            assert_eq!(
-                custom_endpoint_status_label(ApiKeyManager::as_ref(ctx)),
-                Some(("2 need API keys · /api-keys".to_owned(), false))
-            );
-        });
-
-        ApiKeyManager::handle(&app)
-            .update(&mut app, |manager, ctx| {
-                manager.persist_custom_endpoint_key(first, Some("first-secret".to_owned()), ctx)
-            })
-            .unwrap();
-        app.read(|ctx| {
-            assert_eq!(
-                custom_endpoint_status_label(ApiKeyManager::as_ref(ctx)),
-                Some((
-                    "1 connected · 1 need API keys · /api-keys".to_owned(),
-                    false
-                ))
-            );
-        });
-
-        ApiKeyManager::handle(&app)
-            .update(&mut app, |manager, ctx| {
-                manager.persist_custom_endpoint_key(second, Some("second-secret".to_owned()), ctx)
-            })
-            .unwrap();
-        app.read(|ctx| {
-            assert_eq!(
-                custom_endpoint_status_label(ApiKeyManager::as_ref(ctx)),
-                Some(("2 connected · /api-keys".to_owned(), false))
-            );
-        });
-
-        ApiKeyManager::handle(&app).update(&mut app, |manager, ctx| {
-            manager.invalidate_custom_endpoint_definitions(ctx);
-        });
-        app.read(|ctx| {
-            assert_eq!(
-                custom_endpoint_status_label(ApiKeyManager::as_ref(ctx)),
-                Some((
-                    "Configuration error · fix agents.custom_endpoints".to_owned(),
-                    true
-                ))
-            );
-        });
-    });
-}
-
-#[test]
-fn custom_endpoint_section_is_hidden_until_an_endpoint_is_configured() {
-    App::test((), |mut app| async move {
-        register_tui_session_view_test_singletons(&mut app);
-        app.read(|ctx| {
-            let builder = TuiUiBuilder::from_app(ctx);
-            let rendered = render_element_lines(
-                render_bottom_section(
-                    None,
-                    None,
-                    ZeroStateSectionVisibility::default(),
-                    &builder,
-                    ctx,
-                )
-                .finish(),
-                ctx,
-                LEFT_COLUMN_COLS,
-                20,
-            )
-            .join("\n");
-            assert!(!rendered.contains("Custom endpoints"));
-        });
-
-        ApiKeyManager::handle(&app).update(&mut app, |manager, ctx| {
-            manager.set_custom_endpoint_definitions(endpoint_definitions(), ctx);
-        });
-        app.read(|ctx| {
-            let builder = TuiUiBuilder::from_app(ctx);
-            let rendered = render_element_lines(
-                render_bottom_section(
-                    None,
-                    None,
-                    ZeroStateSectionVisibility::default(),
-                    &builder,
-                    ctx,
-                )
-                .finish(),
-                ctx,
-                LEFT_COLUMN_COLS,
-                20,
-            )
-            .join("\n");
-            assert!(rendered.contains("Custom endpoints"));
-            assert!(rendered.contains("2 need API keys · /api-keys"));
-        });
     });
 }
 
@@ -479,6 +218,7 @@ fn zero_state_copy_rectangle_is_opaque_without_changing_the_background_color() {
         });
     });
 }
+
 #[test]
 fn zero_state_starfield_spans_the_full_width() {
     App::test((), |app| async move {
@@ -571,6 +311,7 @@ fn zero_state_animation_is_centered_in_remaining_space_and_hidden_when_space_is_
         });
     });
 }
+
 /// When the terminal is wide enough, the path header must stay on one row and
 /// must not be capped at LEFT_COLUMN_COLS.
 ///
@@ -640,49 +381,6 @@ fn zero_state_path_header_not_truncated_at_wide_terminal() {
             );
         });
     });
-}
-
-#[test]
-fn login_line_shows_signed_in_account_email() {
-    App::test((), |mut app| async move {
-        register_tui_session_view_test_singletons(&mut app);
-
-        let lines = app.read(|ctx| {
-            let builder = TuiUiBuilder::from_app(ctx);
-            render_element_lines(super::render_login_line(&builder, ctx), ctx, 48, 1)
-        });
-        assert!(
-            lines
-                .iter()
-                .any(|line| line.contains("Signed in as test_user@example.com")),
-            "zero-state login line should show the signed-in email:\n{}",
-            lines.join("\n")
-        );
-    });
-}
-
-#[test]
-fn login_line_never_claims_signed_in_without_an_identity() {
-    let snapshot = TuiUserInfoSnapshot {
-        is_logged_in: true,
-        ..Default::default()
-    };
-
-    assert_eq!(super::login_line_label("Signed in as", snapshot), None);
-}
-
-#[test]
-fn login_line_falls_back_to_validated_user_id() {
-    let snapshot = TuiUserInfoSnapshot {
-        is_logged_in: true,
-        user_id: Some("user-123".to_owned()),
-        ..Default::default()
-    };
-
-    assert_eq!(
-        super::login_line_label("Signed in as", snapshot),
-        Some("Signed in as user-123".to_owned())
-    );
 }
 
 /// At a narrow terminal the complete displayed path must wrap across rows

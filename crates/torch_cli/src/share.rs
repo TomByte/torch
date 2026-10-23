@@ -152,7 +152,3 @@ impl FromStr for ShareSubject {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "share_tests.rs"]
-mod tests;

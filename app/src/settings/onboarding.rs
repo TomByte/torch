@@ -311,7 +311,3 @@ fn action_permissions_for_onboarding_autonomy(
         },
     }
 }
-
-#[cfg(test)]
-#[path = "onboarding_tests.rs"]
-mod tests;

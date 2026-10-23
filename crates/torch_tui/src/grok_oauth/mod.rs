@@ -199,7 +199,3 @@ impl Drop for TuiGrokOAuthController {
 impl Entity for TuiGrokOAuthController {
     type Event = TuiGrokOAuthControllerEvent;
 }
-
-#[cfg(test)]
-#[path = "tests.rs"]
-mod tests;

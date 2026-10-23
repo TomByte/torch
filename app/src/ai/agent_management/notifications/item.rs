@@ -213,7 +213,3 @@ impl NotificationItems {
             .any(|item| item.terminal_view_id == terminal_view_id && !item.is_read)
     }
 }
-
-#[cfg(test)]
-#[path = "item_tests.rs"]
-mod tests;

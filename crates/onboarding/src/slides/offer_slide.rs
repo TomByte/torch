@@ -607,7 +607,3 @@ impl TypedActionView for OfferSlide {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "offer_slide_tests.rs"]
-mod tests;

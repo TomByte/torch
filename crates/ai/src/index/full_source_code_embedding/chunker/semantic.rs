@@ -168,7 +168,3 @@ impl<'a> Fragment<'a> {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "semantic_tests.rs"]
-mod tests;

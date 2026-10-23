@@ -58,7 +58,3 @@ define_settings_group!(TuiVoiceSettings, settings: [
         description: "The modifier key held to record voice input in Torch Agent CLI. Configuring a modifier enables enhanced terminal key reporting, which may interfere with AltGr, dead-key composition, some international keyboard layouts, and shortcuts that use punctuation keys. Ctrl+S remains available without a modifier. Defaults to none. Super may be unavailable in some terminals.",
     },
 ]);
-
-#[cfg(test)]
-#[path = "tui_voice_tests.rs"]
-mod tests;

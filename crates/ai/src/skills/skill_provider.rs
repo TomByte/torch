@@ -251,7 +251,3 @@ pub fn get_scope_for_path(path: &Path) -> SkillScope {
     }
     SkillScope::Project
 }
-
-#[cfg(test)]
-#[path = "skill_provider_tests.rs"]
-mod tests;

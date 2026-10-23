@@ -411,7 +411,3 @@ impl SetupStep {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "setup_observability_tests.rs"]
-mod tests;

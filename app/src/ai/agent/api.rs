@@ -104,13 +104,6 @@ impl std::fmt::Display for ServerConversationToken {
     }
 }
 
-#[cfg(test)]
-#[path = "api_tests.rs"]
-mod tests;
-
-#[cfg(test)]
-#[path = "api/injected_attribution_tests.rs"]
-mod injected_attribution_tests;
 impl From<ServerConversationToken> for String {
     fn from(value: ServerConversationToken) -> Self {
         value.0

@@ -73,7 +73,3 @@ fn parse_duration(stderr: &str) -> Option<Duration> {
         .checked_add(seconds)?;
     Some(Duration::new(seconds, nanos))
 }
-
-#[cfg(test)]
-#[path = "recording_metadata_tests.rs"]
-mod tests;

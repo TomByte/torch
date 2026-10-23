@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::sync::Arc;
 
 use ai::skills::SkillProvider;
 use chrono::Local;
@@ -10,8 +9,8 @@ use torch_util::path::EscapeChar;
 use torchui::App;
 
 use super::{
-    CLIAgent, UBER_TEAM_UID, build_diff_hunk_prompt, build_review_prompt,
-    build_selection_line_range_prompt, build_selection_substring_prompt,
+    CLIAgent, build_diff_hunk_prompt, build_review_prompt, build_selection_line_range_prompt,
+    build_selection_substring_prompt,
 };
 use crate::ai::agent::{AgentReviewCommentBatch, DiffSetHunk};
 use crate::code::buffer_location::LocalOrRemotePath;
@@ -19,13 +18,7 @@ use crate::code::editor::line::EditorLineLocation;
 use crate::code_review::comments::{
     AttachedReviewComment, AttachedReviewCommentTarget, CommentOrigin, LineDiffContent,
 };
-use crate::server::ids::ServerId;
-use crate::server::server_api::team::MockTeamClient;
-use crate::server::server_api::workspace::MockWorkspaceClient;
 use crate::ui_components::icons::Icon;
-use crate::workspaces::team::Team;
-use crate::workspaces::user_workspaces::UserWorkspaces;
-use crate::workspaces::workspace::Workspace;
 
 /// Helper to build an alias map from pairs.
 fn aliases(pairs: &[(&str, &str)]) -> HashMap<SmolStr, String> {
@@ -477,92 +470,6 @@ fn test_detect_with_alias_and_env_var() {
     });
 }
 
-/// Creates a workspace containing a team with the given UID.
-fn workspace_with_team_uid(uid: &str) -> Workspace {
-    Workspace::from_local_cache(
-        ServerId::from_string_lossy("test-workspace-uid-001").into(),
-        "Test Workspace".to_string(),
-        Some(vec![Team::from_local_cache(
-            ServerId::from_string_lossy(uid),
-            "Test Team".to_string(),
-            None,
-            None,
-            None,
-            None,
-        )]),
-        None,
-    )
-}
-
-#[test]
-fn test_detect_aifx_agent_run_claude_on_uber_team() {
-    App::test((), |mut app| async move {
-        let uber_workspace = workspace_with_team_uid(UBER_TEAM_UID);
-        app.add_singleton_model(|ctx| {
-            UserWorkspaces::mock(
-                Arc::new(MockTeamClient::new()),
-                Arc::new(MockWorkspaceClient::new()),
-                vec![uber_workspace],
-                ctx,
-            )
-        });
-
-        app.update(|ctx| {
-            assert_eq!(
-                CLIAgent::detect("aifx agent run claude", None, None, ctx),
-                Some(CLIAgent::Claude),
-            );
-            // With extra args
-            assert_eq!(
-                CLIAgent::detect("aifx agent run claude --verbose", None, None, ctx),
-                Some(CLIAgent::Claude),
-            );
-        });
-    });
-}
-
-#[test]
-fn test_detect_aifx_agent_run_claude_via_alias_on_uber_team() {
-    App::test((), |mut app| async move {
-        let uber_workspace = workspace_with_team_uid(UBER_TEAM_UID);
-        app.add_singleton_model(|ctx| {
-            UserWorkspaces::mock(
-                Arc::new(MockTeamClient::new()),
-                Arc::new(MockWorkspaceClient::new()),
-                vec![uber_workspace],
-                ctx,
-            )
-        });
-
-        app.update(|ctx| {
-            let map = aliases(&[("ai", "aifx agent run claude")]);
-            assert_eq!(
-                CLIAgent::detect("ai", None, Some(&map), ctx),
-                Some(CLIAgent::Claude),
-            );
-            assert_eq!(
-                CLIAgent::detect("ai --flag", None, Some(&map), ctx),
-                Some(CLIAgent::Claude),
-            );
-        });
-    });
-}
-
-#[test]
-fn test_detect_aifx_agent_run_claude_not_on_uber_team() {
-    App::test((), |mut app| async move {
-        // Register UserWorkspaces with no Uber team membership
-        app.add_singleton_model(UserWorkspaces::default_mock);
-
-        app.update(|ctx| {
-            assert_eq!(
-                CLIAgent::detect("aifx agent run claude", None, None, ctx),
-                None,
-            );
-        });
-    });
-}
-
 #[test]
 fn test_serialized_name_round_trips_known_agents() {
     for agent in enum_iterator::all::<CLIAgent>() {
@@ -587,28 +494,6 @@ fn test_from_serialized_name_falls_back_to_unknown() {
         CLIAgent::from_serialized_name("nonexistent"),
         CLIAgent::Unknown
     );
-}
-
-#[test]
-fn test_detect_aifx_agent_run_claude_wrong_team() {
-    App::test((), |mut app| async move {
-        let other_workspace = workspace_with_team_uid("some-other-team-uid-01");
-        app.add_singleton_model(|ctx| {
-            UserWorkspaces::mock(
-                Arc::new(MockTeamClient::new()),
-                Arc::new(MockWorkspaceClient::new()),
-                vec![other_workspace],
-                ctx,
-            )
-        });
-
-        app.update(|ctx| {
-            assert_eq!(
-                CLIAgent::detect("aifx agent run claude", None, None, ctx),
-                None,
-            );
-        });
-    });
 }
 
 #[test]

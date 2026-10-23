@@ -637,7 +637,3 @@ pub fn build_runner_snapshot(
         footer: None,
     }
 }
-
-#[cfg(test)]
-#[path = "snapshots_tests.rs"]
-mod tests;

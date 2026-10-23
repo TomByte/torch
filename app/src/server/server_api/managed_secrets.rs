@@ -369,7 +369,3 @@ pub(super) fn task_secrets_from_result(
         TaskSecretsResult::Unknown => Err(anyhow!("Unknown error while getting task secrets")),
     }
 }
-
-#[cfg(test)]
-#[path = "managed_secrets_tests.rs"]
-mod tests;

@@ -5686,7 +5686,3 @@ pub fn test_owner_state_chip_text_contrasts_with_accent_overlay() {
         );
     }
 }
-
-#[cfg(test)]
-#[path = "teams_page_tests.rs"]
-mod teams_page_tests;

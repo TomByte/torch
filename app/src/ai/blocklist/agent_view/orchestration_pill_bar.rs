@@ -2913,7 +2913,3 @@ fn build_crumb_inner(
     }
     container.finish()
 }
-
-#[cfg(test)]
-#[path = "orchestration_pill_bar_tests.rs"]
-mod tests;

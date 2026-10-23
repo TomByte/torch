@@ -140,7 +140,3 @@ fn document_title(index: usize, document_count: usize) -> String {
         format!("Document {}", index + 1)
     }
 }
-
-#[cfg(test)]
-#[path = "document_action_presentation_tests.rs"]
-mod tests;

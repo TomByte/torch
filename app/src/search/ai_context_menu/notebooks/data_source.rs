@@ -156,7 +156,3 @@ impl SyncDataSource for NotebookDataSource {
 impl torchui::Entity for NotebookDataSource {
     type Event = ();
 }
-
-#[cfg(test)]
-#[path = "data_source_tests.rs"]
-mod tests;

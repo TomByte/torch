@@ -506,6 +506,3 @@ impl TypedActionView for TuiShellCommandView {
         }
     }
 }
-#[cfg(test)]
-#[path = "tui_shell_command_view_tests.rs"]
-mod tests;

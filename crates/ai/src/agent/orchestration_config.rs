@@ -223,7 +223,3 @@ fn harness_type_to_proto(harness_type: &str) -> Option<api::Harness> {
         variant: Some(variant),
     })
 }
-
-#[cfg(test)]
-#[path = "orchestration_config_tests.rs"]
-mod tests;

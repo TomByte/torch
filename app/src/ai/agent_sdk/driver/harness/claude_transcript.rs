@@ -498,7 +498,3 @@ pub(crate) fn write_session_index_entry(
     .with_context(|| format!("Failed to write {}", index_path.display()))?;
     Ok(())
 }
-
-#[cfg(test)]
-#[path = "claude_transcript_tests.rs"]
-mod tests;

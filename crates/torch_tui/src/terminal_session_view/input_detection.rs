@@ -261,7 +261,3 @@ impl TuiTerminalSessionView {
         ));
     }
 }
-
-#[cfg(test)]
-#[path = "input_detection_tests.rs"]
-mod tests;

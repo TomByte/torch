@@ -226,7 +226,3 @@ impl ConversationSelection for AgentViewConversationSelection {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "conversation_selection_tests.rs"]
-mod tests;

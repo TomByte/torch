@@ -20,7 +20,3 @@ impl TuiExitSummaryHandle {
         self.0.borrow().clone()
     }
 }
-
-#[cfg(test)]
-#[path = "resume_tests.rs"]
-mod tests;

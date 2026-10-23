@@ -410,7 +410,3 @@ fn fuzzy_match_symbol_with_type(code_symbol: &CodeSymbol, query: &str) -> FuzzyM
         FuzzyMatchResult::no_match()
     }
 }
-
-#[cfg(test)]
-#[path = "data_source_tests.rs"]
-mod tests;

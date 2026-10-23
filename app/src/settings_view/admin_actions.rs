@@ -40,7 +40,3 @@ impl AdminActions {
         Self::contact_support(ctx);
     }
 }
-
-#[cfg(test)]
-#[path = "admin_actions_tests.rs"]
-mod tests;

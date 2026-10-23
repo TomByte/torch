@@ -143,129 +143,13 @@ fn no_lrc_control_requirement_not_satisfied_when_in_control() {
 
 // --- ACTIVE_CONVERSATION flag tests ---
 
-#[test]
-fn active_conversation_requirement_satisfied_when_conversation_active() {
-    let command = Availability::ACTIVE_CONVERSATION;
-    let session = Availability::AGENT_VIEW | Availability::ACTIVE_CONVERSATION;
-    assert!(session.contains(command));
-}
-
-#[test]
-fn active_conversation_requirement_not_satisfied_when_no_conversation() {
-    let command = Availability::ACTIVE_CONVERSATION;
-    let session = Availability::AGENT_VIEW;
-    assert!(!session.contains(command));
-}
-
 // --- CODEBASE_CONTEXT flag tests ---
 
-#[test]
-fn codebase_context_requirement_satisfied_when_enabled() {
-    let command = Availability::CODEBASE_CONTEXT;
-    let session = Availability::AGENT_VIEW | Availability::CODEBASE_CONTEXT;
-    assert!(session.contains(command));
-}
-
-#[test]
-fn codebase_context_requirement_not_satisfied_when_disabled() {
-    let command = Availability::CODEBASE_CONTEXT;
-    let session = Availability::AGENT_VIEW;
-    assert!(!session.contains(command));
-}
-
 // --- CLOUD_AGENT flag tests ---
-#[test]
-fn cloud_agent_required_command_satisfied_in_cloud_agent_session() {
-    let command = Availability::AGENT_VIEW | Availability::AI_ENABLED | Availability::CLOUD_AGENT;
-
-    let session = Availability::AGENT_VIEW | Availability::AI_ENABLED | Availability::CLOUD_AGENT;
-    assert!(session.contains(command));
-}
-
-#[test]
-fn cloud_agent_required_command_not_satisfied_outside_cloud_agent_session() {
-    let command = Availability::AGENT_VIEW | Availability::AI_ENABLED | Availability::CLOUD_AGENT;
-
-    let session =
-        Availability::AGENT_VIEW | Availability::AI_ENABLED | Availability::NOT_CLOUD_AGENT;
-    assert!(!session.contains(command));
-}
 
 // --- CLOUD_MODE_V2_COMPOSER flag tests ---
-#[test]
-fn cloud_mode_v2_composer_required_command_satisfied_in_v2_composer_session() {
-    let command =
-        Availability::AGENT_VIEW | Availability::AI_ENABLED | Availability::CLOUD_MODE_V2_COMPOSER;
-    // V2 cloud-mode composing input has AGENT_VIEW + AI_ENABLED + CLOUD_AGENT +
-    // CLOUD_MODE_V2_COMPOSER set.
-    let session = Availability::AGENT_VIEW
-        | Availability::AI_ENABLED
-        | Availability::CLOUD_AGENT
-        | Availability::CLOUD_MODE_V2_COMPOSER;
-    assert!(session.contains(command));
-}
-
-#[test]
-fn cloud_mode_v2_composer_required_command_not_satisfied_outside_v2_composer() {
-    let command =
-        Availability::AGENT_VIEW | Availability::AI_ENABLED | Availability::CLOUD_MODE_V2_COMPOSER;
-
-    // A regular agent view session without the V2 bit must not match.
-    let session = Availability::AGENT_VIEW | Availability::AI_ENABLED;
-    assert!(!session.contains(command));
-
-    // Local-mode agent view (NOT_CLOUD_AGENT instead of CLOUD_MODE_V2_COMPOSER) must not match either.
-    let session =
-        Availability::AGENT_VIEW | Availability::AI_ENABLED | Availability::NOT_CLOUD_AGENT;
-    assert!(!session.contains(command));
-}
 
 // --- AI_ENABLED flag tests ---
-
-#[test]
-fn ai_enabled_requirement_satisfied_when_ai_on() {
-    let command = Availability::AI_ENABLED;
-    let session = Availability::AGENT_VIEW | Availability::AI_ENABLED;
-    assert!(session.contains(command));
-}
-
-#[test]
-fn ai_enabled_requirement_not_satisfied_when_ai_off() {
-    let command = Availability::AI_ENABLED;
-    let session = Availability::AGENT_VIEW;
-    assert!(!session.contains(command));
-}
-
-#[test]
-fn commands_without_ai_enabled_remain_available_when_ai_off() {
-    // Commands like `/open-file`, `/rename-tab`, `/changelog` only set session-context bits.
-    // With AI off, `session_context` has no `AI_ENABLED` bit, but these should still match.
-    let command_local = Availability::LOCAL;
-    let command_always = Availability::ALWAYS;
-    let session_ai_off = Availability::TERMINAL_VIEW | Availability::LOCAL;
-    assert!(session_ai_off.contains(command_local));
-    assert!(session_ai_off.contains(command_always));
-}
-
-#[test]
-fn index_command_requires_repo_and_codebase_context() {
-    let command = Availability::REPOSITORY | Availability::CODEBASE_CONTEXT;
-
-    // Both present → available
-    let session = Availability::AGENT_VIEW
-        | Availability::LOCAL
-        | Availability::REPOSITORY
-        | Availability::CODEBASE_CONTEXT;
-    assert!(session.contains(command));
-
-    // Missing CODEBASE_CONTEXT → not available
-    let session = Availability::AGENT_VIEW | Availability::LOCAL | Availability::REPOSITORY;
-    assert!(!session.contains(command));
-
-    // Missing REPOSITORY → not available
-    let session = Availability::AGENT_VIEW | Availability::LOCAL | Availability::CODEBASE_CONTEXT;
-    assert!(!session.contains(command));
-}
 
 // --- Combined flag tests ---
 

@@ -816,7 +816,3 @@ impl Entity for OrchestrationEventService {
 }
 
 impl SingletonEntity for OrchestrationEventService {}
-
-#[cfg(test)]
-#[path = "orchestration_events_tests.rs"]
-mod tests;

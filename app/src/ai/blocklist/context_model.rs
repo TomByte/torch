@@ -925,7 +925,3 @@ pub enum BlocklistAIContextEvent {
 impl Entity for BlocklistAIContextModel {
     type Event = BlocklistAIContextEvent;
 }
-
-#[cfg(test)]
-#[path = "context_model_tests.rs"]
-mod tests;

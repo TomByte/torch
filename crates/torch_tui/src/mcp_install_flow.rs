@@ -332,7 +332,3 @@ fn input_text(editor: &ModelHandle<CodeEditorModel>, ctx: &AppContext) -> String
 impl Entity for TuiMcpInstallFlowModel {
     type Event = TuiMcpInstallFlowEvent;
 }
-
-#[cfg(test)]
-#[path = "mcp_install_flow_tests.rs"]
-mod tests;

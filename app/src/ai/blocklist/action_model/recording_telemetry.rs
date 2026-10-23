@@ -119,7 +119,3 @@ impl TelemetryEventDesc for RecordingTelemetryEventDiscriminants {
 }
 
 torch_core::register_telemetry_event!(RecordingTelemetryEvent);
-
-#[cfg(test)]
-#[path = "recording_telemetry_tests.rs"]
-mod tests;

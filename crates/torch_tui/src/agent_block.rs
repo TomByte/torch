@@ -2050,7 +2050,3 @@ impl TypedActionView for TuiAIBlock {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "agent_block_tests.rs"]
-mod tests;

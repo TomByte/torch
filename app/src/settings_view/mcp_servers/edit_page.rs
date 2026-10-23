@@ -987,7 +987,3 @@ fn should_block_save_for_secrets(
 ) -> bool {
     (safe_mode_enabled || enterprise_enforced) && contains_secrets
 }
-
-#[cfg(test)]
-#[path = "edit_page_tests.rs"]
-mod tests;

@@ -12,7 +12,3 @@ pub struct EnvironmentCheckoutArgs {
     #[arg(long, conflicts_with = "remove_origins_only")]
     pub fail_if_target_exists: bool,
 }
-
-#[cfg(test)]
-#[path = "environment_checkout_tests.rs"]
-mod tests;

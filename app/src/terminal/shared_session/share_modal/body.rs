@@ -404,7 +404,3 @@ impl TypedActionView for Body {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "body_tests.rs"]
-mod tests;

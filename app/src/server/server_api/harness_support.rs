@@ -16,8 +16,6 @@ use torch_server_client::PresignedDownloadResponse;
 #[path = "harness_usage/publication.rs"]
 mod publication;
 pub use publication::HarnessUsageCapability;
-#[cfg(test)]
-use publication::parse_harness_usage_retry_after;
 #[cfg(not(target_family = "wasm"))]
 pub use publication::{HarnessUsageError, HarnessUsageErrorKind, HarnessUsagePublicationStatus};
 
@@ -128,14 +126,6 @@ impl SnapshotUploadRequest {
 pub struct CheckpointGeneration(String);
 
 impl CheckpointGeneration {
-    /// Test-only escape hatch; production code mints generations via
-    /// `snapshot::mint_generation`. Gated to match `driver::snapshot`'s test module, which
-    /// does not build on Windows.
-    #[cfg(all(test, not(windows)))]
-    pub(crate) fn new_for_test(value: impl Into<String>) -> Self {
-        Self(value.into())
-    }
-
     /// Mirrors the server's `[A-Za-z0-9._-]{1,128}` format check, including the reserved `__`
     /// separator that would make `checkpoint_<generation>__<logical_name>` ambiguous.
     fn is_valid(value: &str) -> bool {
@@ -703,11 +693,3 @@ pub async fn upload_to_target(
 ) -> Result<()> {
     super::presigned_upload::upload_to_target(http_client, target, body).await
 }
-
-#[cfg(test)]
-#[path = "harness_support_tests.rs"]
-mod tests;
-
-#[cfg(test)]
-#[path = "harness_usage_tests.rs"]
-mod harness_usage_tests;

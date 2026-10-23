@@ -156,7 +156,3 @@ async fn natural_language_detection_heuristic(
 
     ClassificationResult::pure_shell(source)
 }
-
-#[cfg(test)]
-#[path = "mod_tests.rs"]
-mod tests;

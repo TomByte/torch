@@ -226,11 +226,6 @@ impl CloudPreferencesSyncer {
         self.has_completed_initial_load
     }
 
-    #[cfg(test)]
-    pub(crate) fn mark_initial_load_completed_for_test(&mut self) {
-        self.has_completed_initial_load = true;
-    }
-
     fn new_internal(
         ctx: &mut ModelContext<Self>,
         client_id_provider: Arc<dyn ClientIdProvider>,
@@ -1011,7 +1006,3 @@ impl Entity for CloudPreferencesSyncer {
 
 /// Mark CloudPreferencesSyncer as global application state.
 impl SingletonEntity for CloudPreferencesSyncer {}
-
-#[cfg(test)]
-#[path = "cloud_preferences_syncer_tests.rs"]
-mod tests;

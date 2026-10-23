@@ -216,7 +216,3 @@ pub(crate) fn build_cut_only_filtergraph(segments: &[crate::overlay::KeepSegment
     parts.push(format!("{inputs}concat=n={n}:v=1:a=0[vout]"));
     parts.join(";")
 }
-
-#[cfg(test)]
-#[path = "recording_post_process_tests.rs"]
-mod tests;

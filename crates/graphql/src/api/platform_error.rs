@@ -168,7 +168,3 @@ impl From<PlatformErrorInfo> for PlatformErrorInput {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "platform_error_tests.rs"]
-mod tests;

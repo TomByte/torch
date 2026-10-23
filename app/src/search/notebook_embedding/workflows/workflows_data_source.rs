@@ -64,7 +64,3 @@ impl SyncDataSource for CloudWorkflowsDataSource {
             .collect_vec())
     }
 }
-
-#[cfg(test)]
-#[path = "workflows_data_source_tests.rs"]
-mod tests;

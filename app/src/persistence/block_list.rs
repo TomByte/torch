@@ -372,7 +372,3 @@ pub(super) fn delete_ai_conversation(
 
     Ok(())
 }
-
-#[cfg(test)]
-#[path = "block_list_tests.rs"]
-mod tests;

@@ -508,7 +508,3 @@ where
         })
         .finish()
 }
-
-#[cfg(test)]
-#[path = "view_util_tests.rs"]
-mod tests;

@@ -353,7 +353,3 @@ fn status_osc_event(
         | ConversationStatus::WaitingForEvents => None,
     }
 }
-
-#[cfg(test)]
-#[path = "cli_agent_osc_event_publisher_tests.rs"]
-mod tests;

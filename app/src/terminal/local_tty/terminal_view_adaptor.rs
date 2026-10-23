@@ -2331,7 +2331,3 @@ pub fn shutdown_all_pty_event_loops(ctx: &mut AppContext) {
         })
     })
 }
-
-#[cfg(test)]
-#[path = "terminal_view_adaptor_tests.rs"]
-mod tests;

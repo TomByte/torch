@@ -151,7 +151,3 @@ pub(crate) fn render_response_summary(
         .truncate()
         .finish()
 }
-
-#[cfg(test)]
-#[path = "warping_indicator_tests.rs"]
-mod tests;

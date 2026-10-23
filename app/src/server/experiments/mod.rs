@@ -12,8 +12,6 @@
 //! for a full guide on the server-side experiment framework.
 
 use torchui::AppContext;
-#[cfg(test)]
-use torchui::SingletonEntity;
 
 use crate::features::FeatureFlag;
 
@@ -135,11 +133,7 @@ impl ServerExperiment {
                 // Runner availability is gated directly by the experiment arm.
             }
             #[cfg(test)]
-            Self::TestExperiment => {
-                model::TestModel::handle(_ctx).update(_ctx, |model, _| {
-                    model.0 += 1;
-                });
-            }
+            Self::TestExperiment => {}
         }
     }
 }

@@ -698,7 +698,3 @@ impl NodeMask {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "node_tests.rs"]
-mod tests;

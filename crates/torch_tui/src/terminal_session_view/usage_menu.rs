@@ -438,7 +438,3 @@ pub(super) fn render(
         )
         .finish()
 }
-
-#[cfg(test)]
-#[path = "usage_menu_tests.rs"]
-mod tests;

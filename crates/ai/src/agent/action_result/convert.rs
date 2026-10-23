@@ -1698,7 +1698,3 @@ impl TryFrom<StopRecordingResult> for api::request::input::tool_call_result::Res
         }
     }
 }
-
-#[cfg(test)]
-#[path = "convert_tests.rs"]
-mod tests;

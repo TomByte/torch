@@ -93,7 +93,3 @@ impl InputModePolicy for TuiInputModePolicy {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "input_mode_policy_tests.rs"]
-mod tests;

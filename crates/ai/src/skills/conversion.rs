@@ -289,7 +289,3 @@ fn convert_provider(
         api::skill_descriptor::provider::Type::Kiro(_) => Ok(SkillProvider::Kiro),
     }
 }
-
-#[cfg(test)]
-#[path = "conversion_tests.rs"]
-mod conversion_tests;

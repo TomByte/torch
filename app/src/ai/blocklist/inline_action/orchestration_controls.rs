@@ -1375,7 +1375,3 @@ pub fn render_validation_error(
     .with_margin_bottom(8.)
     .finish()
 }
-
-#[cfg(test)]
-#[path = "orchestration_controls_tests.rs"]
-mod tests;

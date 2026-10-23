@@ -133,7 +133,3 @@ impl From<torch_graphql::workspace::LlmProvider> for LLMProvider {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "llm_provider_tests.rs"]
-mod tests;

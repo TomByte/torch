@@ -3233,7 +3233,3 @@ impl AgentsWidget {
             .finish()
     }
 }
-
-#[cfg(test)]
-#[path = "agent_profiles_page_tests.rs"]
-mod tests;

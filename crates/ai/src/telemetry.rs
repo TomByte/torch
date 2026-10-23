@@ -218,7 +218,3 @@ impl TelemetryEventDesc for AITelemetryEventDiscriminants {
 }
 
 register_telemetry_event!(AITelemetryEvent);
-
-#[cfg(test)]
-#[path = "telemetry_tests.rs"]
-mod tests;

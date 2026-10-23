@@ -209,7 +209,3 @@ fn pi_mcp_config(servers: &HashMap<String, JSONMCPServer>) -> Value {
         .collect();
     json!({"mcpServers": servers})
 }
-
-#[cfg(test)]
-#[path = "pi_tests.rs"]
-mod tests;

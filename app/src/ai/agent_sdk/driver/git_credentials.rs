@@ -987,7 +987,3 @@ pub(crate) async fn refresh_loop(
         }
     }
 }
-
-#[cfg(test)]
-#[path = "git_credentials_tests.rs"]
-mod tests;

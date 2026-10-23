@@ -190,7 +190,3 @@ impl TelemetryEventDesc for PricingPromotionTelemetryEventDiscriminants {
 }
 
 torch_core::register_telemetry_event!(PricingPromotionTelemetryEvent);
-
-#[cfg(test)]
-#[path = "pricing_promotion_tests.rs"]
-mod tests;

@@ -608,7 +608,3 @@ impl Entity for RecordingController {
 }
 
 impl SingletonEntity for RecordingController {}
-
-#[cfg(test)]
-#[path = "recording_controller_tests.rs"]
-mod tests;

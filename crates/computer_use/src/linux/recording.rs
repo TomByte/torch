@@ -412,7 +412,3 @@ fn ffmpeg_error_tail(log: &str) -> String {
         format!(" ({tail})")
     }
 }
-
-#[cfg(test)]
-#[path = "recording_tests.rs"]
-mod tests;

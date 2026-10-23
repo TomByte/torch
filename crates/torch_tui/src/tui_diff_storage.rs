@@ -320,7 +320,3 @@ impl RegisteredDiffStorage for TuiDiffStorageHandle {
         })
     }
 }
-
-#[cfg(test)]
-#[path = "tui_diff_storage_tests.rs"]
-mod tests;

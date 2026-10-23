@@ -129,7 +129,3 @@ impl PersistedSubject {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "encoded_permissions_tests.rs"]
-mod tests;

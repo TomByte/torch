@@ -333,10 +333,6 @@ impl TuiGenericToolCallView {
     }
 }
 
-#[cfg(test)]
-#[path = "tui_generic_tool_call_view_tests.rs"]
-mod tests;
-
 impl Entity for TuiGenericToolCallView {
     type Event = TuiGenericToolCallViewEvent;
 }

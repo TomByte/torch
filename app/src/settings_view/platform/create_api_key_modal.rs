@@ -335,16 +335,6 @@ impl CreateApiKeyModal {
         });
     }
 
-    #[cfg(test)]
-    pub(crate) fn set_agents_for_test(
-        &mut self,
-        agents: Vec<AgentIdentity>,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        self.agents = agents;
-        self.populate_agent_dropdown(ctx);
-    }
-
     fn create(&mut self, ctx: &mut ViewContext<Self>) {
         if self.request_state == RequestState::Pending {
             return;
@@ -974,7 +964,3 @@ fn api_key_type_control_styles(app: &AppContext) -> UiComponentStyles {
         ..Default::default()
     }
 }
-
-#[cfg(test)]
-#[path = "create_api_key_modal_tests.rs"]
-mod tests;

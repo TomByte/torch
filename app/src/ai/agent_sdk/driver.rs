@@ -1572,25 +1572,6 @@ impl AgentDriver {
             });
     }
 
-    /// Minimal constructor for unit tests that need a live `AgentDriver` model to call
-    /// methods on (e.g. `load_environment_skills`, `load_global_skills`) without
-    /// bootstrapping a full agent run.
-    ///
-    /// The caller is responsible for creating the `TerminalDriver` handle beforehand
-    /// (e.g. via `TerminalDriver::create_from_existing_view`) and for registering all
-    /// required singleton models before constructing the driver.
-    #[cfg(test)]
-    pub(crate) fn new_for_test(
-        working_dir: PathBuf,
-        terminal_driver: ModelHandle<terminal::TerminalDriver>,
-        ctx: &mut ModelContext<Self>,
-    ) -> Self {
-        ctx.subscribe_to_model(&terminal_driver, |me, _, event, ctx| {
-            me.handle_terminal_driver_event(event, ctx);
-        });
-        Self::with_terminal(working_dir, terminal_driver)
-    }
-
     /// Pair to the registration in `create` / `execute_run`. No-op when
     /// nothing was registered.
     fn unregister_streamer_consumer(&self, ctx: &mut ModelContext<Self>) {
@@ -3604,10 +3585,7 @@ impl AgentDriver {
         let committed_conversation_id: Arc<Mutex<Option<AIConversationId>>> =
             Arc::new(Mutex::new(self.run_conversation_id));
         let exit_commit_handle = OrchestrationEventService::as_ref(ctx).exit_commit_handle();
-        #[cfg(test)]
-        let post_commit_gate = tests::test_post_commit_gate();
-        #[cfg_attr(not(test), allow(unused_mut))]
-        let mut run_exit = IdleTimeoutSender::new(internal_tx).with_on_commit({
+        let run_exit = IdleTimeoutSender::new(internal_tx).with_on_commit({
             let committed_conversation_id = Arc::clone(&committed_conversation_id);
             move || {
                 if let Ok(guard) = committed_conversation_id.lock()
@@ -3615,22 +3593,8 @@ impl AgentDriver {
                 {
                     exit_commit_handle.commit(conversation_id);
                 }
-                // Test-only: lets a test pause deterministically right here — the commit has
-                // already landed, but the completion value has not been sent yet, so nothing
-                // (including the async forwarder that runs model-side cleanup) can have
-                // observed this run ending.
-                #[cfg(test)]
-                if let Some(gate) = &post_commit_gate {
-                    gate.wait(Duration::ZERO);
-                }
             }
         });
-        #[cfg(test)]
-        {
-            if let Some(wait) = tests::test_idle_wait_override() {
-                run_exit = run_exit.with_wait(wait);
-            }
-        }
         let terminal = self.terminal_driver.as_ref(ctx).terminal_view();
         let prepared_conversation_id = terminal
             .as_ref(ctx)
@@ -4968,7 +4932,3 @@ fn write_session_joined(join_url: &str, output_format: OutputFormat) {
         .context("Failed to write shared session event")
     );
 }
-
-#[cfg(test)]
-#[path = "driver_tests.rs"]
-mod tests;

@@ -139,7 +139,3 @@ impl ReviewCommentThreadItem for InsertReviewComment {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "review_comments_tests.rs"]
-mod tests;

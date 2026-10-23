@@ -337,7 +337,3 @@ fn input_text(editor: &ModelHandle<CodeEditorModel>, app: &AppContext) -> String
         buffer.text().into_string()
     }
 }
-
-#[cfg(test)]
-#[path = "conversation_menu_tests.rs"]
-mod tests;

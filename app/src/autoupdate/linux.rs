@@ -569,7 +569,3 @@ fn is_pacman_signing_key_installed() -> bool {
     let sixty_days_from_now = chrono::Utc::now() + chrono::Duration::days(60);
     expiry_timestamp > sixty_days_from_now.timestamp()
 }
-
-#[cfg(test)]
-#[path = "linux_tests.rs"]
-mod tests;

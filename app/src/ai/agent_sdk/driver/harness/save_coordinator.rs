@@ -232,7 +232,3 @@ fn remaining_final_save_budget(now: SystemTime, deadline: Option<SystemTime>) ->
             .min(FINAL_SAVE_TIMEOUT)
     })
 }
-
-#[cfg(test)]
-#[path = "save_coordinator_tests.rs"]
-mod tests;

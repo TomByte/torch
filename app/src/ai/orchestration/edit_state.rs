@@ -280,7 +280,3 @@ impl OrchestrationEditState {
         self.orchestration_config_state.auth_secret_selection = resolved_auth;
     }
 }
-
-#[cfg(test)]
-#[path = "edit_state_tests.rs"]
-mod tests;

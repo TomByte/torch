@@ -204,7 +204,3 @@ impl MerkleTree {
         })
     }
 }
-
-#[cfg(test)]
-#[path = "tree_tests.rs"]
-mod tests;

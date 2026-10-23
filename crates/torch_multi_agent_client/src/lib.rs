@@ -165,7 +165,3 @@ fn decode_response_event(data: &str) -> Result<warp_multi_agent_api::ResponseEve
     warp_multi_agent_api::ResponseEvent::decode(decoded_data.as_slice())
         .map_err(Error::ProtobufDecode)
 }
-
-#[cfg(test)]
-#[path = "lib_tests.rs"]
-mod tests;

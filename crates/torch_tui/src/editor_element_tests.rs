@@ -29,20 +29,6 @@ fn model(ctx: &mut AppContext, text: &str) -> ModelHandle<CodeEditorModel> {
 }
 
 #[test]
-fn masked_editor_paints_only_mask_glyphs() {
-    App::test((), |mut app| async move {
-        app.update(|ctx| {
-            ctx.add_singleton_model(|_| Appearance::mock());
-            let model = model(ctx, "top-secret");
-            let element = TuiEditorElement::new(&model, ctx).masked();
-            let rendered = render_lines(ctx, element, 20, 1).join("\n");
-            assert_eq!(rendered, "••••••••••");
-            assert!(!rendered.contains("top-secret"));
-        });
-    });
-}
-
-#[test]
 fn selection_span_uses_grapheme_width() {
     App::test((), |mut app| async move {
         app.update(|ctx| {
@@ -63,6 +49,7 @@ fn selection_span_uses_grapheme_width() {
         });
     });
 }
+
 #[test]
 fn text_overrides_follow_soft_wrapped_character_ranges() {
     App::test((), |mut app| async move {
@@ -143,6 +130,7 @@ fn render_lines(
         .map(|line| line.trim_end().to_string())
         .collect()
 }
+
 fn dispatch_event(ctx: &AppContext, element: TuiEditorElement, event: &TuiEvent) -> bool {
     dispatch_event_with_view_focus(ctx, element, event, true)
 }

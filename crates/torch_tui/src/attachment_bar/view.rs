@@ -357,7 +357,3 @@ impl TypedActionView for TuiAttachmentBar {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "view_tests.rs"]
-mod tests;

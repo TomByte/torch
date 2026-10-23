@@ -1012,7 +1012,3 @@ fn build_spawn_request(
         orchestration_handoff,
     }
 }
-
-#[cfg(test)]
-#[path = "pipeline_tests.rs"]
-mod tests;

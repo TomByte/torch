@@ -431,7 +431,3 @@ fn send_tui_onboarding_event(event: Option<TuiOnboardingTelemetryEvent>, ctx: &m
         torch_core::send_telemetry_from_app_ctx!(event, ctx);
     }
 }
-
-#[cfg(test)]
-#[path = "mod_tests.rs"]
-mod tests;

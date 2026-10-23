@@ -769,7 +769,3 @@ impl TypedActionView for TuiHandoffBlock {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "block_tests.rs"]
-mod tests;

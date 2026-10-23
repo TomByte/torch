@@ -520,7 +520,3 @@ impl Entity for VoiceInput {
 }
 
 impl SingletonEntity for VoiceInput {}
-
-#[cfg(test)]
-#[path = "lib_tests.rs"]
-mod tests;

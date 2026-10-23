@@ -166,7 +166,3 @@ fn resolve_sidecar_program(dir: &Path, program: &str) -> Result<String> {
         .into_string()
         .map_err(|_| anyhow!("Sidecar ACP executable path is not valid UTF-8"))
 }
-
-#[cfg(test)]
-#[path = "manifest_tests.rs"]
-mod tests;

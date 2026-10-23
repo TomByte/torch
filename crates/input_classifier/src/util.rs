@@ -132,7 +132,3 @@ pub fn is_installed_binary(input: &ParsedTokensSnapshot) -> bool {
         .map(|token| token.token_description.is_some())
         .unwrap_or(false)
 }
-
-#[cfg(all(test, any(feature = "nld_heuristic_v1", feature = "nld_heuristic_v2")))]
-#[path = "util_tests.rs"]
-mod tests;

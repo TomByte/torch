@@ -833,7 +833,3 @@ mod cache {
 
     pub(super) fn write(_token: &str) {}
 }
-
-#[cfg(test)]
-#[path = "iap_tests.rs"]
-mod tests;

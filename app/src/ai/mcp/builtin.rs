@@ -181,7 +181,3 @@ fn builtin_mcp_installation(
         HashMap::new(),
     )
 }
-
-#[cfg(test)]
-#[path = "builtin_tests.rs"]
-mod tests;

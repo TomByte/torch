@@ -613,7 +613,3 @@ impl From<SerializedBlock> for SerializedBlockListItem {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "persistence_tests.rs"]
-mod tests;

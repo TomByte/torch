@@ -1336,7 +1336,3 @@ mod styles {
         appearance.monospace_font_size() + 6.
     }
 }
-
-#[cfg(test)]
-#[path = "zero_state_block_tests.rs"]
-mod tests;

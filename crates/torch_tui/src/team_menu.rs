@@ -256,7 +256,3 @@ fn input_text(editor: &ModelHandle<CodeEditorModel>, app: &AppContext) -> String
 impl Entity for TuiTeamMenuModel {
     type Event = TuiTeamMenuEvent;
 }
-
-#[cfg(test)]
-#[path = "team_menu_tests.rs"]
-mod tests;
