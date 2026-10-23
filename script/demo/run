@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+#
+# Opens a debug build of Torch in an isolated `demo` data profile with example projects and
+# scripted agents, for screenshots. Your own Torch settings and sessions are not touched.
+#
+# Build first with ./script/run --dont-open (data profiles only work in debug builds).
+# --stagger makes agents reach their final states over five minutes, so ages vary in screenshots.
+set -euo pipefail
+
+STAGGER=""
+[[ "${1:-}" == "--stagger" ]] && STAGGER=1
+
+KIT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO="$(cd "$KIT/../.." && pwd)"
+APP="${TORCH_APP:-$REPO/target/debug/bundle/osx/Torch.app}"
+
+if [[ ! -x "$APP/Contents/MacOS/torch" ]]; then
+  echo "No debug build at $APP. Run ./script/run --dont-open first." >&2
+  exit 1
+fi
+
+"$KIT/setup"
+# Start from a clean window state so earlier demo runs are not restored alongside this one.
+rm -rf "$HOME/Library/Application Support/dev.tombyte.Torch-demo"
+TORCH_DEMO_STAGGER="$STAGGER" ZDOTDIR="$KIT/zsh" WARP_DATA_PROFILE=demo "$APP/Contents/MacOS/torch" "torch://launch/torch-demo.yaml" \
+  >/dev/null 2>&1 &
+echo "Torch demo started (pid $!)."

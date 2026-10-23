@@ -1,71 +1,79 @@
-# Torch
+<p align="center">
+  <img src="docs/images/torch-icon.png" width="128" height="128" alt="Torch app icon">
+</p>
 
-Torch is a local terminal based on Warp, maintained independently at [TomByte/torch](https://github.com/TomByte/torch).
+<h1 align="center">Torch</h1>
 
-- Opens directly into your shell without an account or login screen.
-- Keeps tab completion, command history, ordinary autosuggestions, terminal blocks, and local settings.
-- Focuses on terminal and CLI-agent sessions: no built-in file editor, file explorer, or code review panels. Cmd+P searches projects, sessions, and terminal actions; file links open externally.
-- Disables built-in AI predictions, natural-language input detection, AI input hints, and account-backed services.
-- Removes account, billing, teams, cloud, and agent settings from navigation and search.
-- Uses its own `dev.tombyte.Torch` application identity and data directory (`~/.torch` for portable configuration on macOS).
-- Ships without Warp telemetry, crash reporting, automatic updates, or upstream repository automation.
+<p align="center">A local terminal for running coding agents side by side.</p>
 
-## Terminal interface
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/torch-dark.png">
+    <img src="docs/images/torch-light.png" alt="Torch with six coding agents across four projects: one needs permission to run a command, one has finished, one has failed and three are working">
+  </picture>
+</p>
 
-Torch uses a compact session sidebar and an inset terminal pane, with a light theme and 14-point terminal text by default. Existing font preferences remain respected.
+Torch is a native, GPU-rendered terminal built for working with CLI coding agents such as Claude Code, Codex, Gemini CLI and OpenCode. Run as many as you like across your projects; Torch groups the sessions by project and shows which agents are working, finished, failed or waiting on you, so you don't have to check every tab.
 
-Choose **Light**, **Dark**, **Kanagawa** (Wave), **Ayu** (Mirage), or **Catppuccin** (Latte, Frappé, Macchiato, or Mocha) in **Settings → Appearance → Current theme**. All of them keep the same terminal layout and controls. Enable **Sync with OS** to use your chosen themes for light and dark appearance. [Palette sources and licences](docs/design/theme-sources.md) describe Kanagawa, Ayu, and Catppuccin.
+It's a fork of [Warp](https://github.com/warpdotdev/warp) with the account, cloud and built-in AI taken out. Torch doesn't ship a model of its own: your agents are the AI, and everything stays on your machine.
 
-Retired built-in theme preferences fall back to Light or Dark, including choices saved for OS appearance modes. Existing custom theme files and references are preserved, but custom themes and creation controls are hidden from the picker.
+## Why
 
-Projects start empty. In **Settings → Projects**, use **Add project** for an individual folder or **Add parent folder** to discover its immediate child directories as projects. Settings are saved locally without cloud sync. Removing a configured folder leaves its files and open sessions intact.
+Running several agents at once turns into tab-hopping: one is waiting for permission, another finished ten minutes ago, a third hit a rate limit. Torch puts that state where you can see it:
 
-Press **Cmd+P** to find projects, sessions, and actions. Projects appear first: **Resume project NAME** switches to an existing session in that project, including sessions in subdirectories or reached through a symlink; **Open project NAME** starts one if none is open. Choose **New session in NAME** for an additional terminal, or **Manage projects** to open Settings. **New session** uses the current folder; **New session in directory…** opens a folder chooser. An existing absolute path, `~`, or `~/project` opens a new terminal directly in that directory.
+- **Sessions grouped by project.** The sidebar shows each project's sessions with their branch, task and how long they've been in their current state.
+- **Agent status at a glance.** Needs you, finished, failed, working or idle, with the tool an agent is asking permission for.
+- **Show Agents** (<kbd>Cmd</kbd> <kbd>Shift</kbd> <kbd>A</kbd>) lists every agent in every window, most urgent first. Pick one to jump to it.
+- **<kbd>Cmd</kbd> <kbd>P</kbd>** finds projects, sessions and actions, and opens new sessions in a project.
 
-Sessions group automatically by their matching project root, falling back to their working folder. Right-click a session and choose **New group with tab** to place it in a manual group; manual groups take precedence. Click any project, folder, or manual group heading to collapse or expand its sessions; hidden terminals keep running. Automatic group collapse lasts for the current window, while manual groups retain their saved state. Switching to a session reveals its group. Double-click a session or manual group to rename it. The sidebar toggle and plus button sit beside the native window controls.
+Underneath it's still Warp's terminal: blocks, Tab completion, command history and autosuggestions. There are themes too: Light, Dark, Kanagawa, Ayu and Catppuccin.
 
-Activity ages and status indicators come from actual terminal state. Rich Claude/Codex status appears when the CLI supplies supported status events; ordinary commands display their running or idle state. Torch does not manufacture agent activity.
+## Agent status
 
-The visual reference is retained in `docs/design/terminal-reference.png`. To inspect transcript typography without running an agent, run `python3 script/preview-terminal-ui.py` from this checkout in Torch. It displays a labelled synthetic transcript and exits on Enter.
+Claude Code and Codex report their status through hooks that ship inside Torch. Start either agent in Torch and click **Set up session status** in the session footer; Torch adds a small hook to that agent's settings, and it only reports when the agent runs inside Torch. Other agents are recognised by their command and show live status when they send Warp-compatible status notifications. Ordinary commands show as running or idle. Torch never invents activity.
+
+## What's removed from Warp
+
+- **Accounts and login.** Torch opens straight into your shell.
+- **Telemetry and crash reporting.** Telemetry calls compile to no-ops, and no crash reporter is linked.
+- **Warp's AI.** No Agent Mode, AI command suggestions or natural-language detection.
+- **Cloud features.** No Warp Drive, cloud sync, session sharing, teams or billing.
+- **Auto-updates.** No update checks and no Warp release servers.
+
+These are switched off by the `local_only` feature, which every Torch build uses, and Warp's server addresses point at an unreachable `.invalid` domain. Some inherited cloud and AI code stays in the source so shared types still compile, but it can't run. Torch has its own app identity (`dev.tombyte.Torch`) and keeps its settings in `~/.torch` on macOS.
 
 ## Build and run
 
-The workspace uses Rust 1.92.0 (see `rust-toolchain.toml`), Git LFS, and platform build dependencies. On macOS, install Xcode including its Metal Toolchain, CMake, and `cargo-bundle` before building. `./script/bootstrap` can install platform dependencies; it skips Warp account authentication and common agent skill installation by default.
+Torch is developed and tested on macOS. The Linux and Windows build paths are inherited from Warp and untested.
+
+You'll need Rust 1.92.0 (pinned in `rust-toolchain.toml`), Git LFS, Xcode with its Metal toolchain, CMake and `cargo-bundle`. `./script/bootstrap` installs the platform dependencies.
 
 ```sh
-git lfs install --local
-git lfs pull
-cargo check -p warp --bin torch --features gui
+git lfs install --local && git lfs pull
 ./script/run
 ```
 
-On macOS, `./script/run` creates `target/debug/bundle/osx/Torch.app`. Linux uses `cargo run --bin torch --features gui,local_only`. The internal Cargo package remains named `warp` to preserve workspace compatibility; the shipped executable is `torch`.
+`./script/run` builds and opens `target/debug/bundle/osx/Torch.app`. For a signed, notarised release build, see `./script/release --help`.
 
-`local_only` is enabled by default and explicitly by the run script. The Torch executable requires this feature, including for custom builds. The inherited cloud and AI implementation remains in the source for shared type compatibility, but the local-only policy prevents authentication, AI enablement, cloud GraphQL requests, and account UI. Ordinary CLI tools, including separately installed agent CLIs, can still run in the shell.
+## Screenshots
 
-## Updates
-
-For a future independent update service, see the [update server and release guide](docs/update-server.md). It covers the required one-time client changes, HTTPS hosting, macOS signing, and publishing; automatic updates remain disabled until that integration is implemented.
-
-## Validation
+The screenshot above is staged with `script/demo`: example Git repositories and scripted stand-in agents that report their state to Torch the same way real agents do. It runs in a separate data profile, so your own settings and sessions aren't touched.
 
 ```sh
-cargo test -p warp_features --features local_only,test-util
-cargo test -p warp --lib --features gui workspace::view::vertical_tabs::torch::tests
-cargo clippy -p warp_features --features local_only,test-util --all-targets -- -D warnings
-cargo check -p warp --bin torch --features gui
+./script/run --dont-open
+./script/demo/run --stagger
 ```
 
-Upstream tests that explicitly exercise authenticated or AI-enabled behavior describe the original product and are not a Torch acceptance suite. Test local-only policy and ordinary terminal behavior when changing this fork.
+`--stagger` spreads the agents' final states over five minutes so the ages vary. Set `TORCH_DEMO_THEME=dark` for the dark version.
 
-The initial Torch changes were validated on macOS with a native app build, shell execution and Tab-completion smoke tests, 14 path tests, and four feature-policy tests. Linux and Windows packaging changes have not been run on those platforms. Rust 1.97 reports inherited style warnings under strict whole-app Clippy; targeted policy/core Clippy checks pass.
+## Thanks to Warp
 
-The sidebar redesign adds focused tests for folder identity, activity labels, grouped selection order, dark text contrast, and custom theme classification. Native macOS checks cover normal shell completion, manual group creation/rename/collapse, long titles, smaller windows, and legacy layout preferences. The app Clippy gate passes with inherited style-lint categories allowed; no new warning exemptions are added to the source.
+Torch exists because the Warp team open-sourced their terminal. Its renderer, terminal model, shell integration, completions and most of what makes it fast are Warp's work. Thank you.
 
-## Source and licences
+Torch is an independent project and isn't affiliated with or endorsed by Warp (Denver Technologies, Inc.). Please report Torch issues here rather than to Warp.
 
-Imported from [warpdotdev/warp](https://github.com/warpdotdev/warp), commit `cd4b970e6331aa7e9c18bdd441ab0a1b841a0b1c`, on 20 October 2026, into a new Git history. There is no upstream remote or GitHub fork relationship. The only project remote is `TomByte/torch`.
+## Licence
 
-The original copyright notices and licences are retained. Most of the source is [AGPL-3.0](LICENSE-AGPL); `warpui` and `warpui_core` are [MIT](LICENSE-MIT). Torch is independent of Warp and Denver Technologies, Inc.
+Torch keeps Warp's licences and copyright notices. Most of the code is [AGPL-3.0](LICENSE-AGPL); the `warpui` and `warpui_core` UI crates are [MIT](LICENSE-MIT). The source was imported from [warpdotdev/warp](https://github.com/warpdotdev/warp) at commit `cd4b970`. Internal crate names, protocol identifiers and some technical docs still say Warp, for compatibility and attribution.
 
-Internal crate names, protocol identifiers, shell integration variables, dependency URLs, and historical technical documentation may retain Warp names for compatibility and attribution. Public dependencies hosted by warpdotdev remain pinned in Cargo manifests/lockfile; repository remotes and release automation are independent.
+See [CONTRIBUTING.md](CONTRIBUTING.md) to contribute and [SECURITY.md](SECURITY.md) to report a vulnerability.

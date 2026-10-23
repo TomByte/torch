@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+#
+# Creates the example projects and the launch configuration used for Torch screenshots.
+#
+# Projects go in $TORCH_DEMO_ROOT (default ~/torch-demo) as small Git repositories on feature
+# branches. The launch configuration goes in the `demo` data profile's directory, so it never
+# touches your own Torch settings. Run ./script/demo/run to open it.
+set -euo pipefail
+
+KIT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="${TORCH_DEMO_ROOT:-$HOME/torch-demo}"
+PROFILE_DIR="$HOME/.torch-demo"
+
+export GIT_AUTHOR_NAME="Torch Demo" GIT_AUTHOR_EMAIL="demo@example.com"
+export GIT_COMMITTER_NAME="Torch Demo" GIT_COMMITTER_EMAIL="demo@example.com"
+
+# make_repo NAME BRANCH FILE...
+make_repo() {
+  local dir="$ROOT/$1" branch="$2"
+  shift 2
+  [[ -d "$dir/.git" ]] && return
+  mkdir -p "$dir"
+  git -C "$dir" init -q -b main
+  printf '# %s\n' "$(basename "$dir")" > "$dir/README.md"
+  for file in "$@"; do
+    mkdir -p "$dir/$(dirname "$file")"
+    printf '// %s\n' "$file" > "$dir/$file"
+  done
+  git -C "$dir" add -A
+  git -C "$dir" commit -q -m "Initial commit"
+  [[ "$branch" == main ]] || git -C "$dir" switch -q -c "$branch"
+}
+
+make_repo orbit-api feat/rate-limits src/main.rs src/middleware/mod.rs src/middleware/rate_limit.rs Cargo.toml
+make_repo orbit-web fix/flaky-checkout src/pages/settings/Profile.tsx e2e/checkout.spec.ts package.json
+make_repo payments chore/sdk-v5 src/charges.ts package.json
+make_repo infra feat/preview-envs modules/web/main.tf main.tf
+make_repo docs main index.md guides/getting-started.md
+
+mkdir -p "$PROFILE_DIR/launch_configurations"
+# Torch's own prompt rather than your shell's (which shows your user and host name), no
+# first-run notifications banner, and the demo folders as projects.
+cat > "$PROFILE_DIR/settings.toml" <<EOF
+[appearance.themes]
+system_theme = false
+theme = "${TORCH_DEMO_THEME:-light}"
+
+[terminal.input]
+honor_ps1 = false
+
+[notifications.preferences]
+mode = "dismissed"
+
+[projects]
+parent_directories = ["$ROOT"]
+
+[session.new_session_shell_override]
+executable = "/bin/zsh"
+EOF
+
+# tab DIR COMMAND: a session in DIR running COMMAND.
+tab() {
+  cat <<EOF
+      - layout:
+          cwd: $ROOT/$1
+        commands:
+          - exec: $2
+EOF
+}
+{
+  cat <<EOF
+name: torch-demo
+windows:
+  - active_tab_index: 1
+    tabs:
+EOF
+  tab orbit-api "claude \"Add per-key rate limiting to the public API\""
+  tab orbit-web "claude \"Fix the flaky checkout end-to-end test\""
+  tab orbit-web "gemini \"Migrate the settings pages to the new form fields\""
+  tab payments "claude \"Upgrade payments-sdk to v5 and fix the breaking changes\""
+  tab infra "opencode \"Write a Terraform module for preview environments\""
+  tab infra "codex \"Review the preview-env module for drift\""
+  tab docs "docs-preview"
+} > "$PROFILE_DIR/launch_configurations/torch-demo.yaml"
+
+echo "Demo projects: $ROOT"
+echo "Launch configuration: $PROFILE_DIR/launch_configurations/torch-demo.yaml"

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# A stand-in docs dev server for the Torch demo: an ordinary long-running command, not an agent.
+printf '\033]0;docs preview\007'
+printf '\n  \033[1;32mdocs\033[0m dev server ready in 412 ms\n\n'
+printf '  \033[1m➜\033[0m  Local:   \033[36mhttp://localhost:4321/\033[0m\n'
+printf '  \033[2m➜  Network: use --host to expose\033[0m\n\n'
+printf '  \033[2m16:02:11\033[0m \033[32mpage reload\033[0m guides/getting-started.md\n'
+exec sleep 86400
