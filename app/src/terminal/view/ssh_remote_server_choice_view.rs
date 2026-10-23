@@ -1,5 +1,5 @@
 //! Inline block view that asks the user whether they want to install
-//! Warp's SSH extension on the remote host the shell just connected to,
+//! Torch's SSH extension on the remote host the shell just connected to,
 //! or continue without installing (falling back to the existing
 //! ControlMaster warpification path).
 //!
@@ -8,7 +8,7 @@
 //!
 //! The view owns:
 //! - a child [`KeyboardNavigableButtons`] handle for the two selectable
-//!   cards ("Install Warp's SSH extension" / "Continue without installing"),
+//!   cards ("Install Torch's SSH extension" / "Continue without installing"),
 //! - the [`SessionId`] this prompt is scoped to (used for event forwarding),
 //! - the current "Don't ask me this again" checked state (purely local to
 //!   this prompt instance; persisted to `ssh_extension_install_mode` only
@@ -77,7 +77,7 @@ impl SshRemoteServerChoiceView {
                 rich_navigation_button(
                     "Install Torch's SSH extension".to_string(),
                     Some(
-                        "Install Warp's extension to enable agent features like file browsing, \
+                        "Install Torch's extension to enable agent features like file browsing, \
                          code review, and intelligent command completions in this session."
                             .to_string(),
                     ),

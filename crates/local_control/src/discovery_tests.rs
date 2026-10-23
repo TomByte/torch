@@ -188,7 +188,7 @@ fn records_from_other_channels_are_ignored() {
     let record = InstanceRecord::for_current_process(
         Some(ControlEndpoint::localhost(4000)),
         "dev",
-        "dev.warp.Warp-Dev",
+        "dev.warp.Torch-Dev",
         Some("test".to_owned()),
         crate::protocol::ActionKind::implemented_metadata(),
     );

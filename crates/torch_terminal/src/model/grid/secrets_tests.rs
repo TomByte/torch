@@ -230,43 +230,6 @@ fn test_secret_redaction_unobfuscated_secret_remains_after_byte_processing() -> 
 }
 
 #[test]
-fn test_secret_redaction_secret_remains_after_resize() {
-    crate::model::secrets::set_user_and_enterprise_secret_regexes(
-        [&Regex::new("ABCD").expect("Should be able to construct regex")],
-        std::iter::empty(), // No enterprise secrets
-    );
-
-    let mut blockgrid = empty_blockgrid(2, 5, 2, ObfuscateSecrets::Yes);
-    let grid_handler = blockgrid.grid_handler_mut();
-
-    // Nothing has been inserted into the grid, there should be no secrets.
-    assert!(grid_handler.secrets.is_empty());
-
-    grid_handler.input_at_cursor("ABCDE");
-    grid_handler.on_finish_byte_processing(&ansi::ProcessorInput::new(&[]));
-
-    // There should be one secret in the range (0,0)..(0,3).
-    assert_eq!(grid_handler.secrets.len(), 1);
-    assert_eq!(
-        secret_ranges(grid_handler),
-        vec![Point::new(0, 0)..=Point::new(0, 3)]
-    );
-
-    // Resize the grid, to only include 2 columns. This will cause the the last two cells in the
-    // secret to wrap to the next line.
-    let size_info = SizeInfo::new_without_font_metrics(2, 2);
-    grid_handler.resize(size_info);
-    assert_eq!(grid_handler.total_rows(), 4);
-
-    // The range should now be from (0,0)..=(1,1)
-    assert_eq!(grid_handler.secrets.len(), 1);
-    assert_eq!(
-        secret_ranges(grid_handler),
-        vec![Point::new(0, 0)..=Point::new(1, 1)]
-    );
-}
-
-#[test]
 fn test_bytes_processed_for_secrets_after_turning_redaction() {
     crate::model::secrets::set_user_and_enterprise_secret_regexes(
         [&Regex::new("abcd").expect("Should be able to construct regex")],

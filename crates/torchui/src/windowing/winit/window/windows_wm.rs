@@ -15,7 +15,7 @@ use crate::windowing::winit::window::WindowManager;
 use crate::{DisplayId, DisplayIdx};
 
 impl WindowManager {
-    /// Returns the active Warp window. This will return an error if a different app's window is
+    /// Returns the active Torch window. This will return an error if a different app's window is
     /// active.
     fn get_active_window_handle(&self) -> Result<Arc<WinitWindow>> {
         let window_id = &self

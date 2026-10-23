@@ -61,11 +61,11 @@ use opentelemetry_sdk::resource::{EnvResourceDetector, TelemetryResourceDetector
 use opentelemetry_sdk::trace::{
     SdkTracer, SdkTracerProvider, Span as SdkSpan, SpanData, SpanExporter,
 };
+use torchui::AppContext;
 use tracing::subscriber;
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::layer::SubscriberExt as _;
 use url::{Host, Url};
-use torchui::AppContext;
 
 use super::Initialization;
 use super::child_process::ChildProcessTracingConfig;
@@ -78,7 +78,7 @@ use crate::tracing::install_no_subscriber;
 /// spans we don't care about (e.g.: ones from dependencies).
 const CLOUD_AGENT_MARKER: &str = "tags.cloud_agent";
 /// The environment variable used to configure the cloud agent OTLP endpoint.
-const CLOUD_AGENT_OTLP_ENDPOINT: &str = "WARP_CLOUD_AGENT_OTLP_ENDPOINT";
+const CLOUD_AGENT_OTLP_ENDPOINT: &str = "TORCH_CLOUD_AGENT_OTLP_ENDPOINT";
 /// The environment variable used to configure the OTel service name.
 const OTEL_SERVICE_NAME: &str = "OTEL_SERVICE_NAME";
 /// The minimum interval between local export failure diagnostics.
@@ -191,7 +191,7 @@ fn init_exporter(
 ///
 /// A batch exporter keeps network export off instrumentation call sites. The provider is retained
 /// by [`Initialization`] so application termination can explicitly shut it down after attempting
-/// to end registered active spans. Exported resources include Warp's version and channel alongside
+/// to end registered active spans. Exported resources include Torch's version and channel alongside
 /// standard environment-detected OpenTelemetry attributes, with [`OTEL_SERVICE_NAME`] taking
 /// precedence over the default service name. The exporter is built once with a dynamic HTTP client
 /// so credential refresh can update requests without reconstructing provider state.

@@ -98,7 +98,7 @@ pub fn test_execution_profile_model_persists_and_hot_reloads_settings_file() -> 
 
     new_builder()
         .with_setup(|utils| {
-            utils.set_env("WARP_CONFIG_WATCHER_DELAY_MS", Some("10".to_string()));
+            utils.set_env("TORCH_CONFIG_WATCHER_DELAY_MS", Some("10".to_string()));
             write_settings_file(INITIAL_PROFILES);
         })
         .with_step(wait_until_bootstrapped_single_pane_for_tab(0))

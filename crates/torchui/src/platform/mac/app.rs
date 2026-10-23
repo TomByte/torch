@@ -157,7 +157,7 @@ impl App {
             // SAFETY: the app and its delegate are exclusively owned here, so writing
             // the `rustWrapper` ivar and messaging them is sound.
             unsafe {
-                let app_delegate = app.delegate().expect("the warp app always has a delegate");
+                let app_delegate = app.delegate().expect("the torch app always has a delegate");
 
                 let self_ptr = Box::into_raw(Box::new(self));
                 (*app_ptr).set_ivar(RUST_WRAPPER_IVAR_NAME, self_ptr as *mut c_void);
@@ -277,7 +277,7 @@ pub unsafe extern "C-unwind" fn warp_app_will_finish_launching(this: &mut Object
 
         let app_delegate = ns_app
             .delegate()
-            .expect("the warp app always has a delegate");
+            .expect("the torch app always has a delegate");
 
         if app.callbacks.has_internet_reachability_changed_callback() {
             // `setReachabilityListener` is a custom warp app-delegate selector.

@@ -1205,7 +1205,7 @@ impl RichTextAction<CodeEditorView> for CodeEditorViewAction {
             modifiers.shift
         );
 
-        // The first mouse down to bring focus to a Warp window will not have a corresponding mouse up.
+        // The first mouse down to bring focus to a Torch window will not have a corresponding mouse up.
         // We ignore it, and they can click again.
         if is_first_mouse {
             return None;

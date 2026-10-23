@@ -5,8 +5,8 @@ use std::sync::Arc;
 
 use mockall::predicate::eq;
 use tempfile::TempDir;
-use uuid::Uuid;
 use torch_cli::{OZ_HARNESS_ENV, OZ_PARENT_RUN_ID_ENV, OZ_RUN_ID_ENV};
+use uuid::Uuid;
 
 use super::*;
 use crate::ai::agent_events::{AgentMessageEventMetadata, MessageHydrator};
@@ -869,9 +869,9 @@ fn prepare_local_wake_command_rehydrates_transcript_with_self_managed_listener()
     assert!(command.contains(&format!("{OZ_HARNESS_ENV}={}", shell_quote("claude"))));
     assert!(!command.contains(OZ_MESSAGE_LISTENER_MANAGED_EXTERNALLY_ENV));
     assert!(!command.contains("OZ_PARENT_LISTENER_MANAGED_EXTERNALLY"));
-    // The WARP_ aliases are injected alongside the OZ_ names, so they must be dropped with them.
-    assert!(!command.contains("WARP_MESSAGE_LISTENER_MANAGED_EXTERNALLY"));
-    assert!(!command.contains("WARP_PARENT_LISTENER_MANAGED_EXTERNALLY"));
+    // The TORCH_ aliases are injected alongside the OZ_ names, so they must be dropped with them.
+    assert!(!command.contains("TORCH_MESSAGE_LISTENER_MANAGED_EXTERNALLY"));
+    assert!(!command.contains("TORCH_PARENT_LISTENER_MANAGED_EXTERNALLY"));
     assert_eq!(
         fs::read_to_string(&prompt_path).unwrap(),
         "resume prompt\n\nwake prompt"

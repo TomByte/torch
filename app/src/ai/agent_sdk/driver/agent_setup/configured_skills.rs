@@ -77,7 +77,7 @@ pub(crate) async fn resolve_configured_skills<H: Entity + 'static>(
     selected_execution_skills(resolved)
 }
 
-/// Keeps the first skill for prompt context and collects unique search paths for `WARP_SKILL_DIRS`.
+/// Keeps the first skill for prompt context and collects unique search paths for `TORCH_SKILL_DIRS`.
 pub(crate) fn selected_execution_skills(
     skills: Vec<ResolvedSkill>,
 ) -> Result<(Option<ResolvedSkill>, Vec<PathBuf>), AgentDriverError> {

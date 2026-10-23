@@ -1249,7 +1249,7 @@ impl HostRequestHandle {
     }
 
     /// Generates a commit message via AI on the remote host (the daemon
-    /// computes the diff locally and calls the Warp content endpoint).
+    /// computes the diff locally and calls the Torch content endpoint).
     pub async fn git_generate_commit_message(
         &self,
         repo_path: &StandardizedPath,
@@ -2428,7 +2428,7 @@ impl RemoteServerManager {
         let prev = self.sessions.remove(&session_id);
 
         // Extract the ControlMaster socket (if any) so we can force
-        // Warp-managed masters to exit below. Safe to do under the
+        // Torch-managed masters to exit below. Safe to do under the
         // "caller already observed ExitShell" assumption documented
         // above.
         #[cfg(not(target_family = "wasm"))]
@@ -2462,7 +2462,7 @@ impl RemoteServerManager {
         ctx.emit(RemoteServerManagerEvent::SessionDeregistered { session_id });
 
         // Force the local SSH ControlMaster to exit after teardown.
-        // `stop_control_master` only acts on Warp-managed masters and
+        // `stop_control_master` only acts on Torch-managed masters and
         // leaves user-owned masters running. Spawned detached because
         // the ssh subcommand may take a moment to complete and we don't
         // want to block the main thread on it.

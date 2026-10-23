@@ -27,7 +27,7 @@ pub fn is_container_subshell(session_info: &SessionInfo) -> bool {
     })
 }
 
-/// Returns `true` if Warp should use an RC-file based bootstrap (e.g. dump the bootstrap script to
+/// Returns `true` if Torch should use an RC-file based bootstrap (e.g. dump the bootstrap script to
 /// a temp file and `source` it) for a newly spawned session with the given `shell_type`, and
 /// associated `session_type` and `subshell_initialization_info`.
 ///
@@ -106,7 +106,7 @@ pub fn init_subshell_command(
         Some(shell_type) => {
             let subshell_script =
                 init_subshell_script_for_shell(shell_type, &crate::ASSETS, vars, session_id, ctx);
-            format!(r#" [ -z $WARP_BOOTSTRAPPED ] && eval '{subshell_script}'"#)
+            format!(r#" [ -z $TORCH_BOOTSTRAPPED ] && eval '{subshell_script}'"#)
         }
         None => init_subshell_script_for_unknown_shell(&crate::ASSETS, session_id),
     }
@@ -129,7 +129,7 @@ fn init_subshell_script_for_shell(
 
     // Prepend environment variable settings to the script
     let env_setup_script = format!(
-        "export WARP_HONOR_PS1={}; {}",
+        "export TORCH_HONOR_PS1={}; {}",
         honor_ps1_env_var_value,
         env_vars
             .iter()

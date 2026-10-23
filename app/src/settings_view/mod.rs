@@ -28,7 +28,6 @@ use settings_page::{
 };
 use show_blocks_view::{ShowBlocksEvent, ShowBlocksView};
 use teams_page::{TeamsPageAction, TeamsPageView, TeamsPageViewEvent};
-use warp_agent_page::{WarpAgentPageAction, WarpAgentPageEvent, WarpAgentPageView};
 use torch_core::channel::ChannelState;
 use torch_core::context_flag::ContextFlag;
 use torch_core::features::FeatureFlag;
@@ -36,7 +35,6 @@ use torch_core::send_telemetry_from_ctx;
 use torch_core::settings::ToggleableSetting as _;
 use torch_core::ui::theme::color::internal_colors;
 use torch_editor::editor::NavigationKey;
-use warpify_page::{WarpifyPageAction, WarpifyPageView};
 use torchui::elements::{
     Align, Border, ChildAnchor, ChildView, Clipped, ClippedScrollStateHandle, ClippedScrollable,
     ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, DispatchEventResult, Empty,
@@ -50,6 +48,8 @@ use torchui::{
     Action, AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView,
     UpdateView as _, View, ViewContext, ViewHandle, id,
 };
+use warp_agent_page::{WarpAgentPageAction, WarpAgentPageEvent, WarpAgentPageView};
+use warpify_page::{WarpifyPageAction, WarpifyPageView};
 
 use self::telemetry::SettingsTelemetryEvent;
 use crate::ai::custom_model_routers::CustomModelRouter;
@@ -152,7 +152,7 @@ const SIDEBAR_WIDTH_DEFAULT: f32 = 200.;
 /// Wider sidebar used when the settings-file footer is enabled. Sized to
 /// match Figma's settings nav rail (223px alert + 12px horizontal padding
 /// on each side + 1px right border), giving the error-alert footer enough
-/// room to render its "Open file" and "Fix with Warp Agent" buttons side-by-side
+/// room to render its "Open file" and "Fix with Torch Agent" buttons side-by-side
 /// with the designed 24px indent and 8px internal padding.
 const SIDEBAR_WIDTH_WITH_FOOTER: f32 = 248.;
 
@@ -236,7 +236,7 @@ pub(super) fn editor_text_colors(appearance: &Appearance) -> TextColors {
 }
 
 /// Small inline pill rendered next to a settings label to mark a feature as beta.
-/// Used for experimental features (i.e. AsyncFind) that are enabled for Friends of Warp (i.e. Dogfood/Preview) and toggleable by others.
+/// Used for experimental features (i.e. AsyncFind) that are enabled for Friends of Torch (i.e. Dogfood/Preview) and toggleable by others.
 pub(super) fn render_beta_chip(appearance: &Appearance) -> Box<dyn Element> {
     let theme = appearance.theme();
     let chip_color = theme.sub_text_color(theme.surface_3()).into_solid();
@@ -455,7 +455,7 @@ impl SettingsSection {
             "Teams" => Self::Teams,
             "Torch Drive" | "Warp Drive" | "WarpDrive" => Self::WarpDrive,
             "Warpify" => Self::Warpify,
-            // "Oz" and "AI" are older names for what is now the Warp Agent page.
+            // "Warp Agent", "Oz" and "AI" are older names for what is now the Torch Agent page.
             "Torch Agent" | "Warp Agent" | "Oz" | "AI" => Self::WarpAgent,
             "Profiles" | "AgentProfiles" => Self::AgentProfiles,
             // "MCP Servers" named the standalone page before it moved under the
@@ -550,7 +550,7 @@ pub mod flags {
         "Jump_To_Bottom_Of_Block_Button_Enabled";
     pub const RESPECT_SYSTEM_THEME_CONTEXT_FLAG: &str = "Respect_System_Theme";
     pub const COMPLETIONS_OPEN_WHILE_TYPING_CONTEXT_FLAG: &str = "Completions_Open_While_Typing";
-    pub const WARP_COMPLETIONS_CONTEXT_FLAG: &str = "Warp_Completions";
+    pub const TORCH_COMPLETIONS_CONTEXT_FLAG: &str = "Warp_Completions";
     pub const NATIVE_SHELL_COMPLETIONS_CONTEXT_FLAG: &str = "Native_Shell_Completions";
     pub const COMMAND_CORRECTIONS_CONTEXT_FLAG: &str = "Command_Corrections";
     pub const ERROR_UNDERLINING_FLAG: &str = "error_underlining";
@@ -630,7 +630,7 @@ pub mod flags {
     pub const IN_BAND_COMMAND_BLOCKS_FLAG: &str = "In_Band_Command_Blocks_Visible";
     pub const RECORDING_MODE_FLAG: &str = "Recording_Mode_Enabled";
     pub const IN_BAND_GENERATORS_FLAG: &str = "In_Band_Generators_Enabled";
-    pub const WARP_SAME_LINE_PROMPT_FLAG: &str = "Warp_Same_Line_Prompt_Enabled";
+    pub const TORCH_SAME_LINE_PROMPT_FLAG: &str = "Warp_Same_Line_Prompt_Enabled";
     pub const DEBUG_NETWORK_ONLINE_FLAG: &str = "Network_Status_Online";
     pub const AI_INPUT_AUTODETECTION_FLAG: &str = "AI_Input_Autodetection";
     pub const NLD_IN_TERMINAL_FLAG: &str = "NLD_In_Terminal";
@@ -645,9 +645,9 @@ pub mod flags {
         "Auto_Approve_Bypasses_Command_Denylist";
     pub const AI_RULES_FLAG: &str = "AI_Rules";
     pub const SUGGESTED_RULES_FLAG: &str = "Suggested_Rules";
-    pub const WARP_DRIVE_CONTEXT_FLAG: &str = "Warp_Drive_Context";
+    pub const TORCH_DRIVE_CONTEXT_FLAG: &str = "Warp_Drive_Context";
     pub const FILE_BASED_MCP_FLAG: &str = "File_Based_MCP";
-    pub const WARP_CREDIT_FALLBACK_FLAG: &str = "Warp_Credit_Fallback";
+    pub const TORCH_CREDIT_FALLBACK_FLAG: &str = "Warp_Credit_Fallback";
     pub const SHOW_BASE_MODEL_PICKER_IN_PROMPT_FLAG: &str = "Show_Base_Model_Picker_In_Prompt";
     pub const DEBUG_SHOW_MEMORY_STATS_FLAG: &str = "Debug_Memory_Statistics";
     pub const ALLOW_NATIVE_WAYLAND: &str = "Allow_Native_Wayland";
@@ -663,7 +663,7 @@ pub mod flags {
     pub const UNIVERSAL_DEVELOPER_INPUT_ENABLED: &str = "UniversalDeveloperInputEnabled";
     pub const AGENT_MODE_INPUT: &str = "InputAgentMode";
     pub const TERMINAL_MODE_INPUT: &str = "InputTerminalMode";
-    pub const WARP_IS_DEFAULT_TERMINAL: &str = "WarpIsDefaultTerminal";
+    pub const TORCH_IS_DEFAULT_TERMINAL: &str = "WarpIsDefaultTerminal";
     pub const PASSIVE_CODE_DIFF_KEYBINDINGS_ENABLED: &str = "PassiveCodeDiffKeybindingsEnabled";
     /// When set, ctrl-enter should accept a prompt suggestion rather than insert a newline.
     /// This flag is set by the terminal Input when there's a pending passive code diff.
@@ -1264,7 +1264,7 @@ impl SettingsView {
         // About page
         let about_page_handle = ctx.add_typed_action_view(AboutPageView::new);
 
-        // Warp Agent page
+        // Torch Agent page
         let warp_agent_page_handle = ctx.add_typed_action_view(WarpAgentPageView::new);
         ctx.subscribe_to_view(&warp_agent_page_handle, |me, _, event, ctx| {
             me.handle_warp_agent_page_event(event, ctx);
@@ -1351,7 +1351,7 @@ impl SettingsView {
             None
         };
 
-        // Warp Drive page
+        // Torch Drive page
         let warp_drive_page_handle =
             ctx.add_typed_action_view(warp_drive_page::WarpDriveSettingsPageView::new);
         ctx.subscribe_to_view(&warp_drive_page_handle, |me, _, event, ctx| {

@@ -1,5 +1,5 @@
 #!/bin/sh
 #
-# Installs macOS-specific build dependencies required to build Warp.
+# Installs macOS-specific build dependencies required to build Torch.
 
 xcodebuild -downloadComponent MetalToolchain

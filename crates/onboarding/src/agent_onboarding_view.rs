@@ -27,7 +27,6 @@ const PLAN_ACTIVATED_TOAST_DURATION: Duration = Duration::from_secs(5);
 
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
-use ui_components::{Component as _, Options as _, button};
 use torch_core::ui::Icon;
 use torch_core::ui::appearance::Appearance;
 use torch_core::ui::theme::{Fill, WarpTheme};
@@ -45,6 +44,7 @@ use torchui_core::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity as _, TypedActionView, View,
     ViewContext, ViewHandle,
 };
+use ui_components::{Component as _, Options as _, button};
 
 #[derive(Clone, Debug)]
 pub enum AgentOnboardingEvent {
@@ -521,7 +521,7 @@ impl AgentOnboardingView {
             appearance,
             FeatureOptOutDialog {
                 title: "Are you sure you don't want AI?",
-                body: "Without AI, you'll still get Warp's terminal experience, but you'll miss \
+                body: "Without AI, you'll still get Torch's terminal experience, but you'll miss \
                        our agentic features like automatic fixes for terminal errors.",
                 features: &[],
                 close_button,

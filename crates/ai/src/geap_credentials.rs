@@ -8,7 +8,7 @@
 //! keeps the Grok lifecycle out of [`crate::api_keys`].
 //!
 //! The network-facing mint lives in the app layer, which has the workspace
-//! settings and Warp OIDC access this crate cannot see. It drives this state
+//! settings and Torch OIDC access this crate cannot see. It drives this state
 //! machine through [`ApiKeyManager::install_geap_refresh_waiter`] and
 //! [`ApiKeyManager::take_geap_refresh_waiters`].
 
@@ -18,8 +18,8 @@ use chrono::{DateTime, Local};
 #[cfg(not(target_family = "wasm"))]
 use futures::channel::oneshot;
 use torch_core::ui::Icon;
-use warp_multi_agent_api as api;
 use torchui_core::ModelContext;
+use warp_multi_agent_api as api;
 
 use crate::api_keys::{ApiKeyManager, ApiKeyManagerEvent};
 
@@ -110,7 +110,7 @@ pub struct GeapMintBinding {
 // body, so interpolating it would leak it to Sentry via `report_error!`.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum LoadGeapCredentialsError {
-    #[error("failed to mint a Warp identity token")]
+    #[error("failed to mint a Torch identity token")]
     MintIdentityToken { detail: String },
     #[error("STS token exchange failed")]
     ExchangeToken { status: Option<u16>, detail: String },
@@ -163,17 +163,17 @@ impl LoadGeapCredentialsError {
     pub fn user_facing(&self) -> (String, String, GeapRecoveryAction) {
         match self {
             Self::MintIdentityToken { .. } => (
-                "Couldn't authenticate with Warp".to_string(),
-                "Warp couldn't create Gemini Enterprise credentials. Check your network \
-                 connection and that you're signed in to Warp, then try again."
+                "Couldn't authenticate with Torch".to_string(),
+                "Torch couldn't create Gemini Enterprise credentials. Check your network \
+                 connection and that you're signed in to Torch, then try again."
                     .to_string(),
                 GeapRecoveryAction::Retry,
             ),
             Self::ExchangeToken { status, .. } if is_admin_config_status(*status) => (
                 "Gemini Enterprise is misconfigured".to_string(),
-                "Google rejected Warp's identity token. Ask your team admin to verify \
+                "Google rejected Torch's identity token. Ask your team admin to verify \
                  that the Workload Identity Federation audience exactly matches the provider's \
-                 full resource name, the provider trusts Warp's OIDC issuer, and its attribute \
+                 full resource name, the provider trusts Torch's OIDC issuer, and its attribute \
                  condition allows this workspace."
                     .to_string(),
                 GeapRecoveryAction::ContactAdmin,
@@ -187,8 +187,8 @@ impl LoadGeapCredentialsError {
             ),
             Self::ImpersonateServiceAccount { status, .. } if is_admin_config_status(*status) => (
                 "Gemini Enterprise service account access is misconfigured".to_string(),
-                "Warp couldn't obtain credentials for the service account configured by your \
-                 team admin. Ask them to verify the service account email, confirm the Warp \
+                "Torch couldn't obtain credentials for the service account configured by your \
+                 team admin. Ask them to verify the service account email, confirm the Torch \
                  workload identity has the Workload Identity User role on that service account, \
                  and ensure the IAM Service Account Credentials API is enabled."
                     .to_string(),
@@ -243,12 +243,12 @@ impl GeapCredentialsState {
         match self {
             Self::Missing => (
                 "Gemini Enterprise credentials not loaded".to_string(),
-                "Warp hasn't loaded your Gemini Enterprise credentials yet.".to_string(),
+                "Torch hasn't loaded your Gemini Enterprise credentials yet.".to_string(),
                 Icon::Key,
             ),
             Self::Disabled => (
                 "Gemini Enterprise disabled".to_string(),
-                "Warp will not load Gemini Enterprise credentials until it's enabled by you or \
+                "Torch will not load Gemini Enterprise credentials until it's enabled by you or \
                  your team admin."
                     .to_string(),
                 Icon::Key,
@@ -256,7 +256,7 @@ impl GeapCredentialsState {
             Self::Unconfigured => (
                 "Gemini Enterprise setup incomplete".to_string(),
                 "Your team admin needs to configure the Workload Identity Federation audience \
-                before Warp can load credentials."
+                before Torch can load credentials."
                     .to_string(),
                 Icon::AlertTriangle,
             ),
@@ -264,14 +264,14 @@ impl GeapCredentialsState {
                 "Gemini Enterprise setup conflicts across teams".to_string(),
                 format!(
                     "{} have Gemini Enterprise set up with different Google Cloud projects, so \
-                     Warp can't tell which one to use. Ask an admin to align the configuration.",
+                     Torch can't tell which one to use. Ask an admin to align the configuration.",
                     join_team_names(team_names)
                 ),
                 Icon::AlertTriangle,
             ),
             Self::Refreshing { .. } => (
                 "Refreshing credentials...".to_string(),
-                "Loading your Gemini Enterprise credentials into Warp".to_string(),
+                "Loading your Gemini Enterprise credentials into Torch".to_string(),
                 Icon::RefreshCw04,
             ),
             Self::Loaded {

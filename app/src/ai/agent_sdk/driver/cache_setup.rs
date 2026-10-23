@@ -16,7 +16,7 @@ use super::terminal::TerminalDriver;
 use crate::terminal::model::session::command_executor::shell_escape_single_quotes;
 use crate::terminal::shell::ShellType;
 
-const BUILD_CACHE_ROOT_ENV: &str = "WARP_BUILD_CACHE_ROOT";
+const BUILD_CACHE_ROOT_ENV: &str = "TORCH_BUILD_CACHE_ROOT";
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, thiserror::Error)]
 #[error("build cache setup completed with degraded results")]

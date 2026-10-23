@@ -31,8 +31,8 @@ use pathfinder_geometry::rect::{RectF, RectI};
 use pathfinder_geometry::vector::{Vector2F, Vector2I, vec2f, vec2i};
 use resvg::usvg::fontdb;
 use resvg::usvg::fontdb::Query;
-use vec1::Vec1;
 use torchui_core::fonts::{Style, Weight};
+use vec1::Vec1;
 #[cfg(target_os = "windows")]
 use windows::loader;
 
@@ -324,7 +324,7 @@ mod loader {
     }
 }
 
-// We use font-kit's family handle to load fonts that come with Warp as
+// We use font-kit's family handle to load fonts that come with Torch as
 // these binaries are already in memory and won't increase our memory load.
 fn load_font_family_from_bytes(name: &str, font_bytes: Vec<Vec<u8>>) -> Result<FontFamily> {
     use owned_ttf_parser::OwnedFace;

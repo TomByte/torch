@@ -8,13 +8,13 @@ use futures::channel::oneshot;
 use indexmap::IndexMap;
 use serde::{Deserialize, Deserializer, Serialize};
 use sha2::{Digest, Sha256};
-use url::Url;
-use uuid::Uuid;
 use torch_core::send_telemetry_from_ctx;
 use torch_errors::report_error;
-use warp_multi_agent_api as api;
 use torchui_core::{Entity, ModelContext, SingletonEntity};
 use torchui_extras::secure_storage::{self, AppContextExt};
+use url::Url;
+use uuid::Uuid;
+use warp_multi_agent_api as api;
 
 use crate::LLMProvider;
 pub use crate::aws_credentials::{AwsCredentials, AwsCredentialsState};
@@ -53,14 +53,14 @@ pub enum ApiKeyManagerEvent {
 /// Why a ChatGPT connect attempt did not end with a linked account.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ChatGPTConnectFailure {
-    /// The ChatGPT account is linked to another Warp account, or this Warp
+    /// The ChatGPT account is linked to another Torch account, or this Torch
     /// account already has a different ChatGPT account linked.
     AlreadyLinked,
     /// The ChatGPT account's email is not verified with OpenAI.
     EmailUnverified,
     /// The user declined OpenAI's authorization prompt.
     Denied,
-    /// The browser is signed in to a different Warp account than this client, so the link was
+    /// The browser is signed in to a different Torch account than this client, so the link was
     /// refused rather than attached to the wrong account.
     AccountMismatch,
     /// The flow finished without a specific reason being reported.
@@ -83,7 +83,7 @@ impl ChatGPTConnectFailure {
 /// User-provided API keys for AI providers.
 ///
 /// These are used for "Bring Your Own API Key" functionality, allowing
-/// users to use their own API keys instead of Warp's.
+/// users to use their own API keys instead of Torch's.
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct ApiKeys {
@@ -483,7 +483,7 @@ pub struct GrokTokens {
     pub connected_at: Option<SystemTime>,
 }
 
-/// A ChatGPT account linked to the Warp user, as reported by warp-server. The
+/// A ChatGPT account linked to the Torch user, as reported by warp-server. The
 /// server owns the link and any delegated credentials; nothing is stored
 /// locally.
 #[derive(Debug, Clone, PartialEq, Eq)]

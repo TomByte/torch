@@ -383,7 +383,7 @@ const VIM_MODE_DISABLED_HINT: &str = "Vim mode disabled.";
 const VIM_MODE_PERSISTENCE_FAILED_HINT: &str = "Could not save the vim mode setting.";
 const THEME_PERSISTENCE_FAILED_HINT: &str = "Could not save the theme setting.";
 const ZERO_STATE_ASCII_INITIAL_LOAD_FAILED_HINT: &str =
-    "Could not load custom ASCII art. Using the built-in Warp logo.";
+    "Could not load custom ASCII art. Using the built-in Torch logo.";
 const ZERO_STATE_ASCII_RELOAD_FAILED_HINT: &str =
     "Could not reload custom ASCII art. Keeping the current object.";
 #[cfg(feature = "voice_input")]
@@ -413,7 +413,7 @@ fn tui_cli_shell_command(channel: Channel, arguments: &str) -> String {
         Channel::Stable => "warp",
         Channel::Dev => "warp-dev",
         Channel::Preview => "warp-preview",
-        Channel::Oss => "warp-oss",
+        Channel::Oss => "torch-tui",
         Channel::Integration => "warp-integration",
     };
     format!("{launcher} {arguments}")
@@ -3047,7 +3047,7 @@ impl TuiTerminalSessionView {
             Some(CloudConversationData::CLIAgent(_)) => {
                 self.fail_conversation_restore(
                     request_id,
-                    "Warp Agent CLI only supports Oz/Warp conversations.".to_owned(),
+                    "Torch Agent CLI only supports Oz/Torch conversations.".to_owned(),
                     ctx,
                 );
                 return;

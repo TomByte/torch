@@ -2,7 +2,7 @@
 #
 # Prepares bundled pprof for distribution.
 #
-# This script copies a pprof binary that should be bundled with Warp into a
+# This script copies a pprof binary that should be bundled with Torch into a
 # destination directory.
 #
 # Usage:

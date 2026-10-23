@@ -18,13 +18,14 @@ use torch_server_auth::credentials::Credentials;
 use crate::auth::{AuthEvent, AuthSession, UserUid};
 
 /// Header key for the ambient agent workload token attached to authenticated requests.
-pub const AMBIENT_WORKLOAD_TOKEN_HEADER: &str = "X-Warp-Ambient-Workload-Token";
+pub const AMBIENT_WORKLOAD_TOKEN_HEADER: &str = "X-Torch-Ambient-Workload-Token";
 
 /// Header key for the cloud agent task ID attached to ambient-agent requests.
-pub const CLOUD_AGENT_ID_HEADER: &str = "X-Warp-Cloud-Agent-ID";
+pub const CLOUD_AGENT_ID_HEADER: &str = "X-Torch-Cloud-Agent-ID";
 
-pub const PREWARMED_SANDBOX_ID_HEADER: &str = "X-Warp-Prewarmed-Sandbox-ID";
-pub const PREWARMED_SANDBOX_WORKLOAD_TOKEN_HEADER: &str = "X-Warp-Prewarmed-Sandbox-Workload-Token";
+pub const PREWARMED_SANDBOX_ID_HEADER: &str = "X-Torch-Prewarmed-Sandbox-ID";
+pub const PREWARMED_SANDBOX_WORKLOAD_TOKEN_HEADER: &str =
+    "X-Torch-Prewarmed-Sandbox-Workload-Token";
 
 /// Header used to communicate the source of an agent run.
 pub const AGENT_SOURCE_HEADER: &str = "X-Oz-Api-Source";
@@ -34,7 +35,7 @@ pub const AGENT_SOURCE_HEADER: &str = "X-Oz-Api-Source";
 /// `specs/multi-team-api-context/TECH.md`. The server authenticates membership and rejects
 /// a header that disagrees with the request body or an existing resource; adding this header
 /// is not itself proof of membership.
-pub const TEAM_UID_HEADER: &str = "X-Warp-Team-Uid";
+pub const TEAM_UID_HEADER: &str = "X-Torch-Team-Uid";
 
 /// IDs in the staging database that were created specifically for evals.
 ///

@@ -14,7 +14,7 @@ use crate::ai::agent_sdk::driver::termination::Interrupt;
 
 /// Set on the re-executed child so it takes the [`signal_lifecycle_child`] path instead
 /// of running the test body again. Its value selects which lifecycle to exercise.
-const SIGNAL_CHILD_ENV: &str = "WARP_AGENT_DRIVER_SIGNAL_CHILD";
+const SIGNAL_CHILD_ENV: &str = "TORCH_AGENT_DRIVER_SIGNAL_CHILD";
 /// Printed by the child once its interrupt watch is armed, so the parent knows when the
 /// first signal can be delivered.
 const READY_MARKER: &str = "warp-signal-test: ready";

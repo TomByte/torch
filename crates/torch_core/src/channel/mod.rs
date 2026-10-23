@@ -18,7 +18,7 @@ pub enum Channel {
     /// The internal-only HEAD build.
     Local,
 
-    /// The open-source build of Warp.
+    /// The open-source build of Torch.
     Oss,
 
     /// The integration test build.
@@ -35,7 +35,7 @@ impl Channel {
     }
 
     /// Whether this channel honors the `--server-root-url` / `--ws-server-url` /
-    /// `--session-sharing-server-url` flags (and their `WARP_*` env-var equivalents).
+    /// `--session-sharing-server-url` flags (and their `TORCH_*` env-var equivalents).
     ///
     /// Release channels (`Stable`, `Preview`, `Oss`) ignore these overrides so shipped
     /// builds can't be redirected away from their baked-in server URLs. Internal-only channels
@@ -59,7 +59,7 @@ impl Channel {
         }
     }
 
-    /// Returns the Warp Control CLI command name corresponding to this channel.
+    /// Returns the Torch Control CLI command name corresponding to this channel.
     pub fn warpctrl_command_name(&self) -> &'static str {
         match self {
             Channel::Stable => "warpctrl",
@@ -67,7 +67,7 @@ impl Channel {
             Channel::Preview => "warpctrl-preview",
             Channel::Local => "warpctrl-local",
             Channel::Integration => "warpctrl-integration",
-            Channel::Oss => "warpctrl-oss",
+            Channel::Oss => "torchctrl",
         }
     }
 }

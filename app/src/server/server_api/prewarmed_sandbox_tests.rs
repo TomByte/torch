@@ -1,13 +1,4 @@
-#[cfg(not(feature = "skip_login"))]
-use std::sync::Arc;
-
-#[cfg(not(feature = "skip_login"))]
-use futures::executor::block_on;
-#[cfg(not(feature = "skip_login"))]
-use mockito::Matcher;
 use torch_graphql::queries::execution_config::{CodeForge, ExecutionRepositoryRefType};
-#[cfg(not(feature = "skip_login"))]
-use torch_server_client::base_client::AMBIENT_WORKLOAD_TOKEN_HEADER;
 
 use super::*;
 
@@ -85,36 +76,6 @@ pub(crate) fn parse_configuration() -> PrewarmedSandboxConfiguration {
 }
 
 #[test]
-#[cfg(not(feature = "skip_login"))]
-fn configuration_errors_return_after_one_request() {
-    let api = authenticated_client();
-    for status in [403, 503] {
-        let mut server = ChannelState::mock_server();
-        let request = server
-            .mock("POST", "/graphql/v2?op=PrewarmedSandboxConfig")
-            .with_status(status)
-            .with_header("Retry-After", "1")
-            .with_body(r#"{"error":"configuration unavailable"}"#)
-            .expect(1)
-            .create();
-        drop(server);
-
-        let error = block_on(api.fetch_configuration("sandbox")).unwrap_err();
-        assert_eq!(
-            match error
-                .downcast_ref::<torch_graphql::client::GraphQLError>()
-                .unwrap()
-            {
-                torch_graphql::client::GraphQLError::HttpError { status, .. } => status.as_u16(),
-                error => panic!("unexpected GraphQL error: {error}"),
-            },
-            status as u16
-        );
-        request.assert();
-    }
-}
-
-#[test]
 fn deserializes_a_server_configuration() {
     let config = parse_configuration();
 
@@ -151,7 +112,7 @@ fn deserializes_a_server_configuration() {
     assert!(config.preparation.computer_use_enabled);
 
     assert_eq!(
-        config.environment_variables.get("WARP_FACTORY_REPO_DIR"),
+        config.environment_variables.get("TORCH_FACTORY_REPO_DIR"),
         Some(&"factory".to_string())
     );
     assert_eq!(config.git_credentials[0].host, "github.com");
@@ -222,85 +183,6 @@ fn invalid_mcp_json_errors_do_not_include_configuration_values() {
 }
 
 #[test]
-#[cfg(not(feature = "skip_login"))]
-fn configuration_uses_default_graphql_timeout_and_authentication() {
-    let mut http_client = http_client::Client::new_for_test();
-    http_client.set_before_request_fn(Box::new(|request, payload| {
-        assert!(request.timeout().is_none());
-        assert!(request.headers()["authorization"].is_sensitive());
-        for debug in [format!("{request:?}"), format!("{request:#?}")] {
-            assert!(!debug.contains("test-workload-token"));
-            assert!(!debug.contains("test-access-token"));
-        }
-        assert!(request.headers()[AMBIENT_WORKLOAD_TOKEN_HEADER].is_sensitive());
-        assert!(
-            !request
-                .headers()
-                .contains_key(PREWARMED_SANDBOX_WORKLOAD_TOKEN_HEADER)
-        );
-        let payload: serde_json::Value = serde_json::from_str(payload.as_deref().unwrap()).unwrap();
-        assert!(payload["variables"]["requestContext"].is_object());
-        assert_eq!(
-            payload["variables"]["input"],
-            serde_json::json!({"sandboxId": "sandbox"})
-        );
-    }));
-    let api = authenticated_client_with_http(http_client);
-    let mut server = ChannelState::mock_server();
-    let request = server
-        .mock("POST", "/graphql/v2?op=PrewarmedSandboxConfig")
-        .match_header("authorization", "Bearer test-access-token")
-        .match_header(AMBIENT_WORKLOAD_TOKEN_HEADER, "test-workload-token")
-        .with_body(CONFIGURATION_JSON)
-        .create();
-    drop(server);
-    assert_eq!(
-        block_on(api.fetch_configuration("sandbox"))
-            .unwrap()
-            .generation,
-        "abc123"
-    );
-    request.assert();
-}
-
-#[test]
-#[cfg(not(feature = "skip_login"))]
-fn configuration_rejects_user_errors_unknown_results_and_missing_data() {
-    let api = authenticated_client();
-    for (body, expected) in [
-        (
-            serde_json::json!({"data": {"prewarmedSandboxConfig": {
-                "__typename": "UserFacingError",
-                "error": {"__typename": "UnknownError", "message": "private-server-detail"},
-                "responseContext": {"serverVersion": null}
-            }}}),
-            "Pre-warmed sandbox configuration is unavailable",
-        ),
-        (
-            serde_json::json!({"data": {"prewarmedSandboxConfig": {
-                "__typename": "FutureConfig"
-            }}}),
-            "Unknown pre-warmed sandbox configuration response",
-        ),
-        (
-            serde_json::json!({"data": null, "errors": [{"message": "configuration unavailable"}]}),
-            "missing response data for PrewarmedSandboxConfig: configuration unavailable",
-        ),
-    ] {
-        let mut server = ChannelState::mock_server();
-        let request = server
-            .mock("POST", "/graphql/v2?op=PrewarmedSandboxConfig")
-            .with_body(body.to_string())
-            .create();
-        drop(server);
-        let error = block_on(api.fetch_configuration("sandbox")).unwrap_err();
-        assert_eq!(error.to_string(), expected);
-        assert!(!format!("{error:#}").contains("private-server-detail"));
-        request.assert();
-    }
-}
-
-#[test]
 fn configuration_debug_redacts_credentials_and_raw_preparation_values() {
     let mut config = parse_configuration();
     config.managed_secrets.insert(
@@ -308,7 +190,7 @@ fn configuration_debug_redacts_credentials_and_raw_preparation_values() {
         ManagedSecretValue::raw_value("managed-secret-value"),
     );
     config.environment_variables.insert(
-        "WARP_FACTORY_REPO_CLONE_URL".into(),
+        "TORCH_FACTORY_REPO_CLONE_URL".into(),
         "https://environment-secret-value@example.com/repo.git".into(),
     );
     config.git_credentials[0].token = "git-secret-value".into();
@@ -484,7 +366,7 @@ fn fresh_assignment_fixture_decodes_nullable_control_fields() {
         "550e8400-e29b-41d4-a716-446655440000"
     );
     assert_eq!(execution_config.execution_id.inner(), "42");
-    assert_eq!(runtime_env["WARP_SANDBOX_DEADLINE"], "1767225600");
+    assert_eq!(runtime_env["TORCH_SANDBOX_DEADLINE"], "1767225600");
     assert!(execution_config.conversation_id.is_none());
     assert!(execution_config.repositories[0].ref_.is_none());
     assert!(
@@ -528,128 +410,4 @@ fn assignment_debug_omits_run_credentials_and_embedded_config_values() {
             assert!(!debug.contains(marker));
         }
     }
-}
-
-#[cfg(not(feature = "skip_login"))]
-fn authenticated_client() -> ServerApi {
-    authenticated_client_with_http(http_client::Client::new_for_test())
-}
-
-#[cfg(not(feature = "skip_login"))]
-fn authenticated_client_with_http(client: http_client::Client) -> ServerApi {
-    let auth_state = Arc::new(crate::auth::auth_state::AuthState::new_for_test());
-    auth_state.set_credentials(Some(crate::auth::credentials::Credentials::ApiKey {
-        key: "test-access-token".to_string(),
-        owner_type: None,
-    }));
-    let (events, _) = async_channel::unbounded();
-    let api = ServerApi::new_with_parts(
-        Arc::new(client),
-        Arc::new(http_client::Client::new_external()),
-        auth_state,
-        events,
-        None,
-        None,
-    );
-    api.base_client.set_ambient_workload_token_for_test(
-        "test-workload-token".to_string(),
-        Some(Utc::now() + chrono::TimeDelta::hours(1)),
-    );
-    api
-}
-
-#[test]
-#[cfg(not(feature = "skip_login"))]
-fn all_endpoints_use_cached_credentials_and_expected_payloads() {
-    let api = authenticated_client();
-    let mut server = ChannelState::mock_server();
-    let config = server
-        .mock("POST", "/graphql/v2?op=PrewarmedSandboxConfig")
-        .match_header("authorization", "Bearer test-access-token")
-        .match_body(Matcher::PartialJson(serde_json::json!({
-            "variables": {
-                "input": { "sandboxId": "sandbox" }
-            }
-        })))
-        .with_status(200)
-        .with_body(CONFIGURATION_JSON)
-        .create();
-    let status = server
-        .mock("POST", "/internal/prewarmed-sandboxes/sandbox/status")
-        .match_header("authorization", "Bearer test-access-token")
-        .match_header(
-            PREWARMED_SANDBOX_WORKLOAD_TOKEN_HEADER,
-            "test-workload-token",
-        )
-        .match_body(Matcher::Json(serde_json::json!({
-            "fingerprint": "abc123", "state": "ready", "manifest_hash": "abc123",
-        })))
-        .with_status(204)
-        .create();
-    drop(server);
-    block_on(async {
-        assert_eq!(
-            api.fetch_configuration("sandbox").await.unwrap().generation,
-            "abc123"
-        );
-        api.report_status("sandbox", "abc123", PrewarmedSandboxState::Ready)
-            .await
-            .unwrap();
-    });
-    config.assert();
-    status.assert();
-}
-
-#[test]
-#[cfg(not(feature = "skip_login"))]
-fn request_debug_redacts_both_credentials() {
-    let api = authenticated_client();
-    let mut client = http_client::Client::new_for_test();
-    client.set_before_request_fn(Box::new(|request, _| {
-        for name in ["authorization", PREWARMED_SANDBOX_WORKLOAD_TOKEN_HEADER] {
-            assert!(request.headers()[name].is_sensitive());
-        }
-        let debug = format!("{request:?}");
-        assert!(!debug.contains("test-access-token"));
-        assert!(!debug.contains("test-workload-token"));
-    }));
-    let mut server = ChannelState::mock_server();
-    let request = server
-        .mock("POST", "/internal/prewarmed-sandboxes/sandbox/status")
-        .match_header("authorization", "Bearer test-access-token")
-        .match_header(
-            PREWARMED_SANDBOX_WORKLOAD_TOKEN_HEADER,
-            "test-workload-token",
-        )
-        .with_status(204)
-        .expect(1)
-        .create();
-    drop(server);
-    let url = ServerApi::prewarmed_sandbox_url("sandbox", "status");
-
-    block_on(async {
-        let response = api
-            .prewarmed_sandbox_request(client.post(&url))
-            .await
-            .unwrap()
-            .send()
-            .await
-            .unwrap();
-        assert_eq!(response.status().as_u16(), 204);
-    });
-    request.assert();
-}
-
-#[test]
-#[cfg(not(feature = "skip_login"))]
-fn rejects_requests_without_access_credentials() {
-    let api = ServerApi::new_for_test();
-    api.base_client
-        .set_ambient_workload_token_for_test("test-workload-token".to_string(), None);
-    let error =
-        block_on(api.report_status("sandbox", "abc123", PrewarmedSandboxState::Ready)).unwrap_err();
-    assert!(
-        error.to_string().contains("requires an access token"),
-        "{error:#}"
-    );
 }

@@ -25,7 +25,7 @@
         "factorySkillDirs": [".agents/skills"],
         "computerUseEnabled": true
       },
-      "environmentVariables": [{ "name": "WARP_FACTORY_REPO_DIR", "value": "factory" }],
+      "environmentVariables": [{ "name": "TORCH_FACTORY_REPO_DIR", "value": "factory" }],
       "gitCredentials": [
         { "host": "github.com", "username": "x-access-token", "token": "ghs_secret", "email": null }
       ],

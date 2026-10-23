@@ -7,7 +7,6 @@ use futures_util::stream::AbortHandle;
 use lazy_static::lazy_static;
 use regex::Regex;
 use settings::Setting as _;
-use url::Url;
 use torch_core::context_flag::ContextFlag;
 use torch_editor::editor::NavigationKey;
 use torch_editor::model::{CoreEditorModel, RichTextEditorModel};
@@ -28,6 +27,7 @@ use torchui::{
     AppContext, BlurContext, Element, Entity, FocusContext, ModelAsRef, ModelHandle,
     SingletonEntity, TypedActionView, View, ViewContext, ViewHandle, WindowId,
 };
+use url::Url;
 
 use self::details_bar::DetailsBar;
 use super::active_notebook_data::{
@@ -206,7 +206,7 @@ enum NotebookSyncError {
     FeatureNotAvailable,
 }
 
-/// A view that allows viewing/execution and editing of a Warp notebook.
+/// A view that allows viewing/execution and editing of a Torch notebook.
 /// We don't currently persist any data.
 pub struct NotebookView {
     /// This is a stateful component that shows information about the notebook like its location

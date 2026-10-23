@@ -1,5 +1,5 @@
-//! This module contains all code relevant to Voice within Warp.
+//! This module contains all code relevant to Voice within Torch.
 //!
-//! Voice is used for voice input within Warp.
+//! Voice is used for voice input within Torch.
 
 pub(crate) mod transcribe;

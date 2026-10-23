@@ -9,11 +9,11 @@ use rmcp::transport::auth::{
 use rmcp::transport::{AuthError, AuthorizationSession};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use url::Url;
-use uuid::Uuid;
 use torch_core::channel::ChannelState;
 use torch_errors::report_error;
 use torchui_extras::secure_storage::AppContextExt as _;
+use url::Url;
+use uuid::Uuid;
 mod loopback;
 
 pub const TEMPLATABLE_MCP_CREDENTIALS_KEY: &str = "TemplatableMcpCredentials";
@@ -111,7 +111,7 @@ impl OAuthCallbackReceiver {
 }
 
 /// A credential store that wraps [`InMemoryCredentialStore`] and persists token
-/// updates to Warp's secure storage via a channel.
+/// updates to Torch's secure storage via a channel.
 ///
 /// When rmcp auto-refreshes an expired access token at runtime, the rotated
 /// tokens are only saved to the in-memory store by default. This wrapper
@@ -186,7 +186,7 @@ impl CredentialStore for PersistingCredentialStore {
 }
 
 /// Installs a [`PersistingCredentialStore`] on the given auth manager so that
-/// runtime token auto-refreshes are written back to Warp's secure storage.
+/// runtime token auto-refreshes are written back to Torch's secure storage.
 ///
 /// A background tokio task is spawned to receive credential updates and persist
 /// them via the provided callback. The task terminates when the auth manager (and
@@ -324,7 +324,7 @@ pub async fn make_authenticated_client(
             log::warn!(
                 "File-based MCP server {uuid} requires OAuth authentication; \
                  skipping in headless mode. To use this server, authenticate it \
-                 in the Warp desktop app first."
+                 in the Torch desktop app first."
             );
         }
         // Naming the alternatives matters more than it looks: a cloud agent
@@ -333,9 +333,9 @@ pub async fn make_authenticated_client(
         // act on.
         return Err(AuthError::AuthorizationFailed(
             "This MCP server asked for interactive OAuth, which cannot run in a headless or \
-             cloud agent. Either attach the server as a Warp-managed MCP so the platform \
+             cloud agent. Either attach the server as a Torch-managed MCP so the platform \
              supplies its credentials, or configure a static credential header backed by a \
-             managed secret. Authenticating the server in the Warp desktop app also works for \
+             managed secret. Authenticating the server in the Torch desktop app also works for \
              runs on that same machine."
                 .to_string(),
         ));
@@ -393,7 +393,7 @@ pub async fn make_authenticated_client(
         // Try dynamic client registration.
         let mut oauth_state = OAuthState::Unauthorized(auth_manager);
         oauth_state
-            .start_authorization(AuthorizationRequest::new(&redirect_uri).with_client_name("Warp"))
+            .start_authorization(AuthorizationRequest::new(&redirect_uri).with_client_name("Torch"))
             .await?;
         oauth_state
     };

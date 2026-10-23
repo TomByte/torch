@@ -1,4 +1,4 @@
-//! Private filesystem registry for discovering running local Warp instances.
+//! Private filesystem registry for discovering running local Torch instances.
 //!
 //! This module answers “which compatible instances are available, and where
 //! can a client begin authentication?” It does not listen for control requests
@@ -23,7 +23,7 @@
 //! The owner-only directory, records, and broker sockets protect against other
 //! OS users. The broker's kernel-reported peer-UID check is the authoritative
 //! same-user check before credential issuance. Neither mechanism distinguishes
-//! trusted Warp code from arbitrary software already running as that user.
+//! trusted Torch code from arbitrary software already running as that user.
 use std::collections::HashSet;
 use std::fs;
 #[cfg(unix)]
@@ -38,12 +38,12 @@ use serde::{Deserialize, Serialize};
 
 use crate::protocol::{ActionMetadata, ControlError, ErrorCode, PROTOCOL_VERSION};
 
-const DISCOVERY_DIR_ENV: &str = "WARP_LOCAL_CONTROL_DISCOVERY_DIR";
+const DISCOVERY_DIR_ENV: &str = "TORCH_LOCAL_CONTROL_DISCOVERY_DIR";
 const BROKER_SOCKET_SUFFIX: &str = ".broker.sock";
 const TEMP_RECORD_SUFFIX: &str = ".json.tmp";
 const ORPHAN_SOCKET_GRACE_PERIOD: Duration = Duration::from_secs(60);
 
-/// Stable identifier for one running Warp instance.
+/// Stable identifier for one running Torch instance.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct InstanceId(pub String);
@@ -93,7 +93,7 @@ pub struct CredentialBrokerReference {
     pub socket_path: PathBuf,
 }
 
-/// Filesystem-published routing metadata for a running Warp app process.
+/// Filesystem-published routing metadata for a running Torch app process.
 ///
 /// An enabled record connects the three stages of the protocol: filesystem
 /// discovery, Unix-socket credential issuance, and authenticated loopback HTTP

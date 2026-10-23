@@ -6,6 +6,6 @@
 
 **Can I run other tools in the terminal?** Yes, including your own CLI agents.
 
-**Why are there still Warp names in the source?** Internal crate names, protocols, pinned dependencies, and upstream attribution are retained for compatibility. The application is Torch, with its own data identity and repository history.
+**Why are there still a few Warp names in the source?** Torch keeps Warp's licence and copyright notices and its attribution. Dependencies fetched from Warp's repositories keep their names, as do internal type and module names and the identifiers agent plugins rely on (the `warp://cli-agent` status protocol and `TERM_PROGRAM=WarpTerminal`). Everything you see in the app and its build output is Torch.
 
 **Where are builds?** Build from source using the README. This repository does not use Warp's update servers or release pipeline.

@@ -51,11 +51,11 @@ fn native_workspace_leave_preserves_other_access() {
     let mut dialog = CloudActionConfirmationDialog::new();
     dialog.set_variant(
         CloudActionConfirmationDialogVariant::LeaveNativeWorkspaceTeam {
-            team_name: "Warp".to_string(),
+            team_name: "Torch".to_string(),
         },
     );
 
-    assert_eq!(dialog.title_text(), "Leave Warp?");
+    assert_eq!(dialog.title_text(), "Leave Torch?");
     assert_eq!(
         dialog.body_text(),
         "Your workspace access and other team memberships won’t change."

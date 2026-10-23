@@ -4,7 +4,7 @@
 //! it inherits the shell state those commands established and shows up as a block in the shared
 //! session; its stdio is bridged to the in-process ACP client over a socket (see [`bridge`]). The
 //! agent's `session/update` stream is translated into MAA client actions and applied to the
-//! driver's native conversation, so viewers and the task status model see an ordinary Warp agent
+//! driver's native conversation, so viewers and the task status model see an ordinary Torch agent
 //! turn.
 //!
 //! The agent is launched in the driver's own terminal session and bridged over a local socket,
@@ -41,18 +41,18 @@ use parking_lot::Mutex;
 use prost::Message as _;
 use serde_json::Value;
 use session_sharing_protocol::common::ParticipantId;
-use uuid::Uuid;
 use torch_cli::agent::Harness;
 use torch_core::channel::ChannelState;
 use torch_core::safe_warn;
 use torch_errors::report_error;
 use torch_managed_secrets::ManagedSecretValue;
-use warp_multi_agent_api::response_event::StreamFinished;
-use warp_multi_agent_api::{ClientAction, ResponseEvent, response_event};
 use torch_util::path::{EscapeChar, ShellFamily};
 use torchui::r#async::Timer;
 use torchui::r#async::executor::Background;
 use torchui::{ModelContext, ModelHandle, ModelSpawner, SingletonEntity};
+use uuid::Uuid;
+use warp_multi_agent_api::response_event::StreamFinished;
+use warp_multi_agent_api::{ClientAction, ResponseEvent, response_event};
 
 use self::attachments::AttachmentResolver;
 use self::bridge::{BridgeListener, bridge_command};
@@ -599,10 +599,6 @@ impl HarnessRunner for AcpHarnessRunner {
     fn harness_name(&self) -> &str {
         &self.launch.program
     }
-    #[cfg(test)]
-    fn prompt_text_for_test(&self) -> Option<&str> {
-        Some(&self.prompt_text)
-    }
 
     fn persistence(&self) -> &HarnessPersistence {
         &self.persistence
@@ -693,7 +689,7 @@ impl HarnessRunner for AcpHarnessRunner {
                         },
                         client_info: ClientInfo {
                             name: "warp".to_owned(),
-                            title: "Warp".to_owned(),
+                            title: "Torch".to_owned(),
                             version: ChannelState::app_version()
                                 .unwrap_or(env!("CARGO_PKG_VERSION"))
                                 .to_owned(),
@@ -1270,7 +1266,7 @@ async fn blocking(
         .map_err(RpcError::internal)?
 }
 
-/// Grants the request with the broadest "allow" option unless Warp's permission policy refuses
+/// Grants the request with the broadest "allow" option unless Torch's permission policy refuses
 /// it outright (see [`policy`]), in which case the narrowest "reject" option is chosen.
 async fn answer_permission_request(
     context: &AgentRequestContext,

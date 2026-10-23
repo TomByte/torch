@@ -9,7 +9,9 @@ use string_offset::CharOffset;
 use torch_editor::content::anchor::Anchor;
 use torch_editor::content::text::{BufferTextStyle, CodeBlockType, TextStyles};
 use torch_editor::content::version::BufferVersion;
-use torch_editor::editor::{EmbeddedItemModel, NavigationKey, RunnableCommandModel, TextDecoration};
+use torch_editor::editor::{
+    EmbeddedItemModel, NavigationKey, RunnableCommandModel, TextDecoration,
+};
 use torch_editor::model::{CoreEditorModel, RichTextEditorModel};
 use torch_editor::render::element::{
     DisplayOptions, DisplayStateHandle, RichTextAction, RichTextElement, VerticalExpansionBehavior,
@@ -863,7 +865,7 @@ pub enum EditorViewAction {
     OpenEmbeddedObjectSearch,
     RemoveEmbeddingAt(CharOffset),
     MiddleClickPaste,
-    /// Open a file. If open_in_warp is true, open in Warp's code editor; otherwise use external editor.
+    /// Open a file. If open_in_warp is true, open in Torch's code editor; otherwise use external editor.
     OpenFile {
         path: PathBuf,
         line_and_column_num: Option<LineAndColumnArg>,
@@ -3450,7 +3452,7 @@ impl RichTextAction<RichTextEditorView> for EditorViewAction {
         );
         let multiselect = modifiers.alt && FeatureFlag::RichTextMultiselect.is_enabled();
 
-        // The first mouse down to bring focus to a Warp window will not have a corresponding mouse up.
+        // The first mouse down to bring focus to a Torch window will not have a corresponding mouse up.
         // We ignore it, and they can click again.
         if is_first_mouse {
             return None;

@@ -17,9 +17,9 @@ pub use section_views::{ChangelogSectionView, ContentSectionView, FeatureSection
 pub mod sections;
 mod view;
 use serde::{Deserialize, Serialize};
-pub use view::{ResourceCenterAction, ResourceCenterEvent, ResourceCenterPage, ResourceCenterView};
 use torchui::keymap::Keystroke;
 use torchui::{AppContext, Entity, SingletonEntity};
+pub use view::{ResourceCenterAction, ResourceCenterEvent, ResourceCenterPage, ResourceCenterView};
 
 use self::section_views::feature_section::FeatureSection;
 
@@ -89,7 +89,7 @@ pub enum TipAction {
     AiCommandSearch,
     SaveNewLaunchConfig,
     WarpAI,
-    // This toggles Warp Drive rather than opening it. This enum can't directly be
+    // This toggles Torch Drive rather than opening it. This enum can't directly be
     // renamed because we serialize it into the welcome tips.
     OpenWarpDrive,
     Changelog,

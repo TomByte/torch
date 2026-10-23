@@ -307,7 +307,7 @@ Then test a real **A → B** upgrade:
 
 Do this on every supported architecture and a clean Mac user account before broad release. Server responses alone do not validate the updater.
 
-The existing `WARP_CHANNEL_VERSIONS_PATH` override can help development tests by loading a local manifest. It does not by itself change artifact URLs, signing checks, or update eligibility.
+The existing `TORCH_CHANNEL_VERSIONS_PATH` override can help development tests by loading a local manifest. It does not by itself change artifact URLs, signing checks, or update eligibility.
 
 ## 7. Make future releases easy
 

@@ -22,10 +22,6 @@ use settings::ToggleableSetting;
 #[cfg(not(target_family = "wasm"))]
 use tokio::fs;
 use toolbar_item::AgentToolbarItemKind;
-#[cfg(feature = "voice_input")]
-use voice_input::{
-    StartListeningError, VoiceInputLifecycle, VoiceInputLifecycleState, VoiceSessionResult,
-};
 use torch_cli::agent::Harness;
 use torch_core::channel::ChannelState;
 use torch_core::context_flag::ContextFlag;
@@ -47,6 +43,10 @@ use torchui::elements::{
 use torchui::{
     AppContext, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
+};
+#[cfg(feature = "voice_input")]
+use voice_input::{
+    StartListeningError, VoiceInputLifecycle, VoiceInputLifecycleState, VoiceSessionResult,
 };
 
 pub(crate) use self::environment_selector::{
@@ -243,7 +243,7 @@ pub struct AgentInputFooter {
     /// giving the plugin time to connect before we prompt installation.
     /// Reset to `false` when a listener connects.
     plugin_chip_ready: bool,
-    /// Offers Torch's own status hooks in local-only builds, in place of Warp's plugins.
+    /// Offers Torch's own status hooks in local-only builds, in place of Torch's plugins.
     status_setup_button: ViewHandle<ActionButton>,
     /// Whether Torch's status hooks are missing or outdated for this session's agent.
     needs_status_setup: bool,
@@ -524,7 +524,7 @@ impl AgentInputFooter {
             ActionButton::new("Enable notifications", InstallPluginButtonTheme)
                 .with_icon(Icon::Download)
                 .with_tooltip(
-                    "Install the Warp plugin to enable rich agent notifications within Warp",
+                    "Install the Torch plugin to enable rich agent notifications within Torch",
                 )
                 .with_size(cli_button_size)
                 .with_tooltip_alignment(TooltipAlignment::Left)
@@ -537,7 +537,7 @@ impl AgentInputFooter {
         let plugin_instructions_button = ctx.add_typed_action_view(|_ctx| {
             ActionButton::new("Notifications setup instructions", InstallPluginButtonTheme)
                 .with_icon(Icon::Info)
-                .with_tooltip("View instructions to install the Warp plugin")
+                .with_tooltip("View instructions to install the Torch plugin")
                 .with_size(cli_button_size)
                 .with_tooltip_alignment(TooltipAlignment::Left)
                 .with_adjoined_side(AdjoinedSide::Right)
@@ -549,9 +549,9 @@ impl AgentInputFooter {
         });
 
         let update_plugin_button = ctx.add_typed_action_view(|_ctx| {
-            ActionButton::new("Update Warp plugin", InstallPluginButtonTheme)
+            ActionButton::new("Update Torch plugin", InstallPluginButtonTheme)
                 .with_icon(Icon::Download)
-                .with_tooltip("A new version of the Warp plugin is available")
+                .with_tooltip("A new version of the Torch plugin is available")
                 .with_size(cli_button_size)
                 .with_tooltip_alignment(TooltipAlignment::Left)
                 .with_adjoined_side(AdjoinedSide::Right)
@@ -563,7 +563,7 @@ impl AgentInputFooter {
         let update_instructions_button = ctx.add_typed_action_view(|_ctx| {
             ActionButton::new("Plugin update instructions", InstallPluginButtonTheme)
                 .with_icon(Icon::Info)
-                .with_tooltip("View instructions to update the Warp plugin")
+                .with_tooltip("View instructions to update the Torch plugin")
                 .with_size(cli_button_size)
                 .with_tooltip_alignment(TooltipAlignment::Left)
                 .with_adjoined_side(AdjoinedSide::Right)
@@ -1475,7 +1475,7 @@ impl AgentInputFooter {
             // executor so it runs inside the container and targets the
             // container's shell / package layout. A common use case will be
             // running a 3p harness (e.g. Claude Code) inside a sandbox and
-            // needing the Warp plugin to integrate with it.
+            // needing the Torch plugin to integrate with it.
             Some(ShellLaunchData::DockerSandbox { .. }) => return false,
         };
 
@@ -1594,10 +1594,10 @@ impl AgentInputFooter {
             .cli_agent(ctx)
             .and_then(plugin_manager_for)
             .map(|m| m.install_success_message())
-            .unwrap_or("Warp plugin installed. Please restart the session to activate.");
+            .unwrap_or("Torch plugin installed. Please restart the session to activate.");
         self.handle_plugin_operation(
-            "Installing Warp plugin...",
-            "Failed to install Warp plugin",
+            "Installing Torch plugin...",
+            "Failed to install Torch plugin",
             success_msg,
             PluginChipTelemetryKind::Install,
             |manager| async move { manager.install().await },
@@ -1611,10 +1611,10 @@ impl AgentInputFooter {
             .cli_agent(ctx)
             .and_then(plugin_manager_for)
             .map(|m| m.update_success_message())
-            .unwrap_or("Warp plugin updated. Please restart the session to activate.");
+            .unwrap_or("Torch plugin updated. Please restart the session to activate.");
         self.handle_plugin_operation(
-            "Updating Warp plugin...",
-            "Failed to update Warp plugin",
+            "Updating Torch plugin...",
+            "Failed to update Torch plugin",
             success_msg,
             PluginChipTelemetryKind::Update,
             |manager| async move { manager.update().await },
@@ -3125,7 +3125,7 @@ impl ActionButtonTheme for ActiveMicButtonTheme {
     }
 }
 
-/// Green-accented theme for the "Install Warp plugin" chip.
+/// Green-accented theme for the "Install Torch plugin" chip.
 struct InstallPluginButtonTheme;
 
 impl ActionButtonTheme for InstallPluginButtonTheme {
@@ -3165,7 +3165,7 @@ async fn write_install_log(agent: CLIAgent, err: &PluginInstallError) -> Option<
     let log_path = env::temp_dir().join("warp-plugin-install.log");
     let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S UTC");
     let contents = format!(
-        "Warp plugin installation — {agent:?}\n\
+        "Torch plugin installation — {agent:?}\n\
          {now}\n\
          \n\
          {log}",

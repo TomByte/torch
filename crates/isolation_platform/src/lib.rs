@@ -19,30 +19,30 @@ mod namespace;
 /// Environment variable set by the server to identify the isolation platform.
 /// The value should match one of the `IsolationPlatformType` variants in snake_case.
 #[cfg(not(target_family = "wasm"))]
-const WARP_ISOLATION_PLATFORM_ENV: &str = "WARP_ISOLATION_PLATFORM";
+const TORCH_ISOLATION_PLATFORM_ENV: &str = "TORCH_ISOLATION_PLATFORM";
 
-/// Environment variable containing the generic Warp-managed workload token that we use
+/// Environment variable containing the generic Torch-managed workload token that we use
 /// for isolation platforms that don't issue their own tokens.
 #[cfg(not(target_family = "wasm"))]
-const WARP_WORKLOAD_TOKEN_ENV: &str = "WARP_WORKLOAD_TOKEN";
+const TORCH_WORKLOAD_TOKEN_ENV: &str = "TORCH_WORKLOAD_TOKEN";
 
-/// A kind of isolation platform. For our usage, isolation platforms are different ways where Warp
+/// A kind of isolation platform. For our usage, isolation platforms are different ways where Torch
 /// can be sandboxed, such as VMs, containers, or cloud hosts. This may also include weaker forms
 /// of sandboxing such as Git worktrees.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum IsolationPlatformType {
-    /// Warp is running within a Docker container. Note that this does *not* mean this is a Warp-hosted
+    /// Torch is running within a Docker container. Note that this does *not* mean this is a Torch-hosted
     /// Docker Sandboxes environment. Instead, it's likely a self-hosted agent.
     #[cfg(not(target_family = "wasm"))]
     Docker,
-    /// Warp is running within a Docker Sandbox, likely as a Warp-hosted agent.
+    /// Torch is running within a Docker Sandbox, likely as a Torch-hosted agent.
     #[cfg(not(target_family = "wasm"))]
     DockerSandbox,
-    /// Warp is running within a Kubernetes pod, likely as a self-hosted agent.
+    /// Torch is running within a Kubernetes pod, likely as a self-hosted agent.
     #[cfg(not(target_family = "wasm"))]
     Kubernetes,
-    /// Warp is running within a Namespace instance, likely as a Warp-hosted agent.
+    /// Torch is running within a Namespace instance, likely as a Torch-hosted agent.
     #[cfg(not(target_family = "wasm"))]
     Namespace,
 }
@@ -142,7 +142,7 @@ pub async fn issue_workload_token(
 ///
 /// Mirrors `issue_workload_token`'s platform resolution: a platform with its
 /// own issuance mechanism was detected, or a platform-agnostic token is
-/// available via `WARP_WORKLOAD_TOKEN`. Callers can use this to cheaply skip
+/// available via `TORCH_WORKLOAD_TOKEN`. Callers can use this to cheaply skip
 /// an attempt that is guaranteed to fail, without ruling out the case where
 /// no platform was detected but a generic token is still configured.
 pub fn workload_token_available() -> bool {
@@ -160,11 +160,11 @@ fn is_workload_token_available_for(platform: Option<IsolationPlatformType>) -> b
     }
 }
 
-/// Read a platform-agnostic workload token from the `WARP_WORKLOAD_TOKEN` environment variable.
+/// Read a platform-agnostic workload token from the `TORCH_WORKLOAD_TOKEN` environment variable.
 /// Returns a `WorkloadToken` with no expiration, or an error if the variable is missing/empty.
 #[cfg(not(target_family = "wasm"))]
 fn read_generic_workload_token() -> Result<WorkloadToken, IsolationPlatformError> {
-    let token = std::env::var(WARP_WORKLOAD_TOKEN_ENV)
+    let token = std::env::var(TORCH_WORKLOAD_TOKEN_ENV)
         .map_err(|_| IsolationPlatformError::GenericWorkloadTokenMissing)?;
     if token.is_empty() {
         return Err(IsolationPlatformError::GenericWorkloadTokenMissing);
@@ -175,17 +175,17 @@ fn read_generic_workload_token() -> Result<WorkloadToken, IsolationPlatformError
     })
 }
 
-/// Parse the `WARP_ISOLATION_PLATFORM` environment variable into a platform type.
+/// Parse the `TORCH_ISOLATION_PLATFORM` environment variable into a platform type.
 #[cfg(not(target_family = "wasm"))]
 fn platform_from_env() -> Option<IsolationPlatformType> {
-    let value = std::env::var(WARP_ISOLATION_PLATFORM_ENV).ok()?;
+    let value = std::env::var(TORCH_ISOLATION_PLATFORM_ENV).ok()?;
     match value.as_str() {
         "docker" => Some(IsolationPlatformType::Docker),
         "docker_sandbox" => Some(IsolationPlatformType::DockerSandbox),
         "kubernetes" => Some(IsolationPlatformType::Kubernetes),
         "namespace" => Some(IsolationPlatformType::Namespace),
         other => {
-            log::warn!("Unknown {WARP_ISOLATION_PLATFORM_ENV} value: {other}");
+            log::warn!("Unknown {TORCH_ISOLATION_PLATFORM_ENV} value: {other}");
             None
         }
     }

@@ -8,7 +8,7 @@ use crate::server::server_api::managed_secrets::IdentityTokenUserFacingError;
 
 #[test]
 fn bedrock_mint_error_preserves_safe_server_message_in_run_failure() {
-    let message = "Cannot issue a team-scoped identity token: you belong to multiple teams. Select a team using the X-Warp-Team-Uid request header.";
+    let message = "Cannot issue a team-scoped identity token: you belong to multiple teams. Select a team using the X-Torch-Team-Uid request header.";
     let error = anyhow::Error::new(IdentityTokenUserFacingError(message.to_string()));
     let error = bedrock_identity_token_error(error);
     let run_error = AgentDriverError::AwsBedrockCredentialsFailed(error.to_string());

@@ -115,7 +115,7 @@ impl PromptType {
             .collect()
     }
 
-    /// Whether same line prompt is enabled for the Warp Prompt.
+    /// Whether same line prompt is enabled for the Torch Prompt.
     pub fn same_line_prompt_enabled(&self, ctx: &AppContext) -> bool {
         match self {
             Self::Dynamic { prompt } => prompt.as_ref(ctx).same_line_prompt_enabled(),
@@ -123,7 +123,7 @@ impl PromptType {
         }
     }
 
-    /// The separator for the Warp prompt.
+    /// The separator for the Torch prompt.
     pub fn separator(&self, ctx: &AppContext) -> WarpPromptSeparator {
         match self {
             Self::Dynamic { prompt } => prompt.as_ref(ctx).separator(),

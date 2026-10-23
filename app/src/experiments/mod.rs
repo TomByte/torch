@@ -1,4 +1,4 @@
-//! A framework for running A/B tests within Warp.
+//! A framework for running A/B tests within Torch.
 //!
 //! Before starting, please read the usage guide on Notion. The guide explains
 //! some important constraints that are required for proper use of the framework

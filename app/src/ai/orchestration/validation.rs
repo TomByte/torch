@@ -112,7 +112,7 @@ pub fn accept_disabled_reason_with_auth(
     None
 }
 
-/// Soft recommendation copy shown when a Warp-hosted Cloud run has no
+/// Soft recommendation copy shown when a Torch-hosted Cloud run has no
 /// environment selected. `None` when not applicable.
 pub fn empty_env_recommendation_message(
     execution_mode: &RunAgentsExecutionMode,

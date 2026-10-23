@@ -104,7 +104,7 @@ case "$PROFILE_MODE" in
 esac
 
 FEATURES="release_bundle,standalone,agent_mode_debug,remote_codebase_indexing"
-WARP_BIN="warp"
+TORCH_BIN="warp"
 BINARY_NAME="oz-local"
 REMOTE_DIR=".warp-local/remote-server"
 # Global, version-independent resources location read by the daemon. Must
@@ -121,17 +121,17 @@ case "$CARGO_PROFILE" in
     OUTPUT_DIR="$CARGO_TARGET_DIR/$TARGET/$CARGO_PROFILE"
     ;;
 esac
-BUILT_BINARY="$OUTPUT_DIR/$WARP_BIN"
+BUILT_BINARY="$OUTPUT_DIR/$TORCH_BIN"
 LOCAL_RESOURCES_DIR="$OUTPUT_DIR/remote-server-resources"
 
 echo "==> Building Oz CLI for $TARGET (profile=$CARGO_PROFILE)"
-echo "    Binary: $WARP_BIN -> $BINARY_NAME"
+echo "    Binary: $TORCH_BIN -> $BINARY_NAME"
 echo "    Features: $FEATURES"
 echo ""
 
 cargo build \
     -p torch \
-    --bin "$WARP_BIN" \
+    --bin "$TORCH_BIN" \
     --target "$TARGET" \
     --profile "$CARGO_PROFILE" \
     --features "$FEATURES"
@@ -152,7 +152,7 @@ SKIP_SETTINGS_SCHEMA=1 "$WORKSPACE_ROOT/script/prepare_bundled_resources" \
   local
 
 # Resolve $HOME on the remote so our upload lands in the same directory the
-# Warp client checks. The client runs `test -x ~/.warp-local/...` and lets
+# Torch client checks. The client runs `test -x ~/.warp-local/...` and lets
 # the remote login shell expand `~` to $HOME, while rsync's remote path
 # expansion can differ (e.g. on Namespace devboxes, the initial directory
 # is /workspaces but $HOME is elsewhere). Using an absolute path derived

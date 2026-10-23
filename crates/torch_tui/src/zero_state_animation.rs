@@ -1,6 +1,6 @@
 //! Rotating object animation for the TUI zero state.
 //!
-//! The built-in Warp mark or a user-provided ASCII silhouette is sampled into a
+//! The built-in Torch mark or a user-provided ASCII silhouette is sampled into a
 //! shallow, ghosted wireframe, rotated around its vertical axis, and projected
 //! back onto terminal cells. A tiny z-buffer keeps the front-most sample for
 //! each cell, while directional ASCII edges and sparse stippling retain depth
@@ -76,7 +76,7 @@ const MAX_INTERACTIVE_RADIANS_PER_SECOND: f64 =
     MAX_INTERACTIVE_REVOLUTIONS_PER_SECOND * std::f64::consts::TAU;
 const MOMENTUM_SETTLE_DURATION: Duration = Duration::from_secs(3);
 
-/// Approximate visible bounds of the bundled Warp logo SVG.
+/// Approximate visible bounds of the bundled Torch logo SVG.
 const SVG_MIN_X: f64 = 35.0;
 const SVG_MAX_X: f64 = 216.155;
 const SVG_MIN_Y: f64 = 25.5701;

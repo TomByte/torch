@@ -1581,7 +1581,7 @@ impl CodeDiffView {
 
         // Renders the 'open config' button only when every MCP config file in this diff
         // belongs to the same provider. Mixed-provider diffs (e.g. editing both a Claude
-        // config and a Warp config at once) show no badge to avoid misleading attribution.
+        // config and a Torch config at once) show no badge to avoid misleading attribution.
         // MCP config actions currently operate on local paths only.
         let local_file_paths: Vec<PathBuf> = file_locations
             .iter()

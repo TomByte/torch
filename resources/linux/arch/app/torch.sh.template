@@ -1,0 +1,11 @@
+#!/bin/bash
+
+XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-~/.config}
+
+# Allow users to override command-line options
+if [[ -f $XDG_CONFIG_HOME/torch-flags.conf ]]; then
+    TORCH_USER_FLAGS="$(grep -v '^#' $XDG_CONFIG_HOME/torch-flags.conf)"
+fi
+
+# Launch
+exec /opt/torch/torch/@@BINARY_NAME@@ $TORCH_USER_FLAGS "$@"

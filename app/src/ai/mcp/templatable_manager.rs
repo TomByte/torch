@@ -19,10 +19,10 @@ pub use native::McpIntegration;
 use parking_lot::Mutex;
 #[cfg(not(target_family = "wasm"))]
 use simple_logger::SimpleLogger;
-use uuid::Uuid;
 #[cfg(not(target_family = "wasm"))]
 use torchui::ModelSpawner;
 use torchui::{Entity, SingletonEntity};
+use uuid::Uuid;
 
 #[cfg(not(target_family = "wasm"))]
 use crate::ai::mcp::templatable::CloudTemplatableMCPServer;
@@ -95,7 +95,7 @@ pub struct TemplatableMCPServerManager {
     /// UUIDs of MCP servers started via the Oz CLI. We track these so they can be distinguished from
     /// file-based ephemeral MCP servers, which are directory-scoped.
     cli_spawned_server_uuids: HashSet<Uuid>,
-    /// UUIDs of built-in Warp-hosted servers (e.g. the Factory MCP), which are
+    /// UUIDs of built-in Torch-hosted servers (e.g. the Factory MCP), which are
     /// spawned automatically from in-code definitions and authenticated with
     /// the logged-in user's session credentials.
     builtin_server_uuids: HashSet<Uuid>,
@@ -403,7 +403,7 @@ impl TemplatableMCPServerManager {
             .collect()
     }
 
-    /// Returns built-in Warp-hosted servers (e.g. the Factory MCP) that are
+    /// Returns built-in Torch-hosted servers (e.g. the Factory MCP) that are
     /// currently active.
     pub fn get_active_builtin_servers(&self) -> HashMap<Uuid, &TemplatableMCPServerInfo> {
         self.builtin_server_uuids

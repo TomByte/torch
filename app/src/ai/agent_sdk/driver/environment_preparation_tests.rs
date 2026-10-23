@@ -103,7 +103,10 @@ fn execution_policy_file_is_fresh_private_and_owned_until_drop_even_when_empty()
                 OsString::from(FILE_ENV),
                 OsString::from("/inherited/policy"),
             ),
-            (OsString::from("WARP_EXECUTION_ID"), OsString::from("stale")),
+            (
+                OsString::from("TORCH_EXECUTION_ID"),
+                OsString::from("stale"),
+            ),
         ]);
         let first = launch_environment(Some(&policy), Some("task"), root.path(), &mut env)
             .unwrap()
@@ -151,7 +154,7 @@ fn execution_policy_file_is_fresh_private_and_owned_until_drop_even_when_empty()
             .is_err()
         );
         launch_environment(None, None, root.path(), &mut env).unwrap();
-        for name in [FILE_ENV, "WARP_EXECUTION_ID", "OZ_RUN_ID", "WARP_RUN_ID"] {
+        for name in [FILE_ENV, "TORCH_EXECUTION_ID", "OZ_RUN_ID", "TORCH_RUN_ID"] {
             assert!(env.get(OsStr::new(name)).unwrap().is_empty());
         }
         assert_eq!(env.get(OsStr::new(MODE_ENV)).unwrap(), "legacy");

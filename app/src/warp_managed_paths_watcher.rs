@@ -14,9 +14,9 @@ use torchui::{Entity, ModelContext, SingletonEntity};
 #[cfg(not(target_family = "wasm"))]
 use watcher::{BulkFilesystemWatcher, BulkFilesystemWatcherEvent};
 
-/// Duration between filesystem watch events for the Warp managed paths watcher, in milliseconds.
+/// Duration between filesystem watch events for the Torch managed paths watcher, in milliseconds.
 #[cfg(not(target_family = "wasm"))]
-const WARP_MANAGED_PATHS_WATCHER_DEBOUNCE_MILLI_SECS: u64 = 500;
+const TORCH_MANAGED_PATHS_WATCHER_DEBOUNCE_MILLI_SECS: u64 = 500;
 
 pub(crate) fn warp_data_dir() -> PathBuf {
     torch_core::paths::data_dir()
@@ -250,7 +250,7 @@ impl WarpManagedPathsWatcher {
         let watcher = if should_register_watcher {
             ctx.add_model(|ctx| {
                 BulkFilesystemWatcher::new(
-                    Duration::from_millis(WARP_MANAGED_PATHS_WATCHER_DEBOUNCE_MILLI_SECS),
+                    Duration::from_millis(TORCH_MANAGED_PATHS_WATCHER_DEBOUNCE_MILLI_SECS),
                     ctx,
                 )
             })

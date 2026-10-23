@@ -639,7 +639,7 @@ settings::macros::implement_setting_for_enum!(
     description: "Controls how child-agent messages are displayed.",
 );
 
-/// Which unit the usage entry displays in Warp Agent CLI.
+/// Which unit the usage entry displays in Torch Agent CLI.
 #[derive(
     Default,
     Debug,
@@ -718,7 +718,7 @@ impl UsageDisplayUnit {
     }
 }
 
-/// One configurable item in the Warp Agent CLI statusline.
+/// One configurable item in the Torch Agent CLI statusline.
 #[derive(
     Debug,
     serde::Serialize,
@@ -800,7 +800,7 @@ impl TuiStatuslineItem {
     }
 }
 
-/// Ordered and enabled items in the Warp Agent CLI statusline.
+/// Ordered and enabled items in the Torch Agent CLI statusline.
 #[derive(
     Debug,
     serde::Serialize,
@@ -1814,7 +1814,7 @@ define_settings_group!(AISettings, settings: [
     }
 
     // This is not a user-visible setting - it's merely a one-time flag to track if the
-    // Warp Agent CLI launch modal has been shown to the user.
+    // Torch Agent CLI launch modal has been shown to the user.
     //
     // We model it as a setting so it's only shown once to a given user regardless of the number of
     // devices they use.
@@ -1880,7 +1880,7 @@ define_settings_group!(AISettings, settings: [
         description: "Whether the \"What's new\" section is shown in the agent view.",
     }
 
-    // Whether or not the user has enabled fallback to Warp credits for user-provided models.
+    // Whether or not the user has enabled fallback to Torch credits for user-provided models.
     can_use_warp_credits_for_fallback: CanUseWarpCreditsForFallback {
         type: bool,
         default: false,
@@ -2031,7 +2031,7 @@ define_settings_group!(AISettings, settings: [
         toml_path: "general.default_tab_config_path",
     }
 
-    // Whether computer use is enabled for cloud agent conversations started from the Warp app.
+    // Whether computer use is enabled for cloud agent conversations started from the Torch app.
     // This setting is only used when the AI autonomy setting is AlwaysAsk or not set.
     cloud_agent_computer_use_enabled: CloudAgentComputerUseEnabled {
         type: bool,
@@ -2046,7 +2046,7 @@ define_settings_group!(AISettings, settings: [
 
 
     // Whether file-based MCP servers from third-party AI tools (e.g. Claude, Codex) should
-    // be automatically detected and spawned. Warp-native config files (.warp/.mcp.json) are
+    // be automatically detected and spawned. Torch-native config files (.warp/.mcp.json) are
     // always detected and spawned, regardless of this setting.
     file_based_mcp_enabled: FileBasedMcpEnabled {
         type: bool,

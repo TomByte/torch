@@ -9,7 +9,6 @@ use std::ops::{Range, RangeInclusive};
 
 use lazy_static::lazy_static;
 use num_traits::Float as _;
-use unicode_width::UnicodeWidthChar;
 use torch_core::features::FeatureFlag;
 use torch_errors::{ReportErrorLogMode, report_error};
 use torchui::assets::asset_cache::{AssetCache, AssetSource, AssetState};
@@ -23,6 +22,7 @@ use torchui::platform::LineStyle;
 use torchui::text_layout::{DEFAULT_TOP_BOTTOM_RATIO, Line, StyleAndFont, TextStyle};
 use torchui::units::{IntoLines as _, Lines, Pixels};
 use torchui::{AppContext, Element, EntityId, PaintContext, Scene, SingletonEntity};
+use unicode_width::UnicodeWidthChar;
 
 pub use self::cell_glyph_cache::CellGlyphCache;
 use self::cell_type::{CellType, IsFocused, Secret};
@@ -645,7 +645,7 @@ fn render_grid_without_ligatures<'a>(
 
             // Skip the cursor cell when CLI agent rich input is open
             // AND the agent draws its own cursor (SHOW_CURSOR is off).
-            // When Warp draws the cursor (SHOW_CURSOR on), we keep the cell
+            // When Torch draws the cursor (SHOW_CURSOR on), we keep the cell
             // and only suppress the draw_cursor call.
             if hide_cursor_cell
                 && visible_cursor_shape.is_none()
@@ -1188,7 +1188,7 @@ fn render_grid_with_ligatures<'a>(
 
             // Skip the cursor cell when CLI agent rich input is open
             // AND the agent draws its own cursor (SHOW_CURSOR is off).
-            // When Warp draws the cursor (SHOW_CURSOR on), we keep the cell
+            // When Torch draws the cursor (SHOW_CURSOR on), we keep the cell
             // and only suppress the draw_cursor call.
             if hide_cursor_cell
                 && visible_cursor_shape.is_none()

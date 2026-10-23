@@ -1,4 +1,4 @@
-//! Shimmering Warp loading text - renders Warp logo with shimmering text for loading states.
+//! Shimmering Torch loading text - renders Torch logo with shimmering text for loading states.
 
 use torch_core::ui::appearance::Appearance;
 use torchui::elements::Element;
@@ -7,10 +7,10 @@ use torchui::elements::shimmering_text::{
 };
 use torchui::{AppContext, SingletonEntity};
 
-/// Warp icon glyph character
-const WARP_GLYPH: &str = "\u{E500}";
+/// Torch icon glyph character
+const TORCH_GLYPH: &str = "\u{E500}";
 
-/// Creates a shimmering text element with the Warp glyph.
+/// Creates a shimmering text element with the Torch glyph.
 pub fn shimmering_warp_loading_text(
     text: impl Into<String>,
     font_size: f32,
@@ -29,7 +29,7 @@ pub fn shimmering_warp_loading_text(
 
     // Create a single shimmering element with glyph and text
     ShimmeringTextElement::new(
-        format!("{} {}", WARP_GLYPH, text.into()),
+        format!("{} {}", TORCH_GLYPH, text.into()),
         appearance.ui_font_family(),
         font_size,
         base_color,

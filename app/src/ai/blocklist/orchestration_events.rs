@@ -1,8 +1,8 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
 
-use warp_multi_agent_api as api;
 use torchui::{Entity, ModelContext, SingletonEntity};
+use warp_multi_agent_api as api;
 
 use super::history_model::{
     BlocklistAIHistoryEvent, BlocklistAIHistoryModel, ConversationStatusUpdate,
@@ -154,7 +154,7 @@ impl OrchestrationEventService {
 
     /// Drops any orchestration events still queued for `conversation_id` because an external
     /// harness drives its turns (see `ConversationDriver::owns_turn_lifecycle`): this client never
-    /// dispatches to Warp's agent loop for it, and the server wakes such runs itself when new
+    /// dispatches to Torch's agent loop for it, and the server wakes such runs itself when new
     /// messages arrive.
     pub fn drop_pending_events_for_external_harness_conversation(
         &mut self,
@@ -166,7 +166,7 @@ impl OrchestrationEventService {
             log::info!(
                 "[orch-external-harness] Dropping {} queued orchestration event(s) for \
                  conversation {conversation_id:?}: an external harness drives its turns, so \
-                 they cannot be injected into Warp's agent loop",
+                 they cannot be injected into Torch's agent loop",
                 dropped.len()
             );
         }

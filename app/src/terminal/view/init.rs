@@ -1056,7 +1056,7 @@ pub fn init(app: &mut AppContext) {
 
     app.register_editable_bindings([EditableBinding::new(
         "workspace:init_project_rules",
-        BindingDescription::new("Initiate project for warp"),
+        BindingDescription::new("Initiate project for torch"),
         TerminalAction::InitProject,
     )
     .with_enabled(|| !ChannelState::is_local_only())
@@ -1144,7 +1144,7 @@ fn register_input_mode_bindings(app: &mut AppContext) {
 
     // A context predicate that matches when the input mode bindings are
     // available for use. Disabled when a CLI agent session is active — the
-    // Warp agent should not be tagged into a CLI agent's command, and the
+    // Torch agent should not be tagged into a CLI agent's command, and the
     // `!` prefix is the only way to toggle shell mode in the rich input.
     let base_context = id!(flags::IS_ANY_AI_ENABLED)
         & (id!("Input") | id!("Terminal"))

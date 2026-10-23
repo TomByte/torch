@@ -1,5 +1,5 @@
 #!/usr/bin/env -S fontforge -script
-# Script that patches a given font to include the Warp logo as a glyph in the font,
+# Script that patches a given font to include the Torch logo as a glyph in the font,
 # using a unicode codepoint in the private use area.
 import os
 import sys
@@ -9,9 +9,9 @@ import psMat
 
 # Default values match what we used when initially patching Roboto.
 SCRIPT_DIR = os.path.dirname(os.path.abspath(sys.argv[0]))
-DEFAULT_SVG_PATH = os.path.join(SCRIPT_DIR, "warp.svg")
+DEFAULT_SVG_PATH = os.path.join(SCRIPT_DIR, "torch.svg")
 DEFAULT_CODEPOINT = 0xE500  # Private Use Area
-DEFAULT_GLYPH_NAME = "warpLogo"
+DEFAULT_GLYPH_NAME = "torchLogo"
 
 
 def usage(exit_code: int) -> None:

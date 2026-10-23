@@ -38,9 +38,6 @@ use referral::ReferralsClient;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use team::TeamClient;
-#[cfg(feature = "tui")]
-use tui_onboarding::TuiOnboardingClient;
-use url::Url;
 use torch_core::context_flag::ContextFlag;
 use torch_errors::{AnyhowErrorExt, ErrorExt, register_error, report_error};
 use torch_server_client::HttpStatusError;
@@ -53,6 +50,9 @@ use torch_server_client::iap::{IapManager, IapState};
 use torch_server_client::network_logging::NetworkLogModel;
 use torchui::r#async::BoxFuture;
 use torchui::{Entity, ModelContext, SingletonEntity};
+#[cfg(feature = "tui")]
+use tui_onboarding::TuiOnboardingClient;
+use url::Url;
 use workspace::WorkspaceClient;
 
 use super::experiments::{ServerExperiment, ServerExperiments};
@@ -69,19 +69,19 @@ use crate::server::team_scope::RequestTeamScope;
 use crate::{ChannelState, settings_view};
 
 pub const FETCH_CHANNEL_VERSIONS_TIMEOUT: std::time::Duration = Duration::from_secs(60);
-/// We use a special error code header `X-Warp-Error-Code` to allow the server to send
+/// We use a special error code header `X-Torch-Error-Code` to allow the server to send
 /// more specific error code information, so that the client can discern between different
 /// errors with the same error code.
 /// See errors/http_error_codes.go on the server for possible values.
-const WARP_ERROR_CODE_HEADER: &str = "X-Torch-Error-Code";
+const TORCH_ERROR_CODE_HEADER: &str = "X-Torch-Error-Code";
 
 /// An error indicating the user is out of credits. The server sends 429s to communicate this
 /// state, but if Cloud Run is overloaded, it can also send 429s that aren't credit-related.
 /// So we use this to distinguish between the two cases.
-const WARP_ERROR_CODE_OUT_OF_CREDITS: &str = "OUT_OF_CREDITS";
+const TORCH_ERROR_CODE_OUT_OF_CREDITS: &str = "OUT_OF_CREDITS";
 
 /// Error code indicating the user has reached their cloud agent concurrency limit.
-const WARP_ERROR_CODE_AT_CAPACITY: &str = "AT_CLOUD_AGENT_CAPACITY";
+const TORCH_ERROR_CODE_AT_CAPACITY: &str = "AT_CLOUD_AGENT_CAPACITY";
 
 /// ResponseType received by Client
 #[derive(thiserror::Error, Debug, Serialize, Deserialize)]
@@ -226,7 +226,7 @@ impl AIApiError {
         headers: &::http::HeaderMap,
         body: Option<String>,
     ) -> Self {
-        // For HTTP 429 errors, check the X-Warp-Error-Code header to distinguish
+        // For HTTP 429 errors, check the X-Torch-Error-Code header to distinguish
         // between out-of-credits and server-overload.
         if err.status() == Some(http::StatusCode::TOO_MANY_REQUESTS) {
             return Self::error_for_429(headers, body);
@@ -264,12 +264,12 @@ impl AIApiError {
         AIApiError::Transport(err)
     }
 
-    /// Returns the appropriate error for a 429 response by checking the X-Warp-Error-Code header.
+    /// Returns the appropriate error for a 429 response by checking the X-Torch-Error-Code header.
     fn error_for_429(headers: &::http::HeaderMap, body: Option<String>) -> Self {
         if headers
-            .get(WARP_ERROR_CODE_HEADER)
+            .get(TORCH_ERROR_CODE_HEADER)
             .and_then(|v| v.to_str().ok())
-            == Some(WARP_ERROR_CODE_OUT_OF_CREDITS)
+            == Some(TORCH_ERROR_CODE_OUT_OF_CREDITS)
         {
             let user_display_message = body
                 .and_then(|body| serde_json::from_str::<OutOfCreditsResponse>(&body).ok())
@@ -842,14 +842,14 @@ impl ServerApi {
         let status = response.status();
         let is_at_capacity = response
             .headers()
-            .get(WARP_ERROR_CODE_HEADER)
+            .get(TORCH_ERROR_CODE_HEADER)
             .and_then(|v| v.to_str().ok())
-            == Some(WARP_ERROR_CODE_AT_CAPACITY);
+            == Some(TORCH_ERROR_CODE_AT_CAPACITY);
         let is_out_of_credits = response
             .headers()
-            .get(WARP_ERROR_CODE_HEADER)
+            .get(TORCH_ERROR_CODE_HEADER)
             .and_then(|v| v.to_str().ok())
-            == Some(WARP_ERROR_CODE_OUT_OF_CREDITS);
+            == Some(TORCH_ERROR_CODE_OUT_OF_CREDITS);
 
         // Get the response text first since we may need to try multiple deserializations.
         let response_text = response.text().await.unwrap_or_default();
@@ -1239,9 +1239,9 @@ impl ServerApi {
                 } else if res.status() == http::StatusCode::TOO_MANY_REQUESTS {
                     if res
                         .headers()
-                        .get(WARP_ERROR_CODE_HEADER)
+                        .get(TORCH_ERROR_CODE_HEADER)
                         .and_then(|v| v.to_str().ok())
-                        == Some(WARP_ERROR_CODE_OUT_OF_CREDITS)
+                        == Some(TORCH_ERROR_CODE_OUT_OF_CREDITS)
                     {
                         Err(TranscribeError::QuotaLimit)
                     } else {
@@ -1311,7 +1311,7 @@ impl ServerApi {
         }
     }
 
-    /// Fetches updated Warp Channel Versions from Warp Server. If it is the first such request of
+    /// Fetches updated Torch Channel Versions from Torch Server. If it is the first such request of
     /// the current calendar day, first attempts to call the '/client_version/daily'. If that call
     /// fails or if it not the first request of the calendar day, returns the result of a call to
     /// `/client_version'. The caller can specify whether or not changelog information should be
@@ -1513,7 +1513,7 @@ impl ServerApiProvider {
     }
 
     /// Returns the shared HTTP client. This client is wired into network logging
-    /// and includes standard Warp request headers.
+    /// and includes standard Torch request headers.
     pub fn get_http_client(&self) -> Arc<http_client::Client> {
         self.server_api.owned_http_client()
     }

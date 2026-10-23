@@ -275,7 +275,7 @@ fn test_should_add_command_to_history() {
 ///
 /// `rc_file_paths` is rendered into a shell command that runs on the *target*
 /// (e.g. an SSH remote, or a subshell during Auto-Warpify). The path separator
-/// must therefore depend on the target OS, not the host that built Warp.
+/// must therefore depend on the target OS, not the host that built Torch.
 /// Previously this used `PathBuf::join`, which uses the host's separator and
 /// produced strings like `~\.zshrc` on a Windows host targeting a Unix shell —
 /// the remote zsh then errored with "no such user or named directory".

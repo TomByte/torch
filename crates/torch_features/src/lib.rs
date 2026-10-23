@@ -20,7 +20,7 @@ pub enum FeatureFlag {
     /// Enables cloud object related features for an explicit allowlist of team testers.
     CloudObjects,
 
-    /// If `true`, fetch updated Warp channel versions from the Warp server endpoint instead of
+    /// If `true`, fetch updated Torch channel versions from the Torch server endpoint instead of
     /// from GCP directly.
     FetchChannelVersionsFromWarpServer,
 
@@ -74,10 +74,10 @@ pub enum FeatureFlag {
     /// discrete GPU.
     IntegratedGPU,
 
-    /// Warp Agent Mode.
+    /// Torch Agent Mode.
     AgentMode,
 
-    /// Whether the user is part of the Warp Alpha Program (AI Trusted Testers).
+    /// Whether the user is part of the Torch Alpha Program (AI Trusted Testers).
     /// This is enabled automatically for local and dev builds.
     /// Collect conversation and input autodetection data for agent mode.
     /// Also collects block data for Next Command, if enabled.
@@ -96,7 +96,7 @@ pub enum FeatureFlag {
     /// Feature flag for cursor reflow fix (fixes part of the Alacritty resizing logic).
     ResizeFix,
 
-    /// Enable multiselect in Notebooks and Warp Text.
+    /// Enable multiselect in Notebooks and Torch Text.
     RichTextMultiselect,
 
     /// If enabled, the default input mode is set to waterfall for new users.
@@ -122,10 +122,10 @@ pub enum FeatureFlag {
     /// Enable dynamic enum parameter types for workflow arguments
     DynamicWorkflowEnums,
 
-    /// Enables next action prediction within Warp, powered by AI.
+    /// Enables next action prediction within Torch, powered by AI.
     AgentPredict,
 
-    /// Enables receiving shared Warp Drive objects.
+    /// Enables receiving shared Torch Drive objects.
     SharedWithMe,
 
     /// Enables workflows for use with Agent Mode.
@@ -154,7 +154,7 @@ pub enum FeatureFlag {
     /// tab.
     FullScreenZenMode,
 
-    /// Playground for reducing Warp UI clutter.
+    /// Playground for reducing Torch UI clutter.
     MinimalistUI,
 
     /// Enables support for using native shell completions to supplement our
@@ -164,7 +164,7 @@ pub enum FeatureFlag {
     /// Adds avatar to the tab bar.
     AvatarInTabBar,
 
-    /// Adds aliases for executing Warp Drive workflows.
+    /// Adds aliases for executing Torch Drive workflows.
     WorkflowAliases,
 
     SshDragAndDrop,
@@ -214,7 +214,7 @@ pub enum FeatureFlag {
     /// Enables Kitty image rendering
     KittyImages,
 
-    /// Enables support for Warp Packs.
+    /// Enables support for Torch Packs.
     WarpPacks,
 
     /// Enables the revised AI analytics policy banner.
@@ -332,7 +332,7 @@ pub enum FeatureFlag {
     /// Enables code symbols in AI context menu
     AIContextMenuCode,
 
-    /// Enables Warp Drive objects (like workflows) as context in AI context menu
+    /// Enables Torch Drive objects (like workflows) as context in AI context menu
     DriveObjectsAsContext,
 
     /// Expands code diff edits to replace the current pane instead of opening in a new tab.
@@ -461,7 +461,7 @@ pub enum FeatureFlag {
     /// Enables cloud environments management via CLI.
     CloudEnvironments,
 
-    /// Enables the /create-environment slash command for setting up Warp Environments
+    /// Enables the /create-environment slash command for setting up Torch Environments
     CreateEnvironmentSlashCommand,
 
     /// Enables the local docker sandbox entrypoints in the client.
@@ -502,7 +502,7 @@ pub enum FeatureFlag {
     MarkdownTables,
 
     /// Renders `.ipynb` (Jupyter) files as a formatted, read-only notebook in
-    /// Warp's notebook viewer instead of showing the raw JSON in the code editor.
+    /// Torch's notebook viewer instead of showing the raw JSON in the code editor.
     JupyterNotebookRendering,
 
     /// Enables rendering markdown tables inline in AI block list responses.
@@ -561,7 +561,7 @@ pub enum FeatureFlag {
     /// Enables host selection in cloud mode.
     CloudModeHostSelector,
 
-    /// Enables Warp Managed Secrets functionality.
+    /// Enables Torch Managed Secrets functionality.
     WarpManagedSecrets,
 
     /// Enables support for AM file diffs backed by the V4A patch format.
@@ -641,7 +641,7 @@ pub enum FeatureFlag {
     /// Enables conversation artifacts.
     ConversationArtifacts,
 
-    /// Enables auto-syncing ambient plans to Warp Drive.
+    /// Enables auto-syncing ambient plans to Torch Drive.
     SyncAmbientPlans,
 
     /// Enables platform skills support (--skill flag) for agent runs.
@@ -667,14 +667,14 @@ pub enum FeatureFlag {
     /// Enables the Oz launch modal for introducing cloud agent features.
     OzLaunchModal,
 
-    /// Enables the OpenWarp launch modal announcing Warp going open-source.
+    /// Enables the OpenWarp launch modal announcing Torch going open-source.
     /// When enabled, the HOA onboarding flow is suppressed.
     OpenWarpLaunchModal,
 
     /// Enables the orchestration launch modal announcing multi-agent orchestration features.
     OrchestrationLaunchModal,
 
-    /// Enables the launch modal announcing the Warp Agent CLI.
+    /// Enables the launch modal announcing the Torch Agent CLI.
     AgentCliLaunchModal,
 
     /// Updated tab styling (background colors, border, close button positioning, margins).
@@ -694,7 +694,7 @@ pub enum FeatureFlag {
     ConversationsAsContext,
 
     /// Enables the rich input editor for CLI agents (e.g., Claude Code).
-    /// Ctrl-G intercepts the keystroke and opens Warp's input editor instead of $EDITOR.
+    /// Ctrl-G intercepts the keystroke and opens Torch's input editor instead of $EDITOR.
     CLIAgentRichInput,
 
     /// Enables incremental (diff-based) buffer updates for auto-reload instead of full replace.
@@ -754,7 +754,7 @@ pub enum FeatureFlag {
     HoaCodeReview,
 
     /// Enables the `--harness` flag for `oz agent run`, allowing external agent
-    /// CLIs (e.g. `claude`) to execute prompts instead of Warp's agent harness.
+    /// CLIs (e.g. `claude`) to execute prompts instead of Torch's agent harness.
     AgentHarness,
 
     /// Enables the `--harness-transport acp` flag for `oz agent run`, which drives a third-party
@@ -763,7 +763,7 @@ pub enum FeatureFlag {
     AcpHarness,
 
     /// Enables workspace- and block-snapshot handoff between cloud agent runs
-    /// and the local Warp client.
+    /// and the local Torch client.
     /// When enabled:
     /// - The `AgentDriver` uploads a workspace snapshot (repo diffs + files) at the end of every
     ///   cloud agent run, regardless of harness.
@@ -775,19 +775,19 @@ pub enum FeatureFlag {
     /// Enables the upgraded CLI agent session tracking and notifications infrastructure.
     HOANotifications,
 
-    /// Enables the install/update chip for the OpenCode Warp plugin.
+    /// Enables the install/update chip for the OpenCode Torch plugin.
     /// Requires HOANotifications to also be enabled.
     OpenCodeNotifications,
 
-    /// Enables the install/update chip for the Codex Warp notification plugin.
+    /// Enables the install/update chip for the Codex Torch notification plugin.
     /// Requires HOANotifications to also be enabled.
     CodexNotifications,
 
-    /// Enables the Codex Warp plugin marketplace integration.
+    /// Enables the Codex Torch plugin marketplace integration.
     /// When disabled, Codex uses native OSC9 notifications.
     CodexPlugin,
 
-    /// Enables the install/update chip for the Gemini CLI Warp extension.
+    /// Enables the install/update chip for the Gemini CLI Torch extension.
     /// Requires HOANotifications to also be enabled.
     GeminiNotifications,
 
@@ -799,7 +799,7 @@ pub enum FeatureFlag {
     /// Enables tab configs — user-definable TOML templates for launching custom tab layouts.
     TabConfigs,
 
-    /// Enables Warp local control through the standalone warpctrl CLI.
+    /// Enables Torch local control through the standalone warpctrl CLI.
     WarpControlCli,
 
     /// Enables the ask_user_question tool allowing the agent to ask clarifying questions.
@@ -893,7 +893,7 @@ pub enum FeatureFlag {
     ChatGPTSubscription,
 
     /// Gates Gemini Enterprise (GEAP) BYOLLM, which lets users
-    /// route eliglible models to GEAP instead of Warp-managed inference.
+    /// route eliglible models to GEAP instead of Torch-managed inference.
     GeminiEnterprise,
 
     /// Gates NLD input classification matching the buffer against agent
@@ -946,13 +946,13 @@ pub enum FeatureFlag {
     /// `--mcp` arguments, resolved server-side at run setup.
     WellKnownMcpIds,
 
-    /// Automatically attaches the Warp-hosted Factory MCP server
+    /// Automatically attaches the Torch-hosted Factory MCP server
     /// (`/api/v1/mcp/factory`) to agents as a built-in MCP server,
     /// authenticated with the logged-in user's session token. No manual MCP
     /// setup or API key required.
     FactoryMcp,
 
-    /// Attaches the Warp-hosted preview URLs MCP server (`/api/v1/mcp/preview-urls`)
+    /// Attaches the Torch-hosted preview URLs MCP server (`/api/v1/mcp/preview-urls`)
     /// to agent runs, so a cloud run can expose a sandbox port as a preview URL.
     PreviewUrlsMcp,
 
@@ -971,7 +971,7 @@ pub enum FeatureFlag {
     /// signaled or torn down.
     CtrlCCancelsThirdPartyHarness,
 
-    /// Uses fzf or atuin for history search instead of Warp's command search.
+    /// Uses fzf or atuin for history search instead of Torch's command search.
     ShellWidgetHandoff,
 
     /// Attaches process-tree liveness signals to long-running command
@@ -987,7 +987,7 @@ pub enum FeatureFlag {
 
     /// Advertises client support for server-issued task-message updates that
     /// replace inline computer-use screenshot bytes with references to
-    /// Warp-managed object storage.
+    /// Torch-managed object storage.
     StoredScreenshots,
 
     /// Lets cloud agent environment checkouts build repositories from bare git
@@ -1075,7 +1075,7 @@ pub const DOGFOOD_FLAGS: &[FeatureFlag] = &[
     FeatureFlag::AcpHarness,
 ];
 
-/// Features enabled for feature preview build users (e.g.: Friends of Warp).
+/// Features enabled for feature preview build users (e.g.: Friends of Torch).
 /// All PREVIEW_FLAGS are also automatically added to dogfood builds (WarpDev).
 pub const PREVIEW_FLAGS: &[FeatureFlag] = &[];
 
@@ -1231,10 +1231,10 @@ impl FeatureFlag {
                 Some("Enables rendering markdown images inline in AI block list responses.")
             }
             CloudEnvironments => {
-                Some("Enables creating and managing Warp Environments via the CLI.")
+                Some("Enables creating and managing Torch Environments via the CLI.")
             }
             CreateEnvironmentSlashCommand => Some(
-                "Enables the /create environment slash command for setting up Warp Environments with custom configurations.",
+                "Enables the /create environment slash command for setting up Torch Environments with custom configurations.",
             ),
             GlobalSearch => Some("Enables global search in the left panel"),
             BlocklistMarkdownTableRendering => {
@@ -1244,7 +1244,7 @@ impl FeatureFlag {
                 Some("Enables rendering and interaction support for markdown tables in notebooks.")
             }
             SettingsFile => Some(
-                "Enables configuring Warp via a user-editable `settings.toml` file, with hot reload and error reporting for invalid values.",
+                "Enables configuring Torch via a user-editable `settings.toml` file, with hot reload and error reporting for invalid values.",
             ),
             GitOperationsInCodeReview => Some(
                 "Enables commit, push, and create-PR actions directly from the code review panel.",

@@ -227,12 +227,12 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
                 .is_supported_on_current_platform(),
         ),
         ToggleSettingActionPair::new(
-            "warp completions",
+            "torch completions",
             builder(SettingsAction::FeaturesPageToggle(
                 FeaturesPageAction::ToggleWarpCompletions,
             )),
             context,
-            flags::WARP_COMPLETIONS_CONTEXT_FLAG,
+            flags::TORCH_COMPLETIONS_CONTEXT_FLAG,
         )
         .with_enabled(|| FeatureFlag::NativeShellCompletions.is_enabled()),
         ToggleSettingActionPair::new(
@@ -741,7 +741,7 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
             builder(SettingsAction::FeaturesPageToggle(
                 FeaturesPageAction::MakeWarpDefaultTerminal,
             )),
-            context.to_owned() & !id!(flags::WARP_IS_DEFAULT_TERMINAL),
+            context.to_owned() & !id!(flags::TORCH_IS_DEFAULT_TERMINAL),
         )]);
     }
 }
@@ -855,7 +855,7 @@ const NOTIFICATION_EDITOR_MARGIN: f32 = 5.;
 
 const NOTIFICATIONS_DOCS_URL: &str = "https://docs.warp.dev/terminal/more-features/notifications";
 
-/// A help icon linking to Warp's hosted docs, which do not describe Torch's local-only build.
+/// A help icon linking to Torch's hosted docs, which do not describe Torch's local-only build.
 fn docs_link_info(
     mouse_state: &MouseStateHandle,
     url: &str,

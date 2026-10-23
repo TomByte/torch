@@ -172,7 +172,7 @@ pub struct RequestParams {
     pub custom_model_routers: Option<warp_multi_agent_api::request::settings::CustomModelRouters>,
     pub allow_use_of_warp_credits: bool,
     /// Asks the server not to attach the user's delegated ChatGPT token, so OpenAI requests run
-    /// on Warp's key. Set for the rest of a conversation after a token-sharing failure.
+    /// on Torch's key. Set for the rest of a conversation after a token-sharing failure.
     pub skip_chatgpt_subscription: bool,
     pub autonomy_level: warp_multi_agent_api::AutonomyLevel,
     pub isolation_level: warp_multi_agent_api::IsolationLevel,
@@ -292,7 +292,7 @@ impl RequestParams {
                     .values(),
             );
 
-            // Include built-in Warp-hosted servers (e.g. the Factory MCP).
+            // Include built-in Torch-hosted servers (e.g. the Factory MCP).
             active_servers.extend(templatable_manager.get_active_builtin_servers().values());
 
             let servers: Vec<MCPServer> = active_servers

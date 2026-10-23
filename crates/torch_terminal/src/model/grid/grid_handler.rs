@@ -24,15 +24,15 @@ use filtering::FilterState;
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use string_offset::ByteOffset;
-use unicode_general_category::{GeneralCategory, get_general_category};
-use unicode_width::UnicodeWidthChar;
-use urlocator::{UrlLocation, UrlLocator};
 use torch_core::features::FeatureFlag;
 use torch_core::semantic_selection::{SMART_SELECT_MATCH_WINDOW_LIMIT, SemanticSelection};
 use torch_core::{safe_assert, safe_assert_eq};
 use torch_errors::report_error;
 use torch_util::path::CleanPathResult;
 use torchui_core::color::ColorU;
+use unicode_general_category::{GeneralCategory, get_general_category};
+use unicode_width::UnicodeWidthChar;
+use urlocator::{UrlLocation, UrlLocator};
 
 use super::displayed_output::DisplayedOutput;
 use super::grapheme_cursor::{self, GraphemeCursor};
@@ -379,8 +379,8 @@ impl AbsoluteRectangle {
 }
 
 /// Whether or not this Grid should keep track of a "Reset Grid" OSC. On Windows, ConPTY has an internal
-/// grid that needs to be kept in sync with Warp's grids. We do this via clearing the ConPTY
-/// grid before Warp starts populating a new grid.
+/// grid that needs to be kept in sync with Torch's grids. We do this via clearing the ConPTY
+/// grid before Torch starts populating a new grid.
 ///
 /// See here for more: https://docs.google.com/document/d/11fU_vVW8CH72W92QUnFJ1Kl31fGWNGbjkQQCK3TUaYk/edit?usp=sharing
 #[derive(Default, Clone, Copy)]

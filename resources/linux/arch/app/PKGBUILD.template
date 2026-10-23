@@ -1,10 +1,10 @@
-pkgname=warp-terminal@@CHANNEL_SUFFIX@@
+pkgname=torch
 pkgver=@@VERSION@@
 pkgrel=@@RELEASE@@
-pkgdesc="Warp, the Rust-based terminal for developers and teams"
+pkgdesc="Torch, a local terminal for running coding agents side by side"
 arch=('@@ARCH@@')
-url="https://warp.dev"
-license=('custom')
+url="https://github.com/TomByte/torch"
+license=('AGPL-3.0-only' 'MIT')
 depends=(
 	'curl'
 	'default-cursors'

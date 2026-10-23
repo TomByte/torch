@@ -63,11 +63,11 @@ RUN mkdir -p /run/sshd
 RUN systemctl enable ssh
 EXPOSE 22
 
-# Install the Rust toolchain used to build Warp.
+# Install the Rust toolchain used to build Torch.
 COPY rust-toolchain.toml /home/dev/setup/rust-toolchain.toml
 RUN su - dev -c "cd /home/dev/setup && rustup toolchain install"
 
-# Install Warp-on-Linux dependencies.
+# Install Torch-on-Linux dependencies.
 COPY script/linux/install_test_deps /home/dev/setup/linux/install_test_deps
 COPY script/linux/install_runtime_deps /home/dev/setup/linux/install_runtime_deps
 COPY script/linux/install_build_deps /home/dev/setup/linux/install_build_deps

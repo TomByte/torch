@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# linuxdeploy input plugin for restructuring the AppDir to match Warp's
+# linuxdeploy input plugin for restructuring the AppDir to match Torch's
 # standard Linux install layout.
 #
 # By default, linuxdeploy places the executable at usr/bin/ inside the AppDir.
@@ -12,9 +12,9 @@
 # as installing a .deb or .rpm package.
 #
 # Required environment variables:
-#   WARP_BINARY_NAME:           Name of the binary (e.g. "warp-dev").
-#   WARP_PACKAGE_NAME:          Package directory name (e.g. "warp-terminal-dev").
-#   WARP_BUNDLED_RESOURCES_DIR: Path to the staged resources directory to copy.
+#   TORCH_BINARY_NAME:           Name of the binary (e.g. "warp-dev").
+#   TORCH_PACKAGE_NAME:          Package directory name (e.g. "warp-terminal-dev").
+#   TORCH_BUNDLED_RESOURCES_DIR: Path to the staged resources directory to copy.
 
 set -e
 
@@ -39,41 +39,41 @@ if [ -z "$APPDIR" ]; then
   exit 1
 fi
 
-for var in WARP_BINARY_NAME WARP_PACKAGE_NAME WARP_BUNDLED_RESOURCES_DIR; do
+for var in TORCH_BINARY_NAME TORCH_PACKAGE_NAME TORCH_BUNDLED_RESOURCES_DIR; do
   if [ -z "${!var}" ]; then
     echo "ERROR: $var environment variable is not set" >&2
     exit 1
   fi
 done
 
-if [ ! -d "$WARP_BUNDLED_RESOURCES_DIR" ]; then
-  echo "ERROR: Bundled resources directory does not exist: $WARP_BUNDLED_RESOURCES_DIR" >&2
+if [ ! -d "$TORCH_BUNDLED_RESOURCES_DIR" ]; then
+  echo "ERROR: Bundled resources directory does not exist: $TORCH_BUNDLED_RESOURCES_DIR" >&2
   exit 1
 fi
 
-SRC_BIN="$APPDIR/usr/bin/$WARP_BINARY_NAME"
+SRC_BIN="$APPDIR/usr/bin/$TORCH_BINARY_NAME"
 if [ ! -f "$SRC_BIN" ]; then
   echo "ERROR: Expected binary not found at $SRC_BIN" >&2
   exit 1
 fi
 
 # Create the /opt install directory inside the AppDir.
-OPT_DIR="$APPDIR/opt/warpdotdev/$WARP_PACKAGE_NAME"
+OPT_DIR="$APPDIR/opt/torch/$TORCH_PACKAGE_NAME"
 mkdir -p "$OPT_DIR"
 
 # Move the binary from usr/bin/ to opt/warpdotdev/<package>/.
-echo "Relocating binary to $OPT_DIR/$WARP_BINARY_NAME"
-mv "$SRC_BIN" "$OPT_DIR/$WARP_BINARY_NAME"
+echo "Relocating binary to $OPT_DIR/$TORCH_BINARY_NAME"
+mv "$SRC_BIN" "$OPT_DIR/$TORCH_BINARY_NAME"
 
 # Create a relative symlink so usr/bin/<name> still resolves to the binary.
-# From usr/bin/ to opt/warpdotdev/<package>/ is ../../opt/warpdotdev/<package>/.
-echo "Creating symlink at usr/bin/$WARP_BINARY_NAME"
-ln -s "../../opt/warpdotdev/$WARP_PACKAGE_NAME/$WARP_BINARY_NAME" "$SRC_BIN"
+# From usr/bin/ to opt/warpdotdev/<package>/ is ../../opt/torch/<package>/.
+echo "Creating symlink at usr/bin/$TORCH_BINARY_NAME"
+ln -s "../../opt/torch/$TORCH_PACKAGE_NAME/$TORCH_BINARY_NAME" "$SRC_BIN"
 
 # Copy bundled resources alongside the binary.
 DEST_RESOURCES="$OPT_DIR/resources"
 echo "Copying bundled resources to $DEST_RESOURCES"
 mkdir -p "$DEST_RESOURCES"
-cp -R "$WARP_BUNDLED_RESOURCES_DIR/." "$DEST_RESOURCES/"
+cp -R "$TORCH_BUNDLED_RESOURCES_DIR/." "$DEST_RESOURCES/"
 
-echo "Successfully restructured AppDir for Warp"
+echo "Successfully restructured AppDir for Torch"

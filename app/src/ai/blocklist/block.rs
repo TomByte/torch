@@ -6226,7 +6226,7 @@ pub enum AIBlockEvent {
     },
     ToggleCodeDiffVisibility,
 
-    /// Open a Warp Text instance with the requested code diff.
+    /// Open a Torch Text instance with the requested code diff.
     OpenCodeWithDiff {
         view: ViewHandle<CodeDiffView>,
     },
@@ -6296,7 +6296,7 @@ pub enum AIBlockEvent {
     ResumeConversation {
         conversation_id: AIConversationId,
     },
-    /// Emitted when the user chooses Warp-funded inference after a ChatGPT subscription error.
+    /// Emitted when the user chooses Torch-funded inference after a ChatGPT subscription error.
     ContinueWithWarpCredits {
         conversation_id: AIConversationId,
     },
@@ -6355,7 +6355,7 @@ pub enum AIBlockAction {
     /// Resume the stopped conversation
     ResumeConversation,
 
-    /// Switch the conversation to Warp-funded inference after a ChatGPT subscription error, then
+    /// Switch the conversation to Torch-funded inference after a ChatGPT subscription error, then
     /// resume it.
     ContinueWithWarpCredits,
 
@@ -6456,7 +6456,7 @@ pub enum AIBlockAction {
     /// Copy the debug ID to clipboard
     CopyDebugId(String),
     CopyText(String),
-    /// Open Warp feedback documentation
+    /// Open Torch feedback documentation
     OpenFeedbackDocs,
     /// Toggle the usage summary footer expansion state
     ToggleIsUsageFooterExpanded,

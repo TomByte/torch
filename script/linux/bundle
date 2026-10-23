@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Builds a Warp binary and bundles it up for distribution.
+# Builds a Torch binary and bundles it up for distribution.
 
 set -e
 
@@ -192,10 +192,10 @@ mkdir -p "$OUT_DIR"
 # APP_NAME here must match the value used in Rust as the
 # application name; see app/src/channel.rs.
 #
-# WARP_BIN is the name of the binary produced by cargo;
+# TORCH_BIN is the name of the binary produced by cargo;
 # BINARY_NAME is the desired name of the binary in the final package.
 if [[ $RELEASE_CHANNEL = "oss" ]]; then
-  WARP_BIN="torch"
+  TORCH_BIN="torch"
   BINARY_NAME="torch"
   APP_NAME="Torch"
   FEATURES="release_bundle"
@@ -206,11 +206,11 @@ if [[ "$ARTIFACT" == "cli" ]]; then
   # Matches `Channel::cli_command_name` in the Rust source.
   BINARY_NAME="torch"
 elif [[ "$ARTIFACT" == "warpctrl" ]]; then
-  BINARY_NAME="warpctrl"
+  BINARY_NAME="torchctrl"
   PACKAGES=()
 elif [[ "$ARTIFACT" == "tui" ]]; then
-  WARP_BIN="torch-tui"
-  BINARY_NAME="$WARP_BIN"
+  TORCH_BIN="torch-tui"
+  BINARY_NAME="$TORCH_BIN"
   PACKAGES=()
 fi
 
@@ -225,21 +225,21 @@ elif [[ "$ARTIFACT" == "tui" ]]; then
   # minimal feature set. It uses the native GNU target so the Linux clipboard
   # backends can link against the host's Wayland/X11 libraries. Deliberately
   # omit `voice_input` so portable bundles do not require the host ALSA runtime.
-  WARP_TUI_FEATURES="release_bundle,standalone"
+  TORCH_TUI_FEATURES="release_bundle,standalone"
 elif [[ "$ARTIFACT" == "app" ]]; then
   # All channels ship the v3 classifier and v2 heuristic.
   FEATURES="$FEATURES,gui,nld_classifier_v3,nld_heuristic_v2"
 fi
 if [[ -n "$EXTRA_FEATURES" ]]; then
   if [[ "$ARTIFACT" == "tui" ]]; then
-    WARP_TUI_FEATURES="$WARP_TUI_FEATURES,$EXTRA_FEATURES"
+    TORCH_TUI_FEATURES="$TORCH_TUI_FEATURES,$EXTRA_FEATURES"
   else
     FEATURES="$FEATURES,$EXTRA_FEATURES"
   fi
 fi
 
 BUNDLE_ID="dev.tombyte.Torch"
-EXECUTABLE_PATH="$CARGO_TARGET_OUTPUT_DIR/$WARP_BIN"
+EXECUTABLE_PATH="$CARGO_TARGET_OUTPUT_DIR/$TORCH_BIN"
 DEBUG_EXECUTABLE_PATH="$EXECUTABLE_PATH.debug"
 
 # Note that this variable must be set (and exported!) before we compile the
@@ -252,9 +252,9 @@ export APPIMAGE_NAME="$APP_NAME-$BUILD_ARCH.AppImage"
 # using the same feature flags and profile that we would be using in production.
 if [[ "$CHECK_ONLY" == "true" ]]; then
   if [[ "$ARTIFACT" == "tui" ]]; then
-    cargo check -p torch_tui --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --features "$WARP_TUI_FEATURES"
+    cargo check -p torch_tui --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --features "$TORCH_TUI_FEATURES"
   else
-    cargo check -p torch --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --features "$FEATURES" ${TARGET_TRIPLE:+--target $TARGET_TRIPLE}
+    cargo check -p torch --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --features "$FEATURES" ${TARGET_TRIPLE:+--target $TARGET_TRIPLE}
   fi
   exit 0
 fi
@@ -263,29 +263,29 @@ fi
 if [[ "$BUILD" == "true" ]]; then
   echo "Building and bundling Torch for channel $RELEASE_CHANNEL and bundle id $BUNDLE_ID"
   if [[ "$ARTIFACT" == "tui" ]]; then
-    cargo build -p torch_tui --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --features "$WARP_TUI_FEATURES"
+    cargo build -p torch_tui --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --features "$TORCH_TUI_FEATURES"
   else
-    cargo build -p torch --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --features "$FEATURES" ${TARGET_TRIPLE:+--target $TARGET_TRIPLE}
+    cargo build -p torch --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --features "$FEATURES" ${TARGET_TRIPLE:+--target $TARGET_TRIPLE}
   fi
 
   echo "Making debug copy of '$EXECUTABLE_PATH' at '$DEBUG_EXECUTABLE_PATH'"
   cp "$EXECUTABLE_PATH" "$DEBUG_EXECUTABLE_PATH"
 
   echo "Stripping debug symbols from '$EXECUTABLE_PATH'"
-  "${WARP_MUSL_STRIP:-strip}" --strip-all "$EXECUTABLE_PATH"
+  "${TORCH_MUSL_STRIP:-strip}" --strip-all "$EXECUTABLE_PATH"
 else
   echo 'Skipping `cargo build` step due to --skip-build argument'
 fi
 
 if [[ "$ARTIFACT" == "warpctrl" ]]; then
-  echo "Copying control-mode binary into $OUT_DIR/$WARP_BIN"
-  cp "$EXECUTABLE_PATH" "$OUT_DIR/$WARP_BIN"
+  echo "Copying control-mode binary into $OUT_DIR/$TORCH_BIN"
+  cp "$EXECUTABLE_PATH" "$OUT_DIR/$TORCH_BIN"
   WARPCTRL_SCRIPT_PATH="$OUT_DIR/warpctrl"
   echo "Creating warpctrl wrapper script at $WARPCTRL_SCRIPT_PATH"
   cat > "$WARPCTRL_SCRIPT_PATH" << EOF
 #!/usr/bin/env bash
 script_dir="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
-exec "\$script_dir/$WARP_BIN" --warpctrl "\$@"
+exec "\$script_dir/$TORCH_BIN" --warpctrl "\$@"
 EOF
   chmod +x "$WARPCTRL_SCRIPT_PATH"
 fi
@@ -293,9 +293,9 @@ BINARY_PATH="$EXECUTABLE_PATH"
 if [[ "$ARTIFACT" == "warpctrl" ]]; then
   BINARY_PATH="$WARPCTRL_SCRIPT_PATH"
 elif [[ "$ARTIFACT" == "tui" ]]; then
-  echo "Copying TUI binary into $OUT_DIR/$WARP_BIN"
-  cp "$EXECUTABLE_PATH" "$OUT_DIR/$WARP_BIN"
-  BINARY_PATH="$OUT_DIR/$WARP_BIN"
+  echo "Copying TUI binary into $OUT_DIR/$TORCH_BIN"
+  cp "$EXECUTABLE_PATH" "$OUT_DIR/$TORCH_BIN"
+  BINARY_PATH="$OUT_DIR/$TORCH_BIN"
 fi
 
 if [[ "${SKIP_SETTINGS_SCHEMA:-}" != "1" && -z "${SETTINGS_SCHEMA_EXECUTABLE:-}" && -z "${SETTINGS_SCHEMA_SOURCE:-}" ]]; then

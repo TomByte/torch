@@ -446,7 +446,7 @@ fn http_error(status: u16, body: &str) -> anyhow::Error {
 fn operation_not_supported_error() -> anyhow::Error {
     http_error(
         422,
-        r#"{"type":"https://docs.warp.dev/errors/operation_not_supported","title":"normalized conversations are only supported for Warp-native transcripts"}"#,
+        r#"{"type":"https://docs.warp.dev/errors/operation_not_supported","title":"normalized conversations are only supported for Torch-native transcripts"}"#,
     )
 }
 
@@ -476,7 +476,7 @@ fn normalized_conversation_unsupported_matches_type_regardless_of_title() {
 fn normalized_conversation_unsupported_rejects_title_only_rfc7807() {
     assert!(!is_normalized_conversation_unsupported(&http_error(
         422,
-        r#"{"title":"normalized conversations are only supported for Warp-native transcripts"}"#,
+        r#"{"title":"normalized conversations are only supported for Torch-native transcripts"}"#,
     )));
 }
 
@@ -484,7 +484,7 @@ fn normalized_conversation_unsupported_rejects_title_only_rfc7807() {
 fn normalized_conversation_unsupported_rejects_arbitrary_substrings() {
     assert!(!is_normalized_conversation_unsupported(&http_error(
         422,
-        "https://docs.warp.dev/errors/operation_not_supported normalized conversations are only supported for Warp-native transcripts",
+        "https://docs.warp.dev/errors/operation_not_supported normalized conversations are only supported for Torch-native transcripts",
     )));
     assert!(!is_normalized_conversation_unsupported(&http_error(
         422,
@@ -499,7 +499,7 @@ fn normalized_conversation_unsupported_rejects_arbitrary_substrings() {
 fn normalized_conversation_unsupported_rejects_wrong_problem_type() {
     assert!(!is_normalized_conversation_unsupported(&http_error(
         422,
-        r#"{"type":"https://docs.warp.dev/errors/invalid_request","title":"normalized conversations are only supported for Warp-native transcripts"}"#,
+        r#"{"type":"https://docs.warp.dev/errors/invalid_request","title":"normalized conversations are only supported for Torch-native transcripts"}"#,
     )));
 }
 
@@ -507,7 +507,7 @@ fn normalized_conversation_unsupported_rejects_wrong_problem_type() {
 fn normalized_conversation_unsupported_rejects_non_422_status() {
     assert!(!is_normalized_conversation_unsupported(&http_error(
         404,
-        r#"{"type":"https://docs.warp.dev/errors/operation_not_supported","title":"normalized conversations are only supported for Warp-native transcripts"}"#,
+        r#"{"type":"https://docs.warp.dev/errors/operation_not_supported","title":"normalized conversations are only supported for Torch-native transcripts"}"#,
     )));
 }
 

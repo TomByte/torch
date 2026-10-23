@@ -8,7 +8,7 @@ use torch_util::local_or_remote_path::LocalOrRemotePath;
 pub enum SkillReference {
     /// A skill identified by the path to its SKILL.md file.
     Path(LocalOrRemotePath),
-    /// A bundled skill distributed with Warp.
+    /// A bundled skill distributed with Torch.
     BundledSkillId(String),
 }
 

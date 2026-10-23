@@ -1035,7 +1035,7 @@ impl SettingsWidget for EnvironmentsPageWidget {
     type View = EnvironmentsPageView;
 
     fn search_terms(&self) -> &str {
-        "environments environment ambient agents github warp assisted manual configuration"
+        "environments environment ambient agents github torch assisted manual configuration"
     }
 
     fn render(

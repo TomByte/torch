@@ -283,7 +283,7 @@ impl platform::Delegate for AppDelegate {
         dispatch::Queue::main().exec_async(move || {
             // See https://developer.apple.com/documentation/appkit/nsapplication/1428455-orderfrontcharacterpalette.
             // If the `sender` argument is nil, the palette is shown relative to the
-            // first responder's cursor location. In our case, that will be the Warp
+            // first responder's cursor location. In our case, that will be the Torch
             // host view, with a location set via the `active_cursor_position` API.
             // SAFETY: the closure runs on the main dispatch queue.
             let mtm = unsafe { MainThreadMarker::new_unchecked() };
@@ -403,7 +403,7 @@ impl platform::Delegate for AppDelegate {
             // SAFETY: the closure runs on the main dispatch queue.
             let mtm = unsafe { MainThreadMarker::new_unchecked() };
             let app = NSApplication::sharedApplication(mtm);
-            let app_delegate = app.delegate().expect("the warp app always has a delegate");
+            let app_delegate = app.delegate().expect("the torch app always has a delegate");
             let value: BOOL = if visible { YES } else { NO };
             // `setDockIconVisible:` is a custom warp app-delegate selector.
             // SAFETY: messaging the app delegate on the main thread.

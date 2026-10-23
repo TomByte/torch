@@ -1,4 +1,4 @@
-//! Settings UI for local scripting and Warp control permissions.
+//! Settings UI for local scripting and Torch control permissions.
 use std::cell::RefCell;
 use std::collections::HashMap;
 
@@ -11,7 +11,9 @@ use torchui::elements::{ChildView, Element, MouseStateHandle};
 use torchui::ui_components::button::ButtonVariant;
 #[cfg(target_os = "macos")]
 use torchui::ui_components::components::UiComponent;
-use torchui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
+use torchui::{
+    AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
+};
 
 use super::settings_page::{
     LocalOnlyIconState, MatchData, PageTitle, PageType, SettingsPageMeta, SettingsPageViewHandle,
@@ -219,7 +221,7 @@ impl SettingsWidget for WarpControlCliInstallWidget {
     type View = ScriptingSettingsPageView;
 
     fn search_terms(&self) -> &str {
-        "warp control cli command warpctrl install scripting"
+        "torch control cli command warpctrl install scripting"
     }
 
     fn render(
@@ -275,7 +277,7 @@ impl SettingsWidget for LocalControlModeWidget {
     type View = ScriptingSettingsPageView;
 
     fn search_terms(&self) -> &str {
-        "scripting warp control automation warpctrl local cli scripts disabled enabled"
+        "scripting torch control automation warpctrl local cli scripts disabled enabled"
     }
 
     fn render(

@@ -4,10 +4,10 @@ use std::path::{Path, PathBuf};
 
 use itertools::Itertools as _;
 use repo_metadata::repositories::DetectedRepositories;
-use uuid::Uuid;
 use torch_core::features::FeatureFlag;
 use torch_util::local_or_remote_path::LocalOrRemotePath;
 use torchui::{AppContext, Entity, ModelContext, SingletonEntity};
+use uuid::Uuid;
 
 use super::file_mcp_watcher::{FileMCPConfigDiagnostic, PendingScan};
 use super::{FileMCPWatcher, FileMCPWatcherEvent, MCPProvider, home_dir};
@@ -39,9 +39,9 @@ pub struct FileBasedMCPManager {
     /// The TUI scans its global config before login so it can render config
     /// health immediately, but starting servers before authentication would
     /// expose tools and begin OAuth before the session is ready. Hold global
-    /// Warp servers until the TUI login flow explicitly activates them.
+    /// Torch servers until the TUI login flow explicitly activates them.
     defer_global_warp_autostart: bool,
-    /// Whether deferred global Warp servers may now be started.
+    /// Whether deferred global Torch servers may now be started.
     global_warp_servers_activated: bool,
     /// Readiness latch exposed through [`Self::initial_global_scan_result`].
     initial_global_scan_state: InitialGlobalMcpScanState,
@@ -340,7 +340,7 @@ impl FileBasedMCPManager {
     /// config location.
     ///
     /// "Global" means the installation was detected outside of a user repository:
-    /// - For `MCPProvider::Warp`: the logical root for `~/.warp*/.mcp.json`.
+    /// - For `MCPProvider::Torch`: the logical root for `~/.warp*/.mcp.json`.
     /// - For any other provider: the user's home directory (e.g. `~/.claude.json`).
     ///
     /// Project-scoped installations (those detected inside a repo) are not considered
@@ -359,7 +359,7 @@ impl FileBasedMCPManager {
     }
 
     /// Returns `true` if the server identified by `hash` is referenced from the global
-    /// Warp config (`~/.warp/.mcp.json`). Global Warp servers always auto-spawn.
+    /// Torch config (`~/.warp/.mcp.json`). Global Torch servers always auto-spawn.
     fn is_global_warp_server(&self, hash: u64) -> bool {
         self.file_based_servers_by_root
             .iter()
@@ -427,8 +427,8 @@ impl FileBasedMCPManager {
         let mcp_enabled = AISettings::as_ref(ctx).is_file_based_mcp_enabled(ctx);
 
         // Partition servers into three buckets based on scope:
-        // - Global Warp: always auto-spawn.
-        // - Global non-Warp: auto-spawn iff the toggle is on.
+        // - Global Torch: always auto-spawn.
+        // - Global non-Torch: auto-spawn iff the toggle is on.
         // - Project-scoped (any provider): never auto-spawn; require explicit opt-in
         //   via the "Detected from {provider}" section of the MCP settings.
         let mut to_spawn = Vec::new();
@@ -541,7 +541,7 @@ impl FileBasedMCPManager {
             return;
         }
         // Only global third-party servers are affected by the toggle:
-        // - Global Warp servers always spawn regardless of the toggle.
+        // - Global Torch servers always spawn regardless of the toggle.
         // - Project-scoped servers (any provider) are never auto-spawned and their
         //   running state is managed per-card via the MCP settings UI; toggling the
         //   setting must not spawn or despawn them.
@@ -563,7 +563,7 @@ impl FileBasedMCPManager {
                     .collect_vec(),
             });
         } else {
-            // Toggle on: spawn global third-party servers (global Warp servers are
+            // Toggle on: spawn global third-party servers (global Torch servers are
             // already running; project-scoped servers are unaffected).
             ctx.emit(FileBasedMCPManagerEvent::SpawnServers {
                 installations: global_third_party_servers,
@@ -696,7 +696,7 @@ impl FileBasedMCPManager {
     /// when its config does not specify `working_directory`.
     ///
     /// The spawn root is the directory the config was discovered in, with one
-    /// exception: global Warp installs are discovered in `~/.warp*/`, which
+    /// exception: global Torch installs are discovered in `~/.warp*/`, which
     /// isn't a useful cwd for spawned processes, so they are remapped to the
     /// home directory instead.
     /// - Project-scoped installations: the repo root.
@@ -716,9 +716,9 @@ impl FileBasedMCPManager {
             .sorted()
             .next()?;
 
-        // Global Warp installs live under `~/.warp*/`, which is internal Warp
+        // Global Torch installs live under `~/.warp*/`, which is internal Torch
         // state rather than a meaningful working directory. Map them to the
-        // home dir so all global installs (Warp and third-party) share a
+        // home dir so all global installs (Torch and third-party) share a
         // consistent cwd.
         if self.is_global_warp_server(hash) {
             return home_dir().or(Some(discovery_root));
@@ -764,9 +764,9 @@ struct AutoStartDecision {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum FileBasedMCPServerType {
-    /// A file-based MCP server detected from Warp's global managed config.
+    /// A file-based MCP server detected from Torch's global managed config.
     GlobalWarp,
-    /// A file-based MCP server detected from a non-Warp provider's global user config.
+    /// A file-based MCP server detected from a non-Torch provider's global user config.
     GlobalThirdParty,
     /// A file-based MCP server detected from a project/repository-scoped config.
     ProjectScoped,

@@ -4,7 +4,7 @@ use js_sys::ReferenceError;
 use serde::Serialize;
 use wasm_bindgen::JsCast;
 
-/// Events emitted from Warp on Web to the host JavaScript app.
+/// Events emitted from Torch on Web to the host JavaScript app.
 ///
 /// These must stay in sync with the [`WarpEvent` TypeScript type](https://github.com/warpdotdev/warp-server/blob/develop/client/src/warp-client/index.ts).
 #[derive(Debug, Clone, Serialize)]

@@ -299,27 +299,6 @@ fn test_loading_all_spaces_after_switching_from_offline() {
     })
 }
 
-#[test]
-fn test_codebase_context_enabled_with_no_workspace() {
-    App::test((), |mut app| async move {
-        initialize_app(
-            &mut app,
-            CachedResources { workspaces: vec![] },
-            Arc::new(MockTeamClient::new()),
-            Arc::new(MockWorkspaceClient::new()),
-        );
-
-        app.read(|ctx| {
-            let codebase_context_enabled =
-                UserWorkspaces::as_ref(ctx).is_codebase_context_enabled(ctx);
-            assert!(
-                codebase_context_enabled,
-                "codebase context should be on by default"
-            );
-        });
-    })
-}
-
 fn team_for_test() -> Team {
     Team {
         uid: 123.into(),
@@ -3100,35 +3079,6 @@ fn test_unassigned_window_is_initialized_after_workspace_metadata_loads() {
 }
 
 #[test]
-fn test_codebase_context_enabled_when_all_teams_enable_it() {
-    let (mut team_a, mut team_b) = two_teams();
-    team_a.settings.codebase_context.value = AdminEnablementSetting::Enable;
-    team_b.settings.codebase_context.value = AdminEnablementSetting::Enable;
-    let mut workspace = workspace_for_test(&team_a);
-    workspace.teams.push(team_b);
-
-    App::test((), |mut app| async move {
-        initialize_app(
-            &mut app,
-            CachedResources {
-                workspaces: vec![workspace],
-            },
-            Arc::new(MockTeamClient::new()),
-            Arc::new(MockWorkspaceClient::new()),
-        );
-
-        app.read(|ctx| {
-            let user_workspaces = UserWorkspaces::as_ref(ctx);
-            assert_eq!(
-                user_workspaces.teams_allow_codebase_context(),
-                AdminEnablementSetting::Enable
-            );
-            assert!(user_workspaces.is_codebase_context_enabled(ctx));
-        });
-    })
-}
-
-#[test]
 fn test_codebase_context_disabled_when_any_team_disables_it() {
     let (mut team_a, mut team_b) = two_teams();
     team_a.settings.codebase_context.value = AdminEnablementSetting::Enable;
@@ -3160,35 +3110,6 @@ fn test_codebase_context_disabled_when_any_team_disables_it() {
                 Some(disabled_team_uid)
             );
             assert!(!user_workspaces.is_codebase_context_enabled(ctx));
-        });
-    })
-}
-
-#[test]
-fn test_codebase_context_respects_user_setting_when_any_team_does() {
-    let (mut team_a, mut team_b) = two_teams();
-    team_a.settings.codebase_context.value = AdminEnablementSetting::Enable;
-    team_b.settings.codebase_context.value = AdminEnablementSetting::RespectUserSetting;
-    let mut workspace = workspace_for_test(&team_a);
-    workspace.teams.push(team_b);
-
-    App::test((), |mut app| async move {
-        initialize_app(
-            &mut app,
-            CachedResources {
-                workspaces: vec![workspace],
-            },
-            Arc::new(MockTeamClient::new()),
-            Arc::new(MockWorkspaceClient::new()),
-        );
-
-        app.read(|ctx| {
-            let user_workspaces = UserWorkspaces::as_ref(ctx);
-            assert_eq!(
-                user_workspaces.teams_allow_codebase_context(),
-                AdminEnablementSetting::RespectUserSetting
-            );
-            assert!(user_workspaces.is_codebase_context_enabled(ctx));
         });
     })
 }

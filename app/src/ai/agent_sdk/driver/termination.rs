@@ -33,7 +33,7 @@ impl fmt::Display for Interrupt {
 pub(super) enum RunEndCause {
     /// `run_internal` returned on its own (success or a non-interrupt error).
     Completed,
-    /// `WARP_SANDBOX_DEADLINE` warning window fired.
+    /// `TORCH_SANDBOX_DEADLINE` warning window fired.
     SandboxDeadline,
     /// A platform interrupt arrived while the run was still in progress.
     Signal(Interrupt),

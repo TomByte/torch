@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Installs all cargo-managed dependencies required to build Warp.
+# Installs all cargo-managed dependencies required to build Torch.
 
 # This script should be platform-agnostic (eg. no unix-only references like /dev/null).
 

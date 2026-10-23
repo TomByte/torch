@@ -84,7 +84,7 @@ const COMMAND_OPTION: (&str, DisplaySetting) = ("Command", DisplaySetting::Comma
 const OUTPUT_OPTION: (&str, DisplaySetting) = ("Output", DisplaySetting::Output);
 
 /// This default title is helpful for screen readers.
-const DEFAULT_EMBED_TITLE: &str = "embedded warp block";
+const DEFAULT_EMBED_TITLE: &str = "embedded torch block";
 const BLOCK_CREATION_FAILED_MESSAGE: &str = "Something went wrong. Please try again.";
 
 #[derive(PartialEq)]
@@ -849,7 +849,7 @@ impl ShareBlockModal {
         let link_generated = matches!(self.request_state, ShareRequestState::Succeeded { .. });
         let mut column = Flex::column().with_cross_axis_alignment(CrossAxisAlignment::Stretch);
 
-        // If we're using the combined prompt/command grid, then "show prompt" should only be configurable if using Warp prompt!
+        // If we're using the combined prompt/command grid, then "show prompt" should only be configurable if using Torch prompt!
         // Otherwise, we MUST always render the prompt alongside the command (since they're in the same combined grid for PS1).
         let show_prompt_configurable = self
             .model
@@ -1299,7 +1299,7 @@ impl SingleBlock {
         let mut padding_between_prompt_and_cmd_rendered = Lines::zero();
 
         if self.show_prompt {
-            // If we're rendering Warp prompt (above the command).
+            // If we're rendering Torch prompt (above the command).
             if !block.honor_ps1() {
                 if let Some(native_prompt_text) = self.native_prompt_text.as_mut()
                     && self.scroll_top - padding_top_rendered <= Lines::zero()

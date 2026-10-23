@@ -290,7 +290,7 @@ impl ConversationDetailsData {
 
     /// Build details data from an in-memory `AIConversation`. Used both by the WASM
     /// transcript/shared-session details panel and by the native pane-level details panel
-    /// when the active conversation is a local (non-cloud) Warp Agent run.
+    /// when the active conversation is a local (non-cloud) Torch Agent run.
     pub fn from_conversation(conversation: &AIConversation, app: &AppContext) -> Self {
         let mut directory = None;
         let mut conversation_id = None;

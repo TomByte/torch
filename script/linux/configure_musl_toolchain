@@ -46,7 +46,7 @@ configure_musl_toolchain() {
   fi
 
   local default_musl_cross_root
-  if [[ -z "${WARP_MUSL_CROSS_ROOT:-}" && "${GITHUB_ACTIONS:-}" == "true" && -n "${RUNNER_TEMP:-}" ]]; then
+  if [[ -z "${TORCH_MUSL_CROSS_ROOT:-}" && "${GITHUB_ACTIONS:-}" == "true" && -n "${RUNNER_TEMP:-}" ]]; then
     default_musl_cross_root="$RUNNER_TEMP/warp-musl-cross"
   elif [[ -n "${HOME:-}" ]]; then
     default_musl_cross_root="${XDG_CACHE_HOME:-$HOME/.cache}/warp-musl-cross"
@@ -54,7 +54,7 @@ configure_musl_toolchain() {
     default_musl_cross_root="${TMPDIR:-/tmp}/warp-musl-cross-${UID:-$(id -u)}"
   fi
 
-  local musl_cross_root="${WARP_MUSL_CROSS_ROOT:-$default_musl_cross_root}"
+  local musl_cross_root="${TORCH_MUSL_CROSS_ROOT:-$default_musl_cross_root}"
   local install_root="$musl_cross_root/$musl_cross_tag"
   local toolchain_dir="$install_root/$target"
   local toolchain_bin="$toolchain_dir/bin"
@@ -216,10 +216,10 @@ configure_musl_toolchain() {
   export "CC_$target_env=$musl_cc"
   export "CXX_$target_env=$musl_cxx"
   export "CARGO_TARGET_${cargo_target_env}_LINKER=$musl_cc"
-  export WARP_MUSL_TARGET="$target"
-  export WARP_MUSL_CC="$musl_cc"
-  export WARP_MUSL_CXX="$musl_cxx"
-  export WARP_MUSL_STRIP="$musl_strip"
+  export TORCH_MUSL_TARGET="$target"
+  export TORCH_MUSL_CC="$musl_cc"
+  export TORCH_MUSL_CXX="$musl_cxx"
+  export TORCH_MUSL_STRIP="$musl_strip"
 
   echo "Configured the $target toolchain with $musl_cc, $musl_cxx, and $musl_strip"
 }

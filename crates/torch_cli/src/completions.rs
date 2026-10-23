@@ -5,7 +5,7 @@ use torch_core::channel::ChannelState;
 
 use crate::{Args, binary_name};
 
-/// Generate shell completions for the Warp CLI and write them to stdout.
+/// Generate shell completions for the Torch CLI and write them to stdout.
 pub fn generate_to_stdout(shell: Option<Shell>) -> anyhow::Result<()> {
     let shell = match shell.or_else(Shell::from_env) {
         Some(s) => s,

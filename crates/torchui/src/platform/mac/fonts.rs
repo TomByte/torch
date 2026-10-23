@@ -147,7 +147,7 @@ mod loader {
         LoadedSystemFonts(fonts)
     }
 
-    // We use font-kit's family handle to load fonts that come with Warp as
+    // We use font-kit's family handle to load fonts that come with Torch as
     // these binaries are already in memory and won't increase our memory load.
     pub fn load_font_family_from_bytes(name: &str, font_bytes: Vec<Vec<u8>>) -> Result<FontFamily> {
         let mut fonts = Vec::with_capacity(font_bytes.len());

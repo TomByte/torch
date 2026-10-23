@@ -1093,7 +1093,7 @@ fn normalize_summary_text(text: &str) -> Option<String> {
 
 /// Returns the conversation status for a terminal pane, used to render the per-line status
 /// pill prefix in Summary mode. Mirrors the status sources used by `render_detail_status_pill`
-/// in the detail sidecar — CLI agent sessions with reported status, Warp Agent conversations, or
+/// in the detail sidecar — CLI agent sessions with reported status, Torch Agent conversations, or
 /// ambient agent sessions. Returns `None` for plain terminals or conversations without status.
 fn summary_conversation_status_for_terminal(
     terminal_view: &TerminalView,
@@ -1516,7 +1516,7 @@ fn render_detail_kind_badge_icon(
                 .selected_conversation_display_title(app)
                 .is_some()
             {
-                // Local agent conversation: use the Warp agent logo glyph to
+                // Local agent conversation: use the Torch agent logo glyph to
                 // match the icon-with-status rendering for the tab row.
                 WarpIcon::Agent
             } else {
@@ -3411,7 +3411,7 @@ fn resolve_icon_with_status_variant(
             icon: typed.icon(),
             icon_color: main_text,
         },
-        // Warp Drive object types use their established index colors
+        // Torch Drive object types use their established index colors
         TypedPane::Notebook { is_plan } => IconWithStatusVariant::Neutral {
             icon: typed.icon(),
             icon_color: drive_color(DriveObjectType::Notebook {
@@ -5201,7 +5201,7 @@ pub(super) fn render_summary_pane_kind_icon_circle(
     appearance: &Appearance,
 ) -> Box<dyn Element> {
     let theme = appearance.theme();
-    // Route all Warp agent kinds, plus ambient CLI agents, through
+    // Route all Torch agent kinds, plus ambient CLI agents, through
     // `render_icon_with_status` so their circle and cloud treatment stays consistent
     // with the pane row.
     if let Some(variant) = ambient_agent_variant(&kind) {
@@ -5275,7 +5275,7 @@ pub(super) fn render_summary_pane_kind_icon_circle(
     .finish()
 }
 
-/// Maps Warp agents and ambient CLI agents to the shared icon-with-status renderer.
+/// Maps Torch agents and ambient CLI agents to the shared icon-with-status renderer.
 /// Non-ambient CLI agents and non-agent kinds fall back to inline summary rendering.
 fn ambient_agent_variant(kind: &SummaryPaneKind) -> Option<IconWithStatusVariant> {
     match kind {
@@ -5459,7 +5459,7 @@ fn render_terminal_primary_line_for_view(
 
 /// Primary line for terminal pane rows. Precedence:
 /// 1. CLI agent session with plugin data (query/summary) + status
-/// 2. Warp Agent conversation title + status
+/// 2. Torch Agent conversation title + status
 /// 3. Terminal title
 fn render_terminal_primary_line(
     primary_line: TerminalPrimaryLineData,

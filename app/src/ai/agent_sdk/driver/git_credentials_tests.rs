@@ -16,7 +16,7 @@ use crate::server::server_api::ai::{MockAIClient, TaskGitCredentialsResponse};
 
 #[test]
 fn git_authentication_preserves_managed_credentials() -> Result<()> {
-    let Some(home) = std::env::var_os("WARP_TEST_MANAGED_CREDENTIALS_HOME") else {
+    let Some(home) = std::env::var_os("TORCH_TEST_MANAGED_CREDENTIALS_HOME") else {
         let home = tempfile::tempdir()?;
         let mut command = BlockingCommand::new(std::env::current_exe()?);
         #[cfg(windows)]
@@ -28,7 +28,7 @@ fn git_authentication_preserves_managed_credentials() -> Result<()> {
                 "--nocapture",
             ])
             .current_dir(home.path())
-            .env("WARP_TEST_MANAGED_CREDENTIALS_HOME", home.path())
+            .env("TORCH_TEST_MANAGED_CREDENTIALS_HOME", home.path())
             .env("HOME", home.path())
             .env("XDG_CONFIG_HOME", home.path().join(".config"))
             .env("GIT_CONFIG_GLOBAL", home.path().join(".gitconfig"))
@@ -95,9 +95,9 @@ fn refresh_keeps_the_captured_repository_scope() {
             "ai::agent_sdk::driver::git_credentials::tests::retained_scope_refresh_subprocess",
             "--nocapture",
         ])
-        .env("WARP_TEST_RETAINED_SCOPE_REFRESH", "1")
-        .env("WARP_ISOLATION_PLATFORM", "docker")
-        .env("WARP_WORKLOAD_TOKEN", "test-workload-token")
+        .env("TORCH_TEST_RETAINED_SCOPE_REFRESH", "1")
+        .env("TORCH_ISOLATION_PLATFORM", "docker")
+        .env("TORCH_WORKLOAD_TOKEN", "test-workload-token")
         .output()
         .unwrap();
     assert!(
@@ -110,7 +110,7 @@ fn refresh_keeps_the_captured_repository_scope() {
 
 #[test]
 fn retained_scope_refresh_subprocess() {
-    if std::env::var_os("WARP_TEST_RETAINED_SCOPE_REFRESH").is_none() {
+    if std::env::var_os("TORCH_TEST_RETAINED_SCOPE_REFRESH").is_none() {
         return;
     }
     for captured_scope in [false, true] {
@@ -688,7 +688,7 @@ fn global_git_identity_reads_the_actual_global_config() -> Result<()> {
             "no global identity should be configured in the fresh temp HOME yet"
         );
 
-        run_git_config("user.name", "Warp");
+        run_git_config("user.name", "Torch");
         run_git_config("user.email", "agent@warp.dev");
 
         // This is the regression this test guards: `global_git_identity()` must
@@ -700,7 +700,7 @@ fn global_git_identity_reads_the_actual_global_config() -> Result<()> {
         // logic that depends on a real baseline.
         assert_eq!(
             global_git_identity(),
-            Some(("Warp".to_string(), "agent@warp.dev".to_string()))
+            Some(("Torch".to_string(), "agent@warp.dev".to_string()))
         );
         Ok(())
     };
@@ -723,10 +723,10 @@ fn global_git_identity_reads_the_actual_global_config() -> Result<()> {
 fn repository_identity_is_unchanged_when_it_matches_the_baseline() -> Result<()> {
     let temp_dir = tempfile::tempdir()?;
     init_repo(temp_dir.path());
-    run_repository_git_config(temp_dir.path(), "user.name", "Warp");
+    run_repository_git_config(temp_dir.path(), "user.name", "Torch");
     run_repository_git_config(temp_dir.path(), "user.email", "agent@warp.dev");
 
-    let baseline = Some(("Warp".to_string(), "agent@warp.dev".to_string()));
+    let baseline = Some(("Torch".to_string(), "agent@warp.dev".to_string()));
     assert!(!repository_identity_changed_since(
         temp_dir.path(),
         baseline
@@ -741,7 +741,7 @@ fn repository_identity_is_changed_when_a_setup_command_overrides_it() -> Result<
     run_repository_git_config(temp_dir.path(), "user.name", "Vercel Bot");
     run_repository_git_config(temp_dir.path(), "user.email", "vercel-bot@example.com");
 
-    let baseline = Some(("Warp".to_string(), "agent@warp.dev".to_string()));
+    let baseline = Some(("Torch".to_string(), "agent@warp.dev".to_string()));
     assert!(repository_identity_changed_since(temp_dir.path(), baseline));
     Ok(())
 }
@@ -772,7 +772,7 @@ fn configure_repository_git_identity_if_unset_skips_a_repo_the_customer_already_
     configure_repository_git_identity_if_unset(
         temp_dir.path(),
         "github.com",
-        Some(("Warp".to_string(), "agent@warp.dev".to_string())),
+        Some(("Torch".to_string(), "agent@warp.dev".to_string())),
     );
 
     assert_eq!(

@@ -138,7 +138,7 @@ struct InFlightParse {
 pub enum PendingScan {
     /// Every provider config file in a cloud-environment repo, keyed by repo root.
     CloudEnvRepo(PathBuf),
-    /// Every global (home-directory and Warp-managed) config source read at startup.
+    /// Every global (home-directory and Torch-managed) config source read at startup.
     InitialGlobal,
 }
 
@@ -730,7 +730,7 @@ fn config_change_flags(update: &RepositoryUpdate, config_path: &Path) -> (bool, 
     (was_deleted, was_added)
 }
 
-/// Every global config source as `(config_path, root_path, provider)`: the Warp-managed config
+/// Every global config source as `(config_path, root_path, provider)`: the Torch-managed config
 /// plus each other provider's home-directory config.
 fn global_config_sources() -> Vec<(PathBuf, PathBuf, MCPProvider)> {
     let mut sources = Vec::new();

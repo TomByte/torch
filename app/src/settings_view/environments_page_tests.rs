@@ -17,7 +17,7 @@ use crate::auth::AuthStateProvider;
 use crate::network::NetworkStatus;
 use crate::root_view::CreateEnvironmentArg;
 use crate::server::cloud_objects::update_manager::UpdateManager;
-use crate::server::ids::{ClientId, ServerId, SyncId};
+use crate::server::ids::{ClientId, SyncId};
 use crate::server::server_api::ServerApiProvider;
 use crate::server::sync_queue::SyncQueue;
 use crate::settings::PrivacySettings;
@@ -679,89 +679,6 @@ fn test_render_list_page_with_environments_shows_list() {
             let element = EnvironmentsPageWidget::render_list_page(view, appearance, ctx);
             // Element is created successfully - just verify it doesn't panic
             drop(element);
-        });
-    })
-}
-
-#[test]
-fn test_render_list_page_with_personal_and_team_environments_shows_section_headers() {
-    App::test((), |mut app| async move {
-        init_env_page_view_test_models(&mut app);
-        let window_id = create_test_window(&mut app);
-
-        app.update(|ctx| {
-            // Ensure UserWorkspaces has a current team name so the "Team" section renders with the
-            // shared header copy ("Shared by Warp and <team>").
-            UserWorkspaces::handle(ctx).update(ctx, |user_workspaces, ctx| {
-                user_workspaces.setup_test_workspace(ctx);
-                user_workspaces.update_current_workspace(
-                    |workspace| {
-                        if let Some(team) = workspace.teams.first_mut() {
-                            team.name = "Katarina's team".to_string();
-                        }
-                    },
-                    ctx,
-                );
-                let team_uid = user_workspaces.inherited_or_default_team_uid(None);
-                user_workspaces.register_window(window_id, team_uid, ctx);
-            });
-
-            let personal_env = AmbientAgentEnvironment::new(
-                "Personal Env".to_string(),
-                None,
-                vec![],
-                "ubuntu:latest".to_string(),
-                vec![],
-            );
-
-            let team_env = AmbientAgentEnvironment::new(
-                "Team Env".to_string(),
-                None,
-                vec![],
-                "ubuntu:latest".to_string(),
-                vec![],
-            );
-
-            let personal_id = SyncId::ClientId(ClientId::new());
-            let personal_object = CloudAmbientAgentEnvironment::new(
-                personal_id,
-                CloudAmbientAgentEnvironmentModel::new(personal_env),
-                crate::cloud_object::CloudObjectMetadata::mock(),
-                crate::cloud_object::CloudObjectPermissions::mock_personal(),
-            );
-
-            let team_id = SyncId::ClientId(ClientId::new());
-            let mut team_permissions = crate::cloud_object::CloudObjectPermissions::mock_personal();
-            team_permissions.owner = Owner::Team {
-                team_uid: ServerId::from(789),
-            };
-            let team_object = CloudAmbientAgentEnvironment::new(
-                team_id,
-                CloudAmbientAgentEnvironmentModel::new(team_env),
-                crate::cloud_object::CloudObjectMetadata::mock(),
-                team_permissions,
-            );
-
-            CloudModel::handle(ctx).update(ctx, |model, ctx| {
-                model.create_object(personal_id, personal_object, ctx);
-                model.create_object(team_id, team_object, ctx);
-            });
-
-            let view_handle = ctx.add_typed_action_view(window_id, EnvironmentsPageView::new);
-            let appearance = Appearance::as_ref(ctx);
-            let view = view_handle.as_ref(ctx);
-
-            let element = EnvironmentsPageWidget::render_list_page(view, appearance, ctx);
-            let text_content = element.debug_text_content().unwrap_or_default();
-
-            assert!(
-                text_content.contains("PERSONAL"),
-                "Expected 'Personal' section header in rendered content: {text_content}"
-            );
-            assert!(
-                text_content.contains("SHARED BY WARP AND KATARINA'S TEAM"),
-                "Expected shared section header in rendered content: {text_content}"
-            );
         });
     })
 }

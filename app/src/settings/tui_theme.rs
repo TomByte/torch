@@ -9,7 +9,7 @@ use torchui_core::runtime::BackgroundLuminance;
 #[cfg(feature = "tui")]
 use crate::themes::default_themes::{dark_theme, light_theme};
 
-/// The color theme selection used by Warp Agent CLI.
+/// The color theme selection used by Torch Agent CLI.
 #[derive(
     Clone,
     Copy,

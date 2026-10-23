@@ -96,9 +96,6 @@ pub use subshell::*;
 use sum_tree::SeekBias;
 pub use sync_inputs::*;
 use sysinfo::{Pid, ProcessesToUpdate, System};
-pub use typeahead::*;
-use version_compare::Cmp;
-pub use video_recording::*;
 use torch::appearance::Appearance;
 use torch::features::FeatureFlag;
 use torch::integration_testing::assertions::{
@@ -205,6 +202,9 @@ use torchui_core::windowing::WindowManager;
 use torchui_core::{
     AssetProvider, Event, SingletonEntity, UpdateView, ViewHandle, async_assert, async_assert_eq,
 };
+pub use typeahead::*;
+use version_compare::Cmp;
+pub use video_recording::*;
 pub use websockets::*;
 pub use workflows::*;
 pub use workspace::*;
@@ -240,7 +240,7 @@ fn new_builder() -> Builder {
 pub fn test_add_workflows_to_warp_config() -> Builder {
     new_builder()
         .with_setup(move |utils| {
-            utils.set_env("WARP_CONFIG_WATCHER_DELAY_MS", Some((10).to_string()));
+            utils.set_env("TORCH_CONFIG_WATCHER_DELAY_MS", Some((10).to_string()));
 
             std::fs::create_dir_all(integration_testing::workflow::workflows_dir())
                 .expect("Should be able to create workflows dir");
@@ -294,7 +294,7 @@ pub fn test_add_workflows_to_warp_config() -> Builder {
 pub fn test_launch_warp_with_theme_in_warp_config() -> Builder {
     new_builder()
         .with_setup(move |utils| {
-            utils.set_env("WARP_CONFIG_WATCHER_DELAY_MS", Some((10).to_string()));
+            utils.set_env("TORCH_CONFIG_WATCHER_DELAY_MS", Some((10).to_string()));
 
             integration_testing::create_file_from_assets(
                 TEST_ONLY_ASSETS,
@@ -310,7 +310,7 @@ pub fn test_launch_warp_with_theme_in_warp_config() -> Builder {
 pub fn test_add_theme_to_warp_config() -> Builder {
     new_builder()
         .with_setup(move |utils| {
-            utils.set_env("WARP_CONFIG_WATCHER_DELAY_MS", Some((10).to_string()));
+            utils.set_env("TORCH_CONFIG_WATCHER_DELAY_MS", Some((10).to_string()));
 
             std::fs::create_dir_all(integration_testing::themes::themes_dir())
                 .expect("Should be able to create themes dir");
@@ -594,7 +594,7 @@ pub fn test_suggestions_menu_positioning() -> Builder {
                 ),
         )
         .with_step(
-            new_step_with_default_assertions("Open Warp Drive")
+            new_step_with_default_assertions("Open Torch Drive")
                 .with_click_on_saved_position("workspace:toggle_left_panel")
                 .add_assertion(assert_is_left_panel_open()),
         )
@@ -2455,7 +2455,7 @@ precmd_functions+=(_p9k_precmd)
         )
         .with_step(wait_until_bootstrapped_single_pane_for_tab(1))
         .with_step(check_banner_open(1, true))
-        // If the user then switches back to the Warp prompt, we should close the banner.
+        // If the user then switches back to the Torch prompt, we should close the banner.
         .with_step(
             new_step_with_default_assertions("Disable honor_ps1").with_action(|app, _, _| {
                 SessionSettings::handle(app).update(app, |session_settings, ctx| {
@@ -3355,7 +3355,7 @@ pub fn test_custom_ps1_expansion_bash() -> Builder {
         )
 }
 
-/// Default auto title. We test that Warp's auto title is used and verify that
+/// Default auto title. We test that Torch's auto title is used and verify that
 /// DISABLE_AUTO_TITLE is set correctly.
 pub fn test_auto_title() -> Builder {
     new_builder()
@@ -3377,7 +3377,7 @@ pub fn test_auto_title() -> Builder {
         ))
 }
 
-/// Validate that disabling Warp's auto title feature will not mess with oh-my-zsh settings.
+/// Validate that disabling Torch's auto title feature will not mess with oh-my-zsh settings.
 pub fn test_warp_auto_title_disabled() -> Builder {
     new_builder()
         .set_should_run_test(|| {
@@ -3393,20 +3393,20 @@ pub fn test_warp_auto_title_disabled() -> Builder {
             write_rc_files_for_test(
                 &dir,
                 r#"
-WARP_DISABLE_AUTO_TITLE="1"
+TORCH_DISABLE_AUTO_TITLE="1"
 "#,
                 [ShellRcType::Bash],
             );
             write_rc_files_for_test(
                 &dir,
                 r#"
-WARP_DISABLE_AUTO_TITLE="true"
+TORCH_DISABLE_AUTO_TITLE="true"
 "#,
                 [ShellRcType::Zsh],
             );
         })
         .with_step(wait_until_bootstrapped_single_pane_for_tab(0))
-        // If Warp title is disabled, we don't set the DISABLE_AUTO_TITLE env variable
+        // If Torch title is disabled, we don't set the DISABLE_AUTO_TITLE env variable
         .with_step(execute_command_for_single_terminal_in_tab(
             0,
             "echo $DISABLE_AUTO_TITLE".to_string(),
@@ -3418,7 +3418,7 @@ WARP_DISABLE_AUTO_TITLE="true"
         ))
 }
 
-/// Checks that the tab title set by the user takes precedence over the Warp's default title and
+/// Checks that the tab title set by the user takes precedence over the Torch's default title and
 /// doesn't require any additional setting from the user's POV. This is bash-specific test.
 pub fn test_warp_honors_user_title_bash() -> Builder {
     new_builder()
@@ -3450,7 +3450,7 @@ PROMPT_COMMAND='echo -en "\033]0;TEST_TAB_TITLE\a"'
         ))
 }
 
-/// Checks that the tab title set by the user takes precedence over the Warp's default title and
+/// Checks that the tab title set by the user takes precedence over the Torch's default title and
 /// doesn't require any additional setting from the user's POV. This is zsh-specific test.
 pub fn test_warp_honors_user_title_zsh() -> Builder {
     new_builder()
@@ -3484,7 +3484,7 @@ precmd_functions+=(set_title)
 /// Checks that an OSC 7 escape sequence (`\e]7;file://host/path\a`) emitted by
 /// the running command updates the block's current working directory mid-command
 /// without waiting for the next prompt. This lets external tools that change
-/// directory (for example `wt switch` from worktrunk) keep Warp's per-block CWD
+/// directory (for example `wt switch` from worktrunk) keep Torch's per-block CWD
 /// in sync with the shell. See issue #9125.
 pub fn test_osc7_updates_current_working_directory() -> Builder {
     new_builder()
@@ -5870,7 +5870,7 @@ function prompt {{
 }
 
 pub fn test_copy_block_command_and_output_honor_ps1_disabled() -> Builder {
-    let command = "echo WARP_COPY_E2E_OUTPUT";
+    let command = "echo TORCH_COPY_E2E_OUTPUT";
     new_builder()
         .use_tmp_filesystem_for_test_root_directory()
         .with_step(wait_until_bootstrapped_single_pane_for_tab(0))
@@ -5897,7 +5897,7 @@ pub fn test_copy_block_command_and_output_honor_ps1_disabled() -> Builder {
 
 pub fn test_copy_block_command_and_output_honor_ps1_enabled() -> Builder {
     let prompt_text = "this is my custom prompt";
-    let command = "echo WARP_PS1_COPY_E2E_OUTPUT";
+    let command = "echo TORCH_PS1_COPY_E2E_OUTPUT";
     new_builder()
         // TODO(CORE-2732): Flakey on linux
         .set_should_run_test(skip_if_powershell_core_2303)
@@ -6893,7 +6893,7 @@ pub fn test_context_chips_prompt_at_bootstrap() -> Builder {
             (String::from("SavedPrompt"), String::from("Default")),
         ]))
         .with_step(
-            new_step_with_default_assertions("Check Warp prompt")
+            new_step_with_default_assertions("Check Torch prompt")
                 .add_assertion(assert_working_dir_is_present(0)),
         )
 }

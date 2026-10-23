@@ -35,7 +35,7 @@ pub(super) enum TerminalUseInterruptAction {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(super) enum TuiInputTarget {
-    /// No editable destination is ready, such as while Warp injects its
+    /// No editable destination is ready, such as while Torch injects its
     /// bootstrap script or waits for the first post-bootstrap prompt. The
     /// session view renders the editor with a `Starting shell...` indicator,
     /// but submission is disabled and ordinary input is not forwarded to the
@@ -138,7 +138,7 @@ pub(super) fn user_controls_running_command(block: &Block) -> bool {
         && !block.is_agent_tagged_in()
 }
 
-/// Returns the active running command when it, rather than Warp's editor or
+/// Returns the active running command when it, rather than Torch's editor or
 /// agent, owns inline terminal input.
 pub(super) fn user_controlled_running_command(terminal_model: &TerminalModel) -> Option<&Block> {
     let active_block = terminal_model.block_list().active_block();

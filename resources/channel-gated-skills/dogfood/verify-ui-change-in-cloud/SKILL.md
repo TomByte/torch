@@ -1,7 +1,7 @@
 ---
 name: verify-ui-change-in-cloud
 description: >
-  Verifies user-facing Warp client changes by spawning a cloud agent with computer use to test Warp.
+  Verifies user-facing Torch client changes by spawning a cloud agent with computer use to test Torch.
   Use only when the user explicitly requested computer-use verification or accepted an offer to run it, and ONLY in non-sandboxed environments and local environments.
   Triggers a cloud agent that runs the test-warp-ui skill.
 user-invocable: true
@@ -61,12 +61,12 @@ font size relative to other text, and color.
 I added a migration that symlinks config from ~/.warp into ~/.warp-preview on first launch.
 The migration is gated on Channel::Preview. Before building, hardcode the migration to run
 regardless of channel by removing the channel check. Also create a fake ~/.warp directory
-with test files. After launching Warp, verify the symlinks were created in ~/.warp-preview.
+with test files. After launching Torch, verify the symlinks were created in ~/.warp-preview.
 ```
 
 ### Hardcoding to reach the code path under test
 
-The cloud agent builds Warp with `cargo run`, which may not match the exact runtime conditions of your change (e.g., different channel, missing feature flags, absent preconditions). When this happens, instruct the cloud agent to temporarily hardcode the code so the build exercises the path you need to test. Common examples:
+The cloud agent builds Torch with `cargo run`, which may not match the exact runtime conditions of your change (e.g., different channel, missing feature flags, absent preconditions). When this happens, instruct the cloud agent to temporarily hardcode the code so the build exercises the path you need to test. Common examples:
 
 - **Gated code paths**: If the change is behind a channel check, feature flag, or experiment, tell the agent to remove or bypass the gate before building.
 - **Pre-existing state**: If the change depends on filesystem state that wouldn't exist in a clean environment (e.g., a config directory from a prior install), tell the agent to create it before launching.
@@ -76,4 +76,4 @@ Be explicit in the prompt about what to hardcode and why — the cloud agent won
 
 ### 5. Surface the Cloud Agent Link
 
-No extra surfacing step is needed — the Warp client displays the cloud agent run automatically.
+No extra surfacing step is needed — the Torch client displays the cloud agent run automatically.

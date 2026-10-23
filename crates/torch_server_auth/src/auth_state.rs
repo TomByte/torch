@@ -4,11 +4,11 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use anyhow::anyhow;
 use chrono::{DateTime, Duration, Utc};
 use parking_lot::RwLock;
-use uuid::Uuid;
 use torch_core::channel::{Channel, ChannelState};
 use torch_errors::report_error;
 use torch_graphql::object_permissions::OwnerType;
 use torchui_core::{AppContext, Entity, SingletonEntity};
+use uuid::Uuid;
 
 use super::UserUid;
 use super::anonymous_id::get_or_create_anonymous_id;
@@ -113,7 +113,7 @@ impl AuthState {
 
     /// Creates and initializes auth state. Checks, in order:
     /// 1. Test user (test/integration/skip_login builds)
-    /// 2. WARP_USER_SECRET environment variable
+    /// 2. TORCH_USER_SECRET environment variable
     /// 3. Persisted user from secure storage
     #[cfg_attr(target_family = "wasm", allow(dead_code))]
     pub fn initialize(ctx: &AppContext) -> Self {
@@ -135,8 +135,8 @@ impl AuthState {
             return state;
         }
 
-        // Try WARP_USER_SECRET environment variable.
-        if let Some(persisted) = option_env!("WARP_USER_SECRET")
+        // Try TORCH_USER_SECRET environment variable.
+        if let Some(persisted) = option_env!("TORCH_USER_SECRET")
             .and_then(|s| serde_json::from_str::<PersistedUser>(s).ok())
         {
             state.apply_persisted_user(persisted);
@@ -397,7 +397,7 @@ impl AuthState {
             .map(|user| user.metadata.email.clone())
     }
 
-    /// Returns whether the user considered onboarded to Warp.
+    /// Returns whether the user considered onboarded to Torch.
     pub fn is_onboarded(&self) -> Option<bool> {
         self.user.read().as_ref().map(|user| user.is_onboarded)
     }
@@ -416,7 +416,7 @@ impl AuthState {
     }
 
     /// Returns whether or not the user is anonymous.
-    /// Anonymous users are real Warp users, but have no providers linked in Firebase.
+    /// Anonymous users are real Torch users, but have no providers linked in Firebase.
     /// Returns `None` if there is no user data.
     pub fn is_user_anonymous(&self) -> Option<bool> {
         self.user
@@ -426,7 +426,7 @@ impl AuthState {
     }
 
     /// Returns whether or not the user is a "web client anonymous user", aka their account
-    /// originated from viewing Warp on web.
+    /// originated from viewing Torch on web.
     pub fn is_user_web_anonymous_user(&self) -> Option<bool> {
         self.user.read().as_ref().map(|user| {
             user.anonymous_user_type() == Some(AnonymousUserType::WebClientAnonymousUser)

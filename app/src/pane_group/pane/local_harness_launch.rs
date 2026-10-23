@@ -4,8 +4,8 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use shell_words::quote as shell_quote;
-use uuid::Uuid;
 use torch_cli::agent::{Harness, HarnessTransport};
+use uuid::Uuid;
 
 use crate::ai::agent_sdk::driver::AgentDriverError;
 use crate::ai::agent_sdk::driver::harness::claude_code::prepare_claude_environment_config;
@@ -84,7 +84,7 @@ pub(super) fn validate_local_harness_shell(shell_type: Option<ShellType>) -> Res
     }
 }
 
-const LOCAL_CLAUDE_CHILD_ORCHESTRATION_INSTRUCTIONS: &str = r#"You are a local Claude Code child agent launched by a lead agent in Warp.
+const LOCAL_CLAUDE_CHILD_ORCHESTRATION_INSTRUCTIONS: &str = r#"You are a local Claude Code child agent launched by a lead agent in Torch.
 
 Coordinate with the lead agent through the Oz CLI messaging environment:
 - Your run id is in OZ_RUN_ID.
@@ -210,7 +210,7 @@ pub(super) async fn prepare_local_harness_child_launch(
                 .map_err(|error: AgentDriverError| error.to_string())?;
             // Local child harness panes inherit the user's existing local
             // auth/session state. We still prepare harness config files here,
-            // but there are no Warp-managed secrets to materialize into the
+            // but there are no Torch-managed secrets to materialize into the
             // hidden child pane.
             prepare_claude_environment_config(
                 &working_dir,

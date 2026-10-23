@@ -25,7 +25,7 @@ define_settings_group!(WarpDriveSettings, settings: [
         surface: settings::SettingSurfaces::GUI,
         private: true,
     },
-    // Controls whether Warp Drive appears in the tools panel, command palette, and command search.
+    // Controls whether Torch Drive appears in the tools panel, command palette, and command search.
     enable_warp_drive: EnableWarpDrive {
         type: bool,
         default: true,
@@ -39,11 +39,11 @@ define_settings_group!(WarpDriveSettings, settings: [
 ]);
 
 impl WarpDriveSettings {
-    /// Returns whether Warp Drive is available for the current auth state.
+    /// Returns whether Torch Drive is available for the current auth state.
     ///
     /// This is intentionally separate from the stored `enable_warp_drive`
     /// preference. Logged-out and anonymous users can retain their onboarding
-    /// preference so Warp Drive appears automatically after signup, while the
+    /// preference so Torch Drive appears automatically after signup, while the
     /// feature remains unavailable until then.
     pub fn is_warp_drive_available(app: &torchui::AppContext) -> bool {
         if torch_core::channel::ChannelState::is_local_only() {
@@ -56,7 +56,7 @@ impl WarpDriveSettings {
                 .get()
                 .is_anonymous_or_logged_out()
     }
-    /// Returns whether Warp Drive should be considered enabled.
+    /// Returns whether Torch Drive should be considered enabled.
     /// Returns `false` when the user is anonymous or fully logged out,
     /// regardless of the user setting.
     pub fn is_warp_drive_enabled(app: &torchui::AppContext) -> bool {

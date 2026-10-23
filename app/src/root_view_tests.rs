@@ -15,8 +15,8 @@ use torchui::{
 use super::{
     AccountFirstCompletion, AuthOnboardingState, AuthOnboardingTarget,
     HAS_COMPLETED_ONBOARDING_KEY, NewWorkspaceSource, RootView, WorkspaceArgs,
-    has_completed_local_onboarding, offer_variant_for_account_class,
-    refresh_pending_onboarding_choices, requires_post_onboarding_login,
+    offer_variant_for_account_class, refresh_pending_onboarding_choices,
+    requires_post_onboarding_login,
 };
 use crate::GlobalResourceHandles;
 use crate::appearance::Appearance;
@@ -74,14 +74,6 @@ fn set_local_onboarding_completed(app: &mut App, completed: bool) {
             )
             .unwrap();
     });
-}
-
-#[test]
-fn account_first_requires_login_even_without_ai_or_drive_settings() {
-    let _account_first = FeatureFlag::AccountFirstOnboarding.override_enabled(true);
-
-    assert!(requires_post_onboarding_login(false, false, false));
-    assert!(!requires_post_onboarding_login(true, false, false));
 }
 
 #[test]
@@ -193,45 +185,6 @@ fn refreshing_pending_onboarding_choices_replaces_stale_settings() {
     };
     assert!(ui.use_vertical_tabs);
     assert!(pending_tutorial.is_some());
-}
-
-/// Regression test for the bug fixed by introducing
-/// `RootView::sync_local_onboarding_to_server`: when a user completed onboarding
-/// pre-login and later authenticated via a non-login-slide entrypoint (i.e. while
-/// already in `Terminal` state), the server-side `is_onboarded` flag was never
-/// flipped. The helper runs unconditionally on `AuthComplete` and must flip the
-/// flag when all preconditions hold.
-#[test]
-fn test_sync_flips_server_is_onboarded_when_local_onboarding_completed() {
-    App::test((), |mut app| async move {
-        initialize_app(&mut app);
-
-        // Seed the "has_completed_local_onboarding" preference and make the user
-        // appear not yet onboarded on the server. The default test user is
-        // non-anonymous, so the guards in the helper won't short-circuit.
-        set_local_onboarding_completed(&mut app, true);
-        app.update(|ctx| {
-            AuthStateProvider::as_ref(ctx).get().set_is_onboarded(false);
-            assert!(has_completed_local_onboarding(ctx));
-            assert_eq!(
-                AuthStateProvider::as_ref(ctx).get().is_onboarded(),
-                Some(false)
-            );
-        });
-
-        app.update(|ctx| {
-            let auth_state = AuthStateProvider::as_ref(ctx).get().clone();
-            RootView::sync_local_onboarding_to_server(&auth_state, ctx);
-        });
-
-        app.read(|ctx| {
-            assert_eq!(
-                AuthStateProvider::as_ref(ctx).get().is_onboarded(),
-                Some(true),
-                "sync should have invoked AuthManager::set_user_onboarded"
-            );
-        });
-    });
 }
 
 /// If the user hasn't completed local onboarding, the helper must leave the

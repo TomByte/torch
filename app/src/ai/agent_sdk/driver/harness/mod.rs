@@ -12,8 +12,8 @@ use tempfile::NamedTempFile;
 use torch_cli::agent::{Harness, HarnessTransport};
 use torch_cli::{
     OZ_CLI_ENV, OZ_HARNESS_ENV, OZ_PARENT_RUN_ID_ENV, OZ_RUN_ID_ENV, SERVER_ROOT_URL_OVERRIDE_ENV,
-    SESSION_SHARING_SERVER_URL_OVERRIDE_ENV, WARP_CLI_ENV, WARP_HARNESS_ENV,
-    WARP_PARENT_RUN_ID_ENV, WARP_RUN_ID_ENV, WS_SERVER_URL_OVERRIDE_ENV,
+    SESSION_SHARING_SERVER_URL_OVERRIDE_ENV, TORCH_CLI_ENV, TORCH_HARNESS_ENV,
+    TORCH_PARENT_RUN_ID_ENV, TORCH_RUN_ID_ENV, WS_SERVER_URL_OVERRIDE_ENV,
 };
 use torch_core::channel::ChannelState;
 use torch_managed_secrets::ManagedSecretValue;
@@ -23,8 +23,8 @@ use super::terminal::{CommandHandle, TerminalDriver};
 use super::{
     AgentDriver, AgentDriverError, LEGACY_OZ_PARENT_LISTENER_MANAGED_EXTERNALLY_ENV,
     LEGACY_OZ_PARENT_STATE_ROOT_ENV, OZ_MESSAGE_LISTENER_MANAGED_EXTERNALLY_ENV,
-    OZ_MESSAGE_LISTENER_STATE_ROOT_ENV, WARP_MESSAGE_LISTENER_MANAGED_EXTERNALLY_ENV,
-    WARP_MESSAGE_LISTENER_STATE_ROOT_ENV,
+    OZ_MESSAGE_LISTENER_STATE_ROOT_ENV, TORCH_MESSAGE_LISTENER_MANAGED_EXTERNALLY_ENV,
+    TORCH_MESSAGE_LISTENER_STATE_ROOT_ENV,
 };
 use crate::ai::agent::api::ServerConversationToken;
 use crate::ai::agent_sdk::setup_observability::SetupClientEventReporter;
@@ -189,7 +189,7 @@ pub(crate) trait ThirdPartyHarness: Send + Sync {
     /// Whether this harness must verify its Oz platform plugin before launch.
     /// Codex opts into this because its unattended launch command bypasses hook
     /// trust globally, so we should fail setup instead of running without the
-    /// Warp-installed orchestration hooks at the required version.
+    /// Torch-installed orchestration hooks at the required version.
     fn requires_verified_platform_plugin(&self) -> bool {
         false
     }
@@ -328,7 +328,7 @@ pub(crate) fn harness_kind(
     harness: Harness,
     transport: HarnessTransport,
 ) -> Result<HarnessKind, AgentDriverError> {
-    // The transport only selects how a third-party harness is driven; Oz is Warp's own loop
+    // The transport only selects how a third-party harness is driven; Oz is Torch's own loop
     // and Pi has no interactive CLI mode, so neither consults it.
     match harness {
         Harness::Oz => return Ok(HarnessKind::Oz),
@@ -429,7 +429,7 @@ fn insert_non_empty_task_env_var(
 
 /// Writes `value` under every name in `keys`.
 ///
-/// Gives a variable both its `OZ_` and its `WARP_` name from a single value, so the two cannot
+/// Gives a variable both its `OZ_` and its `TORCH_` name from a single value, so the two cannot
 /// carry different ones. `task_env_vars_mirror_every_oz_var_to_a_warp_name` fails if a name is
 /// listed here under only one of the two spellings.
 ///
@@ -461,13 +461,13 @@ fn task_env_vars_for_harness_name(
     parent_run_id: Option<&str>,
     selected_harness: Harness,
 ) -> HashMap<OsString, OsString> {
-    // Sized for the OZ_/WARP_ pairs written below.
+    // Sized for the OZ_/TORCH_ pairs written below.
     let mut env_vars = HashMap::with_capacity(14);
 
     if let Some(id) = task_id {
         insert_task_env_var_names(
             &mut env_vars,
-            &[OZ_RUN_ID_ENV, WARP_RUN_ID_ENV],
+            &[OZ_RUN_ID_ENV, TORCH_RUN_ID_ENV],
             id.to_string(),
         );
     }
@@ -475,19 +475,19 @@ fn task_env_vars_for_harness_name(
     if let Some(parent_run_id) = parent_run_id.filter(|id| !id.is_empty()) {
         insert_task_env_var_names(
             &mut env_vars,
-            &[OZ_PARENT_RUN_ID_ENV, WARP_PARENT_RUN_ID_ENV],
+            &[OZ_PARENT_RUN_ID_ENV, TORCH_PARENT_RUN_ID_ENV],
             parent_run_id,
         );
     }
 
     let cli_path = std::env::current_exe()
         .unwrap_or_else(|_| ChannelState::channel().cli_command_name().into());
-    insert_task_env_var_names(&mut env_vars, &[OZ_CLI_ENV, WARP_CLI_ENV], &cli_path);
+    insert_task_env_var_names(&mut env_vars, &[OZ_CLI_ENV, TORCH_CLI_ENV], &cli_path);
     // The harness name is only consumed by child orchestration telemetry when the child
     // CLI emits `run message *` events.
     insert_task_env_var_names(
         &mut env_vars,
-        &[OZ_HARNESS_ENV, WARP_HARNESS_ENV],
+        &[OZ_HARNESS_ENV, TORCH_HARNESS_ENV],
         selected_harness.to_string(),
     );
     if selected_harness == Harness::Claude && task_id.is_some() {
@@ -495,7 +495,7 @@ fn task_env_vars_for_harness_name(
             &mut env_vars,
             &[
                 OZ_MESSAGE_LISTENER_MANAGED_EXTERNALLY_ENV,
-                WARP_MESSAGE_LISTENER_MANAGED_EXTERNALLY_ENV,
+                TORCH_MESSAGE_LISTENER_MANAGED_EXTERNALLY_ENV,
                 LEGACY_OZ_PARENT_LISTENER_MANAGED_EXTERNALLY_ENV,
             ],
             "1",
@@ -505,7 +505,7 @@ fn task_env_vars_for_harness_name(
                 &mut env_vars,
                 &[
                     OZ_MESSAGE_LISTENER_STATE_ROOT_ENV,
-                    WARP_MESSAGE_LISTENER_STATE_ROOT_ENV,
+                    TORCH_MESSAGE_LISTENER_STATE_ROOT_ENV,
                     LEGACY_OZ_PARENT_STATE_ROOT_ENV,
                 ],
                 &state_root,
@@ -542,7 +542,7 @@ fn task_env_vars_for_harness_name(
 /// Drops every name under which the externally-managed-listener signal is injected.
 ///
 /// The list must stay in step with the one `task_env_vars_for_harness_name` writes: leaving
-/// one name behind would tell the Claude plugin that Warp owns the listener when it does not.
+/// one name behind would tell the Claude plugin that Torch owns the listener when it does not.
 /// `prepare_local_wake_command_rehydrates_transcript_with_self_managed_listener` asserts none
 /// of them survive.
 pub(crate) fn remove_claude_externally_managed_listener_env_vars(
@@ -550,7 +550,7 @@ pub(crate) fn remove_claude_externally_managed_listener_env_vars(
 ) {
     for env_name in [
         OZ_MESSAGE_LISTENER_MANAGED_EXTERNALLY_ENV,
-        WARP_MESSAGE_LISTENER_MANAGED_EXTERNALLY_ENV,
+        TORCH_MESSAGE_LISTENER_MANAGED_EXTERNALLY_ENV,
         LEGACY_OZ_PARENT_LISTENER_MANAGED_EXTERNALLY_ENV,
     ] {
         env_vars.remove(OsStr::new(env_name));
@@ -646,10 +646,6 @@ pub(crate) enum HarnessCleanupDisposition {
 #[cfg_attr(target_family = "wasm", async_trait(?Send))]
 pub(crate) trait HarnessRunner: Send + Sync + 'static {
     fn harness_name(&self) -> &str;
-    #[cfg(test)]
-    fn prompt_text_for_test(&self) -> Option<&str> {
-        None
-    }
 
     /// Create the external conversation on the server and start the harness
     /// command in the terminal.

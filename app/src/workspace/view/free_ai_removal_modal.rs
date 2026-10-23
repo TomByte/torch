@@ -30,13 +30,13 @@ const PANEL_PADDING: f32 = 24.;
 const CLOSE_BUTTON_DIAMETER: f32 = 20.;
 
 const NOTICE_TITLE_TEXT: &str = "Torch is no longer providing inference on the free plan.";
-const NOTICE_BODY_TEXT: &str = "To keep using Warp's AI features, please upgrade to a paid plan, \
+const NOTICE_BODY_TEXT: &str = "To keep using Torch's AI features, please upgrade to a paid plan, \
      bring your own API key or endpoint, or log in with your Grok subscription.";
 const NOTICE_BONUS_CREDITS_TEXT: &str = "If you have any unused bonus credits, AI will keep \
      working until these run out.";
 
 const PROMPT_SUGGESTIONS_TITLE_TEXT: &str = "How to use AI features in Torch";
-const PROMPT_SUGGESTIONS_BODY_TEXT: &str = "To use AI features in Warp, subscribe to a paid plan, \
+const PROMPT_SUGGESTIONS_BODY_TEXT: &str = "To use AI features in Torch, subscribe to a paid plan, \
      add an API key (OpenAI, Anthropic, or Google), add a custom inference endpoint (OpenRouter, \
      LiteLLM), or log in using your SuperGrok subscription.";
 
@@ -44,7 +44,7 @@ const PROMPT_SUGGESTIONS_BODY_TEXT: &str = "To use AI features in Warp, subscrib
 /// the layout and CTAs are identical across variants.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FreeAiRemovalModalVariant {
-    /// One-time notice shown to Free users when Warp-provided AI is removed from their plan.
+    /// One-time notice shown to Free users when Torch-provided AI is removed from their plan.
     Notice,
     /// Shown on demand when a Free user activates Prompt Suggestions while out of credits.
     PromptSuggestions,
@@ -112,7 +112,7 @@ struct StateHandles {
     upgrade_button: MouseStateHandle,
 }
 
-/// Notice shown to Free-plan users about the removal of Warp-provided AI. The
+/// Notice shown to Free-plan users about the removal of Torch-provided AI. The
 /// `variant` selects the copy: a one-time rollout notice, or an on-demand prompt
 /// when a Free user activates a gated feature (e.g. Prompt Suggestions).
 pub struct FreeAiRemovalModal {

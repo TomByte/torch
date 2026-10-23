@@ -185,7 +185,7 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
                     KnowledgePageAction::ToggleWarpDriveContext,
                 )),
                 &(context.clone() & id!(flags::IS_ANY_AI_ENABLED)),
-                flags::WARP_DRIVE_CONTEXT_FLAG,
+                flags::TORCH_DRIVE_CONTEXT_FLAG,
             )
             .with_group(bindings::BindingGroup::WarpAi)
             .with_enabled(|| FeatureFlag::AIRules.is_enabled()),
@@ -336,7 +336,7 @@ impl SettingsWidget for WarpDriveContextWidget {
     type View = KnowledgePageView;
 
     fn search_terms(&self) -> &str {
-        "warp drive agent context contents personal team developer workflows environments notebooks environment variables"
+        "torch drive agent context contents personal team developer workflows environments notebooks environment variables"
     }
 
     fn render(

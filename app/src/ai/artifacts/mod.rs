@@ -3,12 +3,12 @@ use std::path::Path;
 use std::path::PathBuf;
 
 use anyhow::anyhow;
-use ui_components::lightbox::{LightboxImage, LightboxImageSource};
 use torch_errors::report_error;
-use warp_multi_agent_api as api;
 use torchui::SingletonEntity;
 #[cfg(feature = "local_fs")]
 use torchui::platform::SaveFilePickerConfiguration;
+use ui_components::lightbox::{LightboxImage, LightboxImageSource};
+use warp_multi_agent_api as api;
 
 #[cfg(feature = "local_fs")]
 use crate::ai::artifact_download::default_download_filename;
@@ -32,7 +32,7 @@ pub enum Artifact {
     #[serde(rename = "PLAN")]
     Plan {
         document_uid: String,
-        /// None until the plan is synced to Warp Drive.
+        /// None until the plan is synced to Torch Drive.
         notebook_uid: Option<NotebookId>,
         title: Option<String>,
     },

@@ -25,7 +25,7 @@ pub enum CLIAgentEventType {
     Unknown(String),
 }
 
-/// How a CLI agent event reached Warp.
+/// How a CLI agent event reached Torch.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CLIAgentEventSource {
     /// Structured OSC 777 notification from a rich plugin.

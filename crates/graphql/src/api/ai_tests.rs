@@ -120,7 +120,7 @@ fn conversion_populates_token_usage_and_tool_usage_metadata() {
     assert_eq!(converted.context_window_segments[0].token_count, 1000);
 }
 
-/// A single model used through both the Warp API key and a user's own key
+/// A single model used through both the Torch API key and a user's own key
 /// merges into one row with both buckets populated.
 #[test]
 fn conversion_merges_warp_and_byok_usage_for_same_model() {

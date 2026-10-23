@@ -2,14 +2,14 @@ use torch_errors::report_error;
 /// Stages during the course of bootstrapping the shell.  
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum BootstrapStage {
-    /// Warp is re-parsing historical blocks for this session. We haven't yet started
+    /// Torch is re-parsing historical blocks for this session. We haven't yet started
     /// bootstrapping.
     RestoreBlocks,
-    /// Warp is writing the bootstrap script into the running shell.
+    /// Torch is writing the bootstrap script into the running shell.
     WarpInput,
     /// Execution of any shell startup scripts such as .rc or .profile files.
     ScriptExecution,
-    /// Model is fully bootstrapped (i.e the `Bootstrap` message was successfully received by Warp).   
+    /// Model is fully bootstrapped (i.e the `Bootstrap` message was successfully received by Torch).   
     Bootstrapped,
     /// Model is fully bootstrapped and we've received the precmd that results from bootstrapping itself
     PostBootstrapPrecmd,

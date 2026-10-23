@@ -1,6 +1,6 @@
 # Torch-specific guidance
 
-This is the independent Torch fork. The guidance below documents inherited architecture. Torch builds use `cargo check -p torch --bin torch --features gui` and `./script/run`; the Cargo package is still `warp`. Keep `local_only` enabled. Do not add Warp login, AI prediction, cloud integration, telemetry, or upstream release/sync automation. Preserve ordinary completions and shell behavior, plus original licence/copyright notices. The only Git remote is `TomByte/torch`.
+This is the independent Torch fork. The guidance below documents inherited architecture. Torch builds use `cargo check -p torch --bin torch --features gui` and `./script/run`; the Cargo package and its binary are both `torch`. Keep `local_only` enabled. Do not add Warp login, AI prediction, cloud integration, telemetry, or upstream release/sync automation. Preserve ordinary completions and shell behavior, plus original licence/copyright notices. The only Git remote is `TomByte/torch`.
 
 Treat Torch as a distributable app: local integrations must ship with the normal app bundle, resolve user/install paths at runtime, and provide setup/removal without this checkout or developer-machine dependencies. Preserve unrelated user configuration, test clean/custom installation paths, and state which platforms were actually verified.
 
@@ -13,23 +13,8 @@ This file provides guidance when working with code in this repository.
 ### Build and Run
 - `cargo run` / `./script/run` - Build and run the GUI desktop app locally
 - `./script/run-tui` - Build and run the headless TUI front-end (`crates/torch_tui`)
-- `cargo bundle --bin warp` - Bundle the main (GUI) app
+- `cargo bundle --bin torch` - Bundle the main (GUI) app
 - `./script/release` - Build a signed, notarized, universal Torch release into `dist/` as a DMG and an optional zip; `--help` lists its options
-
-### Running with local warp-server
-To connect Warp client to a local warp-server instance:
-
-```bash
-# Connect to server on default port 8080
-WITH_LOCAL_SERVER=1 ./script/run
-
-# Connect to server on custom port (e.g., 8082)
-WITH_LOCAL_SERVER=1 SERVER_ROOT_URL=http://localhost:8082 WS_SERVER_URL=ws://localhost:8082/graphql/v2 ./script/run
-```
-
-Environment variables:
-- `SERVER_ROOT_URL` - HTTP endpoint (default: `http://localhost:8080`)
-- `WS_SERVER_URL` - WebSocket endpoint (default: `ws://localhost:8080/graphql/v2`)
 
 ### Testing
 - `cargo nextest run --no-fail-fast --workspace` - Run tests with nextest
@@ -57,33 +42,19 @@ Optimize for fast delivery and let CI catch uncommon failures outside targeted l
 Run the full presubmit only when the user, task, or approved spec explicitly requires it. For agent-driven implementation, this section replaces the broader pre-push presubmit guidance in `CONTRIBUTING.md`; that document still describes the human contributor workflow. A later source, test, manifest, generated-code, or configuration change creates a new candidate: rerun the affected portion of the sequence and finish with the applicable formatter. Local commits are checkpoints rather than validation boundaries and do not each need to pass independently. PR text, comments, labels, and other metadata do not invalidate code validation.
 
 ### Platform Setup
-- `./script/bootstrap` - Platform-specific setup plus common agent skill installation from `skills-lock.json`; prompts for project/global when an install or update is needed unless a target flag or environment override is provided.
-- `./script/bootstrap --skip-common-skills` - Platform setup without installing or updating common agent skills.
-- `WARP_SKIP_COMMON_SKILLS_INSTALL=1 ./script/run` (or `./script/bootstrap`) - Skip the common-skills install/update check, including its interactive upstream-lock-update prompt, without passing a flag on every invocation.
-- `./script/bootstrap --install-common-skills` - Explicitly install common agent skills from `skills-lock.json`; this is the default behavior.
-- `./script/bootstrap --install-common-skills-in-repo` - Platform setup plus common agent skill installation in this checkout's `.agents/skills`.
-- `./script/bootstrap --install-common-skills-globally` - Platform setup plus common agent skill installation in `~/.agents/skills`.
-- `../common-skills/scripts/install_common_skills --repo-root "$PWD" --project --if-needed` - Install or refresh shared agent skills in this checkout's `.agents/skills`.
-- `../common-skills/scripts/install_common_skills --repo-root "$PWD" --global --if-needed` - Install or refresh shared agent skills in `~/.agents/skills`.
-- `../common-skills/scripts/remove_common_skills --repo-root "$PWD"` - Remove shared agent skills listed in `skills-lock.json` from this checkout's `.agents/skills`.
-- `../common-skills/scripts/remove_common_skills --repo-root "$PWD" --global` - Remove shared agent skills listed in `skills-lock.json` from `~/.agents/skills`.
-- `../common-skills/scripts/remove_common_skills --repo-root "$PWD" --clear-lock` - Remove shared agent skills from this checkout and delete `skills-lock.json`.
+- `./script/bootstrap` - Platform-specific setup: Xcode, Homebrew packages, Rust targets and Git LFS.
 - `./script/install_cargo_build_deps` - Install Cargo build dependencies
 - `./script/install_cargo_test_deps` - Install Cargo test dependencies
 
-`skills-lock.json` is the standard project lock file managed by `npx skills`. `warpdotdev/common-skills/scripts/install_common_skills` requires an explicit install target before restoring: pass `--project`, pass `--global`, set `WARP_COMMON_SKILLS_INSTALL_TARGET`, or answer the interactive prompt from bootstrap. Non-interactive flows fail if no target is explicit. The installer creates `skills-lock.json` from `warpdotdev/common-skills` if it is missing, uses global as the recommended interactive default, errors if common skills are present in both project and global locations, prevents a global install pinned to one lock from being silently overwritten by another checkout pinned to a different lock, and verifies installed skills against the lock after successful install or skip paths. `script/run` and `script/bootstrap` execute this installer with `script/resolve_common_skills`, which uses `WARP_COMMON_SKILLS_SCRIPTS_DIR` only when explicitly set and otherwise runs the raw script from `warpdotdev/common-skills`. To test a remote common-skills branch, set `WARP_COMMON_SKILLS_REF=<branch>`. Cloud setup should use `common-skills/scripts/install_common_skills --repo-root <warp-checkout> --project --if-needed --non-interactive` or set `WARP_COMMON_SKILLS_INSTALL_TARGET=project` to avoid the prompt. To update the locked common skills, run `npx --yes skills@1.5.6 update -p -y` and commit the resulting `skills-lock.json` changes.
-
 ## Architecture Overview
 
-This is a Rust-based terminal emulator with a custom UI framework called **WarpUI**. It has **two front-ends** that share a common core.
+This is a Rust-based terminal emulator with a custom UI framework called **TorchUI**, inherited from Warp. It has **two front-ends** that share a common core.
 
 ### Front-ends: GUI and TUI
 
-Warp has two front-ends that share the `torch_core`/`torchui` Entity/model core (App/Entity/`AppContext`, actions, `Appearance`, `FeatureFlag`, telemetry, logging) but differ in UI framework, rendering, input, and verification:
-- **GUI desktop app** — the `app/` crate on the WarpUI pixel/GPU framework (`torchui`, `crates/torchui_core`): `Element`/`View` layout, GPU/WGSL rendering, mouse input, `.app` bundles. Run with `cargo run` / `./script/run`; verify visually with `computer_use` or the real-display integration framework (`crates/integration`).
+Torch has two front-ends that share the `torch_core`/`torchui` Entity/model core (App/Entity/`AppContext`, actions, `Appearance`, `FeatureFlag`, telemetry, logging) but differ in UI framework, rendering, input, and verification:
+- **GUI desktop app** — the `app/` crate on the TorchUI pixel/GPU framework (`torchui`, `crates/torchui_core`): `Element`/`View` layout, GPU/WGSL rendering, mouse input, `.app` bundles. Run with `cargo run` / `./script/run`; verify visually with `computer_use` or the real-display integration framework (`crates/integration`).
 - **Headless TUI** — the `crates/torch_tui` crate: a console app (run with `./script/run-tui`; no `.app`/GPU) rendered with a parallel cell-grid element library at `crates/torchui_core/src/elements/tui` (the `TuiElement` trait), behind the `tui` cargo feature. Verify by running it in a real terminal and observing output; test with render-to-lines unit tests.
-
-**Skill convention:** a skill specific to one front-end says so in its name and/or description (e.g. `gui-ui-guidelines` / `gui-integration-test` are GUI-only; `tui-ui-guidelines`, `tui-testing`, and `tui-verify-change` are TUI-specific). Skills with no front-end call-out are surface-agnostic and apply to both. For TUI work prefer the `tui-*` skills and ignore GUI-only ones — and vice versa.
 
 ### Key Components
 
@@ -92,7 +63,7 @@ Warp has two front-ends that share the `torch_core`/`torchui` Entity/model core 
 - Actions system for event handling.
 - `crates/torchui_core` also hosts the TUI cell-grid element library under `src/elements/tui` (behind the `tui` feature).
 
-**GUI rendering** (WarpUI GUI elements — GUI-specific):
+**GUI rendering** (TorchUI GUI elements — GUI-specific):
 - `Element`s describe visual layout (Flutter-inspired), rendered on the GPU (WGSL).
 - Mouse input uses `MouseStateHandle`: create it once during construction and reference/clone it wherever mouse input is tracked. An inline `MouseStateHandle::default()` while rendering means no mouse interactions work. (The TUI's hover/click elements — `TuiHoverable`, `tui_collapsible` — also build on `MouseStateHandle`, so the same ownership rule applies there.)
 
@@ -121,7 +92,7 @@ Warp has two front-ends that share the `torch_core`/`torchui` Entity/model core 
 2. **Modular Structure**: Workspace contains multiple workspace configurations, each with terminals, notebooks, etc.
 3. **Cross-Platform**: Native implementations for macOS, Windows, Linux, plus WASM target
 4. **AI Integration**: Built-in AI assistant with context awareness and codebase indexing
-5. **Cloud Sync**: Objects can be synchronized across devices via Warp Drive
+5. **Cloud Sync** (inherited from Warp, disabled in Torch): Warp Drive object synchronization
 
 ### Development Guidelines
 
@@ -189,7 +160,7 @@ for itself.
 
 **Testing**:
 - Use `cargo nextest` for parallel test execution
-- Integration tests use the custom framework in `crates/integration/` — this is **GUI-only**. TUI elements/screens are covered by render-to-lines unit tests instead (see the `tui-testing` skill).
+- Integration tests use the custom framework in `crates/integration/` — this is **GUI-only**. TUI elements/screens are covered by render-to-lines unit tests instead.
 - Follow the Implementation Validation Order above; do not add a full presubmit run after targeted tests unless it was explicitly required.
 - Unit tests should be placed in separate files using the naming convention `${filename}_tests.rs` or `mod_test.rs`
 - Test files should be included at the end of their corresponding module with:
@@ -222,7 +193,7 @@ for itself.
 
 ### Feature Flags
 
-Warp uses compile-time feature flags with a small runtime plumbing layer.
+Torch uses compile-time feature flags with a small runtime plumbing layer.
 
 How to add a feature flag:
 - Add a new variant to `torch_core/src/features.rs` in the `FeatureFlag` enum

@@ -34,16 +34,16 @@ pub use global_actions::{
     flush_pending_save_app, save_app_now,
 };
 use serde::{Deserialize, Serialize};
-pub use util::{PaneViewLocator, TabMovement, active_terminal_in_window};
-pub use view::{
-    NEW_SESSION_MENU_BUTTON_POSITION_ID, NEW_TAB_BUTTON_POSITION_ID, PANEL_HEADER_HEIGHT,
-    TAB_BAR_HEIGHT, TOTAL_TAB_BAR_HEIGHT, WORKSPACE_PADDING, Workspace,
-};
 use torch_core::context_flag::ContextFlag;
 use torchui::AppContext;
 use torchui::accessibility::AccessibilityVerbosity;
 use torchui::elements::DropTargetData;
 use torchui::keymap::{BindingDescription, EditableBinding, FixedBinding};
+pub use util::{PaneViewLocator, TabMovement, active_terminal_in_window};
+pub use view::{
+    NEW_SESSION_MENU_BUTTON_POSITION_ID, NEW_TAB_BUTTON_POSITION_ID, PANEL_HEADER_HEIGHT,
+    TAB_BAR_HEIGHT, TOTAL_TAB_BAR_HEIGHT, WORKSPACE_PADDING, Workspace,
+};
 
 use crate::ai::blocklist::NEW_AGENT_PANE_LABEL;
 use crate::channel::{Channel, ChannelState};
@@ -1312,7 +1312,7 @@ pub fn init(app: &mut AppContext) {
         .with_enabled(has_cloud_surfaces)]);
     }
 
-    // Oz and Warp Control CLI install/uninstall actions (macOS only)
+    // Oz and Torch Control CLI install/uninstall actions (macOS only)
     #[cfg(target_os = "macos")]
     {
         if !ChannelState::is_local_only() {
@@ -1405,7 +1405,7 @@ pub fn init(app: &mut AppContext) {
         .with_context_predicate(id!("Workspace") & id!(flags::IS_ANY_AI_ENABLED))
         .with_group(bindings::BindingGroup::WarpAi.as_str())
         // We use the same custom action as AM so that we don't have
-        // two mac menu items for AM vs Warp AI since they are mutually exclusive.
+        // two mac menu items for AM vs Torch AI since they are mutually exclusive.
         .with_custom_action(CustomAction::NewAgentModePane),
     ]);
 
@@ -1768,7 +1768,7 @@ fn session_label(tab_label: &'static str, session_label: &'static str) -> &'stat
     }
 }
 
-/// Whether the build includes Warp account and cloud surfaces, which local-only builds omit.
+/// Whether the build includes Torch account and cloud surfaces, which local-only builds omit.
 fn has_cloud_surfaces() -> bool {
     !ChannelState::is_local_only()
 }

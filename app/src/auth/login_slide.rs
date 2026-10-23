@@ -4,10 +4,9 @@ use onboarding::components::feature_optout_dialog::{
     FeatureOptOutDialog, render_feature_optout_dialog,
 };
 use onboarding::slides::{layout, onboarding_bottom_nav, slide_content};
-use onboarding::{OnboardingEvent, OnboardingIntention, WARP_DRIVE_FEATURES};
+use onboarding::{OnboardingEvent, OnboardingIntention, TORCH_DRIVE_FEATURES};
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
-use ui_components::{Component as _, Options as _, button};
 use torch_core::features::FeatureFlag;
 use torch_core::safe_error;
 use torch_core::ui::Icon;
@@ -28,6 +27,7 @@ use torchui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity, TypedActionView, UpdateModel, View,
     ViewContext, ViewHandle,
 };
+use ui_components::{Component as _, Options as _, button};
 
 use crate::appearance::Appearance;
 use crate::auth::auth_manager::{AuthManager, AuthManagerEvent};
@@ -183,8 +183,8 @@ enum LoginSlideOverlay {
 }
 
 /// Why the login slide is being shown, which drives its copy. All paths
-/// need an account: Terminal+Drive for cloud sync, and the Warp-agent and
-/// third-party paths because Warp's AI features run on a Warp account. Skipping
+/// need an account: Terminal+Drive for cloud sync, and the Torch-agent and
+/// third-party paths because Torch's AI features run on a Torch account. Skipping
 /// therefore defers sign-in and leaves the gated features off until the user
 /// creates an account.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -205,18 +205,18 @@ pub struct LoginSlideView {
     /// Whether this path wants AI (agent intent) vs. not (terminal intention).
     /// Used to gate the cloud-conversation-storage toggle and AI wording in the
     /// privacy settings step. This reflects intent, not the final state: AI runs
-    /// on a Warp account, so skipping login leaves it off even when this is true.
+    /// on a Torch account, so skipping login leaves it off even when this is true.
     /// The actual `AISettings` value is written when settings are applied.
     ai_enabled: bool,
     /// Whether the user chose third-party (BYO) agents during onboarding. Drives
     /// the agent-path login copy ("Create an account" for third-party vs. "Get
-    /// started with AI" for Warp Agent); it does not affect whether AI is
+    /// started with AI" for Torch Agent); it does not affect whether AI is
     /// enabled, which depends on the user creating an account.
     uses_third_party_agents: bool,
     /// Onboarding intention selected by the user, used to render Drive-focused
     /// copy on the Terminal+Drive path. On the login slide, `intention ==
     /// OnboardingIntention::Terminal` is equivalent to "Terminal+Drive":
-    /// `RootView` only routes Terminal-intent users here when Warp Drive is
+    /// `RootView` only routes Terminal-intent users here when Torch Drive is
     /// enabled.
     intention: OnboardingIntention,
     theme_visual_path: &'static str,
@@ -1105,7 +1105,7 @@ impl LoginSlideView {
             LoginPurpose::WarpDrive => (
                 "Are you sure you want to disable Torch Drive?",
                 "Torch Drive lets you save workflows and knowledge across devices and share them with your team. By continuing, you won't have access to the following features:",
-                WARP_DRIVE_FEATURES,
+                TORCH_DRIVE_FEATURES,
                 "Enable Torch Drive",
             ),
             LoginPurpose::WarpAgent | LoginPurpose::ThirdParty | LoginPurpose::AccountFirst => (

@@ -11,16 +11,16 @@ use chrono::{DateTime, Local, NaiveDateTime};
 use diesel::SqliteConnection;
 use itertools::Itertools as _;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 use torch_cli::agent::Harness;
 use torch_core::features::FeatureFlag;
+use torchui::{AppContext, Entity, EntityId, ModelContext, SingletonEntity};
+use uuid::Uuid;
 use warp_multi_agent_api::RequestCharges;
 use warp_multi_agent_api::client_action::{Action, StartNewConversation};
 use warp_multi_agent_api::message::tool_call::Tool;
 use warp_multi_agent_api::response_event::stream_finished::{
     ConversationUsageMetadata, TokenUsage,
 };
-use torchui::{AppContext, Entity, EntityId, ModelContext, SingletonEntity};
 
 use super::RequestInput;
 use super::controller::response_stream::ResponseStreamId;
@@ -946,7 +946,7 @@ impl BlocklistAIHistoryModel {
         });
     }
 
-    /// Switches the rest of a conversation to Warp-funded inference instead of the user's
+    /// Switches the rest of a conversation to Torch-funded inference instead of the user's
     /// ChatGPT subscription and persists the change to SQLite.
     pub fn set_conversation_use_warp_credits_instead_of_chatgpt(
         &mut self,

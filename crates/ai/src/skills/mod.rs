@@ -14,7 +14,7 @@ pub use parse_skill::{
     ParsedSkill, parse_bundled_skill, parse_skill, parse_skill_content_at_location,
 };
 pub use read_skills::{
-    WARP_SKILL_DIRS_ENV, parse_skills_dirs_env, parse_skills_dirs_value, read_skills,
+    TORCH_SKILL_DIRS_ENV, parse_skills_dirs_env, parse_skills_dirs_value, read_skills,
     read_skills_for_skills_dirs, resolve_skills_dirs,
 };
 pub use skill_provider::{

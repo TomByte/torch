@@ -11,7 +11,6 @@ use futures::executor::block_on;
 use futures::{FutureExt as _, StreamExt as _};
 use http::StatusCode;
 use instant::Instant;
-use uuid::Uuid;
 use torch_cli::mcp::MCPSpec;
 use torch_core::channel::ChannelState;
 use torch_core::execution_mode::{AppExecutionMode, ExecutionMode};
@@ -24,6 +23,7 @@ use torch_managed_secrets::ManagedSecretValue;
 use torch_server_client::base_client::{AMBIENT_WORKLOAD_TOKEN_HEADER, CLOUD_AGENT_ID_HEADER};
 use torchui::r#async::{FutureExt as _, Timer};
 use torchui::{App, ModelContext, ModelHandle, SingletonEntity as _};
+use uuid::Uuid;
 
 use super::{
     AgentDriver, AgentDriverError, MANAGED_MCP_RESOLVE_MAX_ATTEMPTS, McpStartupMode,
@@ -1576,8 +1576,8 @@ impl FileBasedMcpFixture {
     }
 }
 
-/// One auto-started global Warp server, as tracked after a simulated parse of the managed
-/// Warp MCP config.
+/// One auto-started global Torch server, as tracked after a simulated parse of the managed
+/// Torch MCP config.
 struct SimulatedGlobalServer {
     installation_uuid: Uuid,
     config_path: PathBuf,
@@ -1590,8 +1590,8 @@ enum InitialGlobalScan {
     Complete,
 }
 
-/// Simulates the global Warp config parsing one server, then leaves the initial global scan
-/// in `scan` state. `None` when this platform has no managed Warp MCP config path.
+/// Simulates the global Torch config parsing one server, then leaves the initial global scan
+/// in `scan` state. `None` when this platform has no managed Torch MCP config path.
 fn simulate_global_warp_server(
     app: &mut App,
     fixture: &FileBasedMcpFixture,
@@ -1622,7 +1622,7 @@ fn simulate_global_warp_server(
             .into_iter()
             .map(|installation| installation.uuid())
             .next()
-            .expect("the global Warp server should have been auto-started")
+            .expect("the global Torch server should have been auto-started")
     });
     Some(SimulatedGlobalServer {
         installation_uuid,

@@ -1,7 +1,7 @@
 # Escape sequences
 
 Escape sequence is a group (sequence) of characters that have a special meaning, usually different than the literal meaning of the characters used. 
-In Warp we operate on ANSI escape codes, so they always have a form of:
+In Torch we operate on ANSI escape codes, so they always have a form of:
 `<ESC> <separating char> <some combination>`
 
 The `<ESC>` is decimal 27 (0x1b) character. 
@@ -50,10 +50,10 @@ So far, we're mostly using 2: CSI (ESC [) or SS3 (ESC O). Below there's a table 
 In short: `SS3` can only be used iff `TermMode::APP_CURSOR` is set && no modifiers were used and only for a certain group of keys. Otherwise, CSI is most likely the way to go.
 
 
-## Use cases already covered in Warp
+## Use cases already covered in Torch
 
 ### Mouse tracking
-Programs such as `vim` or `tmux` allow users to use the mouse within the app. There's couple modes of operations for mouse tracking (more [here](https://www.xfree86.org/current/ctlseqs.html#Mouse%20Tracking)), but the one we care about in Warp is `SGR`. 
+Programs such as `vim` or `tmux` allow users to use the mouse within the app. There's couple modes of operations for mouse tracking (more [here](https://www.xfree86.org/current/ctlseqs.html#Mouse%20Tracking)), but the one we care about in Torch is `SGR`. 
 
 Basically, some sort of low-res mouse tracking has been implemented before - it only allowed for tracking the mouse movement up to 223 columns, meaning, it wouldn't work in the bigger terminal window. As of 2012 xterm spec introduced `SGR`, which is supposed to support 'higher resolution' mouse tracking. Each of those modes expect different escape sequences to specify the mouse position, however, it is safe to assume that in modern world applications will favor SGR if supported by the terminal emulator, so we don't worry about the other sequences.
 
@@ -68,7 +68,7 @@ Below is the explanation of the sequences used:
 Note that dragging is essentially *pressing a drag mouse button*.
 
 ### Cursor movement (with keyboard)
-Regular cursor movement within the terminal - **unmodified** arrows and home/end key press actions - behave differently depending on the terminal mode. The terminal mode is set based on the program Warp is running, for example, long running command such as `vim` or `emacs` will set the `APP_CURSOR` mode (it's set using CSI ? 1h and unset with CSI ? 1l sequences). Warp keeps track of the mode in terminal_model (`is_term_mode_set` method can be of help).
+Regular cursor movement within the terminal - **unmodified** arrows and home/end key press actions - behave differently depending on the terminal mode. The terminal mode is set based on the program Torch is running, for example, long running command such as `vim` or `emacs` will set the `APP_CURSOR` mode (it's set using CSI ? 1h and unset with CSI ? 1l sequences). Torch keeps track of the mode in terminal_model (`is_term_mode_set` method can be of help).
 
 |                            	| Normal mode 	| APP_CURSOR mode 	|
 |----------------------------	|-------------	|-----------------	|

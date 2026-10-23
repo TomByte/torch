@@ -179,7 +179,7 @@ impl ChatGPTPlanModal {
 
     fn render_description(appearance: &Appearance) -> Box<dyn Element> {
         Text::new(
-            "Eligible requests in Warp will use your ChatGPT plan. You can manage usage for Warp \
+            "Eligible requests in Torch will use your ChatGPT plan. You can manage usage for Torch \
              in your ChatGPT settings.",
             appearance.ui_font_family(),
             14.,

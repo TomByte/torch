@@ -5,7 +5,6 @@ use std::path::PathBuf;
 use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
 use settings::ToggleableSetting as _;
 use strum::IntoEnumIterator;
-use uuid::Uuid;
 use torch_core::features::FeatureFlag;
 use torch_core::send_telemetry_from_ctx;
 use torch_core::ui::Icon;
@@ -22,6 +21,7 @@ use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
     WeakViewHandle,
 };
+use uuid::Uuid;
 
 use crate::ToastStack;
 use crate::ai::mcp::gallery::MCPGalleryManagerEvent;
@@ -1561,8 +1561,8 @@ impl MCPServersListPageView {
             return Some("global".to_string());
         }
 
-        // If the path is the Warp data directory (e.g. ~/.warp or ~/.warp_dev), set the text to
-        // "global". The Warp provider stores its data directory as the root path rather than the
+        // If the path is the Torch data directory (e.g. ~/.warp or ~/.warp_dev), set the text to
+        // "global". The Torch provider stores its data directory as the root path rather than the
         // home directory, unlike other providers that store the home directory directly.
         if root_path == &crate::warp_managed_paths_watcher::warp_data_dir() {
             return Some("global".to_string());

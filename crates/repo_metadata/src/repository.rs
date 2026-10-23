@@ -68,7 +68,7 @@ struct RepositorySubscription {
     subscriber: Box<dyn RepositorySubscriber>,
 }
 
-/// Model for tracking a code repository that Warp is aware of.
+/// Model for tracking a code repository that Torch is aware of.
 pub struct Repository {
     /// The root directory of the repository.
     root_dir: StandardizedPath,

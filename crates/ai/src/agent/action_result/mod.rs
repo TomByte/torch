@@ -8,10 +8,10 @@ use chrono::{DateTime, Local};
 use itertools::Itertools as _;
 use serde::{Deserialize, Serialize};
 use torch_core::command::ExitCode;
-use warp_multi_agent_api::StoredScreenshotRef;
-use warp_multi_agent_api::apply_file_diffs_result::success::UpdatedFileContent;
 use torch_terminal::event::ObservedExitStatus;
 use torch_terminal::model::BlockId;
+use warp_multi_agent_api::StoredScreenshotRef;
+use warp_multi_agent_api::apply_file_diffs_result::success::UpdatedFileContent;
 
 use crate::agent::FileLocations;
 use crate::document::{AIDocumentId, AIDocumentVersion};
@@ -1281,7 +1281,7 @@ pub enum UseComputerResult {
 pub enum ScreenshotSource {
     /// The bytes are inline on the client.
     Inline(computer_use::Screenshot),
-    /// The bytes live in Warp-managed object storage and must be fetched via a
+    /// The bytes live in Torch-managed object storage and must be fetched via a
     /// signed URL.
     Stored {
         stored_ref: StoredScreenshotRef,

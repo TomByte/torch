@@ -389,7 +389,7 @@ pub trait ParseableConfig: PartialEq + Sized + Send {
     /// Reads the file at the given path into the struct implementing ParseableConfig.
     async fn from_file(path: PathBuf) -> Result<Vec<Self>, ConfigError>;
 
-    /// Creates a Warp-readable `Config`. Sets corresponding errors if values have
+    /// Creates a Torch-readable `Config`. Sets corresponding errors if values have
     /// not been configured from the default.
     fn parse(self, fonts: &[FontInfo]) -> Config;
 

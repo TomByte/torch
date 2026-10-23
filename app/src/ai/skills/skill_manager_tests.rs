@@ -1062,7 +1062,7 @@ fn feature_gated_bundled_skill_is_listed_only_when_enabled() {
         handle.update(&mut app, |manager, _| {
             manager.add_bundled_skill_for_testing(
                 "warpctrl",
-                bundled_test_skill("warpctrl", "Control Warp"),
+                bundled_test_skill("warpctrl", "Control Torch"),
                 BundledSkillActivation::RequiresFeature(FeatureFlag::WarpControlCli),
             );
             manager.add_bundled_skill_for_testing(
@@ -1204,7 +1204,7 @@ fn warp_control_direct_read_respects_warp_control_feature() {
         handle.update(&mut app, |manager, _| {
             manager.add_bundled_skill_for_testing(
                 "warpctrl",
-                bundled_test_skill("warpctrl", "Control Warp"),
+                bundled_test_skill("warpctrl", "Control Torch"),
                 BundledSkillActivation::RequiresFeature(FeatureFlag::WarpControlCli),
             );
         });

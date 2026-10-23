@@ -30,7 +30,7 @@ fn warp_managed_mcp_config_path_contains_only_warp_home_path() {
             assert_eq!(path.config_path, warp_home_mcp_config_path);
         }
         (_, _, None) => {}
-        _ => panic!("Expected Warp MCP path when home directory is available"),
+        _ => panic!("Expected Torch MCP path when home directory is available"),
     }
 }
 

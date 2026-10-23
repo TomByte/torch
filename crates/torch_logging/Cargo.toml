@@ -1,7 +1,7 @@
 [package]
 name = "torch_logging"
 edition = "2024"
-description = "Warp logging configuration"
+description = "Torch logging configuration"
 publish.workspace = true
 license.workspace = true
 

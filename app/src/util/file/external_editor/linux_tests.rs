@@ -228,7 +228,7 @@ fn test_field_code_substitutions() {
     Version=1.0
     Type=Application
     Exec=/usr/bin/app %c %i %k %%
-    Name=Warp Test Application
+    Name=Torch Test Application
     Icon=/foo/bar/icon.png
     "#;
     with_files("test_field_code_substitutions", data, |desktop, content| {
@@ -244,7 +244,7 @@ fn test_field_code_substitutions() {
         assert_eq!(
             cmd.get_args().collect::<Vec<_>>(),
             [
-                "Warp Test Application",
+                "Torch Test Application",
                 "--icon",
                 "/foo/bar/icon.png",
                 desktop_file_path.as_str(),

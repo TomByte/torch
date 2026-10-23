@@ -157,6 +157,6 @@ pub struct EnvironmentUpdateArgs {
 /// Image-related subcommands.
 #[derive(Debug, Clone, Subcommand)]
 pub enum ImageCommand {
-    /// List available Warp dev base images from Docker Hub.
+    /// List available Torch dev base images from Docker Hub.
     List,
 }

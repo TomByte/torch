@@ -20,15 +20,15 @@ pub use auth_manager::AuthManager;
 pub use auth_state::AuthStateProvider;
 use itertools::Itertools;
 pub use login_failure_notification::LoginFailureReason;
-#[cfg(feature = "tui")]
-use url::Url;
-pub use user_uid::UserUid;
 use torch_core::channel::ChannelState;
 use torch_core::features::FeatureFlag;
 use torch_core::user_preferences::GetUserPreferences as _;
 use torch_errors::{report_error, report_if_error};
 use torchui::modals::{AlertDialogWithCallbacks, ModalButton};
 use torchui::{AppContext, SingletonEntity};
+#[cfg(feature = "tui")]
+use url::Url;
+pub use user_uid::UserUid;
 
 use crate::ai::agent_conversations_model::AgentConversationsModel;
 use crate::ai::blocklist::BlocklistAIHistoryModel;
@@ -72,7 +72,7 @@ pub fn init(app: &mut AppContext) {
     paste_auth_token_modal::init(app);
 }
 
-/// Returns the configured Warp web logout URL.
+/// Returns the configured Torch web logout URL.
 ///
 /// Keep this derived from the channel's server root so local and non-production
 /// builds log out of the same web session they use for authentication.
@@ -83,9 +83,9 @@ pub fn web_logout_url() -> String {
     )
 }
 
-/// Returns the configured Warp web logout URL with a validated browser continuation.
+/// Returns the configured Torch web logout URL with a validated browser continuation.
 ///
-/// TUI logout only continues to the same Warp web origin's device page. This
+/// TUI logout only continues to the same Torch web origin's device page. This
 /// keeps the logout endpoint from becoming an open redirect if an unexpected
 /// device-authorization response reaches the client.
 #[cfg(feature = "tui")]
@@ -205,7 +205,7 @@ pub fn maybe_log_out(app: &mut AppContext) {
                 "object"
             };
             info_text_vec.push(format!(
-                "You have {num_unsaved_objects} unsynced Warp Drive {plural}. \
+                "You have {num_unsaved_objects} unsynced Torch Drive {plural}. \
             Logging out will cause you to lose the {plural}."
             ));
         }
@@ -258,7 +258,7 @@ pub fn maybe_log_out(app: &mut AppContext) {
     }
 }
 
-/// Logs out locally and sends the user to Warp web's logout endpoint.
+/// Logs out locally and sends the user to Torch web's logout endpoint.
 ///
 /// This is intentionally separate from [`log_out`], which is also used for
 /// non-user-initiated auth recovery paths where opening a browser would be
@@ -286,7 +286,7 @@ pub fn log_out(app: &mut AppContext) {
     AuthManager::handle(app).update(app, |auth_manager, ctx| {
         auth_manager.log_out(ctx);
     });
-    // Detach built-in Warp-hosted MCP servers; they authenticate with the
+    // Detach built-in Torch-hosted MCP servers; they authenticate with the
     // credentials that were just cleared.
     #[cfg(not(target_family = "wasm"))]
     TemplatableMCPServerManager::handle(app).update(app, |manager, ctx| {

@@ -299,7 +299,7 @@ fn get_tooltip_text_for_alert_state(alert_state: &PromptAlertState) -> Option<St
     alert_state.tooltip_text().map(ToString::to_string)
 }
 
-/// Free-plan users who run out of Warp-provided AI credits should get a modal
+/// Free-plan users who run out of Torch-provided AI credits should get a modal
 /// offering BYO/upgrade instead of a disabled button. Other disabled states
 /// (offline, payment issues, team overage gates) keep the disabled treatment.
 fn should_open_unavailable_modal(state: &PromptAlertState, app: &AppContext) -> bool {

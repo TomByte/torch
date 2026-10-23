@@ -173,10 +173,10 @@ use terminal::general_settings::GeneralSettings;
 use terminal::keys_settings::KeysSettings;
 #[cfg(all(not(target_family = "wasm"), feature = "local_tty"))]
 use terminal::local_shell::LocalShellState;
-pub use util::bindings::cmd_or_ctrl_shift;
-use voice::transcriber::VoiceTranscriber;
 use torch_cli::agent::AgentCommand;
 use torch_cli::{CliCommand, GlobalOptions};
+pub use util::bindings::cmd_or_ctrl_shift;
+use voice::transcriber::VoiceTranscriber;
 #[cfg(feature = "local_fs")]
 use watcher::HomeDirectoryWatcher;
 
@@ -215,7 +215,6 @@ use settings::{ExtraMetaKeys, PrivacySettings};
 use shellexpand::tilde;
 use terminal::input;
 use terminal::session_settings::SessionSettings;
-use url::Url;
 // Re-export the debounce function to simplify imports.
 pub use torch_core::r#async::debounce;
 use torch_core::execution_mode::{AppExecutionMode, ExecutionMode};
@@ -236,6 +235,7 @@ use torchui::platform::TerminationMode;
 use torchui::platform::app::{ApproveTerminateResult, TerminationRequestSource};
 use torchui::windowing::state::ApplicationStage;
 use torchui::{AppContext, Event, SingletonEntity, WindowId};
+use url::Url;
 use window_settings::WindowSettings;
 use workflows::manager::WorkflowManager;
 use workspace::sync_inputs::SyncedInputState;
@@ -378,17 +378,17 @@ fn daemon_codebase_index_snapshot_storage(launch_mode: &LaunchMode) -> Option<Sn
     }
 }
 
-/// Launch mode for how to start up Warp.
+/// Launch mode for how to start up Torch.
 #[allow(clippy::large_enum_variant)]
 pub(crate) enum LaunchMode {
     /// Run the regular GUI application.
     App {
         args: torch_cli::AppArgs,
-        /// API key for server authentication, if provided via `--api-key` or `WARP_API_KEY`.
+        /// API key for server authentication, if provided via `--api-key` or `TORCH_API_KEY`.
         api_key: Option<String>,
     },
 
-    /// Run the Warp command-line SDK.
+    /// Run the Torch command-line SDK.
     CommandLine {
         command: torch_cli::CliCommand,
         global_options: GlobalOptions,
@@ -429,7 +429,7 @@ enum TuiEntryPoint {
     /// Build the root TUI view, initialize login, and start the TUI driver.
     Interactive {
         mount: TuiMountFn,
-        /// API key for non-interactive Warp authentication.
+        /// API key for non-interactive Torch authentication.
         api_key: Option<String>,
     },
     /// Execute a CLI command after TUI-scoped app initialization, then exit.
@@ -586,7 +586,7 @@ impl LaunchMode {
         }
     }
 
-    /// Returns `true` if Warp renders to native GUI windows on the platform app backend.
+    /// Returns `true` if Torch renders to native GUI windows on the platform app backend.
     fn is_gui(&self) -> bool {
         match self {
             LaunchMode::App { .. } | LaunchMode::Test { .. } => true,
@@ -599,7 +599,7 @@ impl LaunchMode {
         }
     }
 
-    /// Returns `true` if Warp runs with no user interface at all. The TUI is not headless:
+    /// Returns `true` if Torch runs with no user interface at all. The TUI is not headless:
     /// it has no GUI window, but it renders to the terminal.
     fn is_headless(&self) -> bool {
         match self {
@@ -757,10 +757,10 @@ fn apply_scroll_multiplier(event: &mut Event, app: &AppContext) {
     }
 }
 
-/// Runs the shared Warp executable as the app or as one of its command-line modes.
+/// Runs the shared Torch executable as the app or as one of its command-line modes.
 ///
-/// The bundled Warp Control wrapper injects `--warpctrl`, which is dispatched
-/// before the normal Warp/Oz parser. Oz subcommands are part of that normal
+/// The bundled Torch Control wrapper injects `--warpctrl`, which is dispatched
+/// before the normal Torch/Oz parser. Oz subcommands are part of that normal
 /// parser and therefore do not require a separate mode flag.
 #[::tracing::instrument(skip_all, fields(tags.cloud_agent = true))]
 pub fn run() -> Result<()> {
@@ -780,7 +780,7 @@ pub fn run() -> Result<()> {
 
     // Server URL overrides are only honored on internal dev channels. Release channels silently
     // ignore `--server-root-url` / `--ws-server-url` / `--session-sharing-server-url` (and their
-    // `WARP_*` env-var equivalents) so shipped builds can't be redirected away from their
+    // `TORCH_*` env-var equivalents) so shipped builds can't be redirected away from their
     // baked-in server URLs. See `Channel::allows_server_url_overrides`.
     if ChannelState::channel().allows_server_url_overrides() {
         if let Some(url) = args.server_root_url()
@@ -851,7 +851,7 @@ pub fn run() -> Result<()> {
     // instead of launching the GUI app.
     let is_cli_binary = cfg!(feature = "standalone")
         || torch_cli::binary_name().is_some_and(|name| name.starts_with("oz"))
-        || std::env::var_os("WARP_CLI_MODE").is_some();
+        || std::env::var_os("TORCH_CLI_MODE").is_some();
     if is_cli_binary {
         torch_cli::Args::clap_command().print_help()?;
         return Ok(());
@@ -864,7 +864,7 @@ pub fn run() -> Result<()> {
     })
 }
 
-/// Runs a parsed Warp worker command.
+/// Runs a parsed Torch worker command.
 fn run_worker_command(worker: &torch_cli::WorkerCommand) -> Result<()> {
     match worker {
         #[cfg(all(feature = "local_tty", unix))]
@@ -928,7 +928,7 @@ fn run_worker_command(worker: &torch_cli::WorkerCommand) -> Result<()> {
 
 /// Runs an integration test using the provided test driver.
 pub fn run_integration_test(driver: TestDriver) -> Result<()> {
-    let is_integration_test = std::env::var("WARP_INTEGRATION").is_ok();
+    let is_integration_test = std::env::var("TORCH_INTEGRATION").is_ok();
     let launch = LaunchMode::Test {
         driver: Box::new(Some(driver)),
         is_integration_test,
@@ -1083,9 +1083,9 @@ fn run_internal(mut launch_mode: LaunchMode) -> Result<()> {
             launch_mode.args().as_ref(),
         ) {
             // If we were able to contact an existing application instance, quit -
-            // we only want to run a single instance of Warp at a time.
+            // we only want to run a single instance of Torch at a time.
             Ok(_) => std::process::exit(0),
-            // If Warp isn't already running, we're good to go.
+            // If Torch isn't already running, we're good to go.
             Err(app_services::linux::StartupArgsForwardingError::NoExistingInstance) => {}
             // If we just finished an auto-update, we should continue running.
             Err(app_services::linux::StartupArgsForwardingError::IgnoredAfterAutoUpdate) => {}
@@ -1094,7 +1094,7 @@ fn run_internal(mut launch_mode: LaunchMode) -> Result<()> {
             ) => {}
             // If we were unable to perform the forwarding for an unknown reason,
             // it's better to run a second instance than potentially end up in a
-            // state where Warp refuses to run even a first instance.
+            // state where Torch refuses to run even a first instance.
             Err(err) => {
                 let err = anyhow::Error::from(err).context("Failed to forward startup args");
                 report_error!(&err);
@@ -1108,9 +1108,9 @@ fn run_internal(mut launch_mode: LaunchMode) -> Result<()> {
             launch_mode.args().as_ref(),
         ) {
             // If we were able to contact an existing application instance, quit -
-            // we only want to run a single instance of Warp at a time.
+            // we only want to run a single instance of Torch at a time.
             Ok(_) => std::process::exit(0),
-            // If Warp isn't already running, we're good to go.
+            // If Torch isn't already running, we're good to go.
             Err(app_services::windows::StartupArgsForwardingError::NoExistingInstance) => {}
             // If we just finished an auto-update, we should continue running.
             Err(app_services::windows::StartupArgsForwardingError::IgnoredAfterAutoUpdate) => {}
@@ -1119,7 +1119,7 @@ fn run_internal(mut launch_mode: LaunchMode) -> Result<()> {
             ) => {}
             // If we were unable to perform the forwarding for an unknown reason,
             // it's better to run a second instance than potentially end up in a
-            // state where Warp refuses to run even a first instance.
+            // state where Torch refuses to run even a first instance.
             Err(err) => {
                 let err = anyhow::Error::from(err).context("Failed to forward startup args");
                 report_error!(&err);
@@ -1127,7 +1127,7 @@ fn run_internal(mut launch_mode: LaunchMode) -> Result<()> {
         }
     }
 
-    // Sets up a Job Object that we associate with the Warp process to handle
+    // Sets up a Job Object that we associate with the Torch process to handle
     // shared fate with its child processes. This should be called before we
     // start spawning any child processes.
     #[cfg(windows)]
@@ -1244,7 +1244,7 @@ fn run_internal(mut launch_mode: LaunchMode) -> Result<()> {
 
         let force_x11 = ForceX11::read_from_preferences(prefs_for_public_settings)
             .unwrap_or(ForceX11::default_value());
-        // Force use of wayland if the user has passed the `WARP_ENABLE_WAYLAND` env var.
+        // Force use of wayland if the user has passed the `TORCH_ENABLE_WAYLAND` env var.
         let allow_wayland = linux::is_wayland_env_var_set() || !force_x11;
         app_builder.force_x11(!allow_wayland);
     }
@@ -1803,7 +1803,7 @@ pub(crate) fn initialize_app(
     // bundle, so it runs behind the same `can_autoupdate` guard as the rest of
     // the autoupdate machinery: an execution mode that never autoupdates must
     // not mutate that bundle. The bundled CLI runs the GUI executable from
-    // inside `Warp.app`, so without this it would rewrite a bundle it does not
+    // inside `Torch.app`, so without this it would rewrite a bundle it does not
     // own. See APP-2946.
     if FeatureFlag::Autoupdate.is_enabled()
         && AppExecutionMode::as_ref(ctx).can_autoupdate()
@@ -1866,7 +1866,7 @@ pub(crate) fn initialize_app(
     remote_server::wire_auth_token_rotation(ctx);
 
     log::info!(
-        "Starting warp with channel state {} and version {:?}",
+        "Starting torch with channel state {} and version {:?}",
         ChannelState::debug_str(),
         ChannelState::app_version()
     );
@@ -1878,7 +1878,7 @@ pub(crate) fn initialize_app(
         apply_scroll_multiplier(event, ctx);
     });
 
-    // Rewrite recognized Warp web URLs (sessions, Drive, settings, home) into local
+    // Rewrite recognized Torch web URLs (sessions, Drive, settings, home) into local
     // intent URLs when possible so they open directly in the desktop app.
     ctx.set_before_open_url(|url_str, _ctx| {
         if let Ok(url) = Url::parse(url_str)
@@ -2681,7 +2681,7 @@ pub(crate) fn app_callbacks(
             });
 
             // We want to tear down the terminal server before relaunching for
-            // autoupdate, to ensure we're not running any extra Warp processes
+            // autoupdate, to ensure we're not running any extra Torch processes
             // when we bring up the new process.  Additionally, this must occur
             // after terminating the persistence writer, so we don't keep track
             // of the fact that the shell sessions terminated.
@@ -2760,10 +2760,10 @@ pub(crate) fn app_callbacks(
         on_should_terminate_app: Some(Box::new(move |source, ctx| {
             // Never interrupt a system-initiated termination (logout / restart /
             // scheduled OS update): both cancel paths below return
-            // `ApproveTerminateResult::Cancel`, which macOS interprets as Warp
+            // `ApproveTerminateResult::Cancel`, which macOS interprets as Torch
             // refusing to quit. That can abort a scheduled OS update while the
             // quit-warning modal has no visible window to attach to, leaving
-            // Warp waiting on a prompt nobody can see (#12441). Skipping
+            // Torch waiting on a prompt nobody can see (#12441). Skipping
             // `apply_pending_update` here doesn't lose the update: the next
             // update check re-detects it (autoupdate state isn't persisted
             // across restarts, so the artifact may be re-downloaded).

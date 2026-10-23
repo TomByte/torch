@@ -56,8 +56,6 @@ use serde_json::json;
 use session_sharing_protocol::common::{AgentAttachment, ParticipantId, ServerConversationToken};
 use settings::{Setting as _, ToggleableSetting};
 use string_offset::{ByteOffset, CharOffset};
-use vec1::Vec1;
-use vim::vim::{VimHandler, VimMode};
 use torch_cli::agent::Harness;
 use torch_completer::completer::{
     self, CompleterOptions, CompletionContext, CompletionsFallbackStrategy, Description,
@@ -105,6 +103,8 @@ use torchui::{
     TypedActionView, View, ViewContext, ViewHandle, ViewUpdateError, WeakViewHandle, end_trace,
     start_trace,
 };
+use vec1::Vec1;
+use vim::vim::{VimHandler, VimMode};
 
 use self::decorations::InputBackgroundJobOptions;
 pub use self::handoff_compose::{HandoffComposeState, HandoffComposeStateEvent};
@@ -420,7 +420,7 @@ pub fn get_input_box_top_border_width() -> f32 {
     }
 }
 
-/// The host the cloud-mode selector defaults to: the `WARP_CLOUD_MODE_DEFAULT_HOST` override when
+/// The host the cloud-mode selector defaults to: the `TORCH_CLOUD_MODE_DEFAULT_HOST` override when
 /// set, otherwise the window's team default.
 ///
 /// Takes the selector's handle, not `Input`'s: this runs inside `Input::new` before `Input` is in
@@ -430,7 +430,7 @@ fn effective_default_host(
     host_selector: &WeakViewHandle<HostSelector>,
     app: &AppContext,
 ) -> Option<String> {
-    if let Some(slug) = std::env::var("WARP_CLOUD_MODE_DEFAULT_HOST")
+    if let Some(slug) = std::env::var("TORCH_CLOUD_MODE_DEFAULT_HOST")
         .ok()
         .filter(|slug| !slug.is_empty())
     {
@@ -906,7 +906,7 @@ struct ViewerCommandExecutionRequest {
 /// Where a command execution request originates from.
 #[derive(Clone)]
 pub enum CommandExecutionSource {
-    /// A non-shared command execution request from Warp AI++.
+    /// A non-shared command execution request from Torch AI++.
     /// Shared commands use the SharedSession variant instead.
     AI {
         /// Metadata associated with the execution.
@@ -4969,7 +4969,7 @@ impl Input {
     }
 
     /// Cloud handoff is Oz-only. When this pane's active Agent Mode model can't
-    /// run in a Warp cloud (Oz) agent (e.g. a custom-endpoint/BYOK model or
+    /// run in a Torch cloud (Oz) agent (e.g. a custom-endpoint/BYOK model or
     /// local custom router), shows an explanatory error toast and returns true
     /// so the `&`, footer-chip, and `/handoff` entry points can bail out up
     /// front instead of failing at spawn time.
@@ -6923,7 +6923,7 @@ impl Input {
                 }
 
                 // Follow the `agent_indicator` pattern (see `app/src/tab.rs`):
-                //  * `None` (no conversation, empty, passive, or untitled) => new conversation => "Warp anything"
+                //  * `None` (no conversation, empty, passive, or untitled) => new conversation => "Torch anything"
                 //  * `InProgress`                                           => agent running    => "Steer"
                 //  * Any other status                                       => finished         => "Ask a follow up"
                 match self
@@ -7327,7 +7327,7 @@ impl Input {
         });
     }
 
-    /// Predicts the next action using an AI model and past context on blocks within Warp.
+    /// Predicts the next action using an AI model and past context on blocks within Torch.
     /// Populates the autosuggestion with the predicted action, if any. Otherwise, falls back to
     /// existing autosuggestion logic.
     #[cfg_attr(target_family = "wasm", allow(unused_variables))]
@@ -8758,7 +8758,7 @@ impl Input {
             .string_model;
 
         if shell_type == ShellType::Fish {
-            // Warp currently doesn't support newlines in Fish, just prepend the vars
+            // Torch currently doesn't support newlines in Fish, just prepend the vars
             let mut command = env_vars.export_variables_for_shell(ShellType::Fish);
             command.push(' ');
             Some(command)
@@ -11165,7 +11165,8 @@ impl Input {
                             // the completions finish quickly, since that causes a jittery UX.
                             let _ = ctx.spawn(
                                 async move {
-                                    torchui::r#async::Timer::after(Duration::from_millis(750)).await;
+                                    torchui::r#async::Timer::after(Duration::from_millis(750))
+                                        .await;
                                     old_buffer_text_original
                                 },
                                 move |input, old_buffer_text_original, ctx| {

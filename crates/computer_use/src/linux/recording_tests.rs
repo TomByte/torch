@@ -223,7 +223,7 @@ async fn records_window_target_via_native_x11grab_after_raise() {
     );
 
     // Optionally preserve the recording as a visual-evidence artifact when requested.
-    if let Ok(dir) = std::env::var("WARP_RECORDING_TEST_OUTPUT_DIR") {
+    if let Ok(dir) = std::env::var("TORCH_RECORDING_TEST_OUTPUT_DIR") {
         let dest = Path::new(&dir).join("window_target_recording.mp4");
         let _ = std::fs::copy(&output.path, &dest);
     }

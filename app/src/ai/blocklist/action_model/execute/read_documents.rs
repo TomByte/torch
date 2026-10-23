@@ -41,7 +41,7 @@ impl ReadDocumentsExecutor {
             return ActionExecution::<ReadDocumentsResult>::InvalidAction;
         };
 
-        // A requested plan may live in Warp Drive without being loaded into this conversation's
+        // A requested plan may live in Torch Drive without being loaded into this conversation's
         // document model (e.g. orchestration children reading parent plans, or plan IDs
         // copy-pasted from another conversation), so fall back to hydrating it on a miss.
         let mut documents = Vec::with_capacity(document_ids.len());
@@ -54,7 +54,7 @@ impl ReadDocumentsExecutor {
                         model.hydrate_saved_plan_from_warp_drive(*id, conversation_id, ctx)
                     {
                         log::warn!(
-                            "Failed to hydrate requested plan document {id} from Warp Drive: {error}"
+                            "Failed to hydrate requested plan document {id} from Torch Drive: {error}"
                         );
                     }
                 });

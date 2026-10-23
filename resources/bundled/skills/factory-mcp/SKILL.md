@@ -1,6 +1,6 @@
 ---
 name: factory-mcp
-description: Use the Warp Factory MCP to hand work to a software factory and collaborate with it — bundle local work and send it to the cloud, find factory tasks from a Slack thread / Linear ticket / description, and pull a task down to test or iterate locally and hand it back
+description: Use the Torch Factory MCP to hand work to a software factory and collaborate with it — bundle local work and send it to the cloud, find factory tasks from a Slack thread / Linear ticket / description, and pull a task down to test or iterate locally and hand it back
 ---
 
 # Factory MCP

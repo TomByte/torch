@@ -528,7 +528,7 @@ impl TuiOrchestrationModel {
                 self.fail_child_request(
                     &request,
                     format!(
-                        "Local {harness_type} child agents aren't supported in Warp Agent CLI yet."
+                        "Local {harness_type} child agents aren't supported in Torch Agent CLI yet."
                     ),
                     ctx,
                 );

@@ -13,7 +13,6 @@ use handlebars::get_arguments;
 use instant::Instant;
 use itertools::Itertools as _;
 use oneshot::Canceled;
-use uuid::Uuid;
 use torch_cli::mcp::MCPSpec;
 use torch_core::execution_mode::AppExecutionMode;
 use torch_core::features::FeatureFlag;
@@ -21,6 +20,7 @@ use torch_managed_secrets::ManagedSecretValue;
 use torch_server_client::base_client::AMBIENT_WORKLOAD_TOKEN_HEADER;
 use torchui::r#async::{FutureExt as _, TimeoutError};
 use torchui::{Entity, ModelContext, ModelHandle, ModelSpawner, SingletonEntity};
+use uuid::Uuid;
 
 use super::{AgentDriver, AgentDriverError};
 use crate::ai::agent_sdk::retry::{is_transient_graphql_or_http_error, with_bounded_retry_using};
@@ -251,7 +251,7 @@ pub(crate) enum McpStartupMode {
     Run,
 }
 
-/// Appends the built-in Warp-hosted MCP servers to `installations`.
+/// Appends the built-in Torch-hosted MCP servers to `installations`.
 ///
 /// Interactive clients attach built-ins via `TemplatableMCPServerManager::sync_builtin_servers`,
 /// which skips CLI agent runs, so setup injects the same code-owned installations here, scoped to
@@ -814,7 +814,7 @@ impl AgentDriver {
     /// Returns the built-in Factory MCP server installation to attach to this
     /// run, or `None` when it should not be attached.
     ///
-    /// Interactive clients (GUI/TUI) attach built-in Warp-hosted servers via
+    /// Interactive clients (GUI/TUI) attach built-in Torch-hosted servers via
     /// [`TemplatableMCPServerManager::sync_builtin_servers`], which skips CLI
     /// agent runs. The driver mirrors the same eligibility rules for its
     /// run-scoped ephemeral startup path: the `FactoryMcp` feature flag, a

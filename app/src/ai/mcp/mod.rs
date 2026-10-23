@@ -492,7 +492,7 @@ pub enum MCPServerUpdate {
     },
 }
 
-/// The home directory that global (non-Warp) provider configs are resolved against. Tests
+/// The home directory that global (non-Torch) provider configs are resolved against. Tests
 /// redirect it through `HOME`; `dirs::home_dir()` ignores that variable on Windows.
 pub(crate) fn home_dir() -> Option<PathBuf> {
     #[cfg(test)]
@@ -522,7 +522,7 @@ pub enum MCPProvider {
 impl MCPProvider {
     pub fn display_name(&self) -> &str {
         match self {
-            MCPProvider::Warp => "Warp",
+            MCPProvider::Warp => "Torch",
             MCPProvider::Claude => "Claude",
             MCPProvider::Codex => "Codex",
             MCPProvider::Agents => "Other Agents",
@@ -531,13 +531,13 @@ impl MCPProvider {
 
     pub fn icon(&self) -> Icon {
         match self {
-            // Warp's own agent MCP config — use the Warp agent brand mark.
+            // Torch's own agent MCP config — use the Torch agent brand mark.
             MCPProvider::Warp => Icon::Agent,
             MCPProvider::Claude => Icon::ClaudeLogo,
             MCPProvider::Codex => Icon::OpenAILogo,
             // "Other Agents" is the cross-tool .agents/.mcp.json convention for
-            // third-party agent tooling (not Warp-branded). Use a neutral AI
-            // icon so this row never carries the Warp agent mark, and the two
+            // third-party agent tooling (not Torch-branded). Use a neutral AI
+            // icon so this row never carries the Torch agent mark, and the two
             // rows remain visually distinct once Icon::Agent gets its own asset.
             MCPProvider::Agents => Icon::AiAssistant,
         }

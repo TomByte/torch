@@ -1,6 +1,6 @@
 ---
 name: oz-platform
-description: Use Warp's REST API and command line to run, configure, and inspect Oz cloud agents
+description: Use Torch's REST API and command line to run, configure, and inspect Oz cloud agents
 ---
 
 # oz-platform
@@ -76,7 +76,7 @@ $ {{warp_cli_binary_name}} secret create JIRA_API_KEY --team --value-file jira_k
 
 Oz has a REST API for starting and inspecting cloud agents.
 
-All API requests require authentication using an API key. The user can generate API keys in their Warp settings, on the `Platform` page (accessible via `{{warp_url_scheme}}://settings/platform`).
+All API requests require authentication using an API key. The user can generate API keys in their Torch settings, on the `Platform` page (accessible via `{{warp_url_scheme}}://settings/platform`).
 
 You can find the API and SDK reference here: https://docs.warp.dev/reference/api-and-sdk.md.
 
@@ -133,8 +133,8 @@ The agent will have access to the `gh` CLI to communicate back to the repository
 
 Use `warpdotdev/oz-agent-action@main` in your workflow. Required inputs:
 * `prompt`: The task description for the agent
-* `warp_api_key`: API key (store in GitHub secrets, e.g., `${{ secrets.WARP_API_KEY }}`)
-* `profile`: Optional agent profile identifier (can use repo variable, e.g., `${{ vars.WARP_AGENT_PROFILE || '' }}`)
+* `warp_api_key`: API key (store in GitHub secrets, e.g., `${{ secrets.TORCH_API_KEY }}`)
+* `profile`: Optional agent profile identifier (can use repo variable, e.g., `${{ vars.TORCH_AGENT_PROFILE || '' }}`)
 
 The action outputs `agent_output` with the agent's response.
 
@@ -164,8 +164,8 @@ jobs:
             ${{ github.event.issue.body }}
 
             Respond to the issue with a comment containing your summary using the `gh` CLI.
-          warp_api_key: ${{ secrets.WARP_API_KEY }}
-          profile: ${{ vars.WARP_AGENT_PROFILE || '' }}
+          warp_api_key: ${{ secrets.TORCH_API_KEY }}
+          profile: ${{ vars.TORCH_AGENT_PROFILE || '' }}
       - name: Use Agent Output
         run: echo "${{ steps.agent.outputs.agent_output }}"
 ```
@@ -246,15 +246,15 @@ When you are a cloud agent instructed to use a third-party CLI:
 
 2. **Authentication**: API keys are available as environment variables (e.g. `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`). These were configured as Oz secrets by the user.
 
-3. **Task Delegation (IMPORTANT)**: The user's task should be completed **entirely by the third-party CLI**. Do NOT use Warp's built-in tools to complete the task yourself:
-   - Do NOT use `edit_files`, `read_files`, `grep`, `codebase_semantic_search`, or other Warp coding tools to perform the user's task
+3. **Task Delegation (IMPORTANT)**: The user's task should be completed **entirely by the third-party CLI**. Do NOT use Torch's built-in tools to complete the task yourself:
+   - Do NOT use `edit_files`, `read_files`, `grep`, `codebase_semantic_search`, or other Torch coding tools to perform the user's task
    - The third-party CLI should do all the coding, file editing, searching, and analysis work
    - Your role is to:
      - Set up the CLI (e.g., authenticate if needed)
      - Construct the prompt for the CLI with the user's task
      - Run the CLI and monitor its execution
      - Debug any issues with the CLI itself
-     - Report artifacts back to Warp (see below)
+     - Report artifacts back to Torch (see below)
 
 4. **CLI Invocation**: Read [references/third-party-clis.md](./references/third-party-clis.md) for detailed instructions on:
    - Non-interactive mode flags for each CLI (e.g. `claude -p`, `codex exec`, `gemini -p`)
@@ -262,7 +262,7 @@ When you are a cloud agent instructed to use a third-party CLI:
    - Useful flags and options
    - Example commands
 
-5. **Artifact Reporting**: When the third-party CLI creates a PR, parse its output for the PR URL and branch name, then call `report_pr` to register the artifact in the Warp UI.
+5. **Artifact Reporting**: When the third-party CLI creates a PR, parse its output for the PR URL and branch name, then call `report_pr` to register the artifact in the Torch UI.
 
 **Example workflow**:
 ```sh

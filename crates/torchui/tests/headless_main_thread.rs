@@ -72,7 +72,7 @@ mod macos {
                             Ok(())
                         } else {
                             Err(anyhow!(
-                                "headless Warp did not service the GCD main queue before timeout"
+                                "headless Torch did not service the GCD main queue before timeout"
                             ))
                         };
                         if let Some(mut app) = weak_app.upgrade() {

@@ -1,4 +1,4 @@
-# Starlark configuration for Warp
+# Starlark configuration for Torch
 # Starlark is used by Bazel and has Python-like syntax
 display_name: "Bazel (Starlark)"
 indent_unit:

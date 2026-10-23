@@ -1,11 +1,11 @@
 ---
 name: agent-add-mcp
-description: Use this skill when helping users add MCP servers to their Warp configuration.
+description: Use this skill when helping users add MCP servers to their Torch configuration.
 ---
 
-# Adding MCP Servers to Warp
+# Adding MCP Servers to Torch
 
-Warp supports MCP servers via native config files. Follow these steps when helping a user add an MCP server.
+Torch supports MCP servers via native config files. Follow these steps when helping a user add an MCP server.
 
 ## Step 1: Determine Scope
 
@@ -61,7 +61,7 @@ Check whether the target config file exists.
 }
 ```
 
-By default, Warp spawns stdio servers from the directory the config was discovered in:
+By default, Torch spawns stdio servers from the directory the config was discovered in:
 - Project-scoped configs (`{repo_root}/.warp/.mcp.json`) run from the repo root.
 - Global configs (`~/.warp/.mcp.json`, `~/.claude.json`, etc.) run from the home directory.
 
@@ -94,10 +94,10 @@ If the server's `command` or `args` are relative paths (e.g. `./tooling/mcp/serv
 }
 ```
 
-For environment variables containing secrets, use `${VAR_NAME}` syntax — Warp will substitute the value from the user's environment at runtime.
+For environment variables containing secrets, use `${VAR_NAME}` syntax — Torch will substitute the value from the user's environment at runtime.
 
 ## Notes
 
-- Warp auto-detects changes to `.mcp.json` files on save — no restart required.
-- Configured servers appear in Warp's Settings under MCP, labeled **"Detected from Warp"**.
+- Torch auto-detects changes to `.mcp.json` files on save — no restart required.
+- Configured servers appear in Torch's Settings under MCP, labeled **"Detected from Torch"**.
 - Global config applies across all sessions; project config only applies when working inside that repository.

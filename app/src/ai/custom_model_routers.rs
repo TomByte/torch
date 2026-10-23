@@ -37,7 +37,7 @@ pub const CLOUD_CUSTOM_ROUTER_PREFIX: &str = "custom-router:cloud:";
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum CustomModelRouting {
-    /// Route by Warp-determined task complexity.
+    /// Route by Torch-determined task complexity.
     Complexity(ComplexityRouting),
     /// Route by classifying the prompt against user-authored categories.
     Prompt(PromptRouting),

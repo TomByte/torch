@@ -376,7 +376,7 @@ fn apply_onboarding_settings_pins_base_model_only_when_explicitly_selected() {
     }
 }
 
-/// Warp's AI features run on a Warp account. For third-party agent intent
+/// Torch's AI features run on a Torch account. For third-party agent intent
 /// (`disable_oz = true`), AI is therefore off when the user skips creating an
 /// account and on once they have one.
 #[test]

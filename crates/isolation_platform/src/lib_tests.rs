@@ -16,8 +16,8 @@ fn workload_token_available_for_platforms_with_their_own_issuance() {
 #[serial(warp_workload_token_env)]
 fn workload_token_unavailable_without_platform_or_generic_token() {
     // SAFETY: serialized via `#[serial]`, so no other test in this crate
-    // reads/writes `WARP_WORKLOAD_TOKEN` concurrently.
-    unsafe { std::env::remove_var(WARP_WORKLOAD_TOKEN_ENV) };
+    // reads/writes `TORCH_WORKLOAD_TOKEN` concurrently.
+    unsafe { std::env::remove_var(TORCH_WORKLOAD_TOKEN_ENV) };
 
     assert!(!is_workload_token_available_for(None));
     assert!(!is_workload_token_available_for(Some(
@@ -32,22 +32,22 @@ fn workload_token_available_via_generic_token_without_detected_platform() {
     // Namespace signals) can still authenticate via a manually configured
     // generic token; this must not be treated as unavailable.
     // SAFETY: see above.
-    unsafe { std::env::set_var(WARP_WORKLOAD_TOKEN_ENV, "example-token") };
+    unsafe { std::env::set_var(TORCH_WORKLOAD_TOKEN_ENV, "example-token") };
 
     assert!(is_workload_token_available_for(None));
 
     // SAFETY: see above.
-    unsafe { std::env::remove_var(WARP_WORKLOAD_TOKEN_ENV) };
+    unsafe { std::env::remove_var(TORCH_WORKLOAD_TOKEN_ENV) };
 }
 
 #[test]
 #[serial(warp_workload_token_env)]
 fn workload_token_unavailable_with_empty_generic_token() {
     // SAFETY: see above.
-    unsafe { std::env::set_var(WARP_WORKLOAD_TOKEN_ENV, "") };
+    unsafe { std::env::set_var(TORCH_WORKLOAD_TOKEN_ENV, "") };
 
     assert!(!is_workload_token_available_for(None));
 
     // SAFETY: see above.
-    unsafe { std::env::remove_var(WARP_WORKLOAD_TOKEN_ENV) };
+    unsafe { std::env::remove_var(TORCH_WORKLOAD_TOKEN_ENV) };
 }

@@ -1,6 +1,6 @@
 //! The headless `warp-tui` front-end's app-side entry point.
 //!
-//! `torch_tui` boots the real headless Warp app via [`crate::run_tui`]. Once
+//! `torch_tui` boots the real headless Torch app via [`crate::run_tui`]. Once
 //! shared initialization is done, [`init`] registers the [`TuiLoginModel`] that
 //! the TUI observes, mounts the TUI immediately (so it renders right away), and
 //! leaves device authorization behind an explicit welcome-screen action. The
@@ -18,9 +18,9 @@ pub use mcp::{
 use telemetry::{
     AbandonmentPhase, AuthenticationEntrypoint, TuiOnboardingTelemetry, TuiOnboardingTelemetryEvent,
 };
+use torchui::{AppContext, Entity, SingletonEntity};
 use url::Url;
 pub use user_info::{TuiUserInfoManager, TuiUserInfoManagerEvent, TuiUserInfoSnapshot};
-use torchui::{AppContext, Entity, SingletonEntity};
 
 use crate::TuiMountFn;
 use crate::ai::mcp::FileBasedMCPManager;
@@ -385,7 +385,7 @@ fn start_tui_device_login_with_entrypoint(
         authorize_device(ctx);
     }
 }
-/// Logs out the current TUI user and sends them to Warp web's logged-out flow.
+/// Logs out the current TUI user and sends them to Torch web's logged-out flow.
 pub fn log_out_tui(ctx: &mut AppContext) {
     auth::log_out(ctx);
     TuiOnboardingMarkers::handle(ctx).update(ctx, |markers, ctx| {

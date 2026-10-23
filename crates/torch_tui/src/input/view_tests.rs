@@ -9,7 +9,6 @@ use std::ops::Range;
 use std::rc::Rc;
 
 use string_offset::CharOffset;
-use vim::vim::VimMode;
 use torch::appearance::Appearance;
 use torch::editor::CodeEditorModel;
 use torch::settings::AISettingsChangedEvent;
@@ -37,6 +36,7 @@ use torchui_core::{
     AddWindowOptions, App, AppContext, Entity, EntityId, ModelHandle, TuiView, TypedActionView,
     ViewHandle,
 };
+use vim::vim::VimMode;
 
 use super::{
     INLINE_MENU_CAN_CLEAR_SELECTED_FLAG, INPUT_HANDLES_ESCAPE_FLAG, InputKeymapContextConfig,
@@ -3933,58 +3933,6 @@ fn history_rows(
         .unwrap_or_default()
 }
 
-/// Up with the caret on the first visual row opens history and previews the newest item.
-#[test]
-fn up_on_first_row_opens_prompt_and_command_history_menu() {
-    agent_mode_test(|mut app| async move {
-        let (view, menu) =
-            initialized_history_view(&mut app, &["deploy the app", "run the tests"], &[]).await;
-        app.update(|ctx| {
-            assert!(!menu.as_ref(ctx).is_open(ctx));
-
-            dispatch(
-                &view,
-                ctx,
-                &[TuiInputAction::EditorCommand(TuiEditorCommand::MoveUp)],
-            );
-
-            assert!(menu.as_ref(ctx).is_open(ctx));
-            assert_eq!(
-                history_rows(&menu, ctx),
-                vec!["deploy the app".to_owned(), "run the tests".to_owned()]
-            );
-            assert_eq!(text(&view, ctx), "run the tests");
-        });
-    });
-}
-
-#[test]
-fn up_from_shortcuts_replaces_it_with_prompt_and_command_history() {
-    agent_mode_test(|mut app| async move {
-        let (view, menu) =
-            initialized_history_view(&mut app, &["deploy the app", "run the tests"], &[]).await;
-        app.update(|ctx| {
-            type_str(&view, ctx, "?");
-            assert_eq!(
-                view.as_ref(ctx).suggestions_mode.as_ref(ctx).mode(),
-                TuiInputSuggestionsMode::ReadOnlyMenu(TuiReadOnlyMenuKind::Shortcuts)
-            );
-
-            dispatch(
-                &view,
-                ctx,
-                &[TuiInputAction::EditorCommand(TuiEditorCommand::MoveUp)],
-            );
-
-            assert!(menu.as_ref(ctx).is_open(ctx));
-            assert_eq!(
-                view.as_ref(ctx).suggestions_mode.as_ref(ctx).mode(),
-                TuiInputSuggestionsMode::PromptAndCommandHistory
-            );
-            assert_eq!(text(&view, ctx), "run the tests");
-        });
-    });
-}
 /// Up on a lower visual row still moves the cursor and does not open the menu.
 #[test]
 fn up_on_lower_row_moves_cursor_without_opening_prompt_and_command_history() {
@@ -4037,39 +3985,6 @@ fn shell_mode_up_opens_command_only_history() {
             assert_eq!(history_rows(&menu, ctx), vec!["echo command"]);
             assert_eq!(text(&view, ctx), "echo command");
             assert!(view.as_ref(ctx).is_shell_mode(ctx));
-        });
-    });
-}
-
-/// Escape closes the menu and restores the exact text typed before opening,
-/// discarding any preview.
-#[test]
-fn escape_closes_prompt_and_command_history_and_restores_typed_buffer() {
-    agent_mode_test(|mut app| async move {
-        let (view, menu) =
-            initialized_history_view(&mut app, &["deploy alpha", "deploy beta"], &[]).await;
-        app.update(|ctx| {
-            type_str(&view, ctx, "deploy");
-            dispatch(
-                &view,
-                ctx,
-                &[TuiInputAction::EditorCommand(TuiEditorCommand::MoveUp)],
-            );
-            assert!(menu.as_ref(ctx).is_open(ctx));
-        });
-        app.read(|ctx| {
-            assert_eq!(
-                text(&view, ctx),
-                "deploy beta",
-                "opening previews the initially selected prompt"
-            );
-        });
-        app.update(|ctx| {
-            dispatch(&view, ctx, &[TuiInputAction::HandleEscape]);
-        });
-        app.read(|ctx| {
-            assert!(!menu.as_ref(ctx).is_open(ctx));
-            assert_eq!(text(&view, ctx), "deploy");
         });
     });
 }

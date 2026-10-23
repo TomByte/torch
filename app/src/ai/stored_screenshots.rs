@@ -1,16 +1,16 @@
-//! Loading of computer-use screenshots whose bytes live in Warp-managed object
+//! Loading of computer-use screenshots whose bytes live in Torch-managed object
 //! storage rather than inline on the client (e.g. restored/shared conversations
 //! whose screenshot bytes were offloaded by the server).
 
 use std::sync::Arc;
 
-use warp_multi_agent_api::StoredScreenshotRef;
 use torchui::assets::asset_cache::{AssetSource, AsyncAssetId, AsyncAssetType};
+use warp_multi_agent_api::StoredScreenshotRef;
 
 use crate::server::server_api::ai::AIClient;
 
 /// Namespace for computer-use screenshot bytes fetched on demand from
-/// Warp-managed object storage.
+/// Torch-managed object storage.
 struct StoredScreenshotAsset;
 impl AsyncAssetType for StoredScreenshotAsset {}
 

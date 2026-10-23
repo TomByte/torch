@@ -591,10 +591,10 @@ pub fn render_warping_indicator_base(
     // will be rendered on a second line below the warping text. Captured before
     // `secondary_element` is consumed so the container can reserve room for it.
     let has_secondary_element = secondary_element.is_some();
-    // Unicode code point for the Warp glyph that is embedded in the version of Roboto we bundle
+    // Unicode code point for the Torch glyph that is embedded in the version of Roboto we bundle
     // into the app. This code point MUST be rendered using Roboto (the default ui font) or else the
     // glyph may not be rendered.
-    const WARP_GLYPH: &str = "\u{E500}";
+    const TORCH_GLYPH: &str = "\u{E500}";
 
     let appearance = Appearance::as_ref(app);
 
@@ -626,13 +626,13 @@ pub fn render_warping_indicator_base(
 
     let mut text_col = Flex::column();
     if let Some(sub_element) = secondary_element {
-        // Our warping indicator text prepends the Warp glyph (and a space) to the label.
+        // Our warping indicator text prepends the Torch glyph (and a space) to the label.
         // If we render the tip directly underneath, it will align to the glyph instead of
         // the start of the actual warping text.
         let sub_element = if should_indent_tip_for_warp_glyph {
             let font_size = appearance.monospace_font_size() - 3.;
             let glyph_indent = Text::new_inline(
-                format!("{WARP_GLYPH} "),
+                format!("{TORCH_GLYPH} "),
                 appearance.ui_font_family(),
                 font_size,
             )
@@ -1819,7 +1819,7 @@ struct VisualMarkdownBlockOptions<A: 'static> {
     alignment: VisualMarkdownAlignment,
     lightbox_trigger: Option<VisualMarkdownLightboxTrigger>,
     /// When `Some(non_empty)`, the rendered image is wrapped in the standard
-    /// Warp tooltip primitive so hovering surfaces the CommonMark image title.
+    /// Torch tooltip primitive so hovering surfaces the CommonMark image title.
     /// Mermaid diagrams pass `None` here because CommonMark titles do not
     /// apply to them.
     tooltip: Option<String>,
@@ -2293,7 +2293,7 @@ fn render_visual_markdown_block<A: Action>(
         VisualMarkdownAlignment::Center => Align::new(content).finish(),
     };
 
-    // Wrap the rendered image in the standard Warp tooltip when the source
+    // Wrap the rendered image in the standard Torch tooltip when the source
     // carried a CommonMark `title`. Branching on `Some(non_empty)` here means
     // untitled images remain un-wrapped, matching `specs/GH849/product.md`
     // invariant 6 (no tooltip for empty or absent titles). The tooltip's

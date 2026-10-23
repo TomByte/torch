@@ -121,7 +121,7 @@ mod appimage {
             .as_file_mut()
             .set_permissions(appimage_path.metadata()?.permissions())?;
 
-        // Move new AppImage over the one that launched the current Warp instance.
+        // Move new AppImage over the one that launched the current Torch instance.
         let new_appimage_path = new_appimage.into_temp_path();
         let mv_status = command::r#async::Command::new("mv")
             .arg(new_appimage_path.as_os_str())
@@ -148,11 +148,11 @@ mod appimage {
         // If we're testing with a local copy of channel_versions.json, have the
         // newly-started binary also reference that same file (so we can test
         // displaying an updated changelog after an autoupdate).
-        if let Ok(path) = std::env::var("WARP_CHANNEL_VERSIONS_PATH") {
-            command.env("WARP_CHANNEL_VERSIONS_PATH", path);
+        if let Ok(path) = std::env::var("TORCH_CHANNEL_VERSIONS_PATH") {
+            command.env("TORCH_CHANNEL_VERSIONS_PATH", path);
         }
 
-        log::info!("Relaunching warp for update...");
+        log::info!("Relaunching torch for update...");
         command.spawn()?;
         Ok(())
     }
@@ -242,7 +242,7 @@ mod package_manager {
                 FormattedTextFragment::plain_text(" to install the update and re-launch Torch.  "),
                 FormattedTextFragment::hyperlink(
                     "Please report any issues",
-                    "https://github.com/warpdotdev/Warp/issues/new/choose",
+                    "https://github.com/TomByte/torch/issues/new",
                 ),
             ]));
 
@@ -296,24 +296,24 @@ mod package_manager {
         // If we're testing with a local copy of channel_versions.json, have the
         // newly-started binary also reference that same file (so we can test
         // displaying an updated changelog after an autoupdate).
-        if let Ok(path) = std::env::var("WARP_CHANNEL_VERSIONS_PATH") {
-            command.env("WARP_CHANNEL_VERSIONS_PATH", path);
+        if let Ok(path) = std::env::var("TORCH_CHANNEL_VERSIONS_PATH") {
+            command.env("TORCH_CHANNEL_VERSIONS_PATH", path);
         }
 
-        log::info!("Relaunching warp for update...");
+        log::info!("Relaunching torch for update...");
         command.spawn()?;
         Ok(())
     }
 }
 
-/// Returns which method should be used to update Warp.
+/// Returns which method should be used to update Torch.
 #[derive(Debug)]
 pub(crate) enum UpdateMethod {
-    /// We don't know how to update Warp.
+    /// We don't know how to update Torch.
     Unknown,
-    /// Warp is running as an AppImage and should be updated in-place.
+    /// Torch is running as an AppImage and should be updated in-place.
     AppImage(PathBuf),
-    /// Warp can be updated using the given package manager.
+    /// Torch can be updated using the given package manager.
     PackageManager(PackageManager),
 }
 
@@ -470,7 +470,7 @@ impl PackageManager {
         match output {
             Ok(output) => {
                 if !output.status.success() {
-                    bail!("Failed to determine which package manager was used to install warp");
+                    bail!("Failed to determine which package manager was used to install torch");
                 }
                 let Ok(stdout) = std::str::from_utf8(&output.stdout) else {
                     bail!("Could not parse package manager detection script output as UTF-8");
@@ -547,7 +547,7 @@ impl std::fmt::Display for PackageManager {
 /// `foo.list.distUpgrade`. It then creates a new version of `foo.list` (or `foo.sources` if
 /// updating to Ubuntu 24+) with the repo disabled.
 ///
-/// However, Ubuntu incorrectly thinks the Warp source file is invalid (due to the addition of the
+/// However, Ubuntu incorrectly thinks the Torch source file is invalid (due to the addition of the
 /// `signed-by` key) so it only leaves the `*.distUpgrade` source file. We use the existence of this
 /// file to determine whether we need to run the special `warp_handle_dist_upgrade` function to copy
 /// `warpdotdev.list.distUpgrade` back to `warpdotdev.list` to re-enable the repository.

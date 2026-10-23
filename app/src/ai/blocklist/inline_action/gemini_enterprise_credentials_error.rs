@@ -131,9 +131,9 @@ impl View for GeminiEnterpriseCredentialsErrorView {
         let detail = if self.refresh_succeeded {
             "Your credentials are ready. Retry the request to continue."
         } else if self.refresh_requested {
-            "Warp is refreshing your Google Cloud credentials."
+            "Torch is refreshing your Google Cloud credentials."
         } else {
-            "Warp couldn't authenticate with Google Cloud. Refresh your Gemini Enterprise credentials, then retry the request."
+            "Torch couldn't authenticate with Google Cloud. Refresh your Gemini Enterprise credentials, then retry the request."
         };
         let header_color = if self.refresh_succeeded {
             theme.ansi_fg_green()

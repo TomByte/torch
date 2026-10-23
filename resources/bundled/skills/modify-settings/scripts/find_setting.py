@@ -1,5 +1,5 @@
 """
-Find a setting's full dotted path and properties in the Warp settings JSON schema.
+Find a setting's full dotted path and properties in the Torch settings JSON schema.
 
 Usage:
     python3 find_setting.py <settings_schema_path> <key_name>

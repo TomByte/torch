@@ -190,7 +190,7 @@ pub enum SettingsMode {
 }
 
 impl SettingsMode {
-    /// Whether settings for this mode are synced to the cloud (Warp Drive). The
+    /// Whether settings for this mode are synced to the cloud (Torch Drive). The
     /// GUI syncs; the TUI keeps its config local so the two surfaces never
     /// clobber shared cloud state.
     pub fn should_sync_to_cloud(self) -> bool {
@@ -370,7 +370,7 @@ pub trait Setting {
     /// Returns the platforms that this setting is supported on.
     fn supported_platforms() -> SupportedPlatforms;
 
-    /// Returns whether and how this setting is synced to the cloud via Warp Drive.
+    /// Returns whether and how this setting is synced to the cloud via Torch Drive.
     fn sync_to_cloud() -> SyncToCloud;
 
     /// Returns whether this setting is private (not shown in the user-visible settings file).

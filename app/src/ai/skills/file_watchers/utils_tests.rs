@@ -8,12 +8,12 @@ use repo_metadata::{
     DirectoryWatcher, RepoMetadataModel, RepoMetadataUpdate, RepositoryIdentifier,
     StandingQueryContent, StandingQueryResults, StandingQueryResultsDelta,
 };
-use virtual_fs::{Stub, VirtualFS};
 use torch_util::host_id::HostId;
 use torch_util::local_or_remote_path::LocalOrRemotePath;
 use torch_util::remote_path::RemotePath;
 use torch_util::standardized_path::StandardizedPath;
 use torchui::App;
+use virtual_fs::{Stub, VirtualFS};
 
 use super::{
     extract_skill_parent_directory, find_project_skill_files_in_tree, is_home_provider_path,
@@ -386,7 +386,7 @@ fn extract_skill_parent_directory_returns_home_dir_for_warp_home_skill() {
         return;
     };
     let Some(warp_home_skills_dir) = torch_core::paths::warp_home_skills_dir() else {
-        eprintln!("Skipping test: Warp home skills directory not available");
+        eprintln!("Skipping test: Torch home skills directory not available");
         return;
     };
 
@@ -535,8 +535,10 @@ fn find_skill_files_in_tree_finds_root_skills() {
             app.add_singleton_model(|_| DetectedRepositories::default());
             let repo_handle = watcher.update(&mut app, |w, ctx| {
                 w.add_directory(
-                    torch_util::standardized_path::StandardizedPath::from_local_canonicalized(&repo)
-                        .unwrap(),
+                    torch_util::standardized_path::StandardizedPath::from_local_canonicalized(
+                        &repo,
+                    )
+                    .unwrap(),
                     ctx,
                 )
                 .unwrap()
@@ -546,8 +548,10 @@ fn find_skill_files_in_tree_finds_root_skills() {
             let model_handle = app.add_singleton_model(RepoMetadataModel::new);
             model_handle.update(&mut app, |model, ctx| {
                 let key =
-                    torch_util::standardized_path::StandardizedPath::from_local_canonicalized(&repo)
-                        .unwrap();
+                    torch_util::standardized_path::StandardizedPath::from_local_canonicalized(
+                        &repo,
+                    )
+                    .unwrap();
                 model.insert_test_state(key.clone(), state, ctx);
                 model.insert_test_standing_results(
                     key,
@@ -702,8 +706,10 @@ fn find_skill_files_in_tree_finds_subdirectory_skills() {
             app.add_singleton_model(|_| DetectedRepositories::default());
             let repo_handle = watcher.update(&mut app, |w, ctx| {
                 w.add_directory(
-                    torch_util::standardized_path::StandardizedPath::from_local_canonicalized(&repo)
-                        .unwrap(),
+                    torch_util::standardized_path::StandardizedPath::from_local_canonicalized(
+                        &repo,
+                    )
+                    .unwrap(),
                     ctx,
                 )
                 .unwrap()
@@ -713,8 +719,10 @@ fn find_skill_files_in_tree_finds_subdirectory_skills() {
             let model_handle = app.add_singleton_model(RepoMetadataModel::new);
             model_handle.update(&mut app, |model, ctx| {
                 let key =
-                    torch_util::standardized_path::StandardizedPath::from_local_canonicalized(&repo)
-                        .unwrap();
+                    torch_util::standardized_path::StandardizedPath::from_local_canonicalized(
+                        &repo,
+                    )
+                    .unwrap();
                 model.insert_test_state(key.clone(), state, ctx);
                 model.insert_test_standing_results(
                     key,
@@ -942,8 +950,10 @@ fn find_skill_files_in_tree_empty_repo() {
         vfs.mkdir("repo/src");
 
         let src = Entry::Directory(DirectoryEntry {
-            path: torch_util::standardized_path::StandardizedPath::try_from_local(&repo.join("src"))
-                .unwrap(),
+            path: torch_util::standardized_path::StandardizedPath::try_from_local(
+                &repo.join("src"),
+            )
+            .unwrap(),
             children: vec![],
             ignored: false,
             loaded: true,
@@ -960,8 +970,10 @@ fn find_skill_files_in_tree_empty_repo() {
             app.add_singleton_model(|_| DetectedRepositories::default());
             let repo_handle = watcher.update(&mut app, |w, ctx| {
                 w.add_directory(
-                    torch_util::standardized_path::StandardizedPath::from_local_canonicalized(&repo)
-                        .unwrap(),
+                    torch_util::standardized_path::StandardizedPath::from_local_canonicalized(
+                        &repo,
+                    )
+                    .unwrap(),
                     ctx,
                 )
                 .unwrap()
@@ -971,8 +983,10 @@ fn find_skill_files_in_tree_empty_repo() {
             let model_handle = app.add_singleton_model(RepoMetadataModel::new);
             model_handle.update(&mut app, |model, ctx| {
                 let key =
-                    torch_util::standardized_path::StandardizedPath::from_local_canonicalized(&repo)
-                        .unwrap();
+                    torch_util::standardized_path::StandardizedPath::from_local_canonicalized(
+                        &repo,
+                    )
+                    .unwrap();
                 model.insert_test_state(key, state, ctx);
             });
 

@@ -159,8 +159,8 @@ fn tui_uses_distinct_secure_storage_service_name() {
     ));
 
     assert_eq!(
-        launch_mode.secure_storage_service_name("dev.warp.Warp-Dev"),
-        "dev.warp.Warp-Dev.tui"
+        launch_mode.secure_storage_service_name("dev.warp.Torch-Dev"),
+        "dev.warp.Torch-Dev.tui"
     );
 }
 
@@ -172,8 +172,8 @@ fn app_keeps_default_secure_storage_service_name() {
     };
 
     assert_eq!(
-        launch_mode.secure_storage_service_name("dev.warp.Warp-Dev"),
-        "dev.warp.Warp-Dev"
+        launch_mode.secure_storage_service_name("dev.warp.Torch-Dev"),
+        "dev.warp.Torch-Dev"
     );
 }
 

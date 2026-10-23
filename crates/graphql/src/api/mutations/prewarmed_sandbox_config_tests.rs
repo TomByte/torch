@@ -112,7 +112,7 @@ fn deserializes_configuration_response_with_shared_repository_types() {
     assert!(serde_json::from_str::<serde_json::Value>(&config.spec.mcp_servers_json).is_ok());
     assert_eq!(
         config.environment_variables[0].name,
-        "WARP_FACTORY_REPO_DIR"
+        "TORCH_FACTORY_REPO_DIR"
     );
     assert_eq!(config.environment_variables[0].value, "factory");
     assert_eq!(config.git_credentials[0].token, "ghs_secret");
@@ -163,7 +163,7 @@ fn deserializes_error_and_unknown_result_variants() {
 fn rejects_invalid_workload_token_headers() {
     let client = http_client::Client::new_for_test();
     for header in [
-        "X-Warp-Ambient-Workload-Token",
+        "X-Torch-Ambient-Workload-Token",
         "x-warp-ambient-workload-token",
     ] {
         let operation = PrewarmedSandboxConfig::build(PrewarmedSandboxConfigVariables {

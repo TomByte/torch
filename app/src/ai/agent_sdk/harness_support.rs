@@ -325,7 +325,7 @@ fn report_shutdown(
     Ok(())
 }
 
-/// Results of attempting to infer whether or not the Warp agent process was OOM-killed.
+/// Results of attempting to infer whether or not the Torch agent process was OOM-killed.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct OomDetectionResult {
     /// The process exited with status 137, conventionally reserved for the OOM killer.

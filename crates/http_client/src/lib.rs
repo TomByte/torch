@@ -27,37 +27,37 @@ use torch_errors::report_error;
 use crate::iap::{IapTokenProvider, proxy_auth_header};
 
 pub mod headers {
-    /// Custom Warp header indicating the version of the Warp app.
-    pub const CLIENT_RELEASE_VERSION_HEADER_KEY: &str = "X-Warp-Client-Version";
+    /// Custom Torch header indicating the version of the Torch app.
+    pub const CLIENT_RELEASE_VERSION_HEADER_KEY: &str = "X-Torch-Client-Version";
 
-    /// Custom Warp header indicating the OS category the request was sent from.
-    pub(crate) const WARP_OS_CATEGORY: &str = "X-Warp-OS-Category";
-    /// Custom Warp header indicating the OS name the request was sent from. On Linux this is the
+    /// Custom Torch header indicating the OS category the request was sent from.
+    pub(crate) const TORCH_OS_CATEGORY: &str = "X-Torch-OS-Category";
+    /// Custom Torch header indicating the OS name the request was sent from. On Linux this is the
     /// name of the distribution. On all other platforms it should be equivalent to
-    /// `WARP_OS_CATEGORY`.
-    pub(crate) const WARP_OS_NAME: &str = "X-Warp-OS-Name";
-    /// Custom Warp header indicating the version of the operating system. On Linux this is the
+    /// `TORCH_OS_CATEGORY`.
+    pub(crate) const TORCH_OS_NAME: &str = "X-Torch-OS-Name";
+    /// Custom Torch header indicating the version of the operating system. On Linux this is the
     /// version of the distribution, not the Linux kernel version.
-    pub(crate) const WARP_OS_VERSION: &str = "X-Warp-OS-Version";
+    pub(crate) const TORCH_OS_VERSION: &str = "X-Torch-OS-Version";
 
-    /// Custom Warp header indicating the linux kernel version. This is only sent from Linux.
-    pub(crate) const WARP_OS_LINUX_KERNEL_VERSION: &str = "X-Warp-OS-Linux-Kernel-Version";
+    /// Custom Torch header indicating the linux kernel version. This is only sent from Linux.
+    pub(crate) const TORCH_OS_LINUX_KERNEL_VERSION: &str = "X-Torch-OS-Linux-Kernel-Version";
 
-    /// Custom Warp header indicating the client role. We don't use the User-Agent header
+    /// Custom Torch header indicating the client role. We don't use the User-Agent header
     /// because it can't be set from WASM.
-    pub(crate) const WARP_CLIENT_ID: &str = "X-Warp-Client-ID";
+    pub(crate) const TORCH_CLIENT_ID: &str = "X-Torch-Client-ID";
 
-    /// Custom Warp header carrying the client's current OTEL span context in W3C
+    /// Custom Torch header carrying the client's current OTEL span context in W3C
     /// `traceparent` wire format. It is deliberately distinct from the standard
     /// `traceparent` header so the server links its request span to the client
     /// span rather than reparenting the server span under the client trace.
-    pub(crate) const TRACE_LINK_HEADER: &str = "X-Warp-Traceparent";
+    pub(crate) const TRACE_LINK_HEADER: &str = "X-Torch-Traceparent";
 }
 
 /// The environment variable containing extra HTTP headers to attach to requests.
 /// Only read when the channel is `Channel::Integration`. The value is a newline-separated
 /// list of `Name:Value` pairs, where each pair is split on the first colon.
-const EXTRA_HTTP_HEADERS_ENV_VAR: &str = "WARP_EXTRA_HTTP_HEADERS";
+const EXTRA_HTTP_HEADERS_ENV_VAR: &str = "TORCH_EXTRA_HTTP_HEADERS";
 
 /// A wrapper around a `reqwest::Client` to execute requests. Returns a custom `RequestBuilder` type
 /// that ensures any call to the underlying `reqwest::Client` are properly adapted so that they can
@@ -77,7 +77,7 @@ pub struct Client {
     after_response_received: Option<ResponseHookFn>,
 
     /// If set, provides IAP bearer tokens to attach as `Proxy-Authorization`
-    /// headers on outbound requests to the Warp staging server. Wired in by
+    /// headers on outbound requests to the Torch staging server. Wired in by
     /// the app layer on IAP-enabled builds (staging).
     iap_token_provider: Option<Arc<dyn IapTokenProvider>>,
 }
@@ -158,7 +158,7 @@ impl Client {
         Self::from_client_builder(builder).expect("should not fail to create client")
     }
 
-    /// Creates a pooled client without automatic Warp headers, IAP tokens, or browser credentials.
+    /// Creates a pooled client without automatic Torch headers, IAP tokens, or browser credentials.
     pub fn new_external() -> Self {
         let mut client = Self::new();
         client.include_warp_headers = false;
@@ -267,7 +267,7 @@ impl Client {
     }
 
     /// Returns the IAP bearer token to attach to a request targeting
-    /// `url`, scoped to the Warp server's origin.
+    /// `url`, scoped to the Torch server's origin.
     fn iap_token_for<U: IntoUrl>(&self, url: U) -> Option<String> {
         let provider = self.iap_token_provider.as_ref()?;
         let url = url.into_url().ok()?;
@@ -306,7 +306,7 @@ impl Client {
     fn add_warp_http_headers(mut builder: RequestBuilder) -> RequestBuilder {
         // Include the client ID header.
         if let Some(client_id) = execution_mode::current_client_id() {
-            builder = builder.header(headers::WARP_CLIENT_ID, client_id);
+            builder = builder.header(headers::TORCH_CLIENT_ID, client_id);
         }
 
         // If there's an app version, include it as an HTTP request header.
@@ -348,12 +348,12 @@ impl Client {
             // Operating system category.
             let category = os_system_info.category().to_string();
             if let Ok(category) = HeaderValue::from_str(&category) {
-                builder = builder.header(headers::WARP_OS_CATEGORY, category);
+                builder = builder.header(headers::TORCH_OS_CATEGORY, category);
             }
 
             // Operating system name.
             builder = builder.header(
-                headers::WARP_OS_NAME,
+                headers::TORCH_OS_NAME,
                 HeaderValue::from_static(os_system_info.name()),
             );
 
@@ -362,7 +362,7 @@ impl Client {
                 .version()
                 .and_then(|version| HeaderValue::from_str(version).ok())
             {
-                builder = builder.header(headers::WARP_OS_VERSION, version);
+                builder = builder.header(headers::TORCH_OS_VERSION, version);
             }
 
             // Linux kernel version.
@@ -371,7 +371,7 @@ impl Client {
                 .and_then(|kernel_version| HeaderValue::from_str(kernel_version).ok())
             {
                 builder =
-                    builder.header(headers::WARP_OS_LINUX_KERNEL_VERSION, linux_kernel_version);
+                    builder.header(headers::TORCH_OS_LINUX_KERNEL_VERSION, linux_kernel_version);
             }
         }
 
@@ -685,7 +685,7 @@ impl<'a> RequestBuilder<'a> {
 }
 
 /// An error returned from `Response::error_for_status` that includes response metadata.
-/// This allows callers to inspect headers (like X-Warp-Error-Code) and the response body when
+/// This allows callers to inspect headers (like X-Torch-Error-Code) and the response body when
 /// handling errors.
 #[derive(Debug)]
 pub struct ResponseError {

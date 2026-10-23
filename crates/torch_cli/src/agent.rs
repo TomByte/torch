@@ -275,7 +275,7 @@ const HARNESS_VALUE_VARIANTS: [Harness; 6] = [
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Default, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Harness {
-    /// Use Warp's built-in MAA infrastructure (default).
+    /// Use Torch's built-in MAA infrastructure (default).
     #[default]
     Oz,
     /// Delegate to the `claude` CLI.
@@ -303,7 +303,7 @@ impl ValueEnum for Harness {
     fn to_possible_value(&self) -> Option<PossibleValue> {
         let mut pv = match self {
             Harness::Oz => {
-                PossibleValue::new("oz").help("Use Warp's built-in MAA infrastructure (default)")
+                PossibleValue::new("oz").help("Use Torch's built-in MAA infrastructure (default)")
             }
             Harness::Claude => PossibleValue::new("claude")
                 .alias("claude-code")
@@ -357,7 +357,7 @@ impl Harness {
 
     pub fn display_name(self) -> &'static str {
         match self {
-            Self::Oz => "Warp Agent",
+            Self::Oz => "Torch Agent",
             Self::Claude => "Claude Code",
             Self::OpenCode => "OpenCode",
             Self::Gemini => "Gemini CLI",
@@ -435,7 +435,7 @@ pub enum AgentProfileCommand {
 /// Agent-related subcommands.
 #[derive(Debug, Clone, Subcommand)]
 pub enum AgentCommand {
-    /// Run a new Warp Agent.
+    /// Run a new Torch Agent.
     Run(RunAgentArgs),
     /// Dispatch a cloud agent.
     RunCloud(RunCloudArgs),
@@ -525,7 +525,7 @@ pub struct RunAgentArgs {
     /// Working directory for the agent
     #[arg(short = 'C', long = "cwd")]
     pub cwd: Option<PathBuf>,
-    /// Display agent progress in the Warp interface.
+    /// Display agent progress in the Torch interface.
     #[arg(long = "gui", hide = true)]
     pub gui: bool,
     #[command(flatten)]
@@ -605,7 +605,7 @@ pub struct RunAgentArgs {
     /// Execution whose server-owned settings configure this task launch.
     #[arg(
         long = "execution-id",
-        env = "WARP_EXECUTION_ID",
+        env = "TORCH_EXECUTION_ID",
         hide = true,
         requires = "task_id"
     )]
@@ -647,7 +647,7 @@ pub struct RunAgentArgs {
 
     /// Execution harness for the agent run.
     ///
-    /// "oz" (default) uses Warp Agent.
+    /// "oz" (default) uses Torch Agent.
     /// "claude" delegates to the `claude` CLI.
     #[arg(long = "harness", value_name = "HARNESS", default_value_t = Harness::Oz, hide = true)]
     pub harness: Harness,
@@ -656,12 +656,12 @@ pub struct RunAgentArgs {
     /// terminal session; `acp` drives the harness over the Agent Client Protocol instead. Has no
     /// effect on the `oz` harness.
     ///
-    /// Cloud workers set this through `WARP_HARNESS_TRANSPORT` rather than the flag, so a pinned
+    /// Cloud workers set this through `TORCH_HARNESS_TRANSPORT` rather than the flag, so a pinned
     /// CLI predating this option ignores it instead of rejecting an unknown argument.
     #[arg(
         long = "harness-transport",
         value_name = "TRANSPORT",
-        env = "WARP_HARNESS_TRANSPORT",
+        env = "TORCH_HARNESS_TRANSPORT",
         hide = true
     )]
     pub harness_transport: Option<HarnessTransport>,
@@ -803,7 +803,7 @@ pub struct RunCloudArgs {
     #[arg(long = "runner", value_name = "ID")]
     pub runner: Option<String>,
 
-    /// Open the agent's session in Warp once it's available.
+    /// Open the agent's session in Torch once it's available.
     #[arg(long = "open")]
     pub open: bool,
 
@@ -822,7 +822,7 @@ pub struct RunCloudArgs {
     #[arg(long = "agent", value_name = "UID")]
     pub agent_uid: Option<String>,
 
-    /// Where this job should be hosted. Setting "warp" runs it on Warp's infrastructure. Any other
+    /// Where this job should be hosted. Setting "warp" runs it on Torch's infrastructure. Any other
     /// value is treated is a self-hosted job and the value will be matched with the self-hosted
     /// worker's name.
     #[arg(long = "host", value_name = "WORKER_ID")]
@@ -849,7 +849,7 @@ pub struct RunCloudArgs {
 
     /// Execution harness for the agent run.
     ///
-    /// "oz" (the default) runs on Warp's built-in agent infrastructure. Other
+    /// "oz" (the default) runs on Torch's built-in agent infrastructure. Other
     /// values delegate the run to an external agent CLI; see the possible
     /// values below.
     #[arg(long = "harness", value_name = "HARNESS", default_value_t = Harness::Oz)]

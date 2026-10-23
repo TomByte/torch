@@ -15,21 +15,21 @@ OS_TYPE="$(uname -s)"
 
 FEATURES="gui,local_only"
 
-WARP_BIN_NAME="torch"
-WARP_CHANNEL="oss"
+TORCH_BIN_NAME="torch"
+TORCH_CHANNEL="oss"
 
 # Shared argument parsing. macOS-specific flags (--dont-open,
 # --open_with_launchd, --generate-schema) are forwarded through MAC_ARGS and
 # silently ignored on other platforms.
 MAC_ARGS=()
 CARGO_PARAMS=()
-WARP_ARGS=()
+TORCH_ARGS=()
 
 while (( "$#" )); do
   case "$1" in
     --)
       shift
-      WARP_ARGS=("$@")
+      TORCH_ARGS=("$@")
       break
       ;;
     --features)
@@ -66,21 +66,21 @@ while (( "$#" )); do
 done
 
 export FEATURES
-export WARP_BIN_NAME
-export WARP_CHANNEL
+export TORCH_BIN_NAME
+export TORCH_CHANNEL
 
 if [[ "$OS_TYPE" = "Darwin" ]]; then
-  if [[ ${#WARP_ARGS[@]} -gt 0 ]]; then
-    exec ./script/macos/run "${MAC_ARGS[@]}" -- "${WARP_ARGS[@]}"
+  if [[ ${#TORCH_ARGS[@]} -gt 0 ]]; then
+    exec ./script/macos/run "${MAC_ARGS[@]}" -- "${TORCH_ARGS[@]}"
   else
     exec ./script/macos/run "${MAC_ARGS[@]}"
   fi
 elif [[ "$OS_TYPE" = "Linux" ]] || [[ "$OS_TYPE" =~ ^(MINGW64_NT|MSYS_NT) ]]; then
-  echo "Running cargo run --bin $WARP_BIN_NAME --features \"$FEATURES\" ${CARGO_PARAMS[*]}"
-  if [[ ${#WARP_ARGS[@]} -gt 0 ]]; then
-    cargo run --bin "$WARP_BIN_NAME" --features "$FEATURES" "${CARGO_PARAMS[@]}" -- "${WARP_ARGS[@]}"
+  echo "Running cargo run --bin $TORCH_BIN_NAME --features \"$FEATURES\" ${CARGO_PARAMS[*]}"
+  if [[ ${#TORCH_ARGS[@]} -gt 0 ]]; then
+    cargo run --bin "$TORCH_BIN_NAME" --features "$FEATURES" "${CARGO_PARAMS[@]}" -- "${TORCH_ARGS[@]}"
   else
-    cargo run --bin "$WARP_BIN_NAME" --features "$FEATURES" "${CARGO_PARAMS[@]}"
+    cargo run --bin "$TORCH_BIN_NAME" --features "$FEATURES" "${CARGO_PARAMS[@]}"
   fi
 else
   echo "No run script defined for the current platform ($OS_TYPE)!" >&2

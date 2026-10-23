@@ -1,8 +1,8 @@
 use futures_util::stream::AbortHandle;
 use mcp::oauth::CallbackResult;
+use torchui::App;
 use url::Url;
 use uuid::Uuid;
-use torchui::App;
 
 use super::{SpawnedServerInfo, TemplatableMCPServerManager};
 use crate::ai::mcp::builtin;
@@ -12,16 +12,16 @@ use crate::{GlobalResourceHandles, GlobalResourceHandlesProvider};
 #[test]
 fn prewarmed_mcp_spawn_uses_current_key_without_persisting_it() {
     use crate::ai::mcp::{MCPServer, MCPServerExt as _, TransportType};
-    let json = r#"{"local":{"command":"test-mcp","env":{"WARP_API_KEY":"standby-key","CUSTOM":"configured"}}}"#;
+    let json = r#"{"local":{"command":"test-mcp","env":{"TORCH_API_KEY":"standby-key","CUSTOM":"configured"}}}"#;
     let mut server = MCPServer::from_user_json(json).unwrap().pop().unwrap();
     let mut manager = TemplatableMCPServerManager::default();
     for key in ["assigned-key", "next-assigned-key"] {
         manager
             .runtime_environment
-            .insert("WARP_API_KEY".into(), key.into());
+            .insert("TORCH_API_KEY".into(), key.into());
         manager
             .runtime_environment
-            .insert("WARP_RUN_ID".into(), "assigned-run".into());
+            .insert("TORCH_RUN_ID".into(), "assigned-run".into());
         manager.apply_runtime_environment(&mut server.transport_type);
         let TransportType::CLIServer(server) = &server.transport_type else {
             panic!("stdio server expected");
@@ -29,7 +29,7 @@ fn prewarmed_mcp_spawn_uses_current_key_without_persisting_it() {
         let keys: Vec<_> = server
             .static_env_vars
             .iter()
-            .filter(|var| var.name == "WARP_API_KEY")
+            .filter(|var| var.name == "TORCH_API_KEY")
             .collect();
         assert_eq!(keys.len(), 1);
         assert_eq!(keys[0].value, key);
@@ -48,7 +48,7 @@ fn prewarmed_mcp_spawn_uses_current_key_without_persisting_it() {
         stored
             .static_env_vars
             .iter()
-            .any(|var| var.name == "WARP_API_KEY" && var.value == "standby-key")
+            .any(|var| var.name == "TORCH_API_KEY" && var.value == "standby-key")
     );
 }
 
@@ -79,7 +79,7 @@ fn prewarmed_mcp_replacement_cancels_pending_spawns_and_retains_file_servers() {
         });
         let (retained, stopped) = manager.update(&mut app, |manager, ctx| {
             manager.replace_runtime_environment(
-                std::collections::HashMap::from([("WARP_API_KEY".into(), "assigned-key".into())]),
+                std::collections::HashMap::from([("TORCH_API_KEY".into(), "assigned-key".into())]),
                 ctx,
             )
         });
@@ -92,7 +92,7 @@ fn prewarmed_mcp_replacement_cancels_pending_spawns_and_retains_file_servers() {
         manager.read(&app, |manager, _| {
             assert!(manager.spawned_servers.is_empty());
             assert!(manager.reconnectable_ephemeral_installations.is_empty());
-            assert_eq!(manager.runtime_environment["WARP_API_KEY"], "assigned-key");
+            assert_eq!(manager.runtime_environment["TORCH_API_KEY"], "assigned-key");
         });
     });
 }

@@ -22,29 +22,29 @@ use directories::BaseDirs;
 use crate::AppId;
 use crate::channel::{Channel, ChannelState};
 
-/// The name of the directory in which to put non-global Warp-specific files.
+/// The name of the directory in which to put non-global Torch-specific files.
 ///
 /// This should be used, for example, as the base directory under which
 /// repository workflows would be stored (in "./.warp/workflows").
-pub const WARP_CONFIG_DIR: &str = ".warp";
+pub const TORCH_CONFIG_DIR: &str = ".warp";
 
-/// The name of the folder that stores Warp execution logs and network logs.
+/// The name of the folder that stores Torch execution logs and network logs.
 /// This is currently only used on Windows to maintain backwards compatibility.
-pub const WARP_LOGS_DIR: &str = "logs";
+pub const TORCH_LOGS_DIR: &str = "logs";
 
 fn base_warp_config_dir_name() -> String {
     match ChannelState::channel() {
         // Preview shares the same directory as Stable for backward
         // compatibility — existing users already have config in `.warp`.
-        Channel::Stable | Channel::Preview => WARP_CONFIG_DIR.to_owned(),
+        Channel::Stable | Channel::Preview => TORCH_CONFIG_DIR.to_owned(),
         Channel::Oss => ".torch".to_owned(),
-        Channel::Dev => format!("{WARP_CONFIG_DIR}-dev"),
-        Channel::Integration => format!("{WARP_CONFIG_DIR}-integration"),
-        Channel::Local => format!("{WARP_CONFIG_DIR}-local"),
+        Channel::Dev => format!("{TORCH_CONFIG_DIR}-dev"),
+        Channel::Integration => format!("{TORCH_CONFIG_DIR}-integration"),
+        Channel::Local => format!("{TORCH_CONFIG_DIR}-local"),
     }
 }
 
-/// Returns the home-relative Warp config directory name for the current channel and data profile.
+/// Returns the home-relative Torch config directory name for the current channel and data profile.
 ///
 /// This preserves the historical `.warp*` directory shape while still isolating dev, local,
 /// integration, oss, and optional development profiles.
@@ -58,10 +58,10 @@ pub fn warp_home_config_dir_name() -> String {
     }
 }
 
-/// Returns the home-relative Warp config directory for the current channel and data profile.
+/// Returns the home-relative Torch config directory for the current channel and data profile.
 ///
 /// Unlike [`data_dir`] and [`config_local_dir`] on non-macOS platforms, this intentionally keeps
-/// Warp-authored, user-facing config under a `.warp*` directory in the home directory instead of
+/// Torch-authored, user-facing config under a `.warp*` directory in the home directory instead of
 /// using the platform XDG/AppData project directories.
 pub fn warp_home_config_dir() -> Option<PathBuf> {
     dirs::home_dir().map(|home_dir| home_dir.join(warp_home_config_dir_name()))
@@ -99,12 +99,12 @@ fn macos_config_dir_name() -> String {
 #[cfg(target_os = "macos")]
 fn macos_config_dir_name_for(channel: Channel, data_profile: Option<&str>) -> String {
     let base_dir_name = match channel {
-        Channel::Stable => WARP_CONFIG_DIR.to_owned(),
-        Channel::Preview => format!("{WARP_CONFIG_DIR}-preview"),
+        Channel::Stable => TORCH_CONFIG_DIR.to_owned(),
+        Channel::Preview => format!("{TORCH_CONFIG_DIR}-preview"),
         Channel::Oss => ".torch".to_owned(),
-        Channel::Dev => format!("{WARP_CONFIG_DIR}-dev"),
-        Channel::Integration => format!("{WARP_CONFIG_DIR}-integration"),
-        Channel::Local => format!("{WARP_CONFIG_DIR}-local"),
+        Channel::Dev => format!("{TORCH_CONFIG_DIR}-dev"),
+        Channel::Integration => format!("{TORCH_CONFIG_DIR}-integration"),
+        Channel::Local => format!("{TORCH_CONFIG_DIR}-local"),
     };
     match data_profile {
         Some(profile) => format!("{base_dir_name}-{profile}"),
@@ -213,7 +213,7 @@ pub fn gui_mcp_config_file_path() -> Option<PathBuf> {
 #[cfg(target_os = "macos")]
 fn macos_tui_config_dir_name() -> String {
     macos_config_dir_name()
-        .replacen(WARP_CONFIG_DIR, ".torch_cli", 1)
+        .replacen(TORCH_CONFIG_DIR, ".torch_cli", 1)
         .replacen(".torch", ".torch_cli", 1)
 }
 
@@ -258,7 +258,7 @@ pub fn base_config_dir() -> PathBuf {
 ///
 /// This is the appropriate home for files like our sqlite database, which
 /// contains durable but non-critical and non-portable data like what windows
-/// the user had open and cached state of known Warp Drive objects.
+/// the user had open and cached state of known Torch Drive objects.
 pub fn state_dir() -> PathBuf {
     let Some(project_dirs) = project_dirs() else {
         return PathBuf::new();
@@ -284,7 +284,7 @@ pub fn secure_state_dir() -> Option<PathBuf> {
 
     #[cfg(target_os = "macos")]
     if let Some(app_group_root) = app_group_container_path() {
-        // The macOS project_path is the bundle ID (i.e. `dev.warp.Warp-Stable`).
+        // The macOS project_path is the bundle ID (i.e. `dev.warp.Torch-Stable`).
         let project_dirs = project_dirs()?;
         return Some(
             app_group_root
@@ -373,9 +373,9 @@ fn project_dirs_for_app_id(
             // directories like "warp-terminal" and "warp-terminal-dev", to
             // match our Linux package name.
             let base_app_name = match app_id.application_name() {
-                "Warp" => "Warp-Terminal".to_owned(),
-                "WarpOss" => "Warp-Oss".to_owned(),
-                other if other.starts_with("Warp") => other.replace("Warp", "Warp-Terminal-"),
+                "Torch" => "Torch-Terminal".to_owned(),
+                "WarpOss" => "Torch-Oss".to_owned(),
+                other if other.starts_with("Torch") => other.replace("Torch", "Torch-Terminal-"),
                 _ => app_id.application_name().to_owned(),
             };
         } else {
@@ -426,14 +426,14 @@ pub fn app_group_container_path() -> Option<PathBuf> {
     LazyLock::force(&CONTAINER_PATH).clone()
 }
 
-/// Returns the path to resources included in the Warp distribution.
+/// Returns the path to resources included in the Torch distribution.
 ///
 /// Unlike [`torchui_core::AssetProvider`] assets, which are generally embedded in the binary, these are
-/// stored on the filesystem alongside the rest of Warp.
+/// stored on the filesystem alongside the rest of Torch.
 ///
 /// ## macOS
 /// For the `.app` bundle, the resources directory is `$APP_DIR/Contents/Resources`
-/// (e.g. `/Applications/Warp.app/Contents/Resources`). For the standalone CLI build
+/// (e.g. `/Applications/Torch.app/Contents/Resources`). For the standalone CLI build
 /// (compiled with the `standalone` feature) the binary is not inside a `.app` bundle,
 /// and its resources live in a sibling `resources` directory next to the binary
 /// (e.g. `$INSTALL_DIR/resources`), matching the Linux/Windows layout.
@@ -444,7 +444,7 @@ pub fn app_group_container_path() -> Option<PathBuf> {
 ///
 /// ## Windows
 /// The resources directory is `$INSTALL_DIR/resources`, where `$INSTALL_DIR` is the directory
-/// containing the Warp executable (e.g. `C:\Program Files\WarpDev\resources`).
+/// containing the Torch executable (e.g. `C:\Program Files\WarpDev\resources`).
 pub fn bundled_resources_dir() -> Option<PathBuf> {
     cfg_if::cfg_if! {
         if #[cfg(target_os = "macos")] {

@@ -12,8 +12,8 @@ use itertools::Itertools;
 use legacy::*;
 pub use priority::Priority;
 use smol_str::SmolStr;
-use warp_command_signatures::IconType;
 use torch_core::ui::theme::AnsiColorIdentifier;
+use warp_command_signatures::IconType;
 
 use super::EngineFileType;
 use super::coalesce::coalesce_completion_results;
@@ -617,7 +617,7 @@ impl Default for CompleterOptions {
     }
 }
 
-/// This is the public API for using Warp's completion engine. Note that
+/// This is the public API for using Torch's completion engine. Note that
 /// the completion engines could end up performing I/O (e.g. calling generators,
 /// interacting with the file system, etc.), so you should ensure that you
 /// are on a background thread when using this API.

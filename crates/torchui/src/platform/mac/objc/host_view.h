@@ -1,11 +1,11 @@
 #import <AppKit/AppKit.h>
 #import <QuartzCore/QuartzCore.h>
 
-@interface NSPasteboard (Warp)
+@interface NSPasteboard (Torch)
 - (NSArray *)getFilePaths;
 @end
 
-/// WarpHostView is the Content view of a Warp window.
+/// WarpHostView is the Content view of a Torch window.
 // It is backed by a Metal CALayer.
 @interface WarpHostView : NSView <CALayerDelegate, NSTextInputClient>
 - (WarpHostView *)initWithFrame:(NSRect)frame

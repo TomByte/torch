@@ -6,7 +6,7 @@ define_settings_group!(TuiAutoupdateSettings, settings: [
     //
     // TUI-only (`surface: Tui`): the GUI has its own autoupdater and update
     // preferences, so this key only appears in (and is read from) the TUI's
-    // settings file. Read once at TUI startup; the `WARP_TUI_DISABLE_AUTOUPDATE`
+    // settings file. Read once at TUI startup; the `TORCH_TUI_DISABLE_AUTOUPDATE`
     // environment variable also disables updates for a single launch.
     autoupdate_enabled: TuiAutoupdateEnabled {
         type: bool,

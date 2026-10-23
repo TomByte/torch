@@ -128,7 +128,7 @@ def fake_server(
         thread.join(timeout=5)
 
 
-SERVER_ROOT_VARIABLES = ("WARP_SERVER_ROOT", "WARP_SERVER_ROOT_URL")
+SERVER_ROOT_VARIABLES = ("TORCH_SERVER_ROOT", "TORCH_SERVER_ROOT_URL")
 
 
 def run_validator(
@@ -151,11 +151,11 @@ def run_validator(
             "variable in extra_env; otherwise the validator reaches production"
         )
     environment = os.environ.copy()
-    environment.pop("WARP_API_KEY", None)
+    environment.pop("TORCH_API_KEY", None)
     for variable in SERVER_ROOT_VARIABLES:
         environment.pop(variable, None)
     if api_key:
-        environment["WARP_API_KEY"] = api_key
+        environment["TORCH_API_KEY"] = api_key
     if extra_env:
         environment.update(extra_env)
     args = [sys.executable, str(VALIDATOR), str(root)]
@@ -389,7 +389,7 @@ def assert_credentials_are_optional_but_forwarded() -> None:
     """The endpoint needs no key; one is forwarded when the environment has it.
 
     Requiring a key would disable validation for local authoring agents, whose
-    shell cannot see the Warp client's session.
+    shell cannot see the Torch client's session.
     """
     with factory_tree() as root:
         with fake_server(CLEAN_RESPONSE) as server:
@@ -408,7 +408,7 @@ def assert_credentials_are_optional_but_forwarded() -> None:
 
 
 def assert_401_is_retried_without_the_credential() -> None:
-    """A stale or mismatched WARP_API_KEY must not be able to block validation.
+    """A stale or mismatched TORCH_API_KEY must not be able to block validation.
 
     The endpoint needs no credential. When a forwarded key draws a 401 or 403,
     the request is retried once, without it, before giving up. The drop is
@@ -425,7 +425,7 @@ def assert_401_is_retried_without_the_credential() -> None:
                 )
             if server.authorization():
                 raise RuntimeError("the retry still carried an Authorization header")
-            if "WARP_API_KEY was rejected" not in result.stderr:
+            if "TORCH_API_KEY was rejected" not in result.stderr:
                 raise RuntimeError(f"the dropped credential was not reported: {result.stderr!r}")
             if DISCLOSURE not in result.stdout:
                 raise RuntimeError("the note displaced the verdict the agent must repeat")
@@ -456,31 +456,31 @@ def assert_401_is_retried_without_the_credential() -> None:
 
 
 def assert_server_root_falls_back_to_the_sandbox_url() -> None:
-    """WARP_SERVER_ROOT_URL is used when WARP_SERVER_ROOT is unset.
+    """TORCH_SERVER_ROOT_URL is used when TORCH_SERVER_ROOT is unset.
 
     An Oz sandbox exports the server root under this name, not the older
-    WARP_SERVER_ROOT. Without this fallback the validator silently targets
+    TORCH_SERVER_ROOT. Without this fallback the validator silently targets
     production instead of the server the sandbox actually belongs to.
     """
     with factory_tree() as root:
         with fake_server(CLEAN_RESPONSE) as server:
-            result = run_validator(root, extra_env={"WARP_SERVER_ROOT_URL": server.url})
+            result = run_validator(root, extra_env={"TORCH_SERVER_ROOT_URL": server.url})
         if result.returncode != EXIT_VALID:
             raise RuntimeError(
-                f"WARP_SERVER_ROOT_URL was not honored: {result.stdout}{result.stderr}"
+                f"TORCH_SERVER_ROOT_URL was not honored: {result.stdout}{result.stderr}"
             )
 
-        # WARP_SERVER_ROOT still wins when both are set.
+        # TORCH_SERVER_ROOT still wins when both are set.
         with fake_server(CLEAN_RESPONSE) as server:
             result = run_validator(
                 root,
                 extra_env={
-                    "WARP_SERVER_ROOT": server.url,
-                    "WARP_SERVER_ROOT_URL": "http://127.0.0.1:9",
+                    "TORCH_SERVER_ROOT": server.url,
+                    "TORCH_SERVER_ROOT_URL": "http://127.0.0.1:9",
                 },
             )
         if result.returncode != EXIT_VALID:
-            raise RuntimeError("WARP_SERVER_ROOT should take precedence over WARP_SERVER_ROOT_URL")
+            raise RuntimeError("TORCH_SERVER_ROOT should take precedence over TORCH_SERVER_ROOT_URL")
 
         # --server-root still wins over both environment variables.
         with fake_server(CLEAN_RESPONSE) as server:
@@ -488,8 +488,8 @@ def assert_server_root_falls_back_to_the_sandbox_url() -> None:
                 root,
                 server.url,
                 extra_env={
-                    "WARP_SERVER_ROOT": "http://127.0.0.1:9",
-                    "WARP_SERVER_ROOT_URL": "http://127.0.0.1:9",
+                    "TORCH_SERVER_ROOT": "http://127.0.0.1:9",
+                    "TORCH_SERVER_ROOT_URL": "http://127.0.0.1:9",
                 },
             )
         if result.returncode != EXIT_VALID:
@@ -584,7 +584,7 @@ def assert_json_output_never_implies_a_verdict() -> None:
 def assert_no_format_copy_remains() -> None:
     """The skill must not regrow a local copy of the Factory file format.
 
-    A bundled copy ships inside a Warp release and goes stale against the
+    A bundled copy ships inside a Torch release and goes stale against the
     server, which is what produced confidently wrong diagnostics before. If a
     future change needs the format, fetch it from the server.
     """
@@ -639,7 +639,7 @@ CHECKS = (
     ("credentials are optional but forwarded", assert_credentials_are_optional_but_forwarded),
     ("a 401/403 is retried without the credential", assert_401_is_retried_without_the_credential),
     (
-        "WARP_SERVER_ROOT_URL is a fallback server root",
+        "TORCH_SERVER_ROOT_URL is a fallback server root",
         assert_server_root_falls_back_to_the_sandbox_url,
     ),
     ("symlinked resources are refused", assert_symlinked_resources_are_refused),

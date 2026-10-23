@@ -6,7 +6,6 @@ use futures::Future;
 use itertools::Itertools;
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::{Vector2F, vec2f};
-use url::Url;
 use torch_core::context_flag::ContextFlag;
 use torch_core::settings::Setting;
 use torch_core::ui::theme::color::internal_colors;
@@ -32,6 +31,7 @@ use torchui::{
     AppContext, BlurContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView,
     UpdateView, View, ViewContext, ViewHandle, WindowId,
 };
+use url::Url;
 
 use super::cloud_object_naming_dialog::CloudObjectNamingDialog;
 use super::drive_helpers::{
@@ -100,7 +100,7 @@ use crate::workspaces::user_workspaces::UserWorkspaces;
 use crate::workspaces::workspace::{Workspace, WorkspaceUid};
 use crate::{ObjectActions, send_telemetry_from_ctx};
 
-const WARP_DRIVE_TITLE: &str = "Torch Drive";
+const TORCH_DRIVE_TITLE: &str = "Torch Drive";
 
 // Team zero state consts
 const HINT_HORIZONTAL_PADDING: f32 = 18.;
@@ -177,7 +177,7 @@ const OFFLINE_BANNER_TEXT: &str = "You are offline. Some files will be read only
 
 pub const DRIVE_INDEX_VIEW_POSITION_ID: &str = "drive_index_view_id";
 
-// Sets the speed of the autoscroll that occurs when you drag an item near the Warp Drive border.
+// Sets the speed of the autoscroll that occurs when you drag an item near the Torch Drive border.
 pub const AUTOSCROLL_SPEED_MULTIPLIER: f32 = 10.;
 // Sets the distance from a border at which scroll events start to occur.
 pub const AUTOSCROLL_DETECTION_DISTANCE: f32 = 30.0;
@@ -354,10 +354,10 @@ pub enum DriveIndexAction {
     CloseTrashIndex,
     FocusPreviousItem,
     FocusNextItem,
-    /// Hitting one of the l/r arrow keys on a Warp Drive item.
+    /// Hitting one of the l/r arrow keys on a Torch Drive item.
     LeftArrowKey,
     RightArrowKey,
-    /// Hitting enter key on a Warp Drive item.
+    /// Hitting enter key on a Torch Drive item.
     EnterKey,
     /// Hitting escape key from trash index returns to main drive index.
     EscapeKey,
@@ -372,7 +372,7 @@ pub enum DriveIndexAction {
     SignupAnonymousUser,
     DismissPersonalObjectLimits,
     /// Dismiss (and remember dismissing) the shared object limit banner shown
-    /// in the Warp Drive sidebar when a plan's notebook/workflow limit is hit.
+    /// in the Torch Drive sidebar when a plan's notebook/workflow limit is hit.
     DismissObjectLimitBanner {
         banner_kind: SharedObjectLimitBannerKind,
     },
@@ -517,10 +517,10 @@ struct SpaceMenuState {
     offset: Vector2F,
 }
 
-/// The main view for the Warp Drive sidebar.
+/// The main view for the Torch Drive sidebar.
 /// `DriveIndex` is different from `DrivePanel` in that it is responsible for
-/// all the logic within Warp Drive, whereas `DrivePanel` is responsible for
-/// how Warp Drive interacts with the workspace and the rest of the app.
+/// all the logic within Torch Drive, whereas `DrivePanel` is responsible for
+/// how Torch Drive interacts with the workspace and the rest of the app.
 #[derive(Clone)]
 pub struct DriveIndex {
     window_id: WindowId,
@@ -529,7 +529,7 @@ pub struct DriveIndex {
     menu: ViewHandle<Menu<DriveIndexAction>>,
 
     sharing_dialog: ViewHandle<SharingDialog>,
-    /// Variant of the index, determines whether base Warp Drive or trash is viewed.
+    /// Variant of the index, determines whether base Torch Drive or trash is viewed.
     index_variant: DriveIndexVariant,
     /// If None, the context menu is closed. Otherwise, this contains the ID of the object it's open on.
     menu_object_id_if_open: Option<WarpDriveItemId>,
@@ -557,7 +557,7 @@ pub struct DriveIndex {
     /// A hashmap of location (space/folder) to a list of hashed IDs of objects inside
     /// the space/folder, used for rendering our objects
     sorted_orders_by_location: HashMap<CloudObjectLocation, Vec<ObjectUid>>,
-    /// A sorted list of all the items (spaces + objects) in Warp Drive
+    /// A sorted list of all the items (spaces + objects) in Torch Drive
     /// Unlike sorted_orders_by_location, this is not used for rendering
     /// This is used for object focusing and WD keyboard navigation
     ordered_items: Vec<WarpDriveItemId>,
@@ -567,7 +567,7 @@ pub struct DriveIndex {
     /// from links before everything has been set up.
     has_initialized_sections: Condition,
 
-    /// The number of objects in Warp Drive that have errored.
+    /// The number of objects in Torch Drive that have errored.
     /// This value is cached so that we can determine whether to render the "retry all"
     /// objects button in the case of syncing failures.
     num_errored_objects: usize,
@@ -985,7 +985,7 @@ impl DriveIndex {
 
         let sorting_choice = *WarpDriveSettings::as_ref(ctx).sorting_choice.value();
 
-        // Hide Warp Drive loading icon once initial load is complete
+        // Hide Torch Drive loading icon once initial load is complete
         let initial_load_complete = UpdateManager::as_ref(ctx).initial_load_complete();
         ctx.spawn(initial_load_complete, |me, _, ctx| {
             me.show_warp_drive_loading_icon = false;
@@ -2526,7 +2526,7 @@ impl DriveIndex {
         let text = Container::new(
             appearance
                 .ui_builder()
-                .span(WARP_DRIVE_TITLE.to_string())
+                .span(TORCH_DRIVE_TITLE.to_string())
                 .with_style(UiComponentStyles {
                     font_family_id: Some(appearance.ui_font_family()),
                     font_size: Some(TITLE_FONT_SIZE),
@@ -3251,7 +3251,7 @@ impl DriveIndex {
             if let DriveIndexSection::Space(space) = *section {
                 self.set_focused_item(WarpDriveItemId::Space(space), true, ctx);
             }
-            // Need to re-render focused index in Warp Drive after a space has been toggled
+            // Need to re-render focused index in Torch Drive after a space has been toggled
             if let Some(focused_index) = self.focused_index {
                 self.update_focused_params(focused_index, CloudModel::as_ref(ctx));
             }
@@ -4889,7 +4889,7 @@ impl DriveIndex {
         menu_items
     }
 
-    /// Builder for a menu item to open a Warp Drive object in a pane. The icon and label depend
+    /// Builder for a menu item to open a Torch Drive object in a pane. The icon and label depend
     /// on whether the object is editable or not.
     ///
     /// If `prefer_open` is `true`, the item defaults to view/open mode rather than edit mode.

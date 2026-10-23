@@ -122,7 +122,7 @@ maybe_define_setting!(SshTmuxDeprecationNoticePending, group: WarpifySettings, {
     description: "Internal: whether to show the one-time tmux SSH deprecation notice.",
 });
 
-/// Controls how Warp handles the SSH extension (remote server binary) when connecting
+/// Controls how Torch handles the SSH extension (remote server binary) when connecting
 /// to a remote host that does not already have it installed.
 #[derive(
     Default,

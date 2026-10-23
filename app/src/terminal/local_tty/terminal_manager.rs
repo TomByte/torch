@@ -18,12 +18,12 @@ use nix::sys::termios::LocalFlags;
 use parking_lot::FairMutex;
 use pathfinder_geometry::vector::Vector2F;
 use settings::Setting as _;
-use uuid::Uuid;
 use torch_core::SessionId;
 use torch_errors::report_error;
 use torchui::r#async::Timer;
 use torchui::r#async::executor::Background;
 use torchui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity, ViewHandle};
+use uuid::Uuid;
 
 use super::event_loop::EventLoop;
 use super::shell::{ShellStarter, ShellStarterSource};
@@ -259,7 +259,7 @@ pub struct TerminalManagerInit<S> {
     pub manager: ModelHandle<Box<dyn TerminalManagerTrait>>,
     pub surface: ViewHandle<S>,
 }
-/// Adapts a TUI-owned surface manager to Warp's type-erased manager contract.
+/// Adapts a TUI-owned surface manager to Torch's type-erased manager contract.
 struct TuiTerminalManager<S>(TerminalManager<S>);
 
 impl<S: 'static> TerminalManagerTrait for TuiTerminalManager<S> {
@@ -1177,7 +1177,7 @@ impl<S> TerminalManager<S> {
         });
     }
 
-    /// Sends bindkey to notify shell process to switch to Warp prompt logic for prompt
+    /// Sends bindkey to notify shell process to switch to Torch prompt logic for prompt
     /// with the combined prompt/command grid (we unset the PS1, but save the value for potential
     /// future restoration).
     pub fn send_switch_to_warp_prompt_bindkey(&self, app_ctx: &mut AppContext) {
@@ -1241,7 +1241,7 @@ impl<S> TerminalManager<S> {
         };
 
         // `enable_ssh_warpification` is the single source of truth for whether the SSH
-        // wrapper is active. The bootstrap scripts check `WARP_USE_SSH_WRAPPER` (derived
+        // wrapper is active. The bootstrap scripts check `TORCH_USE_SSH_WRAPPER` (derived
         // from this value) before invoking `warp_ssh_helper`, which spawns the ControlMaster
         // and opens agent-protocol channels.
         let enable_ssh_wrapper = *WarpifySettings::as_ref(ctx)

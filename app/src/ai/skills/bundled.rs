@@ -26,7 +26,7 @@ pub enum BundledSkillActivation {
     Always,
     /// Active only in the TUI frontend.
     TuiOnly,
-    /// Active only when a specific Warp feature is enabled.
+    /// Active only when a specific Torch feature is enabled.
     RequiresFeature(FeatureFlag),
     /// Active only when a specific MCP server is running.
     RequiresMcp(McpIntegration),
@@ -185,14 +185,14 @@ struct BundledSkillDefinition {
     icon: Icon,
 }
 
-/// Skills bundled with Warp for a single host.
+/// Skills bundled with Torch for a single host.
 #[derive(Debug, Default)]
 pub struct BundledSkill {
     definitions: HashMap<String, BundledSkillDefinition>,
 }
 
 impl BundledSkill {
-    /// Detect all skill definitions bundled with Warp for the local host.
+    /// Detect all skill definitions bundled with Torch for the local host.
     pub async fn detect() -> Self {
         let Some(resources_dir) = torch_core::paths::bundled_resources_dir() else {
             return Self::default();
@@ -352,7 +352,7 @@ impl BundledSkill {
     }
 }
 
-/// Load skill definitions bundled with Warp.
+/// Load skill definitions bundled with Torch.
 async fn load_bundled_skill_definitions(
     resources_dir: &Path,
 ) -> HashMap<String, BundledSkillDefinition> {
@@ -462,8 +462,8 @@ fn display_optional_path(path: Option<PathBuf>) -> String {
 /// Supported variables:
 /// - `{{warp_server_url}}` - The server root URL (e.g., `https://api.warp.dev`)
 /// - `{{warp_cli_binary_name}}` - The CLI binary name (e.g., `warp` or `warp-cli`)
-/// - `{{warpctrl_binary_name}}` - The channel-specific Warp Control command name
-/// - `{{warpctrl_wrapper_path}}` - Path to the bundled Warp Control wrapper
+/// - `{{warpctrl_binary_name}}` - The channel-specific Torch Control command name
+/// - `{{warpctrl_wrapper_path}}` - Path to the bundled Torch Control wrapper
 /// - `{{warp_url_scheme}}` - The URL scheme (e.g., `warp`, `warpdev`, `warppreview`)
 /// - `{{settings_schema_path}}` - Path to the bundled JSON settings schema
 /// - `{{skill_dir}}` - Path to the bundled skill's directory
@@ -549,7 +549,7 @@ pub(crate) fn build_bundled_skill_context(
 
 /// Returns the icon for a bundled skill, given its directory-based ID.
 /// Skills with a known brand (e.g. `pr-comments` → GitHub) get a
-/// branded icon; everything else falls back to the Warp logo.
+/// branded icon; everything else falls back to the Torch logo.
 pub(crate) fn icon_for_bundled_skill(skill_id: &str) -> Icon {
     match skill_id {
         "pr-comments" => Icon::Github,

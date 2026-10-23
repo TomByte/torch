@@ -2,19 +2,19 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 #include "environment.iss"
 
-#define MyAppPublisher "Denver Technologies, Inc."
-#define MyAppURL "https://www.warp.dev/"
+#define MyAppPublisher "TomByte"
+#define MyAppURL "https://github.com/TomByte/torch"
 #ifndef MyAppName
-  #define MyAppName "WarpDev"
+  #define MyAppName "Torch"
 #endif
 #ifndef MyAppVersion
   #define MyAppVersion "0.1.0"
 #endif
 #ifndef MyAppExeName
-  #define MyAppExeName "dev.exe"
+  #define MyAppExeName "torch.exe"
 #endif
 #ifndef ReleaseChannel
-  #define ReleaseChannel "dev"
+  #define ReleaseChannel "oss"
 #endif
 #ifndef TargetProfileDir
   #define TargetProfileDir "target\release-lto-debug_assertions"
@@ -30,13 +30,13 @@
   ((ReleaseChannel == "integration") ? "Integration" : \
   ((ReleaseChannel == "oss") ? "Oss" : \
   "Unknown")))))
-#define AppMutexName "Local\Warp" + ChannelPascalCase + "_SingleInstance"
+#define AppMutexName "Local\Torch" + ChannelPascalCase + "_SingleInstance"
 
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId=warp-terminal-{#ReleaseChannel}
+AppId=torch-{#ReleaseChannel}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppVerName={#MyAppName} {#MyAppVersion}
@@ -57,18 +57,18 @@ OutputBaseFilename={#OutputName}
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
-WizardSmallImageFile="installer-images\warp-logo.bmp"
-WizardImageFile="installer-images\warp-banner.bmp"
+WizardSmallImageFile="installer-images\torch-logo.bmp"
+WizardImageFile="installer-images\torch-banner.bmp"
 SetupIconFile="..\..\app\channels\{#ReleaseChannel}\icon\no-padding\icon.ico"
 UninstallDisplayIcon="{app}\icon.ico"
-; Force close previous Warp if it hasn't shut down yet.
+; Force close previous Torch if it hasn't shut down yet.
 ; In the update flow we already warn the user if they have something running and make them confirm
-; before running this installer. Therefore, we are good to force close Warp without fear of losing
+; before running this installer. Therefore, we are good to force close Torch without fear of losing
 ; unsaved work.
 ; VSCode does something similar:
 ; https://github.com/microsoft/vscode/blob/aac9914f93551f894b8df1e4680bd847e7636be3/build/win32/code.iss#L41
 CloseApplications=force
-; For manual installs: if Warp is running, show a dialog prompting the user to close it
+; For manual installs: if Torch is running, show a dialog prompting the user to close it
 ; before Setup proceeds. Returned empty for background updates so the check is skipped.
 AppMutex={code:GetAppMutex}
 SetupMutex={#AppMutexName}Setup
@@ -108,40 +108,40 @@ Source: "{#AssetsDir}\{#Arch}\dxil.dll"; DestDir: "{app}"
 Source: "{#TargetProfileDir}\resources\*"; DestDir: "{app}\resources"; Flags: ignoreversion recursesubdirs
 
 [Registry]
-Root: HKCU; Subkey: "SOFTWARE\Warp.dev\{#MyAppName}"; Flags: uninsdeletekey
-Root: HKCU; Subkey: "SOFTWARE\Warp.dev\{#MyAppName}"; ValueType: string; ValueName: "InstallationPath"; ValueData: "{app}\{#MyAppExeName}"; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "SOFTWARE\Torch.dev\{#MyAppName}"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "SOFTWARE\Torch.dev\{#MyAppName}"; ValueType: string; ValueName: "InstallationPath"; ValueData: "{app}\{#MyAppExeName}"; Flags: uninsdeletevalue
 Root: HKA; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\{#MyAppExeName}"; ValueType: string; ValueName: ""; ValueData: "{app}\{#MyAppExeName}"; Flags: uninsdeletekey
-; cleanup "Open Warp Here" registry entries
+; cleanup "Open Torch Here" registry entries
 Root: HKA; Subkey: "Software\Classes\Directory\shell\{#MyAppName}"; Flags: deletekey
 Root: HKA; Subkey: "Software\Classes\Directory\Background\shell\{#MyAppName}"; Flags: deletekey
-; Add "Open Warp in new tab" to directory context menu
+; Add "Open Torch in new tab" to directory context menu
 Root: HKA; Subkey: "Software\Classes\Directory\shell\{#MyAppName}Tab"; ValueType: string; ValueName: ""; ValueData: "Open {#MyAppName} in new tab"; Flags: uninsdeletekey
 Root: HKA; Subkey: "Software\Classes\Directory\shell\{#MyAppName}Tab"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\icon.ico"
 Root: HKA; Subkey: "Software\Classes\Directory\shell\{#MyAppName}Tab\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""{#MyAppName}://action/new_tab?path=%1"""
-; Add "Open Warp in new tab" to directory background context menu
+; Add "Open Torch in new tab" to directory background context menu
 Root: HKA; Subkey: "Software\Classes\Directory\Background\shell\{#MyAppName}Tab"; ValueType: string; ValueName: ""; ValueData: "Open {#MyAppName} in new tab"; Flags: uninsdeletekey
 Root: HKA; Subkey: "Software\Classes\Directory\Background\shell\{#MyAppName}Tab"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\icon.ico"
 Root: HKA; Subkey: "Software\Classes\Directory\Background\shell\{#MyAppName}Tab\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""{#MyAppName}://action/new_tab?path=%V"""
-; Add "Open Warp in new window" to directory context menu
+; Add "Open Torch in new window" to directory context menu
 Root: HKA; Subkey: "Software\Classes\Directory\shell\{#MyAppName}Window"; ValueType: string; ValueName: ""; ValueData: "Open {#MyAppName} in new window"; Flags: uninsdeletekey
 Root: HKA; Subkey: "Software\Classes\Directory\shell\{#MyAppName}Window"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\icon.ico"
 Root: HKA; Subkey: "Software\Classes\Directory\shell\{#MyAppName}Window\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""{#MyAppName}://action/new_window?path=%1"""
-; Add "Open Warp in new window" to directory background context menu
+; Add "Open Torch in new window" to directory background context menu
 Root: HKA; Subkey: "Software\Classes\Directory\Background\shell\{#MyAppName}Window"; ValueType: string; ValueName: ""; ValueData: "Open {#MyAppName} in new window"; Flags: uninsdeletekey
 Root: HKA; Subkey: "Software\Classes\Directory\Background\shell\{#MyAppName}Window"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\icon.ico"
 Root: HKA; Subkey: "Software\Classes\Directory\Background\shell\{#MyAppName}Window\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""{#MyAppName}://action/new_window?path=%V"""
 
 [Tasks]
-Name: addToPath; Description: "Add Warp to PATH"
+Name: addToPath; Description: "Add Torch to PATH"
 
 [UninstallDelete]
-Type: filesandordirs; Name: "{userappdata}\warp\{#MyAppName}"
-Type: filesandordirs; Name: "{localappdata}\warp\{#MyAppName}"
+Type: filesandordirs; Name: "{userappdata}\tombyte\{#MyAppName}"
+Type: filesandordirs; Name: "{localappdata}\tombyte\{#MyAppName}"
 Type: filesandordirs; Name: "{app}\bin"
 
 [Icons]
-Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\icon.ico"; AppUserModelID: "dev.warp.{#MyAppName}"
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\icon.ico"; AppUserModelID: "dev.warp.{#MyAppName}"; Tasks: desktopicon
+Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\icon.ico"; AppUserModelID: "dev.tombyte.{#MyAppName}"
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\icon.ico"; AppUserModelID: "dev.tombyte.{#MyAppName}"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: postinstall runhidden nowait
@@ -156,10 +156,10 @@ begin
 #endif
 end;
 
-{ Returns true when the installer was launched by Warp's auto-update code.
+{ Returns true when the installer was launched by Torch's auto-update code.
   The auto-update path passes /update=1 on the command line and /NOCLOSEAPPLICATIONS
-  so that the installer does not forcibly kill the running Warp process. Instead we
-  wait for Warp to exit naturally by polling the app mutex below. }
+  so that the installer does not forcibly kill the running Torch process. Instead we
+  wait for Torch to exit naturally by polling the app mutex below. }
 function IsBackgroundUpdate(): Boolean;
 begin
   Result := ExpandConstant('{param:update|false}') <> 'false';
@@ -167,7 +167,7 @@ end;
 
 { For background updates, return an empty mutex name so that Inno Setup skips its
   built-in "application is running" dialog - we handle the wait ourselves. For manual
-  installs, return the real mutex name so the user is prompted to close Warp first. }
+  installs, return the real mutex name so the user is prompted to close Torch first. }
 function GetAppMutex(Value: string): string;
 begin
   if IsBackgroundUpdate() then
@@ -185,15 +185,15 @@ var
   WaitCounter: Integer;
   ResultCode: Integer;
 begin
-  { Background update: the installer was launched while Warp was still running.
+  { Background update: the installer was launched while Torch was still running.
     We passed /NOCLOSEAPPLICATIONS so Inno won't kill it. Wait here - before any
-    files are touched - for Warp to release its single-instance mutex, which
+    files are touched - for Torch to release its single-instance mutex, which
     happens as part of normal process exit. }
   if CurStep = ssInstall then
   begin
     if IsBackgroundUpdate() then
     begin
-      Log('Background update: waiting for Warp to exit (mutex: {#AppMutexName})...');
+      Log('Background update: waiting for Torch to exit (mutex: {#AppMutexName})...');
       WaitCounter := 0;
       while CheckForMutexes('{#AppMutexName}') and (WaitCounter < 30) do
       begin
@@ -202,12 +202,12 @@ begin
       end;
       if CheckForMutexes('{#AppMutexName}') then
       begin
-        Log('Warp mutex still held after timeout; force-killing remaining processes.');
-        { Kill by image name. {#MyAppExeName} (e.g. warp.exe, dev.exe) is unique
+        Log('Torch mutex still held after timeout; force-killing remaining processes.');
+        { Kill by image name. {#MyAppExeName} (torch.exe) is unique
           enough that collateral damage is not a concern. OpenConsole.exe is NOT
           killed by name because it is shared with Windows Terminal; instead we
-          rely on Warp's Job Object (JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE) to
-          cascade-kill any child OpenConsole.exe processes when warp.exe dies. }
+          rely on Torch's Job Object (JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE) to
+          cascade-kill any child OpenConsole.exe processes when torch.exe dies. }
         Exec('taskkill.exe', '/f /im {#MyAppExeName}', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
         if ResultCode <> 0 then
           Log('force-kill failed for {#MyAppExeName} (exit code: ' + IntToStr(ResultCode) + ')');
@@ -215,9 +215,9 @@ begin
       end
       else
       begin
-        Log('Warp has exited; proceeding with file installation.');
+        Log('Torch has exited; proceeding with file installation.');
         { The minidump crash-reporter is a child process (same exe name) that
-          may outlive the main Warp process. It holds the executable file open,
+          may outlive the main Torch process. It holds the executable file open,
           which causes the file-copy step to fail with "Access is denied".
           We identify it by the "minidump-server" argument in its command line. }
         Exec('powershell.exe',
@@ -230,10 +230,9 @@ begin
     end;
   end;
 
-  { After a successful install, write a helper script for running the Warp CLI. }
-  { We use this to add a "warp-" prefix (e.g. "warp-preview.cmd" vs. "preview.exe") }
+  { After a successful install, write a helper script for running the Torch CLI. }
   if CurStep = ssPostInstall then begin
-    { Add Warp to PATH if requested }
+    { Add Torch to PATH if requested }
     if IsTaskSelected('addToPath') then
       EnvAddPath(ExpandConstant('{app}\bin'));
 
@@ -241,20 +240,13 @@ begin
     if not DirExists(BinDir) then
       CreateDir(BinDir);
 
-    { Determine the channel-specific script name.  These values must match
-      `Channel::cli_command_name` in the Rust source. }
-#if ReleaseChannel == "stable"
-    CmdScriptName := 'oz.cmd'
-#elif ReleaseChannel == "oss"
+    { Must match `Channel::cli_command_name` in the Rust source. }
     CmdScriptName := 'torch.cmd';
-#else
-    CmdScriptName := 'oz-{#ReleaseChannel}.cmd';
-#endif
 
     { Create the helper CMD script }
     CmdScriptPath := BinDir + '\' + CmdScriptName;
     CmdScriptContent := '@echo off' + #13#10 +
-                       'set "WARP_CLI_MODE=1"' + #13#10 +
+                       'set "TORCH_CLI_MODE=1"' + #13#10 +
                        '"' + ExpandConstant('{app}\{#MyAppExeName}') + '" %*' + #13#10;
     
     SaveStringToFile(CmdScriptPath, CmdScriptContent, False);

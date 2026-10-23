@@ -1,4 +1,4 @@
-//! Built-in Warp-hosted MCP servers.
+//! Built-in Torch-hosted MCP servers.
 //!
 //! Built-in servers are attached automatically for logged-in users: their
 //! definitions are constructed in code and authenticated with the user's
@@ -23,8 +23,8 @@
 
 use std::collections::HashMap;
 
-use uuid::Uuid;
 use torch_core::channel::ChannelState;
+use uuid::Uuid;
 
 use super::templatable::{JsonTemplate, TemplatableMCPServer};
 use super::templatable_installation::TemplatableMCPServerInstallation;
@@ -58,7 +58,7 @@ struct BuiltinMcpServer {
 const FACTORY_MCP: BuiltinMcpServer = BuiltinMcpServer {
     name: FACTORY_MCP_SERVER_NAME,
     path: "/api/v1/mcp/factory",
-    description: "Warp's hosted Factory MCP server. Work with your team's software factories: \
+    description: "Torch's hosted Factory MCP server. Work with your team's software factories: \
                   list factories and their tasks, inspect a task's status and outputs, and send \
                   work in or hand it back.",
     installation_uuid: FACTORY_MCP_INSTALLATION_UUID,
@@ -68,7 +68,7 @@ const FACTORY_MCP: BuiltinMcpServer = BuiltinMcpServer {
 const PREVIEW_URLS_MCP: BuiltinMcpServer = BuiltinMcpServer {
     name: PREVIEW_URLS_MCP_SERVER_NAME,
     path: "/api/v1/mcp/preview-urls",
-    description: "Warp's hosted preview URLs MCP server. Expose a port from this cloud agent \
+    description: "Torch's hosted preview URLs MCP server. Expose a port from this cloud agent \
                   run's sandbox as a shareable preview URL.",
     installation_uuid: Uuid::from_u128(0xb6b375a8_1ba5_4a51_a407_22563d4f7e81),
     template_uuid: Uuid::from_u128(0xb6b375a8_1ba5_4a51_a407_22563d4f7e82),

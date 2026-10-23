@@ -9,7 +9,6 @@ use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use string_offset::CharOffset;
 use syntax_highlightable::SyntaxHighlightable;
-use url::Url;
 use torch_core::context_flag::ContextFlag;
 use torch_core::settings::Setting;
 use torch_core::ui::theme::AnsiColorIdentifier;
@@ -32,6 +31,7 @@ use torchui::{
     AppContext, Element, Entity, FocusContext, ModelHandle, SingletonEntity, TypedActionView, View,
     ViewContext, ViewHandle, WindowId,
 };
+use url::Url;
 
 use super::aliases::WorkflowAliases;
 use super::command_parser::WorkflowCommandDisplayData;
@@ -1564,7 +1564,7 @@ impl WorkflowView {
     }
 
     /// Save the workflow and associated state. This makes a best-effort attempt to not
-    /// unnecessarily modify the backing Warp Drive object.
+    /// unnecessarily modify the backing Torch Drive object.
     fn save(&mut self, ctx: &mut ViewContext<Self>) {
         if FeatureFlag::WorkflowAliases.is_enabled() && self.are_aliases_dirty(ctx) {
             self.save_aliases(ctx);

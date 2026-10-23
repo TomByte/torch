@@ -2,7 +2,7 @@
 use crate::discovery::{InstanceId, InstanceRecord};
 use crate::protocol::{ControlError, ErrorCode};
 
-/// CLI-level selector for choosing one discovered Warp instance.
+/// CLI-level selector for choosing one discovered Torch instance.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum InstanceSelector {
     Active,
@@ -23,7 +23,7 @@ pub fn select_instance(
             .ok_or_else(|| {
                 ControlError::new(
                     ErrorCode::NoInstance,
-                    format!("no Warp instance with id {}", instance_id.0),
+                    format!("no Torch instance with id {}", instance_id.0),
                 )
             }),
         InstanceSelector::Pid(pid) => records
@@ -33,7 +33,7 @@ pub fn select_instance(
             .ok_or_else(|| {
                 ControlError::new(
                     ErrorCode::NoInstance,
-                    format!("no Warp instance with pid {pid}"),
+                    format!("no Torch instance with pid {pid}"),
                 )
             }),
     }
@@ -43,12 +43,12 @@ fn select_active(records: &[InstanceRecord]) -> Result<InstanceRecord, ControlEr
     match records {
         [] => Err(ControlError::new(
             ErrorCode::NoInstance,
-            "no local Warp control instances were discovered",
+            "no local Torch control instances were discovered",
         )),
         [record] => Ok(record.clone()),
         _ => Err(ControlError::new(
             ErrorCode::AmbiguousInstance,
-            "multiple local Warp control instances were discovered; pass --instance",
+            "multiple local Torch control instances were discovered; pass --instance",
         )),
     }
 }

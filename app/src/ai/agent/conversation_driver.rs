@@ -3,7 +3,7 @@
 /// a new driver only has to answer each predicate once.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum ConversationDriver {
-    /// Warp's agent loop: the MAA server streams events and this client executes tools.
+    /// Torch's agent loop: the MAA server streams events and this client executes tools.
     #[default]
     Native,
     /// Another client's conversation mirrored over a shared session; view-only here.
@@ -12,7 +12,7 @@ pub enum ConversationDriver {
     CliAgentTranscript,
     /// Placeholder for a child agent executing on a remote worker, whose own client drives it.
     RemoteChild,
-    /// A harness running outside Warp's agent loop in this client's session; it authors the MAA
+    /// A harness running outside Torch's agent loop in this client's session; it authors the MAA
     /// events itself and runs its own tools.
     ExternalHarness,
 }

@@ -7,7 +7,7 @@ use torchui::ui_components::components::{UiComponent, UiComponentStyles};
 
 use crate::appearance::Appearance;
 use crate::terminal::model::block::Block;
-use crate::terminal::view::WARP_PROMPT_HEIGHT_LINES;
+use crate::terminal::view::TORCH_PROMPT_HEIGHT_LINES;
 
 pub(super) fn render_floating_block_snapshot(
     block: &Block,
@@ -30,7 +30,7 @@ pub(super) fn render_floating_block_snapshot(
                 .with_style(UiComponentStyles {
                     font_color: Some(font_color),
                     // Preview prompt font size should scale the same way as the block prompt.
-                    font_size: Some(appearance.monospace_font_size() * WARP_PROMPT_HEIGHT_LINES),
+                    font_size: Some(appearance.monospace_font_size() * TORCH_PROMPT_HEIGHT_LINES),
                     font_family_id: Some(appearance.monospace_font_family()),
                     ..Default::default()
                 })
@@ -73,7 +73,7 @@ pub(super) fn render_floating_block_snapshot(
                     .with_style(UiComponentStyles {
                         font_color: Some(sub_font_color),
                         font_size: Some(
-                            appearance.monospace_font_size() * WARP_PROMPT_HEIGHT_LINES,
+                            appearance.monospace_font_size() * TORCH_PROMPT_HEIGHT_LINES,
                         ),
                         font_family_id: Some(appearance.monospace_font_family()),
                         ..Default::default()

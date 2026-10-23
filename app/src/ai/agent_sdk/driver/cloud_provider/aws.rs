@@ -6,9 +6,9 @@ use std::time::Duration;
 
 use anyhow::Context;
 use tempfile::{Builder, NamedTempFile};
-use vec1::Vec1;
 use torch_core::safe_info;
 use torchui::{ModelSpawner, SingletonEntity};
+use vec1::Vec1;
 
 use super::super::terminal::TerminalDriver;
 use super::{CloudProvider, CloudProviderSetupError, Result};
@@ -21,7 +21,7 @@ use crate::server::server_api::managed_secrets::AppManagedSecretManager as Manag
 /// set this to the current maximum task duration.
 const IDENTITY_TOKEN_DURATION: Duration = Duration::from_hours(3);
 
-/// AWS STS audience for Warp Oz OIDC federation.
+/// AWS STS audience for Torch Oz OIDC federation.
 const AWS_AUDIENCE: &str = "sts.amazonaws.com";
 
 /// Provides AWS Web Identity credentials for the agent session.

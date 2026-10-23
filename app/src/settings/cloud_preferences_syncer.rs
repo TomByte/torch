@@ -108,7 +108,7 @@ pub fn initialize_cloud_preferences_syncer(
     )
 }
 
-/// Handles syncing CloudPreferences (the Warp Drive objects) and local Settings models that
+/// Handles syncing CloudPreferences (the Torch Drive objects) and local Settings models that
 /// have been created using the define_settings_group macro.
 pub struct CloudPreferencesSyncer {
     // A channel used for debouncing local settings updates so that we don't spam the

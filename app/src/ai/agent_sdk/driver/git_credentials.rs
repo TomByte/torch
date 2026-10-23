@@ -42,7 +42,7 @@ const GIT_CREDENTIALS_REFRESH_BACKOFF: [Duration; 3] = [
     Duration::from_secs(4 * 60),
 ];
 
-const DEFAULT_GIT_NAME: &str = "Warp";
+const DEFAULT_GIT_NAME: &str = "Torch";
 const DEFAULT_GIT_EMAIL: &str = "agent@warp.dev";
 const READ_ONLY_CREDENTIAL_HELPER: &str =
     r#"!f() { test "$1" = get && exec git credential-store get; }; f"#;
@@ -76,7 +76,7 @@ pub(crate) fn is_retryable(error: &TaskGitCredentialsError) -> bool {
 /// plausibly be issued, instead of waiting for the request to fail
 /// asynchronously. This accepts both a detected platform with its own
 /// issuance mechanism and a platform-agnostic token configured via
-/// `WARP_WORKLOAD_TOKEN`, matching `issue_workload_token`'s own resolution,
+/// `TORCH_WORKLOAD_TOKEN`, matching `issue_workload_token`'s own resolution,
 /// so it only short-circuits attempts that are guaranteed to fail.
 pub(crate) fn ensure_workload_token_available() -> Result<(), TaskGitCredentialsError> {
     if !torch_isolation_platform::workload_token_available() {
@@ -688,7 +688,7 @@ pub(crate) fn setup_git_config(credentials: &[GitCredential]) {
 /// Configure the global git user identity from the server-returned credential.
 ///
 /// Uses the first credential's `username`/`email` fields, falling back to the
-/// Warp defaults when either is absent (e.g. service-account principals).
+/// Torch defaults when either is absent (e.g. service-account principals).
 pub(crate) fn configure_git_identity(credentials: &[GitCredential]) {
     let (name, email) = identity_of(credentials.first());
     run_git_config("user.name", &name);
@@ -846,7 +846,7 @@ fn repository_identity_changed_since(
 /// against a `baseline` captured before any of that ran (see
 /// [`global_git_identity`]). A repo the customer's setup command already gave
 /// its own identity — globally, or locally for just that repo — is left
-/// alone; every other repo falls back to the forge-appropriate identity Warp
+/// alone; every other repo falls back to the forge-appropriate identity Torch
 /// resolved at bootstrap.
 pub(crate) fn configure_repository_git_identity_if_unset(
     repository_dir: &std::path::Path,

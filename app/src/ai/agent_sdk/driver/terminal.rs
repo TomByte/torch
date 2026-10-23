@@ -12,7 +12,6 @@ use futures::channel::oneshot;
 use instant::Instant;
 use session_sharing_protocol::common::{Role, SessionId};
 use session_sharing_protocol::sharer::SessionRetentionReason;
-use uuid::Uuid;
 use torch_cli::share::{ShareAccessLevel, ShareRequest, ShareSubject};
 use torch_completer::completer::CommandOutput;
 use torch_core::command::ExitCode;
@@ -22,6 +21,7 @@ use torch_terminal::model::grid::Dimensions;
 use torch_util::path::ShellFamily;
 use torchui::r#async::FutureExt;
 use torchui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity as _, ViewHandle};
+use uuid::Uuid;
 
 use super::AgentDriverError;
 use crate::ai::agent::redaction::redact_secrets;
@@ -49,9 +49,9 @@ use crate::workspaces::user_workspaces::{HeadlessTeamScope, TeamScope, UserWorks
 pub(crate) enum BootstrapError {
     /// The PTY or shell process failed before the bootstrap script completed.
     /// When `reason` is `Some`, the message is
-    /// "Shell spawn failed: {reason}. Check the Warp logs for details."
+    /// "Shell spawn failed: {reason}. Check the Torch logs for details."
     /// When `reason` is `None`, it is
-    /// "Shell spawn failed. Check the Warp logs for details."
+    /// "Shell spawn failed. Check the Torch logs for details."
     PtySpawnFailed { reason: Option<String> },
     /// The bootstrap script did not complete within the expected time.
     TimedOut,
@@ -66,16 +66,16 @@ impl std::fmt::Display for BootstrapError {
             BootstrapError::PtySpawnFailed { reason: Some(r) } => {
                 write!(
                     f,
-                    "Shell spawn failed: {r}. Check the Warp logs for details."
+                    "Shell spawn failed: {r}. Check the Torch logs for details."
                 )
             }
             BootstrapError::PtySpawnFailed { reason: None } => {
-                write!(f, "Shell spawn failed. Check the Warp logs for details.")
+                write!(f, "Shell spawn failed. Check the Torch logs for details.")
             }
             BootstrapError::TimedOut => write!(
                 f,
                 "Terminal session did not start within the expected time. \
-                 Check the Warp logs for details."
+                 Check the Torch logs for details."
             ),
             BootstrapError::InternalError => {
                 write!(f, "An unexpected internal error occurred during bootstrap.")

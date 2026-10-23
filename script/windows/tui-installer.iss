@@ -1,36 +1,36 @@
 #include "environment.iss"
 
-#define MyAppPublisher "Denver Technologies, Inc."
-#define MyAppURL "https://www.warp.dev/"
+#define MyAppPublisher "TomByte"
+#define MyAppURL "https://github.com/TomByte/torch"
 #ifndef MyAppName
-  #define MyAppName "WarpAgentCLIDev"
+  #define MyAppName "TorchTUI"
 #endif
 #ifndef MyAppVersion
   #define MyAppVersion "0.1.0"
 #endif
 #ifndef MyAppExeName
-  #define MyAppExeName "warp-tui-dev.exe"
+  #define MyAppExeName "torch-tui.exe"
 #endif
 #ifndef ReleaseChannel
-  #define ReleaseChannel "dev"
+  #define ReleaseChannel "oss"
 #endif
 #ifndef CLIName
-  #define CLIName "warp-dev"
+  #define CLIName "torch"
 #endif
 #ifndef InstallDirName
-  #define InstallDirName "tui-dev"
+  #define InstallDirName "tui"
 #endif
 #ifndef TargetProfileDir
-  #define TargetProfileDir "target\rclida"
+  #define TargetProfileDir "target\rcli"
 #endif
 #ifndef WindowsAssetsDir
   #define WindowsAssetsDir "..\..\app\assets\windows\x64"
 #endif
 
-#define ProductRegistryKey "SOFTWARE\Warp.dev\WarpAgentCLI\" + ReleaseChannel
+#define ProductRegistryKey "SOFTWARE\TomByte\TorchTUI\" + ReleaseChannel
 
 [Setup]
-AppId=warp-agent-cli-{#ReleaseChannel}
+AppId=torch-tui-{#ReleaseChannel}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppVerName={#MyAppName} {#MyAppVersion}
@@ -54,12 +54,12 @@ OutputBaseFilename={#OutputName}
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
-WizardSmallImageFile="installer-images\warp-logo.bmp"
-WizardImageFile="installer-images\warp-banner.bmp"
+WizardSmallImageFile="installer-images\torch-logo.bmp"
+WizardImageFile="installer-images\torch-banner.bmp"
 SetupIconFile="..\..\app\channels\{#ReleaseChannel}\icon\no-padding\icon.ico"
 CloseApplications=no
 RestartApplications=no
-SetupMutex=Local\WarpAgentCLI{#ReleaseChannel}Setup
+SetupMutex=Local\TorchTUI{#ReleaseChannel}Setup
 MinVersion=10.0.18362
 ChangesEnvironment=true
 RedirectionGuard=no
@@ -119,17 +119,17 @@ end;
 function GetDefaultInstallDir(Param: string): string;
 begin
   if IsAdminInstallMode then
-    Result := ExpandConstant('{commonappdata}\Warp\{#InstallDirName}')
+    Result := ExpandConstant('{commonappdata}\Torch\{#InstallDirName}')
   else
-    Result := ExpandConstant('{localappdata}\Warp\{#InstallDirName}');
+    Result := ExpandConstant('{localappdata}\Torch\{#InstallDirName}');
 end;
 
 function GetDefaultBinDir(): string;
 begin
   if IsAdminInstallMode then
-    Result := ExpandConstant('{commonappdata}\Warp\bin')
+    Result := ExpandConstant('{commonappdata}\Torch\bin')
   else
-    Result := ExpandConstant('{localappdata}\Warp\bin');
+    Result := ExpandConstant('{localappdata}\Torch\bin');
 end;
 function GetRegisteredBinDir(var BinDir: string): Boolean;
 begin
@@ -145,7 +145,7 @@ function GetBinDir(Param: string): string;
 var
   RequestedBinDir: string;
 begin
-  RequestedBinDir := ExpandConstant('{param:warp_bin_dir|}');
+  RequestedBinDir := ExpandConstant('{param:torch_bin_dir|}');
   if RequestedBinDir <> '' then
   begin
     Result := RequestedBinDir;
@@ -267,9 +267,9 @@ begin
   LauncherContents :=
     '@echo off' + #13#10 +
     'setlocal' + #13#10 +
-    'set "WARP_TUI_MANAGED_ROOT=' + ManagedRoot + '"' + #13#10 +
-    'set /p WARP_TUI_ACTIVE_VERSION=<"%WARP_TUI_MANAGED_ROOT%\current"' + #13#10 +
-    '"%WARP_TUI_MANAGED_ROOT%\versions\%WARP_TUI_ACTIVE_VERSION%\{#MyAppExeName}" %*' + #13#10;
+    'set "TORCH_TUI_MANAGED_ROOT=' + ManagedRoot + '"' + #13#10 +
+    'set /p TORCH_TUI_ACTIVE_VERSION=<"%TORCH_TUI_MANAGED_ROOT%\current"' + #13#10 +
+    '"%TORCH_TUI_MANAGED_ROOT%\versions\%TORCH_TUI_ACTIVE_VERSION%\{#MyAppExeName}" %*' + #13#10;
   WriteAtomicTextFile(LauncherPath, LauncherContents);
 end;
 
@@ -295,7 +295,7 @@ begin
     not AllowDowngrade() then
   begin
     Result :=
-      'Warp Agent CLI ' + CurrentVersion +
+      'Torch Agent CLI ' + CurrentVersion +
       ' is newer than {#MyAppVersion}. Pass /allow_downgrade=1 to install an older version.';
     exit;
   end;
@@ -322,7 +322,7 @@ begin
     exit;
 
   if not IsCompleteVersionDir(VersionDir(ExpandConstant('{app}'), '{#MyAppVersion}')) then
-    RaiseException('The installed Warp Agent CLI payload is incomplete');
+    RaiseException('The installed Torch Agent CLI payload is incomplete');
 
   BinDir := GetBinDir('');
   if (PreviousBinDir <> '') and

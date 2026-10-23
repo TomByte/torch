@@ -30,7 +30,7 @@ extern crate plist;
 const ITERM_DEFAULT_MONOSPACE_FONT_SIZE: &str = "12";
 const ITERM_DEFAULT_MONOSPACE_FONT_FAMILY: &str = "Monaco";
 
-const WARP_DEFAULT_WORKING_DIRECTORY: ITermWorkingDirectoryStrategy =
+const TORCH_DEFAULT_WORKING_DIRECTORY: ITermWorkingDirectoryStrategy =
     ITermWorkingDirectoryStrategy::Simple(ITermWorkingDirectory::ReuseLast);
 
 const PIN_TOP: i64 = 2;
@@ -40,7 +40,7 @@ const PIN_RIGHT: i64 = 7;
 
 bitflags! {
     /// Bit flags for modifier keys. Bit 17 = shift, bit 18 = ctrl, bit 19 = option,
-    /// bit 20 = cmd, bit 21 = numpad (which Warp does not store as a modifier).
+    /// bit 20 = cmd, bit 21 = numpad (which Torch does not store as a modifier).
     #[derive(Copy, Clone, Debug, PartialEq, Eq)]
     pub struct Flags: u32 {
         const CTRL = 1 << 18;
@@ -291,7 +291,7 @@ impl TryFrom<ITermKeystroke> for Keystroke {
             alt: modifier_flags.contains(Flags::ALT),
             shift: modifier_flags.contains(Flags::SHIFT),
             cmd: modifier_flags.contains(Flags::CMD),
-            // Neither Warp nor iTerm supports Meta in global hotkeys.
+            // Neither Torch nor iTerm supports Meta in global hotkeys.
             meta: false,
             key,
         })
@@ -303,7 +303,7 @@ pub struct ITermGlobalHotkeyWindow {
     keystroke: ITermKeystroke,
     autohide: bool,
     /// Which screen the hotkey window should open on. -1 = any screen,
-    /// -2 = screen with cursor (not supported in Warp), and >= 0 is the index of the screen.
+    /// -2 = screen with cursor (not supported in Torch), and >= 0 is the index of the screen.
     screen: i64,
     /// How the quake window displays. 2 is pin to top, 5 is bottom, 6 is left, and 7 is right.
     screen_type: i64,
@@ -669,8 +669,8 @@ impl ParseableConfig for ITermProfile {
     }
 
     fn parse(mut self, fonts: &[FontInfo]) -> Config {
-        // iTerm stores its fonts with internal names and supports styles as default terminal text, whereas Warp changes fonts based on display name.
-        // Only import a font if there is only one font whose iTerm name starts with the display name of a font Warp supports.
+        // iTerm stores its fonts with internal names and supports styles as default terminal text, whereas Torch changes fonts based on display name.
+        // Only import a font if there is only one font whose iTerm name starts with the display name of a font Torch supports.
         let translated_font_name = fonts
             .iter()
             .find(|font_info| {
@@ -707,7 +707,7 @@ impl ParseableConfig for ITermProfile {
         };
 
         let mouse_and_scroll_reporting = match (self.mouse_reporting, self.scroll_reporting) {
-            // Since this is the Warp default, return None.
+            // Since this is the Torch default, return None.
             (true, true) => None,
             (mouse_reporting, scroll_reporting) => Some(MouseAndScrollReporting {
                 mouse_reporting,
@@ -821,12 +821,12 @@ impl ParseableConfig for ITermProfile {
         }
 
         if self.working_directory == default_profile.working_directory
-            || self.working_directory == Some(WARP_DEFAULT_WORKING_DIRECTORY)
+            || self.working_directory == Some(TORCH_DEFAULT_WORKING_DIRECTORY)
         {
             self.working_directory = None;
         }
 
-        // Warp's default is not to open windows with a custom size,
+        // Torch's default is not to open windows with a custom size,
         // so there is nothing to check against.
         if self.rows == default_profile.rows {
             self.rows = None;
@@ -834,7 +834,7 @@ impl ParseableConfig for ITermProfile {
         if self.columns == default_profile.columns {
             self.columns = None;
         }
-        // iTerm's presets are the same as Warp's
+        // iTerm's presets are the same as Torch's
         if self.transparency == default_profile.transparency {
             self.transparency = None;
         }

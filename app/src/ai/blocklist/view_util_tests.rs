@@ -16,7 +16,7 @@ fn chatgpt_subscription_error(actions: Vec<ChatGPTSubscriptionErrorAction>) -> R
     RenderableAIError::ChatGPTSubscriptionError {
         code: "subscription_sharing_usage_limit_exceeded".to_string(),
         title: "You've reached your ChatGPT usage limit".to_string(),
-        message: "Continue with Warp credits to keep going.".to_string(),
+        message: "Continue with Torch credits to keep going.".to_string(),
         actions,
     }
 }
@@ -53,7 +53,7 @@ fn chatgpt_subscription_error_presents_server_copy_and_actions_in_order() {
                     failed_output_presentation(&error, false, ctx),
                     Some(FailedOutputPresentation::ChatGPTSubscription {
                         title: "You've reached your ChatGPT usage limit".to_string(),
-                        message: "Continue with Warp credits to keep going.".to_string(),
+                        message: "Continue with Torch credits to keep going.".to_string(),
                         actions,
                     })
                 );
@@ -79,7 +79,7 @@ fn chatgpt_subscription_error_becomes_disclosure_once_conversation_uses_warp_cre
 
 #[test]
 fn chatgpt_subscription_message_with_links_appends_only_url_actions() {
-    let message = "Continue with Warp credits to keep going.";
+    let message = "Continue with Torch credits to keep going.";
     assert_eq!(
         chatgpt_subscription_message_with_links(message, &[]),
         message

@@ -274,7 +274,7 @@ pub trait ObjectClient: 'static + Send + Sync {
         notebook_id: cloud_object_models::NotebookId,
     ) -> Result<ServerMetadata>;
 
-    /// Gets updates for all Warp Drive actions.
+    /// Gets updates for all Torch Drive actions.
     async fn get_warp_drive_updates(
         &self,
         message_sender: Sender<ObjectUpdateMessage>,

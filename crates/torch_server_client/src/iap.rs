@@ -39,15 +39,15 @@ const REQUESTED_TOKEN_TYPE_ACCESS_TOKEN: &str = "urn:ietf:params:oauth:token-typ
 const WIF_IDENTITY_TOKEN_DURATION: Duration = Duration::from_secs(60 * 60);
 const WIF_MINT_REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
 
-/// Env var carrying a Warp OIDC task-identity JWT (audience = the WIF provider
+/// Env var carrying a Torch OIDC task-identity JWT (audience = the WIF provider
 /// resource name), injected by warp-server so a cold sandboxed runner can
 /// bootstrap its first IAP mint without calling the IAP-gated identity-token
 /// endpoint.
-const STAGING_IAP_BOOTSTRAP_TOKEN_ENV_VAR: &str = "WARP_STAGING_IAP_BOOTSTRAP_JWT";
+const STAGING_IAP_BOOTSTRAP_TOKEN_ENV_VAR: &str = "TORCH_STAGING_IAP_BOOTSTRAP_JWT";
 
 pub type PathResolver = Box<dyn Fn(&mut AppContext) -> BoxFuture<'static, Option<String>>>;
 
-/// Mints a Warp-signed OIDC identity token for a given audience. Implemented in
+/// Mints a Torch-signed OIDC identity token for a given audience. Implemented in
 /// the `app` crate over the managed-secrets client so this crate need not depend
 /// on the managed-secrets stack.
 pub trait IapIdentityTokenMinter: Send + Sync + 'static {
@@ -306,7 +306,7 @@ impl IapManager {
         let audiences = state.audiences().to_string();
         let service_account_email = state.service_account_email().to_string();
 
-        // Make `gcloud` findable even when Warp is launched from the macOS GUI
+        // Make `gcloud` findable even when Torch is launched from the macOS GUI
         // (i.e. in environments without something like `~/.zshrc && WarpDev` happening to init cli path)
         let path_future = (self.path_resolver)(ctx);
 
@@ -343,7 +343,7 @@ impl IapManager {
     }
 
     /// Runner-context refresh: mint an IAP-valid ID token via Workload Identity
-    /// Federation (Warp OIDC JWT -> STS -> IAM `generateIdToken`). No gcloud.
+    /// Federation (Torch OIDC JWT -> STS -> IAM `generateIdToken`). No gcloud.
     fn start_wif_refresh(
         &mut self,
         state: Arc<IapState>,
@@ -416,14 +416,14 @@ impl IapManager {
                 }
                 state.set_loaded(cached);
                 self.consecutive_failures = 0;
-                log::info!("Warp Staging IAP token refreshed");
+                log::info!("Torch Staging IAP token refreshed");
                 ctx.emit(IapManagerEvent::StateChanged);
                 ctx.notify();
                 self.schedule_next_refresh(expires_at, ctx);
             }
             Err(err) => {
                 let message = format!("{err:#}");
-                log::warn!("Warp Staging IAP token fetch failed: {message}");
+                log::warn!("Torch Staging IAP token fetch failed: {message}");
                 let is_first_failure_of_streak = self.consecutive_failures == 0;
                 state.set_failed(message.clone());
                 ctx.emit(IapManagerEvent::RefreshFailed {
@@ -556,12 +556,12 @@ async fn resolve_wif_identity_token(
         minter
             .mint_identity_token(federation_audience.to_string(), WIF_IDENTITY_TOKEN_DURATION)
             .await
-            .map_err(|err| anyhow::anyhow!("failed to mint Warp identity token: {err:#}"))
+            .map_err(|err| anyhow::anyhow!("failed to mint Torch identity token: {err:#}"))
     }
 }
 
 /// Mints an IAP-valid ID token for a sandboxed Oz runner via Workload Identity
-/// Federation: Warp OIDC JWT -> GCP STS federated token -> IAM `generateIdToken`
+/// Federation: Torch OIDC JWT -> GCP STS federated token -> IAM `generateIdToken`
 /// impersonating the IAP access service account. Requires no local gcloud.
 async fn fetch_iap_token_via_wif(
     minter: Arc<dyn IapIdentityTokenMinter>,
@@ -576,7 +576,7 @@ async fn fetch_iap_token_via_wif(
     let federation_audience = parse_aud_from_jwt(&injected_jwt)
         .ok_or_else(|| anyhow::anyhow!("injected OIDC JWT has no readable `aud` claim"))?;
 
-    // Leg 1: obtain the Warp-signed OIDC JWT used as the STS subject token.
+    // Leg 1: obtain the Torch-signed OIDC JWT used as the STS subject token.
     let identity_token =
         resolve_wif_identity_token(injected_jwt, &federation_audience, &minter).await?;
 

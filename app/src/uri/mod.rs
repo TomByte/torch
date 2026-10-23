@@ -14,13 +14,13 @@ use std::str::FromStr;
 use anyhow::{Result, anyhow, ensure};
 use itertools::Itertools;
 use session_sharing_protocol::common::SessionId;
-use url::Url;
 #[cfg(not(target_family = "wasm"))]
 use torch_errors::report_error;
 use torch_util::path::LineAndColumnArg;
 use torchui::notification::UserNotification;
 use torchui::platform::TerminationMode;
 use torchui::{AppContext, EntityId, SingletonEntity as _, TypedActionView, ViewHandle, WindowId};
+use url::Url;
 
 use self::docker::open_docker_container;
 use crate::ai::active_agent_views_model::{ActiveAgentViewsModel, ConversationOrTaskId};
@@ -393,7 +393,7 @@ impl UriHost {
                 // - warp://settings/mcp - opens MCP servers settings page
                 // - warp://settings/platform - opens platform settings page
                 // - warp://settings/appearance - opens appearance settings page (themes, fonts, etc.)
-                // - warp://settings/warp_agent - opens the Warp Agent settings page (inference / API keys)
+                // - warp://settings/warp_agent - opens the Torch Agent settings page (inference / API keys)
                 let query_string: HashMap<_, _> = url.query_pairs().collect();
                 // A bare `warp://settings` (or a trailing slash) yields an empty path
                 // segment; treat that as "no sub-page" so the query-param routing below
@@ -816,7 +816,7 @@ fn find_matching_config_name<'a>(
 /// - `<name>` is matched case-insensitively against each tab config's file
 ///   stem, so both `warp://tab_config/my_tab` and
 ///   `warp://tab_config/my_tab.toml` work.
-/// - When `?new_window=true` (or no Warp window is open) the tab config opens
+/// - When `?new_window=true` (or no Torch window is open) the tab config opens
 ///   in a brand-new window. Otherwise it opens as a new tab in the active
 ///   window.
 fn handle_tab_config_uri(primary_window_id: Option<WindowId>, url: &Url, ctx: &mut AppContext) {
@@ -1320,7 +1320,7 @@ fn get_primary_window(
 enum OpenFileAction {
     /// Open in the notebook viewer pane (Markdown, or Jupyter when enabled).
     Notebook,
-    /// Open in Warp's code/text editor pane.
+    /// Open in Torch's code/text editor pane.
     Editor,
     /// Open a session at the parent directory and queue the file as the pending command,
     /// or just open a session at the directory path if `path` is a directory.
@@ -1331,10 +1331,10 @@ enum OpenFileAction {
 /// standing up a full `AppContext`.
 ///
 /// The Markdown Viewer preference is passed in because macOS can hand Markdown
-/// file URLs to Warp via the file type registration in `Info.plist`. Since Warp
+/// file URLs to Torch via the file type registration in `Info.plist`. Since Torch
 /// cannot easily update that registration when the user toggles the viewer
 /// preference, the URI handler must check the preference before routing a
-/// Markdown file to the in-Warp notebook viewer. Other notebook viewer formats,
+/// Markdown file to the in-Torch notebook viewer. Other notebook viewer formats,
 /// such as Jupyter notebooks, are controlled by their own routing checks.
 fn classify_open_file_action(path: &Path, prefer_markdown_viewer: bool) -> OpenFileAction {
     if renders_in_warp_notebook_viewer(path) && (!is_markdown_file(path) || prefer_markdown_viewer)
@@ -1398,7 +1398,7 @@ fn open_file(window_id: Option<WindowId>, path: PathBuf, ctx: &mut AppContext) {
             use crate::util::file::external_editor::EditorSettings;
             use crate::util::openable_file_type::resolve_file_target_to_open_in_warp;
 
-            // Open text/code files in Warp's code editor, respecting the user's layout preference.
+            // Open text/code files in Torch's code editor, respecting the user's layout preference.
             let editor_settings = EditorSettings::as_ref(ctx);
             let target = resolve_file_target_to_open_in_warp(&path, editor_settings, None);
 

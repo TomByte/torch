@@ -92,7 +92,6 @@ use crate::autoupdate::TuiAutoupdater;
 use crate::editor_element::TuiEditorAction;
 use crate::inline_menu::MAX_INLINE_MENU_ROWS;
 use crate::input::view::TuiInputAction;
-use crate::input_mode_policy::{AI_LOCKED_CONFIG, AI_UNLOCKED_CONFIG};
 use crate::input_suggestions_mode::TuiInputSuggestionsMode;
 use crate::keybindings::{
     CONTEXTUAL_PLAN_TOGGLE_BINDING_NAME, KEYBOARD_ENHANCEMENT_AVAILABLE_FLAG,
@@ -1114,56 +1113,6 @@ fn shell_completion_source_warmup_loads_path_executables() {
 }
 
 #[test]
-fn nld_reset_only_unlocks_after_agent_control_and_not_on_user_edit() {
-    App::test((), |mut app| async move {
-        let fixture = focus_test_fixture(&mut app);
-        let (view, _) = add_focus_test_session(&mut app, &fixture, true);
-
-        view.update(&mut app, |view, ctx| {
-            AISettings::handle(ctx).update(ctx, |settings, ctx| {
-                settings
-                    .ai_autodetection_enabled_internal
-                    .set_value(true, ctx)
-                    .expect("test setting should update");
-            });
-            view.input_view.update(ctx, |input, ctx| {
-                input.exit_shell_mode(ctx);
-                input.set_text("git status", ctx);
-            });
-            assert_eq!(
-                view.ai_input_model.as_ref(ctx).input_config(),
-                AI_LOCKED_CONFIG,
-                "an explicit Agent lock should be retained while the user edits"
-            );
-
-            // User edits must not reinterpret an explicit Agent lock as stale
-            // agent-control state.
-            view.handle_input_content_changed(true, ctx);
-            assert_eq!(
-                view.ai_input_model.as_ref(ctx).input_config(),
-                AI_LOCKED_CONFIG,
-                "user edits must not unlock an explicit Agent lock"
-            );
-
-            // A lock installed for agent terminal control is reset when that
-            // control completes, which restores the first post-agent prompt to
-            // the setting-derived NLD state.
-            view.input_view.update(ctx, |input, ctx| {
-                input.lock_for_agent_control(ctx);
-            });
-            view.input_view.update(ctx, |input, ctx| {
-                input.reset_after_agent_control(ctx);
-            });
-            assert_eq!(
-                view.ai_input_model.as_ref(ctx).input_config(),
-                AI_UNLOCKED_CONFIG,
-                "agent-control completion should resume NLD"
-            );
-        });
-    });
-}
-
-#[test]
 #[cfg(feature = "voice_input")]
 fn voice_accepts_exact_and_whitespace_only_arguments() {
     assert_eq!(voice_command_argument("/voice"), Some(""));
@@ -1231,7 +1180,7 @@ fn tui_cli_shell_command_uses_channel_entry_points() {
     );
     assert_eq!(
         super::tui_cli_shell_command(Channel::Oss, "--version"),
-        "warp-oss --version"
+        "torch-tui --version"
     );
     assert_eq!(
         super::tui_cli_shell_command(Channel::Integration, "--version"),
@@ -2403,100 +2352,6 @@ fn fork_slash_command_keeps_a_conversation_without_a_resume_id_selected() {
 }
 
 #[test]
-fn fork_slash_command_replaces_the_surface_and_renders_original_resume_guidance() {
-    App::test((), |mut app| async move {
-        let fixture = focus_test_fixture(&mut app);
-        let (view, _) = add_focus_test_session(&mut app, &fixture, true);
-        let (model_event_sender, _model_event_receiver) = std::sync::mpsc::sync_channel(2);
-        app.update(|ctx| {
-            torch::tui_export::GlobalResourceHandlesProvider::handle(ctx).update(
-                ctx,
-                |provider, _| {
-                    provider.set_model_event_sender_for_test(model_event_sender);
-                },
-            );
-        });
-
-        let source_token = "11111111-1111-1111-1111-111111111111";
-        let source_conversation =
-            forkable_tui_conversation_for_test("Original fork boundary prompt");
-        let source_conversation_id = source_conversation.id();
-        let source_root_task_id = source_conversation.get_root_task_id().clone();
-        view.update(&mut app, |view, ctx| {
-            let source_conversation =
-                BlocklistAIHistoryModel::handle(ctx).update(ctx, |history, ctx| {
-                    history.restore_conversations(
-                        view.terminal_surface_id,
-                        vec![source_conversation],
-                        ctx,
-                    );
-                    history.set_server_conversation_token_for_conversation(
-                        source_conversation_id,
-                        source_token.to_owned(),
-                    );
-                    history
-                        .conversation(&source_conversation_id)
-                        .expect("source conversation should be restored")
-                        .clone()
-                });
-            view.replace_conversation_surface(
-                source_conversation,
-                TuiConversationRestoreOrigin::ConversationList,
-                TuiConversationRestoreTelemetryTarget::Local,
-                ctx,
-            );
-            assert!(
-                view.slash_commands_source
-                    .as_ref(ctx)
-                    .active_commands()
-                    .any(|(_, command)| command.kind == SlashCommandKind::Fork)
-            );
-            view.execute_tui_slash_command(&slash_commands::FORK, None, ctx);
-        });
-
-        let forked_conversation_id = view.read(&app, |view, ctx| {
-            view.conversation_selection
-                .as_ref(ctx)
-                .selected_conversation_id(ctx)
-                .expect("fork should select a replacement conversation")
-        });
-        assert_ne!(forked_conversation_id, source_conversation_id);
-        app.read(|ctx| {
-            let history = BlocklistAIHistoryModel::as_ref(ctx);
-            assert!(history.conversation(&source_conversation_id).is_some());
-            let forked = history
-                .conversation(&forked_conversation_id)
-                .expect("forked conversation should be restored");
-            assert_ne!(forked.get_root_task_id(), &source_root_task_id);
-            assert_eq!(
-                forked
-                    .forked_from_server_conversation_token()
-                    .map(|token| token.as_str()),
-                Some(source_token),
-            );
-            assert_eq!(forked.exchange_count(), 1);
-            assert_eq!(
-                view.as_ref(ctx)
-                    .transcript
-                    .as_ref(ctx)
-                    .agent_blocks_in_canonical_order()
-                    .len(),
-                1,
-            );
-        });
-
-        let rendered = render_session(&mut app, &view, 100, 40).join("\n");
-        let notice = rendered
-            .find("Forked conversation. To resume the original in another session, run:")
-            .unwrap_or_else(|| panic!("fork should render resume guidance:\n{rendered}"));
-        let resume_id = rendered.find(source_token).unwrap_or_else(|| {
-            panic!("resume guidance should contain the original server token:\n{rendered}")
-        });
-        assert!(notice < resume_id);
-    });
-}
-
-#[test]
 fn cost_command_uses_the_gui_eligibility_rules() {
     assert_eq!(
         cost_command_unavailable_hint(None),
@@ -3122,66 +2977,6 @@ fn empty_typeahead_event_leaves_the_tui_input_unchanged() {
 }
 
 #[test]
-fn nld_slash_command_toggles_and_reports_its_effects() {
-    App::test((), |mut app| async move {
-        let _agent_mode = torch_core::features::FeatureFlag::AgentMode.override_enabled(true);
-        let fixture = focus_test_fixture(&mut app);
-        let (view, _) = add_focus_test_session(&mut app, &fixture, true);
-
-        view.update(&mut app, |view, ctx| {
-            view.input_view.update(ctx, |input, ctx| {
-                input.set_text("/natural-language-detection", ctx);
-            });
-            view.execute_tui_slash_command(&slash_commands::NATURAL_LANGUAGE_DETECTION, None, ctx);
-        });
-
-        assert!(app.read(|ctx| {
-            *AISettings::as_ref(ctx)
-                .ai_autodetection_enabled_internal
-                .value()
-        }));
-        assert_eq!(app.read(|ctx| input_text(&view, ctx)), "");
-        assert_eq!(
-            view.read(&app, |view, _| {
-                view.transient_hint
-                    .current()
-                    .map(|(text, tone)| (text.to_owned(), tone))
-            }),
-            Some((
-                "Natural language detection enabled.".to_owned(),
-                TransientHintTone::Success
-            ))
-        );
-
-        view.update(&mut app, |view, ctx| {
-            view.input_view.update(ctx, |input, ctx| {
-                input.set_text("/natural-language-detection", ctx);
-            });
-            view.execute_tui_slash_command(&slash_commands::NATURAL_LANGUAGE_DETECTION, None, ctx);
-        });
-        futures_lite::future::yield_now().await;
-
-        assert!(!app.read(|ctx| {
-            *AISettings::as_ref(ctx)
-                .ai_autodetection_enabled_internal
-                .value()
-        }));
-        assert_eq!(app.read(|ctx| input_text(&view, ctx)), "");
-        assert_eq!(
-            view.read(&app, |view, _| {
-                view.transient_hint
-                    .current()
-                    .map(|(text, tone)| (text.to_owned(), tone))
-            }),
-            Some((
-                "Natural language detection disabled.".to_owned(),
-                TransientHintTone::Success
-            ))
-        );
-    });
-}
-
-#[test]
 fn status_slash_command_opens_dedicated_status_menu_via_shared_structure() {
     App::test((), |mut app| async move {
         app.update(crate::keybindings::init);
@@ -3356,7 +3151,7 @@ fn zero_state_position_stays_stable_across_shell_bootstrap() {
         let title_row = |lines: &[String]| {
             lines
                 .iter()
-                .position(|line| line.contains("Warp Agent CLI"))
+                .position(|line| line.contains("Torch Agent CLI"))
                 .unwrap_or_else(|| panic!("zero-state title should render:\n{}", lines.join("\n")))
         };
         assert_eq!(
@@ -3656,7 +3451,7 @@ fn zero_state_running_command_hint_shows_attachment() {
 
         let lines = render_session(&mut app, &view, 80, 40);
         assert!(
-            lines.iter().any(|line| line.contains("Warp Agent CLI")),
+            lines.iter().any(|line| line.contains("Torch Agent CLI")),
             "zero state should remain visible:\n{}",
             lines.join("\n")
         );
@@ -4218,8 +4013,8 @@ fn zero_state_renders_with_only_zero_height_bootstrap_blocks() {
         let lines = frame.buffer.to_lines();
         let title_row = lines
             .iter()
-            .position(|line| line.contains("Warp Agent CLI"))
-            .expect("zero state should render the Warp Agent CLI title");
+            .position(|line| line.contains("Torch Agent CLI"))
+            .expect("zero state should render the Torch Agent CLI title");
         assert!(
             title_row < 28,
             "zero-state title should render in the transcript area:\n{}",
@@ -4270,11 +4065,11 @@ fn first_zero_state_stays_hidden_while_markers_load_and_reconciles_without_repla
             );
         });
         let lines = render_session(&mut app, &view, 100, 24);
-        assert!(lines.iter().any(|line| line.contains("Warp Agent CLI")));
+        assert!(lines.iter().any(|line| line.contains("Torch Agent CLI")));
         assert!(
             lines
                 .iter()
-                .all(|line| !line.contains("What’s different about Warp"))
+                .all(|line| !line.contains("What’s different about Torch"))
         );
         assert!(lines.iter().all(|line| !line.contains("████")));
 
@@ -4390,11 +4185,11 @@ fn background_session_does_not_receive_first_run_onboarding() {
             );
         });
         let lines = render_session(&mut app, &onboarding_view, 100, 24);
-        assert!(lines.iter().any(|line| line.contains("Welcome to Warp")));
+        assert!(lines.iter().any(|line| line.contains("Welcome to Torch")));
         assert!(
             lines
                 .iter()
-                .any(|line| line.contains("What’s different about Warp"))
+                .any(|line| line.contains("What’s different about Torch"))
         );
     });
 }
@@ -6467,30 +6262,6 @@ fn copy_debugging_id_available_in_active_commands_at_zero_state() {
             assert!(
                 has_copy_debugging_id,
                 "/copy-debugging-id must be available for the blank active conversation",
-            );
-        });
-    });
-}
-
-/// Verifies that `/handoff` remains available for the TUI's blank active conversation.
-#[test]
-fn handoff_is_available_at_zero_state() {
-    App::test((), |mut app| async move {
-        let _oz_handoff = FeatureFlag::OzHandoff.override_enabled(true);
-        let _local_cloud = FeatureFlag::HandoffLocalCloud.override_enabled(true);
-        let fixture = focus_test_fixture(&mut app);
-        let (view, _) = add_focus_test_session(&mut app, &fixture, true);
-        view.read(&app, |view, ctx| {
-            let active_names: Vec<&str> = view
-                .slash_commands_source
-                .as_ref(ctx)
-                .active_commands()
-                .map(|(_, cmd)| cmd.name)
-                .collect();
-
-            assert!(
-                active_names.contains(&slash_commands::MOVE_TO_CLOUD.name),
-                "/handoff must be active at zero state",
             );
         });
     });

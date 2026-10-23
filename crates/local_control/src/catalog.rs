@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 pub const PROTOCOL_VERSION: u32 = 1;
 
-/// Level of Warp hierarchy or orthogonal product noun an action targets.
+/// Level of Torch hierarchy or orthogonal product noun an action targets.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum TargetScope {

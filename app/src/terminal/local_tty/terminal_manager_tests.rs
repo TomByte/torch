@@ -15,12 +15,12 @@ fn planned_environment_becomes_the_next_recovery_baseline() {
                 "/bin/bash".into(),
                 Vec::new(),
             )),
-            original_env: HashMap::from([("WARP_API_KEY".into(), "standby-key".into())]),
+            original_env: HashMap::from([("TORCH_API_KEY".into(), "standby-key".into())]),
             channel_event_proxy: ChannelEventListener::new_for_test(),
             model_events: init.model_events,
         };
         let run_env = HashMap::from([
-            ("WARP_API_KEY".into(), "run-key".into()),
+            ("TORCH_API_KEY".into(), "run-key".into()),
             ("CUSTOM_SETUP_VALUE".into(), "run-value".into()),
         ]);
         assert_eq!(resources.adopt_environment(run_env.clone()), run_env);
@@ -29,7 +29,7 @@ fn planned_environment_becomes_the_next_recovery_baseline() {
             "/run/kubeconfig".into(),
         )])));
         assert_eq!(
-            recovered.get(&OsString::from("WARP_API_KEY")).unwrap(),
+            recovered.get(&OsString::from("TORCH_API_KEY")).unwrap(),
             "run-key"
         );
         assert_eq!(
@@ -42,7 +42,7 @@ fn planned_environment_becomes_the_next_recovery_baseline() {
             recovered.get(&OsString::from("KUBECONFIG")).unwrap(),
             "/run/kubeconfig"
         );
-        let next_env = HashMap::from([("WARP_API_KEY".into(), "next-run-key".into())]);
+        let next_env = HashMap::from([("TORCH_API_KEY".into(), "next-run-key".into())]);
         resources.adopt_environment(next_env.clone());
         assert_eq!(resources.recovery_environment(None), next_env);
     });

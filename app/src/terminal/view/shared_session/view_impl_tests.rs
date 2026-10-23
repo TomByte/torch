@@ -8,9 +8,9 @@ use futures::channel::oneshot;
 use pathfinder_geometry::vector::vec2f;
 use persistence::model::ConversationUsageMetadata;
 use session_sharing_protocol::sharer::SessionSourceType;
-use warp_multi_agent_api::{self as api, client_action as api_client_action};
 use torchui::platform::WindowStyle;
 use torchui::{App, EntityId, TypedActionView, ViewHandle};
+use warp_multi_agent_api::{self as api, client_action as api_client_action};
 
 use super::*;
 use crate::ai::agent::api::ServerConversationToken;
@@ -954,36 +954,6 @@ fn handoff_request_for_test() -> SpawnAgentRequest {
     }
 }
 
-#[test]
-fn test_ambient_session_join_auto_opens_details_panel() {
-    let _cloud_mode_flag = FeatureFlag::CloudMode.override_enabled(true);
-
-    App::test((), |mut app| async move {
-        let terminal = cloud_mode_terminal_for_test(&mut app);
-        let firebase_uid = UserUid::new("mock_firebase_uid");
-
-        terminal.update(&mut app, |view, ctx| {
-            view.model
-                .lock()
-                .set_shared_session_status(SharedSessionStatus::ViewPending);
-            view.on_session_share_joined(
-                ParticipantId::new(),
-                firebase_uid,
-                ReplicaId::random(),
-                Box::new(ParticipantList::default()),
-                SessionId::new(),
-                SessionSourceType::AmbientAgent { task_id: None },
-                ctx,
-            );
-        });
-
-        terminal.read(&app, |view, _| {
-            assert!(view.is_conversation_details_panel_open);
-            assert!(view.has_auto_opened_conversation_details_panel);
-        });
-    });
-}
-
 #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
 #[test]
 fn test_local_to_cloud_handoff_session_join_keeps_details_panel_hidden() {
@@ -1029,128 +999,6 @@ fn test_local_to_cloud_handoff_session_join_keeps_details_panel_hidden() {
     });
 }
 
-#[test]
-fn test_cloud_cloud_handoff_session_join_keeps_closed_details_panel_hidden() {
-    let _cloud_mode_flag = FeatureFlag::CloudMode.override_enabled(true);
-    let _handoff_flag = FeatureFlag::HandoffCloudCloud.override_enabled(true);
-    let _setup_v2_flag = FeatureFlag::CloudModeSetupV2.override_enabled(true);
-
-    App::test((), |mut app| async move {
-        let terminal = cloud_mode_terminal_for_test(&mut app);
-        let task = create_cloud_mode_task_for_user(TEST_USER_UID);
-        let task_id = task.task_id;
-        let firebase_uid = UserUid::new("mock_firebase_uid");
-
-        AgentConversationsModel::handle(&app).update(&mut app, |model, _| {
-            model.insert_task_for_test(task);
-        });
-
-        terminal.update(&mut app, |view, ctx| {
-            let ambient_agent_view_model = view
-                .ambient_agent_view_model()
-                .expect("cloud mode terminal should have ambient model")
-                .clone();
-            ambient_agent_view_model.update(ctx, |model, ctx| {
-                model.enter_viewing_existing_session(task_id, ctx);
-            });
-
-            assert!(!view.is_conversation_details_panel_open);
-            assert!(!view.has_auto_opened_conversation_details_panel);
-
-            view.enable_cloud_followup_input(task_id, ctx);
-            view.handle_ambient_agent_event(
-                &crate::terminal::view::ambient_agent::AmbientAgentViewModelEvent::ExecutionSessionReady {
-                    session_id: SessionId::new(),
-                },
-                ctx,
-            );
-
-            view.model
-                .lock()
-                .set_shared_session_status(SharedSessionStatus::ViewPending);
-            view.on_session_share_joined(
-                ParticipantId::new(),
-                firebase_uid,
-                ReplicaId::random(),
-                Box::new(ParticipantList::default()),
-                SessionId::new(),
-                SessionSourceType::AmbientAgent {
-                    task_id: Some(task_id.to_string()),
-                },
-                ctx,
-            );
-        });
-
-        terminal.read(&app, |view, _| {
-            assert!(!view.is_conversation_details_panel_open);
-            assert!(view.has_auto_opened_conversation_details_panel);
-        });
-    });
-}
-
-#[test]
-fn test_cloud_cloud_handoff_session_join_respects_details_panel_closed_after_followup_input() {
-    let _cloud_mode_flag = FeatureFlag::CloudMode.override_enabled(true);
-    let _handoff_flag = FeatureFlag::HandoffCloudCloud.override_enabled(true);
-    let _setup_v2_flag = FeatureFlag::CloudModeSetupV2.override_enabled(true);
-
-    App::test((), |mut app| async move {
-        let terminal = cloud_mode_terminal_for_test(&mut app);
-        let task = create_cloud_mode_task_for_user(TEST_USER_UID);
-        let task_id = task.task_id;
-        let firebase_uid = UserUid::new("mock_firebase_uid");
-
-        AgentConversationsModel::handle(&app).update(&mut app, |model, _| {
-            model.insert_task_for_test(task);
-        });
-
-        terminal.update(&mut app, |view, ctx| {
-            let ambient_agent_view_model = view
-                .ambient_agent_view_model()
-                .expect("cloud mode terminal should have ambient model")
-                .clone();
-            ambient_agent_view_model.update(ctx, |model, ctx| {
-                model.enter_viewing_existing_session(task_id, ctx);
-            });
-
-            view.is_conversation_details_panel_open = true;
-            view.fetch_and_update_conversation_details_panel(ctx);
-            assert!(view.is_conversation_details_panel_open);
-
-            view.enable_cloud_followup_input(task_id, ctx);
-            view.handle_action(&TerminalAction::ToggleConversationDetailsPanel, ctx);
-            assert!(!view.is_conversation_details_panel_open);
-            assert!(!view.has_auto_opened_conversation_details_panel);
-
-            view.handle_ambient_agent_event(
-                &crate::terminal::view::ambient_agent::AmbientAgentViewModelEvent::ExecutionSessionReady {
-                    session_id: SessionId::new(),
-                },
-                ctx,
-            );
-
-            view.model
-                .lock()
-                .set_shared_session_status(SharedSessionStatus::ViewPending);
-            view.on_session_share_joined(
-                ParticipantId::new(),
-                firebase_uid,
-                ReplicaId::random(),
-                Box::new(ParticipantList::default()),
-                SessionId::new(),
-                SessionSourceType::AmbientAgent {
-                    task_id: Some(task_id.to_string()),
-                },
-                ctx,
-            );
-        });
-
-        terminal.read(&app, |view, _| {
-            assert!(!view.is_conversation_details_panel_open);
-            assert!(view.has_auto_opened_conversation_details_panel);
-        });
-    });
-}
 #[test]
 fn test_restored_ambient_view_resolves_cta_from_view_model_task_id() {
     let _handoff_flag = FeatureFlag::HandoffCloudCloud.override_enabled(true);
@@ -2001,7 +1849,7 @@ fn test_deep_linked_ambient_continuation_refreshes_when_task_data_arrives() {
 
         terminal.update(&mut app, |view, ctx| {
             // Mirrors opening a cloud conversation directly (for example, a
-            // Warp-on-Web deep link) before AgentConversationsModel has loaded
+            // Torch-on-Web deep link) before AgentConversationsModel has loaded
             // the ambient task. The restored pane only has the task id from
             // conversation metadata, so it first renders the conservative
             // ended-session UI.

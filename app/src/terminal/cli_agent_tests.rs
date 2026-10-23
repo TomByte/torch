@@ -643,7 +643,8 @@ fn test_warp_tui_matches_with_env_var_prefix() {
     // Env-var assignments before the command are skipped when an escape char is
     // provided (mirrors `CLIAgent::detect`).
     assert!(
-        CLIAgent::WarpTui.matches_command("WARP_API_KEY=secret warp", Some(EscapeChar::Backslash),)
+        CLIAgent::WarpTui
+            .matches_command("TORCH_API_KEY=secret warp", Some(EscapeChar::Backslash),)
     );
 }
 
@@ -677,7 +678,7 @@ fn test_warp_tui_variant_properties() {
             "run-tui",
         ]
     );
-    assert_eq!(CLIAgent::WarpTui.display_name(), "Warp TUI");
+    assert_eq!(CLIAgent::WarpTui.display_name(), "Torch TUI");
     assert_eq!(CLIAgent::WarpTui.brand_color(), Some(ColorU::black()));
     assert_eq!(CLIAgent::WarpTui.icon(), Some(Icon::Warp));
     assert_eq!(CLIAgent::WarpTui.brand_icon_color(), ColorU::white());

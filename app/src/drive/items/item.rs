@@ -26,7 +26,7 @@ use crate::drive::index::{
     ITEM_MARGIN_BOTTOM, ITEM_PADDING_HORIZONTAL, ITEM_PADDING_VERTICAL,
 };
 use crate::drive::items::WarpDriveItem;
-use crate::drive::panel::WARP_DRIVE_POSITION_ID;
+use crate::drive::panel::TORCH_DRIVE_POSITION_ID;
 use crate::menu::Menu;
 use crate::ui_components::blended_colors;
 use crate::ui_components::icons::{ICON_DIMENSIONS, Icon};
@@ -702,10 +702,10 @@ impl<'a> WarpDriveRow<'a> {
     }
 }
 
-/// Generate a callback for calculating the Drag bounds within Warp Drive
+/// Generate a callback for calculating the Drag bounds within Torch Drive
 fn drag_bounds_callback() -> impl Fn(&PositionCache, Vector2F) -> Option<RectF> {
     move |position_cache, window: Vector2F| {
-        let drive_index = position_cache.get_position(WARP_DRIVE_POSITION_ID)?;
+        let drive_index = position_cache.get_position(TORCH_DRIVE_POSITION_ID)?;
 
         let top_left = drive_index.origin();
 

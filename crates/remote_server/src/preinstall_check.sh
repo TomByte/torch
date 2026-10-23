@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Preinstall check for the Warp remote-server binary.
+# Preinstall check for the Torch remote-server binary.
 #
 # Emits a structured key=value summary on stdout. Exits 0 on success.
 # A non-zero exit indicates a probe-level failure; the client treats

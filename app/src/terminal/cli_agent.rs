@@ -178,7 +178,7 @@ pub enum CLIAgent {
     Grok,
     Kiro,
     Muse,
-    /// Warp's own headless TUI.
+    /// Torch's own headless TUI.
     WarpTui,
     /// Represents an unknown/custom CLI agent matched by user-configured regex patterns.
     Unknown,
@@ -265,7 +265,7 @@ impl CLIAgent {
     }
 
     /// Returns the [`CLIAgent`] corresponding to a cloud-agent [`Harness`] when it represents a
-    /// third-party agent. Returns `None` for [`Harness::Oz`] (Warp's built-in harness has no
+    /// third-party agent. Returns `None` for [`Harness::Oz`] (Torch's built-in harness has no
     /// distinct CLI agent identity).
     pub fn from_harness(harness: Harness) -> Option<Self> {
         match harness {
@@ -400,7 +400,7 @@ impl CLIAgent {
         )
     }
 
-    /// Whether Warp should show its CLI-agent footer for this agent.
+    /// Whether Torch should show its CLI-agent footer for this agent.
     pub(crate) fn supports_cli_agent_footer(&self) -> bool {
         !matches!(self, CLIAgent::WarpTui)
     }

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #
-# Install all dependencies required to build and run Warp on Linux.
+# Install all dependencies required to build and run Torch on Linux.
 
 set -e
 
-. "$PWD/script/warp_sudo"
+. "$PWD/script/torch_sudo"
 
 # Define some control sequences for text formatting.
 red="\033[0;31m"
@@ -36,7 +36,7 @@ if [[ "$(source /etc/os-release; echo $ID $ID_LIKE)" = *"debian"* ]]; then
     # Ensuring at least one cursor library for WSL.
     yaru-theme-icon
   )
-  warp_sudo apt-get install -y "${PACKAGES[@]}"
+  torch_sudo apt-get install -y "${PACKAGES[@]}"
 else
   echo -e "⚠️  ${red}Unknown Linux distribution; necessary runtime dependencies may not be installed!${reset}"
 fi

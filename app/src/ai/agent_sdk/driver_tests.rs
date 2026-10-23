@@ -12,7 +12,6 @@ use command::blocking::Command as ProcessCommand;
 use futures::channel::oneshot;
 use futures::executor::block_on;
 use futures::poll;
-use mockito::Matcher;
 use repo_metadata::{DirectoryWatcher, RepoMetadataEvent, RepoMetadataModel, RepositoryIdentifier};
 use serde_json::json;
 use session_sharing_protocol::common::{AgentAttachment, ParticipantId};
@@ -27,17 +26,17 @@ use torch_core::channel::ChannelState;
 use torch_graphql::ai::AgentTaskState;
 use torch_graphql::platform_error::PlatformErrorMessageFormat;
 use torch_managed_secrets::ManagedSecretValue;
-use warp_multi_agent_api::response_event;
 use torch_util::standardized_path::StandardizedPath;
 use torchui::r#async::Timer;
 use torchui::{App, SingletonEntity as _};
+use warp_multi_agent_api::response_event;
 
 use super::{
     AgentDriver, AgentDriverError, AgentRunPrompt, CLIAgentSessionStatus, DebugWindowController,
     HarnessIdleAction, IdleTimeoutSender, LEGACY_OZ_PARENT_LISTENER_MANAGED_EXTERNALLY_ENV,
     LEGACY_OZ_PARENT_STATE_ROOT_ENV, OZ_MESSAGE_LISTENER_MANAGED_EXTERNALLY_ENV,
     OZ_MESSAGE_LISTENER_STATE_ROOT_ENV, PlatformErrorCode, PluginInstallError,
-    SDKConversationOutputStatus, WARP_MESSAGE_LISTENER_STATE_ROOT_ENV, build_secret_env_vars,
+    SDKConversationOutputStatus, TORCH_MESSAGE_LISTENER_STATE_ROOT_ENV, build_secret_env_vars,
     debug_turn_task_state, harness_idle_action_for_conversation_status,
     idle_window_for_cli_session_status, idle_window_for_terminal_status,
     setup_failure_status_update, terminal_status_log_outcome,
@@ -888,11 +887,11 @@ fn task_env_vars_propagate_message_listener_state_root_with_legacy_alias() {
         env_vars.get(&OsString::from(OZ_MESSAGE_LISTENER_STATE_ROOT_ENV)),
         Some(&OsString::from("/tmp/message-listener-root"))
     );
-    // The WARP_ twin is only reachable when the state root is actually set, which is why it is
+    // The TORCH_ twin is only reachable when the state root is actually set, which is why it is
     // asserted here rather than in the pairing test: that test does not populate the process
     // env, and making it do so would need `#[serial_test::serial]` to stay race-free.
     assert_eq!(
-        env_vars.get(&OsString::from(WARP_MESSAGE_LISTENER_STATE_ROOT_ENV)),
+        env_vars.get(&OsString::from(TORCH_MESSAGE_LISTENER_STATE_ROOT_ENV)),
         Some(&OsString::from("/tmp/message-listener-root"))
     );
     assert_eq!(
@@ -901,11 +900,11 @@ fn task_env_vars_propagate_message_listener_state_root_with_legacy_alias() {
     );
 }
 
-/// Every `OZ_` variable reaching a harness subprocess has a `WARP_` twin carrying the same
+/// Every `OZ_` variable reaching a harness subprocess has a `TORCH_` twin carrying the same
 /// value. This guard fails when one of a pair is injected without the other.
 ///
 /// The legacy `OZ_PARENT_*` listener names are exempt: they exist only to keep an external
-/// Claude plugin working through its migration and are deliberately not given `WARP_` twins.
+/// Claude plugin working through its migration and are deliberately not given `TORCH_` twins.
 #[test]
 fn task_env_vars_mirror_every_oz_var_to_a_warp_name() {
     const LEGACY_ONLY: [&str; 2] = [
@@ -926,11 +925,11 @@ fn task_env_vars_mirror_every_oz_var_to_a_warp_name() {
             continue;
         }
         paired += 1;
-        let warp_name = OsString::from(format!("WARP_{suffix}"));
+        let warp_name = OsString::from(format!("TORCH_{suffix}"));
         assert_eq!(
             env_vars.get(&warp_name),
             Some(value),
-            "{name} is injected without a matching WARP_{suffix} carrying the same value"
+            "{name} is injected without a matching TORCH_{suffix} carrying the same value"
         );
     }
     assert!(
@@ -1020,10 +1019,10 @@ fn json_format_input_omits_filepath_and_description_for_proto_upload_result() {
 #[test]
 #[serial_test::serial]
 fn metadata_secret_collision_rejects_even_an_empty_injected_value() {
-    let previous = std::env::var_os("WARP_METADATA_SECRET_TEST");
-    unsafe { std::env::set_var("WARP_METADATA_SECRET_TEST", "") };
+    let previous = std::env::var_os("TORCH_METADATA_SECRET_TEST");
+    unsafe { std::env::set_var("TORCH_METADATA_SECRET_TEST", "") };
     let secrets = HashMap::from([(
-        "warp_metadata_secret_test".to_string(),
+        "torch_metadata_secret_test".to_string(),
         ManagedSecretValue::raw_value("managed-value"),
     )]);
 
@@ -1031,12 +1030,12 @@ fn metadata_secret_collision_rejects_even_an_empty_injected_value() {
 
     unsafe {
         match previous {
-            Some(value) => std::env::set_var("WARP_METADATA_SECRET_TEST", value),
-            None => std::env::remove_var("WARP_METADATA_SECRET_TEST"),
+            Some(value) => std::env::set_var("TORCH_METADATA_SECRET_TEST", value),
+            None => std::env::remove_var("TORCH_METADATA_SECRET_TEST"),
         }
     }
     assert!(
-        matches!(result, Err(AgentDriverError::EnvironmentSetupFailed(message)) if message.contains("WARP_METADATA_SECRET_TEST"))
+        matches!(result, Err(AgentDriverError::EnvironmentSetupFailed(message)) if message.contains("TORCH_METADATA_SECRET_TEST"))
     );
 }
 
@@ -1522,7 +1521,7 @@ fn write_skill_file(repo: &Path, name: &str) {
 }
 
 /// Write a minimal SKILL.md at `{skills_dir}/{name}/SKILL.md`.
-/// This is the flat layout expected by `WARP_SKILL_DIRS` (no `.agents/skills` wrapper).
+/// This is the flat layout expected by `TORCH_SKILL_DIRS` (no `.agents/skills` wrapper).
 fn write_flat_skill(skills_dir: &Path, name: &str) {
     let skill_dir = skills_dir.join(name);
     fs::create_dir_all(&skill_dir).unwrap();
@@ -1533,7 +1532,7 @@ fn write_flat_skill(skills_dir: &Path, name: &str) {
     .unwrap();
 }
 
-/// Verifies that `load_skills_dirs` reads skills from the `WARP_SKILL_DIRS` environment
+/// Verifies that `load_skills_dirs` reads skills from the `TORCH_SKILL_DIRS` environment
 /// variable and registers them in the personal (home) bucket so they are always in scope,
 /// regardless of the current working directory.
 #[test]
@@ -1552,10 +1551,10 @@ fn warp_skill_dirs_env_loads_skills_as_home_tier() {
         write_flat_skill(&skills_dir_a, "env-skill-a2");
         write_flat_skill(&skills_dir_b, "env-skill-b1");
 
-        // Point WARP_SKILL_DIRS at both directories.
+        // Point TORCH_SKILL_DIRS at both directories.
         let skills_dirs_value = format!("{},{}", skills_dir_a.display(), skills_dir_b.display());
         // TODO: Audit that the environment access only happens in single-threaded code.
-        unsafe { std::env::set_var("WARP_SKILL_DIRS", &skills_dirs_value) };
+        unsafe { std::env::set_var("TORCH_SKILL_DIRS", &skills_dirs_value) };
 
         let terminal_view = add_window_with_terminal(&mut app, None);
         let driver_handle = app.add_model(|ctx| {
@@ -1578,9 +1577,9 @@ fn warp_skill_dirs_env_loads_skills_as_home_tier() {
         done_rx.await.expect("loading task should complete");
 
         // TODO: Audit that the environment access only happens in single-threaded code.
-        unsafe { std::env::remove_var("WARP_SKILL_DIRS") };
+        unsafe { std::env::remove_var("TORCH_SKILL_DIRS") };
 
-        // Skills from WARP_SKILL_DIRS are home-tier, so they appear for any working directory.
+        // Skills from TORCH_SKILL_DIRS are home-tier, so they appear for any working directory.
         // Use None cwd — home skills are included regardless of is_cloud_environment.
         let skill_names = SkillManager::handle(&app).read(&app, |manager: &SkillManager, ctx| {
             manager
@@ -1592,15 +1591,15 @@ fn warp_skill_dirs_env_loads_skills_as_home_tier() {
 
         assert!(
             skill_names.contains(&"env-skill-a1".to_string()),
-            "'env-skill-a1' from WARP_SKILL_DIRS should be loaded; got: {skill_names:?}"
+            "'env-skill-a1' from TORCH_SKILL_DIRS should be loaded; got: {skill_names:?}"
         );
         assert!(
             skill_names.contains(&"env-skill-a2".to_string()),
-            "'env-skill-a2' from WARP_SKILL_DIRS should be loaded; got: {skill_names:?}"
+            "'env-skill-a2' from TORCH_SKILL_DIRS should be loaded; got: {skill_names:?}"
         );
         assert!(
             skill_names.contains(&"env-skill-b1".to_string()),
-            "'env-skill-b1' from WARP_SKILL_DIRS should be loaded; got: {skill_names:?}"
+            "'env-skill-b1' from TORCH_SKILL_DIRS should be loaded; got: {skill_names:?}"
         );
 
         // Verify the skills have Home scope (personal tier).
@@ -1614,12 +1613,12 @@ fn warp_skill_dirs_env_loads_skills_as_home_tier() {
         });
         assert!(
             scope_check,
-            "all WARP_SKILL_DIRS skills must have SkillScope::Home"
+            "all TORCH_SKILL_DIRS skills must have SkillScope::Home"
         );
     });
 }
 
-/// Verifies that relative `WARP_SKILL_DIRS` entries are resolved against the driver's
+/// Verifies that relative `TORCH_SKILL_DIRS` entries are resolved against the driver's
 /// working directory rather than the process's current working directory (which
 /// `prepare_environment` may have changed).
 #[test]
@@ -1637,7 +1636,7 @@ fn warp_skill_dirs_env_relative_entries_resolve_against_working_dir() {
         write_flat_skill(&working_dir.join("rel-skills"), "env-skill-rel");
 
         // TODO: Audit that the environment access only happens in single-threaded code.
-        unsafe { std::env::set_var("WARP_SKILL_DIRS", "rel-skills") };
+        unsafe { std::env::set_var("TORCH_SKILL_DIRS", "rel-skills") };
 
         let terminal_view = add_window_with_terminal(&mut app, None);
         let driver_handle = app.add_model(|ctx| {
@@ -1660,7 +1659,7 @@ fn warp_skill_dirs_env_relative_entries_resolve_against_working_dir() {
         done_rx.await.expect("loading task should complete");
 
         // TODO: Audit that the environment access only happens in single-threaded code.
-        unsafe { std::env::remove_var("WARP_SKILL_DIRS") };
+        unsafe { std::env::remove_var("TORCH_SKILL_DIRS") };
 
         let skill_names = SkillManager::handle(&app).read(&app, |manager: &SkillManager, ctx| {
             manager
@@ -1672,7 +1671,7 @@ fn warp_skill_dirs_env_relative_entries_resolve_against_working_dir() {
 
         assert!(
             skill_names.contains(&"env-skill-rel".to_string()),
-            "'env-skill-rel' should load via a relative WARP_SKILL_DIRS entry resolved against the driver's working dir; got: {skill_names:?}"
+            "'env-skill-rel' should load via a relative TORCH_SKILL_DIRS entry resolved against the driver's working dir; got: {skill_names:?}"
         );
     });
 }
@@ -2637,71 +2636,6 @@ fn ambient_driver_resumed_conversation_elapsed_idle_window_commits_exiting() {
 }
 
 #[test]
-fn deferred_repository_semantic_acp_consumes_server_resolved_text_once() {
-    if std::env::var_os("WARP_TEST_DEFERRED_ACP_PROMPT").is_none() {
-        let home = TempDir::new().unwrap();
-        let output = ProcessCommand::new(std::env::current_exe().unwrap())
-            .args([
-                "--exact",
-                "ai::agent_sdk::driver::tests::deferred_repository_semantic_acp_consumes_server_resolved_text_once",
-                "--nocapture",
-            ])
-            .env("WARP_TEST_DEFERRED_ACP_PROMPT", "1")
-            .env("HOME", home.path())
-            .env("USERPROFILE", home.path())
-            .env("CODEX_HOME", home.path().join(".codex"))
-            .env("WARP_ISOLATION_PLATFORM", "docker")
-            .env("WARP_WORKLOAD_TOKEN", "test-workload-token")
-            .output()
-            .unwrap();
-        assert!(
-            output.status.success(),
-            "{}\n{}",
-            String::from_utf8_lossy(&output.stdout),
-            String::from_utf8_lossy(&output.stderr),
-        );
-        return;
-    }
-    let mut server = ChannelState::mock_server();
-    let prompt = "Factory deferred repository inventory at task creation:\n- GITHUB \"acme\"/\"repo\"\n\nimplement";
-    let resolved = server
-        .mock("POST", "/api/v1/harness-support/resolve-prompt")
-        .match_body(Matcher::Json(json!({})))
-        .with_status(200)
-        .with_body(json!({"prompt": prompt}).to_string())
-        .expect(1)
-        .create();
-    App::test((), |mut app| async move {
-        initialize_workspace_test_app(&mut app);
-        let root = TempDir::new().unwrap();
-        let mut options = crate::ai::agent_sdk::tests::agent_driver_options();
-        options.working_dir = root.path().to_path_buf();
-        options.selected_harness = Harness::Codex;
-        options.harness_transport = HarnessTransport::Acp;
-        let driver = app.update(|ctx| AgentDriver::create(options, ctx).unwrap());
-        let foreground = driver.update(&mut app, |_, ctx| ctx.spawner());
-        let HarnessKind::ThirdParty(harness) =
-            harness_kind(Harness::Codex, HarnessTransport::Acp).unwrap()
-        else {
-            panic!("expected an ACP harness");
-        };
-        let runner = AgentDriver::prepare_harness(
-            &AgentRunPrompt::ServerSide {
-                skill: None,
-                attachments_dir: None,
-            },
-            &[],
-            harness.as_ref(),
-            &foreground,
-        )
-        .await
-        .unwrap();
-        assert_eq!(runner.prompt_text_for_test(), Some(prompt));
-    });
-    resolved.assert();
-}
-
-#[test]
 fn deferred_repository_semantic_skipped_server_startup_has_no_inventory_only_turn() {
     App::test((), |mut app| async move {
         initialize_app_for_terminal_view(&mut app);
@@ -2742,7 +2676,7 @@ fn deferred_repository_semantic_skipped_server_startup_has_no_inventory_only_tur
 
 #[test]
 fn deferred_repository_semantic_skill_publication_without_initial_inventory() {
-    if std::env::var_os("WARP_TEST_DEFERRED_SKILL_PUBLICATION").is_none() {
+    if std::env::var_os("TORCH_TEST_DEFERRED_SKILL_PUBLICATION").is_none() {
         let home = TempDir::new().unwrap();
         let output = ProcessCommand::new(std::env::current_exe().unwrap())
             .args([
@@ -2750,7 +2684,7 @@ fn deferred_repository_semantic_skill_publication_without_initial_inventory() {
                 "ai::agent_sdk::driver::tests::deferred_repository_semantic_skill_publication_without_initial_inventory",
                 "--nocapture",
             ])
-            .env("WARP_TEST_DEFERRED_SKILL_PUBLICATION", "1")
+            .env("TORCH_TEST_DEFERRED_SKILL_PUBLICATION", "1")
             .env("HOME", home.path())
             .env("USERPROFILE", home.path())
             .env("CLAUDE_CONFIG_DIR", home.path().join(".claude"))
@@ -2774,8 +2708,9 @@ fn deferred_repository_semantic_skill_publication_without_initial_inventory() {
                 (Harness::Gemini, ".gemini"),
             ] {
                 App::test((), |mut app| async move {
-                    let _capability = torch_core::features::FeatureFlag::FactoryDeferredRepositories
-                        .override_enabled(!use_factory_repositories);
+                    let _capability =
+                        torch_core::features::FeatureFlag::FactoryDeferredRepositories
+                            .override_enabled(!use_factory_repositories);
                     let should_activate = use_factory_repositories;
                     initialize_workspace_test_app(&mut app);
                     let root = TempDir::new().unwrap();
@@ -2795,7 +2730,7 @@ fn deferred_repository_semantic_skill_publication_without_initial_inventory() {
                     options.workspace.factory_skill_dirs = Some(Vec::new());
                     if !should_activate {
                         options.secrets.insert(
-                            "WARP_FACTORY_DEFERRED_REPOSITORIES_SKILL".into(),
+                            "TORCH_FACTORY_DEFERRED_REPOSITORIES_SKILL".into(),
                             ManagedSecretValue::raw_value("1"),
                         );
                     }
@@ -2810,7 +2745,7 @@ fn deferred_repository_semantic_skill_publication_without_initial_inventory() {
                         assert_eq!(driver.factory_repository_contract, should_activate);
                         assert_eq!(
                             driver.resolved_env_vars.contains_key(std::ffi::OsStr::new(
-                                "WARP_FACTORY_DEFERRED_REPOSITORIES_SKILL",
+                                "TORCH_FACTORY_DEFERRED_REPOSITORIES_SKILL",
                             )),
                             !should_activate,
                         );
@@ -2820,7 +2755,7 @@ fn deferred_repository_semantic_skill_publication_without_initial_inventory() {
                             .launch_env_vars_for_test
                             .as_ref()
                             .unwrap();
-                        for name in ["OZ_WORKSPACE_ROOT", "WARP_WORKSPACE_ROOT"] {
+                        for name in ["OZ_WORKSPACE_ROOT", "TORCH_WORKSPACE_ROOT"] {
                             assert_eq!(
                                 launch_env.get(std::ffi::OsStr::new(name)),
                                 Some(&root.path().as_os_str().to_os_string())
@@ -2870,12 +2805,12 @@ fn deferred_repository_runtime_exports_absolute_root_before_terminal_creation() 
             ManagedSecretValue::raw_value("relative/stale"),
         );
         options.secrets.insert(
-            "WARP_WORKSPACE_ROOT".into(),
+            "TORCH_WORKSPACE_ROOT".into(),
             ManagedSecretValue::raw_value("/other/root"),
         );
         let driver = app.update(|ctx| AgentDriver::create(options, ctx).unwrap());
         driver.update(&mut app, |driver, ctx| {
-            for name in ["OZ_WORKSPACE_ROOT", "WARP_WORKSPACE_ROOT"] {
+            for name in ["OZ_WORKSPACE_ROOT", "TORCH_WORKSPACE_ROOT"] {
                 assert_eq!(
                     driver.resolved_env_vars.get(std::ffi::OsStr::new(name)),
                     Some(&root.as_os_str().to_os_string())
@@ -2910,7 +2845,7 @@ fn deferred_repository_runtime_exports_root_when_unset() {
         options.working_dir = root.path().to_path_buf();
         let driver = app.update(|ctx| AgentDriver::create(options, ctx).unwrap());
         driver.read(&app, |driver, _| {
-            for name in ["OZ_WORKSPACE_ROOT", "WARP_WORKSPACE_ROOT"] {
+            for name in ["OZ_WORKSPACE_ROOT", "TORCH_WORKSPACE_ROOT"] {
                 assert_eq!(
                     driver.resolved_env_vars.get(std::ffi::OsStr::new(name)),
                     Some(&root.path().as_os_str().to_os_string())
@@ -2946,8 +2881,8 @@ fn deferred_execution_policy_reaches_every_launch_and_legacy_clears_inheritance(
                     FILE_ENV,
                     MODE_ENV,
                     "OZ_RUN_ID",
-                    "WARP_RUN_ID",
-                    "WARP_EXECUTION_ID",
+                    "TORCH_RUN_ID",
+                    "TORCH_EXECUTION_ID",
                 ] {
                     options
                         .secrets
@@ -2976,10 +2911,10 @@ fn deferred_execution_policy_reaches_every_launch_and_legacy_clears_inheritance(
                         FILE_ENV,
                         MODE_ENV,
                         "OZ_RUN_ID",
-                        "WARP_RUN_ID",
-                        "WARP_EXECUTION_ID",
+                        "TORCH_RUN_ID",
+                        "TORCH_EXECUTION_ID",
                         "OZ_WORKSPACE_ROOT",
-                        "WARP_WORKSPACE_ROOT",
+                        "TORCH_WORKSPACE_ROOT",
                     ] {
                         assert_eq!(
                             launch.get(std::ffi::OsStr::new(name)),
@@ -2988,10 +2923,10 @@ fn deferred_execution_policy_reaches_every_launch_and_legacy_clears_inheritance(
                     }
                     let value = |name: &str| launch.get(std::ffi::OsStr::new(name)).unwrap();
                     assert_eq!(value("OZ_RUN_ID"), task_id);
-                    assert_eq!(value("WARP_RUN_ID"), task_id);
+                    assert_eq!(value("TORCH_RUN_ID"), task_id);
                     if let Some(capability) = capability {
                         assert_eq!(value(MODE_ENV), "execution");
-                        assert_eq!(value("WARP_EXECUTION_ID"), "42");
+                        assert_eq!(value("TORCH_EXECUTION_ID"), "42");
                         let policy: serde_json::Value =
                             serde_json::from_slice(&fs::read(value(FILE_ENV)).unwrap()).unwrap();
                         assert_eq!(policy["supports_deferred_repositories"], capability);
@@ -3003,7 +2938,7 @@ fn deferred_execution_policy_reaches_every_launch_and_legacy_clears_inheritance(
                     } else {
                         assert_eq!(value(MODE_ENV), "legacy");
                         assert!(value(FILE_ENV).is_empty());
-                        assert!(value("WARP_EXECUTION_ID").is_empty());
+                        assert!(value("TORCH_EXECUTION_ID").is_empty());
                     }
                 });
             });

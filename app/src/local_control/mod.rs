@@ -1,4 +1,4 @@
-//! Running app-side server for local Warp control requests.
+//! Running app-side server for local Torch control requests.
 //!
 //! This module owns the in-process listener, discovery registration, credential
 //! broker socket, and request handoff from Axum into the WarpUI model graph.
@@ -53,7 +53,7 @@
 //! outside this boundary.
 //!
 //! The Settings > Scripting gates used here are local-only settings backed by
-//! Warp's secure storage provider.
+//! Torch's secure storage provider.
 //!
 //! Discovery records never include raw bearer tokens: discovery only exposes
 //! endpoint metadata and credential broker references while Scripting is enabled.
@@ -111,7 +111,7 @@ struct ControlServerState {
     expected_host: String,
     credentials: Arc<Mutex<HashMap<String, CredentialGrant>>>,
 }
-/// Process-local publisher, credential broker, and HTTP server for one Warp instance.
+/// Process-local publisher, credential broker, and HTTP server for one Torch instance.
 ///
 /// Holding the runtime and registration keeps both listeners and the discovery
 /// route alive. Dropping them stops request handling and removes the app's
@@ -403,9 +403,9 @@ async fn handle_credential_broker_connection(
 }
 
 #[cfg(unix)]
-/// Requires the kernel-reported peer UID to match Warp's effective UID.
+/// Requires the kernel-reported peer UID to match Torch's effective UID.
 ///
-/// This excludes other OS users but does not distinguish trusted Warp code from
+/// This excludes other OS users but does not distinguish trusted Torch code from
 /// arbitrary processes already running as the same user.
 fn ensure_same_user_peer(stream: &tokio::net::UnixStream) -> Result<(), ControlError> {
     ensure_peer_uid(stream, unsafe { libc::geteuid() })

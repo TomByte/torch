@@ -44,7 +44,7 @@ impl TuiOrchestrationBlock {
             Some(harness) => HarnessAvailabilityModel::as_ref(ctx)
                 .display_name_for(harness)
                 .to_string(),
-            None => "Warp".to_string(),
+            None => "Torch".to_string(),
         }
     }
 

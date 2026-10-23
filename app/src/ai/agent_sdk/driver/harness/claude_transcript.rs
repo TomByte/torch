@@ -5,7 +5,7 @@
 //!   (main jsonl entries + subagent jsonl files + per-agent todo JSONs), plus reader/writer
 //!   functions that interoperate with Claude's own `~/.claude` layout.
 //! - [`ClaudeResumeInfo`] — everything the harness runner needs to resume an existing
-//!   Claude conversation: the Warp server conversation id to reuse, the Claude session uuid
+//!   Claude conversation: the Torch server conversation id to reuse, the Claude session uuid
 //!   to pass to `claude --resume`, and the decoded envelope to rehydrate onto disk.
 //! - [`write_session_index_entry`] — update of `~/.claude/sessions-index.json` so Claude's
 //!   `--resume <uuid>` lookup can find the freshly-rehydrated jsonl. Upstream versions vary in
@@ -23,9 +23,9 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use uuid::Uuid;
 use torch_core::safe_warn;
 use torch_harness_usage::{CaptureDiagnostics, JsonlCapture, JsonlDiagnostics, JsonlReadStatus};
+use uuid::Uuid;
 
 use super::json_utils::entries_to_jsonl;
 use super::transcript_persistence::read_jsonl_capture;
@@ -59,7 +59,7 @@ pub(crate) struct ClaudeTranscriptEnvelope {
 /// session and server conversation ids instead of minting fresh ones.
 #[derive(Debug)]
 pub(crate) struct ClaudeResumeInfo {
-    /// The Warp server-side conversation id. The runner stores this instead of calling
+    /// The Torch server-side conversation id. The runner stores this instead of calling
     /// `create_external_conversation` so subsequent transcript/block-snapshot uploads overwrite
     /// the same GCS objects.
     pub(crate) conversation_id: ServerConversationToken,

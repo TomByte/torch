@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Install all dependencies required to build Warp on Web.
+# Install all dependencies required to build Torch on Web.
 
 set -e
 

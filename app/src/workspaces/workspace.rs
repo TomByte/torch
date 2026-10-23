@@ -802,7 +802,7 @@ impl BillingMetadata {
             || self.delinquency_status == DelinquencyStatus::Unpaid
     }
 
-    // Whether the enterprise customer is our Stable Warp Enterprise team (internal team of Warpers).
+    // Whether the enterprise customer is our Stable Torch Enterprise team (internal team of Warpers).
     pub fn is_warp_plan(&self) -> bool {
         self.tier.name == "Torch Plan"
     }
@@ -898,7 +898,7 @@ pub struct LlmHostSettings {
     pub enabled: bool,
     pub enablement_setting: HostEnablementSetting,
     /// Full resource name of the GCP workload identity provider that Gemini Enterprise
-    /// (GEAP) credential minting exchanges Warp OIDC JWTs against. Only populated on the
+    /// (GEAP) credential minting exchanges Torch OIDC JWTs against. Only populated on the
     /// `GeminiEnterprise` host entry; `None` for other hosts and for workspace caches
     /// written before this field existed.
     #[serde(default)]

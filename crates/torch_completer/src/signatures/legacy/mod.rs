@@ -49,7 +49,7 @@ impl CommandRegistry {
         registry
     }
 
-    /// Register signatures for Warp CLI commands.
+    /// Register signatures for Torch CLI commands.
     ///
     /// Ideally this would be done outside of the `torch_completer` crate, but it's not currently
     /// possible to configure the shared [`Self::global_instance`].

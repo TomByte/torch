@@ -7,7 +7,6 @@ use anyhow::Context as _;
 use chrono::{DateTime, Local, TimeZone};
 use indexmap::IndexMap;
 use itertools::Itertools as _;
-use vec1::{Size0Error, Vec1};
 use torch_cli::agent::Harness;
 use torch_core::command::ExitCode;
 use torch_core::execution_mode::AppExecutionMode;
@@ -17,11 +16,12 @@ use torch_core::ui::appearance::Appearance;
 use torch_core::ui::theme::WarpTheme;
 use torch_core::ui::theme::color::internal_colors;
 use torch_errors::report_error;
+use torchui::color::ColorU;
+use torchui::{AppContext, EntityId, ModelContext, SingletonEntity};
+use vec1::{Size0Error, Vec1};
 use warp_multi_agent_api::response_event::stream_finished;
 use warp_multi_agent_api::response_event::stream_finished::TokenUsage;
 use warp_multi_agent_api::{self as api};
-use torchui::color::ColorU;
-use torchui::{AppContext, EntityId, ModelContext, SingletonEntity};
 
 use super::api::ServerConversationToken;
 pub use super::conversation_driver::ConversationDriver;
@@ -441,7 +441,7 @@ pub struct AIConversation {
     /// conversation resumes ordinary synchronization.
     task_sync_mode: TaskSyncMode,
 
-    /// Whether the user chose Warp-funded inference for this conversation after a ChatGPT
+    /// Whether the user chose Torch-funded inference for this conversation after a ChatGPT
     /// token-sharing failure. Sticky for the rest of the conversation and inherited by forks.
     use_warp_credits_instead_of_chatgpt: bool,
 }
@@ -1353,13 +1353,13 @@ impl AIConversation {
         self.pinned = pinned;
     }
 
-    /// Returns whether requests in this conversation must run on Warp's OpenAI key instead of
+    /// Returns whether requests in this conversation must run on Torch's OpenAI key instead of
     /// the user's ChatGPT subscription.
     pub fn use_warp_credits_instead_of_chatgpt(&self) -> bool {
         self.use_warp_credits_instead_of_chatgpt
     }
 
-    /// Switches the rest of this conversation to Warp-funded inference. Callers must follow up
+    /// Switches the rest of this conversation to Torch-funded inference. Callers must follow up
     /// with `write_updated_conversation_state` to push the change to SQLite.
     pub fn set_use_warp_credits_instead_of_chatgpt(&mut self) {
         self.use_warp_credits_instead_of_chatgpt = true;
@@ -1866,7 +1866,7 @@ impl AIConversation {
         });
     }
 
-    /// Updates the notebook_uid for a plan artifact when it's synced to Warp Drive.
+    /// Updates the notebook_uid for a plan artifact when it's synced to Torch Drive.
     pub fn update_plan_notebook_uid(
         &mut self,
         document_uid: AIDocumentId,
@@ -4930,7 +4930,7 @@ pub enum AIAgentSerializedBlockFormat {
 /// Describes the format capabilities of a conversation.
 #[derive(Debug, Clone)]
 pub struct AIAgentConversationFormat {
-    /// Whether there is a Warp MAA task list available for this conversation.
+    /// Whether there is a Torch MAA task list available for this conversation.
     pub has_task_list: bool,
     /// The format of the TUI serialized block, if available.
     pub block_snapshot: Option<AIAgentSerializedBlockFormat>,

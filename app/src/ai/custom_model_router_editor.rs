@@ -1,6 +1,6 @@
 //! Editor view for creating and editing local custom model routers.
 //!
-//! Opened as a side-pane from the Warp Agent settings page when the user clicks
+//! Opened as a side-pane from the Torch Agent settings page when the user clicks
 //! "Add router" or "Edit" on an existing router card. Writes changes to
 //! `~/.warp/custom_model_routers/` via [`WarpConfig::save_custom_model_router`].
 
@@ -690,7 +690,7 @@ impl CustomRouterEditorView {
             );
             let rules_copy = FormattedText::new([
                 FormattedTextLine::Line(vec![FormattedTextFragment::plain_text(
-                    "Rules are custom prompts that describe when to use a specific model. Warp intelligently matches your tasks against these rules.",
+                    "Rules are custom prompts that describe when to use a specific model. Torch intelligently matches your tasks against these rules.",
                 )]),
                 FormattedTextLine::Line(vec![FormattedTextFragment::plain_text(
                     "Rules are matched top to bottom — rules higher in the list take precedence over those below.",

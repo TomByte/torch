@@ -30,7 +30,7 @@ fn item_action(item: &MenuItem<DropdownAction>) -> &DropdownAction {
 #[test]
 fn build_menu_items_with_no_defaults_shows_warp_and_custom() {
     let items = build_menu_items(None, None, &[]);
-    assert_eq!(items.len(), 2, "expected warp + custom-host entries");
+    assert_eq!(items.len(), 2, "expected torch + custom-host entries");
     assert_eq!(item_label(&items[0]), ORCHESTRATION_WARP_WORKER_HOST);
     assert_eq!(item_label(&items[1]), "Custom host\u{2026}");
 }
@@ -67,7 +67,7 @@ fn build_menu_items_dedups_recent_when_it_matches_default_or_warp() {
 
     // Recent == "warp" is also skipped (warp is already a row).
     let items = build_menu_items(Some("my-corp"), Some("warp"), &[]);
-    assert_eq!(items.len(), 3, "warp recent should not double-add");
+    assert_eq!(items.len(), 3, "torch recent should not double-add");
 }
 #[test]
 fn build_menu_items_adds_connected_hosts_before_recent_and_dedups_known_hosts() {

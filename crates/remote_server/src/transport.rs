@@ -147,11 +147,11 @@ impl Error {
 #[cfg(not(target_family = "wasm"))]
 #[derive(Debug, Clone)]
 pub enum ControlPath {
-    /// Warp created the ControlMaster at this socket path and is
+    /// Torch created the ControlMaster at this socket path and is
     /// responsible for tearing it down on session exit.
     WarpManaged(PathBuf),
     /// The SSH wrapper attached to a ControlMaster the user already had
-    /// running at this socket path. Warp must never tear it down.
+    /// running at this socket path. Torch must never tear it down.
     UserOwned(PathBuf),
     /// No ControlMaster socket (e.g. in-process test transports).
     None,

@@ -1,5 +1,5 @@
 //! Module to attribute AI-generated requested commands
-//! to known documents (e.g. Warp Drive objects).
+//! to known documents (e.g. Torch Drive objects).
 
 use markdown_parser::{FormattedTextLine, parse_markdown};
 use torchui::{AppContext, SingletonEntity};
@@ -29,7 +29,7 @@ pub(crate) fn is_command_copied_from_document(
 }
 
 /// Returns true iff the `command` is directly copied from the
-/// Warp Drive object identified by `object_uid`.
+/// Torch Drive object identified by `object_uid`.
 fn is_command_copied_from_warp_drive_object(
     command: &str,
     object_uid: &str,

@@ -21,11 +21,11 @@ fn driver_without_a_task_keeps_preparation_inputs_without_run_state() {
         let mut options = AgentDriverOptions {
             working_dir: root.path().to_path_buf(),
             environment_variables: HashMap::from([
-                ("WARP_FACTORY_REPO_DIR".into(), "factory".into()),
-                ("WARP_SKILL_DIRS".into(), "ignored".into()),
+                ("TORCH_FACTORY_REPO_DIR".into(), "factory".into()),
+                ("TORCH_SKILL_DIRS".into(), "ignored".into()),
             ]),
             secrets: HashMap::from([(
-                "WARP_PREPARATION_TEST_SECRET".into(),
+                "TORCH_PREPARATION_TEST_SECRET".into(),
                 torch_managed_secrets::ManagedSecretValue::raw_value("test-value"),
             )]),
             computer_use_config: Some((true, None)),
@@ -43,15 +43,15 @@ fn driver_without_a_task_keeps_preparation_inputs_without_run_state() {
             assert!(driver.computer_use_configured);
             assert_eq!(driver.skill_dirs, [PathBuf::from("skills")]);
             assert_eq!(
-                driver.resolved_env_vars[&OsString::from("WARP_FACTORY_REPO_DIR")],
+                driver.resolved_env_vars[&OsString::from("TORCH_FACTORY_REPO_DIR")],
                 "factory"
             );
             assert_eq!(
-                driver.resolved_env_vars[&OsString::from("WARP_SKILL_DIRS")],
+                driver.resolved_env_vars[&OsString::from("TORCH_SKILL_DIRS")],
                 "skills"
             );
             assert_eq!(
-                driver.resolved_env_vars[&OsString::from("WARP_PREPARATION_TEST_SECRET")],
+                driver.resolved_env_vars[&OsString::from("TORCH_PREPARATION_TEST_SECRET")],
                 "test-value"
             );
             driver

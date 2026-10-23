@@ -92,10 +92,10 @@ fn factory_installation_resolves_to_a_preauthenticated_http_server() {
 fn factory_installation_attaches_ambient_headers_for_an_active_task() {
     let ambient_headers = [
         (
-            "X-Warp-Ambient-Workload-Token".to_string(),
+            "X-Torch-Ambient-Workload-Token".to_string(),
             "workload-tok".to_string(),
         ),
-        ("X-Warp-Cloud-Agent-ID".to_string(), "task-abc".to_string()),
+        ("X-Torch-Cloud-Agent-ID".to_string(), "task-abc".to_string()),
     ];
     let installation = builtin_mcp_installation(
         &FACTORY_MCP,
@@ -122,11 +122,11 @@ fn factory_installation_attaches_ambient_headers_for_an_active_task() {
                 Some("Bearer tok-123".to_string())
             );
             assert_eq!(
-                header_value("X-Warp-Ambient-Workload-Token"),
+                header_value("X-Torch-Ambient-Workload-Token"),
                 Some("workload-tok".to_string())
             );
             assert_eq!(
-                header_value("X-Warp-Cloud-Agent-ID"),
+                header_value("X-Torch-Cloud-Agent-ID"),
                 Some("task-abc".to_string())
             );
         }
@@ -138,10 +138,10 @@ fn factory_installation_attaches_ambient_headers_for_an_active_task() {
 fn preview_urls_installation_resolves_to_a_preauthenticated_http_server() {
     let ambient_headers = [
         (
-            "X-Warp-Ambient-Workload-Token".to_string(),
+            "X-Torch-Ambient-Workload-Token".to_string(),
             "workload-tok".to_string(),
         ),
-        ("X-Warp-Cloud-Agent-ID".to_string(), "task-abc".to_string()),
+        ("X-Torch-Cloud-Agent-ID".to_string(), "task-abc".to_string()),
     ];
     let installation = builtin_mcp_installation(
         &PREVIEW_URLS_MCP,
@@ -164,10 +164,10 @@ fn preview_urls_installation_resolves_to_a_preauthenticated_http_server() {
                     "Bearer wk-test-key".to_string()
                 ),
                 (
-                    "X-Warp-Ambient-Workload-Token".to_string(),
+                    "X-Torch-Ambient-Workload-Token".to_string(),
                     "workload-tok".to_string()
                 ),
-                ("X-Warp-Cloud-Agent-ID".to_string(), "task-abc".to_string()),
+                ("X-Torch-Cloud-Agent-ID".to_string(), "task-abc".to_string()),
             ]),
         }
     );

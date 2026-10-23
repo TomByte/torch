@@ -124,7 +124,7 @@ pub enum PrepareEnvironmentError {
         second_owner: String,
     },
     #[error(
-        "Repository {repo_name} has a code forge this client build doesn't support; update Warp to a version that does"
+        "Repository {repo_name} has a code forge this client build doesn't support; update Torch to a version that does"
     )]
     UnsupportedRepositoryForge { repo_name: String },
     #[error("Environment checkout helper failed: {reason}")]
@@ -244,7 +244,7 @@ pub(crate) struct WorkspaceConfiguration {
     pub source_repos: Vec<SourceRepo>,
     pub deferred_repos: Vec<ResolvedRepository>,
     pub setup_commands: Vec<String>,
-    /// Overrides `WARP_SKILL_DIRS` when present, including an empty list.
+    /// Overrides `TORCH_SKILL_DIRS` when present, including an empty list.
     pub factory_skill_dirs: Option<Vec<PathBuf>>,
     /// Retains an explicitly selected environment even when it has no repositories or commands.
     pub has_environment: bool,
@@ -530,12 +530,12 @@ pub(crate) fn merge_repos_deduped(
 
 /// Environment variable carrying the authenticated remote URL of a Factory's
 /// definition repository. Dispatch attaches it only to runs that execute as a
-/// Factory agent whose Factory definition lives in a Warp-managed repository.
-pub(crate) const FACTORY_REPO_CLONE_URL_ENV_VAR: &str = "WARP_FACTORY_REPO_CLONE_URL";
+/// Factory agent whose Factory definition lives in a Torch-managed repository.
+pub(crate) const FACTORY_REPO_CLONE_URL_ENV_VAR: &str = "TORCH_FACTORY_REPO_CLONE_URL";
 
 /// Environment variable carrying the directory, relative to the working
 /// directory, that the Factory definition repository is cloned into.
-pub(crate) const FACTORY_REPO_DIR_ENV_VAR: &str = "WARP_FACTORY_REPO_DIR";
+pub(crate) const FACTORY_REPO_DIR_ENV_VAR: &str = "TORCH_FACTORY_REPO_DIR";
 
 /// Prepends the setup command that clones a Factory's definition repository
 /// when the dispatch attached the clone variables to this run, so the checkout
@@ -772,7 +772,7 @@ async fn prepare_environment_impl(
     // command, or anything else run above) has claimed it yet. This runs
     // after setup commands specifically so a customer's own git identity
     // config always wins: repo-local config always beats `--global` config
-    // regardless of write order, so applying Warp's own fallback any earlier
+    // regardless of write order, so applying Torch's own fallback any earlier
     // would permanently shadow a later customer override. Runs even if a
     // setup command failed, so whatever happens next (e.g. a failure-linger
     // session) still has a usable identity for every repo.
@@ -1237,7 +1237,7 @@ async fn execute_checkout_helper(
     let _tracing_handoff = crate::tracing::create_child_process_handoff(&requests_file);
     let executable =
         std::env::current_exe().map_err(|_| PrepareEnvironmentError::CheckoutHelper {
-            reason: "could not resolve the running Warp/Oz executable",
+            reason: "could not resolve the running Torch/Oz executable",
         })?;
     let command = build_checkout_helper_command(
         &executable,

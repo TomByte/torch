@@ -70,7 +70,7 @@ cleanup_dmg_files() {
         find "$target_dir" -name "rw.*.dmg" -type f -delete
     fi
     # Also check if any volumes are mounted and unmount them
-    hdiutil info | grep "/Volumes/Warp.*" | awk '{print $1}' | while read -r disk; do
+    hdiutil info | grep "/Volumes/Torch.*" | awk '{print $1}' | while read -r disk; do
         echo "Unmounting disk image: $disk"
         hdiutil detach "$disk" -force || true
     done
@@ -363,10 +363,10 @@ if [[ "$CARGO_PROFILE" == "dev" ]]; then
 fi
 
 if [[ $RELEASE_CHANNEL = "oss" ]]; then
-    WARP_BIN="torch"
+    TORCH_BIN="torch"
     BUNDLE_ID="dev.tombyte.Torch"
-    WARP_APP_NAME="Torch"
-    WARP_SCHEME_NAME="torch"
+    TORCH_APP_NAME="Torch"
+    TORCH_SCHEME_NAME="torch"
     FEATURES="release_bundle,extern_plist,local_only"
 fi
 
@@ -438,8 +438,8 @@ elif [[ "$ARTIFACT" == tui ]]; then
   # binary (the TUI is not shipped inside a `.app` bundle).
   UNIVERSAL_BINARY=false
   OPEN_AFTER_BUNDLE=false
-  WARP_BIN="torch-tui"
-  WARP_TUI_FEATURES="release_bundle,standalone,voice_input"
+  TORCH_BIN="torch-tui"
+  TORCH_TUI_FEATURES="release_bundle,standalone,voice_input"
 elif [[ "$ARTIFACT" == app ]]; then
   # All channels ship the v3 classifier and v2 heuristic.
   FEATURES="$FEATURES,gui,nld_classifier_v3,nld_heuristic_v2"
@@ -464,22 +464,22 @@ fi
 # using the same feature flags and profile that we would be using in production.
 if [[ "$CHECK_ONLY" == "true" ]]; then
   if [[ "$ARTIFACT" == "tui" ]]; then
-    cargo check -p torch_tui --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --target "$DEFAULT_TARGET" --features "$WARP_TUI_FEATURES"
+    cargo check -p torch_tui --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --target "$DEFAULT_TARGET" --features "$TORCH_TUI_FEATURES"
   else
-    cargo check --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --target "$DEFAULT_TARGET" --features "$FEATURES"
+    cargo check --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --target "$DEFAULT_TARGET" --features "$FEATURES"
     if [[ $UNIVERSAL_BINARY = true && "$ARTIFACT" != "cli" && "$ARTIFACT" != "warpctrl" ]]; then
-      cargo check --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --target "$ADDITIONAL_TARGET" --features "$FEATURES"
+      cargo check --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --target "$ADDITIONAL_TARGET" --features "$FEATURES"
     fi
   fi
   exit 0
 fi
 
-DMG_DIR="$BUNDLE_DIR/dmg/$WARP_BIN"
-DMG_NAME="$WARP_APP_NAME.dmg"
+DMG_DIR="$BUNDLE_DIR/dmg/$TORCH_BIN"
+DMG_NAME="$TORCH_APP_NAME.dmg"
 if [[ -z "$FINAL_DMG_NAME" && -n "$DMG_NAME_SUFFIX" ]]; then
-  FINAL_DMG_NAME="$WARP_APP_NAME-$DMG_NAME_SUFFIX.dmg"
+  FINAL_DMG_NAME="$TORCH_APP_NAME-$DMG_NAME_SUFFIX.dmg"
 else
-  FINAL_DMG_NAME="$WARP_APP_NAME.dmg"
+  FINAL_DMG_NAME="$TORCH_APP_NAME.dmg"
 fi
 
 # Check signing credentials up front so a missing cert or profile doesn't surface only after a
@@ -497,9 +497,9 @@ fi
 
 # First clean up and prep the outdir
 mkdir -p "$OUT_DIR"
-rm -R "$OUT_DIR/$WARP_APP_NAME.app" || echo "No old app to remove"
+rm -R "$OUT_DIR/$TORCH_APP_NAME.app" || echo "No old app to remove"
 rm -R "$OUT_DIR/$FINAL_DMG_NAME" || echo "No old dmg to remove"
-rm "$OUT_DIR/$WARP_APP_NAME.zip" || echo "No old zip to remove"
+rm "$OUT_DIR/$TORCH_APP_NAME.zip" || echo "No old zip to remove"
 
 ###########################
 ## Step 1: Build the app ##
@@ -513,13 +513,13 @@ if [[ "$ARTIFACT" == "app" ]]; then
 
   pushd app > /dev/null
   echo "Building and bundling $DEFAULT_TARGET for channel $RELEASE_CHANNEL and bundle id $BUNDLE_ID with profile $CARGO_PROFILE"
-  cargo bundle --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --target "$DEFAULT_TARGET" --features "$FEATURES"
+  cargo bundle --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --target "$DEFAULT_TARGET" --features "$FEATURES"
   popd > /dev/null
 
-  "$WORKSPACE_ROOT_DIR/script/macos/add_framework_rpath" "$BUNDLE_DIR/$WARP_APP_NAME.app/Contents/MacOS/$WARP_BIN"
+  "$WORKSPACE_ROOT_DIR/script/macos/add_framework_rpath" "$BUNDLE_DIR/$TORCH_APP_NAME.app/Contents/MacOS/$TORCH_BIN"
 
-  export WARP_SCHEME_NAME
-  export WARP_PLIST_PATH="$BUNDLE_DIR/$WARP_APP_NAME.app/Contents/Info.plist"
+  export TORCH_SCHEME_NAME
+  export TORCH_PLIST_PATH="$BUNDLE_DIR/$TORCH_APP_NAME.app/Contents/Info.plist"
   ./script/update_plist
 
   if [[ $REGISTER_SERVICES = true ]]; then
@@ -529,7 +529,7 @@ if [[ "$ARTIFACT" == "app" ]]; then
         <key>NSMenuItem</key>
         <dict>
           <key>default</key>
-          <string>New $WARP_APP_NAME Tab Here</string>
+          <string>New $TORCH_APP_NAME Tab Here</string>
         </dict>
         <key>NSMessage</key>
         <string>openTab</string>
@@ -548,7 +548,7 @@ if [[ "$ARTIFACT" == "app" ]]; then
         <key>NSMenuItem</key>
         <dict>
           <key>default</key>
-          <string>New $WARP_APP_NAME Window Here</string>
+          <string>New $TORCH_APP_NAME Window Here</string>
         </dict>
         <key>NSMessage</key>
         <string>openWindow</string>
@@ -563,25 +563,25 @@ if [[ "$ARTIFACT" == "app" ]]; then
           <string>public.plain-text</string>
         </array>
       </dict>
-    </array>" "$BUNDLE_DIR"/$WARP_APP_NAME.app/Contents/Info.plist
+    </array>" "$BUNDLE_DIR"/$TORCH_APP_NAME.app/Contents/Info.plist
   fi
 
-  # Temporary key that ChatGPT Desktop can use to determine if the latest version of Warp supports the ChatGPT integration.
+  # Temporary key that ChatGPT Desktop can use to determine if the latest version of Torch supports the ChatGPT integration.
   # Once support has been rolled out for a sufficient amount of time we (and ChatGPT) can remove this.
-  plutil -insert SUPPORTS_CHAT_GPT_WORK_WITH_APPS -bool true "$BUNDLE_DIR"/$WARP_APP_NAME.app/Contents/Info.plist
+  plutil -insert SUPPORTS_CHAT_GPT_WORK_WITH_APPS -bool true "$BUNDLE_DIR"/$TORCH_APP_NAME.app/Contents/Info.plist
 
   # Add LSBackgroundOnly key and set it to false since we need a UI app
-  plutil -insert LSBackgroundOnly -bool false "$BUNDLE_DIR"/$WARP_APP_NAME.app/Contents/Info.plist
+  plutil -insert LSBackgroundOnly -bool false "$BUNDLE_DIR"/$TORCH_APP_NAME.app/Contents/Info.plist
 
   # Add SMAuthorizedClients for macOS 13+ (Ventura) to support login item functionality
-  plutil -insert SMAuthorizedClients -xml "<array><string>$BUNDLE_ID</string></array>" "$BUNDLE_DIR"/$WARP_APP_NAME.app/Contents/Info.plist
+  plutil -insert SMAuthorizedClients -xml "<array><string>$BUNDLE_ID</string></array>" "$BUNDLE_DIR"/$TORCH_APP_NAME.app/Contents/Info.plist
 
   if [[ $UNIVERSAL_BINARY = true ]]; then
       if [[ $BUILD_BINARY = true ]]; then
           echo "Building $ADDITIONAL_TARGET to include in universal binary"
 
           pushd app > /dev/null
-          cargo build --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --target "$ADDITIONAL_TARGET" --features "$FEATURES"
+          cargo build --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --target "$ADDITIONAL_TARGET" --features "$FEATURES"
           popd > /dev/null
       else
           echo "Skipping build of $ADDITIONAL_TARGET due to --skip-build flag"
@@ -591,13 +591,13 @@ if [[ "$ARTIFACT" == "app" ]]; then
 
       echo "Adding rpath to both binaries for universal executable"
       "$WORKSPACE_ROOT_DIR/script/macos/add_framework_rpath" \
-        "target/$INTEL_TARGET/$TARGET_PROFILE_DIR/$WARP_BIN" \
-        "target/$ARM_TARGET/$TARGET_PROFILE_DIR/$WARP_BIN"
+        "target/$INTEL_TARGET/$TARGET_PROFILE_DIR/$TORCH_BIN" \
+        "target/$ARM_TARGET/$TARGET_PROFILE_DIR/$TORCH_BIN"
 
       echo "Building universal binary using lipo."
-      lipo -create -output "$tmp_bundle_dir/$WARP_BIN" \
-          "target/$INTEL_TARGET/$TARGET_PROFILE_DIR/$WARP_BIN" \
-          "target/$ARM_TARGET/$TARGET_PROFILE_DIR/$WARP_BIN"
+      lipo -create -output "$tmp_bundle_dir/$TORCH_BIN" \
+          "target/$INTEL_TARGET/$TARGET_PROFILE_DIR/$TORCH_BIN" \
+          "target/$ARM_TARGET/$TARGET_PROFILE_DIR/$TORCH_BIN"
 
       # Compute the real absolute path to the dSYM file, factoring in symlinks.
       # Starting in Rust 1.56, the generated dSYMs are symlinks to files within the target/dep directory. For example,
@@ -605,26 +605,26 @@ if [[ "$ARTIFACT" == "app" ]]; then
       # would be located at dev.dSYM/Contents/Resources/DWARF/dev-080cf7e291fb066d.dSYM where dev.dSYM is symlink to
       # deps/dev-080cf7e291fb066d.dSYM. To fix this, parse out the actual name of the directory that the dSYM is
       # symlinked to, since this is also the name of file that contains the debug symbols within the dSYM.
-      INTEL_DSYM_NAME=$(basename "$(realpath target/$INTEL_TARGET/$TARGET_PROFILE_DIR/$WARP_BIN.dSYM)" .dSYM)
-      INTEL_DSYM_PATH="target/$INTEL_TARGET/$TARGET_PROFILE_DIR/$WARP_BIN.dSYM/Contents/Resources/DWARF/$INTEL_DSYM_NAME"
-      ARM_DSYM_NAME=$(basename "$(realpath target/$ARM_TARGET/$TARGET_PROFILE_DIR/$WARP_BIN.dSYM)" .dSYM)
-      ARM_DSYM_PATH="target/$ARM_TARGET/$TARGET_PROFILE_DIR/$WARP_BIN.dSYM/Contents/Resources/DWARF/$ARM_DSYM_NAME"
+      INTEL_DSYM_NAME=$(basename "$(realpath target/$INTEL_TARGET/$TARGET_PROFILE_DIR/$TORCH_BIN.dSYM)" .dSYM)
+      INTEL_DSYM_PATH="target/$INTEL_TARGET/$TARGET_PROFILE_DIR/$TORCH_BIN.dSYM/Contents/Resources/DWARF/$INTEL_DSYM_NAME"
+      ARM_DSYM_NAME=$(basename "$(realpath target/$ARM_TARGET/$TARGET_PROFILE_DIR/$TORCH_BIN.dSYM)" .dSYM)
+      ARM_DSYM_PATH="target/$ARM_TARGET/$TARGET_PROFILE_DIR/$TORCH_BIN.dSYM/Contents/Resources/DWARF/$ARM_DSYM_NAME"
       if [[ -e "$INTEL_DSYM_PATH" && -e "$ARM_DSYM_PATH" ]]; then
-        echo "Building universal binary .dSYM using lipo and storing in $OUT_DIR/$WARP_BIN.dSYM"
+        echo "Building universal binary .dSYM using lipo and storing in $OUT_DIR/$TORCH_BIN.dSYM"
 
         # Use lipo to merge the .dSYM files into a single universal .dSYM file.
         # It expects the base name for the file (with the .dSYM suffix removed).
-        lipo -create -output "$OUT_DIR/$WARP_BIN.dSYM" "${INTEL_DSYM_PATH}" "${ARM_DSYM_PATH}"
+        lipo -create -output "$OUT_DIR/$TORCH_BIN.dSYM" "${INTEL_DSYM_PATH}" "${ARM_DSYM_PATH}"
       fi
 
       echo "Storing result in $BUNDLE_DIR, replacing $DEFAULT_TARGET binary with fat binary."
-      mv "$tmp_bundle_dir/$WARP_BIN" "$BUNDLE_DIR/$WARP_APP_NAME.app/Contents/MacOS"
-  elif [[ -n "$TARGET_ARCH" && -e "target/$DEFAULT_TARGET/$TARGET_PROFILE_DIR/$WARP_BIN.dSYM" ]]; then
-    echo "Copying .dSYM into $OUT_DIR/$WARP_BIN.dSYM"
-    cp -HR "target/$DEFAULT_TARGET/$TARGET_PROFILE_DIR/$WARP_BIN.dSYM" "$OUT_DIR/"
+      mv "$tmp_bundle_dir/$TORCH_BIN" "$BUNDLE_DIR/$TORCH_APP_NAME.app/Contents/MacOS"
+  elif [[ -n "$TARGET_ARCH" && -e "target/$DEFAULT_TARGET/$TARGET_PROFILE_DIR/$TORCH_BIN.dSYM" ]]; then
+    echo "Copying .dSYM into $OUT_DIR/$TORCH_BIN.dSYM"
+    cp -HR "target/$DEFAULT_TARGET/$TARGET_PROFILE_DIR/$TORCH_BIN.dSYM" "$OUT_DIR/"
   fi
 
-  BUNDLED_RESOURCES_DIR="$BUNDLE_DIR/$WARP_APP_NAME.app/Contents/Resources"
+  BUNDLED_RESOURCES_DIR="$BUNDLE_DIR/$TORCH_APP_NAME.app/Contents/Resources"
   echo "Preparing bundled resources..."
   if [[ "${SKIP_SETTINGS_SCHEMA:-}" != "1" && -z "${SETTINGS_SCHEMA_EXECUTABLE:-}" && -z "${SETTINGS_SCHEMA_SOURCE:-}" ]]; then
     if [[ $BUILD_BINARY != true ]]; then
@@ -634,14 +634,14 @@ if [[ "$ARTIFACT" == "app" ]]; then
       echo "Error: Cannot execute the just-built $DEFAULT_TARGET binary on this $HOST_ARCH host to generate a settings schema; pass SETTINGS_SCHEMA_SOURCE or SETTINGS_SCHEMA_EXECUTABLE." >&2
       exit 1
     else
-      export SETTINGS_SCHEMA_EXECUTABLE="$BUNDLE_DIR/$WARP_APP_NAME.app/Contents/MacOS/$WARP_BIN"
+      export SETTINGS_SCHEMA_EXECUTABLE="$BUNDLE_DIR/$TORCH_APP_NAME.app/Contents/MacOS/$TORCH_BIN"
     fi
   fi
   "$WORKSPACE_ROOT_DIR/script/prepare_bundled_resources" "$BUNDLED_RESOURCES_DIR" "$RELEASE_CHANNEL"
 
-  "$WORKSPACE_ROOT_DIR/script/compile_icon" "$RELEASE_CHANNEL" "$BUNDLE_DIR/$WARP_APP_NAME.app"
+  "$WORKSPACE_ROOT_DIR/script/compile_icon" "$RELEASE_CHANNEL" "$BUNDLE_DIR/$TORCH_APP_NAME.app"
 
-  HELPERS_DIR="$BUNDLE_DIR/$WARP_APP_NAME.app/Contents/Helpers"
+  HELPERS_DIR="$BUNDLE_DIR/$TORCH_APP_NAME.app/Contents/Helpers"
   if [[ ",$FEATURES," =~ ",heap_usage_tracking," ]]; then
     echo "Bundling pprof..."
     "$WORKSPACE_ROOT_DIR/script/prepare_bundled_pprof" "$HELPERS_DIR"
@@ -656,27 +656,27 @@ if [[ "$ARTIFACT" == "app" ]]; then
   cat > "$CLI_SCRIPT_PATH" << 'EOF'
 #!/bin/bash
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-exec -a "$0" "$script_dir/../../MacOS/WARP_BIN_PLACEHOLDER" "$@"
+exec -a "$0" "$script_dir/../../MacOS/TORCH_BIN_PLACEHOLDER" "$@"
 EOF
   
   # Replace the placeholder with the actual binary name
-  sed -i '' "s/WARP_BIN_PLACEHOLDER/$WARP_BIN/" "$CLI_SCRIPT_PATH"
+  sed -i '' "s/TORCH_BIN_PLACEHOLDER/$TORCH_BIN/" "$CLI_SCRIPT_PATH"
   
   # Make the script executable
   chmod +x "$CLI_SCRIPT_PATH"
 
   if [[ ",$FEATURES," =~ ",warp_control_cli," ]]; then
     # Must match `Channel::warpctrl_command_name` in the Rust source.
-    WARPCTRL_COMMAND_NAME="warpctrl-oss"
+    WARPCTRL_COMMAND_NAME="torchctrl"
     WARPCTRL_SCRIPT_PATH="$BUNDLED_RESOURCES_DIR/bin/$WARPCTRL_COMMAND_NAME"
     echo "Creating warpctrl wrapper script at $WARPCTRL_SCRIPT_PATH..."
     "$WORKSPACE_ROOT_DIR/script/macos/create_warpctrl_wrapper" \
       "$WARPCTRL_SCRIPT_PATH" \
-      "../../MacOS/$WARP_BIN"
+      "../../MacOS/$TORCH_BIN"
   fi
 
   # Store the built artifact locations for GitHub Actions outputs.
-  BINARY_PATH="target/$DEFAULT_TARGET/$TARGET_PROFILE_DIR/$WARP_BIN"
+  BINARY_PATH="target/$DEFAULT_TARGET/$TARGET_PROFILE_DIR/$TORCH_BIN"
   DMG_PATH="$OUT_DIR/$FINAL_DMG_NAME"
 elif [[ "$ARTIFACT" == "cli" || "$ARTIFACT" == "warpctrl" ]]; then
   if [[ $BUILD_BINARY == true ]]; then
@@ -684,26 +684,26 @@ elif [[ "$ARTIFACT" == "cli" || "$ARTIFACT" == "warpctrl" ]]; then
     # Apple's codesigning tools will detect Info.plist files in the same directory as an executable.
     # This breaks the code signature, so we must use a different location for the file.
     mkdir -p "$BUNDLE_DIR"
-    export WARP_PLIST_PATH="$BUNDLE_DIR/cli-info.plist"
-    cp app/assets/resources/mac/CLI-Info.plist "$WARP_PLIST_PATH"
+    export TORCH_PLIST_PATH="$BUNDLE_DIR/cli-info.plist"
+    cp app/assets/resources/mac/CLI-Info.plist "$TORCH_PLIST_PATH"
 
-    export WARP_PLIST_NO_FILE_TYPES=true
+    export TORCH_PLIST_NO_FILE_TYPES=true
     ./script/update_plist
-    plutil -insert CFBundleIdentifier -string "$BUNDLE_ID" "$WARP_PLIST_PATH"
-    plutil -insert CFBundleName -string "$WARP_BIN" "$WARP_PLIST_PATH"
-    plutil -insert CFBundleExecutable -string "$WARP_BIN" "$WARP_PLIST_PATH"
+    plutil -insert CFBundleIdentifier -string "$BUNDLE_ID" "$TORCH_PLIST_PATH"
+    plutil -insert CFBundleName -string "$TORCH_BIN" "$TORCH_PLIST_PATH"
+    plutil -insert CFBundleExecutable -string "$TORCH_BIN" "$TORCH_PLIST_PATH"
 
-    export "INFO_PLIST_PATH=$(realpath "$WARP_PLIST_PATH")"
+    export "INFO_PLIST_PATH=$(realpath "$TORCH_PLIST_PATH")"
     pushd app > /dev/null
     echo "Building $DEFAULT_TARGET for channel $RELEASE_CHANNEL with profile $CARGO_PROFILE"
-    cargo build --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --target "$DEFAULT_TARGET" --features "$FEATURES"
+    cargo build --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --target "$DEFAULT_TARGET" --features "$FEATURES"
     popd > /dev/null
   else
     echo "Skipping binary build due to --skip-build flag"
   fi
 
-  echo "Copying binary into $OUT_DIR/$WARP_BIN"
-  cp "target/$DEFAULT_TARGET/$TARGET_PROFILE_DIR/$WARP_BIN" "$OUT_DIR/$WARP_BIN"
+  echo "Copying binary into $OUT_DIR/$TORCH_BIN"
+  cp "target/$DEFAULT_TARGET/$TARGET_PROFILE_DIR/$TORCH_BIN" "$OUT_DIR/$TORCH_BIN"
 
   if [[ "$ARTIFACT" == "warpctrl" ]]; then
     if [[ ! ",$FEATURES," =~ ",warp_control_cli," ]]; then
@@ -714,12 +714,12 @@ elif [[ "$ARTIFACT" == "cli" || "$ARTIFACT" == "warpctrl" ]]; then
     echo "Creating warpctrl wrapper script at $WARPCTRL_SCRIPT_PATH"
     "$WORKSPACE_ROOT_DIR/script/macos/create_warpctrl_wrapper" \
       "$WARPCTRL_SCRIPT_PATH" \
-      "$WARP_BIN"
+      "$TORCH_BIN"
   fi
 
-  if [[ -n "$TARGET_ARCH" && -e "target/$DEFAULT_TARGET/$TARGET_PROFILE_DIR/$WARP_BIN.dSYM" ]]; then
-    echo "Copying .dSYM into $OUT_DIR/$WARP_BIN.dSYM"
-    cp -HR "target/$DEFAULT_TARGET/$TARGET_PROFILE_DIR/$WARP_BIN.dSYM" "$OUT_DIR/"
+  if [[ -n "$TARGET_ARCH" && -e "target/$DEFAULT_TARGET/$TARGET_PROFILE_DIR/$TORCH_BIN.dSYM" ]]; then
+    echo "Copying .dSYM into $OUT_DIR/$TORCH_BIN.dSYM"
+    cp -HR "target/$DEFAULT_TARGET/$TARGET_PROFILE_DIR/$TORCH_BIN.dSYM" "$OUT_DIR/"
   fi
 
   echo "Preparing CLI resources directory"
@@ -732,7 +732,7 @@ elif [[ "$ARTIFACT" == "cli" || "$ARTIFACT" == "warpctrl" ]]; then
       echo "Error: Cannot execute the just-built $DEFAULT_TARGET binary on this $HOST_ARCH host to generate a settings schema; pass SETTINGS_SCHEMA_SOURCE or SETTINGS_SCHEMA_EXECUTABLE." >&2
       exit 1
     else
-      export SETTINGS_SCHEMA_EXECUTABLE="$OUT_DIR/$WARP_BIN"
+      export SETTINGS_SCHEMA_EXECUTABLE="$OUT_DIR/$TORCH_BIN"
     fi
   fi
   "$WORKSPACE_ROOT_DIR/script/prepare_bundled_resources" "$BUNDLED_RESOURCES_DIR" "$RELEASE_CHANNEL"
@@ -742,22 +742,22 @@ elif [[ "$ARTIFACT" == "cli" || "$ARTIFACT" == "warpctrl" ]]; then
   if [[ "$ARTIFACT" == "warpctrl" ]]; then
     BINARY_PATH="$OUT_DIR/warpctrl"
   else
-    BINARY_PATH="$OUT_DIR/$WARP_BIN"
+    BINARY_PATH="$OUT_DIR/$TORCH_BIN"
   fi
 elif [[ "$ARTIFACT" == "tui" ]]; then
   if [[ $BUILD_BINARY == true ]]; then
-    echo "Building $WARP_BIN ($DEFAULT_TARGET) for channel $RELEASE_CHANNEL with profile $CARGO_PROFILE"
-    cargo build -p torch_tui --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --target "$DEFAULT_TARGET" --features "$WARP_TUI_FEATURES"
+    echo "Building $TORCH_BIN ($DEFAULT_TARGET) for channel $RELEASE_CHANNEL with profile $CARGO_PROFILE"
+    cargo build -p torch_tui --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --target "$DEFAULT_TARGET" --features "$TORCH_TUI_FEATURES"
   else
     echo "Skipping binary build due to --skip-build flag"
   fi
 
-  echo "Copying binary into $OUT_DIR/$WARP_BIN"
-  cp "target/$DEFAULT_TARGET/$TARGET_PROFILE_DIR/$WARP_BIN" "$OUT_DIR/$WARP_BIN"
+  echo "Copying binary into $OUT_DIR/$TORCH_BIN"
+  cp "target/$DEFAULT_TARGET/$TARGET_PROFILE_DIR/$TORCH_BIN" "$OUT_DIR/$TORCH_BIN"
 
-  if [[ -n "$TARGET_ARCH" && -e "target/$DEFAULT_TARGET/$TARGET_PROFILE_DIR/$WARP_BIN.dSYM" ]]; then
-    echo "Copying .dSYM into $OUT_DIR/$WARP_BIN.dSYM"
-    cp -HR "target/$DEFAULT_TARGET/$TARGET_PROFILE_DIR/$WARP_BIN.dSYM" "$OUT_DIR/"
+  if [[ -n "$TARGET_ARCH" && -e "target/$DEFAULT_TARGET/$TARGET_PROFILE_DIR/$TORCH_BIN.dSYM" ]]; then
+    echo "Copying .dSYM into $OUT_DIR/$TORCH_BIN.dSYM"
+    cp -HR "target/$DEFAULT_TARGET/$TARGET_PROFILE_DIR/$TORCH_BIN.dSYM" "$OUT_DIR/"
   fi
 
   # Ship bundled skills + settings schema next to the binary. The standalone TUI
@@ -771,7 +771,7 @@ elif [[ "$ARTIFACT" == "tui" ]]; then
   fi
   "$WORKSPACE_ROOT_DIR/script/prepare_bundled_resources" "$BUNDLED_RESOURCES_DIR" "$RELEASE_CHANNEL"
 
-  BINARY_PATH="$OUT_DIR/$WARP_BIN"
+  BINARY_PATH="$OUT_DIR/$TORCH_BIN"
 else
   echo "Unsupported artifact: $ARTIFACT" >&2
   exit 1
@@ -790,31 +790,31 @@ if [[ $SELFSIGN = true ]]; then
     echo "Found Apple Development certificate"
   fi
   if [[ "$ARTIFACT" == app ]]; then
-    echo "Self-signing $BUNDLE_DIR/$WARP_APP_NAME.app with ${SIGNING_CERT}..."
-    codesign --force --deep --options runtime --sign "$SIGNING_CERT" "$BUNDLE_DIR/$WARP_APP_NAME.app" --entitlements script/Debug-Entitlements.plist
+    echo "Self-signing $BUNDLE_DIR/$TORCH_APP_NAME.app with ${SIGNING_CERT}..."
+    codesign --force --deep --options runtime --sign "$SIGNING_CERT" "$BUNDLE_DIR/$TORCH_APP_NAME.app" --entitlements script/Debug-Entitlements.plist
   elif [[ "$ARTIFACT" == cli || "$ARTIFACT" == warpctrl || "$ARTIFACT" == tui ]]; then
-    echo "Self-signing $OUT_DIR/$WARP_BIN with ${SIGNING_CERT}..."
-    codesign --force --options runtime --sign "$SIGNING_CERT" "$OUT_DIR/$WARP_BIN" --entitlements script/Debug-Entitlements.plist
+    echo "Self-signing $OUT_DIR/$TORCH_BIN with ${SIGNING_CERT}..."
+    codesign --force --options runtime --sign "$SIGNING_CERT" "$OUT_DIR/$TORCH_BIN" --entitlements script/Debug-Entitlements.plist
   fi
 elif [[ $CODESIGN = true ]]; then
   if [[ "$ARTIFACT" == app ]]; then
-    echo "Codesigning $BUNDLE_DIR/$WARP_APP_NAME.app..."
+    echo "Codesigning $BUNDLE_DIR/$TORCH_APP_NAME.app..."
     # Use --deep so we sign bundled frameworks as well
-    codesign_with_retry --deep -f -o runtime --timestamp -s "$CODESIGN_IDENTITY" "$BUNDLE_DIR/$WARP_APP_NAME.app" --entitlements script/Entitlements.plist
+    codesign_with_retry --deep -f -o runtime --timestamp -s "$CODESIGN_IDENTITY" "$BUNDLE_DIR/$TORCH_APP_NAME.app" --entitlements script/Entitlements.plist
   elif [[ "$ARTIFACT" == cli || "$ARTIFACT" == warpctrl || "$ARTIFACT" == tui ]]; then
-    echo "Codesigning $OUT_DIR/$WARP_BIN..."
-    codesign_with_retry -f -o runtime --timestamp -s "$CODESIGN_IDENTITY" "$OUT_DIR/$WARP_BIN" --entitlements script/Entitlements.plist
+    echo "Codesigning $OUT_DIR/$TORCH_BIN..."
+    codesign_with_retry -f -o runtime --timestamp -s "$CODESIGN_IDENTITY" "$OUT_DIR/$TORCH_BIN" --entitlements script/Entitlements.plist
 
     # Create the .zip for notarization in a separate location - otherwise, Apple's codesigning
     # tools decide that it's a sealed resource that belongs to the binary and needs to also be signed.
-    NOTARIZATION_ARTIFACT="$BUNDLE_DIR/${WARP_BIN}_notarize.zip"
+    NOTARIZATION_ARTIFACT="$BUNDLE_DIR/${TORCH_BIN}_notarize.zip"
     if [[ -e "$NOTARIZATION_ARTIFACT" ]]; then
       echo "Removing old notarization artifact..."
       rm "$NOTARIZATION_ARTIFACT"
     fi
 
     # Create a .zip archive to notarize.
-    ditto -c -k "$OUT_DIR/$WARP_BIN" "$NOTARIZATION_ARTIFACT"
+    ditto -c -k "$OUT_DIR/$TORCH_BIN" "$NOTARIZATION_ARTIFACT"
     
     # It's not possible to staple notarization tickets to standalone binaries:
     # https://developer.apple.com/documentation/security/customizing-the-notarization-workflow?language=objc#Staple-the-ticket-to-your-distribution
@@ -833,14 +833,14 @@ if [[ "$ARTIFACT" = app ]]; then
     local source_folder="$1"
 
     local args=(
-      --volname "$WARP_APP_NAME"
+      --volname "$TORCH_APP_NAME"
       # For --no-internet-enable, see https://github.com/create-dmg/create-dmg/issues/179
       --no-internet-enable
       --icon-size 128
       --window-size 700 500
       --format UDZO
       --app-drop-link 550 250
-      --icon "$WARP_APP_NAME.app" 150 250
+      --icon "$TORCH_APP_NAME.app" 150 250
       # macOS 26.4 Beta has issues with mounting HFS+ DMGs, so we're using APFS instead.
       # APFS has been supported as a DMG filesystem since macOS 10.13, and we target 10.14
       # as our minimum version.
@@ -869,7 +869,7 @@ if [[ "$ARTIFACT" = app ]]; then
     fi
     echo "Creating $DMG_DIR"
     mkdir -p "$DMG_DIR"
-    cp -R "$BUNDLE_DIR/$WARP_APP_NAME.app" "$DMG_DIR"
+    cp -R "$BUNDLE_DIR/$TORCH_APP_NAME.app" "$DMG_DIR"
 
     create_warp_dmg "$DMG_DIR"
 
@@ -903,7 +903,7 @@ if [[ $CODESIGN = true ]]; then
     if [[ "$ARTIFACT" = app ]]; then
       # Notarizing the dmg also notarizes the app inside it, so the app can carry its own
       # ticket and pass Gatekeeper offline when shared without the dmg.
-      xcrun stapler staple "$BUNDLE_DIR/$WARP_APP_NAME.app"
+      xcrun stapler staple "$BUNDLE_DIR/$TORCH_APP_NAME.app"
     fi
   fi
 
@@ -911,9 +911,9 @@ if [[ $CODESIGN = true ]]; then
   echo "Verifying notarization ticket..."
   if [[ "$ARTIFACT" = app ]]; then
     xcrun stapler validate "$DMG_DIR/$DMG_NAME"
-    spctl -a -t exec -vv "$BUNDLE_DIR/$WARP_APP_NAME.app"
+    spctl -a -t exec -vv "$BUNDLE_DIR/$TORCH_APP_NAME.app"
   elif [[ "$ARTIFACT" = cli || "$ARTIFACT" = warpctrl || "$ARTIFACT" = tui ]]; then
-    spctl -a -t open --context context:primary-signature -vv "$OUT_DIR/$WARP_BIN"
+    spctl -a -t open --context context:primary-signature -vv "$OUT_DIR/$TORCH_BIN"
   fi
 fi
 
@@ -924,13 +924,13 @@ fi
 
 if [[ "$ARTIFACT" = app ]]; then
   echo "Copying dmg and app to $OUT_DIR"
-  cp -R "$BUNDLE_DIR/$WARP_APP_NAME.app" "$OUT_DIR"
+  cp -R "$BUNDLE_DIR/$TORCH_APP_NAME.app" "$OUT_DIR"
   cp "$DMG_DIR/$DMG_NAME" "$OUT_DIR/$FINAL_DMG_NAME"
 
   if [[ $CODESIGN = true ]]; then
-    echo "Zipping $OUT_DIR/$WARP_APP_NAME.app"
+    echo "Zipping $OUT_DIR/$TORCH_APP_NAME.app"
     # ditto preserves the code signature and stapled ticket, which `zip` can break.
-    ditto -c -k --keepParent "$OUT_DIR/$WARP_APP_NAME.app" "$OUT_DIR/$WARP_APP_NAME.zip"
+    ditto -c -k --keepParent "$OUT_DIR/$TORCH_APP_NAME.app" "$OUT_DIR/$TORCH_APP_NAME.zip"
   fi
 fi
 

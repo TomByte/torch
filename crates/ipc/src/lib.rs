@@ -4,9 +4,9 @@
 //! corresponding typed "clients" ([`ServiceCaller`]s) which provide a typed interface to call the
 //! services across process boundaries.
 //!
-//! This is used for communication between Warp processes, such as the terminal server. Where
+//! This is used for communication between Torch processes, such as the terminal server. Where
 //! possible, transport-specific details are abstracted out to eventually support the same protocol
-//! on top of the WebWorkers `MessagePort` API in the browser for Warp on Web.
+//! on top of the WebWorkers `MessagePort` API in the browser for Torch on Web.
 //!
 //! On native platforms, this is implemented on top of the `interprocess` crate, which uses
 //! Unix Domain Sockets on Unix platforms and named pipes on Windows as the underlying transport.

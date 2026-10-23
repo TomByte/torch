@@ -1,4 +1,4 @@
-//! Pure, dependency-light AI model types shared across Warp crates.
+//! Pure, dependency-light AI model types shared across Torch crates.
 //!
 //! This crate sits below `torch_terminal` and `ai` in the dependency graph, so
 //! it must not depend on any workspace crate above `torch_core`. Keep the

@@ -9,7 +9,7 @@ use torch_errors::report_error;
 use crate::channel::{Channel, ChannelState};
 use crate::server::server_api::{FETCH_CHANNEL_VERSIONS_TIMEOUT, ServerApi};
 
-// Fetches channel versions asynchronously from the Warp server. If the Warp server request fails,
+// Fetches channel versions asynchronously from the Torch server. If the Torch server request fails,
 // then fetches from GCP JSON storage as a fallback.
 pub async fn fetch_channel_versions(
     nonce: &str,
@@ -17,7 +17,7 @@ pub async fn fetch_channel_versions(
     include_changelogs: bool,
     is_daily: bool,
 ) -> Result<ChannelVersions> {
-    if let Ok(path) = env::var("WARP_CHANNEL_VERSIONS_PATH") {
+    if let Ok(path) = env::var("TORCH_CHANNEL_VERSIONS_PATH") {
         // Load channel versions from local filesystem. Used for testing both
         // autoupdate and changelog behavior.
         let path = shellexpand::tilde(&path);
@@ -39,7 +39,7 @@ pub async fn fetch_channel_versions(
                 // our Sentry logs).
                 Channel::Dev | Channel::Preview => report_error!(err),
                 _ => log::warn!(
-                    "Failed to retrieve channel versions from Warp server, falling \
+                    "Failed to retrieve channel versions from Torch server, falling \
                 back to GCP JSON storage."
                 ),
             }
@@ -48,8 +48,8 @@ pub async fn fetch_channel_versions(
     }
 }
 
-// Synchronously fetches updated Warp [`ChannelVersions`] from GCP JSON storage. This will soon
-// be deprecated in favor of retrieving updated channel versions from the Warp Server.
+// Synchronously fetches updated Torch [`ChannelVersions`] from GCP JSON storage. This will soon
+// be deprecated in favor of retrieving updated channel versions from the Torch Server.
 // Note, in order to run against a test file you can use the "channel_versions_test.json" file
 // and update the file using gsutil cp channel_versions_test.json gs://warp-releases/channel_versions_test.json
 async fn fetch_channel_versions_from_json_storage(

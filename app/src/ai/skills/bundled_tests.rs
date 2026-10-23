@@ -96,7 +96,7 @@ fn factory_files_bundled_skill_is_always_active_and_scoped_to_authoring() {
 
 /// The skill must not carry a copy of the Factory file format.
 ///
-/// A bundled copy ships inside a Warp release and goes stale against the
+/// A bundled copy ships inside a Torch release and goes stale against the
 /// warp-server it is used against. A stale copy does not fail quietly: it
 /// reports fields the server accepts as unknown, and an agent clearing that
 /// diagnostic deletes working configuration. An earlier revision did exactly

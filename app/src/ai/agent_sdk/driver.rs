@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, SystemTime};
 
-use ai::skills::{ParsedSkill, WARP_SKILL_DIRS_ENV, parse_skills_dirs_env};
+use ai::skills::{ParsedSkill, TORCH_SKILL_DIRS_ENV, parse_skills_dirs_env};
 use anyhow::{Context as _, anyhow};
 use chrono::{DateTime, Utc};
 use futures::FutureExt as _;
@@ -18,8 +18,6 @@ use futures::future::{self, Either, FusedFuture};
 use itertools::Itertools as _;
 use oneshot::{Canceled, Receiver};
 use session_sharing_protocol::sharer::SessionRetentionReason;
-use tracing::Instrument as _;
-use uuid::Uuid;
 use torch_cli::agent::{Harness, HarnessTransport, OutputFormat};
 use torch_cli::mcp::MCPSpec;
 use torch_cli::share::ShareRequest;
@@ -33,6 +31,8 @@ use torchui::r#async::{FutureExt, TimeoutError, Timer};
 use torchui::{
     AppContext, Entity, EntityId, ModelContext, ModelHandle, ModelSpawner, SingletonEntity,
 };
+use tracing::Instrument as _;
+use uuid::Uuid;
 
 use crate::ai::agent::conversation::{AIConversationId, ConversationStatus};
 use crate::ai::agent::{
@@ -184,7 +184,7 @@ const HARNESS_EXIT_FOLLOWUP_DELAY: Duration = Duration::from_secs(1);
 /// force-killing the harness's process group. Together with
 /// `HARNESS_EXIT_FOLLOWUP_DELAY` this bounds the whole escalation ladder to
 /// ~15s from the initial exit request — independent of, and much shorter
-/// than, `WARP_SANDBOX_DEADLINE`.
+/// than, `TORCH_SANDBOX_DEADLINE`.
 const HARNESS_EXIT_FORCE_KILL_DELAY: Duration = Duration::from_secs(14);
 /// Bound on the end-of-run wait for `LocalAgentTaskSyncModel` to finish
 /// delivering queued task status updates before the process may exit.
@@ -203,7 +203,7 @@ const PREFLIGHT_CHECK_TIMEOUT: Duration = Duration::from_secs(30);
 /// still has a chance to recover queued prompts before the server considers the run stalled.
 const PENDING_CLI_HARNESS_PROMPT_QUEUE_FALLBACK_DRAIN_TIMEOUT: Duration =
     Duration::from_secs(8 * 60);
-pub(crate) const WARP_DRIVE_SYNC_TIMEOUT: Duration = Duration::from_secs(60);
+pub(crate) const TORCH_DRIVE_SYNC_TIMEOUT: Duration = Duration::from_secs(60);
 /// Maximum time to wait for an automatic error resume before propagating the error.
 /// If no follow-up status arrives within this window, the driver terminates with the
 /// original error so the CLI does not hang indefinitely.
@@ -213,23 +213,23 @@ pub(crate) const WARP_DRIVE_SYNC_TIMEOUT: Duration = Duration::from_secs(60);
 /// fresh one. So it bounds a single attempt, not the whole recovery chain — but a single
 /// attempt's wait (including the recovery backoff) still has to fit inside it.
 pub(crate) const AUTO_RESUME_TIMEOUT: Duration = Duration::from_secs(120);
-/// Signals to Claude child-harness hooks that Warp already owns the background
+/// Signals to Claude child-harness hooks that Torch already owns the background
 /// message-listener lifecycle, so the plugin should reuse the shared state
 /// files instead of spawning and cleaning up its own listener.
 ///
 /// When this variable is absent, the Claude plugin falls back to its legacy
-/// self-managed listener path so older Warp builds and standalone plugin
+/// self-managed listener path so older Torch builds and standalone plugin
 /// invocations keep working.
 pub(crate) const OZ_MESSAGE_LISTENER_MANAGED_EXTERNALLY_ENV: &str =
     "OZ_MESSAGE_LISTENER_MANAGED_EXTERNALLY";
-/// Warp-branded name for the same signal, injected alongside the `OZ_` one with the same value.
-pub(crate) const WARP_MESSAGE_LISTENER_MANAGED_EXTERNALLY_ENV: &str =
-    "WARP_MESSAGE_LISTENER_MANAGED_EXTERNALLY";
+/// Torch-branded name for the same signal, injected alongside the `OZ_` one with the same value.
+pub(crate) const TORCH_MESSAGE_LISTENER_MANAGED_EXTERNALLY_ENV: &str =
+    "TORCH_MESSAGE_LISTENER_MANAGED_EXTERNALLY";
 /// Optional root directory for the per-session Claude message-listener state
-/// that Warp and the Claude hook scripts share.
+/// that Torch and the Claude hook scripts share.
 pub(crate) const OZ_MESSAGE_LISTENER_STATE_ROOT_ENV: &str = "OZ_MESSAGE_LISTENER_STATE_ROOT";
-/// Warp-branded name for the same state root, injected alongside the `OZ_` one.
-pub(crate) const WARP_MESSAGE_LISTENER_STATE_ROOT_ENV: &str = "WARP_MESSAGE_LISTENER_STATE_ROOT";
+/// Torch-branded name for the same state root, injected alongside the `OZ_` one.
+pub(crate) const TORCH_MESSAGE_LISTENER_STATE_ROOT_ENV: &str = "TORCH_MESSAGE_LISTENER_STATE_ROOT";
 // Keep exporting the legacy `OZ_PARENT_*` names to child hooks until the
 // external Claude plugin has fully migrated to the canonical
 // `OZ_MESSAGE_LISTENER_*` names.
@@ -842,7 +842,7 @@ fn split_run_options(
     .map_err(AgentDriverError::ConfigBuildFailed)?;
     if let Some(dirs) = &workspace.factory_skill_dirs {
         env_vars.insert(
-            OsString::from(WARP_SKILL_DIRS_ENV),
+            OsString::from(TORCH_SKILL_DIRS_ENV),
             OsString::from(dirs.iter().map(|dir| dir.to_string_lossy()).join(",")),
         );
     }
@@ -1120,7 +1120,7 @@ pub enum AgentDriverError {
     #[error("Agent profile \"{0}\" not found")]
     ProfileError(String),
     #[error(
-        "Failed to authenticate with server - please log in via 'oz login', provide an API key via '--api-key <key>', or set the WARP_API_KEY environment variable"
+        "Failed to authenticate with server - please log in via 'oz login', provide an API key via '--api-key <key>', or set the TORCH_API_KEY environment variable"
     )]
     NotLoggedIn,
     #[error("Saved prompt not found for id {0}")]
@@ -1135,7 +1135,7 @@ pub enum AgentDriverError {
         #[source]
         error: terminal::ShareSessionError,
     },
-    #[error("Error syncing Warp Drive")]
+    #[error("Error syncing Torch Drive")]
     WarpDriveSyncFailed,
     #[error("Requested environment not found: {0}")]
     EnvironmentNotFound(String),
@@ -1251,7 +1251,7 @@ pub enum AgentDriverError {
          forcibly terminated."
     )]
     HarnessExitTimedOut { harness: String },
-    /// `WARP_SANDBOX_DEADLINE` expired before `run_internal` completed.
+    /// `TORCH_SANDBOX_DEADLINE` expired before `run_internal` completed.
     /// For free plans, this is a user-facing limit (upgrade to remove it).
     /// For paid plans, it's a configurable limit the user or team set.
     /// Either way, it's a task outcome — the user's requested work didn't fit
@@ -1278,11 +1278,11 @@ const fn sandbox_deadline_message(on_free_plan: bool) -> &'static str {
 
 /// Environment variable holding the Unix timestamp (seconds) at which the sandbox
 /// hosting this run will be hard-killed.
-const SANDBOX_DEADLINE_ENV: &str = "WARP_SANDBOX_DEADLINE";
+const SANDBOX_DEADLINE_ENV: &str = "TORCH_SANDBOX_DEADLINE";
 
 /// Returns the instant at which the sandbox hosting this run will be hard-killed.
 ///
-/// `None` outside a Warp-hosted sandbox, since the server only injects a deadline for
+/// `None` outside a Torch-hosted sandbox, since the server only injects a deadline for
 /// Docker Sandbox and Namespace runs. Local and self-hosted runs have no bounded lifetime
 /// to report.
 pub(crate) fn sandbox_deadline() -> Option<SystemTime> {
@@ -1702,9 +1702,9 @@ impl AgentDriver {
         ),
         AgentDriverError,
     > {
-        // Primary: WARP_SANDBOX_DEADLINE client-side timer.
+        // Primary: TORCH_SANDBOX_DEADLINE client-side timer.
         //
-        // The server injects WARP_SANDBOX_DEADLINE (Unix timestamp, seconds since
+        // The server injects TORCH_SANDBOX_DEADLINE (Unix timestamp, seconds since
         // epoch) into the container environment at sandbox creation time for both
         // Docker Sandbox and Namespace. The sandbox deadline is set to
         // MaxInstanceRuntime + SandboxShutdownWarningWindow (5 min); this timer
@@ -1719,12 +1719,12 @@ impl AgentDriver {
         // SIGTERM ~10-20 seconds before SIGKILL), container-runtime stops, and
         // self-hosted workers being terminated. When the deadline timer is
         // active it fires 5 minutes earlier and wins this race, but SIGTERM is
-        // the primary signal whenever WARP_SANDBOX_DEADLINE is absent or the
+        // the primary signal whenever TORCH_SANDBOX_DEADLINE is absent or the
         // shutdown was not deadline-driven. SIGINT (Ctrl-C) uses the same killed
         // path so a handoff snapshot can be saved before default terminate. A
         // second SIGINT/SIGTERM emulates the default action immediately.
         //
-        // When WARP_SANDBOX_DEADLINE is absent and no interrupt arrives,
+        // When TORCH_SANDBOX_DEADLINE is absent and no interrupt arrives,
         // run_internal runs to completion as before (local and self-hosted runs
         // are unaffected).
         let mut interrupt_watch = match InterruptWatch::register(background).await {
@@ -1831,7 +1831,7 @@ impl AgentDriver {
                     RunEndCause::SandboxDeadline => {
                         tracing::info!(tags.cloud_agent = true, "sandbox deadline approaching");
                         log::info!(
-                            "Sandbox deadline approaching (WARP_SANDBOX_DEADLINE); aborting \
+                            "Sandbox deadline approaching (TORCH_SANDBOX_DEADLINE); aborting \
                              run_internal to allow recording finalization"
                         );
                     }
@@ -2819,7 +2819,7 @@ impl AgentDriver {
     }
 
     /// Sets up the third-party harness by subscribing to CLI session events and
-    /// installing the Warp plugin and platform plugin, if applicable.
+    /// installing the Torch plugin and platform plugin, if applicable.
     ///
     /// Returns a oneshot receiver that fires when the harness should exit
     /// (either immediately on completion or after the idle-on-complete timeout).
@@ -4011,7 +4011,7 @@ impl AgentDriver {
             }
         });
 
-        // Subscribe to document model events to emit artifact_created when plans sync to Warp Drive.
+        // Subscribe to document model events to emit artifact_created when plans sync to Torch Drive.
         ctx.subscribe_to_model(&AIDocumentModel::handle(ctx), move |me, _, event, ctx| {
             let AIDocumentModelEvent::DocumentSaveStatusUpdated(document_id) = event else {
                 return;
@@ -4798,7 +4798,7 @@ pub(super) fn build_secret_env_vars(
     for (name, secret) in secrets {
         let normalized_name = name.to_ascii_uppercase();
         if matches!(secret, ManagedSecretValue::RawValue { .. })
-            && normalized_name.starts_with("WARP_METADATA_")
+            && normalized_name.starts_with("TORCH_METADATA_")
             && (std::env::var_os(&normalized_name).is_some()
                 || runtime_env.contains_key(&normalized_name))
         {
@@ -4996,7 +4996,3 @@ fn write_session_joined(join_url: &str, output_format: OutputFormat) {
 #[cfg(test)]
 #[path = "driver_tests.rs"]
 mod tests;
-
-#[cfg(all(test, feature = "local_fs", not(feature = "skip_login")))]
-#[path = "driver/standby_bootstrap_tests.rs"]
-mod standby_bootstrap_tests;

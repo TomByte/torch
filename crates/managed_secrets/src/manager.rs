@@ -3,11 +3,11 @@ use std::future::Future;
 use std::sync::Arc;
 use std::time::Duration;
 
-use vec1::vec1;
 use torch_core::features::FeatureFlag;
 use torch_graphql::managed_secrets::ManagedSecret;
 use torch_graphql::queries::task_secrets::ManagedSecretValue as GqlManagedSecretValue;
 use torchui_core::{Entity, SingletonEntity};
+use vec1::vec1;
 
 use crate::ManagedSecretValue;
 use crate::client::{
@@ -17,7 +17,7 @@ use crate::client::{
 use crate::envelope::UploadKey;
 use crate::gcp::{self, GcpWorkloadIdentityFederationError, GcpWorkloadIdentityFederationToken};
 
-/// Singleton model for working with Warp-managed secrets.
+/// Singleton model for working with Torch-managed secrets.
 pub struct ManagedSecretManager<RequestScope> {
     client: Arc<dyn ManagedSecretsClient<RequestScope = RequestScope>>,
     actor_provider: Arc<dyn ActorProvider>,
@@ -229,7 +229,7 @@ where
         }
     }
 
-    /// Get Warp-managed secrets scoped to the currently-executing task.
+    /// Get Torch-managed secrets scoped to the currently-executing task.
     ///
     /// This will fail if not in an ambient agent.
     pub fn get_task_secrets(
@@ -248,7 +248,8 @@ where
         {
             // We only need the workload token for the duration of the request.
             let workload_token =
-                torch_isolation_platform::issue_workload_token(Some(Duration::from_mins(5))).await?;
+                torch_isolation_platform::issue_workload_token(Some(Duration::from_mins(5)))
+                    .await?;
             let gql_secrets = client
                 .get_task_secrets(task_id, workload_token.token)
                 .await?;

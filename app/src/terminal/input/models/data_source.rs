@@ -249,7 +249,7 @@ impl ModelSelectorDataSource {
 
     /// Returns whether a model should appear in the inline picker.
     /// Custom-endpoint models are suppressed in Oz cloud agent panes because
-    /// they cannot route through Warp's cloud inference infrastructure.
+    /// they cannot route through Torch's cloud inference infrastructure.
     pub(crate) fn include_model_in_picker(is_cloud_pane: bool, is_custom_endpoint: bool) -> bool {
         !is_cloud_pane || !is_custom_endpoint
     }
@@ -815,7 +815,7 @@ impl SearchItem for ModelSearchItem {
 }
 
 /// Returns true when a promo discount chip should be shown for a model.
-/// Discounts only apply when the user is billing through Warp credits,
+/// Discounts only apply when the user is billing through Torch credits,
 /// so we suppress the chip when the user is routing through their own API key.
 fn should_show_discount_chip(discount_percentage: Option<f32>, is_using_byok: bool) -> bool {
     discount_percentage.is_some_and(|p| p > 0.) && !is_using_byok

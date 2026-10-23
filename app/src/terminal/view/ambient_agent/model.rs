@@ -221,7 +221,7 @@ impl AmbientAgentViewModel {
             }
         });
 
-        // Validate the default environment once Warp Drive sync completes.
+        // Validate the default environment once Torch Drive sync completes.
         // The environment ID may be restored from settings before environments are synced,
         // so we need to validate it once the initial load is complete.
         let initial_load_complete = UpdateManager::as_ref(ctx).initial_load_complete();
@@ -384,7 +384,7 @@ impl AmbientAgentViewModel {
         }
     }
 
-    /// Validates the environment ID after Warp Drive initial load completes.
+    /// Validates the environment ID after Torch Drive initial load completes.
     /// If the environment no longer exists, clears the selection.
     fn validate_environment_after_initial_load(&mut self, ctx: &mut ModelContext<Self>) {
         if let Some(id) = &self.environment_id {
@@ -856,7 +856,7 @@ impl AmbientAgentViewModel {
 
     /// Applies the run configuration for an existing shared ambient session.
     ///
-    /// Viewed sessions can join before Warp Drive has loaded the referenced environment object,
+    /// Viewed sessions can join before Torch Drive has loaded the referenced environment object,
     /// especially on web. Preserve the server-provided environment ID anyway so the selector does
     /// not fall back to an unrelated default while waiting for the environment object to arrive.
     fn apply_viewed_task_config_snapshot(
@@ -1076,7 +1076,7 @@ impl AmbientAgentViewModel {
     /// Builds the default `AgentConfigSnapshot` for spawning a cloud agent from this pane.
     ///
     /// Reads the user's preferred model, computer-use autonomy, optional self-hosted
-    /// host (`WARP_CLOUD_MODE_DEFAULT_HOST`), and the pane's currently-selected env
+    /// host (`TORCH_CLOUD_MODE_DEFAULT_HOST`), and the pane's currently-selected env
     /// and harness. Shared by `spawn_agent` and the local-to-cloud handoff path so
     /// both flows route to the same worker host and inherit the same defaults.
     pub(crate) fn build_default_spawn_config(

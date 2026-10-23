@@ -66,7 +66,7 @@ pub fn ssh_args(socket_path: &Path) -> Vec<String> {
 /// [`ControlPath::None`] is a no-op.
 ///
 /// **Only safe to call once the user's shell has already exited** --
-/// for Warp-managed masters this tears down the interactive ssh
+/// for Torch-managed masters this tears down the interactive ssh
 /// outright. In practice it is invoked from the `ExitShell` teardown
 /// path on the client.
 ///

@@ -14,7 +14,7 @@ mkdir -p "$(dirname "$WRAPPER_PATH")"
 cat > "$WRAPPER_PATH" << EOF
 #!/bin/bash
 # This wrapper may be installed through a symlink in /usr/local/bin. Resolve
-# symlinks before locating the Warp executable relative to the bundled wrapper.
+# symlinks before locating the Torch executable relative to the bundled wrapper.
 wrapper_path="\${BASH_SOURCE[0]}"
 while [[ -L "\$wrapper_path" ]]; do
   wrapper_dir="\$(cd -P "\$(dirname "\$wrapper_path")" && pwd)"
@@ -25,7 +25,7 @@ while [[ -L "\$wrapper_path" ]]; do
 done
 script_dir="\$(cd -P "\$(dirname "\$wrapper_path")" && pwd)"
 
-# Warp Control has a separate argument parser from the normal Warp/Oz parser.
+# Torch Control has a separate argument parser from the normal Torch/Oz parser.
 # The hidden flag selects it before normal CLI parsing or GUI startup.
 # Replace the wrapper process while preserving its invocation name as argv[0].
 exec -a "\$0" "\$script_dir/$BINARY_RELATIVE_PATH" --warpctrl "\$@"

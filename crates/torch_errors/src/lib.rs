@@ -1,4 +1,4 @@
-//! Explicit error reporting for Warp.
+//! Explicit error reporting for Torch.
 //!
 //! Provides the [`report_error!`] / [`report_if_error!`] macros and the machinery they depend on
 //! (`ErrorExt`, `AnyhowErrorExt`, `register_error!`, `ReportErrorLogMode`). This is a leaf crate

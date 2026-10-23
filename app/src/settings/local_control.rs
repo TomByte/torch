@@ -1,7 +1,7 @@
 //! Secure local setting that gates local control.
 //!
 //! This setting is local-only, kept out of the user-visible settings file, and
-//! persisted through Warp's secure storage provider. It is the authoritative
+//! persisted through Torch's secure storage provider. It is the authoritative
 //! enablement bit for local control.
 use anyhow::Result;
 use serde::{Deserialize, Serialize};

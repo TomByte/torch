@@ -59,5 +59,5 @@ fn render_search_item_icon_inner(
 }
 
 pub mod colors {
-    pub const WARP_AI: u32 = 0xF3B911FF;
+    pub const TORCH_AI: u32 = 0xF3B911FF;
 }

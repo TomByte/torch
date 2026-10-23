@@ -420,7 +420,7 @@ fn map_conversation_status_error_classifies_status_error_other_as_error() {
     let mut conversation = AIConversation::new(false, false);
     conversation.set_status_for_test(ConversationStatus::Error);
     conversation.set_status_error_for_test(Some(RenderableAIError::other(
-        "Out of credits. Upgrade your Warp plan to continue running cloud agents.",
+        "Out of credits. Upgrade your Torch plan to continue running cloud agents.",
         false,
     )));
     assert_update(

@@ -435,7 +435,7 @@ pub trait SlashCommandDataSource {
         let ai_settings = AISettings::as_ref(ctx);
         // Hide /host when no default host is configured (env var or the window's own team
         // setting), matching the host the command itself resolves when it runs.
-        let has_default_host = std::env::var("WARP_CLOUD_MODE_DEFAULT_HOST")
+        let has_default_host = std::env::var("TORCH_CLOUD_MODE_DEFAULT_HOST")
             .ok()
             .filter(|s| !s.is_empty())
             .is_some()

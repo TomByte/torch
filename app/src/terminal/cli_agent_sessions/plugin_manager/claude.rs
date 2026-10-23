@@ -283,7 +283,7 @@ fn check_plugin_installed(claude_dir: &Path, plugin_key: &str) -> bool {
         .unwrap_or(false)
 }
 
-/// Reads the installed version string for the Warp plugin, if present.
+/// Reads the installed version string for the Torch plugin, if present.
 fn installed_version(claude_dir: &Path) -> Option<String> {
     installed_plugin_version(claude_dir, PLUGIN_KEY)
 }

@@ -1,4 +1,4 @@
-//! `torch_tui` — the headless TUI front-end for Warp.
+//! `torch_tui` — the headless TUI front-end for Torch.
 //!
 //! This crate contains:
 //! - [`input`] — the editor-backed TUI input view (`TuiEditorModel` + `TuiInputView`).

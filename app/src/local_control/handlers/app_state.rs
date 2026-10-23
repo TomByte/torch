@@ -804,7 +804,7 @@ fn file_open(
 
 /// Resolves the path for `file.open` against the targeted terminal session's working
 /// directory, so a caller running `warpctrl file open README.md` from a session gets the
-/// file the shell would resolve rather than one relative to Warp's own process directory.
+/// file the shell would resolve rather than one relative to Torch's own process directory.
 #[cfg(feature = "local_fs")]
 fn resolve_file_open_path(
     path: &str,

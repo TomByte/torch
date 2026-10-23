@@ -17,7 +17,6 @@ use pathfinder_geometry::vector::{Vector2F, vec2f};
 use serde::{Deserialize, Serialize};
 use session_sharing_protocol::common::SessionId;
 use settings::Setting as _;
-use url::Url;
 use torch_core::context_flag::ContextFlag;
 use torch_core::safe_error;
 use torch_core::user_preferences::GetUserPreferences as _;
@@ -36,6 +35,7 @@ use torchui::{
     NextNewWindowsHasThisWindowsBoundsUponClose, SingletonEntity, TypedActionView, View,
     ViewContext, ViewHandle, WindowId, id,
 };
+use url::Url;
 
 use crate::ai::AIRequestUsageModel;
 use crate::ai::agent::api::ServerConversationToken;
@@ -917,7 +917,7 @@ fn path_if_directory(path: &Path) -> Option<&Path> {
 /// Opens a new window with the workspace configured according to `source`. Returns the
 /// newly-opened window ID and a handle to the root view in that window.
 ///
-/// This is the canonical way to open a new Warp window - all other entrypoints should delegate to
+/// This is the canonical way to open a new Torch window - all other entrypoints should delegate to
 /// it if possible.
 pub(crate) fn open_new_with_workspace_source(
     source: NewWorkspaceSource,
@@ -1545,11 +1545,11 @@ fn toggle_quake_mode_window(global_resource_handles: &GlobalResourceHandles, ctx
     };
 }
 
-/// This action will show or hide all of Warp's windows except the quake window
+/// This action will show or hide all of Torch's windows except the quake window
 ///
-/// - If Warp is active and has any windows, hide those windows.
-/// - If Warp is hidden, show all windows.
-/// - If Warp is active but has 0 normal windows, create a new window with a new session.
+/// - If Torch is active and has any windows, hide those windows.
+/// - If Torch is hidden, show all windows.
+/// - If Torch is active but has 0 normal windows, create a new window with a new session.
 fn show_or_hide_non_quake_mode_windows(_: &(), ctx: &mut AppContext) {
     let quake_window_id = get_quake_mode_state(ctx).map(|state| state.window_id);
     let non_quake_mode_window_ids = ctx
@@ -1560,7 +1560,7 @@ fn show_or_hide_non_quake_mode_windows(_: &(), ctx: &mut AppContext) {
         open_new(&(), ctx);
     }
     let windowing_model = ctx.windows();
-    // Now there is at least one window. If a Warp window is active, hide the app.
+    // Now there is at least one window. If a Torch window is active, hide the app.
     // Otherwise, show activate the app to show it in front.
     let active_window_id = windowing_model.active_window();
     match active_window_id {
@@ -2927,7 +2927,7 @@ impl RootView {
                     LoginSlideView::new(
                         ai_enabled,
                         // No agent setup choice has been made yet; default to the
-                        // Warp Agent login screen rather than the third-party copy.
+                        // Torch Agent login screen rather than the third-party copy.
                         false,
                         &theme_name,
                         use_vertical_tabs,
@@ -3208,7 +3208,7 @@ impl RootView {
             ctx.windows().show_window_and_focus_app(window_id);
             ctx.notify();
         } else {
-            log::warn!("Auth not complete before trying to open warp drive object");
+            log::warn!("Auth not complete before trying to open torch drive object");
         }
         true
     }
@@ -3394,7 +3394,7 @@ impl RootView {
             );
             ctx.windows().show_window_and_focus_app(window_id);
         } else {
-            report_error!("Auth not complete before trying to open warp drive");
+            report_error!("Auth not complete before trying to open torch drive");
         }
 
         // Use the team tester model to notify relevant subscribers to refresh their data.
@@ -3608,7 +3608,7 @@ impl RootView {
                 } else if let AuthOnboardingState::NeedsSsoLink { .. } = &self.auth_onboarding_state
                 {
                     // We should be able to access their SSO state; if not, default to true,
-                    // since we should err on the side of them _not_ being able to use Warp.
+                    // since we should err on the side of them _not_ being able to use Torch.
                     if auth_state.needs_sso_link() == Some(false) {
                         self.auth_onboarding_state.complete_sso_link(ctx);
                     }
@@ -3648,7 +3648,7 @@ impl RootView {
                             self.web_handoff(ctx);
                         } else {
                             // On native, force sign them out, as they should not be able to continue
-                            // to use Warp. Instead, they can sign in or up with a valid account.
+                            // to use Torch. Instead, they can sign in or up with a valid account.
                             crate::auth::log_out(ctx);
                         }
                     }
@@ -3835,8 +3835,8 @@ impl RootView {
         key_code: &torchui::platform::keyboard::KeyCode,
         ctx: &mut ViewContext<Self>,
     ) -> bool {
-        use voice_input::{VoiceInput, VoiceInputState, VoiceInputToggledFrom};
         use torchui::event::KeyState;
+        use voice_input::{VoiceInput, VoiceInputState, VoiceInputToggledFrom};
 
         use crate::settings::AISettings;
 

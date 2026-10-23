@@ -15,7 +15,6 @@ use pathfinder_geometry::vector::{Vector2F, vec2f};
 use rand::Rng;
 use rand::distributions::Alphanumeric;
 use string_offset::CharOffset;
-use vec1::Vec1;
 use torch_core::channel::{Channel, ChannelState};
 use torch_core::features::FeatureFlag;
 use torch_core::ui::theme::color::internal_colors;
@@ -53,6 +52,7 @@ use torchui::{
     AppContext, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle, WeakViewHandle, WindowId,
 };
+use vec1::Vec1;
 
 use super::code_review_header::CodeReviewHeader;
 use super::comment_list_view::{CommentListDebugState, CommentListEvent, CommentListView};
@@ -7679,7 +7679,7 @@ impl BackingView for CodeReviewView {
                     target_os = "windows"
                 )
             )) {
-                // Find the workspace to show the Warp-native modal
+                // Find the workspace to show the Torch-native modal
                 if let Some(workspace) = ctx
                     .views_of_type::<Workspace>(ctx.window_id())
                     .and_then(|workspaces| workspaces.first().cloned())

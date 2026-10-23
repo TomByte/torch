@@ -1,27 +1,27 @@
 //! Serializable selectors for targeting windows, tabs, and panes.
 use serde::{Deserialize, Serialize};
 
-/// Opaque window identifier supplied by Warp metadata.
+/// Opaque window identifier supplied by Torch metadata.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct WindowSelector(pub String);
 
-/// Opaque tab identifier supplied by Warp metadata.
+/// Opaque tab identifier supplied by Torch metadata.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct TabSelector(pub String);
 
-/// Opaque pane identifier supplied by Warp metadata.
+/// Opaque pane identifier supplied by Torch metadata.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct PaneSelector(pub String);
 
-/// Opaque session identifier supplied by Warp metadata.
+/// Opaque session identifier supplied by Torch metadata.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct SessionSelector(pub String);
 
-/// Hierarchical target for actions that operate on a specific Warp surface.
+/// Hierarchical target for actions that operate on a specific Torch surface.
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub struct TargetSelector {

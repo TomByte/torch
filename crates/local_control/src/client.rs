@@ -14,7 +14,7 @@
 //!    issuing a short-lived, action-scoped credential.
 //! 4. The client keeps that credential in memory and presents it as a bearer
 //!    token only to the selected instance's loopback HTTP endpoint. The running
-//!    Warp app revalidates the credential, current settings, action scope, and
+//!    Torch app revalidates the credential, current settings, action scope, and
 //!    request before dispatch.
 //!
 //! Client-side validation prevents accidental use of inconsistent discovery

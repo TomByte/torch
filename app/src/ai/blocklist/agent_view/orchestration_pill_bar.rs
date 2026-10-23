@@ -2659,7 +2659,7 @@ pub fn render_orchestration_breadcrumbs(
         .unwrap_or("Agent");
     let child_label = child_name.to_string();
 
-    // Parent crumb uses the Warp logo on a neutral disc to match the
+    // Parent crumb uses the Torch logo on a neutral disc to match the
     // orchestrator pill in the pill bar.
     let parent_spec = CrumbSpec {
         conversation_id: parent_id,

@@ -8,7 +8,7 @@ use cloud_objects::ids::{GenericStringObjectId, ServerId, SyncId};
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
 
-/// Workflow model used by Warp and warp-internal.
+/// Workflow model used by Torch and warp-internal.
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Hash)]
 #[serde(tag = "type")]
 #[serde(rename_all = "snake_case")]

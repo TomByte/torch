@@ -1,6 +1,6 @@
 //! Skill provider definitions and utilities.
 //!
-//! This module defines the supported skill providers (i.e. Agents, Claude, Codex, Warp) and their
+//! This module defines the supported skill providers (i.e. Agents, Claude, Codex, Torch) and their
 //! associated skills directory paths. It provides utilities for looking up providers
 //! from paths and vice versa.
 use std::path::{Path, PathBuf};
@@ -14,7 +14,7 @@ use torch_core::ui::icons::Icon;
 use torch_core::ui::theme::Fill;
 use torch_util::local_or_remote_path::LocalOrRemotePath;
 
-/// Represents a skill provider/origin (Agents, Claude, Codex, or Warp).
+/// Represents a skill provider/origin (Agents, Claude, Codex, or Torch).
 #[derive(
     Debug,
     Clone,
@@ -63,7 +63,7 @@ pub enum SkillScope {
     Home,
     /// Skills from a project directory (e.g., `./repo/.agents/skills`).
     Project,
-    /// Bundled skills distributed with Warp.
+    /// Bundled skills distributed with Torch.
     Bundled,
 }
 

@@ -17,11 +17,11 @@ use bounded_vec_deque::BoundedVecDeque;
 use pathfinder_geometry::vector::Vector2F;
 use rand::Rng;
 use tab_stops::TabStops;
-use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 use torch_core::channel::ChannelState;
 use torch_core::features::FeatureFlag;
 use torch_errors::report_error;
 use torchui_core::image_cache::{FitType, resize_dimensions};
+use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 
 use super::{AbsolutePoint, FullGridClearBehavior, GridHandler, PerformResetGridChecks, TermMode};
 use crate::event::Event;
@@ -80,7 +80,7 @@ pub(super) struct State {
     pub obfuscate_secrets: ObfuscateSecrets,
 
     /// Whether this Grid is in a shell context which supports handling the emoji presentation selector
-    /// correctly. Notably, Zsh does NOT support this well in bracketed paste mode (which we use for all Warp
+    /// correctly. Notably, Zsh does NOT support this well in bracketed paste mode (which we use for all Torch
     /// commands), which can lead to cursor misalignment issues.
     pub supports_emoji_presentation_selector: bool,
 
@@ -412,7 +412,7 @@ impl ansi::Handler for GridHandler {
                 // was introduced[2] - version 277.
                 //
                 // Since we didn't want to claim xterm functionalities that we haven't yet implemented in
-                // Warp, rather than passing the higher `Pv` value, we decided to use one of the
+                // Torch, rather than passing the higher `Pv` value, we decided to use one of the
                 // hardcoded ones. `0;95;0` is set what iTerm2 sends.
 
                 // [1] https://github.com/vim/vim/blob/20c370d9f2ee89cb854054edf71f5004f6efff77/src/term.c#L4630
@@ -432,7 +432,7 @@ impl ansi::Handler for GridHandler {
     fn report_xtversion<W: std::io::Write>(&mut self, writer: &mut W) {
         log::trace!("Reporting xtversion");
         let version = ChannelState::app_version().unwrap_or("");
-        let _ = writer.write_all(format!("\x1bP>|Warp({version})\x1b\\").as_bytes());
+        let _ = writer.write_all(format!("\x1bP>|Torch({version})\x1b\\").as_bytes());
     }
 
     fn device_status<W: std::io::Write>(&mut self, writer: &mut W, arg: usize) {

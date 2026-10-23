@@ -12,13 +12,13 @@ use ai::document::DEFAULT_PLANNING_DOCUMENT_TITLE;
 pub use ai::document::{AIDocumentId, AIDocumentVersion};
 use chrono::{DateTime, Local, Utc};
 use itertools::Itertools;
-use uuid::Uuid;
 use torch_editor::model::RichTextEditorModel;
 use torch_editor::render::model::RichTextStyles;
 use torch_errors::{ReportErrorLogMode, report_error};
-use warp_multi_agent_api as maa_api;
 use torchui::color::ColorU;
 use torchui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity, WindowId};
+use uuid::Uuid;
+use warp_multi_agent_api as maa_api;
 
 use crate::ai::agent::AIAgentActionId;
 use crate::ai::agent::conversation::AIConversationId;
@@ -57,13 +57,13 @@ struct AIDocumentSaveRequest {
     document_id: AIDocumentId,
 }
 
-/// The status of saving an AI Document to Warp Drive
+/// The status of saving an AI Document to Torch Drive
 pub enum AIDocumentSaveStatus {
-    /// Not being synced with Warp Drive at all
+    /// Not being synced with Torch Drive at all
     NotSaved,
-    /// Is being saved to Warp Drive, but has not finished yet
+    /// Is being saved to Torch Drive, but has not finished yet
     Saving,
-    /// Has been saved to Warp Drive
+    /// Has been saved to Torch Drive
     Saved,
 }
 
@@ -91,7 +91,7 @@ impl AIDocumentUserEditStatus {
 
 const PLAN_FOLDER_NAME: &str = "Plans";
 
-/// Represents a document queued for creation in Warp Drive.
+/// Represents a document queued for creation in Torch Drive.
 #[derive(Debug, Clone)]
 struct PendingDocument {
     id: AIDocumentId,
@@ -111,7 +111,7 @@ pub struct AIDocumentEarlierVersion {
 #[derive(Debug, Clone)]
 pub struct AIDocument {
     /// ID to sync with a cloud model with the server.
-    /// Set when a document is saved to Warp Drive.
+    /// Set when a document is saved to Torch Drive.
     pub sync_id: Option<SyncId>,
     pub title: String,
     pub version: AIDocumentVersion,
@@ -271,7 +271,7 @@ impl AIDocumentModel {
         let content = document.editor.as_ref(ctx).markdown(ctx);
 
         let Some(owner) = Self::get_plan_owner(ctx) else {
-            log::warn!("Failed to get owner while saving AI Document to Warp Drive. Skipping");
+            log::warn!("Failed to get owner while saving AI Document to Torch Drive. Skipping");
             return false;
         };
 
@@ -334,7 +334,7 @@ impl AIDocumentModel {
                 AIDocumentSaveStatus::NotSaved => {
                     if !self.sync_to_warp_drive(document_id, ctx) {
                         report_error!(
-                            "Failed to publish plan document to Warp Drive before child-agent launch.",
+                            "Failed to publish plan document to Torch Drive before child-agent launch.",
                             extra: { "document_id" => %document_id }
                         );
                     } else if !self.get_document_save_status(&document_id).is_saved() {
@@ -347,7 +347,7 @@ impl AIDocumentModel {
         awaiting_server_backing
     }
 
-    /// Reconciles a document with an existing server-backed Warp Drive notebook.
+    /// Reconciles a document with an existing server-backed Torch Drive notebook.
     fn reconcile_document_server_backing(
         &mut self,
         document_id: &AIDocumentId,
@@ -367,7 +367,7 @@ impl AIDocumentModel {
         true
     }
 
-    /// Reconciles all loaded documents with server-backed Warp Drive notebooks.
+    /// Reconciles all loaded documents with server-backed Torch Drive notebooks.
     fn reconcile_all_document_server_backing(&mut self, ctx: &mut ModelContext<Self>) {
         let document_ids = self.documents.keys().copied().collect::<Vec<_>>();
         for document_id in document_ids {
@@ -375,7 +375,7 @@ impl AIDocumentModel {
         }
     }
 
-    /// Refreshes the latest content for a plan whose Warp Drive creation is in progress.
+    /// Refreshes the latest content for a plan whose Torch Drive creation is in progress.
     fn refresh_saving_document_content(
         &mut self,
         document_id: &AIDocumentId,
@@ -498,7 +498,7 @@ impl AIDocumentModel {
         // If we're waiting on a Plans folder to complete creation, ensure the Plans folder exists
         // (creating it if needed) and if it has a ServerId, process the pending document queue.
         //
-        // NOTE: this handler runs for *all* Warp Drive object creations, so we must only create the
+        // NOTE: this handler runs for *all* Torch Drive object creations, so we must only create the
         // Plans folder when we actually have a plan notebook waiting to be created.
         if !self.pending_document_queue.is_empty() {
             if let Some(owner) = Self::get_plan_owner(ctx) {
@@ -545,7 +545,7 @@ impl AIDocumentModel {
         id
     }
 
-    /// Create a document from an existing Warp Drive notebook.
+    /// Create a document from an existing Torch Drive notebook.
     pub fn create_document_from_notebook(
         &mut self,
         ai_document_id: AIDocumentId,
@@ -596,12 +596,12 @@ impl AIDocumentModel {
                 )
             })
             .ok_or_else(|| {
-                format!("Plan document {ai_document_id} was not found in Warp Drive.")
+                format!("Plan document {ai_document_id} was not found in Torch Drive.")
             })?;
         let (sync_id, title, content) = notebook;
         if sync_id.into_server().is_none() {
             return Err(format!(
-                "Plan document {ai_document_id} is not backed by a saved Warp Drive notebook."
+                "Plan document {ai_document_id} is not backed by a saved Torch Drive notebook."
             ));
         }
 

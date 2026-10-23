@@ -1,6 +1,6 @@
-//! The "Warp Agent" settings page, shown under the Agents umbrella.
+//! The "Torch Agent" settings page, shown under the Agents umbrella.
 //!
-//! Covers Warp's own AI: the global toggle, Active AI suggestions, agent
+//! Covers Torch's own AI: the global toggle, Active AI suggestions, agent
 //! input behavior, voice input, credentials (BYO keys, Bedrock, Gemini
 //! Enterprise, custom endpoints, custom routers) and the miscellaneous
 //! agent display settings.
@@ -25,7 +25,6 @@ use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
 use pathfinder_geometry::vector::vec2f;
 use settings::{Setting, ToggleableSetting};
 use strum::IntoEnumIterator;
-use uuid::Uuid;
 use torch_core::channel::ChannelState;
 use torch_core::context_flag::ContextFlag;
 use torch_core::features::FeatureFlag;
@@ -48,6 +47,7 @@ use torchui::{
     Action, AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle, WeakViewHandle, WindowId, id,
 };
+use uuid::Uuid;
 
 use super::ai_shared::{
     render_ai_feature_switch, render_ai_setting_description, render_ai_setting_label,
@@ -569,7 +569,7 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
                     WarpAgentPageAction::ToggleCanUseWarpCreditsForFallback,
                 )),
                 &(context.clone() & id!(flags::IS_ANY_AI_ENABLED)),
-                flags::WARP_CREDIT_FALLBACK_FLAG,
+                flags::TORCH_CREDIT_FALLBACK_FLAG,
             )
             .with_group(bindings::BindingGroup::WarpAi)
             .is_supported_on_current_platform(
@@ -617,7 +617,7 @@ const GROK_OAUTH_CONNECT_TOAST_OBJECT_ID: &str = "grok_oauth_connect_toast";
 const CHATGPT_OAUTH_CONNECT_TOAST_OBJECT_ID: &str = "chatgpt_oauth_connect_toast";
 
 /// How long a ChatGPT connect attempt stays pending without a deep-link result. Covers
-/// warp-server's transaction TTL plus time for the browser to sign in to Warp beforehand.
+/// warp-server's transaction TTL plus time for the browser to sign in to Torch beforehand.
 const CHATGPT_OAUTH_PENDING_TIMEOUT: Duration = Duration::from_secs(15 * 60);
 
 /// A SuperGrok connect attempt's terminal outcome, applied once the loopback
@@ -1340,7 +1340,7 @@ impl WarpAgentPageView {
     /// Returns `true` when the active Agent Mode default model is already served
     /// by a credential the user has: a BYO key/subscription for its provider, or
     /// one of their custom-endpoint models. `auto` models report `false` since
-    /// they always consume Warp credits.
+    /// they always consume Torch credits.
     fn active_base_model_is_byo_covered(ctx: &ViewContext<Self>) -> bool {
         let scope =
             ResolvedTeamScope::from_scope(&UserWorkspaces::as_ref(ctx).team_context_for_view(ctx));
@@ -1377,7 +1377,7 @@ impl WarpAgentPageView {
         // Exclude only confirmed paid plans. Solo/individual users have no
         // `current_workspace`, and billing may not have loaded yet (Unknown), so
         // treat both as eligible and rely on the out-of-credits check below to
-        // filter anyone who can still run Warp-hosted models. (A strict
+        // filter anyone who can still run Torch-hosted models. (A strict
         // `is_free_plan()` check here meant solo free users — the common case —
         // never saw the prompt.)
         let on_paid_plan = UserWorkspaces::as_ref(ctx)
@@ -1437,7 +1437,7 @@ impl WarpAgentPageView {
         let current_default = Self::active_base_model_display_name(ctx);
         let description = format!(
             "You added your own {provider_name} API key, but your default model is currently set \
-             to {current_default}, which won't work without Warp credits. Would you like to change \
+             to {current_default}, which won't work without Torch credits. Would you like to change \
              your default model?"
         );
         self.show_set_default_model_modal(description, choices, ctx);
@@ -1482,7 +1482,7 @@ impl WarpAgentPageView {
         let current_default = Self::active_base_model_display_name(ctx);
         let description = format!(
             "You added the \"{}\" custom endpoint, but your default model is currently set to \
-             {current_default}, which won't work without Warp credits. Would you like to change \
+             {current_default}, which won't work without Torch credits. Would you like to change \
              your default model?",
             endpoint.name
         );
@@ -1961,8 +1961,8 @@ impl WarpAgentPageView {
         });
     }
 
-    /// Links a ChatGPT account to this Warp account. warp-server issues a browser URL that links
-    /// to whichever Warp account the browser is signed in as (prompting for sign-in first when it
+    /// Links a ChatGPT account to this Torch account. warp-server issues a browser URL that links
+    /// to whichever Torch account the browser is signed in as (prompting for sign-in first when it
     /// has none), runs the confidential OAuth exchange, and hands the result back via the
     /// `chatgpt_link` deep link, which settles the attempt.
     fn start_chatgpt_oauth(&mut self, ctx: &mut ViewContext<Self>) {
@@ -1989,7 +1989,7 @@ impl WarpAgentPageView {
                     ToastStack::handle(ctx).update(ctx, |toast_stack, ctx| {
                         let toast = DismissibleToast::default(
                             "Opening your browser to connect your ChatGPT subscription. You may \
-                             be asked to sign in to Warp first…"
+                             be asked to sign in to Torch first…"
                                 .to_string(),
                         )
                         .with_object_id(CHATGPT_OAUTH_CONNECT_TOAST_OBJECT_ID.to_string())
@@ -2023,7 +2023,7 @@ impl WarpAgentPageView {
         });
 
         // The browser flow has no cancel signal of its own, so time out the pending state. The
-        // server's transaction TTL only starts once the browser is signed in to Warp, so allow
+        // server's transaction TTL only starts once the browser is signed in to Torch, so allow
         // extra time for that sign-in.
         ctx.spawn(
             Timer::after(CHATGPT_OAUTH_PENDING_TIMEOUT),
@@ -2097,7 +2097,7 @@ impl WarpAgentPageView {
         let message = match failure {
             ChatGPTConnectFailure::AlreadyLinked => {
                 "Couldn't connect your ChatGPT subscription. That ChatGPT account is already \
-                 connected to a different Warp account, or this Warp account already has a \
+                 connected to a different Torch account, or this Torch account already has a \
                  ChatGPT account connected. Disconnect it first, then try again."
             }
             ChatGPTConnectFailure::EmailUnverified => {
@@ -2105,12 +2105,12 @@ impl WarpAgentPageView {
                  account with OpenAI, then try again."
             }
             ChatGPTConnectFailure::Denied => {
-                "ChatGPT subscription not connected. Warp needs your permission in the browser \
+                "ChatGPT subscription not connected. Torch needs your permission in the browser \
                  to use your plan."
             }
             ChatGPTConnectFailure::AccountMismatch => {
                 "Couldn't connect your ChatGPT subscription. Your browser is signed in to a \
-                 different Warp account than this one. Sign in to this account in the browser, \
+                 different Torch account than this one. Sign in to this account in the browser, \
                  then try again."
             }
             ChatGPTConnectFailure::Unknown => {
@@ -4599,7 +4599,7 @@ impl SettingsWidget for AgentAttributionWidget {
     type View = WarpAgentPageView;
 
     fn search_terms(&self) -> &str {
-        "agent attribution commit pull request co-author author credit oz warp"
+        "agent attribution commit pull request co-author author credit oz torch"
     }
 
     fn render(
@@ -6045,7 +6045,7 @@ impl SettingsWidget for ApiKeysWidget {
             );
         }
 
-        // Warp credit fallback applies to member-provided API keys, not custom endpoints.
+        // Torch credit fallback applies to member-provided API keys, not custom endpoints.
         if is_byo_enabled && show_provider_keys {
             column.add_child(
                 Container::new(self.render_warp_credit_fallback_toggle(view, app))
@@ -6668,11 +6668,11 @@ impl GeminiEnterpriseWidget {
         let are_credentials_enabled =
             user_workspaces.is_gemini_enterprise_credentials_enabled(&scope, app);
         let toggle_description = if is_admin_enforced {
-            "Warp routes eligible requests through your workspace's Gemini Enterprise Google Cloud \
+            "Torch routes eligible requests through your workspace's Gemini Enterprise Google Cloud \
              project. This setting is managed by your organization."
                 .to_string()
         } else {
-            "Warp routes eligible requests through your workspace's Gemini Enterprise Google Cloud \
+            "Torch routes eligible requests through your workspace's Gemini Enterprise Google Cloud \
              project."
                 .to_string()
         };

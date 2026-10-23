@@ -388,9 +388,9 @@ pub enum TerminalAction {
     DismissCodeToolbeltTooltip,
     /// Start a Language Server for the current working directory (if supported)
     StartLspServer,
-    /// Start the guided Warp Environment setup flow (inserts the inline setup block).
+    /// Start the guided Torch Environment setup flow (inserts the inline setup block).
     SetupCloudEnvironment(Vec<String>),
-    /// Start the guided Warp Environment setup flow immediately (no inline setup block).
+    /// Start the guided Torch Environment setup flow immediately (no inline setup block).
     SetupCloudEnvironmentAndStart(Vec<String>),
     /// Show the environment setup mode selector to choose between remote GitHub or local agent flow.
     TriggerEnvironmentSetupSelection(Vec<String>),

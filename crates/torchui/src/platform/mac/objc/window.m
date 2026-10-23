@@ -556,7 +556,7 @@ void init_warp_nswindow(NSWindow<WarpWindowProtocol> *window, bool testMode, boo
 
         // If we are recording a keystroke for an EditableBinding.
         BOOL keyBindingsDisabled = warp_app_are_key_bindings_disabled_for_window(application, self);
-        // If Warp has assigned a binding for this keystroke.
+        // If Torch has assigned a binding for this keystroke.
         BOOL keystrokeIsAssigned = warp_app_has_binding_for_keystroke(application, event);
 
         BOOL triggersCustomAction = warp_app_has_custom_action_for_keystroke(application, event);

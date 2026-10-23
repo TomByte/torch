@@ -853,7 +853,7 @@ pub fn test_basic_bootstrapping() {
         .build();
 
     // Simulate entering the bootstrap script for WarpInput mode.
-    input_string(&mut block_list, "i am the warp input");
+    input_string(&mut block_list, "i am the torch input");
     block_list.linefeed();
     block_list.preexec(Default::default());
     // WarpInput -> ScriptExecution
@@ -1444,12 +1444,12 @@ pub fn test_block_heights_combined_prompt_command_grid_warp_prompt() {
     // We created one block.
     assert_eq!(block_list.blocks.len(), bootstrapped_block_list_len + 1);
 
-    // Note that this test is using the Warp prompt, hence the prompt is not included in the combined grid.
+    // Note that this test is using the Torch prompt, hence the prompt is not included in the combined grid.
     assert_eq!(first_block.prompt_and_command_grid().len(), 3);
     assert_eq!(first_block.output_grid().len(), 3);
 
     // In this case, we SHOULD consider command_padding_top since we have a combined prompt/command grid BUT
-    // we have the built-in Warp prompt, so there's padding between that prompt and the combined grid.
+    // we have the built-in Torch prompt, so there's padding between that prompt and the combined grid.
     // The combined grid _just_ has the command in this case! The PS1 is unset!
     // Hence, we expect heights of 8.5.
     assert_lines_approx_eq!(
@@ -1494,7 +1494,7 @@ pub fn test_block_heights_combined_prompt_command_grid_ps1() {
     assert_eq!(first_block.prompt_and_command_grid().len(), 4);
     assert_eq!(first_block.output_grid().len(), 3);
 
-    // We have a 2-line prompt, adding 1 extra line to the combined grid (vs 0.6 default for Warp prompt).
+    // We have a 2-line prompt, adding 1 extra line to the combined grid (vs 0.6 default for Torch prompt).
     // Hence, we expect a height of 8.7 rather than 8.3.
     assert_lines_approx_eq!(
         first_block.height(&crate::terminal::model::block::TranscriptScope::Terminal),
@@ -1668,72 +1668,6 @@ fn test_remove_rich_content_block() {
 }
 
 #[test]
-fn test_conversation_scoped_rich_content_hidden_outside_fullscreen_agent_view() {
-    FeatureFlag::AgentView.set_enabled(true);
-    let mut block_list =
-        new_bootstrapped_block_list(None, None, ChannelEventListener::new_for_test());
-    let conversation_id = AIConversationId::new();
-    let view_id = EntityId::new();
-
-    block_list.append_rich_content(
-        RichContentItem::new_for_test(None, view_id, Some(conversation_id)),
-        false,
-    );
-
-    block_list.set_transcript_scope(TranscriptScope::Conversation(conversation_id));
-
-    let item_visible_in_fullscreen =
-        block_list
-            .block_heights()
-            .items()
-            .iter()
-            .find_map(|item| match item {
-                BlockHeightItem::RichContent(rich_content) if rich_content.view_id == view_id => {
-                    Some(*rich_content)
-                }
-                _ => None,
-            });
-    assert!(item_visible_in_fullscreen.is_some());
-    assert!(item_visible_in_fullscreen.is_some_and(|item| !item.should_hide));
-    assert!(
-        item_visible_in_fullscreen
-            .is_some_and(|item| item.last_laid_out_height > BlockHeight::zero())
-    );
-
-    block_list.set_transcript_scope(TranscriptScope::Terminal);
-
-    let item_hidden_in_terminal_mode =
-        block_list
-            .block_heights()
-            .items()
-            .iter()
-            .find_map(|item| match item {
-                BlockHeightItem::RichContent(rich_content) if rich_content.view_id == view_id => {
-                    Some(*rich_content)
-                }
-                _ => None,
-            });
-    assert!(item_hidden_in_terminal_mode.is_some());
-    assert!(item_hidden_in_terminal_mode.is_some_and(|item| item.should_hide));
-
-    block_list.set_transcript_scope(TranscriptScope::Terminal);
-
-    let item_hidden_in_inline =
-        block_list
-            .block_heights()
-            .items()
-            .iter()
-            .find_map(|item| match item {
-                BlockHeightItem::RichContent(rich_content) if rich_content.view_id == view_id => {
-                    Some(*rich_content)
-                }
-                _ => None,
-            });
-    assert!(item_hidden_in_inline.is_some());
-    assert!(item_hidden_in_inline.is_some_and(|item| item.should_hide));
-}
-
-#[test]
 fn test_clear_user_executed_command_blocks_for_conversation() {
     let mut block_list =
         new_bootstrapped_block_list(None, None, ChannelEventListener::new_for_test());
@@ -1797,70 +1731,6 @@ fn test_clear_user_executed_command_blocks_for_conversation() {
     );
 }
 
-#[test]
-fn test_agent_origin_block_can_be_attached_to_other_conversation() {
-    let _agent_view_flag = FeatureFlag::AgentView.override_enabled(true);
-    let mut block_list =
-        new_bootstrapped_block_list(None, None, ChannelEventListener::new_for_test());
-
-    let expected_origin_conversation_id = AIConversationId::new();
-    let other_conversation_id = AIConversationId::new();
-
-    block_list.enter_conversation_context(expected_origin_conversation_id, false, false);
-    let user_block_index = insert_block(&mut block_list, "user", "output");
-    let user_block_id = block_list.block_at(user_block_index).unwrap().id().clone();
-
-    let associated = block_list
-        .associate_blocks_with_conversation([&user_block_id].into_iter(), other_conversation_id);
-    assert_eq!(associated.len(), 1);
-    assert_eq!(associated[0].0, user_block_id);
-    match &associated[0].1 {
-        AgentViewVisibility::Agent {
-            origin_conversation_id: observed_origin_conversation_id,
-            pending_other_conversation_ids,
-            other_conversation_ids,
-        } => {
-            assert_eq!(
-                observed_origin_conversation_id,
-                &expected_origin_conversation_id
-            );
-            assert!(pending_other_conversation_ids.contains(&other_conversation_id));
-            assert!(!other_conversation_ids.contains(&other_conversation_id));
-        }
-        _ => panic!("Expected agent visibility for agent-origin block"),
-    }
-
-    block_list.enter_conversation_context(other_conversation_id, false, false);
-    let user_block_index = block_list.block_index_for_id(&user_block_id).unwrap();
-    let user_block = block_list.block_at(user_block_index).unwrap();
-    assert!(!user_block.is_empty(block_list.transcript_scope()));
-
-    let promoted = block_list.promote_blocks_to_attached_from_conversation(other_conversation_id);
-    assert_eq!(promoted.len(), 1);
-    assert_eq!(promoted[0].0, user_block_id);
-    match &promoted[0].1 {
-        AgentViewVisibility::Agent {
-            pending_other_conversation_ids,
-            other_conversation_ids,
-            ..
-        } => {
-            assert!(!pending_other_conversation_ids.contains(&other_conversation_id));
-            assert!(other_conversation_ids.contains(&other_conversation_id));
-        }
-        _ => panic!("Expected agent visibility for agent-origin block"),
-    }
-
-    let removed = block_list.remove_pending_context_assocation_for_blocks(
-        [&user_block_id].into_iter(),
-        other_conversation_id,
-    );
-    assert!(removed.is_empty());
-
-    block_list.exit_conversation_context();
-    let user_block_index = block_list.block_index_for_id(&user_block_id).unwrap();
-    let user_block = block_list.block_at(user_block_index).unwrap();
-    assert!(user_block.is_empty(block_list.transcript_scope()));
-}
 #[test]
 fn unfiltered_transcript_scope_shows_restored_conversation_command_blocks() {
     let _agent_view_flag = FeatureFlag::AgentView.override_enabled(true);

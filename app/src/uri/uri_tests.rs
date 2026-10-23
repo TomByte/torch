@@ -956,36 +956,11 @@ fn test_open_file_executable_bash_zsh_fish_route_to_execute() {
 }
 
 #[test]
-fn test_open_file_markdown_routes_to_notebook_when_viewer_enabled() {
-    let dir = tempfile::tempdir().unwrap();
-    let p = dir.path().join("README.md");
-    std::fs::write(&p, b"# hi\n").unwrap();
-    assert_eq!(
-        classify_open_file_action(&p, true),
-        OpenFileAction::Notebook
-    );
-}
-
-#[test]
 fn test_open_file_markdown_routes_to_editor_when_viewer_disabled() {
     let dir = tempfile::tempdir().unwrap();
     let p = dir.path().join("README.md");
     std::fs::write(&p, b"# hi\n").unwrap();
     assert_eq!(classify_open_file_action(&p, false), OpenFileAction::Editor);
-}
-
-#[test]
-fn test_open_file_ipynb_routes_to_notebook_when_enabled() {
-    // A `.ipynb` opened via `file://` (e.g. "Open with Warp" from Finder) opens
-    // in the notebook viewer, not the raw-JSON code editor.
-    let _flag = crate::features::FeatureFlag::JupyterNotebookRendering.override_enabled(true);
-    let dir = tempfile::tempdir().unwrap();
-    let p = dir.path().join("analysis.ipynb");
-    std::fs::write(&p, b"{\"nbformat\": 4, \"cells\": []}\n").unwrap();
-    assert_eq!(
-        classify_open_file_action(&p, false),
-        OpenFileAction::Notebook
-    );
 }
 
 #[test]

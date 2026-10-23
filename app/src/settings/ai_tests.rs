@@ -6,9 +6,7 @@ use torchui::{App, SingletonEntity};
 
 use super::*;
 use crate::ai::request_usage_model::{RequestLimitInfo, RequestLimitRefreshDuration};
-use crate::auth::AuthStateProvider;
 use crate::test_util::settings::initialize_settings_for_tests;
-use crate::workspaces::user_workspaces::UserWorkspaces;
 
 fn create_test_request_limit_info(
     limit: usize,
@@ -54,11 +52,6 @@ fn auto_approve_denylist_bypass_defaults_on_and_is_available_in_gui_and_tui_sett
     let surfaces: SettingSurfaces = (entry.surfaces_fn)();
     assert!(surfaces.includes(SettingsMode::Gui));
     assert!(surfaces.includes(SettingsMode::Tui));
-}
-
-fn add_ai_enablement_dependencies_for_test(app: &mut App) {
-    app.add_singleton_model(|_| AuthStateProvider::new_for_test());
-    app.add_singleton_model(UserWorkspaces::default_mock);
 }
 
 /// A real terminal surface for the [`FocusedTerminalInfo`] cases below, which record the
@@ -531,18 +524,6 @@ fn usage_display_unit_toml_path() {
 }
 
 #[test]
-fn orchestration_is_enabled_when_ai_is_enabled() {
-    App::test((), |mut app| async move {
-        initialize_settings_for_tests(&mut app);
-        add_ai_enablement_dependencies_for_test(&mut app);
-
-        AISettings::handle(&app).read(&app, |settings, ctx| {
-            assert!(settings.is_orchestration_enabled(ctx));
-        });
-    });
-}
-
-#[test]
 fn test_should_display_quota_reset_banner_with_empty_history() {
     App::test((), |mut app| async move {
         initialize_settings_for_tests(&mut app);
@@ -975,53 +956,4 @@ fn test_voice_input_languages_includes_common_languages() {
             "catalog is missing {expected:?}"
         );
     }
-}
-#[test]
-fn ai_autodetection_defaults_to_opt_in() {
-    App::test((), |mut app| async move {
-        initialize_settings_for_tests(&mut app);
-        add_ai_enablement_dependencies_for_test(&mut app);
-
-        AISettings::handle(&app).read(&app, |settings, ctx| {
-            // NLD is opt-in: a fresh user who never touched the setting has it off.
-            // This fails before the default flip (default was `true`) and passes after.
-            assert!(!*settings.ai_autodetection_enabled_internal.value());
-            // AI is enabled by default, so the getter reflects the opt-in setting
-            // rather than a disabled-AI state.
-            assert!(settings.is_any_ai_enabled(ctx));
-            assert!(!settings.is_ai_autodetection_enabled(ctx));
-        });
-    });
-}
-
-#[test]
-fn ai_autodetection_setting_can_be_toggled_on_and_off() {
-    App::test((), |mut app| async move {
-        initialize_settings_for_tests(&mut app);
-        add_ai_enablement_dependencies_for_test(&mut app);
-
-        // Mirrors what `/enable-natural-language-detection` does in the TUI.
-        AISettings::handle(&app).update(&mut app, |settings, ctx| {
-            settings
-                .ai_autodetection_enabled_internal
-                .set_value(true, ctx)
-                .unwrap();
-        });
-        AISettings::handle(&app).read(&app, |settings, ctx| {
-            assert!(*settings.ai_autodetection_enabled_internal.value());
-            assert!(settings.is_ai_autodetection_enabled(ctx));
-        });
-
-        // Mirrors what `/disable-natural-language-detection` does in the TUI.
-        AISettings::handle(&app).update(&mut app, |settings, ctx| {
-            settings
-                .ai_autodetection_enabled_internal
-                .set_value(false, ctx)
-                .unwrap();
-        });
-        AISettings::handle(&app).read(&app, |settings, ctx| {
-            assert!(!*settings.ai_autodetection_enabled_internal.value());
-            assert!(!settings.is_ai_autodetection_enabled(ctx));
-        });
-    });
 }

@@ -21,7 +21,7 @@ fn dispatches_worker_invocation_instead_of_tui_frontend() {
         String::from_utf8_lossy(&output.stderr)
     );
     assert!(
-        !String::from_utf8_lossy(&output.stdout).contains("Welcome to Warp TUI"),
+        !String::from_utf8_lossy(&output.stdout).contains("Welcome to Torch TUI"),
         "worker invocation started the TUI frontend"
     );
 }

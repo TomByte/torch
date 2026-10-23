@@ -28,19 +28,19 @@ use crate::workspaces::workspace::ChargeUnit;
 const PROVIDER_BUTTON_ICON_SIZE: f32 = 14.;
 const PROVIDER_BUTTON_ICON_TEXT_GAP: f32 = 8.;
 const ERROR_APOLOGY_TEXT: &str = "I'm sorry, I couldn't complete that request.";
-const INTERNAL_WARP_ERROR: &str = "Internal Warp error.";
+const INTERNAL_WARP_ERROR: &str = "Internal Torch error.";
 pub const FAILED_OUTPUT_USAGE_NOTICE_TEXT: &str = "This response won't count towards your usage.";
 pub const OUT_OF_CREDITS_SUBSCRIBE_LABEL: &str = "Subscribe";
 /// Disclosure shown in place of a ChatGPT subscription error once the user has switched the
-/// conversation to Warp-funded inference.
-pub const CHATGPT_CONTINUED_WITH_WARP_CREDITS_TEXT: &str = "Continued with Warp credits. Your \
+/// conversation to Torch-funded inference.
+pub const CHATGPT_CONTINUED_WITH_WARP_CREDITS_TEXT: &str = "Continued with Torch credits. Your \
      ChatGPT subscription won't be used for the rest of this conversation.";
 /// Text to use as a label throughout the app for user interactions that will attach selected
 /// block(s) or text selections to a new AI query.
 pub static ATTACH_AS_AGENT_MODE_CONTEXT_TEXT: LazyLock<&'static str> =
     LazyLock::new(|| "Attach as agent context");
 
-/// Label we use for the the command palette action to create a new local Warp Agent pane.
+/// Label we use for the the command palette action to create a new local Torch Agent pane.
 pub static NEW_AGENT_PANE_LABEL: LazyLock<&'static str> = LazyLock::new(|| "New Agent Pane");
 
 /// Claude/Anthropic brand color (official brand orange #D97757).
@@ -94,7 +94,7 @@ pub enum FailedOutputPresentation {
         message: String,
         actions: Vec<ChatGPTSubscriptionErrorAction>,
     },
-    /// The conversation has since been switched to Warp-funded inference, so the failure is
+    /// The conversation has since been switched to Torch-funded inference, so the failure is
     /// shown as a disclosure line instead of an actionable error.
     ChatGPTSubscriptionContinuedWithWarpCredits,
 }
@@ -140,7 +140,7 @@ pub fn failed_output_presentation(
             }
         }
         RenderableAIError::ServerOverloaded => FailedOutputPresentation::Message(
-            "Warp is currently overloaded. Please try again later.".to_string(),
+            "Torch is currently overloaded. Please try again later.".to_string(),
         ),
         RenderableAIError::InternalWarpError => FailedOutputPresentation::Message(format!(
             "{ERROR_APOLOGY_TEXT}\n\n{INTERNAL_WARP_ERROR}"
@@ -172,7 +172,7 @@ pub fn failed_output_presentation(
             FailedOutputPresentation::GeminiEnterpriseCredentialsExpiredOrInvalid {
                 fallback_message: format!(
                     "{ERROR_APOLOGY_TEXT}\n\nGemini Enterprise credentials expired or invalid.\n\n\
-                     Warp couldn't authenticate with Google Cloud. Refresh your Gemini Enterprise credentials, then retry the request."
+                     Torch couldn't authenticate with Google Cloud. Refresh your Gemini Enterprise credentials, then retry the request."
                 ),
             }
         }

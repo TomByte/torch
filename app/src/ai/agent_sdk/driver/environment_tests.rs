@@ -184,17 +184,17 @@ fn reported_heads_are_keyed_by_checkout_name_and_omit_unresolved_heads() {
 #[cfg(unix)]
 #[test]
 fn head_probe_timeout_preserves_later_snapshot_repositories() {
-    if std::env::var_os("WARP_TEST_HEAD_PROBE").is_none() {
+    if std::env::var_os("TORCH_TEST_HEAD_PROBE").is_none() {
         let output = Command::new(std::env::current_exe().unwrap())
             .args([
                 "--exact",
                 "ai::agent_sdk::driver::environment::tests::head_probe_timeout_preserves_later_snapshot_repositories",
                 "--nocapture",
             ])
-            .env("WARP_TEST_HEAD_PROBE", "1")
+            .env("TORCH_TEST_HEAD_PROBE", "1")
             .env(super::super::environment_preparation::MODE_ENV, "legacy")
             .env(super::super::environment_preparation::FILE_ENV, "")
-            .env("WARP_EXECUTION_ID", "")
+            .env("TORCH_EXECUTION_ID", "")
             .output()
             .unwrap();
         assert!(
@@ -1388,7 +1388,7 @@ fn factory_clone_is_prepended_when_clone_values_are_present() {
     assert_eq!(
         setup_commands,
         vec![
-            "git clone \"$WARP_FACTORY_REPO_CLONE_URL\" \"$WARP_FACTORY_REPO_DIR\"".to_string(),
+            "git clone \"$TORCH_FACTORY_REPO_CLONE_URL\" \"$TORCH_FACTORY_REPO_DIR\"".to_string(),
             "make setup".to_string(),
         ]
     );
@@ -1396,9 +1396,9 @@ fn factory_clone_is_prepended_when_clone_values_are_present() {
 
 #[test]
 fn factory_clone_references_env_vars_with_the_session_shells_syntax() {
-    let posix_command = "git clone \"$WARP_FACTORY_REPO_CLONE_URL\" \"$WARP_FACTORY_REPO_DIR\"";
+    let posix_command = "git clone \"$TORCH_FACTORY_REPO_CLONE_URL\" \"$TORCH_FACTORY_REPO_DIR\"";
     let powershell_command =
-        "git clone \"$env:WARP_FACTORY_REPO_CLONE_URL\" \"$env:WARP_FACTORY_REPO_DIR\"";
+        "git clone \"$env:TORCH_FACTORY_REPO_CLONE_URL\" \"$env:TORCH_FACTORY_REPO_DIR\"";
     for (shell_type, expected) in [
         (ShellType::Bash, posix_command),
         (ShellType::Zsh, posix_command),
@@ -1447,7 +1447,7 @@ fn factory_clone_defers_to_a_persisted_environment_copy() {
     // not the command's exact shape, so this must still be recognized and
     // left alone rather than duplicated.
     let persisted =
-        "git clone \"$WARP_FACTORY_REPO_CLONE_URL\" \"$WARP_FACTORY_REPO_DIR\"".to_string();
+        "git clone \"$TORCH_FACTORY_REPO_CLONE_URL\" \"$TORCH_FACTORY_REPO_DIR\"".to_string();
     let mut setup_commands = vec![persisted.clone(), "make setup".to_string()];
     super::prepend_factory_definition_clone_for_values(
         "https://t:token@definitions.example.com/team/factory.git",
@@ -1462,7 +1462,7 @@ fn factory_clone_defers_to_a_persisted_environment_copy() {
 fn factory_clone_defers_to_a_persisted_bare_clone_copy() {
     // A persisted copy in the bare (no target dir) shape must also be
     // recognized, since detection is shape-independent.
-    let persisted = "git clone \"$WARP_FACTORY_REPO_CLONE_URL\"".to_string();
+    let persisted = "git clone \"$TORCH_FACTORY_REPO_CLONE_URL\"".to_string();
     let mut setup_commands = vec![persisted.clone(), "make setup".to_string()];
     super::prepend_factory_definition_clone_for_values(
         "https://t:token@definitions.example.com/team/factory.git",

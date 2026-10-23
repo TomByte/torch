@@ -9,7 +9,7 @@ use torch_cli::WorkerCommand;
 use torch_core::AppId;
 use torch_core::channel::{Channel, ChannelConfig, ChannelState, OzConfig, WarpServerConfig};
 
-/// The Warp integration test runner.
+/// The Torch integration test runner.
 #[derive(Debug, Default, Parser, Clone)]
 #[command(name = "warp-integration-test")]
 #[clap(args_conflicts_with_subcommands = true)]
@@ -31,7 +31,7 @@ pub fn main() -> Result<()> {
                 "dev",
                 "warp",
                 if cfg!(target_os = "macos") {
-                    "Warp-Integration"
+                    "Torch-Integration"
                 } else {
                     "WarpIntegration"
                 },

@@ -6,9 +6,9 @@ use std::sync::Arc;
 
 use futures::channel::oneshot;
 use session_sharing_protocol::common::SessionId;
-use update_queue::LocalTaskUpdateQueue;
 use torch_graphql::ai::{AgentTaskState, PlatformErrorCode};
 use torchui::{Entity, EntityId, ModelContext, SingletonEntity};
+use update_queue::LocalTaskUpdateQueue;
 
 use super::history_model::{
     BlocklistAIHistoryEvent, BlocklistAIHistoryModel, ConversationStatusUpdate,
@@ -602,7 +602,7 @@ pub(crate) fn classify_renderable_error(
         RenderableAIError::ServerOverloaded => (
             AgentTaskState::Error,
             Some(TaskStatusUpdate::with_error_code(
-                "Warp is temporarily overloaded. Please try again shortly.",
+                "Torch is temporarily overloaded. Please try again shortly.",
                 PlatformErrorCode::ResourceUnavailable,
             )),
         ),
@@ -715,7 +715,7 @@ fn map_cli_session_status(
         } => {
             // User-actionable errors (bad credentials, org restrictions, billing) map to
             // FAILED. Everything else (rate limits, server errors, model errors, etc.)
-            // maps to ERROR since they are typically Anthropic's or Warp's fault.
+            // maps to ERROR since they are typically Anthropic's or Torch's fault.
             // The list of error types on Claude Code comes from https://code.claude.com/docs/en/hooks#stopfailure-input
             let task_state = match error_type.as_deref() {
                 Some("authentication_failed" | "oauth_org_not_allowed" | "billing_error") => {

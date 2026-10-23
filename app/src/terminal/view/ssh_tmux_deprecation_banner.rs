@@ -1,6 +1,6 @@
 //! One-time inline banner shown to users who had previously opted into the now-deprecated
 //! tmux-based SSH warpification flow. It explains that tmux SSH warpification has been turned
-//! off in favor of Warp's SSH extension (remote server) and links to the docs.
+//! off in favor of Torch's SSH extension (remote server) and links to the docs.
 //!
 //! The banner is shown at most once per affected user: it is gated on the
 //! `ssh_tmux_deprecation_notice_pending` setting, which is set by a one-time migration and
@@ -22,7 +22,7 @@ use crate::ui_components::icons::Icon;
 
 const BANNER_TITLE: &str = "Tmux SSH warpification has been deprecated";
 
-const BANNER_BODY: &str = "Warp now connects to remote sessions using the SSH extension, which is \
+const BANNER_BODY: &str = "Torch now connects to remote sessions using the SSH extension, which is \
     more robust than the tmux-based flow. The tmux option has been removed.";
 
 const LEARN_MORE_LABEL: &str = "Learn more";
@@ -76,7 +76,7 @@ impl View for SshTmuxDeprecationBanner {
         let font_size = appearance.monospace_font_size();
         let small_font_size = font_size - 2.;
 
-        // Warp icon to match the other warpification blocks.
+        // Torch icon to match the other warpification blocks.
         let icon = Container::new(
             ConstrainedBox::new(Icon::Warp.to_warpui_icon(fg_color.into()).finish())
                 .with_width(16.)

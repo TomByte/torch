@@ -98,7 +98,7 @@ impl SizeInfo {
     }
 
     /// Create SizeInfo for a [`TerminalModel`] instance that doesn't have font metrics,
-    /// which comes from either a headless Warp instance or tests.
+    /// which comes from either a headless Torch instance or tests.
     pub fn new_without_font_metrics(rows: usize, cols: usize) -> Self {
         let width = cols as f32;
         let height = rows as f32;

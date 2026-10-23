@@ -311,7 +311,7 @@ impl Asset for ImageType {
                 }
             }) else {
                 return Err(anyhow!(
-                    "Could not convert custom warp image into approprate dynamic image."
+                    "Could not convert custom torch image into approprate dynamic image."
                 ));
             };
             return Ok(ImageType::StaticBitmap {

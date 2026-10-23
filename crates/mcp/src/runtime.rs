@@ -16,8 +16,8 @@ use rmcp::model::{ClientConfig, Implementation};
 use rmcp::transport::ConfigureCommandExt as _;
 use simple_logger::SimpleLogger;
 use tokio::io::AsyncBufReadExt as _;
-use uuid::Uuid;
 use torch_errors::report_error;
+use uuid::Uuid;
 
 use super::TemplatableMCPServerInfo;
 
@@ -78,7 +78,7 @@ fn build_header_map(headers: &HashMap<String, String>) -> reqwest::header::Heade
     headers.try_into().unwrap_or_default()
 }
 
-/// Header names whose value Warp treats as a caller-supplied credential when
+/// Header names whose value Torch treats as a caller-supplied credential when
 /// deciding whether a `401` means "authenticate me" or "your token was
 /// rejected".
 ///
@@ -252,7 +252,7 @@ pub async fn spawn_server(
                 if err.kind() == std::io::ErrorKind::NotFound {
                     let cwd_display = cwd_for_log
                         .as_deref()
-                        .unwrap_or("<inherited from Warp's process cwd>");
+                        .unwrap_or("<inherited from Torch's process cwd>");
                     logger.log(format!(
                         "[error] MCP: Failed to spawn '{server_name}': command '{command_for_log}' \
                          not found (cwd: {cwd_display}). If your MCP server depends on a specific \

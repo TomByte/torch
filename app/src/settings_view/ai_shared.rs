@@ -51,7 +51,7 @@ pub fn update_editor_interaction_state<V: View>(
     })
 }
 
-/// The "Toolbar layout" chip editor. Shared by the Warp Agent toolbar and the
+/// The "Toolbar layout" chip editor. Shared by the Torch Agent toolbar and the
 /// third-party coding agent toolbar, which are separate settings backed by the
 /// same editor view.
 pub fn render_toolbar_layout_editor(

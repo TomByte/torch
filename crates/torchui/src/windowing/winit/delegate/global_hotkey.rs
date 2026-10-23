@@ -76,7 +76,7 @@ impl GlobalHotKeyHandler {
             thread::spawn(move || {
                 while let Ok(event) = GlobalHotKeyEvent::receiver().recv() {
                     // Trigger when the hotkey is released, _not_ pressed. This is due to an X11
-                    // quirk where focus is transferred out of Warp windows after a global hotkey
+                    // quirk where focus is transferred out of Torch windows after a global hotkey
                     // is pressed. This breaks our quake mode logic. However, focus is restored
                     // when the hotkey is released.
                     if event.state == HotKeyState::Released {

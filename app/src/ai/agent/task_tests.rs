@@ -761,7 +761,7 @@ fn test_upsert_message_new_message_requires_current_stream_exchange() {
 }
 
 // =============================================================================
-// Tests for Warp docs subagent classification
+// Tests for Torch docs subagent classification
 // =============================================================================
 
 #[test]

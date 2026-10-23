@@ -81,7 +81,7 @@ fn head_start_copy_and_telemetry_names_match_spec() {
         &[
             "Limited monthly AI usage for occasional tasks",
             "Access to premium and open-source models",
-            "Use the Warp Agent locally and in the cloud",
+            "Use the Torch Agent locally and in the cloud",
         ]
     );
     assert_eq!(variant.slide_name(), "head_start");
@@ -98,10 +98,10 @@ fn choose_how_to_start_copy_and_telemetry_names_match_spec() {
         variant.subtitle(),
         Some("To use AI, start with a plan or one-time credit packs.")
     );
-    assert_eq!(variant.primary_label(), "Use Warp with AI");
+    assert_eq!(variant.primary_label(), "Use Torch with AI");
     assert_eq!(
         variant.primary_description(),
-        "Warp Agent works locally or in the cloud with frontier and OSS models. Proactively fix terminal errors, implement changes, and ship verified code."
+        "Torch Agent works locally or in the cloud with frontier and OSS models. Proactively fix terminal errors, implement changes, and ship verified code."
     );
     assert_eq!(variant.secondary_label(), "Set up AI later");
     assert_eq!(

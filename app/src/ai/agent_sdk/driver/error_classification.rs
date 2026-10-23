@@ -10,7 +10,7 @@ use crate::server::server_api::ai::{TaskGitCredentialsError, TaskStatusUpdate};
 /// suitable for reporting via `update_agent_task`.
 pub fn classify_driver_error(error: &AgentDriverError) -> (AgentTaskState, TaskStatusUpdate) {
     match error {
-        // --- Warp-side errors (task → ERROR) ---
+        // --- Torch-side errors (task → ERROR) ---
         AgentDriverError::TerminalUnavailable | AgentDriverError::InvalidRuntimeState => (
             AgentTaskState::Error,
             TaskStatusUpdate::with_error_code(
@@ -67,7 +67,7 @@ pub fn classify_driver_error(error: &AgentDriverError) -> (AgentTaskState, TaskS
         AgentDriverError::WarpDriveSyncFailed => (
             AgentTaskState::Error,
             TaskStatusUpdate::with_error_code(
-                "Warp Drive failed to sync. Please check your network connection and try again.",
+                "Torch Drive failed to sync. Please check your network connection and try again.",
                 PlatformErrorCode::InternalError,
             ),
         ),
@@ -77,7 +77,7 @@ pub fn classify_driver_error(error: &AgentDriverError) -> (AgentTaskState, TaskS
                 AgentTaskState::Error,
                 TaskStatusUpdate::with_error_code(
                     format!(
-                        "Authentication required. Log in via '{bin} login', provide an API key via '--api-key', or set the WARP_API_KEY environment variable."
+                        "Authentication required. Log in via '{bin} login', provide an API key via '--api-key', or set the TORCH_API_KEY environment variable."
                     ),
                     PlatformErrorCode::AuthenticationRequired,
                 ),
@@ -96,7 +96,7 @@ pub fn classify_driver_error(error: &AgentDriverError) -> (AgentTaskState, TaskS
             AgentTaskState::Failed,
             TaskStatusUpdate::with_error_code(
                 format!(
-                    "MCP server {uuid} was not found. Verify the server exists in your Warp Drive and the UUID is correct."
+                    "MCP server {uuid} was not found. Verify the server exists in your Torch Drive and the UUID is correct."
                 ),
                 PlatformErrorCode::EnvironmentSetupFailed,
             ),
@@ -155,7 +155,7 @@ pub fn classify_driver_error(error: &AgentDriverError) -> (AgentTaskState, TaskS
             AgentTaskState::Failed,
             TaskStatusUpdate::with_error_code(
                 format!(
-                    "Agent profile \"{name}\" not found. Check the profile ID and ensure it exists in your team's Warp Drive."
+                    "Agent profile \"{name}\" not found. Check the profile ID and ensure it exists in your team's Torch Drive."
                 ),
                 PlatformErrorCode::ResourceNotFound,
             ),
@@ -164,7 +164,7 @@ pub fn classify_driver_error(error: &AgentDriverError) -> (AgentTaskState, TaskS
             AgentTaskState::Failed,
             TaskStatusUpdate::with_error_code(
                 format!(
-                    "Saved prompt not found for ID {id}. Verify the prompt exists in your Warp Drive."
+                    "Saved prompt not found for ID {id}. Verify the prompt exists in your Torch Drive."
                 ),
                 PlatformErrorCode::ResourceNotFound,
             ),
@@ -415,7 +415,7 @@ pub fn classify_driver_error(error: &AgentDriverError) -> (AgentTaskState, TaskS
         }
 
         // The harness didn't respond to any graceful exit attempt and had to
-        // be forcibly killed. This is a Warp/CLI interaction gap rather than
+        // be forcibly killed. This is a Torch/CLI interaction gap rather than
         // something the user misconfigured, but the run's own outcome was
         // already decided before shutdown, so classify like other harness
         // command-failure variants (FAILED) rather than an internal ERROR.

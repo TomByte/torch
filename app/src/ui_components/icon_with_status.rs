@@ -130,7 +130,7 @@ pub(crate) enum IconWithStatusVariant {
     },
     /// A pre-built icon element on an overlay background.
     NeutralElement { icon_element: Box<dyn Element> },
-    /// A Warp agent conversation: monochrome Warp glyph and circle. Local conversations
+    /// A Torch agent conversation: monochrome Torch glyph and circle. Local conversations
     /// use a foreground/background pair that flips for light and dark themes; ambient
     /// (cloud) conversations retain the purple brand background and cloud status badge.
     OzAgent {

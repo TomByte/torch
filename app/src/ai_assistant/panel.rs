@@ -238,7 +238,7 @@ impl AIAssistantPanelView {
         {
             Some(handle) => handle,
             None => {
-                report_error!("Couldn't retrieve warp ai resizable state handle.");
+                report_error!("Couldn't retrieve torch ai resizable state handle.");
                 resizable_state_handle(DEFAULT_WARP_AI_WIDTH)
             }
         };

@@ -24,7 +24,7 @@
 //! Homebrew installs check for newer versions but leave installation to
 //! Homebrew, while `cargo run` builds and legacy flat installs are unaffected.
 //! Users can opt out with the file-backed `general.autoupdate_enabled` setting
-//! or the `WARP_TUI_DISABLE_AUTOUPDATE` environment variable; re-running the
+//! or the `TORCH_TUI_DISABLE_AUTOUPDATE` environment variable; re-running the
 //! install script remains available as a manual escape hatch.
 
 use std::ffi::{OsStr, OsString};
@@ -47,8 +47,8 @@ use crate::telemetry::TuiAutoupdateTelemetryEvent;
 /// Setting this environment variable (to any value) disables background
 /// auto-updates for a single launch, regardless of the
 /// `general.autoupdate_enabled` setting.
-const DISABLE_ENV_VAR: &str = "WARP_TUI_DISABLE_AUTOUPDATE";
-/// The stable cask token shared by the Warp-managed tap and the planned
+const DISABLE_ENV_VAR: &str = "TORCH_TUI_DISABLE_AUTOUPDATE";
+/// The stable cask token shared by the Torch-managed tap and the planned
 /// official Homebrew package.
 const HOMEBREW_CASK_TOKEN: &str = "warp-agent-cli";
 
@@ -147,7 +147,7 @@ impl InstallLayout {
 /// The installation owner inferred from the canonical running executable.
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum InstallMethod {
-    /// Installed by Warp's native versioned installer.
+    /// Installed by Torch's native versioned installer.
     Native(InstallLayout),
     /// Installed from the `warp-agent-cli` Homebrew cask.
     Homebrew,
@@ -286,8 +286,8 @@ impl VersionLease {
             .map(|layout| {
                 Self::acquire(&layout)
                     .context(
-                        "failed to protect this managed Warp Agent CLI version; retry the \
-                         command, or reinstall Warp Agent CLI if the problem persists",
+                        "failed to protect this managed Torch Agent CLI version; retry the \
+                         command, or reinstall Torch Agent CLI if the problem persists",
                     )
                     .map(Some)
             })
@@ -307,8 +307,8 @@ impl VersionLease {
 
         if !is_complete_version_dir(layout, &layout.running_version_dir) {
             bail!(
-                "the managed Warp Agent CLI version at {:?} was retired while this process was \
-                 starting; retry the command, or reinstall Warp Agent CLI if the problem persists",
+                "the managed Torch Agent CLI version at {:?} was retired while this process was \
+                 starting; retry the command, or reinstall Torch Agent CLI if the problem persists",
                 layout.running_version_dir
             );
         }
@@ -415,7 +415,7 @@ impl AutoupdateEligibility {
     fn determine(ctx: &AppContext) -> Self {
         if std::env::var_os(DISABLE_ENV_VAR).is_some() {
             return Self::Disabled {
-                reason: "opted out via the WARP_TUI_DISABLE_AUTOUPDATE environment variable",
+                reason: "opted out via the TORCH_TUI_DISABLE_AUTOUPDATE environment variable",
             };
         }
         if !*TuiAutoupdateSettings::as_ref(ctx).autoupdate_enabled {
@@ -673,7 +673,7 @@ async fn check_for_update(layout: InstallLayout) -> Result<CheckDecision> {
         VersionDirState::Invalid => {
             bail!(
                 "refusing to replace incomplete or invalid installed TUI version at \
-                 {version_dir:?}; remove that directory or reinstall Warp Agent CLI, then retry"
+                 {version_dir:?}; remove that directory or reinstall Torch Agent CLI, then retry"
             );
         }
         VersionDirState::Complete | VersionDirState::Missing => {}
@@ -759,7 +759,7 @@ async fn install_update(layout: InstallLayout, latest_version: String) -> Result
         VersionDirState::Invalid => {
             bail!(
                 "refusing to replace incomplete or invalid installed TUI version at \
-                 {version_dir:?}; remove that directory or reinstall Warp Agent CLI, then retry"
+                 {version_dir:?}; remove that directory or reinstall Torch Agent CLI, then retry"
             );
         }
     };
@@ -780,7 +780,7 @@ async fn install_update(layout: InstallLayout, latest_version: String) -> Result
             VersionDirState::Invalid => {
                 bail!(
                     "refusing to replace incomplete or invalid installed TUI version at \
-                     {version_dir:?}; remove that directory or reinstall Warp Agent CLI, then retry"
+                     {version_dir:?}; remove that directory or reinstall Torch Agent CLI, then retry"
                 );
             }
         }
@@ -832,10 +832,10 @@ async fn install_update(layout: InstallLayout, latest_version: String) -> Result
         ])
         .output()
         .await
-        .context("failed to launch the Warp Agent CLI installer")?;
+        .context("failed to launch the Torch Agent CLI installer")?;
     if !output.status.success() {
         bail!(
-            "Warp Agent CLI installer exited with {}: {}",
+            "Torch Agent CLI installer exited with {}: {}",
             output.status,
             String::from_utf8_lossy(&output.stderr).trim()
         );
@@ -844,10 +844,10 @@ async fn install_update(layout: InstallLayout, latest_version: String) -> Result
     blocking::unblock(move || {
         let version_dir = layout.versions_dir.join(&latest_version);
         if version_dir_state(&layout, &version_dir)? != VersionDirState::Complete {
-            bail!("Warp Agent CLI installer did not create a complete version at {version_dir:?}");
+            bail!("Torch Agent CLI installer did not create a complete version at {version_dir:?}");
         }
         if !current_points_at(&layout, &latest_version) {
-            bail!("Warp Agent CLI installer did not activate expected version {latest_version:?}");
+            bail!("Torch Agent CLI installer did not activate expected version {latest_version:?}");
         }
         prune_old_versions(&layout, &latest_version);
         Ok(UpdateOutcome::Installed {
@@ -896,7 +896,7 @@ fn current_points_at(layout: &InstallLayout, version: &str) -> bool {
     read_current_pointer(layout).is_ok_and(|current| current == OsStr::new(version))
 }
 
-/// Fetches the latest version for this channel: from the Warp server's
+/// Fetches the latest version for this channel: from the Torch server's
 /// `/client_version` endpoint, falling back to the channel-versions JSON in
 /// GCP storage (mirroring the GUI autoupdater's fallback).
 async fn fetch_latest_version(client: &http_client::Client) -> Result<String> {
@@ -920,10 +920,10 @@ async fn fetch_latest_version(client: &http_client::Client) -> Result<String> {
         Err(error) => {
             let releases_base_url = ChannelState::releases_base_url();
             if releases_base_url.is_empty() {
-                return Err(error.context("failed to fetch channel versions from the Warp server"));
+                return Err(error.context("failed to fetch channel versions from the Torch server"));
             }
             log::warn!(
-                "Failed to fetch channel versions from the Warp server ({error:#}); \
+                "Failed to fetch channel versions from the Torch server ({error:#}); \
                  falling back to GCP JSON storage"
             );
             // The nonce busts any CDN/browser-style caching of the JSON file.
@@ -965,7 +965,7 @@ fn latest_version_for(channel: Channel, versions: &ChannelVersions) -> Result<St
     Ok(channel_version.version_info().tui_version().to_owned())
 }
 
-/// The Warp Agent CLI artifact endpoint for a release channel.
+/// The Torch Agent CLI artifact endpoint for a release channel.
 fn download_endpoint(channel: Channel) -> &'static str {
     match channel {
         Channel::Preview => "/download/agent-cli-preview/artifact",
@@ -1047,16 +1047,16 @@ async fn download_windows_installer(
         }
     }
     let (path, mut file) =
-        installer.context("failed to allocate a unique Warp Agent CLI installer path")?;
+        installer.context("failed to allocate a unique Torch Agent CLI installer path")?;
     let installer = DownloadedInstaller { path };
     let response = client
         .get(download_url(version)?.as_str())
         .timeout(DOWNLOAD_TIMEOUT)
         .send()
         .await
-        .context("failed to download the Warp Agent CLI installer")?
+        .context("failed to download the Torch Agent CLI installer")?
         .error_for_status()
-        .context("failed to download the Warp Agent CLI installer")?;
+        .context("failed to download the Torch Agent CLI installer")?;
     futures_lite::io::copy(
         response
             .bytes_stream()
@@ -1065,7 +1065,7 @@ async fn download_windows_installer(
         &mut file,
     )
     .await
-    .context("failed to download the Warp Agent CLI installer")?;
+    .context("failed to download the Torch Agent CLI installer")?;
     file.sync_data().await?;
     drop(file);
     Ok(installer)

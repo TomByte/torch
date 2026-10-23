@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #
-# Install all dependencies required to build Warp on Linux.
+# Install all dependencies required to build Torch on Linux.
 
 set -e
 
-. "$PWD/script/warp_sudo"
+. "$PWD/script/torch_sudo"
 
 # Define some control sequences for text formatting.
 red="\033[0;31m"
@@ -44,7 +44,7 @@ if [[ "$(source /etc/os-release; echo $ID $ID_LIKE)" = *"debian"* ]]; then
     # Required to build statically-linked binaries for Linux.
     musl-tools
   )
-  warp_sudo apt-get install -y "${PACKAGES[@]}"
+  torch_sudo apt-get install -y "${PACKAGES[@]}"
 
   # Install a modern version of protoc. The apt 'protobuf-compiler' package on
   # Ubuntu 20.04 ships protoc 3.6.1, which is too old for proto3 'optional'
@@ -57,7 +57,7 @@ if [[ "$(source /etc/os-release; echo $ID $ID_LIKE)" = *"debian"* ]]; then
   esac
   curl -fsSL -o /tmp/protoc.zip \
     "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/${PROTOC_ZIP}"
-  warp_sudo unzip -o /tmp/protoc.zip -d /usr/local bin/protoc 'include/*'
+  torch_sudo unzip -o /tmp/protoc.zip -d /usr/local bin/protoc 'include/*'
   rm /tmp/protoc.zip
 else
   echo -e "⚠️  ${red}Unknown Linux distribution; necessary build dependencies may not be installed!${reset}"

@@ -6,11 +6,11 @@ use ai::api_keys::{
 };
 use futures::channel::oneshot;
 use serde::{Deserialize, Serialize};
-use vec1::vec1;
 use torch_errors::report_error;
 use torch_managed_secrets::client::{IdentityTokenOptions, TaskIdentityToken};
 use torchui::r#async::Timer;
 use torchui::{AppContext, ModelContext, SingletonEntity};
+use vec1::vec1;
 
 use crate::auth::AuthStateProvider;
 use crate::server::server_api::managed_secrets::AppManagedSecretManager as ManagedSecretManager;
@@ -281,7 +281,7 @@ fn refresh_geap_credentials_with_options(
     manager.set_geap_credentials_state(GeapCredentialsState::Refreshing { previous }, ctx);
 
     // Leg 1: every mint — initial or re-mint, timer/trigger/forced — starts
-    // with a brand-new Warp OIDC JWT, consumed exactly once by the STS
+    // with a brand-new Torch OIDC JWT, consumed exactly once by the STS
     // exchange below and never cached across mints.
     let token_future = ManagedSecretManager::handle(ctx)
         .as_ref(ctx)
@@ -501,7 +501,7 @@ struct GenerateAccessTokenResponse {
     expire_time: String,
 }
 
-/// Legs 2 and 3 of the mint: exchanges the Warp OIDC JWT at Google STS for a
+/// Legs 2 and 3 of the mint: exchanges the Torch OIDC JWT at Google STS for a
 /// federated token, then (when configured) impersonates the workspace's
 /// service account for the final ~1h access token.
 async fn exchange_identity_token_for_geap_credentials(

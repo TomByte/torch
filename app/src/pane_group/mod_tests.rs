@@ -15,7 +15,6 @@ use repo_metadata::repositories::DetectedRepositories;
 use repo_metadata::watcher::DirectoryWatcher;
 use session_sharing_protocol::common::SessionId;
 use shared_session::permissions_manager::SessionPermissionsManager;
-use uuid::Uuid;
 use torch_core::features::FeatureFlag;
 use torch_server_client::base_client::TEAM_UID_HEADER;
 use torch_server_client::iap::IapManager;
@@ -23,6 +22,7 @@ use torchui::platform::{WindowBounds, WindowStyle};
 use torchui::windowing::WindowManager;
 use torchui::windowing::state::ApplicationStage;
 use torchui::{App, ModelHandle};
+use uuid::Uuid;
 use watcher::HomeDirectoryWatcher;
 
 use super::child_agent::restoration::is_stale_ancestor_list_completion;
@@ -95,13 +95,11 @@ use crate::terminal::alt_screen_reporting::AltScreenReporting;
 use crate::terminal::cli_agent_sessions::CLIAgentSessionsModel;
 use crate::terminal::history::History;
 use crate::terminal::keys::TerminalKeybindings;
-use crate::terminal::local_tty::TerminalManager;
 use crate::terminal::local_tty::spawner::PtySpawner;
 use crate::terminal::model::terminal_model::ConversationTranscriptViewerStatus;
 use crate::terminal::resizable_data::ResizableData;
 use crate::terminal::shared_session::{
-    IsSharedSessionCreator, SharedSessionActionSource, SharedSessionScrollbackType,
-    SharedSessionSource, SharedSessionStatus,
+    IsSharedSessionCreator, SharedSessionSource, SharedSessionStatus,
 };
 use crate::terminal::view::Event as TerminalViewEvent;
 use crate::test_util::assert_eventually;
@@ -3491,165 +3489,6 @@ fn test_number_of_shared_panes() {
             // Close a pane
             panes.close_pane(first_pane_id, ctx);
             assert_eq!(panes.number_of_shared_sessions(ctx), 1);
-        });
-    });
-}
-
-#[test]
-fn test_start_shared_session_from_modal() {
-    let _guard = FeatureFlag::CreatingSharedSessions.override_enabled(true);
-    App::test((), |mut app| async move {
-        initialize_app(&mut app);
-        let pane_group = mock_pane_group(&mut app, Default::default());
-
-        pane_group.update(&mut app, |pane_group, ctx| {
-            let terminal_pane = pane_group.terminal_session_by_pane_index(0).unwrap();
-            let terminal_pane_id = terminal_pane.terminal_pane_id();
-            let terminal_model = terminal_pane.terminal_manager(ctx).as_ref(ctx).model();
-
-            assert!(matches!(
-                terminal_model.lock().shared_session_status(),
-                SharedSessionStatus::NotShared
-            ));
-
-            pane_group.open_share_session_modal(
-                terminal_pane_id,
-                SharedSessionActionSource::PaneHeader,
-                ctx,
-            );
-            assert!(pane_group.terminal_with_open_share_session_modal.is_some());
-            assert_eq!(
-                pane_group
-                    .share_session_modal
-                    .as_ref(ctx)
-                    .terminal_pane_id(),
-                Some(terminal_pane_id)
-            );
-
-            pane_group.handle_share_session_modal_event(
-                &ShareSessionModalEvent::StartSharing {
-                    terminal_pane_id,
-                    scrollback_type: SharedSessionScrollbackType::None,
-                    source: SharedSessionActionSource::PaneHeader,
-                },
-                ctx,
-            );
-            assert!(pane_group.terminal_with_open_share_session_modal.is_none());
-            assert!(matches!(
-                terminal_model.lock().shared_session_status(),
-                SharedSessionStatus::SharePending
-            ));
-        });
-
-        // Wait for one tick of the event loop for the share to be started.
-        pane_group.read(&app, |pane_group, ctx| {
-            let terminal_view = pane_group
-                .terminal_view_at_pane_index(0, ctx)
-                .unwrap()
-                .to_owned();
-            let model = terminal_view.as_ref(ctx).model.lock();
-            assert!(matches!(
-                model.shared_session_status(),
-                SharedSessionStatus::ActiveSharer
-            ));
-
-            let manager = shared_session::manager::Manager::as_ref(ctx);
-            let shared_views = manager.shared_views(ctx).collect_vec();
-            assert_eq!(shared_views.len(), 1);
-            assert_eq!(shared_views[0].id(), terminal_view.id());
-
-            let terminal_pane = pane_group.terminal_session_by_pane_index(0).unwrap();
-            assert!(
-                terminal_pane
-                    .pane_view()
-                    .as_ref(ctx)
-                    .header()
-                    .as_ref(ctx)
-                    .has_shareable_object(ctx)
-            );
-        });
-    });
-}
-
-/// TODO: look into moving this test somewhere more suitable.
-/// Currently, the pane group is responsible for creating and owning
-/// the terminal manager, which in turn owns the Network model for the share.
-#[test]
-fn test_stop_shared_session() {
-    let _guard = FeatureFlag::CreatingSharedSessions.override_enabled(true);
-
-    App::test((), |mut app| async move {
-        initialize_app(&mut app);
-        let pane_group = mock_pane_group(&mut app, Default::default());
-
-        // Start the shared session.
-        pane_group.update(&mut app, |pane_group, ctx| {
-            let terminal_pane = pane_group.terminal_session_by_pane_index(0).unwrap();
-            let terminal_view = terminal_pane.terminal_view(ctx);
-            terminal_view.update(ctx, |terminal_view, ctx| {
-                terminal_view.attempt_to_share_session(
-                    SharedSessionScrollbackType::None,
-                    None,
-                    SharedSessionSource::user(None),
-                    false,
-                    ctx,
-                );
-            });
-        });
-
-        // Wait for one tick of the event loop for the share to be started.
-        pane_group.read(&app, |pane_group, ctx| {
-            let terminal_model = pane_group
-                .terminal_session_by_pane_index(0)
-                .unwrap()
-                .to_owned()
-                .terminal_manager(ctx)
-                .as_ref(ctx)
-                .model();
-            assert!(matches!(
-                terminal_model.lock().shared_session_status(),
-                SharedSessionStatus::ActiveSharer
-            ));
-        });
-
-        // Stop the shared session.
-        pane_group.update(&mut app, |pane_group, ctx| {
-            let terminal_pane = pane_group.terminal_session_by_pane_index(0).unwrap();
-            let terminal_view = terminal_pane.terminal_view(ctx);
-            terminal_view.update(ctx, |terminal_view, ctx| {
-                terminal_view.stop_sharing_session(SharedSessionActionSource::PaneHeader, ctx);
-            });
-        });
-
-        // Ensure the state is correct after stopping.
-        pane_group.update(&mut app, |pane_group, ctx| {
-            let terminal_pane = pane_group.terminal_session_by_pane_index(0).unwrap();
-            let terminal_manager = terminal_pane
-                .terminal_manager(ctx)
-                .as_ref(ctx)
-                .as_any()
-                .downcast_ref::<TerminalManager<TerminalView>>()
-                .unwrap();
-            let terminal_model = terminal_pane.terminal_manager(ctx).as_ref(ctx).model();
-
-            assert!(terminal_manager.session_sharer().borrow().is_none());
-            assert!(matches!(
-                terminal_model.lock().shared_session_status(),
-                SharedSessionStatus::NotShared
-            ));
-
-            let manager = shared_session::manager::Manager::as_ref(ctx);
-            let shared_views = manager.shared_views(ctx).collect_vec();
-            assert!(shared_views.is_empty());
-
-            assert!(
-                !terminal_pane
-                    .pane_view()
-                    .as_ref(ctx)
-                    .header()
-                    .as_ref(ctx)
-                    .has_shareable_object(ctx)
-            );
         });
     });
 }

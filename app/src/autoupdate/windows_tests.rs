@@ -22,7 +22,7 @@ fn parses_exit_code_128() {
 fn parses_exit_code_embedded_in_multiline_log() {
     // The pattern appears after several unrelated log lines.
     let contents = log(
-        "[2024-01-01 00:00:00] Warp mutex still held after timeout; force-killing remaining processes.\n\
+        "[2024-01-01 00:00:00] Torch mutex still held after timeout; force-killing remaining processes.\n\
          [2024-01-01 00:00:01] force-kill failed for warp.exe (exit code: 5)\n\
          [2024-01-01 00:00:02] Installation complete.",
     );
@@ -32,7 +32,7 @@ fn parses_exit_code_embedded_in_multiline_log() {
 #[test]
 fn returns_none_when_no_forcekill_line() {
     // Log contains no force-kill attempt at all.
-    let contents = log("warp mutex still held after timeout; proceeding.");
+    let contents = log("torch mutex still held after timeout; proceeding.");
     assert_eq!(parse_forcekill_exit_code(&contents), None);
 }
 

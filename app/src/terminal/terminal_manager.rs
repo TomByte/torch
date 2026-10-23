@@ -12,7 +12,7 @@ use super::model::block::BlockSize;
 use super::safe_mode_settings::get_secret_obfuscation_mode;
 use super::session_settings::SessionSettings;
 use super::settings::TerminalSettings;
-use super::view::{WARP_PROMPT_HEIGHT_LINES, create_size_info_for_blocklist};
+use super::view::{TORCH_PROMPT_HEIGHT_LINES, create_size_info_for_blocklist};
 use super::{BlockPadding, ShellLaunchState, SizeInfo, TerminalModel, color};
 use crate::PrivacySettings;
 use crate::ai::blocklist::SerializedBlockListItem;
@@ -67,7 +67,7 @@ impl torchui::Entity for Box<dyn TerminalManager> {
 }
 
 /// Spacing baked into block heights: the per-block padding, the height
-/// reserved for the rendered Warp prompt (in lines), and whether blocks
+/// reserved for the rendered Torch prompt (in lines), and whether blocks
 /// reserve a footer row for the debug memory-stats overlay.
 ///
 /// [`Self::for_gui`] derives the GUI blocklist's spacing from the user's
@@ -82,7 +82,7 @@ pub struct BlockSpacing {
 
 impl BlockSpacing {
     /// The GUI blocklist's spacing, derived from the user's settings: padding
-    /// from the terminal-spacing style, the rendered Warp prompt's height, and
+    /// from the terminal-spacing style, the rendered Torch prompt's height, and
     /// the debug memory-stats footer toggle.
     pub(super) fn for_gui(ctx: &AppContext) -> Self {
         let appearance = Appearance::as_ref(ctx);
@@ -90,7 +90,7 @@ impl BlockSpacing {
             TerminalSettings::as_ref(ctx).terminal_spacing(appearance.line_height_ratio(), ctx);
         Self {
             block_padding: terminal_spacing.block_padding,
-            warp_prompt_height_lines: WARP_PROMPT_HEIGHT_LINES,
+            warp_prompt_height_lines: TORCH_PROMPT_HEIGHT_LINES,
             show_memory_stats: DebugSettings::as_ref(ctx).should_show_memory_stats(),
         }
     }

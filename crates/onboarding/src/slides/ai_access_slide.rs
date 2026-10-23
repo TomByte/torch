@@ -1,4 +1,3 @@
-use ui_components::{Component as _, Options as _, button};
 use torch_core::ui::appearance::Appearance;
 use torch_core::ui::theme::Fill;
 use torch_core::ui::theme::color::internal_colors;
@@ -17,6 +16,7 @@ use torchui_core::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity as _, TypedActionView, View,
     ViewContext,
 };
+use ui_components::{Component as _, Options as _, button};
 
 use super::OnboardingSlide;
 use crate::model::{AiAccessChoice, OnboardingAuthState, OnboardingStateModel};
@@ -42,8 +42,8 @@ pub enum AiAccessSlideEvent {
     PasteAuthTokenFromClipboardRequested,
 }
 
-/// The "Choose how to access AI" slide (Warp Agent path). Forks between a paid
-/// subscription and a "Set up later" option that lets the user explore Warp's
+/// The "Choose how to access AI" slide (Torch Agent path). Forks between a paid
+/// subscription and a "Set up later" option that lets the user explore Torch's
 /// built-in AI before committing to a plan.
 pub struct AiAccessSlide {
     onboarding_state: ModelHandle<OnboardingStateModel>,
@@ -309,7 +309,7 @@ impl AiAccessSlide {
             .finish();
 
         let description = FormattedTextElement::from_str(
-            "Explore Warp's built-in AI features before committing to a plan, or bring your own \
+            "Explore Torch's built-in AI features before committing to a plan, or bring your own \
              inference.",
             appearance.ui_font_family(),
             14.,

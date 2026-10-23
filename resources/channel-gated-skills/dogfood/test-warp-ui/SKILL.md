@@ -1,21 +1,21 @@
 ---
 name: test-warp-ui
 description: >
-  Guides testing Warp UI features and changes using the computer use tool.
+  Guides testing Torch UI features and changes using the computer use tool.
   Use this skill only when computer-use testing was requested (explicit request or accepted offer) and the computer_use tool is available to the agent.
-  Covers launching Warp and verifying UI behavior.
+  Covers launching Torch and verifying UI behavior.
 user-invocable: false
 ---
 
-# Computer Use for Warp UI Testing
+# Computer Use for Torch UI Testing
 
-Use the `computer_use` tool to visually test that Warp looks and behaves as intended after UI changes, when computer-use testing was requested.
+Use the `computer_use` tool to visually test that Torch looks and behaves as intended after UI changes, when computer-use testing was requested.
 
-## Running Warp
+## Running Torch
 
-Launch Warp from the repository root. The exact command depends on which environment variable holds the API key:
+Launch Torch from the repository root. The exact command depends on which environment variable holds the API key:
 
-- If `WARP_API_KEY` is already set, omit the flag entirely — the `--api-key` flag is bound to `WARP_API_KEY`, so Warp reads it automatically:
+- If `TORCH_API_KEY` is already set, omit the flag entirely — the `--api-key` flag is bound to `TORCH_API_KEY`, so Torch reads it automatically:
 
   ```bash
   cargo run --bin warp
@@ -37,7 +37,7 @@ Initial builds may take several minutes; subsequent incremental builds are faste
 
 After launching, confirm both of the following before testing:
 
-- Warp is **authenticated** — it opens straight to the terminal, NOT the logged-out onboarding/sign-in screen.
+- Torch is **authenticated** — it opens straight to the terminal, NOT the logged-out onboarding/sign-in screen.
 - The `cargo run` stderr/terminal output does **not** contain the substring `provided but IGNORED`.
 
 If that warning appears (or the app is logged out), the wrong binary/channel was launched — stop and relaunch with `cargo run --bin warp`.
@@ -60,7 +60,7 @@ Keep mocked changes minimal and focused — only change what's necessary to reac
 
 Call the `computer_use` tool with a task description that includes:
 
-- The command to build and launch Warp from the repo root: `cargo run --bin warp` when `WARP_API_KEY` is set in the environment, or `cargo run --bin warp -- --api-key $STAGING_USER_WARP_API_KEY` when the key is in `STAGING_USER_WARP_API_KEY` instead
+- The command to build and launch Torch from the repo root: `cargo run --bin warp` when `TORCH_API_KEY` is set in the environment, or `cargo run --bin warp -- --api-key $STAGING_USER_WARP_API_KEY` when the key is in `STAGING_USER_WARP_API_KEY` instead
 - Step-by-step instructions for navigating to the UI being tested
 - **Specific observations to report**: describe exactly what elements, text, colors, layout, or states the tool should observe and describe back
 - Do **not** include expected values in the task — the tool should report what it sees, not judge correctness

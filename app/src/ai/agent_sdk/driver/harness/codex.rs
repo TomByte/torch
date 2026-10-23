@@ -11,7 +11,6 @@ use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use tempfile::NamedTempFile;
-use uuid::Uuid;
 use torch_cli::agent::Harness;
 use torch_core::features::FeatureFlag;
 use torch_core::safe_info;
@@ -19,6 +18,7 @@ use torch_errors::report_error;
 use torch_harness_usage::{CaptureDiagnostics, JsonlReadStatus, extract_codex};
 use torch_managed_secrets::ManagedSecretValue;
 use torchui::{ModelHandle, ModelSpawner, SingletonEntity};
+use uuid::Uuid;
 
 use super::super::terminal::{CommandHandle, TerminalDriver};
 use super::super::{AgentDriver, AgentDriverError};
@@ -57,7 +57,7 @@ pub(crate) struct CodexHarness;
 const CODEX_CLI_FORMAT: &str = "codex_cli";
 /// Slash command Codex's TUI recognises as a graceful shutdown.
 const CODEX_EXIT_COMMAND: &str = "/exit";
-/// Allow the Warp-installed Codex plugin hooks to run in vetted driver sessions
+/// Allow the Torch-installed Codex plugin hooks to run in vetted driver sessions
 /// without requiring an unattended `/hooks` review step.
 const CODEX_BYPASS_HOOK_TRUST_FLAG: &str = "--dangerously-bypass-hook-trust";
 
@@ -206,7 +206,7 @@ impl ThirdPartyHarness for CodexHarness {
 /// `--dangerously-bypass-approvals-and-sandbox` disables both the sandbox and approval
 /// prompts so the agent can run autonomously.
 /// `--dangerously-bypass-hook-trust` allows the orchestration plugin hooks installed by
-/// Warp to run without a manual hook review in unattended driver sessions. Driver setup
+/// Torch to run without a manual hook review in unattended driver sessions. Driver setup
 /// verifies the Codex platform plugin before launching commands with this flag.
 /// `Some(session_id)` indicates that we want to resume that prior session. Unlike claude,
 /// codex does not support assigning a session_id to a new conversation.
@@ -631,7 +631,7 @@ pub(super) fn prepare_codex_environment_config(
 
 /// Publish configured and eligible bundled skills under
 /// `<harness_working_dir>/.agents/skills`, so Codex sees the same skills
-/// available to the Warp driver.
+/// available to the Torch driver.
 ///
 /// Relative source directories are resolved from the workspace root, matching
 /// Oz. The links are published into the harness working directory because

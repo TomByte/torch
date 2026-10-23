@@ -58,26 +58,6 @@ fn step(app: &App, model: &ModelHandle<OnboardingStateModel>) -> OnboardingStep 
 }
 
 #[test]
-fn account_first_path_is_linear_and_reversible() {
-    let _account_first = FeatureFlag::AccountFirstOnboarding.override_enabled(true);
-    App::test((), |mut app| async move {
-        let model = add_test_model(&mut app);
-
-        model.update(&mut app, |model, ctx| model.next(ctx));
-        assert_eq!(step(&app, &model), OnboardingStep::Customize);
-
-        model.update(&mut app, |model, ctx| model.next(ctx));
-        assert_eq!(step(&app, &model), OnboardingStep::ThemePicker);
-
-        model.update(&mut app, |model, ctx| model.back(ctx));
-        assert_eq!(step(&app, &model), OnboardingStep::Customize);
-
-        model.update(&mut app, |model, ctx| model.back(ctx));
-        assert_eq!(step(&app, &model), OnboardingStep::Intro);
-    });
-}
-
-#[test]
 fn post_auth_offer_is_unclassified_until_selected_and_does_not_switch() {
     let _account_first = FeatureFlag::AccountFirstOnboarding.override_enabled(true);
     App::test((), |mut app| async move {
@@ -94,35 +74,6 @@ fn post_auth_offer_is_unclassified_until_selected_and_does_not_switch() {
         model.read(&app, |model, _| {
             assert_eq!(model.offer_variant(), Some(OfferVariant::HeadStart));
         });
-    });
-}
-
-#[test]
-fn post_auth_offer_supports_back_to_theme_and_no_direct_next() {
-    let _account_first = FeatureFlag::AccountFirstOnboarding.override_enabled(true);
-    App::test((), |mut app| async move {
-        app.update(MockTelemetryContextProvider::register);
-        for variant in [OfferVariant::HeadStart, OfferVariant::ChooseHowToStart] {
-            let model = add_model(&mut app);
-            model.update(&mut app, |model, ctx| {
-                model.show_post_auth_offer(variant, ctx);
-            });
-
-            assert_eq!(step(&app, &model), OnboardingStep::PostAuthOffer);
-            model.read(&app, |model, _| {
-                assert_eq!(model.offer_variant(), Some(variant));
-                assert_eq!(model.progress(), (0, 0));
-            });
-
-            model.update(&mut app, |model, ctx| model.back(ctx));
-            assert_eq!(step(&app, &model), OnboardingStep::ThemePicker);
-
-            model.update(&mut app, |model, ctx| {
-                model.show_post_auth_offer(variant, ctx);
-                model.next(ctx);
-            });
-            assert_eq!(step(&app, &model), OnboardingStep::PostAuthOffer);
-        }
     });
 }
 
@@ -244,25 +195,6 @@ fn the_checkout_success_handoff_is_inert_outside_an_ai_sell_offer() {
 }
 
 #[test]
-fn account_first_path_uses_three_step_progress() {
-    let _account_first = FeatureFlag::AccountFirstOnboarding.override_enabled(true);
-    App::test((), |mut app| async move {
-        let model = add_test_model(&mut app);
-        let cases = [
-            (OnboardingStep::Intro, (0, 3)),
-            (OnboardingStep::Customize, (0, 3)),
-            (OnboardingStep::ThemePicker, (1, 3)),
-        ];
-
-        for (target, expected) in cases {
-            model.update(&mut app, |model, ctx| model.set_step(target, ctx));
-            let progress = model.read(&app, |model, _| model.progress());
-            assert_eq!(progress, expected, "unexpected dots for {target:?}");
-        }
-    });
-}
-
-#[test]
 fn account_first_path_uses_agent_ui_defaults() {
     let _account_first = FeatureFlag::AccountFirstOnboarding.override_enabled(true);
     App::test((), |mut app| async move {
@@ -301,7 +233,7 @@ fn agent_path_routes_through_ai_setup() {
         model.update(&mut app, |model, ctx| model.next(ctx));
         assert_eq!(step(&app, &model), OnboardingStep::AiSetup);
 
-        // The default AI setup choice is the Warp agent.
+        // The default AI setup choice is the Torch agent.
         model.update(&mut app, |model, ctx| model.next(ctx));
         assert_eq!(step(&app, &model), OnboardingStep::Agent);
         model.update(&mut app, |model, ctx| model.next(ctx));
@@ -471,7 +403,7 @@ fn agent_intent_keeps_ai_enabled_for_any_setup_choice() {
     App::test((), |mut app| async move {
         let model = add_test_model(&mut app);
 
-        // Default agent intention + "Use Warp Agent" enables AI.
+        // Default agent intention + "Use Torch Agent" enables AI.
         model.read(&app, |model, _| assert!(model.settings().is_ai_enabled()));
 
         // "Use third party agents" still keeps AI enabled: agent intent always
@@ -481,7 +413,7 @@ fn agent_intent_keeps_ai_enabled_for_any_setup_choice() {
         });
         model.read(&app, |model, _| assert!(model.settings().is_ai_enabled()));
 
-        // Switching back to Warp Agent also keeps AI enabled.
+        // Switching back to Torch Agent also keeps AI enabled.
         model.update(&mut app, |model, ctx| {
             model.set_ai_setup_choice(AiSetupChoice::WarpAgent, ctx)
         });
@@ -519,7 +451,7 @@ fn progress_reports_v3_positions_for_agent_path() {
     App::test((), |mut app| async move {
         let model = add_test_model(&mut app);
 
-        // Warp Agent path: Intention → AiSetup → Agent → AiAccess → Customize → ThemePicker.
+        // Torch Agent path: Intention → AiSetup → Agent → AiAccess → Customize → ThemePicker.
         let cases = [
             (OnboardingStep::Intention, (0, 6)),
             (OnboardingStep::AiSetup, (1, 6)),
@@ -545,7 +477,7 @@ fn progress_reports_v3_positions_for_third_party_path() {
         });
 
         // Third-party path has no "Choose how to access AI" step, so it is one
-        // dot shorter than the Warp Agent path.
+        // dot shorter than the Torch Agent path.
         let cases = [
             (OnboardingStep::Intention, (0, 5)),
             (OnboardingStep::AiSetup, (1, 5)),

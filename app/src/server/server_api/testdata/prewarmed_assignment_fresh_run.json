@@ -59,7 +59,7 @@
   },
   "runtime_env": {
     "OZ_RUN_ID": "550e8400-e29b-41d4-a716-446655440000",
-    "WARP_SANDBOX_DEADLINE": "1767225600"
+    "TORCH_SANDBOX_DEADLINE": "1767225600"
   },
   "api_key": "wk-placeholder-not-a-real-key",
   "expires_at": "2026-01-01T00:00:00Z"

@@ -87,7 +87,7 @@ impl TelemetryEvent for TuiStartupTelemetryEvent {
     }
 
     fn description(&self) -> &'static str {
-        "The headless Warp TUI is launched"
+        "The headless Torch TUI is launched"
     }
 
     fn enablement_state(&self) -> EnablementState {
@@ -112,7 +112,7 @@ impl TelemetryEventDesc for TuiStartupTelemetryEvent {
     }
 
     fn description(&self) -> &'static str {
-        "The headless Warp TUI is launched"
+        "The headless Torch TUI is launched"
     }
 
     fn enablement_state(&self) -> EnablementState {
@@ -165,8 +165,8 @@ impl TelemetryEventDesc for TuiConversationMenuTelemetryEventDiscriminants {
 
     fn description(&self) -> &'static str {
         match self {
-            Self::Opened => "The conversation menu opened in the headless Warp TUI",
-            Self::ItemSelected => "A conversation-menu item was selected in the headless Warp TUI",
+            Self::Opened => "The conversation menu opened in the headless Torch TUI",
+            Self::ItemSelected => "A conversation-menu item was selected in the headless Torch TUI",
         }
     }
 
@@ -230,7 +230,7 @@ impl TelemetryEvent for TuiConversationRestoreTelemetryEvent {
     }
 
     fn description(&self) -> &'static str {
-        "A conversation-list restore changed lifecycle state in the headless Warp TUI"
+        "A conversation-list restore changed lifecycle state in the headless Torch TUI"
     }
 
     fn enablement_state(&self) -> EnablementState {
@@ -255,7 +255,7 @@ impl TelemetryEventDesc for TuiConversationRestoreTelemetryEvent {
     }
 
     fn description(&self) -> &'static str {
-        "A conversation-list restore changed lifecycle state in the headless Warp TUI"
+        "A conversation-list restore changed lifecycle state in the headless Torch TUI"
     }
 
     fn enablement_state(&self) -> EnablementState {

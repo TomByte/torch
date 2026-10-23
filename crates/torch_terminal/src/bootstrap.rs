@@ -203,7 +203,7 @@ pub fn fish_bootstrap_file(assets: &dyn AssetProvider) -> Option<std::path::Path
 }
 
 /// Placeholder in init shell scripts that gets replaced with the client-generated session ID.
-pub const SESSION_ID_PLACEHOLDER: &str = "@@WARP_SESSION_ID@@";
+pub const SESSION_ID_PLACEHOLDER: &str = "@@TORCH_SESSION_ID@@";
 
 /// Returns the init shell script for the given `shell_type` (e.g. the script that emits the
 /// InitShell DCS hook).

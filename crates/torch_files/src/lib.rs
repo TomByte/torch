@@ -515,7 +515,7 @@ impl FileModel {
     ///
     /// Derived from the stored path so registration and unregistration always agree. `None` when
     /// the file's path has no usable parent — a bare relative name such as `README.md` yields an
-    /// empty parent, which platform watchers resolve to Warp's own process directory.
+    /// empty parent, which platform watchers resolve to Torch's own process directory.
     fn watch_path(&self, file_id: FileId) -> Option<PathBuf> {
         Self::watch_path_for(self.file_state.get_local(file_id)?.path.as_deref()?)
     }

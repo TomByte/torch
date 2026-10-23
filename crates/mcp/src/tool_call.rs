@@ -10,8 +10,8 @@ use rmcp::model::{
 };
 use rmcp::service::PeerRequestOptions;
 use rmcp::{Peer, RoleClient, ServiceError};
-use uuid::Uuid;
 use torchui::r#async::Timer;
+use uuid::Uuid;
 
 /// Total connection, dispatch, and response budget for one tool call.
 pub const TOOL_CALL_TIMEOUT: Duration = Duration::from_secs(30 * 60);
@@ -100,7 +100,7 @@ where
     if let Some((peer, request_id)) = cancellation {
         let cancel = peer.notify_cancelled(CancelledNotificationParam::new(
             Some(request_id),
-            Some("Warp MCP tool call deadline exceeded".to_owned()),
+            Some("Torch MCP tool call deadline exceeded".to_owned()),
         ));
         let cancellation_outcome =
             match select(Box::pin(cancel), Box::pin(cancellation_deadline())).await {

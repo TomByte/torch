@@ -104,7 +104,7 @@ impl PublicApiError {
 }
 
 impl BaseClient {
-    /// Downloads bytes from a presigned URL without attaching Warp headers or credentials.
+    /// Downloads bytes from a presigned URL without attaching Torch headers or credentials.
     pub async fn download_presigned(&self, url: &str) -> Result<bytes::Bytes> {
         let response = self
             .external_http_client()

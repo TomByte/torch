@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Installs the Warp remote server binary on a remote host, plus the
+# Installs the Torch remote server binary on a remote host, plus the
 # artifact's `resources/` tree (bundled skills, settings schema) at a
 # global, version-independent location:
 #

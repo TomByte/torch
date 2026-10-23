@@ -73,7 +73,7 @@ fn test_keybinding_name_to_display_string() {
     });
 }
 
-// Local-only builds hide the Warp agent orchestration bindings.
+// Local-only builds hide the Torch agent orchestration bindings.
 #[cfg(not(feature = "local_only"))]
 #[test]
 fn test_orchestration_cycle_bindings_are_editable() {

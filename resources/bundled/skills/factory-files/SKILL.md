@@ -1,6 +1,6 @@
 ---
 name: factory-files
-description: Create and edit file-based Warp software factory definitions, in a repository tree rooted at a factory.yaml. Use when authoring or changing that factory.yaml, Agent, Automation, Scorer, Benchmark, Runner, or Webhook files under that root, or its factory and agent skill trees, and when fixing Factory file diagnostics. Do not use for agent-definition Markdown that belongs to another tool, for a tree with no factory.yaml, or to operate a live factory or hand work to one through Factory MCP.
+description: Create and edit file-based Torch software factory definitions, in a repository tree rooted at a factory.yaml. Use when authoring or changing that factory.yaml, Agent, Automation, Scorer, Benchmark, Runner, or Webhook files under that root, or its factory and agent skill trees, and when fixing Factory file diagnostics. Do not use for agent-definition Markdown that belongs to another tool, for a tree with no factory.yaml, or to operate a live factory or hand work to one through Factory MCP.
 ---
 
 # Factory Files
@@ -11,7 +11,7 @@ request.
 
 warp-server owns the format. It publishes the schema for each version it
 supports and validates a tree with the same parser the apply path uses. This
-skill carries no copy of the format: a copy ships inside a Warp release, goes
+skill carries no copy of the format: a copy ships inside a Torch release, goes
 stale against the server, and then reports confident, wrong diagnostics. When
 the server cannot be reached, the answer is that the tree was not checked.
 
@@ -100,9 +100,9 @@ python3 "{{skill_dir}}/scripts/validate_factory_files.py" "<factory-root>"
 
 It selects the tree's resource files and submits them to the server, which runs
 the real parser. Add `--json` for machine-readable output and `--server-root
-<url>`, or `WARP_SERVER_ROOT` (or `WARP_SERVER_ROOT_URL`, the name an Oz
+<url>`, or `TORCH_SERVER_ROOT` (or `TORCH_SERVER_ROOT_URL`, the name an Oz
 sandbox exports), to point at a local, staging, or self-hosted server. No
-credential is required; `WARP_API_KEY` is forwarded when the environment
+credential is required; `TORCH_API_KEY` is forwarded when the environment
 already carries one, as an agent sandbox does, and dropped for a single retry
 if the server answers it with 401 or 403.
 
@@ -175,7 +175,7 @@ read them.
 
 ## Do not add a local copy of the format
 It is tempting to bundle the schema, or to reimplement a few checks here so
-authoring works offline. Both have been tried and removed. A copy inside a Warp
+authoring works offline. Both have been tried and removed. A copy inside a Torch
 release is routinely older than the server it is used against, and a stale copy
 does not fail quietly: it reports a valid field as unknown, and an agent trying
 to get to a clean run deletes working configuration to satisfy it. That has

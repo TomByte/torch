@@ -6,12 +6,12 @@ use anyhow::Context as _;
 #[cfg(not(feature = "agent_mode_evals"))]
 use indexmap::IndexMap;
 use settings::Setting as _;
-use uuid::Uuid;
 use torch_core::channel::ChannelState;
 use torch_core::features::FeatureFlag;
 use torch_core::user_preferences::GetUserPreferences;
 use torch_errors::report_error;
 use torchui::{AppContext, Entity, EntityId, ModelContext, SingletonEntity};
+use uuid::Uuid;
 
 use super::{
     AIExecutionProfile, ActionPermission, CloudAIExecutionProfileModel, ExecutionProfileId,
@@ -54,7 +54,7 @@ impl AIExecutionProfileInfo {
         &self.id
     }
 
-    /// The Warp Drive sync ID of this profile, if it has been synced.
+    /// The Torch Drive sync ID of this profile, if it has been synced.
     #[cfg_attr(target_family = "wasm", allow(dead_code))]
     pub fn sync_id(&self) -> Option<SyncId> {
         self.sync_id
@@ -83,7 +83,7 @@ fn file_backed_execution_profiles_enabled(launch_mode: &LaunchMode) -> bool {
 /// Selects the authoritative persistence backend for execution profiles.
 #[derive(Clone, Copy, Debug)]
 enum ProfileSource {
-    /// Existing per-profile Warp Drive objects used by GUI rollback builds.
+    /// Existing per-profile Torch Drive objects used by GUI rollback builds.
     LegacyCloudObjects,
     /// One file-backed collection stored in [`AISettings`].
     SettingsCollection {

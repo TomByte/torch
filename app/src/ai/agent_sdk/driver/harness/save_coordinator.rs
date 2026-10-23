@@ -216,7 +216,7 @@ impl SaveCoordinator {
 }
 
 pub(super) fn final_save_budget() -> Duration {
-    let deadline = std::env::var("WARP_SANDBOX_DEADLINE")
+    let deadline = std::env::var("TORCH_SANDBOX_DEADLINE")
         .ok()
         .and_then(|value| value.parse::<u64>().ok())
         .filter(|seconds| *seconds > 0)

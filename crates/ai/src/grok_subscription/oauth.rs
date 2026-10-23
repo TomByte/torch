@@ -1,5 +1,5 @@
 //! OAuth flow for connecting an xAI / Grok subscription (e.g. SuperGrok) to
-//! Warp, so users can "plug in" their subscription instead of pasting a
+//! Torch, so users can "plug in" their subscription instead of pasting a
 //! pay-as-you-go API key.
 //!
 //! This mirrors the public Grok-CLI desktop OAuth flow: an OAuth 2.0
@@ -564,14 +564,14 @@ async fn post_token_request<T: serde::Serialize + ?Sized>(
 }
 
 const SUCCESS_HTML: &str = "<!doctype html><html><head><meta charset=\"utf-8\">\
-<title>Warp — Grok connected</title></head>\
+<title>Torch — Grok connected</title></head>\
 <body style=\"font-family:system-ui,-apple-system,sans-serif;text-align:center;padding:3rem\">\
-<h1>Grok connected</h1><p>You can close this window and return to Warp.</p></body></html>";
+<h1>Grok connected</h1><p>You can close this window and return to Torch.</p></body></html>";
 
 const FAILURE_HTML: &str = "<!doctype html><html><head><meta charset=\"utf-8\">\
-<title>Warp — Grok authorization failed</title></head>\
+<title>Torch — Grok authorization failed</title></head>\
 <body style=\"font-family:system-ui,-apple-system,sans-serif;text-align:center;padding:3rem\">\
-<h1>Authorization failed</h1><p>Something went wrong. Return to Warp and try again.</p></body></html>";
+<h1>Authorization failed</h1><p>Something went wrong. Return to Torch and try again.</p></body></html>";
 
 #[cfg(test)]
 #[path = "oauth_tests.rs"]

@@ -3,9 +3,9 @@ use std::path::{Path, PathBuf, absolute};
 
 use anyhow::{Context as _, Result, anyhow, bail};
 use serde::Deserialize;
-use typed_path::{WindowsComponent, WindowsPath};
 use torch_cli::agent::Harness;
 use torch_util::path::file_exists_and_is_executable;
+use typed_path::{WindowsComponent, WindowsPath};
 
 use super::super::super::AgentDriverError;
 use super::super::ThirdPartyHarness;
@@ -14,7 +14,7 @@ use super::super::codex::CodexHarness;
 use super::super::gemini::GeminiHarness;
 use super::launch::AcpLaunchSpec;
 
-const SIDECAR_ENV: &str = "WARP_HARNESS_SIDECAR";
+const SIDECAR_ENV: &str = "TORCH_HARNESS_SIDECAR";
 const MANIFEST_FILE: &str = "warp-harness.json";
 
 /// Unknown top-level sections are ignored so a sidecar can add ones for other transports

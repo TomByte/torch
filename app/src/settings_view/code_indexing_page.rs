@@ -75,7 +75,7 @@ const CODE_FEATURE_NAME: &str = "Code";
 const INITIALIZATION_SETTINGS_HEADER: &str = "Initialization Settings";
 const CODEBASE_INDEXING_LABEL: &str = "Codebase indexing";
 const CODEBASE_INDEX_DESCRIPTION: &str = "Torch can automatically index code repositories as you navigate them, helping agents quickly understand context and provide solutions. Code is never stored on the server. If a codebase is unable to be indexed, Torch can still navigate your codebase and gain insights via grep and find tool calling.";
-const WARP_INDEXING_IGNORE_DESCRIPTION: &str = "To exclude specific files or directories from indexing, add them to the .warpindexingignore file in your repository directory. These files will still be accessible to AI features, but they won't be included in codebase embeddings.";
+const TORCH_INDEXING_IGNORE_DESCRIPTION: &str = "To exclude specific files or directories from indexing, add them to the .warpindexingignore file in your repository directory. These files will still be accessible to AI features, but they won't be included in codebase embeddings.";
 const AUTO_INDEX_FEATURE_NAME: &str = "Index new folders by default";
 const AUTO_INDEX_DESCRIPTION: &str = "When set to true, Torch will automatically index code repositories as you navigate them - helping agents quickly understand context and provide targeted solutions.";
 const INDEXING_DISABLED_ADMIN_TEXT: &str = "Team admins have disabled codebase indexing.";
@@ -779,7 +779,7 @@ impl SettingsWidget for CodePageWidget {
         ));
         content.add_child(self.render_settings_subtext(
             global_ai_enabled,
-            WARP_INDEXING_IGNORE_DESCRIPTION,
+            TORCH_INDEXING_IGNORE_DESCRIPTION,
             appearance,
         ));
 

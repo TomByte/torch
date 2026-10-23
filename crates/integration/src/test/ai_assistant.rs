@@ -10,7 +10,7 @@ use torchui_core::async_assert;
 use super::new_builder;
 use crate::Builder;
 
-/// Checks if the Ask Warp AI keybinding works correctly when a block is selected.
+/// Checks if the Ask Torch AI keybinding works correctly when a block is selected.
 /// This is a regression test: https://linear.app/warpdotdev/issue/WAR-6758/warp-ai-ask-from-block-keybinding-doesnt-work-as-expected.
 pub fn test_ask_warp_ai_keybinding_for_selected_block() -> Builder {
     new_builder()
@@ -32,7 +32,7 @@ pub fn test_ask_warp_ai_keybinding_for_selected_block() -> Builder {
         .with_step(
             new_step_with_default_assertions("select block")
                 .with_keystrokes(&["ctrl-shift-space"])
-                .add_named_assertion("ask warp ai from selected block", |app, window_id| {
+                .add_named_assertion("ask torch ai from selected block", |app, window_id| {
                     let ai_assistant_panel = ai_assistant_panel_view(app, window_id);
                     ai_assistant_panel.read(app, |view, ctx| {
                         let expected_code_block = "```warp\nfoo\n```";

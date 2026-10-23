@@ -5,16 +5,16 @@ use torchui_core::{Entity, ModelContext, SingletonEntity};
 // Global execution mode, for logic that runs outside the UI framework.
 static GLOBAL_EXECUTION_MODE: OnceLock<ExecutionMode> = OnceLock::new();
 
-/// Execution mode that Warp is running under.
+/// Execution mode that Torch is running under.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ExecutionMode {
-    /// Warp is running as a normal desktop app.
+    /// Torch is running as a normal desktop app.
     App,
-    /// Warp is running as the headless terminal UI.
+    /// Torch is running as the headless terminal UI.
     Tui,
-    /// Warp is running as a CLI.
+    /// Torch is running as a CLI.
     Sdk,
-    /// Warp is running as the remote server daemon.
+    /// Torch is running as the remote server daemon.
     RemoteServerDaemon,
 }
 
@@ -36,7 +36,7 @@ impl ExecutionMode {
     /// The desktop app keeps requiring a shell-derived path, so a failed MCP spawn surfaces
     /// as an actionable toast instead of silently launching with the wrong PATH. The SDK CLI
     /// and the TUI receive an authoritative PATH from their own launcher (an interactive shell
-    /// or a CLI invocation) before Warp starts, so inheriting it is safe and is the only PATH
+    /// or a CLI invocation) before Torch starts, so inheriting it is safe and is the only PATH
     /// available to a fresh SDK process before terminal bootstrap populates
     /// `mcp_execution_path`. The remote server daemon is headless and long-lived with no user
     /// present to open a terminal and populate that setting, and no window to show the
@@ -51,9 +51,9 @@ impl ExecutionMode {
     }
 }
 
-/// Model tracking the mode that Warp is running in.
+/// Model tracking the mode that Torch is running in.
 ///
-/// This gates functionality that's disabled when Warp is running in SDK mode.
+/// This gates functionality that's disabled when Torch is running in SDK mode.
 #[derive(Clone, Debug)]
 pub struct AppExecutionMode {
     mode: ExecutionMode,
@@ -71,7 +71,7 @@ impl AppExecutionMode {
     fn is_app(&self) -> bool {
         matches!(self.mode, ExecutionMode::App | ExecutionMode::Tui)
     }
-    /// Whether Warp is running as the headless terminal UI.
+    /// Whether Torch is running as the headless terminal UI.
     pub fn is_tui(&self) -> bool {
         matches!(self.mode, ExecutionMode::Tui)
     }
@@ -149,7 +149,7 @@ impl AppExecutionMode {
         self.mode.can_inherit_process_path_for_mcp()
     }
 
-    /// If true, Warp is running in a sandbox like a Docker container or VM, rather than directly
+    /// If true, Torch is running in a sandbox like a Docker container or VM, rather than directly
     /// on a user machine.
     pub fn is_sandboxed(&self) -> bool {
         self.is_sandboxed

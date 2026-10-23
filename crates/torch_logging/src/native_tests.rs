@@ -131,7 +131,7 @@ fn ignores_unrelated_files_and_malformed_suffixes() {
 fn errors_when_directory_is_empty() {
     let tmp = tempfile::tempdir().unwrap();
     let err = collect_log_paths_in(tmp.path(), "warp.log").unwrap_err();
-    assert!(err.to_string().contains("No warp logs were found"));
+    assert!(err.to_string().contains("No torch logs were found"));
 }
 
 #[test]

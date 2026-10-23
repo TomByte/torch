@@ -11,12 +11,12 @@ use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use tempfile::NamedTempFile;
-use uuid::Uuid;
 use torch_cli::agent::Harness;
 use torch_core::safe_info;
 use torch_harness_usage::extract_claude;
 use torch_managed_secrets::ManagedSecretValue;
 use torchui::{ModelHandle, ModelSpawner};
+use uuid::Uuid;
 
 use super::super::terminal::{CommandHandle, TerminalDriver};
 use super::super::{AgentDriver, AgentDriverError};
@@ -65,9 +65,9 @@ use parent_bridge::{
 use parent_bridge::{MessageBridge, MessageBridgeCleanupDisposition};
 #[cfg(test)]
 use shell_words::quote as shell_quote;
+use torch_errors::report_error;
 #[cfg(test)]
 use wake_driver::{CLAUDE_WAKE_PROMPT_FILE_NAME, ClaudeWakeRemoteContext};
-use torch_errors::report_error;
 
 #[cfg(test)]
 use super::super::OZ_MESSAGE_LISTENER_STATE_ROOT_ENV;
@@ -747,7 +747,7 @@ pub(crate) fn prepare_claude_environment_config(
     Ok(())
 }
 
-/// Publish `WARP_SKILL_DIRS` and eligible bundled skills under
+/// Publish `TORCH_SKILL_DIRS` and eligible bundled skills under
 /// `<harness_working_dir>/.claude/skills`.
 ///
 /// Relative source directories are resolved from the workspace root, matching

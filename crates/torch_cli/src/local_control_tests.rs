@@ -195,7 +195,7 @@ fn instance_list_output_serializes_empty_and_populated_lists() {
     let record = local_control::discovery::InstanceRecord::for_current_process(
         None,
         "dev",
-        "dev.warp.Warp",
+        "dev.warp.Torch",
         Some("v0.1.0".to_owned()),
         Vec::new(),
     );
@@ -204,7 +204,7 @@ fn instance_list_output_serializes_empty_and_populated_lists() {
         .expect("populated list serializes");
     assert_eq!(populated["instances"][0]["instance_id"], json!(instance_id));
     assert_eq!(populated["instances"][0]["channel"], json!("dev"));
-    assert_eq!(populated["instances"][0]["app_id"], json!("dev.warp.Warp"));
+    assert_eq!(populated["instances"][0]["app_id"], json!("dev.warp.Torch"));
     assert_eq!(populated["instances"][0]["app_version"], json!("v0.1.0"));
 }
 
@@ -269,7 +269,7 @@ fn generated_bash_completions_include_mutating_command_groups() {
 
 #[test]
 fn structured_error_output_uses_stable_error_code() {
-    let error = ControlError::new(ErrorCode::NoInstance, "no local Warp control instances");
+    let error = ControlError::new(ErrorCode::NoInstance, "no local Torch control instances");
     let value = serde_json::to_value(ErrorSummary {
         ok: false,
         error: &error,
@@ -279,7 +279,7 @@ fn structured_error_output_uses_stable_error_code() {
     assert_eq!(value["error"]["code"], json!("no_instance"));
     assert_eq!(
         value["error"]["message"],
-        json!("no local Warp control instances")
+        json!("no local Torch control instances")
     );
 }
 

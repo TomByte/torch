@@ -11,16 +11,17 @@ Param (
     [ValidateSet('app', 'tui', 'cli')]
     [String]$ARTIFACT = 'app',
 
-    [ValidateSet('local', 'dev', 'preview', 'stable', 'oss')]
-    [String]$CHANNEL = 'dev',
+    # Torch ships a single channel.
+    [ValidateSet('oss')]
+    [String]$CHANNEL = 'oss',
 
     [Alias('release-tag')]
     [String]$RELEASE_TAG = '',
     [String]$FEATURES = 'release_bundle,gui',
 
-    # Builds only the Warp binary, skips the installer.
+    # Builds only the Torch binary, skips the installer.
     [Switch]$SKIP_BUILD_INSTALLER = $False,
-    # Builds only the installer, skips the Warp binary. Use this if the Warp
+    # Builds only the installer, skips the Torch binary. Use this if the Torch
     # binary has already been built.
     [Switch]$SKIP_BUILD_BINARY = $False,
 
@@ -55,7 +56,7 @@ if ($ARCH -eq 'arm64') {
     $FILE_ENDING = 'Setup-arm64'
     $PLATFORM_TARGET = 'aarch64-pc-windows-msvc'
 } else {
-    # If x64, then we just use the filename "WarpSetup.exe" for example
+    # If x64, then we just use the filename "TorchSetup.exe" for example
     $FILE_ENDING = 'Setup'
     $PLATFORM_TARGET = 'x86_64-pc-windows-msvc'
 }
@@ -109,15 +110,8 @@ $IS_CLI = $ARTIFACT -eq 'cli'
 
 if ($DEBUG_BUILD) {
     $CARGO_PROFILE = 'dev'
-} elseif (($IS_TUI -or $IS_CLI) -and (("$CHANNEL" -eq 'local') -or ("$CHANNEL" -eq 'dev'))) {
-    $CARGO_PROFILE = 'rclida'
 } elseif ($IS_TUI -or $IS_CLI) {
     $CARGO_PROFILE = 'rcli'
-} elseif (("$CHANNEL" -eq 'local') -or ("$CHANNEL" -eq 'dev')) {
-    # For dev bundles, we want to enable debug assertions to
-    # catch violations that would otherwise silently pass in
-    # a normal release build (e.g. in stable).
-    $CARGO_PROFILE = 'rltoda'
 } else {
     $CARGO_PROFILE = 'rlto'
 }
@@ -127,77 +121,28 @@ if ($CARGO_PROFILE -eq 'dev') {
 } else {
     $CARGO_TARGET_OUTPUT_DIR = "$CARGO_TARGET_DIR" + '\' + $PLATFORM_TARGET + '\' + "$CARGO_PROFILE"
 }
-$BUNDLE_ID = "dev.warp.$app_name"
-
 # Update parameters based on the target release channel.
 #
 # APP_NAME here must match the value used in Rust as the
 # application name; see app/src/channel.rs.
 #
-# WARP_BIN is the name of the binary produced by cargo;
+# TORCH_BIN is the name of the binary produced by cargo;
 # BINARY_NAME is the desired name of the binary in the final package.
-if ("$CHANNEL" -eq 'local') {
-    $WARP_BIN = 'warp'
-    $BINARY_NAME = 'warp.exe'
-    $APP_NAME = 'WarpLocal'
-} elseif ("$CHANNEL" -eq 'dev') {
-    $WARP_BIN = 'dev'
-    $BINARY_NAME = 'dev.exe'
-    $APP_NAME = 'WarpDev'
-    $FEATURES = "$FEATURES,agent_mode_debug"
-} elseif ("$CHANNEL" -eq 'preview') {
-    $WARP_BIN = 'preview'
-    $BINARY_NAME = 'preview.exe'
-    $APP_NAME = 'WarpPreview'
-    $FEATURES = "$FEATURES,preview_channel"
-} elseif ("$CHANNEL" -eq 'stable') {
-    $WARP_BIN = 'stable'
-    $BINARY_NAME = 'warp.exe'
-    $APP_NAME = 'Warp'
-} elseif ("$CHANNEL" -eq 'oss') {
-    $WARP_BIN = 'torch'
-    $BINARY_NAME = 'torch.exe'
-    $APP_NAME = 'Torch'
-    $FEATURES = 'release_bundle,gui'
-}
+$TORCH_BIN = 'torch'
+$BINARY_NAME = 'torch.exe'
+$APP_NAME = 'Torch'
 
 if ($IS_TUI) {
-    $WARP_BIN = switch ($CHANNEL) {
-        'local' { 'warp-tui' }
-        'oss' { 'torch-tui' }
-        Default { "warp-tui-$CHANNEL" }
-    }
-    $BINARY_NAME = "$WARP_BIN.exe"
-    $APP_NAME = switch ($CHANNEL) {
-        'local' { 'WarpAgentCLI' }
-        'dev' { 'WarpAgentCLIDev' }
-        'preview' { 'WarpAgentCLIPreview' }
-        'stable' { 'WarpAgentCLI' }
-        'oss' { 'WarpAgentCLIOss' }
-    }
-    $CLI_NAME = switch ($CHANNEL) {
-        'local' { 'warp' }
-        'dev' { 'warp-dev' }
-        'preview' { 'warp-preview' }
-        'stable' { 'warp' }
-        'oss' { 'torch' }
-    }
-    $INSTALL_DIR_NAME = switch ($CHANNEL) {
-        'local' { 'tui-local' }
-        'dev' { 'tui-dev' }
-        'preview' { 'tui-preview' }
-        'stable' { 'tui' }
-        'oss' { 'tui-oss' }
-    }
+    $TORCH_BIN = 'torch-tui'
+    $BINARY_NAME = "$TORCH_BIN.exe"
+    $APP_NAME = 'TorchTUI'
+    $CLI_NAME = 'torch'
+    $INSTALL_DIR_NAME = 'tui'
     $FEATURES = 'release_bundle,standalone,voice_input'
 } elseif ($IS_CLI) {
-    # The CLI ships the same channel binary target as the app (no separate bin), so keep
-    # $WARP_BIN and the channel-scoped $FEATURES set above (preview_channel,
-    # agent_mode_debug, etc.) but swap the app's `gui` feature for `standalone`, mirroring the
-    # macOS and Linux `--artifact cli` builds. Filtering (rather than overwriting) $FEATURES is
-    # required so per-channel additions above -- e.g. preview_channel, required by the `preview`
-    # cargo target -- survive into the CLI build.
-    $BINARY_NAME = "$WARP_BIN.exe"
+    # The CLI ships the same binary target as the app (no separate bin), with the app's `gui`
+    # feature swapped for `standalone`, mirroring the macOS and Linux `--artifact cli` builds.
+    $BINARY_NAME = "$TORCH_BIN.exe"
     $FEATURES = (($FEATURES -split ',') | Where-Object { $_ -ne 'gui' }) -join ','
     $FEATURES = "$FEATURES,standalone"
 } else {
@@ -206,8 +151,7 @@ if ($IS_TUI) {
 }
 
 $BINARY_PATH = "$CARGO_TARGET_OUTPUT_DIR\$BINARY_NAME"
-$BUNDLE_ID = "dev.warp.$APP_NAME"
-if ($CHANNEL -eq 'oss') { $BUNDLE_ID = 'dev.tombyte.Torch' }
+$BUNDLE_ID = 'dev.tombyte.Torch'
 $INSTALLER_OUTPUT_DIR = "$WINDOWS_INSTALLER_DIR\Output"
 $INSTALLER_NAME = "$($APP_NAME)$($FILE_ENDING)"
 $INSTALLER_PATH = "$($INSTALLER_OUTPUT_DIR)\$($INSTALLER_NAME).exe"
@@ -215,12 +159,12 @@ $PDB_BASENAME = if ($IS_TUI) {
     # rustc normalizes hyphens to underscores in crate names, and MSVC uses
     # that normalized crate name for the PDB even though Cargo exposes the
     # executable under its original hyphenated target name.
-    $WARP_BIN.Replace('-', '_')
+    $TORCH_BIN.Replace('-', '_')
 } else {
-    $WARP_BIN
+    $TORCH_BIN
 }
 $PDB_PATH = "$CARGO_TARGET_OUTPUT_DIR\$PDB_BASENAME.pdb"
-$CARGO_PACKAGE = if ($IS_TUI) { 'torch_tui' } else { 'warp' }
+$CARGO_PACKAGE = if ($IS_TUI) { 'torch_tui' } else { 'torch' }
 $INSTALLER_SCRIPT = if ($IS_TUI) {
     "$WINDOWS_INSTALLER_DIR\tui-installer.iss"
 } else {
@@ -239,28 +183,28 @@ if ($DEBUG_BUILD) {
 # then exit.  We use this script to invoke `cargo check` to ensure that we are
 # using the same feature flags and profile that we would be using in production.
 if ($CHECK_ONLY) {
-    cargo check -p $CARGO_PACKAGE --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --features "$FEATURES" --target $PLATFORM_TARGET
+    cargo check -p $CARGO_PACKAGE --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --features "$FEATURES" --target $PLATFORM_TARGET
     if (-Not $?) {
-        Write-Error "Failed to verify Warp $WARP_BIN compilation with profile $CARGO_PROFILE"
+        Write-Error "Failed to verify Torch $TORCH_BIN compilation with profile $CARGO_PROFILE"
         exit 1
     }
     exit 0
 }
 
 if (-Not $SKIP_BUILD_BINARY) {
-    Write-Output "Building Warp for channel $CHANNEL and bundle id $BUNDLE_ID"
+    Write-Output "Building Torch for channel $CHANNEL and bundle id $BUNDLE_ID"
     $env:CARGO_BIN_NAME = $CHANNEL
-    $env:WARP_APP_NAME = $APP_NAME
-    cargo build -p $CARGO_PACKAGE --profile "$CARGO_PROFILE" --bin "$WARP_BIN" --features "$FEATURES" --target $PLATFORM_TARGET
+    $env:TORCH_APP_NAME = $APP_NAME
+    cargo build -p $CARGO_PACKAGE --profile "$CARGO_PROFILE" --bin "$TORCH_BIN" --features "$FEATURES" --target $PLATFORM_TARGET
     if (-Not $?) {
-        Write-Error "Failed to build Warp $WARP_BIN binary with profile $CARGO_PROFILE"
+        Write-Error "Failed to build Torch $TORCH_BIN binary with profile $CARGO_PROFILE"
         exit 1
     }
 
     # If we desire an executable name different from the cargo bin, rename it.
-    if ("$WARP_BIN.exe" -ne $BINARY_NAME) {
-        $binarySource = "$CARGO_TARGET_OUTPUT_DIR\$WARP_BIN.exe"
-        Write-Output "Renaming executable $WARP_BIN.exe to $BINARY_NAME"
+    if ("$TORCH_BIN.exe" -ne $BINARY_NAME) {
+        $binarySource = "$CARGO_TARGET_OUTPUT_DIR\$TORCH_BIN.exe"
+        Write-Output "Renaming executable $TORCH_BIN.exe to $BINARY_NAME"
         Move-Item -Path "$binarySource" -Destination "$BINARY_PATH" -Force
     }
 }
@@ -318,7 +262,7 @@ if ($IS_TUI -or $IS_CLI) {
     )
     foreach ($requiredFile in $requiredPayloadFiles) {
         if (-not (Test-Path -LiteralPath $requiredFile -PathType Leaf)) {
-            throw "Required Warp Agent CLI payload file does not exist: $requiredFile"
+            throw "Required Torch Agent CLI payload file does not exist: $requiredFile"
         }
         if ($REQUIRE_SIGNATURES) {
             Assert-ValidSignature -Path $requiredFile
@@ -339,7 +283,7 @@ if ($IS_CLI) {
     exit 0
 }
 
-Write-Output 'Building Warp installer'
+Write-Output 'Building Torch installer'
 $ISCC_ARGS = @(
     "$INSTALLER_SCRIPT",
     "/DReleaseChannel=$CHANNEL",

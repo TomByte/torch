@@ -43,7 +43,7 @@ use super::{
 const PANEL_SIZE: TuiSize = TuiSize::new(52, 20);
 const DIAMOND_ART: &str = "   #\n  ###\n #####\n  ###\n   #\n";
 const ROCKET_ART: &str = "    #\n   ###\n  ####\n #####\n   ###\n  #  #\n";
-const WARP_W_ART: &str = "#       #\n#       #\n#   #   #\n#  # #  #\n ##   ##\n";
+const TORCH_W_ART: &str = "#       #\n#       #\n#   #   #\n#  # #  #\n ##   ##\n";
 
 #[test]
 fn idle_animation_uses_a_fifteen_frame_per_second_cadence() {
@@ -432,7 +432,7 @@ fn ascii_parser_normalizes_crlf_trims_borders_and_pads_ragged_rows() {
 fn representative_ascii_fixtures_have_distinct_dimensions() {
     assert_eq!(AsciiArtMask::parse(DIAMOND_ART).unwrap().size(), (5, 5));
     assert_eq!(AsciiArtMask::parse(ROCKET_ART).unwrap().size(), (5, 6));
-    assert_eq!(AsciiArtMask::parse(WARP_W_ART).unwrap().size(), (9, 5));
+    assert_eq!(AsciiArtMask::parse(TORCH_W_ART).unwrap().size(), (9, 5));
 }
 
 #[test]
@@ -1557,7 +1557,7 @@ fn representative_ascii_shapes_rotate_through_front_side_and_back() {
     for (name, art) in [
         ("diamond", DIAMOND_ART),
         ("rocket", ROCKET_ART),
-        ("Warp W", WARP_W_ART),
+        ("Torch W", TORCH_W_ART),
     ] {
         let config = custom_config(art, 4.0, 0.18);
         let face = object_frame_at(Duration::ZERO, PANEL_SIZE, &config).unwrap();
@@ -1638,7 +1638,7 @@ fn extreme_ascii_aspect_ratios_clamp_to_a_visible_minimum() {
 #[test]
 fn custom_animation_element_paints_and_requests_another_frame() {
     App::test((), |mut app| async move {
-        let config = Arc::new(custom_config(WARP_W_ART, 4.0, 0.18));
+        let config = Arc::new(custom_config(TORCH_W_ART, 4.0, 0.18));
         let (_, view) = app.update(|ctx| {
             ctx.add_tui_window(AddWindowOptions::default(), move |_| AnimationTestView {
                 config,

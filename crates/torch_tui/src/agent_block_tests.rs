@@ -140,7 +140,7 @@ fn first_credit_gate_matches_design_and_opens_upgrade() {
                     .map(|line| line.trim_end().to_owned())
                     .collect::<Vec<_>>(),
                 vec![
-                    "You need AI credits in order to use Warp’s agent.".to_owned(),
+                    "You need AI credits in order to use Torch’s agent.".to_owned(),
                     "Start using AI (ctrl+o).".to_owned(),
                     String::new(),
                     expected_upgrade_url.clone(),
@@ -202,7 +202,7 @@ fn first_credit_gate_consumes_once_and_reacts_to_delayed_marker_readiness() {
             assert!(
                 lines
                     .iter()
-                    .any(|line| line == "You need AI credits in order to use Warp’s agent.")
+                    .any(|line| line == "You need AI credits in order to use Torch’s agent.")
             );
             assert!(
                 lines
@@ -377,7 +377,7 @@ fn out_of_credits_failure_matches_tui_design_and_opens_upgrade() {
 
         app.read(|ctx| {
             let presentation = FailedOutputPresentation::OutOfCredits {
-                message: "I'm sorry, I couldn't complete that request.\n\nIn order to use Warp's AI features, subscribe to a Warp plan, or bring your own inference."
+                message: "I'm sorry, I couldn't complete that request.\n\nIn order to use Torch's AI features, subscribe to a Torch plan, or bring your own inference."
                     .to_owned(),
                 can_use_own_api_keys: true,
             };
@@ -401,7 +401,7 @@ fn out_of_credits_failure_matches_tui_design_and_opens_upgrade() {
                     .collect::<Vec<_>>(),
                 vec![
                     "⚠ I’m sorry, I couldn’t complete that request.".to_owned(),
-                    "  In order to use Warp’s AI features, subscribe to a Warp plan or buy packs of credits."
+                    "  In order to use Torch’s AI features, subscribe to a Torch plan or buy packs of credits."
                         .to_owned(),
                     String::new(),
                     "  Get started with AI (ctrl+o)".to_owned(),
@@ -480,11 +480,11 @@ fn chatgpt_subscription_failure_lists_url_actions_as_text() {
         app.read(|ctx| {
             let presentation = FailedOutputPresentation::ChatGPTSubscription {
                 title: "You've reached your ChatGPT usage limit".to_owned(),
-                message: "Continue with Warp credits to keep going.".to_owned(),
+                message: "Continue with Torch credits to keep going.".to_owned(),
                 actions: vec![
                     ChatGPTSubscriptionErrorAction {
                         kind: ChatGPTSubscriptionErrorActionKind::ContinueWithWarpCredits,
-                        label: "Continue with Warp credits".to_owned(),
+                        label: "Continue with Torch credits".to_owned(),
                     },
                     ChatGPTSubscriptionErrorAction {
                         kind: ChatGPTSubscriptionErrorActionKind::OpenUrl {
@@ -509,7 +509,7 @@ fn chatgpt_subscription_failure_lists_url_actions_as_text() {
                     .collect::<Vec<_>>(),
                 vec![
                     "⚠ You've reached your ChatGPT usage limit".to_owned(),
-                    "  Continue with Warp credits to keep going.".to_owned(),
+                    "  Continue with Torch credits to keep going.".to_owned(),
                     String::new(),
                     "  Manage usage: https://chatgpt.com/#settings/Usage".to_owned(),
                 ]

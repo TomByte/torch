@@ -224,7 +224,7 @@ impl Network {
         let session_id = SessionId::new();
         let viewer_id = ParticipantId::new();
         let viewer_firebase_uid = UserUid::new("mock_firebase_uid");
-        let active_prompt = ActivePrompt::WarpPrompt("test warp prompt".to_owned());
+        let active_prompt = ActivePrompt::WarpPrompt("test torch prompt".to_owned());
 
         let model = Network {
             session_id,

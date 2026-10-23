@@ -411,9 +411,9 @@ impl OrchestrationBlockController for TestController {
                     "local"
                 },
             ),
-            ConfigPage::Harness => (vec![row("oz", "Warp")], "oz"),
+            ConfigPage::Harness => (vec![row("oz", "Torch")], "oz"),
             ConfigPage::ApiKey => (vec![row("", "Skip")], ""),
-            ConfigPage::Host => (vec![row("warp", "Warp")], "warp"),
+            ConfigPage::Host => (vec![row("warp", "Torch")], "warp"),
             ConfigPage::Environment => (vec![row("", "Empty environment")], ""),
             ConfigPage::Model => (vec![row("auto", "Auto")], "auto"),
         };

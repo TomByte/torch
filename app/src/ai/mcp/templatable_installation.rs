@@ -5,9 +5,9 @@ use handlebars::{get_arguments, render_template};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use siphasher::sip::SipHasher;
-use uuid::Uuid;
 use torch_errors::report_error;
 use torch_managed_secrets::ManagedSecretValue;
+use uuid::Uuid;
 
 use crate::ai::mcp::{TemplatableMCPServer, TemplateVariable};
 
@@ -31,7 +31,7 @@ pub struct TemplatableMCPServerInstallation {
     uuid: Uuid,
     templatable_mcp_server: TemplatableMCPServer,
     variable_values: HashMap<String, VariableValue>,
-    /// Warp-side identity of the server this installation was resolved from:
+    /// Torch-side identity of the server this installation was resolved from:
     /// a managed MCP server uid or a well-known integration id (e.g. `linear`),
     /// with the same semantics as `MCPServerConfig.warp_id` in the public API.
     /// `None` for local and ad-hoc installations. Sent to warp-server in the
@@ -55,14 +55,14 @@ impl TemplatableMCPServerInstallation {
         }
     }
 
-    /// Records the Warp-side id (managed uid or well-known integration id) this
+    /// Records the Torch-side id (managed uid or well-known integration id) this
     /// installation was resolved from. See [`Self::warp_id`].
     pub fn with_warp_id(mut self, warp_id: Option<String>) -> Self {
         self.warp_id = warp_id;
         self
     }
 
-    /// The Warp-side id this installation was resolved from, if any.
+    /// The Torch-side id this installation was resolved from, if any.
     pub fn warp_id(&self) -> Option<&str> {
         self.warp_id.as_deref()
     }
@@ -122,7 +122,7 @@ impl TemplatableMCPServerInstallation {
         &self.variable_values
     }
 
-    /// Apply Warp-managed secrets to the installation's variable values.
+    /// Apply Torch-managed secrets to the installation's variable values.
     ///
     /// Precedence for each template variable:
     /// 1. Explicit reference: if the current value contains `{{secret_name}}`

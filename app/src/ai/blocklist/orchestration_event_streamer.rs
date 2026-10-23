@@ -5,13 +5,13 @@ use std::time::Duration;
 use anyhow::anyhow;
 use async_trait::async_trait;
 use futures::channel::mpsc;
-use uuid::Uuid;
 use torch_cli::agent::Harness;
-use warp_multi_agent_api as api;
 use torchui::r#async::{SpawnedFutureHandle, Timer};
 use torchui::{
     Entity, EntityId, GetSingletonModelHandle, ModelContext, SingletonEntity, UpdateModel,
 };
+use uuid::Uuid;
+use warp_multi_agent_api as api;
 
 use super::history_model::{BlocklistAIHistoryEvent, BlocklistAIHistoryModel};
 use super::orchestration_child_tracker::{ChildSignal, OrchestrationChildTracker};
@@ -2621,7 +2621,7 @@ impl OrchestrationEventStreamer {
             log::info!(
                 "[orch-external-harness] Not queueing {} message(s) and {} lifecycle event(s) \
                  for conversation {conversation_id:?}: an external harness drives its turns, \
-                 so they cannot be injected into Warp's agent loop",
+                 so they cannot be injected into Torch's agent loop",
                 messages.len(),
                 lifecycle_events.len()
             );

@@ -118,7 +118,7 @@ where
         req = req.timeout(timeout);
     }
     for (header, value) in options.headers {
-        if header.eq_ignore_ascii_case("X-Warp-Ambient-Workload-Token")
+        if header.eq_ignore_ascii_case("X-Torch-Ambient-Workload-Token")
             && let Ok(mut sensitive_value) = HeaderValue::from_str(&value)
         {
             sensitive_value.set_sensitive(true);

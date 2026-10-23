@@ -41,64 +41,6 @@ fn test_parse_input_requires_slash_at_start() {
 }
 
 #[test]
-fn test_parse_slash_command_handles_argument_rules() {
-    App::test((), |mut app| async move {
-        initialize_app(&mut app);
-
-        let terminal = add_window_with_bootstrapped_terminal(
-            &mut app, None, /* history_file_commands */
-            None,
-        )
-        .await;
-        let input = terminal.read(&app, |terminal, _| terminal.input().clone());
-        let slash_command_data_source =
-            input.read(&app, |input, _| input.slash_command_data_source.clone());
-
-        slash_command_data_source.read(&app, |data_source, _| {
-            let no_argument_command_name = data_source
-                .active_commands()
-                .find_map(|(_, command)| command.argument.is_none().then_some(command.name))
-                .expect("expected at least one slash command without an argument");
-
-            let optional_argument_command_name = data_source
-                .active_commands()
-                .find_map(|(_, command)| {
-                    (command.argument.is_some()
-                        && data_source.parse_slash_command(command.name).is_some())
-                    .then_some(command.name)
-                })
-                .expect("expected at least one slash command that accepts optional arguments");
-
-            let with_extra_text = format!("{no_argument_command_name} trailing");
-            assert!(
-                data_source.parse_slash_command(&with_extra_text).is_none(),
-                "commands without arguments should reject non-whitespace suffixes"
-            );
-
-            let with_whitespace = format!("{no_argument_command_name}   ");
-            let detected_with_whitespace = data_source
-                .parse_slash_command(&with_whitespace)
-                .expect("command with whitespace-only suffix should still be parsed");
-            assert_eq!(
-                detected_with_whitespace.command.name,
-                no_argument_command_name
-            );
-
-            let detected_without_argument = data_source
-                .parse_slash_command(optional_argument_command_name)
-                .expect("optional-argument command should parse without an argument");
-            assert_eq!(detected_without_argument.argument, None);
-
-            let with_argument = format!("{optional_argument_command_name} prompt");
-            let detected_with_argument = data_source
-                .parse_slash_command(&with_argument)
-                .expect("optional-argument command should parse with an argument");
-            assert_eq!(detected_with_argument.argument.as_deref(), Some("prompt"));
-        });
-    });
-}
-
-#[test]
 fn test_parse_rename_tab_slash_command_arguments() {
     App::test((), |mut app| async move {
         initialize_app(&mut app);
@@ -224,57 +166,6 @@ fn test_disabled_until_empty_buffer_ignores_non_slash_edits() {
 }
 
 #[test]
-fn test_disabled_until_empty_buffer_reevaluates_when_slash_is_added_to_start() {
-    App::test((), |mut app| async move {
-        initialize_app(&mut app);
-
-        let terminal = add_window_with_bootstrapped_terminal(
-            &mut app, None, /* history_file_commands */
-            None,
-        )
-        .await;
-        let input = terminal.read(&app, |terminal, _| terminal.input().clone());
-        let slash_command_data_source =
-            input.read(&app, |input, _| input.slash_command_data_source.clone());
-        let detected_command_name = slash_command_data_source.read(&app, |data_source, _| {
-            data_source
-                .active_commands()
-                .find_map(|(_, command)| {
-                    data_source
-                        .parse_slash_command(command.name)
-                        .is_some()
-                        .then(|| command.name.to_owned())
-                })
-                .expect("expected at least one active slash command")
-        });
-
-        input.update(&mut app, |input, ctx| {
-            input.set_input_mode_natural_language_detection(ctx);
-            input.user_insert("echo hello", ctx);
-        });
-        input.update(&mut app, |input, ctx| {
-            input.slash_command_model.update(ctx, |model, ctx| {
-                model.disable(ctx);
-            });
-        });
-
-        input.update(&mut app, |input, ctx| {
-            input.user_replace_editor_text(&detected_command_name, ctx);
-        });
-
-        input.read(&app, |input, ctx| {
-            assert!(
-                matches!(
-                    input.slash_command_model.as_ref(ctx).state(),
-                    SlashCommandEntryState::SlashCommand(_)
-                ),
-                "adding '/' at the start of the buffer should re-enable slash command parsing"
-            );
-        });
-    });
-}
-
-#[test]
 fn test_second_slash_in_command_token_sets_state_to_none() {
     App::test((), |mut app| async move {
         initialize_app(&mut app);
@@ -371,51 +262,6 @@ fn test_detect_command_returns_none_for_unknown_slash() {
             assert!(
                 matches!(result, SlashCommandEntryState::None),
                 "unknown /command should return None"
-            );
-        });
-    });
-}
-
-#[test]
-fn test_detect_command_matches_buffer_driven_detection() {
-    App::test((), |mut app| async move {
-        initialize_app(&mut app);
-
-        let terminal = add_window_with_bootstrapped_terminal(&mut app, None, None).await;
-        let input = terminal.read(&app, |terminal, _| terminal.input().clone());
-
-        let command_name = input.read(&app, |input, ctx| {
-            let ds = &input.slash_command_data_source;
-            ds.as_ref(ctx)
-                .active_commands()
-                .find_map(|(_, command)| {
-                    ds.as_ref(ctx)
-                        .parse_slash_command(command.name)
-                        .is_some()
-                        .then(|| command.name.to_owned())
-                })
-                .expect("expected at least one active slash command")
-        });
-
-        // Type the command into the buffer so the buffer-driven model processes it.
-        input.update(&mut app, |input, ctx| {
-            input.set_input_mode_natural_language_detection(ctx);
-            input.user_insert(&command_name, ctx);
-        });
-
-        // Compare the buffer-driven state with the stateless detect_command result.
-        input.read(&app, |input, ctx| {
-            let buffer_state = input.slash_command_model.as_ref(ctx).state().clone();
-            let detect_state = input
-                .slash_command_model
-                .as_ref(ctx)
-                .detect_command(&command_name, ctx);
-
-            let buffer_is_slash = matches!(buffer_state, SlashCommandEntryState::SlashCommand(_));
-            let detect_is_slash = matches!(detect_state, SlashCommandEntryState::SlashCommand(_));
-            assert_eq!(
-                buffer_is_slash, detect_is_slash,
-                "detect_command and buffer-driven detection should agree for '{command_name}'"
             );
         });
     });

@@ -181,7 +181,7 @@ impl From<Space> for TelemetrySpace {
     }
 }
 
-/// Common metadata to include in all Warp Drive telemetry events that act on a specific object.
+/// Common metadata to include in all Torch Drive telemetry events that act on a specific object.
 /// Events that only apply to a single object type may use specific metadata like [`WorkflowTelemetryMetadata`],
 /// [`NotebookTelemetryMetadata`], or [`EnvVarTelemetryMetadata`] instead.
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -353,7 +353,7 @@ impl From<rmcp::RmcpError> for MCPServerTelemetryError {
 pub struct OpenedSharingDialogEvent {
     pub source: SharingDialogSource,
 
-    /// Metadata for the object being shared, if it's a Warp Drive object.
+    /// Metadata for the object being shared, if it's a Torch Drive object.
     #[serde(flatten)]
     pub object_metadata: Option<CloudObjectTelemetryMetadata>,
 
@@ -361,18 +361,18 @@ pub struct OpenedSharingDialogEvent {
     pub session_id: Option<SharedSessionId>,
 }
 
-/// How the user opened the Warp Drive sharing dialog.
+/// How the user opened the Torch Drive sharing dialog.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
 pub enum SharingDialogSource {
     /// The sharing button in the pane header.
     PaneHeader,
     /// The per-pane command palette entry (includes keybindings).
     CommandPalette,
-    /// The Warp Drive index context menu.
+    /// The Torch Drive index context menu.
     DriveIndex,
     /// The sharing dialog was auto-opened from shared session creation.
     StartedSessionShare,
-    /// The user intented into Warp with an email address to invite.
+    /// The user intented into Torch with an email address to invite.
     InviteeRequest,
     /// The user jumped from an inherited ACL to its definition on a parent object.
     InheritedPermission,
@@ -438,7 +438,7 @@ pub enum FileTreeSource {
     ForceOpened,
     /// Opened from the CLI agent view footer (e.g., Claude Code).
     CLIAgentView,
-    /// Opened from the File explorer chip in Warp's own agent input toolbelt.
+    /// Opened from the File explorer chip in Torch's own agent input toolbelt.
     AgentToolbelt,
 }
 
@@ -463,7 +463,7 @@ pub enum PluginChipTelemetryKind {
 #[derive(Clone, Copy, Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum NotificationAgentVariant {
-    /// Warp's built-in agent (Oz).
+    /// Torch's built-in agent (Oz).
     Oz,
     /// A CLI agent (e.g., Claude Code, Gemini CLI, etc.).
     CLIAgent(#[serde(serialize_with = "serialize_cli_agent_telemetry_name")] CLIAgent),
@@ -1369,7 +1369,7 @@ pub enum TelemetryEvent {
     DatabaseReadError(String),
     DatabaseWriteError(String),
     AppStartup(AppStartupInfo),
-    /// The native app was opened while logged out. Since Warp requires login,
+    /// The native app was opened while logged out. Since Torch requires login,
     /// this usually means a new user.
     LoggedOutStartup,
     /// The download source, if it can be determined. Will only be sent when
@@ -1615,11 +1615,11 @@ pub enum TelemetryEvent {
     InitialWorkingDirectoryConfigurationChanged {
         advanced_mode_enabled: bool,
     },
-    /// Opened legacy Warp AI.
+    /// Opened legacy Torch AI.
     OpenedWarpAI {
         source: OpenedWarpAISource,
     },
-    /// Issued legacy Warp AI request.
+    /// Issued legacy Torch AI request.
     WarpAIRequestIssued {
         result: WarpAIRequestResult,
     },
@@ -1722,7 +1722,7 @@ pub enum TelemetryEvent {
         source: WarpDriveSource,
         is_code_mode_v2: bool,
     },
-    // Toggled the legacy Warp AI side panel.
+    // Toggled the legacy Torch AI side panel.
     ToggleWarpAI {
         opened: bool,
     },
@@ -1965,7 +1965,7 @@ pub enum TelemetryEvent {
     /// language auto-detection false-positive.
     AgentModePotentialAutoDetectionFalsePositive(AgentModeAutoDetectionFalsePositivePayload),
 
-    /// This is a telemetry event used to help track performance of Agent Predict in Warp,
+    /// This is a telemetry event used to help track performance of Agent Predict in Torch,
     /// by keeping track of the context given and the predictions generated.
     AgentModePrediction {
         was_suggestion_accepted: bool,
@@ -2623,7 +2623,7 @@ pub enum TelemetryEvent {
     AgentManagementViewOpenedSession,
     /// Emitted when the user copies a session link from the Agent Management View.
     AgentManagementViewCopiedSessionLink,
-    /// Detected that Warp is running in an isolated sandbox.
+    /// Detected that Torch is running in an isolated sandbox.
     DetectedIsolationPlatform {
         platform: torch_isolation_platform::IsolationPlatformType,
     },
@@ -2790,7 +2790,7 @@ pub enum TelemetryEvent {
     /// (e.g. no display), so the run's requests omit the computer-use tools. At most once per run.
     ComputerUseUnavailable {
         ambient_agent_task_id: AmbientAgentTaskId,
-        /// Whether the client is running inside a sandbox (a Warp-hosted cloud agent).
+        /// Whether the client is running inside a sandbox (a Torch-hosted cloud agent).
         sandboxed: bool,
     },
     /// Emitted when a warp://linear deeplink is opened.

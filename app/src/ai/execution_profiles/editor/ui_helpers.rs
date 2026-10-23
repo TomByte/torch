@@ -1,6 +1,5 @@
 use pathfinder_geometry::vector::vec2f;
 use thousands::Separable;
-use uuid::Uuid;
 use torch_core::features::FeatureFlag;
 use torchui::elements::{
     ChildAnchor, ChildView, ConstrainedBox, Container, CrossAxisAlignment, Dismiss, Flex,
@@ -10,6 +9,7 @@ use torchui::elements::{
 use torchui::fonts::{Properties, Weight};
 use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use torchui::{AppContext, Element, SingletonEntity, ViewHandle};
+use uuid::Uuid;
 
 use super::{ExecutionProfileEditorView, ExecutionProfileEditorViewAction};
 use crate::ai::blocklist::BlocklistAIPermissions;
@@ -267,7 +267,7 @@ pub fn render_models_section(
         .with_child(render_filterable_dropdown_row(
             appearance,
             "Base model",
-            "This model serves as the primary engine behind the agent. It powers most interactions and invokes other models for tasks like planning or code generation when necessary. Warp may automatically switch to alternate models based on model availability or for auxiliary tasks such as conversation summarization.",
+            "This model serves as the primary engine behind the agent. It powers most interactions and invokes other models for tasks like planning or code generation when necessary. Torch may automatically switch to alternate models based on model availability or for auxiliary tasks such as conversation summarization.",
             &view.base_model_dropdown,
         ));
 
@@ -914,7 +914,7 @@ pub fn render_plan_auto_sync_toggle(
     .finish();
 
     let desc_elem = Text::new(
-        "The plans this agent creates will be automatically added and synced to Warp Drive."
+        "The plans this agent creates will be automatically added and synced to Torch Drive."
             .to_string(),
         appearance.ui_font_family(),
         11.,

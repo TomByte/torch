@@ -16,10 +16,10 @@ use opentelemetry::trace::TracerProvider as _;
 use opentelemetry_sdk::error::OTelSdkResult;
 use opentelemetry_sdk::trace::{SdkTracerProvider, SpanData, SpanExporter};
 use tempfile::TempDir;
-use tracing_subscriber::layer::SubscriberExt as _;
 use torch_cli::agent::{RepositoryForge, RepositoryHeadRef, RepositoryIdentity};
 use torch_cli::environment_checkout::EnvironmentCheckoutArgs;
 use torch_core::features::FeatureFlag;
+use tracing_subscriber::layer::SubscriberExt as _;
 
 use super::super::environment_checkout_protocol::{
     CheckoutBatch, CheckoutFailureKind, CheckoutOutcome, CheckoutReport, CheckoutRequest,
@@ -453,7 +453,7 @@ fn distinct_sources_run_concurrently_with_a_bounded_active_count() {
 
 #[test]
 fn absent_unwritable_and_non_namespace_roots_use_network_checkout() {
-    if let Ok(expected) = std::env::var("WARP_TEST_MIRROR_ROOT_EXPECTED") {
+    if let Ok(expected) = std::env::var("TORCH_TEST_MIRROR_ROOT_EXPECTED") {
         let _mirrors = FeatureFlag::GitMirrorCache.override_enabled(true);
         assert_eq!(optional_mirror_root().is_some(), expected == "present");
         return;
@@ -466,18 +466,18 @@ fn absent_unwritable_and_non_namespace_roots_use_network_checkout() {
                 #[cfg(windows)]
                 command.creation_flags(0);
                 command.args(["--exact", "ai::agent_sdk::driver::environment_checkout::tests::absent_unwritable_and_non_namespace_roots_use_network_checkout", "--nocapture"])
-                .env("WARP_TEST_MIRROR_ROOT_EXPECTED", "absent");
+                .env("TORCH_TEST_MIRROR_ROOT_EXPECTED", "absent");
                 match scenario {
                     "absent" => {
-                        command.env_remove("WARP_BUILD_CACHE_ROOT");
+                        command.env_remove("TORCH_BUILD_CACHE_ROOT");
                     }
                     "other-platform" => {
-                        command.env("WARP_ISOLATION_PLATFORM", "docker");
+                        command.env("TORCH_ISOLATION_PLATFORM", "docker");
                     }
                     "unusable" => {
                         let file = fixture.root.join("unusable");
                         fs::write(&file, "not a directory").unwrap();
-                        command.env("WARP_BUILD_CACHE_ROOT", file);
+                        command.env("TORCH_BUILD_CACHE_ROOT", file);
                     }
                     _ => unreachable!(),
                 }
@@ -1276,7 +1276,7 @@ fn git_subprocesses_do_not_inherit_otlp_credentials() {
         "git_subprocesses_do_not_inherit_otlp_credentials",
         |fixture| {
             unsafe {
-                std::env::set_var("WARP_CLOUD_AGENT_OTLP_TOKEN", "inherited-test-token");
+                std::env::set_var("TORCH_CLOUD_AGENT_OTLP_TOKEN", "inherited-test-token");
             }
             git(
                 &fixture.root,
@@ -1285,7 +1285,7 @@ fn git_subprocesses_do_not_inherit_otlp_credentials() {
                     "--file",
                     fixture.root.join("gitconfig").to_str().unwrap(),
                     "alias.check-otlp",
-                    "!test -z \"$WARP_CLOUD_AGENT_OTLP_TOKEN\"",
+                    "!test -z \"$TORCH_CLOUD_AGENT_OTLP_TOKEN\"",
                 ],
             );
             let mut child_git = Git::default();
@@ -1510,12 +1510,12 @@ fn helper_with_expired_handoff_keeps_checkout_working() {
 const CANONICAL_URL: &str = "https://github.com/fixtures/source.git";
 #[test]
 fn execution_policy_helper_subprocess() {
-    let Some(requests_file) = std::env::var_os("WARP_TEST_POLICY_REQUESTS") else {
+    let Some(requests_file) = std::env::var_os("TORCH_TEST_POLICY_REQUESTS") else {
         return;
     };
-    let report_file = PathBuf::from(std::env::var_os("WARP_TEST_POLICY_REPORT").unwrap());
-    let cleanup = std::env::var_os("WARP_TEST_POLICY_CLEANUP").is_some();
-    let strict = std::env::var_os("WARP_TEST_POLICY_STRICT").is_some();
+    let report_file = PathBuf::from(std::env::var_os("TORCH_TEST_POLICY_REPORT").unwrap());
+    let cleanup = std::env::var_os("TORCH_TEST_POLICY_CLEANUP").is_some();
+    let strict = std::env::var_os("TORCH_TEST_POLICY_STRICT").is_some();
     let args = EnvironmentCheckoutArgs {
         requests_file: requests_file.into(),
         report_file: report_file.clone(),
@@ -1523,7 +1523,7 @@ fn execution_policy_helper_subprocess() {
         fail_if_target_exists: strict,
     };
     let result = run(&args);
-    match std::env::var("WARP_TEST_POLICY_EXPECT").unwrap().as_str() {
+    match std::env::var("TORCH_TEST_POLICY_EXPECT").unwrap().as_str() {
         "success" => result.unwrap(),
         "partial" => {
             assert!(result.is_err());
@@ -1607,14 +1607,14 @@ fn execution_policy_checkout_enforces_binding_and_preparation() {
                         isolated_test_command(fixture, "execution_policy_helper_subprocess");
                     command
                         .envs(env)
-                        .env("WARP_TEST_POLICY_REQUESTS", &requests)
-                        .env("WARP_TEST_POLICY_REPORT", &report)
-                        .env("WARP_TEST_POLICY_EXPECT", expected);
+                        .env("TORCH_TEST_POLICY_REQUESTS", &requests)
+                        .env("TORCH_TEST_POLICY_REPORT", &report)
+                        .env("TORCH_TEST_POLICY_EXPECT", expected);
                     if strict {
-                        command.env("WARP_TEST_POLICY_STRICT", "1");
+                        command.env("TORCH_TEST_POLICY_STRICT", "1");
                     }
                     if cleanup {
-                        command.env("WARP_TEST_POLICY_CLEANUP", "1");
+                        command.env("TORCH_TEST_POLICY_CLEANUP", "1");
                     }
                     let output = command.output().unwrap();
                     assert!(
@@ -1635,8 +1635,8 @@ fn execution_policy_checkout_enforces_binding_and_preparation() {
                 ("missing-file", FILE_ENV, ""),
                 ("unreadable-file", FILE_ENV, "/absent/preparation.json"),
                 ("stale-task", "OZ_RUN_ID", "other-task"),
-                ("stale-execution", "WARP_EXECUTION_ID", "other-execution"),
-                ("stale-root", "WARP_WORKSPACE_ROOT", "/other-root"),
+                ("stale-execution", "TORCH_EXECUTION_ID", "other-execution"),
+                ("stale-root", "TORCH_WORKSPACE_ROOT", "/other-root"),
             ] {
                 let mut invalid = env.clone();
                 invalid.insert(key.into(), value.into());
@@ -1844,7 +1844,7 @@ impl Fixture {
 /// Runs `test` against a fixture. The test body executes in a re-run of the test process that
 /// is isolated from the user's git configuration; the outer invocation only sets that up.
 fn fixture_test(name: &str, test: impl FnOnce(&Fixture)) {
-    if let Some(root) = std::env::var_os("WARP_TEST_CHECKOUT_ROOT") {
+    if let Some(root) = std::env::var_os("TORCH_TEST_CHECKOUT_ROOT") {
         let _mirrors = FeatureFlag::GitMirrorCache.override_enabled(true);
         test(&Fixture { root: root.into() });
         return;
@@ -1932,14 +1932,14 @@ fn isolated_test_command(fixture: &Fixture, name: &str) -> Command {
             &format!("ai::agent_sdk::driver::environment_checkout::tests::{name}"),
             "--nocapture",
         ])
-        .env("WARP_TEST_CHECKOUT_ROOT", &fixture.root)
+        .env("TORCH_TEST_CHECKOUT_ROOT", &fixture.root)
         .env("GIT_CONFIG_GLOBAL", fixture.root.join("gitconfig"))
         .env("GIT_CONFIG_NOSYSTEM", "1")
-        .env("WARP_ISOLATION_PLATFORM", "namespace")
-        .env("WARP_BUILD_CACHE_ROOT", fixture.root.join("cache"))
+        .env("TORCH_ISOLATION_PLATFORM", "namespace")
+        .env("TORCH_BUILD_CACHE_ROOT", fixture.root.join("cache"))
         .env(super::super::environment_preparation::MODE_ENV, "legacy")
         .env(super::super::environment_preparation::FILE_ENV, "")
-        .env("WARP_EXECUTION_ID", "")
+        .env("TORCH_EXECUTION_ID", "")
         .env_remove("GIT_CONFIG_COUNT")
         .env_remove("GIT_DIR")
         .env_remove("GIT_WORK_TREE");

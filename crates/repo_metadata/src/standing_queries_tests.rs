@@ -89,9 +89,9 @@ fn support_file_beneath_skill_does_not_synthesize_provider_update() {
     assert!(results.project_skills().next().is_none());
 }
 
-/// Emulates the open `AGENTS.md` discovery contract that non-Warp agents follow:
+/// Emulates the open `AGENTS.md` discovery contract that non-Torch agents follow:
 /// walk from a working directory up to the repository root, collecting any
-/// `AGENTS.md` rule files via the same predicate Warp uses to index project
+/// `AGENTS.md` rule files via the same predicate Torch uses to index project
 /// rules. Guards the `WARP.md` → `AGENTS.md` rename so the repo-root agent
 /// context file stays present, non-empty, and discoverable.
 #[test]
@@ -103,11 +103,11 @@ fn repo_root_agents_md_is_discovered_by_rule_file_contract() {
     let repo_root = manifest_dir
         .ancestors()
         .find(|ancestor| ancestor.join(".git").exists())
-        .expect("repo_metadata crate should live inside the warp git checkout");
+        .expect("repo_metadata crate should live inside the torch git checkout");
 
     // Walk from the crate dir up to (and including) the repo root, collecting
     // every `AGENTS.md` the rule-file predicate recognizes — the same
-    // nearest-file-up-the-tree contract a conformant non-Warp agent uses.
+    // nearest-file-up-the-tree contract a conformant non-Torch agent uses.
     let discovered: Vec<PathBuf> = manifest_dir
         .ancestors()
         .take_while(|ancestor| ancestor.starts_with(repo_root))

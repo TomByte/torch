@@ -5,7 +5,7 @@ edition = "2024"
 authors.workspace = true
 publish.workspace = true
 license.workspace = true
-description = "Language Server Protocol implementation for Warp"
+description = "Language Server Protocol implementation for Torch"
 
 [features]
 local_fs = []

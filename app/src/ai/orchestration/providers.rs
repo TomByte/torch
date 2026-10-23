@@ -11,7 +11,7 @@ use crate::LLMPreferences;
 use crate::ai::auth_secret_types::auth_secret_types_for_harness;
 use crate::ai::cloud_agent_settings::{AuthSecretPreference, CloudAgentSettings};
 use crate::ai::cloud_environments::CloudEnvironmentCatalog;
-use crate::ai::connected_self_hosted_workers::WARP_WORKER_HOST;
+use crate::ai::connected_self_hosted_workers::TORCH_WORKER_HOST;
 use crate::ai::harness_availability::{AuthSecretFetchState, HarnessAvailabilityModel};
 use crate::ai::llms::LLMInfo;
 use crate::ai::orchestration::config_state::AuthSecretSelection;
@@ -19,13 +19,13 @@ use crate::workspaces::user_workspaces::{TeamScope, UserWorkspaces};
 
 /// Env var override for the workspace default host (developer testing).
 /// Mirrors the single-agent ambient flow.
-const DEFAULT_HOST_ENV_VAR: &str = "WARP_CLOUD_MODE_DEFAULT_HOST";
+const DEFAULT_HOST_ENV_VAR: &str = "TORCH_CLOUD_MODE_DEFAULT_HOST";
 
-pub const ORCHESTRATION_WARP_WORKER_HOST: &str = WARP_WORKER_HOST;
+pub const ORCHESTRATION_WARP_WORKER_HOST: &str = TORCH_WORKER_HOST;
 pub const ORCHESTRATION_ENV_NONE_LABEL: &str = "Empty environment";
 pub const ORCHESTRATION_RUNNER_NONE_LABEL: &str = "Use default";
 
-/// Returns Warp base-model choices for orchestration.
+/// Returns Torch base-model choices for orchestration.
 pub(crate) fn get_base_model_choices<'a>(
     llm_prefs: &'a LLMPreferences,
     app: &'a AppContext,
@@ -69,7 +69,7 @@ pub fn is_model_in_filtered_choices(
 
 /// Returns the default model_id for the given harness.
 ///
-/// For Oz this is the first Warp LLM; for non-Oz harnesses it is an empty
+/// For Oz this is the first Torch LLM; for non-Oz harnesses it is an empty
 /// string (the "Default model" entry).
 pub fn first_filtered_model_id(harness_type: &str, ctx: &AppContext) -> Option<String> {
     let harness = Harness::parse_orchestration_harness(harness_type);
@@ -87,7 +87,7 @@ pub fn first_filtered_model_id(harness_type: &str, ctx: &AppContext) -> Option<S
 }
 
 /// Resolves the default host slug configured for `scope`'s team, honoring the
-/// `WARP_CLOUD_MODE_DEFAULT_HOST` env var override for developer
+/// `TORCH_CLOUD_MODE_DEFAULT_HOST` env var override for developer
 /// testing. Mirrors the single-agent ambient flow.
 pub fn resolve_default_host_slug<S: TeamScope + ?Sized>(
     scope: &S,

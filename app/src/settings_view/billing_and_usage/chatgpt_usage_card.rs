@@ -25,7 +25,7 @@ pub(crate) fn chatgpt_manage_usage_button() -> ActionButton {
 }
 
 /// Points a user with a connected ChatGPT subscription at OpenAI's usage page, since requests
-/// billed to that subscription don't show up in Warp's own usage reporting. Renders nothing
+/// billed to that subscription don't show up in Torch's own usage reporting. Renders nothing
 /// when no subscription is connected.
 pub(crate) fn render_chatgpt_usage_card(
     manage_button: &ViewHandle<ActionButton>,

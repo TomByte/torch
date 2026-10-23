@@ -6,7 +6,7 @@ use anyhow::Result;
 use torch_core::AppId;
 use torch_core::channel::{Channel, ChannelConfig, ChannelState, OzConfig, WarpServerConfig};
 
-// Simple wrapper around torch::run() for Warp OSS builds.
+// Simple wrapper around torch::run() for Torch OSS builds.
 fn main() -> Result<()> {
     if torch::local_hooks::run_if_requested() {
         return Ok(());

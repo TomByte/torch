@@ -99,7 +99,7 @@ pub fn platforms_by_uid(runners: &[Runner]) -> HashMap<String, RunnerPlatform> {
 pub enum RunPlatform {
     /// A stored runner supplies the run's compute.
     Runner(RunnerPlatform),
-    /// Nothing references a runner, so the run gets Warp's default compute.
+    /// Nothing references a runner, so the run gets Torch's default compute.
     /// This mirrors the server synthesizing x86-64 Linux from an environment's
     /// inline image.
     Default,
@@ -150,7 +150,7 @@ impl RunPlatform {
 
 /// Resolves the compute a run executes on, by the same precedence the server
 /// uses: the runner the run names, then its environment's default runner, then
-/// Warp's default compute.
+/// Torch's default compute.
 ///
 /// Returns `None` when a runner is referenced but absent from `platforms` —
 /// the runner may be inaccessible, deleted, or still loading, and guessing a

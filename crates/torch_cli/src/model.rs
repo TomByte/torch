@@ -5,7 +5,7 @@ use crate::scope::TeamSelection;
 /// Model-related subcommands.
 #[derive(Debug, Clone, Subcommand)]
 pub enum ModelCommand {
-    /// List available models for the Warp Agent harness. For third party harnesses,
+    /// List available models for the Torch Agent harness. For third party harnesses,
     /// consult third party harness docs for available models.
     List(ListModelsArgs),
 }

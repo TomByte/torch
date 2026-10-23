@@ -1,4 +1,4 @@
-//! Bridge between protocol-level control requests and Warp application models.
+//! Bridge between protocol-level control requests and Torch application models.
 //!
 //! The bridge validates protocol version, selectors, credentials, and settings
 //! before routing each supported action to an app-side handler.

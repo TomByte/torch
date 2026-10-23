@@ -10,7 +10,6 @@ use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use thousands::Separable;
 use torch_core::ui::Icon;
-use warp_multi_agent_api as api;
 use torchui::elements::{
     Border, ChildAnchor, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Dismiss,
     DispatchEventResult, DropShadow, Empty, EventHandler, Expanded, Flex, Hoverable,
@@ -23,6 +22,7 @@ use torchui::text_layout::ClipConfig;
 use torchui::{
     AppContext, Element, Entity, EntityId, SingletonEntity, TypedActionView, View, ViewContext,
 };
+use warp_multi_agent_api as api;
 
 use crate::ai::agent::conversation::{AIConversation, AIConversationId};
 use crate::ai::blocklist::BlocklistAIHistoryModel;
@@ -440,7 +440,7 @@ impl UsagePopoverView {
         Some(column.finish())
     }
 
-    /// Renders the non-collapsible "PLATFORM USAGE" section: Warp's platform
+    /// Renders the non-collapsible "PLATFORM USAGE" section: Torch's platform
     /// fee, which unlike inference cost isn't attributable to any single
     /// model. Omitted when the conversation incurred no platform fee.
     fn render_platform_usage_section(
@@ -1239,7 +1239,7 @@ impl ModelChargedUsage {
 /// and merging them would double-count the charges on both rows.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 enum ModelChargeKey {
-    /// Warp API-key and BYOK usage, keyed by the server-known model id.
+    /// Torch API-key and BYOK usage, keyed by the server-known model id.
     Standard(String),
     /// Custom-endpoint usage, keyed by the upstream `config_key`.
     CustomEndpoint(String),

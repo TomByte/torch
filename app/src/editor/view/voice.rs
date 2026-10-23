@@ -1,8 +1,4 @@
 use settings::Setting as _;
-use voice_input::{
-    StartListeningError, VoiceInput, VoiceInputLifecycle, VoiceInputLifecycleState,
-    VoiceSessionResult,
-};
 use torch_core::send_telemetry_from_ctx;
 use torch_core::ui::theme::AnsiColorIdentifier;
 use torch_core::ui::theme::color::internal_colors;
@@ -13,6 +9,10 @@ use torchui::platform::Cursor;
 use torchui::ui_components::button::ButtonTooltipPosition;
 use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use torchui::{AppContext, Element, SingletonEntity, ViewContext, ViewHandle, elements};
+use voice_input::{
+    StartListeningError, VoiceInput, VoiceInputLifecycle, VoiceInputLifecycleState,
+    VoiceSessionResult,
+};
 
 use super::{EditorAction, EditorView, VoiceTranscriber, VoiceTranscriptionOptions};
 use crate::ai::blocklist::InputType;
@@ -239,14 +239,14 @@ impl EditorView {
                 // If the keypress is not valid in the current state, we ignore it.
                 match self.voice_input_state.lifecycle.state() {
                     // For example, the user could press Fn in a different app, then switch focus
-                    // to Warp and let it go - we should NOT activate voice input in this case.
+                    // to Torch and let it go - we should NOT activate voice input in this case.
                     VoiceInputLifecycleState::Idle => {
                         if matches!(state, torchui::event::KeyState::Released) {
                             return false;
                         }
                     }
                     // Note that in reality, this case is unreachable because we stop voice input
-                    // if the user is not focused on Warp (since we lose the ability to listen to modifier
+                    // if the user is not focused on Torch (since we lose the ability to listen to modifier
                     // key events). Thus, the user cannot enter a state where we're listening for voice input
                     // but the key is not held already.
                     VoiceInputLifecycleState::Listening => {

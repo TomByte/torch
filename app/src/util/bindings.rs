@@ -118,9 +118,9 @@ pub enum CustomAction {
     WindowsPaste,
     #[cfg(windows)]
     WindowsCopy,
-    /// Also applies to legacy Warp AI (toggles the panel)
+    /// Also applies to legacy Torch AI (toggles the panel)
     NewAgentModePane,
-    /// Also applies to legacy Warp AI (attaches the selection to the panel editor)
+    /// Also applies to legacy Torch AI (attaches the selection to the panel editor)
     AttachSelectionAsAgentModeContext,
     OpenAIFactCollection,
     OpenMCPServerCollection,
@@ -140,8 +140,8 @@ pub enum CustomAction {
 lazy_static! {
     /// Maps for converting from custom tags back to the action enum
     /// This layer of indirection is necessary because the UI framework can't
-    /// know about particular Warp specific actions, so it deals with all actions
-    /// as plain isizes.  Within Warp though we want to deal with them as the enum type.
+    /// know about particular Torch specific actions, so it deals with all actions
+    /// as plain isizes.  Within Torch though we want to deal with them as the enum type.
     pub static ref CUSTOM_TAG_TO_ACTION: HashMap<isize, CustomAction> = HashMap::from_iter(all::<CustomAction>().map(|action| {
         (action as isize, action)
     }));

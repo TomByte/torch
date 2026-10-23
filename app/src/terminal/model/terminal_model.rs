@@ -957,7 +957,7 @@ impl SelectedBlocks {
 pub enum TerminalInputState {
     /// Alt-screen on which programs like vim run is visible.
     AltScreen,
-    /// Warp Input View is visible.
+    /// Torch Input View is visible.
     InputEditor,
     /// Block-list is visible but input will go to the running command.
     LongRunningCommand,
@@ -2379,7 +2379,7 @@ impl TerminalModel {
     pub fn set_custom_title(&mut self, custom_title: Option<String>) {
         self.custom_title.clone_from(&custom_title);
         // If the custom title set by the user is None, we "reset" to whatever the title was set by
-        // the shell / Warp itself.
+        // the shell / Torch itself.
         self.send_title_event(
             match custom_title {
                 Some(_) => custom_title,
@@ -3200,7 +3200,7 @@ impl ansi::Handler for TerminalModel {
             if value.external_control_master {
                 log::info!(
                     "SSH wrapper attached to an external ControlMaster at {}; \
-                     Warp will not tear it down on session exit",
+                     Torch will not tear it down on session exit",
                     value.socket_path.display()
                 );
             }

@@ -6,7 +6,7 @@
 //! - `staged/` holds newly observed message IDs from the event stream.
 //! - `surfaced/` holds the fully hydrated records currently exposed to Claude.
 //! - `pending-hook-output.json` plus `pending-hook-output.ack` coordinates the
-//!   handoff between Warp's driver and the Claude hook process.
+//!   handoff between Torch's driver and the Claude hook process.
 use std::fmt::Write as _;
 use std::fs;
 use std::io::Write;
@@ -19,9 +19,9 @@ use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use tempfile::NamedTempFile;
 use tokio::sync::Mutex as AsyncMutex;
-use uuid::Uuid;
 use torchui::ModelSpawner;
 use torchui::r#async::SpawnedFutureHandle;
+use uuid::Uuid;
 
 use crate::ai::agent_events::{
     AgentEventConsumer, AgentEventConsumerControlFlow, AgentEventDriverConfig,
@@ -707,7 +707,7 @@ async fn read_parent_bridge_resume_cursor(
     state_dir: &Path,
 ) -> Result<i64> {
     // The server cursor is the durable cross-client source of truth, but the
-    // bridge also keeps a local cursor for same-machine recovery. If Warp or
+    // bridge also keeps a local cursor for same-machine recovery. If Torch or
     // Claude restarts after the bridge has staged events locally but before the
     // server cursor update is visible, the local cursor prevents replaying
     // messages already handed to this Claude session.

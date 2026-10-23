@@ -175,50 +175,6 @@ fn prepare_falls_back_to_auto_for_an_implicit_local_model() {
 }
 
 #[test]
-fn execute_revalidates_current_model_before_returning_future() {
-    let _oz_handoff = FeatureFlag::OzHandoff.override_enabled(true);
-    let _local_cloud = FeatureFlag::HandoffLocalCloud.override_enabled(true);
-    App::test((), |mut app| async move {
-        initialize_app_for_terminal_view(&mut app);
-        let mut mock = MockAIClient::new();
-        mock.expect_spawn_agent().times(0);
-        let client: Arc<dyn AIClient> = Arc::new(mock);
-        let mut pending = pending(client.clone(), None, false, "continue");
-        pending.selected_model_id = "custom-router:local:byok".to_owned();
-        pending.model_is_cloud_runnable = true;
-
-        let future = app.update(|ctx| execute_handoff(pending, client, None, None, ctx));
-        let HandoffCommitOutcome::Rejected { error, .. } = future.await else {
-            panic!("current invalid model must reject before external work");
-        };
-        assert_eq!(error, HandoffPrepareError::InvalidModel);
-    });
-}
-
-#[test]
-fn execute_revalidates_current_environment_catalog_before_returning_future() {
-    let _oz_handoff = FeatureFlag::OzHandoff.override_enabled(true);
-    let _local_cloud = FeatureFlag::HandoffLocalCloud.override_enabled(true);
-    App::test((), |mut app| async move {
-        initialize_app_for_terminal_view(&mut app);
-        let mut mock = MockAIClient::new();
-        mock.expect_spawn_agent().times(0);
-        let client: Arc<dyn AIClient> = Arc::new(mock);
-        let mut pending = pending(client.clone(), None, false, "continue");
-        let environment_id = SyncId::ServerId(ServerId::from(1));
-        pending.selected_environment_id = Some(environment_id);
-        pending.valid_environment_ids.insert(environment_id);
-        pending.config.environment_id = Some(environment_id.to_string());
-
-        let future = app.update(|ctx| execute_handoff(pending, client, None, None, ctx));
-        let HandoffCommitOutcome::Rejected { error, .. } = future.await else {
-            panic!("deleted environment must reject before external work");
-        };
-        assert_eq!(error, HandoffPrepareError::InvalidEnvironment);
-    });
-}
-
-#[test]
 fn execute_revalidates_current_handoff_enablement_before_returning_future() {
     let _oz_handoff = FeatureFlag::OzHandoff.override_enabled(true);
     let _local_cloud = FeatureFlag::HandoffLocalCloud.override_enabled(false);

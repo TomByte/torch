@@ -33,9 +33,9 @@ pub(crate) mod installation;
 pub struct SshTransport {
     socket_path: PathBuf,
     auth_context: Arc<RemoteServerAuthContext>,
-    /// Whether Warp owns the ControlMaster behind `socket_path`. `false`
+    /// Whether Torch owns the ControlMaster behind `socket_path`. `false`
     /// when the SSH wrapper attached to a master the user already had
-    /// running, in which case Warp must not run `ssh -O exit` against it
+    /// running, in which case Torch must not run `ssh -O exit` against it
     /// on teardown.
     warp_owns_control_master: bool,
 }
@@ -268,8 +268,8 @@ impl RemoteTransport for SshTransport {
                 host_response_rx,
                 child,
                 // Tag the socket with master ownership. Teardown only runs
-                // `ssh -O exit` against Warp-managed masters; a user-owned
-                // (external) master must be left running when the Warp
+                // `ssh -O exit` against Torch-managed masters; a user-owned
+                // (external) master must be left running when the Torch
                 // session exits.
                 control_path: if warp_owns_control_master {
                     ControlPath::WarpManaged(socket_path)

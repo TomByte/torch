@@ -33,7 +33,6 @@ use std::any::Any;
 use std::fmt::Display;
 
 use serde::{Deserialize, Serialize};
-use url::Url;
 use torch_util::remote_path::RemotePath;
 use torchui::elements::{DispatchEventResult, EventHandler, MouseInBehavior};
 use torchui::presenter::ChildView;
@@ -41,6 +40,7 @@ use torchui::{
     Action, AppContext, Element, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity,
     View, ViewContext, ViewHandle, WeakModelHandle,
 };
+use url::Url;
 
 pub use self::view::{PaneHeaderAction, PaneHeaderCustomAction, PaneView, PaneViewEvent};
 use super::{ActivationReason, LeafContents, PaneGroup, PaneGroupAction};
@@ -436,7 +436,7 @@ impl PaneId {
         matches!(self.0.pane_type, IPaneType::EnvironmentManagement)
     }
 
-    /// Returns true if this pane contains a Warp Drive object (notebook, workflow, etc.).
+    /// Returns true if this pane contains a Torch Drive object (notebook, workflow, etc.).
     pub fn is_warp_drive_object_pane(&self) -> bool {
         matches!(
             self.0.pane_type,

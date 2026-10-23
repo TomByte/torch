@@ -1,8 +1,8 @@
-//! Makes Warp-provided skills available to third-party harnesses (Claude Code,
+//! Makes Torch-provided skills available to third-party harnesses (Claude Code,
 //! Codex, Gemini) by symlinking them into a skill root each harness already searches
 //! on its own.
 //!
-//! Oz reads `WARP_SKILL_DIRS` directly (see
+//! Oz reads `TORCH_SKILL_DIRS` directly (see
 //! `crate::ai::agent_sdk::driver::AgentDriver::load_skills_dirs`). Third-party
 //! harnesses discover skills from their own skill roots instead, so this
 //! module receives the same skill directories and symlinks each
@@ -76,7 +76,7 @@ const NON_SANDBOX_ALTERNATE_NAME_PREFIX: &str = "warp-";
 pub(crate) enum HarnessSupportSkills {
     /// The harness's own plugin manager installs them from its marketplace at run start.
     Plugin,
-    /// Published from the copies shipped in Warp's bundled resources, for transports that
+    /// Published from the copies shipped in Torch's bundled resources, for transports that
     /// never run a plugin install.
     Bundled,
 }
@@ -193,8 +193,8 @@ where
             Ok(entries) => entries,
             Err(err) => {
                 safe_warn!(
-                    safe: ("WARP_SKILL_DIRS publish: skipping an unreadable source directory"),
-                    full: ("WARP_SKILL_DIRS publish: skipping '{}' — {err}", source_dir.display())
+                    safe: ("TORCH_SKILL_DIRS publish: skipping an unreadable source directory"),
+                    full: ("TORCH_SKILL_DIRS publish: skipping '{}' — {err}", source_dir.display())
                 );
                 continue;
             }
@@ -204,9 +204,9 @@ where
                 Ok(entry) => entry,
                 Err(err) => {
                     safe_warn!(
-                        safe: ("WARP_SKILL_DIRS publish: failed to read a directory entry"),
+                        safe: ("TORCH_SKILL_DIRS publish: failed to read a directory entry"),
                         full: (
-                            "WARP_SKILL_DIRS publish: failed to read an entry in '{}': {err}",
+                            "TORCH_SKILL_DIRS publish: failed to read an entry in '{}': {err}",
                             source_dir.display()
                         )
                     );
@@ -282,9 +282,9 @@ pub(super) fn exclude_published_skill_paths_from_git(
     }
     if let Err(err) = write_published_skill_paths_to_git_exclude(working_dir, published_paths) {
         safe_warn!(
-            safe: ("WARP_SKILL_DIRS publish: failed to exclude generated skill links from Git"),
+            safe: ("TORCH_SKILL_DIRS publish: failed to exclude generated skill links from Git"),
             full: (
-                "WARP_SKILL_DIRS publish: failed to exclude generated skill links under '{}': {err:#}",
+                "TORCH_SKILL_DIRS publish: failed to exclude generated skill links under '{}': {err:#}",
                 working_dir.display()
             )
         );
@@ -504,9 +504,9 @@ pub(super) fn publish_skill(
             )
         })?;
         safe_warn!(
-            safe: ("WARP_SKILL_DIRS publish: replaced a conflicting skill entry in a sandbox, backing up the original"),
+            safe: ("TORCH_SKILL_DIRS publish: replaced a conflicting skill entry in a sandbox, backing up the original"),
             full: (
-                "WARP_SKILL_DIRS publish: replaced skill '{skill_name}' at {} with {}, backing up the original to {}",
+                "TORCH_SKILL_DIRS publish: replaced skill '{skill_name}' at {} with {}, backing up the original to {}",
                 target.display(), source_dir.display(), backup.display()
             )
         );
@@ -520,9 +520,9 @@ pub(super) fn publish_skill(
     match inspect_target(&alt_target, source_dir)? {
         TargetOutcome::Foreign => {
             safe_warn!(
-                safe: ("WARP_SKILL_DIRS publish: a skill conflict outside a sandbox also collided under its alternate name; the skill was not published"),
+                safe: ("TORCH_SKILL_DIRS publish: a skill conflict outside a sandbox also collided under its alternate name; the skill was not published"),
                 full: (
-                    "WARP_SKILL_DIRS publish: skill '{skill_name}' conflicts with an existing entry at {} (left untouched); the alternate name {} is also occupied, so the skill from {} was not published under either name",
+                    "TORCH_SKILL_DIRS publish: skill '{skill_name}' conflicts with an existing entry at {} (left untouched); the alternate name {} is also occupied, so the skill from {} was not published under either name",
                     target.display(), alt_target.display(), source_dir.display()
                 )
             );
@@ -535,9 +535,9 @@ pub(super) fn publish_skill(
         }
         TargetOutcome::Missing => {
             safe_warn!(
-                safe: ("WARP_SKILL_DIRS publish: a skill conflicted outside a sandbox; the original was left as-is and the skill was published under an alternate name"),
+                safe: ("TORCH_SKILL_DIRS publish: a skill conflicted outside a sandbox; the original was left as-is and the skill was published under an alternate name"),
                 full: (
-                    "WARP_SKILL_DIRS publish: skill '{skill_name}' conflicts with an existing entry at {} (left untouched); published {} as {} instead",
+                    "TORCH_SKILL_DIRS publish: skill '{skill_name}' conflicts with an existing entry at {} (left untouched); published {} as {} instead",
                     target.display(), source_dir.display(), alt_target.display()
                 )
             );

@@ -73,7 +73,7 @@ impl AgentIconFields {
 enum CanonicalRunState {
     /// Plain terminal, no conversation, no agent activity.
     PlainTerminal,
-    /// Local Warp-native (Oz) conversation, in-progress.
+    /// Local Torch-native (Oz) conversation, in-progress.
     LocalOzInProgress,
     /// Cloud-mode Oz run, in-progress.
     CloudOzInProgress,

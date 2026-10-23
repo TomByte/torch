@@ -295,7 +295,7 @@ static BOOL isSystemInitiatedTermination(void) {
         if (systemInitiated) {
             // Comply immediately when the system asked us to quit. Anything but
             // `NSTerminateNow` here (including the hide-then-reterminate dance
-            // below, which returns `NSTerminateCancel`) makes macOS treat Warp
+            // below, which returns `NSTerminateCancel`) makes macOS treat Torch
             // as blocking the logout/shutdown, which can abort a scheduled OS
             // update and leave the app in a stuck-looking state (#12441).
             return NSTerminateNow;
@@ -475,7 +475,7 @@ static BOOL isSystemInitiatedTermination(void) {
 - (void)userNotificationCenter:(UNUserNotificationCenter *)center
     didReceiveNotificationResponse:(UNNotificationResponse *)response
              withCompletionHandler:(void (^)(void))completionHandler {
-    // Handle what happens when the user clicks the notification. Warp doesn't support any actions
+    // Handle what happens when the user clicks the notification. Torch doesn't support any actions
     // other than the default action currently.
     if ([response.actionIdentifier isEqualToString:UNNotificationDefaultActionIdentifier]) {
         NSDictionary *userInfo = response.notification.request.content.userInfo;
@@ -554,7 +554,7 @@ NSMenuItem *make_services_menu_item() {
 }
 
 // \return a new menu item that wraps the given context pointer.
-// The pointer will be provided back to Warp in the callbacks (see menus.h).
+// The pointer will be provided back to Torch in the callbacks (see menus.h).
 // The result is autoreleased.
 NSMenuItem *make_warp_custom_menu_item(void *context) {
     WarpCustomMenuItemHandler *handler =

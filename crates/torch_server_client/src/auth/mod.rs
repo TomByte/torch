@@ -13,7 +13,6 @@ use instant::Duration;
 use mockall::automock;
 pub use session::*;
 use thiserror::Error;
-pub use user_uid::{TEST_USER_EMAIL, TEST_USER_UID, UserUid};
 use torch_errors::{AnyhowErrorExt, ErrorExt, register_error};
 use torch_graphql::client::Operation;
 use torch_graphql::mutations::create_anonymous_user::{
@@ -25,7 +24,9 @@ use torch_graphql::mutations::expire_api_key::{
 use torch_graphql::mutations::generate_api_key::{
     GenerateApiKey, GenerateApiKeyInput, GenerateApiKeyResult, GenerateApiKeyVariables,
 };
-use torch_graphql::mutations::mint_custom_token::{MintCustomTokenResult, MintCustomTokenVariables};
+use torch_graphql::mutations::mint_custom_token::{
+    MintCustomTokenResult, MintCustomTokenVariables,
+};
 use torch_graphql::mutations::set_user_is_onboarded::{
     SetUserIsOnboarded, SetUserIsOnboardedResult, SetUserIsOnboardedVariables,
 };
@@ -40,13 +41,14 @@ use torch_graphql::queries::get_user::{GetUser, GetUserVariables, UserOutput as 
 use torch_graphql::queries::get_user_settings::{GetUserSettings, GetUserSettingsVariables};
 use torch_server_auth::credentials::{AuthToken, Credentials, FirebaseToken, LoginToken};
 pub use torch_server_auth::user_uid;
+pub use user_uid::{TEST_USER_EMAIL, TEST_USER_UID, UserUid};
 
 use crate::base_client::{BaseClient, TEAM_UID_HEADER};
 use crate::graphql_helpers::{send_graphql_request, send_graphql_request_with_options};
 use crate::ids::ApiKeyUid;
 
 /// Header key used to associate unauthenticated requests with an experiment identity.
-pub const EXPERIMENT_ID_HEADER: &str = "X-Warp-Experiment-Id";
+pub const EXPERIMENT_ID_HEADER: &str = "X-Torch-Experiment-Id";
 
 /// A named agent identity from the public API.
 #[derive(Clone, Debug, serde::Deserialize)]
@@ -83,7 +85,7 @@ pub struct FetchUserResult {
 #[cfg_attr(not(target_family = "wasm"), async_trait)]
 #[cfg_attr(target_family = "wasm", async_trait(?Send))]
 pub trait AuthClient: Send + Sync {
-    /// Creates an anonymous user who is allowed to use Warp but may lack the ability
+    /// Creates an anonymous user who is allowed to use Torch but may lack the ability
     /// to interact with particular features.
     async fn create_anonymous_user(
         &self,
@@ -317,7 +319,9 @@ impl AuthClient for AuthClientImpl {
             .data
             .ok_or_else(|| anyhow!("Expected valid response.data"))?;
         match response.user {
-            torch_graphql::queries::get_user::UserResult::UserOutput(user_output) => Ok(user_output),
+            torch_graphql::queries::get_user::UserResult::UserOutput(user_output) => {
+                Ok(user_output)
+            }
             torch_graphql::queries::get_user::UserResult::Unknown => {
                 Err(anyhow!("Unable to fetch user"))
             }

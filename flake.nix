@@ -1,5 +1,5 @@
 {
-  description = "Warp is an agentic development environment, born out of the terminal (Experimental Nix Support, Linux-only).";
+  description = "Torch, a local terminal for running coding agents side by side (experimental Nix support, Linux-only).";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -86,7 +86,7 @@
             in
             # crane writes a root config.toml; buildRustPackage expects the
             # cargoDeps layout to include .cargo/config.toml and Cargo.lock.
-            pkgs.runCommand "warp-terminal-experimental-${version}-cargo-vendor" { } ''
+            pkgs.runCommand "torch-${version}-cargo-vendor" { } ''
               cp -R ${craneVendorDir}/. "$out"
               chmod u+w "$out"
               mkdir -p "$out/.cargo"
@@ -128,8 +128,8 @@
             "gui"
           ];
 
-          warp-terminal-experimental = rustPlatform.buildRustPackage {
-            pname = "warp-terminal-experimental";
+          torch = rustPlatform.buildRustPackage {
+            pname = "torch";
             inherit version;
 
             inherit src;
@@ -152,9 +152,9 @@
 
             cargoBuildFlags = [
               "-p"
-              "warp"
+              "torch"
               "--bin"
-              "warp-oss"
+              "torch"
             ];
             inherit buildFeatures;
 
@@ -163,7 +163,7 @@
             doCheck = false;
 
             env = {
-              APPIMAGE_NAME = "WarpOss-${pkgs.stdenv.hostPlatform.parsed.cpu.name}.AppImage";
+              APPIMAGE_NAME = "Torch-${pkgs.stdenv.hostPlatform.parsed.cpu.name}.AppImage";
               LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
               PROTOC = "${pkgs.protobuf}/bin/protoc";
               PROTOC_INCLUDE = "${pkgs.protobuf}/include";
@@ -171,72 +171,69 @@
             };
             postInstall =
               let
-                installDir = "$out/opt/warpdotdev/warp-terminal-experimental";
+                installDir = "$out/opt/torch";
                 resourcesDir = "${installDir}/resources";
                 releaseChannel = "oss";
                 libraryPath = lib.makeLibraryPath linuxRuntimeLibraries;
                 executablePath = lib.makeBinPath (with pkgs; [ xdg-utils ]);
               in
               ''
-                install -Dm755 "$out/bin/warp-oss" "${installDir}/warp-oss"
-                rm -f "$out/bin/warp-oss"
+                install -Dm755 "$out/bin/torch" "${installDir}/torch"
+                rm -f "$out/bin/torch"
 
                 patchShebangs \
                   ./script/prepare_bundled_resources \
                   ./script/copy_conditional_skills
 
-                SETTINGS_SCHEMA_EXECUTABLE="${installDir}/warp-oss" ./script/prepare_bundled_resources \
+                SETTINGS_SCHEMA_EXECUTABLE="${installDir}/torch" ./script/prepare_bundled_resources \
                   "${resourcesDir}" \
                   "${releaseChannel}"
 
                 install -Dm644 \
                   "${resourcesDir}/THIRD_PARTY_LICENSES.txt" \
-                  "$out/share/licenses/warp-terminal-experimental/THIRD_PARTY_LICENSES.txt"
+                  "$out/share/licenses/torch/THIRD_PARTY_LICENSES.txt"
 
-                install -Dm644 LICENSE-AGPL "$out/share/licenses/warp-terminal-experimental/LICENSE-AGPL"
-                install -Dm644 LICENSE-MIT "$out/share/licenses/warp-terminal-experimental/LICENSE-MIT"
+                install -Dm644 LICENSE-AGPL "$out/share/licenses/torch/LICENSE-AGPL"
+                install -Dm644 LICENSE-MIT "$out/share/licenses/torch/LICENSE-MIT"
 
-                install -Dm644 app/channels/oss/dev.warp.WarpOss.desktop \
-                  "$out/share/applications/dev.warp.WarpOss.desktop"
-                substituteInPlace "$out/share/applications/dev.warp.WarpOss.desktop" \
-                  --replace-fail "Exec=warp-terminal-oss %U" "Exec=warp-terminal-experimental %U"
+                install -Dm644 app/channels/oss/dev.tombyte.Torch.desktop \
+                  "$out/share/applications/dev.tombyte.Torch.desktop"
 
                 for size in 16x16 32x32 64x64 128x128 256x256 512x512; do
                   icon="app/channels/oss/icon/no-padding/$size.png"
                   if [ -f "$icon" ]; then
                     install -Dm644 "$icon" \
-                      "$out/share/icons/hicolor/$size/apps/dev.warp.WarpOss.png"
+                      "$out/share/icons/hicolor/$size/apps/dev.tombyte.Torch.png"
                   fi
                 done
 
-                wrapProgram "${installDir}/warp-oss" \
+                wrapProgram "${installDir}/torch" \
                   --prefix LD_LIBRARY_PATH : "${libraryPath}" \
                   --prefix PATH : "${executablePath}"
 
                 mkdir -p "$out/bin"
-                ln -s "${installDir}/warp-oss" "$out/bin/warp-oss"
-                ln -s "${installDir}/warp-oss" "$out/bin/warp-terminal-experimental"
+                ln -s "${installDir}/torch" "$out/bin/torch"
               '';
 
             postFixup = lib.optionalString pkgs.stdenv.isLinux ''
-              wrapped="/opt/warpdotdev/warp-terminal-experimental/.warp-oss-wrapped"
+              wrapped="/opt/torch/.torch-wrapped"
               if [ -e "$out$wrapped" ] && ! patchelf --print-needed "$out$wrapped" | grep -q '^libfontconfig\.so\.1$'; then
                 patchelf --add-needed libfontconfig.so.1 "$out$wrapped"
               fi
             '';
 
             meta = {
-              description = "Warp is an agentic development environment, born out of the terminal (Experimental Nix Support, Linux-only).";
-              homepage = "https://www.warp.dev";
+              description = "Torch, a local terminal for running coding agents side by side (experimental Nix support, Linux-only).";
+              homepage = "https://github.com/TomByte/torch";
               license = lib.licenses.agpl3Only;
-              mainProgram = "warp-terminal-experimental";
+              mainProgram = "torch";
               platforms = systems;
               sourceProvenance = with lib.sourceTypes; [ fromSource ];
             };
           };
         in
         {
-          inherit warp-terminal-experimental;
+          inherit torch;
         }
       );
 
@@ -295,7 +292,7 @@
         {
           default = pkgs.mkShell {
             inherit nativeBuildInputs buildInputs;
-            APPIMAGE_NAME = "WarpOss-${pkgs.stdenv.hostPlatform.parsed.cpu.name}.AppImage";
+            APPIMAGE_NAME = "Torch-${pkgs.stdenv.hostPlatform.parsed.cpu.name}.AppImage";
             LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
             PROTOC = "${pkgs.protobuf}/bin/protoc";
             PROTOC_INCLUDE = "${pkgs.protobuf}/include";

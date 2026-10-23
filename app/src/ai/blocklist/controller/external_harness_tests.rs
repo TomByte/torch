@@ -1,6 +1,7 @@
 use std::time::SystemTime;
 
 use session_sharing_protocol::common::AgentAttachment;
+use torchui::{App, AppContext};
 use uuid::Uuid;
 use warp_multi_agent_api::client_action::{AddMessagesToTask, CreateTask};
 use warp_multi_agent_api::message::tool_call::{RunShellCommand, Tool};
@@ -14,7 +15,6 @@ use warp_multi_agent_api::{
     ShellCommandFinished, Task, client_action, query_author, response_event,
     run_shell_command_result,
 };
-use torchui::{App, AppContext};
 
 use super::*;
 use crate::ai::agent::conversation::{AIConversation, ConversationDriver, ConversationStatus};
@@ -224,7 +224,7 @@ fn shared_session_injections_go_to_the_prompt_sink_instead_of_the_queue() {
                         .unwrap()
                         .exchange_count(),
                     0,
-                    "the harness owns the turn; nothing is sent to Warp's agent"
+                    "the harness owns the turn; nothing is sent to Torch's agent"
                 );
 
                 controller.unbind_native_prompt_conversation(ctx);
@@ -337,7 +337,7 @@ fn injections_queued_before_the_sink_exists_are_relayed_when_it_is_installed() {
                         .unwrap()
                         .exchange_count(),
                     0,
-                    "nothing is sent to Warp's agent"
+                    "nothing is sent to Torch's agent"
                 );
             });
         });
@@ -513,7 +513,7 @@ fn queued_harness_prompts_are_shown_as_rows_until_hidden() {
                 assert_eq!(queue.queue(id)[0].text(), "waiting");
                 assert!(
                     queue.is_dispatch_blocked(id),
-                    "the row is for display; nothing may dispatch it to Warp's agent"
+                    "the row is for display; nothing may dispatch it to Torch's agent"
                 );
 
                 controller.hide_external_harness_prompt_queued(id, row, ctx);

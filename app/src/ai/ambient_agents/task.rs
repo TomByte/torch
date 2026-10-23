@@ -7,12 +7,12 @@ pub use cloud_object_models::{AgentConfigSnapshot, HarnessAuthSecretsConfig, Har
 use iso8601_duration::Duration as Iso8601Duration;
 use serde::{Deserialize, Serialize};
 use session_sharing_protocol::common::SessionId;
-use url::Url;
 use torch_cli::agent::Harness;
 use torch_core::ui::theme::WarpTheme;
 use torch_errors::report_error;
 use torchui::color::ColorU;
 use torchui::{SingletonEntity, View, ViewContext};
+use url::Url;
 
 use super::AmbientAgentTaskId;
 use crate::ai::agent::conversation::ConversationStatus;
@@ -91,7 +91,7 @@ impl AgentSource {
             AgentSource::Slack => "Slack",
             AgentSource::Cli => "CLI",
             AgentSource::ScheduledAgent => "Scheduled",
-            AgentSource::Interactive | AgentSource::CloudMode => "Warp App",
+            AgentSource::Interactive | AgentSource::CloudMode => "Torch App",
             AgentSource::WebApp => "Oz Web",
             AgentSource::GitHubAction => "GitHub Action",
             AgentSource::GitHubWebhook => "GitHub",
@@ -374,7 +374,7 @@ impl AmbientAgentTask {
     }
 
     /// The third-party CLI harness this task is configured to run, if any. `None` means the
-    /// task runs on Warp's native Oz harness (the default when no harness is configured), whose
+    /// task runs on Torch's native Oz harness (the default when no harness is configured), whose
     /// conversations are represented locally in `BlocklistAIHistoryModel`. A `Some` task has no
     /// such local conversation, whether or not its CLI-harness session has started yet — callers
     /// that route or gate on "is this task backed by a native conversation" must check this

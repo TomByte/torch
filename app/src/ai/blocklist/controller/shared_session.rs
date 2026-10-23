@@ -7,10 +7,10 @@ use itertools::Itertools;
 use session_sharing_protocol::common::{AgentAttachment, ParticipantId, ServerConversationToken};
 use torch_core::features::FeatureFlag;
 use torch_errors::report_error;
+use torchui::{AppContext, ModelContext, SingletonEntity};
 use warp_multi_agent_api::client_action::Action;
 use warp_multi_agent_api::message::Message;
 use warp_multi_agent_api::response_event::{ClientActions, stream_finished};
-use torchui::{AppContext, ModelContext, SingletonEntity};
 
 use super::response_stream::ResponseStreamId;
 use super::{BlocklistAIController, RequestInput, SessionContext};
@@ -720,7 +720,7 @@ impl BlocklistAIController {
         }
     }
 
-    /// Execute an agent prompt on behalf of the viewer, against Warp's native Oz harness.
+    /// Execute an agent prompt on behalf of the viewer, against Torch's native Oz harness.
     ///
     /// Callers must have already routed away third-party-harness-backed tasks: this method (and
     /// `send_warp_agent_prompt_from_shared_session_injection`, which it feeds into) can only
@@ -919,7 +919,7 @@ impl BlocklistAIController {
         });
     }
 
-    /// Helper to send a prompt against Warp's native Oz harness, used both for immediate sends
+    /// Helper to send a prompt against Torch's native Oz harness, used both for immediate sends
     /// (no file attachments) and deferred sends (after file downloads complete). Only ever
     /// resolves or creates a native `AIConversation` — see the doc comment on
     /// `execute_warp_agent_prompt_from_shared_session_injection`, this method's sole caller.

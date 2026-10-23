@@ -83,7 +83,7 @@ fn test_resolve_file_target_to_open_in_warp_never_leaves_warp() {
                 target,
                 FileTarget::CodeEditor(_) | FileTarget::MarkdownViewer(_)
             ),
-            "{path} must resolve to an in-Warp surface, got {target:?}"
+            "{path} must resolve to an in-Torch surface, got {target:?}"
         );
     }
 }
@@ -139,7 +139,7 @@ fn test_renders_in_warp_notebook_viewer() {
 #[cfg(not(feature = "local_only"))]
 fn test_resolve_file_target_jupyter_notebook_flag_on() {
     let _flag = FeatureFlag::JupyterNotebookRendering.override_enabled(true);
-    // Even with prefer_markdown_viewer off and an explicit Warp editor choice,
+    // Even with prefer_markdown_viewer off and an explicit Torch editor choice,
     // a Jupyter notebook routes to the notebook viewer (not the JSON editor).
     let target = resolve_file_target_with_editor_choice(
         Path::new("analysis.ipynb"),

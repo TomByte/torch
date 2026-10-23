@@ -7,7 +7,7 @@ use crate::banner::BannerState;
 // should be persisted the same way we would a setting.
 //
 // When a user dismisses the "you've run out of <object>s on your plan" banner
-// shown in the Warp Drive sidebar, we want to remember that they did so and
+// shown in the Torch Drive sidebar, we want to remember that they did so and
 // avoid showing the same prompt again. The state is tracked per object type so
 // dismissing the notebook banner doesn't hide a future workflow banner.
 define_settings_group!(SharedObjectLimitBannerSettings, settings: [

@@ -1,5 +1,5 @@
 //! This module defines CellGlyphCache, a struct which manages the caching of glyph values for cells
-//! when rendering Grids within Warp.
+//! when rendering Grids within Torch.
 use std::collections::HashMap;
 
 use torchui::PaintContext;

@@ -1,10 +1,10 @@
-# Note that WARP_SESSION_ID is expected to have been set when executing commands to
+# Note that TORCH_SESSION_ID is expected to have been set when executing commands to
 # emit the InitShell payload, which includes the session ID.
 #
 # Throughout, command -p is used to call external binaries. command -p resolves the
 # given command using the system default $PATH, which ensures the shells can locate
 # the corresponding binaries even if the user has a clobbered value of $PATH.
-if [ -z "$WARP_BOOTSTRAPPED" ]; then
+if [ -z "$TORCH_BOOTSTRAPPED" ]; then
     # Byte sequence used to signal the start of a DCS. ([0x1b, 0x50, 0x24] which
     # maps to <ESC>, P, $ in ASCII.)
     DCS_START="$(printf '\eP$')"
@@ -37,10 +37,10 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
 
     # Attempt to cd to the desired initial working directory, swallowing any
     # errors.  If this fails, the user will end up in their home directory.
-    if [[ ! -z "$WARP_INITIAL_WORKING_DIR" ]]; then
+    if [[ ! -z "$TORCH_INITIAL_WORKING_DIR" ]]; then
         # shellcheck disable=SC2164
-        cd "$WARP_INITIAL_WORKING_DIR" >/dev/null 2>&1
-        unset WARP_INITIAL_WORKING_DIR
+        cd "$TORCH_INITIAL_WORKING_DIR" >/dev/null 2>&1
+        unset TORCH_INITIAL_WORKING_DIR
     fi
 
     # We configure history to `ignorespace` to avoid leaking our bootstrap script
@@ -75,34 +75,34 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
         # one of the bytes in JSON is 9c (ST) or other (CAN, SUB, ESC).
         encoded_message=$(warp_hex_encode_string "$1")
         # We send the InitShell hook via OSCs when on WSL or MSYS2 or SSH from Windows and via DCSs otherwise.
-        # Note that $WARP_USING_WINDOWS_CON_PTY is set in the init shell script.
-        if [ "$WARP_USING_WINDOWS_CON_PTY" = true ]; then
+        # Note that $TORCH_USING_WINDOWS_CON_PTY is set in the init shell script.
+        if [ "$TORCH_USING_WINDOWS_CON_PTY" = true ]; then
           printf $OSC_START$DCS_JSON_MARKER$OSC_PARAM_SEPARATOR$encoded_message$OSC_END
         else
           printf $DCS_START$DCS_JSON_MARKER$encoded_message$DCS_END
         fi
     }
 
-    # Emit the ExitShell hook right before the remote shell exits so the Warp
+    # Emit the ExitShell hook right before the remote shell exits so the Torch
     # client can drop per-session resources (specifically the
     # `ssh … remote-server-proxy` child that holds a multiplexed channel on
     # the foreground ssh ControlMaster). This avoids a hang where the master
     # waits on orphaned slave channels when the user ends their interactive
     # session.
     #
-    # Only relevant for remote SSH shells. WARP_IS_SSH is exported to "1"
-    # by `warp_ssh_helper` on the remote side of a Warp-managed SSH session
+    # Only relevant for remote SSH shells. TORCH_IS_SSH is exported to "1"
+    # by `warp_ssh_helper` on the remote side of a Torch-managed SSH session
     # and is unset everywhere else (local shells, subshells, docker
     # sandboxes, etc.), so the hook only fires where a remote-server-proxy
     # actually needs tearing down.
     #
     # Installed after warp_send_json_message is defined so the handler is
     # callable the moment the trap is registered.
-    if [[ "$WARP_IS_SSH" == "1" ]]; then
+    if [[ "$TORCH_IS_SSH" == "1" ]]; then
         __warp_emit_exit_shell() {
-            if [[ -n "$WARP_SESSION_ID" ]]; then
+            if [[ -n "$TORCH_SESSION_ID" ]]; then
                 warp_send_json_message \
-                    "{\"hook\": \"ExitShell\", \"value\": {\"session_id\": $WARP_SESSION_ID}}"
+                    "{\"hook\": \"ExitShell\", \"value\": {\"session_id\": $TORCH_SESSION_ID}}"
             fi
         }
         # Bash allows only one handler per signal, so compose with the
@@ -116,7 +116,7 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
     fi
 
     warp_maybe_send_reset_grid_osc () {
-        if [ "$WARP_USING_WINDOWS_CON_PTY" = true ]; then
+        if [ "$TORCH_USING_WINDOWS_CON_PTY" = true ]; then
             printf $RESET_GRID_OSC
         fi
     }
@@ -408,14 +408,14 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
         # history to do so. This means that $1 is not the correct command if the executed command is ignored
         # by history (e.g. via $HISTCONTROL or $HISTIGNORE); for example, all in-band generators are ignored
         # by history.
-        if [ "$WARP_IN_MSYS2" = true ]; then
+        if [ "$TORCH_IN_MSYS2" = true ]; then
           warp_send_hook_via_kv_pairs_start "Preexec"
           warp_send_hook_kv_pair "command" "$BASH_COMMAND"
-          warp_send_hook_kv_pair "session_id" "$WARP_SESSION_ID"
+          warp_send_hook_kv_pair "session_id" "$TORCH_SESSION_ID"
           warp_send_hook_via_kv_pairs_end
         else
           local truncated_command=$(warp_escape_json "$BASH_COMMAND")
-          warp_send_json_message "{\"hook\": \"Preexec\", \"value\": {\"command\": \"$truncated_command\", \"session_id\": $WARP_SESSION_ID}}"
+          warp_send_json_message "{\"hook\": \"Preexec\", \"value\": {\"command\": \"$truncated_command\", \"session_id\": $TORCH_SESSION_ID}}"
         fi
         warp_maybe_send_reset_grid_osc
 
@@ -468,7 +468,7 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
     # Set terminal window and tab title to the same title value. Note that for values longer than 25
     # characters, we truncate the title and prepend "..".
     # Usage warp_title "title"
-    # Users can disable the auto title if they chose to by setting WARP_DISABLE_AUTO_TITLE.
+    # Users can disable the auto title if they chose to by setting TORCH_DISABLE_AUTO_TITLE.
     warp_title () {
       # shellcheck disable=SC2034
       DISABLE_AUTO_TITLE="1"
@@ -489,8 +489,8 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
 
     # Runs before executing the command
     warp_set_title_idle_on_precmd () {
-      # If the user wants to set the title themselves, they can set the WARP_DISABLE_AUTO_TITLE flag.
-      if [ ! -z "$WARP_DISABLE_AUTO_TITLE" ]; then
+      # If the user wants to set the title themselves, they can set the TORCH_DISABLE_AUTO_TITLE flag.
+      if [ ! -z "$TORCH_DISABLE_AUTO_TITLE" ]; then
         return
       fi
 
@@ -503,7 +503,7 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
       new_home='~'
       bash_term_tab_title="${PWD/#$HOME/$new_home}"
 
-      if [[ $WARP_IS_LOCAL_SHELL_SESSION == "1" ]]; then
+      if [[ $TORCH_IS_LOCAL_SHELL_SESSION == "1" ]]; then
         warp_title "$bash_term_tab_title"
       else
         bash_term_tab_title_remote="${HOSTNAME%%.*}:$bash_term_tab_title"
@@ -513,8 +513,8 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
 
     # Runs before executing the command
     warp_set_title_active_on_preexec () {
-      # If the user wants to set the title themselves, they can set the WARP_DISABLE_AUTO_TITLE flag.
-      if [ ! -z "$WARP_DISABLE_AUTO_TITLE" ]; then
+      # If the user wants to set the title themselves, they can set the TORCH_DISABLE_AUTO_TITLE flag.
+      if [ ! -z "$TORCH_DISABLE_AUTO_TITLE" ]; then
         return
       fi
 
@@ -573,25 +573,25 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
         # executed within this block instead of the actual last
         # command that was run.
         local exit_code=$?
-        local next_block_id="precmd-$WARP_SESSION_ID-$((block_id++))"
-        if [ "$WARP_IN_MSYS2" = true ]; then
+        local next_block_id="precmd-$TORCH_SESSION_ID-$((block_id++))"
+        if [ "$TORCH_IN_MSYS2" = true ]; then
           warp_send_hook_via_kv_pairs_start "CommandFinished"
           warp_send_hook_kv_pair "exit_code" "$exit_code"
           warp_send_hook_kv_pair "next_block_id" "$next_block_id"
-          warp_send_hook_kv_pair "session_id" "$WARP_SESSION_ID"
+          warp_send_hook_kv_pair "session_id" "$TORCH_SESSION_ID"
           warp_send_hook_via_kv_pairs_end
         else
-          warp_send_json_message "{\"hook\": \"CommandFinished\", \"value\": {\"exit_code\": $exit_code, \"next_block_id\": \"$next_block_id\", \"session_id\": $WARP_SESSION_ID}}"
+          warp_send_json_message "{\"hook\": \"CommandFinished\", \"value\": {\"exit_code\": $exit_code, \"next_block_id\": \"$next_block_id\", \"session_id\": $TORCH_SESSION_ID}}"
         fi
 
         warp_maybe_send_reset_grid_osc
 
         if [[ $PS1 == "" ]]; then
-          # Use the saved PS1, if we've already unset it (due to active Warp prompt).
-          WARP_PS1="$SAVED_PS1"
+          # Use the saved PS1, if we've already unset it (due to active Torch prompt).
+          TORCH_PS1="$SAVED_PS1"
         else
           # If we haven't unset it yet, then we can use the current PS1 value.
-          WARP_PS1="$PS1"
+          TORCH_PS1="$PS1"
         fi
 
         # If this is being called for a generator command, short circuit and send an unpopulated
@@ -613,7 +613,7 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
             \"virtual_env\": \"\",
             \"conda_env\": \"\",
             \"node_version\": \"\",
-            \"session_id\": $WARP_SESSION_ID,
+            \"session_id\": $TORCH_SESSION_ID,
             \"is_after_in_band_command\": true
             }}"
             return 0
@@ -627,24 +627,24 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
           echo "" > $_WARP_GENERATOR_PIDS_COMPLETED_TMP_FILE
         fi
 
-        if [[ -z $WARP_INPUT_REPORTING_SUPPORTED ]]; then
-          WARP_INPUT_REPORTING_SUPPORTED=$(warp_input_reporting_supported)
+        if [[ -z $TORCH_INPUT_REPORTING_SUPPORTED ]]; then
+          TORCH_INPUT_REPORTING_SUPPORTED=$(warp_input_reporting_supported)
         fi
 
         local honor_ps1
         local deref_ps1=""
         local escaped_ps1=""
-        if [[ "$WARP_HONOR_PS1" == "1" ]]; then
+        if [[ "$TORCH_HONOR_PS1" == "1" ]]; then
           honor_ps1="true"
         else
           honor_ps1="false"
 
           # If we haven't already, cache information about supported features.
-          if [[ -z $WARP_PS1_EXPANSION_SUPPORTED ]]; then
-            WARP_PS1_EXPANSION_SUPPORTED=$(warp_ps1_expanding_supported)
+          if [[ -z $TORCH_PS1_EXPANSION_SUPPORTED ]]; then
+            TORCH_PS1_EXPANSION_SUPPORTED=$(warp_ps1_expanding_supported)
           fi
 
-          if [[ $WARP_PS1_EXPANSION_SUPPORTED  == "1" ]]; then
+          if [[ $TORCH_PS1_EXPANSION_SUPPORTED  == "1" ]]; then
             # When evaluating the PS1, we want to ensure that it's aware of the last exit code.
             # Since we captured it already and executed multiple other commands, the actual
             # last exit code has changed. So before the evaluation, we want to trick the shell
@@ -653,15 +653,15 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
               return $1
             }
             exit_code_hack $exit_code
-            deref_ps1=${WARP_PS1@P}
+            deref_ps1=${TORCH_PS1@P}
           else
             # Tricking the shell into rendering the prompt
             # Note that in more modern versions of bash we could use ${PS1@P} to achieve the same,
             # but MacOS comes by default with a much older version of bash, and we want to be compatible.
-            deref_ps1=$(echo -e "\n" | PS1="$WARP_PS1" BASH_SILENCE_DEPRECATION_WARNING=1 "$BASH" --norc -i 2>&1 | command -p head -2 | command -p tail -1)
+            deref_ps1=$(echo -e "\n" | PS1="$TORCH_PS1" BASH_SILENCE_DEPRECATION_WARNING=1 "$BASH" --norc -i 2>&1 | command -p head -2 | command -p tail -1)
           fi
 
-          if [ "$WARP_IN_MSYS2" = false ]; then
+          if [ "$TORCH_IN_MSYS2" = false ]; then
             escaped_ps1=$(warp_escape_ps1 "$(echo "$deref_ps1")")
           fi
         fi
@@ -671,30 +671,30 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
 
         # Reset the custom kill-whole-line binding as the user's bashrc (which is sourced after bashrc_warp)
         # could have added another bind. This won't have any user-impact because these shortcuts are only run
-        # in the context of the bash editor, which isn't displayed in Warp.
+        # in the context of the bash editor, which isn't displayed in Torch.
         bind -r '"\C-p"'
         bind "\C-p":kill-whole-line
 
         # Reset the report-input binding in case the user's bashrc modified it.
         # This is arbitrarily bound to ESC-i in all supported shells ("i" for input).
-        if [[ $WARP_INPUT_REPORTING_SUPPORTED == "1" ]]; then
+        if [[ $TORCH_INPUT_REPORTING_SUPPORTED == "1" ]]; then
           bind -r '"\ei"'
           bind -x '"\ei":"warp_report_input"'
         fi
         
         # We need to register bindkeys to enable intra-session switching of the prompt 
-        # (these bindkeys are used by Warp to communicate the prompt mode switch to bash).
+        # (these bindkeys are used by Torch to communicate the prompt mode switch to bash).
         # We remove any existing bindkey for ESC-P ("p" for prompt/PS1) and register the bindkey
         # to our custom function. Note that this specific keybinding is arbitrary.
         bind -r '"\ep"'
         bind -x '"\ep":"warp_change_prompt_modes_to_ps1"'
-        # We remove any existing bindkey for ESC-P ("w" for Warp prompt) and register the bindkey
+        # We remove any existing bindkey for ESC-P ("w" for Torch prompt) and register the bindkey
         # to our custom function. Note that this specific keybinding is arbitrary.
         bind -r '"\ew"'
         bind -x '"\ew":"warp_change_prompt_modes_to_warp_prompt"'
 
         local escaped_pwd
-        if [ "$WARP_IN_MSYS2" = false ]; then
+        if [ "$TORCH_IN_MSYS2" = false ]; then
           if [ -n "$WSL_DISTRO_NAME" ]; then
             # In WSL, avoid symlinks b/c on Windows `std::fs` is unable to resolve symlink inside WSL containers.
             escaped_pwd=$(warp_escape_json "$(pwd -P)")
@@ -715,20 +715,20 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
         # blocks created during the bootstrap process don't have visible
         # prompts, and we don't want to invoke `git` before we've sourced the
         # user's rcfiles and have a fully-populated PATH.
-        if [[ -n "$WARP_BOOTSTRAPPED" ]]; then
-          if [[ -n "$VIRTUAL_ENV" ]] && [ "$WARP_IN_MSYS2" = false ]; then
+        if [[ -n "$TORCH_BOOTSTRAPPED" ]]; then
+          if [[ -n "$VIRTUAL_ENV" ]] && [ "$TORCH_IN_MSYS2" = false ]; then
               escaped_virtual_env=$(warp_escape_json "$VIRTUAL_ENV")
           fi
 
-          if [[ -n "$CONDA_DEFAULT_ENV" ]] && [ "$WARP_IN_MSYS2" = false ]; then
+          if [[ -n "$CONDA_DEFAULT_ENV" ]] && [ "$TORCH_IN_MSYS2" = false ]; then
               escaped_conda_env=$(warp_escape_json "$CONDA_DEFAULT_ENV")
           fi
 
           # Get the Node.js version, but only when the Node.js Version chip is enabled.
-          # Warp sets WARP_PROMPT_NODE_VERSION_ENABLED to "0" when the chip is not in the
+          # Torch sets TORCH_PROMPT_NODE_VERSION_ENABLED to "0" when the chip is not in the
           # prompt (defaulting to enabled when unset), so we avoid spawning `node` on
           # every prompt when the chip is not shown.
-          if [[ "$WARP_PROMPT_NODE_VERSION_ENABLED" != "0" ]] && command -v node > /dev/null 2>&1 && [ "$WARP_IN_MSYS2" = false ]; then
+          if [[ "$TORCH_PROMPT_NODE_VERSION_ENABLED" != "0" ]] && command -v node > /dev/null 2>&1 && [ "$TORCH_IN_MSYS2" = false ]; then
               # Check for package.json in current directory and parent directories
               local current_dir="$PWD"
               local found_package_json=false
@@ -789,7 +789,7 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
             # The git branch the user is on, or the git commit hash if they're not on a branch.
             git_head="${git_branch:-$(warp_git rev-parse --short HEAD 2> /dev/null)}"
           fi
-          if [ "$WARP_IN_MSYS2" = false ]; then
+          if [ "$TORCH_IN_MSYS2" = false ]; then
             escaped_git_head=$(warp_escape_json "$git_head")
             escaped_git_branch=$(warp_escape_json "$git_branch")
           fi
@@ -803,11 +803,11 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
         # as JS string literals of the form \uHEX, and will include
         # ctrl characters (like ESC) in the json, which will cause a JSON
         # parse error.
-        # Note WARP_SESSION_ID doesn't need to be escaped since it's a number
-        # We also pass the shell's notion of `honor_ps1` to ensure it's synced correctly on the Warp-side for prompt handling.
+        # Note TORCH_SESSION_ID doesn't need to be escaped since it's a number
+        # We also pass the shell's notion of `honor_ps1` to ensure it's synced correctly on the Torch-side for prompt handling.
         # This is passed as a "real boolean" via the JSON payload (string interpolated into JSON string below).
-        # We send the escaped PS1, if we are in active Warp prompt mode, for prompt preview rendering (note the shell's PS1 is unset in this case).
-        if [ "$WARP_IN_MSYS2" = true ]; then
+        # We send the escaped PS1, if we are in active Torch prompt mode, for prompt preview rendering (note the shell's PS1 is unset in this case).
+        if [ "$TORCH_IN_MSYS2" = true ]; then
           warp_send_hook_via_kv_pairs_start "Precmd"
           warp_send_hook_kv_pair "exit_code" "$exit_code"
           warp_send_hook_kv_pair "next_block_id" "$next_block_id"
@@ -820,7 +820,7 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
           warp_send_hook_kv_pair "virtual_env" "$VIRTUAL_ENV"
           warp_send_hook_kv_pair "conda_env" "$CONDA_DEFAULT_ENV"
           warp_send_hook_kv_pair "node_version" "$node_version"
-          warp_send_hook_kv_pair "session_id" "$WARP_SESSION_ID"
+          warp_send_hook_kv_pair "session_id" "$TORCH_SESSION_ID"
           warp_send_hook_via_kv_pairs_end
         else
           local escaped_json="{\"hook\": \"Precmd\", \"value\": {
@@ -835,7 +835,7 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
           \"virtual_env\": \"$escaped_virtual_env\",
           \"conda_env\": \"$escaped_conda_env\",
           \"node_version\": \"$escaped_node_version\",
-          \"session_id\": $WARP_SESSION_ID
+          \"session_id\": $TORCH_SESSION_ID
           }}"
           warp_send_json_message "$escaped_json"
         fi
@@ -873,7 +873,7 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
     # and, well, the prompt itself). What is more, prompt can also include emojis - unicode characters
     # that sometimes contain special bytes (ie. ST, CAN or SUB) that are otherwise used as unhook
     # triggers for the precmd. Instead of escaping those and extracting the value of the prompt itself,
-    # we simply convert the entire data structure into a single line hex string, which Warp
+    # we simply convert the entire data structure into a single line hex string, which Torch
     # later decodes and sends to the grid to show the prompt.
     # Note: before converting the prompt to a hex string, we remove the multi-line newlines and replace
     # them with a single space (to avoid prompts that span multiple empty lines).
@@ -955,17 +955,17 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
         warp_at_least_bash_version "4.0"
     }
 
-    # Report the current input buffer contents to Warp. This only works correctly
+    # Report the current input buffer contents to Torch. This only works correctly
     # if `warp_input_reporting_supported` returns "1".
     warp_report_input () {
-        if [ "$WARP_IN_MSYS2" = true ]; then
+        if [ "$TORCH_IN_MSYS2" = true ]; then
             warp_send_hook_via_kv_pairs_start "InputBuffer"
             warp_send_hook_kv_pair "buffer" "$READLINE_LINE"
-            warp_send_hook_kv_pair "session_id" "$WARP_SESSION_ID"
+            warp_send_hook_kv_pair "session_id" "$TORCH_SESSION_ID"
             warp_send_hook_via_kv_pairs_end
         else
             local escaped_input="$(warp_escape_json "$READLINE_LINE")"
-            warp_send_json_message "{ \"hook\": \"InputBuffer\", \"value\": { \"buffer\": \"$escaped_input\", \"session_id\": $WARP_SESSION_ID } }"
+            warp_send_json_message "{ \"hook\": \"InputBuffer\", \"value\": { \"buffer\": \"$escaped_input\", \"session_id\": $TORCH_SESSION_ID } }"
         fi
         # This prevents bash from re-printing typeahead after we've removed it.
         READLINE_LINE=""
@@ -991,14 +991,14 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
             ;;
         esac
         local warp_escaped_selection="$(warp_escape_json "$result")"
-        warp_send_json_message "{ \"hook\": \"ExternalShellWidgetSelection\", \"value\": { \"buffer\": \"$warp_escaped_selection\", \"session_id\": $WARP_SESSION_ID } }"
+        warp_send_json_message "{ \"hook\": \"ExternalShellWidgetSelection\", \"value\": { \"buffer\": \"$warp_escaped_selection\", \"session_id\": $TORCH_SESSION_ID } }"
     }
 
     # Runs fzf's ctrl-t file-search widget as a foreground command.
     warp_run_external_ctrl_t_widget () {
         local result="$(__fzf_select__)"
         local warp_escaped_selection="$(warp_escape_json "$result")"
-        warp_send_json_message "{ \"hook\": \"ExternalShellWidgetSelection\", \"value\": { \"buffer\": \"$warp_escaped_selection\", \"session_id\": $WARP_SESSION_ID } }"
+        warp_send_json_message "{ \"hook\": \"ExternalShellWidgetSelection\", \"value\": { \"buffer\": \"$warp_escaped_selection\", \"session_id\": $TORCH_SESSION_ID } }"
     }
 
     warp_run_external_alt_c_widget () {
@@ -1014,7 +1014,7 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
       # https://gitlab.freedesktop.org/terminal-wg/specifications/-/merge_requests/6/diffs for details.
       local prompt_prefix=$'\e]133;A\a'
       local prompt_suffix=$'\e]133;B\a'
-      if [[ "$WARP_HONOR_PS1" != "1" ]] && [ "$WARP_USING_WINDOWS_CON_PTY" = true ]; then
+      if [[ "$TORCH_HONOR_PS1" != "1" ]] && [ "$TORCH_USING_WINDOWS_CON_PTY" = true ]; then
         local suffix="$prompt_suffix$RESET_GRID_OSC"
       else
         local suffix="$prompt_suffix"
@@ -1026,20 +1026,20 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
       local prompt_prefix_with_cursor_marker_surrounded="\[$prompt_prefix\]"
       local suffix_with_cursor_marker_surrounded="\[$suffix\]"
 
-      # Clear the user-defined prompt again, if using Warp's built-in prompt, before the command 
+      # Clear the user-defined prompt again, if using Torch's built-in prompt, before the command 
       # is rendered as it could have been reset by the user's bashrc or by setting 
       # the variable on the command line. This is used for same-line prompt and leads to the temporary
-      # product behavior of Warp prompt switches only taking effect in new sessions.
+      # product behavior of Torch prompt switches only taking effect in new sessions.
       # Certain prompt plugins can reset the prompt to a non-empty value, after we've initially unset it.
-      # Confirm that it is unset, if using built-in Warp prompt (update prompt vars is forced to run as the last precmd fn).
-      if [[ "$WARP_HONOR_PS1" != "1" ]]; then
+      # Confirm that it is unset, if using built-in Torch prompt (update prompt vars is forced to run as the last precmd fn).
+      if [[ "$TORCH_HONOR_PS1" != "1" ]]; then
         if [[ "$PS1" != "" ]]; then
           # If the PS1 has its original value, then we save it in SAVED_PS1 so we can restore to this value, if we were to unset it for
-          # the Warp prompt case, but the user wants to switch back to PS1 later.
+          # the Torch prompt case, but the user wants to switch back to PS1 later.
           SAVED_PS1=$PS1
         fi
         # Note that we DO NOT unset the PS1 here, since we want to pass it along as a "hidden left prompt" for 
-        # prompt preview purposes, if the Warp prompt is being used. Specifically, we want to show this prompt preview
+        # prompt preview purposes, if the Torch prompt is being used. Specifically, we want to show this prompt preview
         # for the Edit Prompt modal and onboarding prompt block.
       fi
 
@@ -1062,8 +1062,8 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
         PS1="$prompt_prefix$PS1$suffix"
       fi
 
-      # Unset the PS1, if we are using the Warp prompt.
-      if [[ "$WARP_HONOR_PS1" != "1" ]]; then
+      # Unset the PS1, if we are using the Torch prompt.
+      if [[ "$TORCH_HONOR_PS1" != "1" ]]; then
         PS1=""
       # Otherwise, if we are using the PS1, we use the normal prompt markers.
       else
@@ -1098,47 +1098,47 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
       precmd_functions+=("warp_update_prompt_vars")
     }
     
-    # Changes the WARP_HONOR_PS1 variable to 1, to indicate we want to use the PS1. Restores
-    # the original PS1 value (which we unset for Warp prompt) and calls warp_update_prompt_vars
+    # Changes the TORCH_HONOR_PS1 variable to 1, to indicate we want to use the PS1. Restores
+    # the original PS1 value (which we unset for Torch prompt) and calls warp_update_prompt_vars
     # to refresh the prompt. Note that we use an "empty block" workaround to achieve instant
     # prompt switching in bash, since there is no built-in methods to repaint the prompt, unlike
     # Zsh/fish.
     function warp_change_prompt_modes_to_ps1() {
       PS1="$SAVED_PS1"
-      WARP_HONOR_PS1="1"
+      TORCH_HONOR_PS1="1"
 
       warp_update_prompt_vars
     }
 
-    # Changes the WARP_HONOR_PS1 variable to 0, to indicate we want to use the Warp prompt. Calls 
+    # Changes the TORCH_HONOR_PS1 variable to 0, to indicate we want to use the Torch prompt. Calls 
     # warp_update_prompt_vars to refresh the prompt (note the PS1 will be unset in this logic). 
     # Note that we use an "empty block" workaround to achieve instant prompt switching in bash, 
     # since there is no built-in methods to repaint the prompt, unlike Zsh/fish.
     function warp_change_prompt_modes_to_warp_prompt() {
-      WARP_HONOR_PS1="0"
+      TORCH_HONOR_PS1="0"
 
       warp_update_prompt_vars
     }
 
     function clear() {
-        if [ "$WARP_IN_MSYS2" = true ]; then
+        if [ "$TORCH_IN_MSYS2" = true ]; then
             warp_send_hook_via_kv_pairs_start "Clear"
-            warp_send_hook_kv_pair "session_id" "$WARP_SESSION_ID"
+            warp_send_hook_kv_pair "session_id" "$TORCH_SESSION_ID"
             warp_send_hook_via_kv_pairs_end
         else
-            warp_send_json_message "{\"hook\": \"Clear\", \"value\": {\"session_id\": $WARP_SESSION_ID}}"
+            warp_send_json_message "{\"hook\": \"Clear\", \"value\": {\"session_id\": $TORCH_SESSION_ID}}"
         fi
     }
 
     function warp_finish_update {
       local update_id="$1"
-      if [ "$WARP_IN_MSYS2" = true ]; then
+      if [ "$TORCH_IN_MSYS2" = true ]; then
         warp_send_hook_via_kv_pairs_start "FinishUpdate"
         warp_send_hook_kv_pair "update_id" "$update_id"
-        warp_send_hook_kv_pair "session_id" "$WARP_SESSION_ID"
+        warp_send_hook_kv_pair "session_id" "$TORCH_SESSION_ID"
         warp_send_hook_via_kv_pairs_end
       else
-        warp_send_json_message "{ \"hook\": \"FinishUpdate\", \"value\": { \"update_id\": \"$update_id\", \"session_id\": $WARP_SESSION_ID} }"
+        warp_send_json_message "{ \"hook\": \"FinishUpdate\", \"value\": { \"update_id\": \"$update_id\", \"session_id\": $TORCH_SESSION_ID} }"
       fi
     }
 
@@ -1168,7 +1168,7 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
 
     # The SSH logic only applies to local sessions, because we don't yet have support for bootstrapping
     # recursive SSH sessions.
-    if [[ $WARP_IS_LOCAL_SHELL_SESSION == "1" ]]; then
+    if [[ $TORCH_IS_LOCAL_SHELL_SESSION == "1" ]]; then
         # This helper function determines whether the user's ssh arguments imply
         # creation of a non-interactive session or otherwise would conflict with
         # our SSH wrapper.  Returns 0 for an interactive session; >0 otherwise.
@@ -1232,19 +1232,19 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
             # Hex-encode the ZSH environment script we use to bootstrap remote zsh b/c it contains control characters
             # We decode on the SSH server using xxd if its available, otherwise fall back to a for-loop over each byte
             # and use printf to convert back to plaintext
-            local zsh_env_script=$(printf '%s' 'unsetopt ZLE RCS GLOBAL_RCS; WARP_SESSION_ID='$remote_session_id'; WARP_USING_WINDOWS_CON_PTY=@@USING_CON_PTY_BOOLEAN@@; WARP_HONOR_PS1='$WARP_HONOR_PS1'; _hostname=$(command -pv hostname >/dev/null 2>&1 && command -p hostname 2>/dev/null || command -p uname -n); _user=$(command -pv whoami >/dev/null 2>&1 && command -p whoami 2>/dev/null || echo $USER); _msg=$(printf "{\"hook\": \"InitShell\", \"value\": {\"session_id\": $WARP_SESSION_ID, \"shell\": \"zsh\", \"user\": \"%s\", \"hostname\": \"%s\"}}" "$_user" "$_hostname" | command -p od -An -v -tx1 | command -p tr -d '"'"' \n'"'"'); printf '"'"'\e]9278;d;%s\x07'"'"' $_msg; unset _hostname _user _msg' | command -p od -An -v -tx1 | command -p tr -d ' \n')
+            local zsh_env_script=$(printf '%s' 'unsetopt ZLE RCS GLOBAL_RCS; TORCH_SESSION_ID='$remote_session_id'; TORCH_USING_WINDOWS_CON_PTY=@@USING_CON_PTY_BOOLEAN@@; TORCH_HONOR_PS1='$TORCH_HONOR_PS1'; _hostname=$(command -pv hostname >/dev/null 2>&1 && command -p hostname 2>/dev/null || command -p uname -n); _user=$(command -pv whoami >/dev/null 2>&1 && command -p whoami 2>/dev/null || echo $USER); _msg=$(printf "{\"hook\": \"InitShell\", \"value\": {\"session_id\": $TORCH_SESSION_ID, \"shell\": \"zsh\", \"user\": \"%s\", \"hostname\": \"%s\"}}" "$_user" "$_hostname" | command -p od -An -v -tx1 | command -p tr -d '"'"' \n'"'"'); printf '"'"'\e]9278;d;%s\x07'"'"' $_msg; unset _hostname _user _msg' | command -p od -An -v -tx1 | command -p tr -d ' \n')
 
             # Optionally attach to an existing ControlMaster the user already
             # runs for this destination instead of creating our own. Resolve
             # the user's configured ControlPath with `ssh -G` (which expands
             # tokens like %h/%p/%r/%C into a literal path), then verify the
             # master is alive with `ssh -O check`. Both probes are local-only
-            # commands. On any failure we fall back to creating a Warp-owned
+            # commands. On any failure we fall back to creating a Torch-owned
             # master, preserving the existing behavior.
-            local control_path="$SSH_SOCKET_DIR/$WARP_SESSION_ID"
+            local control_path="$SSH_SOCKET_DIR/$TORCH_SESSION_ID"
             local control_master_mode="yes"
             local external_control_master="false"
-            if [[ "$WARP_SSH_REUSE_CONTROL_MASTER" == "1" ]]; then
+            if [[ "$TORCH_SSH_REUSE_CONTROL_MASTER" == "1" ]]; then
                 local user_control_path=$(command ssh -G "${@:1}" 2>/dev/null | command -p sed -n 's/^controlpath //p')
                 case "$user_control_path" in
                     "" | none)
@@ -1254,12 +1254,12 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
                         # The resolved path contains characters we cannot safely
                         # embed in the SSH hook JSON below (e.g. an unexpanded %
                         # token, quotes, or whitespace); fall back to a
-                        # Warp-owned master.
+                        # Torch-owned master.
                         ;;
                     *)
                         if command ssh -O check -o ControlPath="$user_control_path" "${@:1}" >/dev/null 2>&1; then
                             # A live master exists: multiplex through it and let
-                            # the client know Warp does not own it.
+                            # the client know Torch does not own it.
                             control_path="$user_control_path"
                             control_master_mode="no"
                             external_control_master="true"
@@ -1279,19 +1279,19 @@ if [ -z "$WARP_BOOTSTRAPPED" ]; then
             -t "${@:1}" \
 "
 export TERM_PROGRAM='WarpTerminal'
-# Mark the remote side of a Warp-managed SSH session so the bootstrap
+# Mark the remote side of a Torch-managed SSH session so the bootstrap
 # body can distinguish it from local shells. Used to gate the ExitShell
 # hook which tears down the remote-server-proxy subprocess.
-export WARP_IS_SSH='1'
-test -n '$WARP_CLIENT_VERSION' && export WARP_CLIENT_VERSION='$WARP_CLIENT_VERSION'
+export TORCH_IS_SSH='1'
+test -n '$TORCH_CLIENT_VERSION' && export TORCH_CLIENT_VERSION='$TORCH_CLIENT_VERSION'
 # Only forward the protocol version if it was set locally (i.e. the HOANotifications feature flag is on).
 test -n '$WARP_CLI_AGENT_PROTOCOL_VERSION' && export WARP_CLI_AGENT_PROTOCOL_VERSION='$WARP_CLI_AGENT_PROTOCOL_VERSION'
 
-hook="'$(printf "{\"hook\": \"SSH\", \"value\": {\"socket_path\": \"'$control_path'\", \"remote_shell\": \"%s\", \"session_id\": '"$WARP_SESSION_ID"', \"remote_session_id\": '"$remote_session_id"', \"external_control_master\": '"$external_control_master"'}}" "${SHELL##*/}" | command -p od -An -v -tx1 | command -p tr -d " \n")'"
+hook="'$(printf "{\"hook\": \"SSH\", \"value\": {\"socket_path\": \"'$control_path'\", \"remote_shell\": \"%s\", \"session_id\": '"$TORCH_SESSION_ID"', \"remote_session_id\": '"$remote_session_id"', \"external_control_master\": '"$external_control_master"'}}" "${SHELL##*/}" | command -p od -An -v -tx1 | command -p tr -d " \n")'"
 printf '$OSC_START$DCS_JSON_MARKER$OSC_PARAM_SEPARATOR%s$OSC_END' "'$hook'"
 
 if test "'"${SHELL##*/}" != "bash" -a "${SHELL##*/}" != "zsh"'"; then
-  # Emulate the SSHD logic to print the MotD. Because the Warp SSH wrapper passes
+  # Emulate the SSHD logic to print the MotD. Because the Torch SSH wrapper passes
   # a command to run, SSHD does a quiet login, updating utmp and other login
   # state, but not printing the MotD. For bash and zsh, this is instead handled
   # by our bootstrap script.
@@ -1322,30 +1322,30 @@ case "'${SHELL##*/}'" in
       command -p stty raw
       HISTCONTROL=ignorespace
       HISTIGNORE=" *"
-      WARP_SESSION_ID='$remote_session_id'
-      WARP_HONOR_PS1="'$WARP_HONOR_PS1'"
+      TORCH_SESSION_ID='$remote_session_id'
+      TORCH_HONOR_PS1="'$TORCH_HONOR_PS1'"
       _hostname=$(command -pv hostname >/dev/null 2>&1 && command -p hostname 2>/dev/null || command -p uname -n)
       _user=$(command -v whoami >/dev/null 2>&1 && command whoami 2>/dev/null || echo $USER)
-      _msg=$(printf "{\"hook\": \"InitShell\", \"value\": {\"session_id\": $WARP_SESSION_ID, \"shell\": \"bash\", \"user\": \"%s\", \"hostname\": \"%s\"}}" "$_user" "$_hostname" | command -p od -An -v -tx1 | command -p tr -d " \n")'"
-      WARP_USING_WINDOWS_CON_PTY=@@USING_CON_PTY_BOOLEAN@@
-      if [[ "'$OS'" == Windows_NT ]]; then WARP_IN_MSYS2=true; else WARP_IN_MSYS2=false; fi
+      _msg=$(printf "{\"hook\": \"InitShell\", \"value\": {\"session_id\": $TORCH_SESSION_ID, \"shell\": \"bash\", \"user\": \"%s\", \"hostname\": \"%s\"}}" "$_user" "$_hostname" | command -p od -An -v -tx1 | command -p tr -d " \n")'"
+      TORCH_USING_WINDOWS_CON_PTY=@@USING_CON_PTY_BOOLEAN@@
+      if [[ "'$OS'" == Windows_NT ]]; then TORCH_IN_MSYS2=true; else TORCH_IN_MSYS2=false; fi
       printf '\''"'\e]9278;d;%s\x07'"'\'' \""'$_msg'"\"')
       unset _hostname _user _msg
       ;;
-  zsh) WARP_TMP_DIR="'$(command -p mktemp -d warptmp.XXXXXX)'"
+  zsh) TORCH_TMP_DIR="'$(command -p mktemp -d warptmp.XXXXXX)'"
 local ZSH_ENV_SCRIPT='$zsh_env_script'
 if [[ "'$?'" == 0 ]]; then
   if command -pv xxd >/dev/null 2>&1; then
-    echo "'$ZSH_ENV_SCRIPT'" | command -p xxd -p -r > "'$WARP_TMP_DIR'"/.zshenv
+    echo "'$ZSH_ENV_SCRIPT'" | command -p xxd -p -r > "'$TORCH_TMP_DIR'"/.zshenv
   else
     for i in {0..\$((\${#ZSH_ENV_SCRIPT} - 1))..2}; do
       builtin printf "'"\x${ZSH_ENV_SCRIPT:$i:2}"'"
-    done > "'$WARP_TMP_DIR'"/.zshenv
+    done > "'$TORCH_TMP_DIR'"/.zshenv
   fi
 else
   echo \"Failed to bootstrap warp. Continuing with a non-bootstrapped shell.\"
 fi
-TMPPREFIX="'$HOME/.zshtmp-'" WARP_SSH_RCFILES="'${ZDOTDIR:-$HOME}'" ZDOTDIR="'$WARP_TMP_DIR'" exec -l zsh -g $TRACE_FLAG_IF_WARP_SHELL_DEBUG_MODE
+TMPPREFIX="'$HOME/.zshtmp-'" TORCH_SSH_RCFILES="'${ZDOTDIR:-$HOME}'" ZDOTDIR="'$TORCH_TMP_DIR'" exec -l zsh -g $TRACE_FLAG_IF_WARP_SHELL_DEBUG_MODE
       ;;
 esac
 "
@@ -1353,12 +1353,12 @@ esac
 
         function ssh() {
             if is_interactive_ssh_session "$@"; then
-                warp_send_json_message "{\"hook\": \"PreInteractiveSSHSession\", \"value\": {\"session_id\": $WARP_SESSION_ID}}"
+                warp_send_json_message "{\"hook\": \"PreInteractiveSSHSession\", \"value\": {\"session_id\": $TORCH_SESSION_ID}}"
 
                 # If the SSH wrapper is not enabled for this session, don't use it.
-                if [ "$WARP_USE_SSH_WRAPPER" = "1" ]; then
+                if [ "$TORCH_USE_SSH_WRAPPER" = "1" ]; then
                     local TRACE_FLAG_IF_WARP_SHELL_DEBUG_MODE=""
-                    if [[ "$WARP_SHELL_DEBUG_MODE" == "1" ]]; then
+                    if [[ "$TORCH_SHELL_DEBUG_MODE" == "1" ]]; then
                         TRACE_FLAG_IF_WARP_SHELL_DEBUG_MODE="-x"
                     fi
                     warp_ssh_helper "$@"
@@ -1378,8 +1378,8 @@ esac
 
     # Before calling rcfiles, print the MotD.
     # In general, login(1) or pam_motd(8) is supposed to do this. However, we don't
-    # go through the normal login flow when bootstrapping a Warp session. In
-    # addition, Warp bash shells are _not_ login shells, because bash does not
+    # go through the normal login flow when bootstrapping a Torch session. In
+    # addition, Torch bash shells are _not_ login shells, because bash does not
     # support custom rcfiles in login shells.
     if [[ ! -e "$HOME/.hushlogin" ]]; then
       for motd_file in /etc/motd /run/motd /run/motd.dynamic /usr/lib/motd /usr/lib/motd.dynamic; do
@@ -1392,10 +1392,10 @@ esac
 
 
     # This reflects the bootstrap sequence in a login shell. We want to
-    # Do other shell startup first so we can ensure Warp goes last.
+    # Do other shell startup first so we can ensure Torch goes last.
     #
     # If this is a subshell, the user and system RC files have already been sourced.
-    if [[ -z $WARP_IS_SUBSHELL ]]; then
+    if [[ -z $TORCH_IS_SUBSHELL ]]; then
         # Make sure we force the locale used for number formatting to "C", to avoid
         # issues in locales that use a comma as the decimal separator.
         rcfiles_start_time="$(LC_ALL="C"; echo $EPOCHREALTIME)"
@@ -1431,14 +1431,14 @@ esac
     # set initial values.
     #
     # For more context, see: https://github.com/warpdotdev/Warp/issues/1262
-    if [[ $HISTFILESIZE == "$WARP_INITIAL_HISTFILESIZE" ]]; then
+    if [[ $HISTFILESIZE == "$TORCH_INITIAL_HISTFILESIZE" ]]; then
         unset HISTFILESIZE
     fi
-    unset WARP_INITIAL_HISTFILESIZE
-    if [[ $HISTSIZE == "$WARP_INITIAL_HISTSIZE" ]]; then
+    unset TORCH_INITIAL_HISTFILESIZE
+    if [[ $HISTSIZE == "$TORCH_INITIAL_HISTSIZE" ]]; then
         unset HISTSIZE
     fi
-    unset WARP_INITIAL_HISTSIZE
+    unset TORCH_INITIAL_HISTSIZE
 
     # Save the value of HISTCONTROL as it existed just after reading the user's
     # rcfiles.
@@ -1482,7 +1482,7 @@ esac
     # If the user's rc files turned PROMPT_COMMAND into an array, we must undo that.
     # Since Bash 5.1, the PROMPT_COMMAND variable can be an array, see:
     #   https://tiswww.case.edu/php/chet/bash/NEWS
-    # Unfortunately, doing so will break Warp because of the way it interacts with bash-preexec.
+    # Unfortunately, doing so will break Torch because of the way it interacts with bash-preexec.
     # When PROMPT_COMMAND is an array, the DEBUG signal fires for each array element, and since
     # bash-preexec uses a DEBUG trap to trigger the preexec functions, it will run our preexec
     # functions before the command at PROMPT_COMMAND[1], PROMPT_COMMAND[2], etc. This means our
@@ -1509,13 +1509,13 @@ esac
         # receive the command in preexec).
         __bp_adjust_histcontrol
     fi
-## ----- Warp initialization -----
+## ----- Torch initialization -----
     
-    # Append additional PATH entries if provided via WARP_PATH_APPEND. This is after the user's RC
+    # Append additional PATH entries if provided via TORCH_PATH_APPEND. This is after the user's RC
     # files are sourced in case they reset PATH (/etc/profile on Debian does this, for example).
-    if [[ ! -z "$WARP_PATH_APPEND" ]]; then
-        export PATH="$PATH:$WARP_PATH_APPEND"
-        unset WARP_PATH_APPEND
+    if [[ ! -z "$TORCH_PATH_APPEND" ]]; then
+        export PATH="$PATH:$TORCH_PATH_APPEND"
+        unset TORCH_PATH_APPEND
     fi
 
     # Read through shell options to determine if the user has enabled vi mode.
@@ -1556,7 +1556,7 @@ esac
         precmd_functions+=(user_prompt_command)
     fi
 
-    WARP_BOOTSTRAPPED=1
+    TORCH_BOOTSTRAPPED=1
 
     warp_update_prompt_vars
 
@@ -1567,7 +1567,7 @@ esac
 
     # Detect whether ctrl-r has been rebound to fzf's or atuin's bash history widget.
     _WARP_EXTERNAL_CTRL_R_WIDGET=""
-    if [ "$WARP_IN_MSYS2" = false ]; then
+    if [ "$TORCH_IN_MSYS2" = false ]; then
       warp_ctrl_r_binding="$(bind -X 2>/dev/null | command -p sed -n 's/^"\\C-r"[ :] *"\(.*\)"$/\1/p')"
       if [ -z "$warp_ctrl_r_binding" ] && declare -F __fzf_history__ >/dev/null; then
         warp_ctrl_r_macro="$(bind -s 2>/dev/null | command -p sed -n 's/^"\\C-r"[ :] *"\(.*\)"$/\1/p')"
@@ -1604,7 +1604,7 @@ esac
         local function_names="`compgen -A function`"
         local builtins="`compgen -b`"
         local keywords="`compgen -k`"
-        if [ "$WARP_IN_MSYS2" = false ]; then
+        if [ "$TORCH_IN_MSYS2" = false ]; then
           # Note that for now we don't support dynamically changing HISTFILE within a session.
           local escaped_histfile="$(warp_escape_json "$HISTFILE")"
           local escaped_abbrs=""
@@ -1631,7 +1631,7 @@ esac
 
         local shell_plugins_list="$(printf '%s\n' "${shell_plugins[@]}")"
 
-        if [ "$WARP_IN_MSYS2" = false ]; then
+        if [ "$TORCH_IN_MSYS2" = false ]; then
           local escaped_shell_plugins=$(warp_escape_json "$shell_plugins_list")
           local escaped_path="$(warp_escape_json "$PATH")"
           local escaped_shell_options=$(warp_escape_json "$shell_options")
@@ -1639,10 +1639,10 @@ esac
 
         local _user=$(command -pv whoami >/dev/null 2>&1 && command -p whoami 2>/dev/null || echo $USER)
         local _hostname=$(command -pv hostname >/dev/null 2>&1 && command -p hostname 2>/dev/null || command -p uname -n)
-        if [ "$WARP_IN_MSYS2" = true ]; then
+        if [ "$TORCH_IN_MSYS2" = true ]; then
           warp_send_hook_via_kv_pairs_start "Bootstrapped"
           warp_send_hook_kv_pair "histfile" "$HISTFILE"
-          warp_send_hook_kv_pair "session_id" "$WARP_SESSION_ID"
+          warp_send_hook_kv_pair "session_id" "$TORCH_SESSION_ID"
           warp_send_hook_kv_pair "shell" "bash"
           warp_send_hook_kv_pair "home_dir" "$HOME"
           warp_send_hook_kv_pair "user" "$_user"
@@ -1670,7 +1670,7 @@ esac
           local escaped_editor="$(warp_escape_json "$EDITOR")"
           local escaped_shell_path="$(warp_escape_json "$BASH")"
           local escaped_cdpath="$(warp_escape_json "$CDPATH")"
-          local escaped_json="{\"hook\": \"Bootstrapped\", \"value\": {\"histfile\": \"$escaped_histfile\", \"session_id\": $WARP_SESSION_ID, \"shell\": \"bash\",  \"home_dir\": \"$HOME\", \"user\":\"$_user\", \"host\":\"$_hostname\", \"path\": \"$escaped_path\", \"cdpath\": \"$escaped_cdpath\", \"editor\": \"$escaped_editor\", \"env_var_names\": \"$escaped_env_var_names\", \"abbreviations\": \"$escaped_abbrs\", \"aliases\": \"$escaped_aliases\", \"function_names\": \"$escaped_function_names\", \"builtins\": \"$escaped_builtins\", \"keywords\": \"$escaped_keywords\", \"shell_version\": \"$BASH_VERSION\", \"shell_options\": \"$escaped_shell_options\", \"rcfiles_start_time\": \"$rcfiles_start_time\", \"rcfiles_end_time\": \"$rcfiles_end_time\", \"shell_plugins\": \"$escaped_shell_plugins\", \"vi_mode_enabled\": \"$vi_mode_enabled\", \"os_category\": \"$os_category\", \"linux_distribution\": \"$linux_distribution\", \"wsl_name\": \"$WSL_DISTRO_NAME\", \"shell_path\": \"$escaped_shell_path\"}}"
+          local escaped_json="{\"hook\": \"Bootstrapped\", \"value\": {\"histfile\": \"$escaped_histfile\", \"session_id\": $TORCH_SESSION_ID, \"shell\": \"bash\",  \"home_dir\": \"$HOME\", \"user\":\"$_user\", \"host\":\"$_hostname\", \"path\": \"$escaped_path\", \"cdpath\": \"$escaped_cdpath\", \"editor\": \"$escaped_editor\", \"env_var_names\": \"$escaped_env_var_names\", \"abbreviations\": \"$escaped_abbrs\", \"aliases\": \"$escaped_aliases\", \"function_names\": \"$escaped_function_names\", \"builtins\": \"$escaped_builtins\", \"keywords\": \"$escaped_keywords\", \"shell_version\": \"$BASH_VERSION\", \"shell_options\": \"$escaped_shell_options\", \"rcfiles_start_time\": \"$rcfiles_start_time\", \"rcfiles_end_time\": \"$rcfiles_end_time\", \"shell_plugins\": \"$escaped_shell_plugins\", \"vi_mode_enabled\": \"$vi_mode_enabled\", \"os_category\": \"$os_category\", \"linux_distribution\": \"$linux_distribution\", \"wsl_name\": \"$WSL_DISTRO_NAME\", \"shell_path\": \"$escaped_shell_path\"}}"
           warp_send_json_message "$escaped_json"
         fi
     }

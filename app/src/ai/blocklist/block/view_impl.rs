@@ -660,7 +660,7 @@ pub fn render_citation(
         }
         AIAgentCitation::WarpDocumentation { .. } => {
             let icon = Icon::Warp.to_warpui_icon(theme.foreground()).finish();
-            let name = String::from("Warp Docs");
+            let name = String::from("Torch Docs");
             (Some(icon), name)
         }
         AIAgentCitation::WebPage { url } => {

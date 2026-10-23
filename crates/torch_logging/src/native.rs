@@ -454,7 +454,7 @@ fn collect_log_paths_in(log_directory: &Path, logfile_name: &str) -> Result<Vec<
 
     if files.is_empty() {
         return Err(anyhow::anyhow!(
-            "No warp logs were found for {logfile_name}"
+            "No torch logs were found for {logfile_name}"
         ));
     }
 
@@ -583,7 +583,7 @@ fn init_internal(
 
     let stdout_is_a_tty = std::io::stdout().is_terminal();
     let in_ci = env::var("CI").is_ok();
-    let integration_test = env::var("WARP_INTEGRATION").is_ok();
+    let integration_test = env::var("TORCH_INTEGRATION").is_ok();
     let use_logfile = match log_destination {
         Some(LogDestination::File) => true,
         Some(LogDestination::Stderr) => false,
@@ -661,7 +661,7 @@ fn init_log_directory() -> Result<std::path::PathBuf> {
         } else if #[cfg(any(target_os = "linux", target_os = "freebsd"))] {
             Ok(torch_core::paths::state_dir())
         } else if #[cfg(windows)] {
-            Ok(torch_core::paths::state_dir().join(torch_core::paths::WARP_LOGS_DIR))
+            Ok(torch_core::paths::state_dir().join(torch_core::paths::TORCH_LOGS_DIR))
         } else {
             Err(anyhow::anyhow!("Have not configured file-based logging for the current platform!"))
         }

@@ -1,14 +1,13 @@
-Package: warp-terminal@@CHANNEL_SUFFIX@@
+Package: torch
 Version: @@VERSION@@
 Section: devel
 Depends: fontconfig, libegl1, libwayland-client0, libwayland-egl1, libx11-6, libxcb1, libxcursor1, libxi6, libxkbcommon-x11-0, zlib1g
 Recommends: libgl1-mesa-dri, yaru-icon-theme | adwaita-icon-theme-full
 Priority: optional
 Architecture: @@ARCH@@
-Maintainer: Warp Linux Maintainers <linux-maintainers@warp.dev>
-Homepage: https://warp.dev/
-Description: Warp, the Rust-based terminal for developers and teams
- Warp is a modern, Rust-based terminal with AI built in so teams can
- build great software, faster. Bringing collaboration to the command line,
- Warp lets teams save and share commands for streamlined onboarding and
- incident response.
+Maintainer: TomByte <TomByte@users.noreply.github.com>
+Homepage: https://github.com/TomByte/torch
+Description: Torch, a local terminal for running coding agents side by side
+ Torch is a Rust terminal for running coding agents side by side, with each
+ agent's status in one place. It is forked from Warp and runs locally, with
+ no account, cloud services or telemetry.

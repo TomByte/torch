@@ -14,7 +14,7 @@ use torchui::r#async::FutureExt;
 use torchui::{AppContext, GetSingletonModelHandle, SingletonEntity as _, UpdateModel};
 
 use crate::ai::agent::conversation::ServerAIConversationMetadata;
-use crate::ai::agent_sdk::driver::{AgentDriverError, WARP_DRIVE_SYNC_TIMEOUT};
+use crate::ai::agent_sdk::driver::{AgentDriverError, TORCH_DRIVE_SYNC_TIMEOUT};
 use crate::ai::ambient_agents::AmbientAgentTaskId;
 use crate::ai::cloud_environments::{CloudAmbientAgentEnvironment, environment_matches_scope};
 use crate::ai::llms::{LLMId, LLMPreferences, is_model_allowed_for_scope};
@@ -266,14 +266,14 @@ where
     }
 }
 
-/// Refresh Warp Drive before executing an operation.
+/// Refresh Torch Drive before executing an operation.
 pub fn refresh_warp_drive(
     ctx: &AppContext,
 ) -> impl Future<Output = anyhow::Result<()>> + Send + 'static + use<> {
     UpdateManager::as_ref(ctx)
         .initial_load_complete()
-        .with_timeout(WARP_DRIVE_SYNC_TIMEOUT)
-        .map_err(|_| anyhow::anyhow!("Timed out waiting for Warp Drive to sync"))
+        .with_timeout(TORCH_DRIVE_SYNC_TIMEOUT)
+        .map_err(|_| anyhow::anyhow!("Timed out waiting for Torch Drive to sync"))
 }
 
 /// Fetch the conversation's server metadata and validate that its harness matches the caller's
@@ -345,7 +345,7 @@ pub enum EnvironmentChoice {
 
 impl EnvironmentChoice {
     /// Resolve the environment to use when creating an agent operation.
-    /// Warp Drive *must* have been synced first.
+    /// Torch Drive *must* have been synced first.
     pub fn resolve_for_create(
         args: EnvironmentCreateArgs,
         team_scope: &(impl TeamScope + ?Sized),
@@ -413,7 +413,7 @@ Without an environment, the agent will not be able to access private repositorie
 
     /// Resolve the environment to use when updating an agent integration. If the user did not
     /// request any changes to the environment, this returns `Ok(None)`.
-    /// Warp Drive *must* have been synced first.
+    /// Torch Drive *must* have been synced first.
     pub fn resolve_for_update(
         args: EnvironmentUpdateArgs,
         ctx: &AppContext,

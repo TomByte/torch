@@ -11,23 +11,23 @@ use torch_core::command::ExitCode;
 use crate::model::block::BlockId;
 use crate::model::session::SessionId;
 
-/// Indicates that the following JSON-encoded message is hex-encoded for Warp's lifecycle hooks.
+/// Indicates that the following JSON-encoded message is hex-encoded for Torch's lifecycle hooks.
 /// In DCS, it is used as the final char in the DCS start sequence.
 /// In OSC, it is used as the first parameter.
 pub(super) const HEX_ENCODED_JSON_MARKER: char = 'd';
 
-/// Indicates that the following JSON-encoded message is unencoded for Warp's lifecycle hooks.
+/// Indicates that the following JSON-encoded message is unencoded for Torch's lifecycle hooks.
 /// In DCS, it is used as the final char in the DCS start sequence.
 /// In OSC, it is used as the first parameter.
 pub(super) const UNENCODED_JSON_MARKER: char = 'f';
 
-/// Indicates that the following JSON-encoded message is percent-encoded for Warp's lifecycle
+/// Indicates that the following JSON-encoded message is percent-encoded for Torch's lifecycle
 /// hooks. Like hex encoding, this keeps the payload ASCII, but fish can produce it with a builtin.
 /// In DCS, it is used as the final char in the DCS start sequence.
 /// In OSC, it is used as the first parameter.
 pub(super) const PERCENT_ENCODED_JSON_MARKER: char = 'j';
 
-/// Indicates that the following message is a ANSI-C quoted message for receiving Warp's lifecycle
+/// Indicates that the following message is a ANSI-C quoted message for receiving Torch's lifecycle
 /// hooks via key-value pairs.
 /// In OSC< it is used as the first parameter.
 pub(super) const UNENCODED_KV_MARKER: char = 'k';
@@ -39,7 +39,7 @@ pub(super) const UNENCODED_KV_MARKER: char = 'k';
 /// rejects missing or unregistered IDs for hooks that require a registered session.
 pub type HookSessionId = Option<u64>;
 
-/// Enum representing all possible JSON payloads for Warp's DCS's.
+/// Enum representing all possible JSON payloads for Torch's DCS's.
 ///
 /// Serialization derives the internally tagged form
 /// (`{"hook": "...", "value": {...}}`). Deserialization is hand-written
@@ -706,7 +706,7 @@ pub struct PreexecValue {
     pub session_id: HookSessionId,
 }
 
-/// Received from the pty after the shell has finished executing Warp's
+/// Received from the pty after the shell has finished executing Torch's
 /// bootstrap script.
 ///
 /// Deserialization is hand-written through [`RawBootstrappedValue`] below,
@@ -756,7 +756,7 @@ pub struct BootstrappedValue {
     pub rcfiles_end_time: Option<OrderedFloat<f64>>,
 
     /// Tags for known shell configurations/plugins, especially ones that are
-    /// incompatible with Warp.
+    /// incompatible with Torch.
     pub shell_plugins: Option<HashSet<String>>,
 
     /// Whether the shell's native vi mode implementation is on.
@@ -921,7 +921,7 @@ fn parse_float_from_string(s: String) -> Option<OrderedFloat<f64>> {
     s.parse::<f64>().map(|f| f.into()).ok()
 }
 
-/// Received from the pty when Warp's SSH wrapper is executed, prior to
+/// Received from the pty when Torch's SSH wrapper is executed, prior to
 /// bootstrapping the SSH session.
 #[derive(Debug, Default, PartialEq, Eq, Deserialize, Serialize, Clone)]
 pub struct PreInteractiveSSHSessionValue {
@@ -941,7 +941,7 @@ pub struct SSHValue {
     pub remote_session_id: HookSessionId,
     /// `true` when `socket_path` points at a ControlMaster the user already
     /// had running (the wrapper attached to it instead of creating its own).
-    /// Warp must not tear down such a master on session exit. Defaults to
+    /// Torch must not tear down such a master on session exit. Defaults to
     /// `false` for hooks emitted by older bootstrap scripts.
     #[serde(default)]
     pub external_control_master: bool,
@@ -984,10 +984,10 @@ pub struct InitSubshellValue {
 }
 
 /// Emitted by a snippet included in the user's RC file, which signals a new session is being
-/// created; if the session is for a subshell, this triggers Warp's bootstrap process.
+/// created; if the session is for a subshell, this triggers Torch's bootstrap process.
 /// Otherwise, it's ignored.
 ///
-/// NOTE: snippets installed by older Warp versions may also include a `tmux` field; serde
+/// NOTE: snippets installed by older Torch versions may also include a `tmux` field; serde
 /// ignores unknown fields, so it is simply dropped now that the tmux SSH flow is removed.
 #[derive(Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
 pub struct SourcedRcFileForWarpValue {
@@ -997,8 +997,8 @@ pub struct SourcedRcFileForWarpValue {
 
 /// Received from the pty via a shell line editor hook, whether readline (bash),
 /// ZLE, or the fish [command line editor](https://fishshell.com/docs/current/interactive.html#command-line-editor).
-/// The binding is triggered when Warp writes the `ESC-i` escape sequence to the pty.
-/// Warp usually does this after a block completes, to collect any typeahead
+/// The binding is triggered when Torch writes the `ESC-i` escape sequence to the pty.
+/// Torch usually does this after a block completes, to collect any typeahead
 /// that the user entered while the block was running (see
 /// [`TerminalView::request_input_buffer`]).
 #[derive(Debug, Default, PartialEq, Eq, Clone, Deserialize, Serialize)]
@@ -1044,7 +1044,7 @@ pub struct FinishUpdateValue {
 }
 
 /// Received from the pty right before the remote shell exits (via `exit`,
-/// `logout`, Ctrl-D on an empty prompt, etc.). Lets the Warp client drop
+/// `logout`, Ctrl-D on an empty prompt, etc.). Lets the Torch client drop
 /// per-session resources — in particular the `ssh … remote-server-proxy`
 /// child process that holds a multiplexed channel on the foreground ssh
 /// ControlMaster — before the user's outer ssh tunnel tries to close, so

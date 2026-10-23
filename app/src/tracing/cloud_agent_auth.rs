@@ -38,8 +38,8 @@ use torchui::{AppContext, Entity, ModelContext, SingletonEntity};
 use crate::server::server_api::managed_secrets::AppManagedSecretsClient;
 
 /// The environment variables form the immutable dispatch-time authentication bootstrap.
-const CLOUD_AGENT_OTLP_TOKEN: &str = "WARP_CLOUD_AGENT_OTLP_TOKEN";
-const CLOUD_AGENT_OTLP_TOKEN_EXPIRES_AT: &str = "WARP_CLOUD_AGENT_OTLP_TOKEN_EXPIRES_AT";
+const CLOUD_AGENT_OTLP_TOKEN: &str = "TORCH_CLOUD_AGENT_OTLP_TOKEN";
+const CLOUD_AGENT_OTLP_TOKEN_EXPIRES_AT: &str = "TORCH_CLOUD_AGENT_OTLP_TOKEN_EXPIRES_AT";
 const OZ_RUN_ID: &str = "OZ_RUN_ID";
 /// The collector audience and requested lifetime are fixed by the cloud-agent trace contract.
 const COLLECTOR_AUDIENCE: &str = "warp-cloud-agent-otel";

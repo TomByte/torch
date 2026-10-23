@@ -36,7 +36,7 @@ pub enum AppIcon {
     Classic3,
     #[schemars(description = "Comets")]
     Comets,
-    /// Cow icon, for Code on Warp launch.
+    /// Cow icon, for Code on Torch launch.
     #[schemars(description = "Cow")]
     Cow,
     #[schemars(description = "Glass Sky")]

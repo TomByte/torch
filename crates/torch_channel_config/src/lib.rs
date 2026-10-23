@@ -1,4 +1,4 @@
-//! Loads a per-channel [`ChannelConfig`] for Warp's channel binaries.
+//! Loads a per-channel [`ChannelConfig`] for Torch's channel binaries.
 //!
 //! For non-bundled builds the internal `warp-channel-config` generator is
 //! invoked at runtime; for `release_bundle` builds the config is embedded at

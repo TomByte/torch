@@ -456,7 +456,7 @@ fn build_update_input(args: &UpdateRunnerArgs, existing: &RunnerConfig) -> Resul
 fn unrecognized_runner_value_error(field: &str) -> anyhow::Error {
     anyhow!(
         "This runner's {field} isn't recognized by this version of the CLI, so it can't be \
-         updated without setting {field} explicitly. Update Warp to manage this runner."
+         updated without setting {field} explicitly. Update Torch to manage this runner."
     )
 }
 

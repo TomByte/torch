@@ -132,11 +132,11 @@ pub enum Subject {
     AnyoneWithLink(LinkSharingSubjectType),
 }
 
-/// A kind of user. In all cases, there is an underlying Warp account, but it's represented
+/// A kind of user. In all cases, there is an underlying Torch account, but it's represented
 /// differently in certain cases.
 #[derive(Debug, Clone)]
 pub enum UserKind {
-    /// A Warp user account, tracked in the [`UserProfiles`] model.
+    /// A Torch user account, tracked in the [`UserProfiles`] model.
     Account(UserUid),
     /// A session-sharing participant.
     // TODO(CLD-2283): Remove this once we have Firebase UIDs for shared session participants.

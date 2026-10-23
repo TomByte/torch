@@ -1,5 +1,4 @@
 use pathfinder_color::ColorU;
-use ui_components::{Component as _, Options as _, button};
 use torch_core::features::FeatureFlag;
 use torch_core::send_telemetry_from_ctx;
 use torch_core::ui::appearance::Appearance;
@@ -18,6 +17,7 @@ use torchui_core::ui_components::components::{UiComponent, UiComponentStyles};
 use torchui_core::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
 };
+use ui_components::{Component as _, Options as _, button};
 
 use super::OnboardingSlide;
 use crate::OnboardingIntention;
@@ -171,7 +171,7 @@ impl ThemePickerSlide {
         // Add the Privacy Settings / Terms of Service disclaimer block below the
         // theme options when the user has selected the terminal intention and
         // won't hit the login slide afterwards. The terminal-intent flow skips
-        // the login slide (which surfaces the same links) unless Warp Drive is
+        // the login slide (which surfaces the same links) unless Torch Drive is
         // enabled — in that case the login slide will still run after the theme
         // step and show the disclaimer, so duplicating it here is unnecessary.
         let state = self.onboarding_state.as_ref(app);

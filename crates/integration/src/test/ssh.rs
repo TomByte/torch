@@ -15,7 +15,9 @@ use torch::integration_testing::terminal::{
     execute_command_for_single_terminal_in_tab, validate_block_output,
     wait_until_bootstrapped_single_pane_for_tab,
 };
-use torch::integration_testing::view_getters::{single_terminal_view, single_terminal_view_for_tab};
+use torch::integration_testing::view_getters::{
+    single_terminal_view, single_terminal_view_for_tab,
+};
 use torch::terminal::model::bootstrap::BootstrapStage;
 use torch::terminal::session_settings::{StartupShell, StartupShellOverride};
 use torch::terminal::shell::ShellType;
@@ -116,7 +118,7 @@ fn verify_login_shell(shell: &str) -> TestStep {
         "zsh" => "[[ -o login ]]",
         "fish" => "status --is-login",
         // For other shells, we don't actually start a login shell but do source /etc/profile.
-        _ => "test \"$WARP_PROFILE_LOADED\" = true",
+        _ => "test \"$TORCH_PROFILE_LOADED\" = true",
     };
 
     match shell {

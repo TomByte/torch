@@ -11,8 +11,6 @@ use itertools::Itertools;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use smol_str::SmolStr;
-use typed_path::{TypedPath, TypedPathBuf, WindowsPath};
-use version_compare::{Cmp, Version};
 use torch_completer::completer::{CommandExitStatus, CommandOutput};
 #[cfg(windows)]
 use torch_core::paths::base_config_dir;
@@ -21,6 +19,8 @@ use torch_errors::report_error;
 use torch_util::path::{
     convert_msys2_to_windows_native_path, convert_wsl_to_windows_host_path, msys2_exe_to_root,
 };
+use typed_path::{TypedPath, TypedPathBuf, WindowsPath};
+use version_compare::{Cmp, Version};
 
 use self::unescape::unescape_quotes;
 use crate::model::escape_sequences;
@@ -155,7 +155,7 @@ impl Shell {
     /// If the particular version of this shell supports input reporting, return the byte sequence
     /// to trigger input reporting.
     ///
-    /// These sequences are bound to Warp shell functions during session bootstrap that print the
+    /// These sequences are bound to Torch shell functions during session bootstrap that print the
     /// shell's input buffer, wrapped within the 'InputBuffer' DCS hook when triggered. PowerShell
     /// cannot use a binding that contains the letter "i"  because it does virtual key code
     /// translation based on the current layout, and not all layouts have the letter "i".
@@ -401,7 +401,7 @@ impl ShellType {
                 format!(" warp_run_generator_command_native_completions {hex_encoded_line}")
             }
             ShellType::PowerShell => {
-                format!("Warp-Run-GeneratorCommand-NativeCompletion {hex_encoded_line}")
+                format!("Torch-Run-GeneratorCommand-NativeCompletion {hex_encoded_line}")
             }
         }
     }
@@ -604,7 +604,7 @@ impl ShellType {
         }
     }
 
-    /// If true, Warp will bootstrap the shell if it's the login shell on the remote host.
+    /// If true, Torch will bootstrap the shell if it's the login shell on the remote host.
     pub fn is_fully_supported_remotely(&self) -> bool {
         match self {
             ShellType::Zsh | ShellType::Bash => true,
@@ -680,7 +680,7 @@ impl ShellType {
                                 // Those suffixes are contained in `PATHEXT`.
                                 for ext in PATHEXT {
                                     // If the command ends with one of those suffixes, tell
-                                    // Warp about this command as-is and also sans-suffix, e.g.
+                                    // Torch about this command as-is and also sans-suffix, e.g.
                                     // "git" and "git.exe".
                                     if line.to_lowercase().ends_with(&ext.to_lowercase()) {
                                         let trimmed = &line[..line.len() - ext.len()];
@@ -719,7 +719,7 @@ impl ShellType {
                                     // Those suffixes are contained in `PATHEXT`.
                                     for ext in PATHEXT {
                                         // If the command ends with one of those suffixes, tell
-                                        // Warp about this command as-is and also sans-suffix, e.g.
+                                        // Torch about this command as-is and also sans-suffix, e.g.
                                         // "git" and "git.exe".
                                         if line.to_lowercase().ends_with(&ext.to_lowercase()) {
                                             let trimmed = &line[..line.len() - ext.len()];
@@ -755,7 +755,7 @@ impl ShellType {
         match self {
             ShellType::PowerShell => Some(
                 "$names = Get-Command -CommandType Function | Where-Object { \
-                -not $_.Name.StartsWith('Warp') } | Select-Object -ExpandProperty Name; \
+                -not $_.Name.StartsWith('Torch') } | Select-Object -ExpandProperty Name; \
                 $text = [string]::Join([Environment]::NewLine, $names); \
                 $bytes = [System.Text.UTF8Encoding]::new($false).GetBytes($text); \
                 [Console]::OpenStandardOutput().Write($bytes, 0, $bytes.Length)",
@@ -872,7 +872,7 @@ impl ShellLaunchData {
                 let windows_encoding = TypedPath::unix(path_str).with_windows_encoding();
                 PathBuf::try_from(windows_encoding).ok()
             }
-            // The container is Unix; Warp runs on the host, so paths are
+            // The container is Unix; Torch runs on the host, so paths are
             // already in the host's native encoding. Pass through unchanged.
             ShellLaunchData::DockerSandbox { .. } => Some(PathBuf::from(path_str)),
         }

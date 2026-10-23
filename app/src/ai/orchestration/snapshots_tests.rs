@@ -73,7 +73,7 @@ fn environment(id: SyncId, name: &str, owner: Owner) -> CloudAmbientAgentEnviron
 #[test]
 fn harness_snapshot_excludes_gemini_and_selects_initial() {
     let entries = vec![
-        entry(Harness::Oz, "Warp", true),
+        entry(Harness::Oz, "Torch", true),
         entry(Harness::Claude, "Claude Code", true),
         entry(Harness::Gemini, "Gemini", true),
     ];
@@ -90,7 +90,7 @@ fn harness_snapshot_excludes_gemini_and_selects_initial() {
 #[test]
 fn harness_snapshot_filters_product_disabled_local_harness() {
     let entries = vec![
-        entry(Harness::Oz, "Warp", true),
+        entry(Harness::Oz, "Torch", true),
         entry(Harness::Codex, "Codex", true),
     ];
 
@@ -104,7 +104,7 @@ fn harness_snapshot_filters_product_disabled_local_harness() {
 #[test]
 fn harness_snapshot_keeps_cloud_opencode_selectable() {
     let entries = vec![
-        entry(Harness::Oz, "Warp", true),
+        entry(Harness::Oz, "Torch", true),
         entry(Harness::OpenCode, "OpenCode", true),
     ];
 
@@ -123,7 +123,7 @@ fn harness_snapshot_keeps_cloud_opencode_selectable() {
 fn harness_snapshot_marks_missing_local_cli_disabled_and_sorts_last() {
     let entries = vec![
         entry(Harness::Claude, "Claude Code", true),
-        entry(Harness::Oz, "Warp", true),
+        entry(Harness::Oz, "Torch", true),
     ];
     let setup = |harness: Harness| match harness {
         Harness::Claude => LocalHarnessSetupState::MissingHarness {
@@ -150,7 +150,7 @@ fn harness_snapshot_marks_missing_local_cli_disabled_and_sorts_last() {
 #[test]
 fn harness_snapshot_marks_server_disabled_entries() {
     let entries = vec![
-        entry(Harness::Oz, "Warp", true),
+        entry(Harness::Oz, "Torch", true),
         entry(Harness::Claude, "Claude Code", false),
     ];
 

@@ -245,7 +245,7 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
         context.to_owned(),
     )]);
 
-    // Add command palette entry for toggling between Warp and Classic input modes
+    // Add command palette entry for toggling between Torch and Classic input modes
     app.register_fixed_bindings(vec![
         FixedBinding::empty(
             "Toggle Input Mode (Torch/Classic)".to_string(),
@@ -557,7 +557,7 @@ pub struct AppearanceSettingsPageView {
     header_toolbar_inline_editor: ViewHandle<HeaderToolbarInlineEditor>,
 
     /// The context chip renderers based on the most recently
-    /// selected Warp prompt configuration.
+    /// selected Torch prompt configuration.
     context_chips: Vec<ContextChipRenderer>,
 
     /// The information we need to render the PS1 as a grid when we're
@@ -3565,7 +3565,7 @@ impl SettingsWidget for ToolsPanelStateScopeWidget {
     type View = AppearanceSettingsPageView;
 
     fn search_terms(&self) -> &str {
-        "left tools panel open closed across tabs file tree project explorer global search warp drive conversation list"
+        "left tools panel open closed across tabs file tree project explorer global search torch drive conversation list"
     }
 
     fn render(
@@ -3734,7 +3734,7 @@ impl SettingsWidget for ToolsPanelWarpDriveWidget {
     type View = AppearanceSettingsPageView;
 
     fn search_terms(&self) -> &str {
-        "tools panel tabs warp drive left panel visibility"
+        "tools panel tabs torch drive left panel visibility"
     }
 
     fn render(
@@ -3779,7 +3779,7 @@ impl SettingsWidget for InputTypeWidget {
     type View = AppearanceSettingsPageView;
 
     fn search_terms(&self) -> &str {
-        "input type warp universal classic style prompt terminal ai developer mode interface shell chips ps1"
+        "input type torch universal classic style prompt terminal ai developer mode interface shell chips ps1"
     }
 
     fn render(
@@ -3868,7 +3868,7 @@ impl SettingsWidget for PromptWidget {
     type View = AppearanceSettingsPageView;
 
     fn search_terms(&self) -> &str {
-        "prompt ps1 terminal warp shell custom"
+        "prompt ps1 terminal torch shell custom"
     }
 
     fn render(

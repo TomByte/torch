@@ -6,7 +6,6 @@ use onboarding::components::onboarding_callout::{
     StepStatus,
 };
 use rust_embed::RustEmbed;
-use ui_components::Component as _;
 use torch_core::ui::appearance::Appearance;
 use torch_core::ui::theme::{AnsiColor, AnsiColors, Details, Fill, TerminalColors, WarpTheme};
 use torchui_core::color::ColorU;
@@ -14,6 +13,7 @@ use torchui_core::elements::{Rect, Stack};
 use torchui_core::fonts::{Cache, FamilyId, Weight};
 use torchui_core::prelude::*;
 use torchui_core::{AddWindowOptions, AssetProvider, ModelContext, platform};
+use ui_components::Component as _;
 
 #[derive(Clone, Copy, RustEmbed)]
 #[folder = "../../app/assets"]
@@ -85,7 +85,7 @@ impl View for RootView {
         let callout = self.callout.render(
             appearance,
             CalloutParams {
-                title: "Meet your Warp input".into(),
+                title: "Meet your Torch input".into(),
                 text: "Your terminal input can detect natural language as well as commands.".into(),
                 step: StepStatus::new(1, 2),
                 right_button: CalloutButton {

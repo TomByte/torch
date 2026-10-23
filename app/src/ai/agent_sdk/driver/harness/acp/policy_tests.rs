@@ -49,7 +49,7 @@ fn permission_requests_are_reduced_to_what_policy_cares_about() {
             "rawInput": { "path": "README.md" }
         }))),
         None,
-        "reads have no hard refusal in Warp's policy"
+        "reads have no hard refusal in Torch's policy"
     );
     assert_eq!(
         PolicyRequest::for_tool_call(&tool_call(json!({ "toolCallId": "c4" }))),

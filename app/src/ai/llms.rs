@@ -10,8 +10,8 @@ use serde::{Deserialize, Serialize, de};
 use torch_core::features::FeatureFlag;
 use torch_core::ui::Icon;
 use torch_errors::report_error;
-use warp_multi_agent_api as api;
 use torchui::{AppContext, Entity, EntityId, ModelContext, SingletonEntity};
+use warp_multi_agent_api as api;
 
 use super::agent::conversation::AIConversation;
 use super::custom_model_routers::{self, CustomModelRouter, ModelConfigError};
@@ -35,7 +35,7 @@ pub fn is_using_api_key_for_provider(provider: &LLMProvider, app: &AppContext) -
 }
 
 /// Like [`is_using_api_key_for_provider`], but for requests in `conversation`: a connected
-/// ChatGPT subscription does not count once that conversation has switched to Warp credits.
+/// ChatGPT subscription does not count once that conversation has switched to Torch credits.
 pub fn is_using_api_key_for_provider_in_conversation(
     provider: &LLMProvider,
     conversation: Option<&AIConversation>,
@@ -565,7 +565,7 @@ impl LLMInfo {
 /// The set of LLMs available for a feature.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct AvailableLLMs {
-    /// The Warp "default" LLM.
+    /// The Torch "default" LLM.
     default_id: LLMId,
     choices: Vec<LLMInfo>,
 
@@ -1334,7 +1334,7 @@ impl LLMPreferences {
         self.custom_llms.iter().find(|info| info.id == *id)
     }
 
-    /// Returns `true` when `id` identifies a model that can run in a Warp cloud
+    /// Returns `true` when `id` identifies a model that can run in a Torch cloud
     /// (Oz) agent, and is therefore safe to forward as a cloud
     /// `config.model_id`.
     ///
@@ -1364,7 +1364,7 @@ impl LLMPreferences {
         }
     }
 
-    /// True when the pane's active Agent Mode model can run in a Warp cloud
+    /// True when the pane's active Agent Mode model can run in a Torch cloud
     /// (Oz) agent (see [`Self::is_cloud_runnable_oz_model_id`]).
     pub(crate) fn is_active_base_model_cloud_runnable(
         &self,

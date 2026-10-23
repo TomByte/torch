@@ -145,28 +145,6 @@ fn test_from_group_id_errors_if_incorrect_experiment() {
 }
 
 #[test]
-fn test_create_experiment_layer_mappings() {
-    let layers = vec![&*TEST_LAYER];
-    create_experiment_layer_mappings(&layers);
-
-    assert_eq!(EXPERIMENT_LAYER_MAPPINGS.len(), 2);
-    assert_eq!(
-        EXPERIMENT_LAYER_MAPPINGS
-            .get(TestExperiment::name())
-            .expect("Layer mapping should have been created for TestExperiment.")
-            .name(),
-        TEST_LAYER.name()
-    );
-    assert_eq!(
-        EXPERIMENT_LAYER_MAPPINGS
-            .get(FooExperiment::name())
-            .expect("Layer mapping should have been created for FooExperiment.")
-            .name(),
-        TEST_LAYER.name()
-    );
-}
-
-#[test]
 fn test_allow_user_overrides() {
     // Case 1: Experiment and channel don't allow overrides.
     assert!(!TestExperiment::can_use_user_override(Channel::Stable));

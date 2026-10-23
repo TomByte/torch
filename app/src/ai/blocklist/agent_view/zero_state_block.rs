@@ -57,7 +57,7 @@ use crate::util::time_format::format_approx_duration_from_now_utc;
 const CLOUD_AGENT_DOCS_URL: &str = "https://docs.warp.dev/platform/";
 const OZ_UPDATES_SECTION_HEADER: &str = "Latest updates";
 
-// The maximum number of Warp Agent updates from the changelog rendered in-line in the 'Latest updates' section.
+// The maximum number of Torch Agent updates from the changelog rendered in-line in the 'Latest updates' section.
 const MAX_OZ_UPDATE_COUNT: usize = 4;
 
 const MAX_RECENT_CONVERSATION_COUNT: usize = 3;
@@ -426,7 +426,7 @@ impl View for AgentViewZeroStateBlock {
             }
 
             HeaderProps {
-                title: "New Warp Agent conversation".into(),
+                title: "New Torch Agent conversation".into(),
                 description: AgentViewDescription::PlainText(vec![local_description.into()]),
                 icon: IconWithStatusVariant::OzAgent {
                     status: None,

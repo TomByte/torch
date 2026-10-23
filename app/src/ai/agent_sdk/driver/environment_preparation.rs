@@ -157,10 +157,10 @@ pub(super) fn launch_environment(
     working_dir: &Path,
     env: &mut HashMap<OsString, OsString>,
 ) -> anyhow::Result<Option<PreparationFile>> {
-    for name in ["OZ_WORKSPACE_ROOT", "WARP_WORKSPACE_ROOT"] {
+    for name in ["OZ_WORKSPACE_ROOT", "TORCH_WORKSPACE_ROOT"] {
         env.insert(name.into(), working_dir.as_os_str().to_owned());
     }
-    for name in ["OZ_RUN_ID", "WARP_RUN_ID"] {
+    for name in ["OZ_RUN_ID", "TORCH_RUN_ID"] {
         env.insert(name.into(), task_id.unwrap_or_default().into());
     }
     let file = match policy {
@@ -173,7 +173,7 @@ pub(super) fn launch_environment(
             env.insert(MODE_ENV.into(), "execution".into());
             env.insert(FILE_ENV.into(), file.path().into_os_string());
             env.insert(
-                "WARP_EXECUTION_ID".into(),
+                "TORCH_EXECUTION_ID".into(),
                 policy.execution_id.clone().into(),
             );
             Some(file)
@@ -181,7 +181,7 @@ pub(super) fn launch_environment(
         None => {
             env.insert(MODE_ENV.into(), "legacy".into());
             env.insert(FILE_ENV.into(), OsString::new());
-            env.insert("WARP_EXECUTION_ID".into(), OsString::new());
+            env.insert("TORCH_EXECUTION_ID".into(), OsString::new());
             None
         }
     };
@@ -209,17 +209,17 @@ pub(super) fn resolve_from_environment(
             let bytes = std::fs::read(path).context("could not read execution preparation")?;
             let policy: PreparationPolicy =
                 serde_json::from_slice(&bytes).context("invalid execution preparation")?;
-            for name in ["OZ_RUN_ID", "WARP_RUN_ID"] {
+            for name in ["OZ_RUN_ID", "TORCH_RUN_ID"] {
                 ensure!(
                     value(name) == Some(&OsString::from(&policy.task_id)),
                     "execution preparation task mismatch"
                 );
             }
             ensure!(
-                value("WARP_EXECUTION_ID") == Some(&OsString::from(&policy.execution_id)),
+                value("TORCH_EXECUTION_ID") == Some(&OsString::from(&policy.execution_id)),
                 "execution preparation execution mismatch"
             );
-            for name in ["OZ_WORKSPACE_ROOT", "WARP_WORKSPACE_ROOT"] {
+            for name in ["OZ_WORKSPACE_ROOT", "TORCH_WORKSPACE_ROOT"] {
                 ensure!(
                     value(name).map(PathBuf::from).as_ref() == Some(&policy.working_dir),
                     "execution preparation root mismatch"
@@ -233,12 +233,12 @@ pub(super) fn resolve_from_environment(
         }
         Some("legacy") => {
             ensure!(
-                value(FILE_ENV).is_none() && value("WARP_EXECUTION_ID").is_none(),
+                value(FILE_ENV).is_none() && value("TORCH_EXECUTION_ID").is_none(),
                 "legacy preparation inherited execution state"
             );
             Ok(())
         }
-        None if value(FILE_ENV).is_none() && value("WARP_EXECUTION_ID").is_none() => Ok(()),
+        None if value(FILE_ENV).is_none() && value("TORCH_EXECUTION_ID").is_none() => Ok(()),
         Some(_) | None => bail!("execution preparation mode is missing or invalid"),
     }
 }

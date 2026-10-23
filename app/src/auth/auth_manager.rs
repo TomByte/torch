@@ -7,9 +7,6 @@ use ai::api_keys::{ApiKeyManager, ChatGPTConnectFailure};
 use anyhow::{Result, anyhow};
 use futures::future::Either;
 use settings::Setting as _;
-#[cfg(target_family = "wasm")]
-use url::Url;
-use uuid::Uuid;
 use torch_core::channel::ChannelState;
 use torch_core::features::FeatureFlag;
 use torch_errors::{report_error, report_if_error};
@@ -21,6 +18,9 @@ use torch_server_auth::user::persistence::PersistedUser;
 use torchui::r#async::Timer;
 use torchui::clipboard::ClipboardContent;
 use torchui::{AppContext, Entity, ModelContext, SingletonEntity, UpdateModel};
+#[cfg(target_family = "wasm")]
+use url::Url;
+use uuid::Uuid;
 
 use super::auth_state::{AuthState, PersistAction};
 use super::auth_view_modal::{AuthRedirectPayload, AuthViewVariant};
@@ -72,7 +72,7 @@ pub enum AuthManagerEvent {
     AttemptedLoginGatedFeature {
         auth_view_variant: AuthViewVariant,
     },
-    // The current user is anonymous and the client has received a browser intent to sign in with a different Warp account.
+    // The current user is anonymous and the client has received a browser intent to sign in with a different Torch account.
     // Holds an auth payload from the received browser intent.
     LoginOverrideDetected(AuthRedirectPayload),
     /// Failed to mint a new custom token for an anonymous user.
@@ -179,7 +179,7 @@ impl AuthManager {
 
     /// Fetches and ultimately sets the user's auth state from an auth payload.
     /// Typically, this function is triggered when a user clicks the intent link from their browser
-    /// back to Warp after login (or pastes the URL in the app).
+    /// back to Torch after login (or pastes the URL in the app).
     pub fn initialize_user_from_auth_payload(
         &mut self,
         auth_payload: AuthRedirectPayload,
@@ -239,7 +239,7 @@ impl AuthManager {
             send_telemetry_from_ctx!(TelemetryEvent::AnonymousUserLinkedFromBrowser, ctx);
         } else if self.incoming_login_conflicts_with_pending_chatgpt_connect(&user_uid, ctx) {
             // A connect attempt only ever expects a link result, never a login. A login for
-            // another account here would silently switch the user's Warp account.
+            // another account here would silently switch the user's Torch account.
             log::warn!(
                 "Ignoring login handoff for a different user while a ChatGPT connect is pending"
             );
@@ -357,7 +357,7 @@ impl AuthManager {
 
     /// Authenticate asynchronously using the OAuth2 device authorization flow.
     ///
-    /// This is only used by the Warp CLI if running on a device that does not have the Warp app installed.
+    /// This is only used by the Torch CLI if running on a device that does not have the Torch app installed.
     #[cfg_attr(target_family = "wasm", allow(dead_code))]
     pub fn authorize_device(&self, ctx: &mut ModelContext<Self>) {
         if ChannelState::is_local_only() {
@@ -938,7 +938,7 @@ impl AuthManager {
 
     /// Returns whether an auth redirect that failed state validation should be
     /// silently dropped rather than surfaced as an error. This covers the
-    /// "user clicks the browser's 'Take me to Warp' button twice" case: once
+    /// "user clicks the browser's 'Take me to Torch' button twice" case: once
     /// they're fully logged in, a second redirect targeting the same user is
     /// redundant and should not produce a user-visible error.
     fn should_silently_ignore_stale_redirect(&self, incoming_user_uid: &Option<UserUid>) -> bool {

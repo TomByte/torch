@@ -31,9 +31,9 @@ pub enum WasmNUXDialogAction {
     SetWebAndClose,
     /// Closes the dialog and open on the desktop
     OpenNativeAndClose,
-    /// Open the Warp download page
+    /// Open the Torch download page
     OpenDownloadDesktopAppLink,
-    /// Open a link to learn more about Warp
+    /// Open a link to learn more about Torch
     LearnMore,
 }
 
@@ -42,7 +42,7 @@ pub enum WasmNUXDialogEvent {
 }
 
 /// A dialog that prompts the user to:
-/// * Download Warp if they haven't already
+/// * Download Torch if they haven't already
 /// * Explicitly choose between native and web.
 pub struct WasmNUXDialog {
     close_mouse_state: MouseStateHandle,
@@ -76,7 +76,7 @@ impl WasmNUXDialog {
     /// * The user hasn't dismissed the dialog
     ///
     /// If the user dismisses the dialog without choosing a preference, we'll continue to use the default autodetection
-    /// behavior: if Warp is installed, redirect to it; otherwise stay on the web.
+    /// behavior: if Torch is installed, redirect to it; otherwise stay on the web.
     pub fn should_display(app: &AppContext) -> bool {
         // Don't show on mobile devices - they can't use the desktop app
         if torchui::platform::wasm::is_mobile_device() {
@@ -86,7 +86,7 @@ impl WasmNUXDialog {
         // Someone just viewing a shared session or a conversation transcript (e.g. a
         // factory-onboarding link) isn't a prospective new user composing in their own
         // workspace, so the desktop-download prompt isn't relevant to them. The "Open in
-        // Warp" header button remains available as the unobtrusive path to the app.
+        // Torch" header button remains available as the unobtrusive path to the app.
         if matches!(
             web_intent_parser::current_web_intent(),
             Some(WebIntent::SessionView(_)) | Some(WebIntent::ConversationView(_))
@@ -137,8 +137,8 @@ impl View for WasmNUXDialog {
         let appearance = Appearance::handle(app).as_ref(app);
 
         // There are two general cases with the dialog:
-        // 1. The user doesn't have Warp installed - treat them as a potential new user and encourage downloading Warp.
-        // 2. The user has Warp installed, but clicked through to the web - ask if they want to always default to web.
+        // 1. The user doesn't have Torch installed - treat them as a potential new user and encourage downloading Torch.
+        // 2. The user has Torch installed, but clicked through to the web - ask if they want to always default to web.
         // As a sub-state of case 1, if the user clicks the download button, we provide an intent into the app.
 
         let close_button = appearance
@@ -272,8 +272,8 @@ impl TypedActionView for WasmNUXDialog {
                 ctx.emit(WasmNUXDialogEvent::Close);
             }
             WasmNUXDialogAction::OpenNativeAndClose => {
-                // We intentionally do not set the native preference here, in case the user hasn't actually installed Warp.
-                // If they have, on subsequent loads, we'll detect that Warp is installed and redirect to the desktop.
+                // We intentionally do not set the native preference here, in case the user hasn't actually installed Torch.
+                // If they have, on subsequent loads, we'll detect that Torch is installed and redirect to the desktop.
                 ctx.emit(WasmNUXDialogEvent::Close);
 
                 if let Some(url) = web_intent_parser::parse_web_intent_from_current_url() {

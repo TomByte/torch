@@ -45,7 +45,7 @@ pub(crate) const BLOCK_TOP_PADDING_ROWS: u16 = 1;
 /// transcript, passed in at session creation. The transcript renders whole
 /// rows, so fractional pixel-derived padding would ceil into several blank
 /// rows per block; instead every block gets exactly [`BLOCK_TOP_PADDING_ROWS`]
-/// blank rows above it, no reserved Warp-prompt height, and no memory-stats
+/// blank rows above it, no reserved Torch-prompt height, and no memory-stats
 /// footer row (the transcript renders neither).
 pub(crate) const TRANSCRIPT_BLOCK_SPACING: BlockSpacing = BlockSpacing {
     block_padding: BlockPadding {

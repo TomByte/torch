@@ -2,7 +2,7 @@ use super::is_warp_bundle;
 
 #[test]
 fn is_warp_bundle_recognises_warp_channels() {
-    assert!(is_warp_bundle("dev.warp.Warp"));
+    assert!(is_warp_bundle("dev.warp.Torch"));
     assert!(is_warp_bundle("dev.warp.WarpDev"));
     assert!(is_warp_bundle("dev.warp.WarpPreview"));
     assert!(is_warp_bundle("dev.warp.WarpOss"));

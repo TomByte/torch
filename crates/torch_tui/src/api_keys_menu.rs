@@ -25,8 +25,8 @@ use crate::input_suggestions_mode::{
 use crate::tui_builder::TuiUiBuilder;
 
 const MAX_VISIBLE_ROWS: usize = result_row_capacity(MAX_INLINE_MENU_ROWS, true, false);
-const FALLBACK_DESCRIPTION: &str = "in the event of an error, requests may be routed to use Warp \
-credits. Warp will prioritize using your API keys over Warp credits.";
+const FALLBACK_DESCRIPTION: &str = "in the event of an error, requests may be routed to use Torch \
+credits. Torch will prioritize using your API keys over Torch credits.";
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum TuiApiKeysRowKind {
     Provider(LLMProvider),
@@ -649,7 +649,7 @@ impl TuiApiKeysMenuModel {
         match result {
             Ok(_) => self.refresh_rows(ctx),
             Err(_) => self.set_browsing_error(
-                "Could not save the Warp credit fallback setting.".to_owned(),
+                "Could not save the Torch credit fallback setting.".to_owned(),
                 ctx,
             ),
         }
@@ -794,7 +794,7 @@ fn all_rows(ctx: &AppContext) -> Vec<TuiApiKeysRow> {
     }
     rows.push(TuiApiKeysRow {
         kind: TuiApiKeysRowKind::WarpCreditFallbackSetting,
-        title: "Warp credit fallback".to_owned(),
+        title: "Torch credit fallback".to_owned(),
         is_selectable: true,
     });
     rows
@@ -849,7 +849,7 @@ pub(crate) fn render_api_keys_footer(
         }
         TuiApiKeysFooter::WarpCreditFallback => vec![
             ("enter".to_owned(), key),
-            (" to toggle warp credit fallback | ".to_owned(), muted),
+            (" to toggle torch credit fallback | ".to_owned(), muted),
             ("esc".to_owned(), key),
             (" to close menu".to_owned(), muted),
         ],

@@ -258,7 +258,7 @@ fn renamed_sections_keep_the_slug_they_were_seeded_with() {
 
 #[test]
 fn from_slug_accepts_legacy_spellings() {
-    // Both the legacy "Oz" name and the current "Warp Agent" slug must resolve
+    // Both the legacy "Oz" name and the current "Torch Agent" slug must resolve
     // to SettingsSection::WarpAgent so existing deep links, persisted sessions
     // and external callers keep working after the user-facing rename (see
     // specs/GH1063/product.md, Behavior #8).
@@ -809,7 +809,7 @@ impl SettingsWidget for StubWidget {
 fn stub_widgets_page() -> PageType<TestSettingsView> {
     let widgets: Vec<Box<dyn SettingsWidget<View = TestSettingsView>>> = vec![
         Box::new(StubWidget {
-            terms: "warp agent global ai toggle",
+            terms: "torch agent global ai toggle",
         }),
         Box::new(StubWidget {
             terms: "active ai autosuggestions prompt",
@@ -838,7 +838,7 @@ fn visible_widget_count<V: View>(page: &PageType<V>) -> usize {
 #[test]
 fn search_terms_match_direct_unit_checks() {
     // Empty query matches everything (mirrors PageType::update_filter's guard).
-    assert!(search_terms_match("warp agent global ai toggle", ""));
+    assert!(search_terms_match("torch agent global ai toggle", ""));
     // All-words, case-insensitive, non-contiguous.
     assert!(search_terms_match(
         "active ai autosuggestions prompt",
@@ -854,7 +854,7 @@ fn search_terms_match_direct_unit_checks() {
     ));
     // Every word must appear.
     assert!(!search_terms_match(
-        "warp agent global ai toggle",
+        "torch agent global ai toggle",
         "file search"
     ));
     assert!(!search_terms_match(

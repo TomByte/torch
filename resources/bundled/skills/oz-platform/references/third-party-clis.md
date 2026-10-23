@@ -6,11 +6,11 @@ This reference documents third-party coding agent CLIs that Oz cloud agents can 
 
 The `-agents` tagged variants of prebuilt Oz Docker images (e.g. `warpdotdev/dev-base:latest-agents`, `warpdotdev/dev-rust:1.85-agents`) include Claude Code, Codex, and Gemini CLI preinstalled. Base tags (without `-agents`) do not include coding agent CLIs.
 
-> **Note**: Commands below that reference the Warp CLI should use the CLI binary name from the parent skill (the `{{warp_cli_binary_name}}` value).
+> **Note**: Commands below that reference the Torch CLI should use the CLI binary name from the parent skill (the `{{warp_cli_binary_name}}` value).
 
 ## Reporting Artifacts
 
-When a third-party CLI creates a PR or branch, Oz does not automatically detect it. You must explicitly register these artifacts so they appear in the Warp UI.
+When a third-party CLI creates a PR or branch, Oz does not automatically detect it. You must explicitly register these artifacts so they appear in the Torch UI.
 
 **Pull Requests**: After a third-party CLI creates a PR, call the `report_pr` tool with the `pr_url` and `branch` parameters. Parse the CLI's output to extract the PR URL and branch name.
 

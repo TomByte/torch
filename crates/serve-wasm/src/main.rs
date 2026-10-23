@@ -14,7 +14,7 @@ use tracing::Span;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 
-/// A small webserver to serve the Warp wasm bundle and assets for local development.
+/// A small webserver to serve the Torch wasm bundle and assets for local development.
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
@@ -38,7 +38,7 @@ async fn main() {
 
     let args = Args::parse();
 
-    println!("Serving Warp on http://localhost:{}", args.port);
+    println!("Serving Torch on http://localhost:{}", args.port);
     serve(make_router(&args.directory), args.port).await
 }
 

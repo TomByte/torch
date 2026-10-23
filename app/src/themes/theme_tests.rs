@@ -156,7 +156,8 @@ fn custom_theme_unmatched_legacy_absolute_path_is_preserved() {
 #[test]
 fn custom_theme_windows_absolute_path_string_is_preserved() {
     let root = PathBuf::from("/Users/example/.warp/themes");
-    let stored = PathBuf::from(r"C:\Users\example\AppData\Roaming\warp\Warp\data\themes\mocha.yml");
+    let stored =
+        PathBuf::from(r"C:\Users\example\AppData\Roaming\warp\Torch\data\themes\mocha.yml");
 
     assert_eq!(custom_theme_path_from_storage(&stored, &root), stored);
 }
@@ -164,7 +165,8 @@ fn custom_theme_windows_absolute_path_string_is_preserved() {
 #[test]
 fn custom_theme_windows_absolute_path_string_is_not_portable() {
     let root = PathBuf::from("/Users/example/.warp/themes");
-    let stored = PathBuf::from(r"C:\Users\example\AppData\Roaming\warp\Warp\data\themes\mocha.yml");
+    let stored =
+        PathBuf::from(r"C:\Users\example\AppData\Roaming\warp\Torch\data\themes\mocha.yml");
 
     assert!(!custom_theme_path_is_portable(&stored, &root));
 }
@@ -172,7 +174,8 @@ fn custom_theme_windows_absolute_path_string_is_not_portable() {
 #[test]
 fn custom_theme_windows_absolute_path_string_storage_helper_preserves_path() {
     let root = PathBuf::from("/Users/example/.warp/themes");
-    let stored = PathBuf::from(r"C:\Users\example\AppData\Roaming\warp\Warp\data\themes\mocha.yml");
+    let stored =
+        PathBuf::from(r"C:\Users\example\AppData\Roaming\warp\Torch\data\themes\mocha.yml");
 
     assert_eq!(custom_theme_path_for_storage(&stored, &root), stored);
 }
@@ -234,7 +237,7 @@ fn custom_theme_serde_preserves_unportable_raw_paths() {
         "../outside.yml",
         "catppuccin/../mocha.yml",
         r"catppuccin\mocha.yml",
-        "C:/Users/example/AppData/Roaming/warp/Warp/data/themes/mocha.yml",
+        "C:/Users/example/AppData/Roaming/warp/Torch/data/themes/mocha.yml",
         "C:themes/mocha.yml",
     ] {
         let custom = custom_theme_from_serde_path(raw_path);
@@ -266,7 +269,7 @@ fn custom_theme_settings_value_preserves_unportable_raw_paths() {
         "../outside.yml",
         "catppuccin/../mocha.yml",
         r"catppuccin\mocha.yml",
-        "C:/Users/example/AppData/Roaming/warp/Warp/data/themes/mocha.yml",
+        "C:/Users/example/AppData/Roaming/warp/Torch/data/themes/mocha.yml",
         "C:themes/mocha.yml",
     ] {
         let custom = custom_theme_from_file_value_path(raw_path);
@@ -319,7 +322,7 @@ mod windows_custom_theme_path_tests {
     use super::*;
 
     fn windows_theme_root() -> PathBuf {
-        PathBuf::from(r"C:\Users\example\AppData\Roaming\warp\Warp\data\themes")
+        PathBuf::from(r"C:\Users\example\AppData\Roaming\warp\Torch\data\themes")
     }
 
     #[test]
@@ -366,7 +369,7 @@ mod windows_custom_theme_path_tests {
 
         for raw_path in [
             r"catppuccin\mocha.yml",
-            "C:/Users/example/AppData/Roaming/warp/Warp/data/themes/mocha.yml",
+            "C:/Users/example/AppData/Roaming/warp/Torch/data/themes/mocha.yml",
             "C:themes/mocha.yml",
         ] {
             assert_eq!(
@@ -382,7 +385,7 @@ mod windows_custom_theme_path_tests {
 
         for raw_path in [
             r"catppuccin\mocha.yml",
-            "C:/Users/example/AppData/Roaming/warp/Warp/data/themes/mocha.yml",
+            "C:/Users/example/AppData/Roaming/warp/Torch/data/themes/mocha.yml",
             "C:themes/mocha.yml",
         ] {
             assert!(!custom_theme_path_is_portable(

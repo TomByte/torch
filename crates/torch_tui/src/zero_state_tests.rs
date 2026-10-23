@@ -8,7 +8,6 @@ use ai::api_keys::{
 };
 use channel_versions::{Changelog, MarkdownSection, Section};
 use chrono::DateTime;
-use uuid::Uuid;
 use torch::tui_export::{
     TuiMcpConfigDiagnostic, TuiMcpServerId, TuiMcpServerSnapshot, TuiMcpServerSource,
     TuiMcpServerStatus, TuiMcpSnapshot, TuiMcpTransport, TuiUserInfoSnapshot,
@@ -21,6 +20,7 @@ use torchui_core::elements::tui::{
     TuiPaintSurface, TuiRect, TuiScreenPosition, TuiSize, TuiStyle, TuiText, text_width,
 };
 use torchui_core::{App, AppContext};
+use uuid::Uuid;
 
 use super::{
     ANIMATION_PANEL_COLS, LEFT_COLUMN_COLS, ZeroStateSectionVisibility, autoupdate_status_label,
@@ -136,8 +136,8 @@ fn first_zero_state_matches_welcome_design_copy() {
         });
         let rendered = lines.join("\n");
         for expected in [
-            "Welcome to Warp",
-            "What’s different about Warp",
+            "Welcome to Torch",
+            "What’s different about Torch",
             "✶ State of the art coding agents",
             "✶ Frontier and open-weight models",
             "✶ Fully customizable model routers",

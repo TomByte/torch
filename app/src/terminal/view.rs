@@ -132,9 +132,6 @@ pub(crate) use shared_session::cloud_conversation_continuation::{
 use shared_session::{SharedSessionAdapter, Viewer};
 use ssh_file_upload::{FileUpload, FileUploadEvent};
 use sum_tree::SeekBias;
-use use_agent_footer::UseAgentToolbar;
-use uuid::Uuid;
-use vec1::vec1;
 use torch_completer::meta::Span;
 use torch_core::r#async::debounce;
 use torch_core::channel::ChannelState;
@@ -184,6 +181,9 @@ use torchui::{
     View, ViewAsRef, ViewContext, ViewHandle, WeakModelHandle, WeakViewHandle, WindowId,
     end_trace_after_next, record_trace_event, windowing,
 };
+use use_agent_footer::UseAgentToolbar;
+use uuid::Uuid;
+use vec1::vec1;
 
 use self::link_detection::HighlightedLinkOption;
 pub use self::link_detection::{GridHighlightedLink, RichContentLink, RichContentLinkTooltipInfo};
@@ -636,7 +636,7 @@ pub const WAKEUP_THROTTLE_PERIOD: Duration =
 
 pub const EXECUTE_PENDING_COMMAND_DELAY: Duration = Duration::from_millis(100);
 
-pub const WARP_PROMPT_HEIGHT_LINES: f32 = 0.9;
+pub const TORCH_PROMPT_HEIGHT_LINES: f32 = 0.9;
 
 const SCROLLBAR_WIDTH: ScrollbarWidth = ScrollbarWidth::Auto;
 
@@ -663,7 +663,7 @@ const ENV_VAR_BOOTSTRAP_FAILED_DURATION: Duration = Duration::from_secs(60);
 /// before it auto-dismisses. The banner used to persist until the user
 /// dismissed it manually or bootstrap finished, but in workflows where
 /// bootstrap will never complete (e.g. a shell that `exec`s into `expect`
-/// before Warp's shell integration runs), nothing ever clears it. Auto-
+/// before Torch's shell integration runs), nothing ever clears it. Auto-
 /// dismissal keeps the warning informational without turning it into a
 /// permanent fixture.
 const SLOW_BOOTSTRAP_BANNER_AUTO_DISMISS_DURATION: Duration = Duration::from_secs(30);
@@ -734,7 +734,7 @@ const DEFAULT_AI_BLOCK_HEIGHT: f32 = 96.;
 
 pub const DEFAULT_ASK_AI_AUTOSUGGESTION_TEXT: &str = "What happened here?";
 
-const WARP_MD_PATH: &str = "WARP.md";
+const TORCH_MD_PATH: &str = "WARP.md";
 
 /// `shell_plugins` tags reported by bootstrap when ctrl-r identifies a supported shell plugin.
 /// fzf provides ctrl-r, ctrl-t, and alt-c, while atuin only provides ctrl-r.
@@ -1800,7 +1800,7 @@ pub enum Event {
     BlockStarted {
         is_for_in_band_command: bool,
     },
-    /// Tell the pane group to open a file within Warp.
+    /// Tell the pane group to open a file within Torch.
     OpenFileInWarp {
         path: PathBuf,
         /// The session that the file belongs to.
@@ -2466,7 +2466,7 @@ impl Default for TerminalViewStateChange {
 }
 
 /// Whether or not this is the active terminal session. The active session for a pane group
-/// is the one used for executing workflows, Warp AI suggestions, etc.
+/// is the one used for executing workflows, Torch AI suggestions, etc.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ActiveSessionState {
     Active,
@@ -2668,7 +2668,7 @@ pub struct TerminalView {
     control_master_error_banner_suppressed: bool,
 
     /// Banner to show if we detect a configuration in the user's rc files that
-    /// is incompatible with Warp.
+    /// is incompatible with Torch.
     incompatible_configuration_banner: ViewHandle<Banner<TerminalAction>>,
     is_incompatible_configuration_banner_open: bool,
 
@@ -8816,7 +8816,7 @@ impl TerminalView {
         if model.is_read_only() {
             return false;
         }
-        // Warp's own headless TUI (`torch_tui`) is itself an agent surface, so
+        // Torch's own headless TUI (`torch_tui`) is itself an agent surface, so
         // suppress the outer agent input bar while it runs in this pane. Uses
         // the same command-based detection as the CLI agent footer (see
         // `is_running_warp_tui`).
@@ -9586,10 +9586,10 @@ impl TerminalView {
     }
 
     /// If ctrl-r was pressed at an idle prompt on a session using fzf or atuin, hands the keypress
-    /// off to that plugin instead of opening Warp's own command search.
+    /// off to that plugin instead of opening Torch's own command search.
     ///
     /// Returns `true` if the handoff was triggered, in which case the caller should not open
-    /// Warp's command search.
+    /// Torch's command search.
     pub fn maybe_trigger_external_ctrl_r_history_search(
         &mut self,
         ctx: &mut ViewContext<Self>,
@@ -11616,7 +11616,7 @@ impl TerminalView {
         reset_focus
     }
 
-    /// Recomputes the chip values for the Warp prompt (i.e. _not_ PS1).
+    /// Recomputes the chip values for the Torch prompt (i.e. _not_ PS1).
     fn refresh_warp_prompt(&mut self, ctx: &mut ViewContext<Self>) {
         // Ask the per-repo sub-model to re-fetch metadata so the chip values
         // reflect the latest git state (branch, diff stats, etc.).
@@ -13104,7 +13104,7 @@ impl TerminalView {
                         );
 
                         // On dogfood only, we're interested in the block commands, durations,
-                        // and exit codes to trial Warp Analytics.
+                        // and exit codes to trial Torch Analytics.
                         if ChannelState::channel().is_dogfood() {
                             send_telemetry_from_ctx!(
                                 TelemetryEvent::BlockCompletedOnDogfoodOnly {
@@ -13506,7 +13506,7 @@ impl TerminalView {
                     BlockMetadataUpdateSource::Osc7,
                     ctx,
                 );
-                // Recompute Warp-prompt chip values (notably the
+                // Recompute Torch-prompt chip values (notably the
                 // `WorkingDirectory` chip text that feeds the vertical-tab
                 // subtitle via `display_working_directory`). The chip
                 // generator reads from `CurrentPrompt::latest_context`, which
@@ -14661,7 +14661,7 @@ impl TerminalView {
 
         // Now that the session is bootstrapped, update any restored AI blocks that were
         // created before bootstrapping with the shell launch data. This enables file link
-        // detection and the "Open in Warp" button on code blocks in restored conversations.
+        // detection and the "Open in Torch" button on code blocks in restored conversations.
         if let Some(shell_launch_data) = self.active_session.as_ref(ctx).shell_launch_data(ctx) {
             let ai_block_handles: Vec<_> = self
                 .rich_content_views
@@ -16891,7 +16891,7 @@ impl TerminalView {
     }
 
     /// Shared logic for sending a desktop notification (or showing a discovery banner)
-    /// for any agent status change (both Warp's agent and any CLI agent).
+    /// for any agent status change (both Torch's agent and any CLI agent).
     fn send_local_cli_agent_notification(
         &mut self,
         agent: CLIAgent,
@@ -17765,7 +17765,7 @@ impl TerminalView {
                                         .with_on_select_action(TerminalAction::OpenFileInWarp(path))
                                         .into_item(),
                                 );
-                                // Because the default for cmd-click is to open in Warp, we also
+                                // Because the default for cmd-click is to open in Torch, we also
                                 // have an open-in-editor option.
                                 items.push(
                                     MenuItemFields::new("Open in editor")
@@ -18677,7 +18677,7 @@ impl TerminalView {
             items.extend(self.session_sharing_context_menu_items(&model, false, has_session_link));
         }
 
-        // Section 2: AI Command Search, Ask Warp AI
+        // Section 2: AI Command Search, Ask Torch AI
         items.extend([
             MenuItem::Separator,
             MenuItemFields::new("Command search")
@@ -19659,7 +19659,7 @@ impl TerminalView {
         self.paste(true, ctx);
     }
 
-    /// Tell the pane group to open a file within Warp.
+    /// Tell the pane group to open a file within Torch.
     fn open_file_in_warp(&mut self, path: PathBuf, ctx: &mut ViewContext<Self>) {
         if let Some(session) = self
             .active_block_session_id()
@@ -24630,7 +24630,7 @@ impl TerminalView {
                     self.update_incompatible_configuration_banner(session.shell().plugins(), ctx)
                 }
 
-                // honor_ps1 affects whether the Warp prompt is active, which
+                // honor_ps1 affects whether the Torch prompt is active, which
                 // determines if we need git status updates.
                 self.update_git_status_subscription(ctx);
             }
@@ -25143,7 +25143,7 @@ impl TerminalView {
         let prompt = Text::new_inline(
             Self::block_prompt(model, sessions, index),
             appearance.monospace_font_family(),
-            appearance.monospace_font_size() * WARP_PROMPT_HEIGHT_LINES,
+            appearance.monospace_font_size() * TORCH_PROMPT_HEIGHT_LINES,
         )
         .with_style(Properties::default().weight(appearance.monospace_font_weight()))
         .with_color(terminal_theme_prompt)
@@ -25156,7 +25156,7 @@ impl TerminalView {
             let duration = Text::new_inline(
                 duration_string,
                 appearance.monospace_font_family(),
-                appearance.monospace_font_size() * WARP_PROMPT_HEIGHT_LINES,
+                appearance.monospace_font_size() * TORCH_PROMPT_HEIGHT_LINES,
             )
             .with_style(Properties::default().weight(appearance.monospace_font_weight()))
             .with_color(terminal_theme_prompt)
@@ -28958,7 +28958,7 @@ impl TypedActionView for TerminalView {
             OpenProjectRulesPane => {
                 if let Some(current_dir) = self.pwd() {
                     let mut warp_md_path = PathBuf::from(&current_dir);
-                    warp_md_path.push(WARP_MD_PATH);
+                    warp_md_path.push(TORCH_MD_PATH);
                     #[cfg(feature = "local_fs")]
                     ctx.emit(Event::OpenCodeInWarp {
                         source: CodeSource::ProjectRules {
@@ -29332,7 +29332,7 @@ impl View for TerminalView {
                     column.add_child(Shrinkable::new(1., output_area).finish());
 
                     // Suppress the "Use agent" footer when the nested program is
-                    // Warp's own TUI (`torch_tui`) — it's already an agent surface,
+                    // Torch's own TUI (`torch_tui`) — it's already an agent surface,
                     // so the outer footer would just stack on top of it. Other
                     // full-screen TUIs (vim, htop, …) still get the footer.
                     if model.is_alt_screen_active()

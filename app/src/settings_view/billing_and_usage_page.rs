@@ -549,7 +549,7 @@ impl BillingAndUsagePageView {
                     self.show_toast(CHECKOUT_PENDING_MESSAGE, ToastFlavor::Default, ctx);
                     // Credits are granted via webhook once checkout completes;
                     // `on_page_selected` refreshes billing data when the user
-                    // returns (e.g. via the confirmation page's Open Warp link).
+                    // returns (e.g. via the confirmation page's Open Torch link).
                 }
             }
             UserWorkspacesEvent::PurchaseAddonCreditsRejected(err) => {

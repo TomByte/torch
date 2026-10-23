@@ -5,9 +5,9 @@ use repo_metadata::RepoMetadataModel;
 use repo_metadata::repositories::DetectedRepositories;
 use repo_metadata::watcher::DirectoryWatcher;
 use settings::Setting as _;
-use uuid::Uuid;
 use torch_core::features::FeatureFlag;
 use torchui::{App, Entity, ModelHandle, SingletonEntity as _};
+use uuid::Uuid;
 use watcher::HomeDirectoryWatcher;
 
 use super::{
@@ -432,7 +432,7 @@ fn test_update_file_based_servers_removes_unreferenced_servers() {
     });
 }
 
-/// A Warp-global installation detected from the managed `~/.warp*/.mcp.json`
+/// A Torch-global installation detected from the managed `~/.warp*/.mcp.json`
 /// watcher uses the home directory as its logical root and still always
 /// auto-spawns.
 #[test]
@@ -447,8 +447,8 @@ fn test_global_warp_server_from_managed_home_root_always_spawns() {
         let manager = setup_app(&mut app);
         let events = subscribe_events(&mut app, &manager);
 
-        // Toggle is off by default; the watcher-produced Warp root should still
-        // be classified as the global Warp config and auto-spawn.
+        // Toggle is off by default; the watcher-produced Torch root should still
+        // be classified as the global Torch config and auto-spawn.
         manager.update(&mut app, |m, ctx| {
             m.apply_parsed_servers(
                 warp_mcp_config_path.root_path.clone(),
@@ -462,73 +462,19 @@ fn test_global_warp_server_from_managed_home_root_always_spawns() {
             assert_eq!(
                 e.spawned_uuids.len(),
                 1,
-                "Managed Warp MCP config should auto-spawn regardless of toggle"
+                "Managed Torch MCP config should auto-spawn regardless of toggle"
             );
         });
 
-        // Flipping the toggle must not despawn the global Warp server.
+        // Flipping the toggle must not despawn the global Torch server.
         set_file_based_mcp_enabled(&mut app, true);
         set_file_based_mcp_enabled(&mut app, false);
 
         events.update(&mut app, |e, _| {
             assert!(
                 e.despawned_uuids.is_empty(),
-                "Managed Warp MCP config should never be despawned by toggle changes, got: {:?}",
+                "Managed Torch MCP config should never be despawned by toggle changes, got: {:?}",
                 e.despawned_uuids
-            );
-        });
-    });
-}
-/// A globally-scoped non-Warp installation only auto-spawns when the toggle is on.
-#[test]
-fn test_global_non_warp_server_respects_toggle() {
-    let _flag_guard = FeatureFlag::FileBasedMcp.override_enabled(true);
-    let Some(home_dir) = home_dir() else {
-        // Skip on platforms where a home dir isn't available (shouldn't happen on
-        // our supported platforms, but guard to avoid false failures).
-        return;
-    };
-    let parsed = parse_mcp_json(r#"{"global-claude": {"command": "npx", "args": ["claude"]}}"#);
-
-    App::test((), |mut app| async move {
-        let manager = setup_app(&mut app);
-        let events = subscribe_events(&mut app, &manager);
-
-        // Toggle is off by default: detection should NOT auto-spawn.
-        manager.update(&mut app, |m, ctx| {
-            m.apply_parsed_servers(home_dir.clone(), MCPProvider::Claude, parsed, ctx);
-        });
-        events.update(&mut app, |e, _| {
-            assert!(
-                e.spawned_uuids.is_empty(),
-                "Global non-Warp server must not auto-spawn while toggle is off, got: {:?}",
-                e.spawned_uuids
-            );
-        });
-
-        let installation_uuid = manager.update(&mut app, |m, _| {
-            let servers = m.file_based_servers();
-            assert_eq!(servers.len(), 1);
-            servers[0].uuid()
-        });
-
-        // Toggle on: the global non-Warp server should be spawned.
-        set_file_based_mcp_enabled(&mut app, true);
-        events.update(&mut app, |e, _| {
-            assert_eq!(
-                e.spawned_uuids,
-                vec![installation_uuid],
-                "Global non-Warp server should spawn when toggle flips on"
-            );
-        });
-
-        // Toggle off: the global non-Warp server should be despawned.
-        set_file_based_mcp_enabled(&mut app, false);
-        events.update(&mut app, |e, _| {
-            assert_eq!(
-                e.despawned_uuids,
-                vec![installation_uuid],
-                "Global non-Warp server should despawn when toggle flips off"
             );
         });
     });
@@ -602,12 +548,12 @@ fn tui_global_warp_servers_start_only_after_activation() {
             assert_eq!(
                 events.spawned_uuids.len(),
                 1,
-                "post-login activation should start TUI Warp-global servers"
+                "post-login activation should start TUI Torch-global servers"
             );
         });
     });
 }
-/// Project-scoped installations (both Warp and third-party) never auto-spawn on
+/// Project-scoped installations (both Torch and third-party) never auto-spawn on
 /// detection, and the toggle must not spawn or despawn them either.
 #[test]
 fn test_project_scoped_servers_never_auto_spawn() {
@@ -728,60 +674,7 @@ fn test_auto_started_cloud_scan_uuids_are_in_wait_set() {
             assert_eq!(scan.wait_server_uuids, e.spawned_uuids);
             assert!(
                 scan.detected_servers[0].auto_start_eligible,
-                "Global Warp server should be auto-start eligible"
-            );
-        });
-    });
-}
-
-/// An installation referenced from both a global location and a project location
-/// is considered global (and thus gated only by the toggle for non-Warp providers).
-#[test]
-fn test_server_referenced_from_both_global_and_project_is_global() {
-    let _flag_guard = FeatureFlag::FileBasedMcp.override_enabled(true);
-    let Some(home_dir) = home_dir() else {
-        return;
-    };
-    let repo_path = PathBuf::from("/tmp/warp-test-repo-shared");
-    let json = r#"{"shared-claude": {"command": "npx", "args": ["shared"]}}"#;
-    let global_parsed = parse_mcp_json(json);
-    let project_parsed = parse_mcp_json(json);
-
-    App::test((), |mut app| async move {
-        let manager = setup_app(&mut app);
-        let events = subscribe_events(&mut app, &manager);
-
-        // Register both a global and a project reference for the same server.
-        manager.update(&mut app, |m, ctx| {
-            m.apply_parsed_servers(home_dir.clone(), MCPProvider::Claude, global_parsed, ctx);
-            m.apply_parsed_servers(repo_path.clone(), MCPProvider::Claude, project_parsed, ctx);
-        });
-
-        // Toggle starts off, so no auto-spawn yet.
-        events.update(&mut app, |e, _| {
-            assert!(
-                e.spawned_uuids.is_empty(),
-                "Server should not auto-spawn while toggle is off"
-            );
-        });
-
-        let installation_uuid = manager.update(&mut app, |m, _| {
-            let servers = m.file_based_servers();
-            assert_eq!(
-                servers.len(),
-                1,
-                "Both roots should reference the same server"
-            );
-            servers[0].uuid()
-        });
-
-        // Flipping the toggle on should spawn the server because it's also global.
-        set_file_based_mcp_enabled(&mut app, true);
-        events.update(&mut app, |e, _| {
-            assert_eq!(
-                e.spawned_uuids,
-                vec![installation_uuid],
-                "Global reference should make the server eligible for toggle-driven spawn"
+                "Global Torch server should be auto-start eligible"
             );
         });
     });
@@ -938,7 +831,7 @@ fn initial_global_scan_result_pending_until_watcher_signals_completion() {
         });
 
         manager.update(&mut app, |m, ctx| {
-            // Global Warp parse: contributes its auto-started UUID when the scan later
+            // Global Torch parse: contributes its auto-started UUID when the scan later
             // freezes.
             m.handle_watcher_event(
                 &FileMCPWatcherEvent::ConfigParsed {
@@ -977,7 +870,7 @@ fn initial_global_scan_result_pending_until_watcher_signals_completion() {
                 .into_iter()
                 .map(|s| s.uuid())
                 .next()
-                .expect("the global Warp server should be tracked")
+                .expect("the global Torch server should be tracked")
         });
 
         manager.update(&mut app, |m, ctx| {

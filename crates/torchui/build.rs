@@ -1,5 +1,5 @@
 // We can use `std::process:Command` here because this is invoked within a build script,
-// _not_ within the Warp binary (where it could cause a terminal to temporarily flash on
+// _not_ within the Torch binary (where it could cause a terminal to temporarily flash on
 // Windows).
 #![allow(clippy::disallowed_types)]
 
@@ -81,7 +81,7 @@ fn compile_metal_shaders() {
 
     // LOCAL VERIFICATION ONLY (never commit): this machine has no Metal
     // toolchain; an empty library satisfies `include_bytes!` for `cargo check`.
-    if env::var("WARP_LOCAL_SKIP_METAL").is_ok() {
+    if env::var("TORCH_LOCAL_SKIP_METAL").is_ok() {
         std::fs::write(lib_path, b"").expect("write empty metallib");
         return;
     }

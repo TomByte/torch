@@ -1,6 +1,6 @@
 //! The headless `warp-tui` front-end's session bootstrap.
 //!
-//! [`run`] boots the real headless Warp app via [`torch::run_tui`]. Once shared
+//! [`run`] boots the real headless Torch app via [`torch::run_tui`]. Once shared
 //! initialization is done, the mount built here starts the TUI driver and
 //! creates the first terminal session once browser authentication starts, while
 //! allowing authentication to complete in the background.
@@ -53,7 +53,7 @@ struct TuiArgs {
     #[command(subcommand)]
     command: Option<TuiCommand>,
 
-    /// Resume an Oz/Warp conversation by server token.
+    /// Resume an Oz/Torch conversation by server token.
     #[arg(long)]
     resume: Option<String>,
 
@@ -62,10 +62,10 @@ struct TuiArgs {
     auto_approve: bool,
 
     /// API key for non-interactive authentication.
-    #[arg(long, env = "WARP_API_KEY")]
+    #[arg(long, env = "TORCH_API_KEY")]
     api_key: Option<String>,
 
-    /// Securely store a model-provider API key for Warp Agent CLI.
+    /// Securely store a model-provider API key for Torch Agent CLI.
     #[arg(
         long,
         value_name = LLMProvider::API_KEY_PROVIDER_VALUE_NAME,
@@ -74,7 +74,7 @@ struct TuiArgs {
     )]
     set_provider_api_key: Option<LLMProvider>,
 
-    /// Remove a securely stored model-provider API key from Warp Agent CLI.
+    /// Remove a securely stored model-provider API key from Torch Agent CLI.
     #[arg(
         long,
         value_name = LLMProvider::API_KEY_PROVIDER_VALUE_NAME,
@@ -101,7 +101,7 @@ enum ProviderApiKeyCommand {
 /// about to run, without building the full GUI app binary just for that.
 #[derive(Debug, Subcommand)]
 enum TuiCommand {
-    /// Print the JSON schema for the current Warp channel's settings and exit.
+    /// Print the JSON schema for the current Torch channel's settings and exit.
     DumpSettingsSchema {
         /// Write the schema to this path instead of standard output.
         output_path: Option<PathBuf>,
@@ -137,12 +137,12 @@ fn parse_resume_token(token: String) -> Result<ServerConversationToken> {
     Ok(ServerConversationToken::new(token))
 }
 
-/// Boots the headless Warp app and mounts the transcript-capable TUI session.
+/// Boots the headless Torch app and mounts the transcript-capable TUI session.
 pub fn run() -> Result<()> {
     // Protect this managed version before any worker dispatch or resource
     // access. The guard stays alive until this process exits.
     let _version_lease = crate::autoupdate::VersionLease::acquire_for_current_process()?;
-    // If this process was re-exec'd as a Warp worker (e.g. the terminal
+    // If this process was re-exec'd as a Torch worker (e.g. the terminal
     // server), dispatch that instead of starting another TUI — otherwise the
     // worker re-exec would recursively launch TUIs.
     if let Some(result) = torch::run_tui_worker_if_requested() {

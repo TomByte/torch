@@ -29,11 +29,11 @@ use session_sharing_protocol::common::{AgentAttachment, ParticipantId};
 pub use slash_command::*;
 use torch_core::assertions::safe_assert;
 use torch_errors::report_error;
-use warp_multi_agent_api::{AgentType, Task, ToolType, message};
 use torchui::r#async::{SpawnedFutureHandle, Timer};
 use torchui::{
     AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity, WeakViewHandle,
 };
+use warp_multi_agent_api::{AgentType, Task, ToolType, message};
 
 use self::response_stream::{PendingResume, RecoveryBudget, ResponseStream, ResponseStreamEvent};
 use super::action_model::{BlocklistAIActionEvent, BlocklistAIActionModel};
@@ -350,7 +350,7 @@ pub struct BlocklistAIController {
     shared_session_state: shared_session::SharedSessionState,
     native_prompt_conversation_id: Option<AIConversationId>,
     /// When set, prompts injected into the bound native conversation are handed to an external
-    /// harness driving it instead of being sent to Warp's agent.
+    /// harness driving it instead of being sent to Torch's agent.
     external_harness_prompt_sink:
         Option<async_channel::Sender<external_harness::ExternalHarnessPrompt>>,
     /// When set, cancellations of the bound native conversation are handed to the external
@@ -359,7 +359,7 @@ pub struct BlocklistAIController {
         Option<async_channel::Sender<external_harness::ExternalHarnessCancel>>,
 
     /// Ambient agent task ID attached to this controller. This is a property of the controller, and not an individual
-    /// conversation, because the ambient agent task driver owns the entire Warp window working on a task, and any
+    /// conversation, because the ambient agent task driver owns the entire Torch window working on a task, and any
     /// sessions within it. In the future, one task may span several sessions with background processes.
     ambient_agent_task_id: Option<AmbientAgentTaskId>,
 

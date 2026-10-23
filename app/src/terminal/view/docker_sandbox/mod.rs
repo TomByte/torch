@@ -22,7 +22,7 @@ use torchui::{SingletonEntity, View, ViewHandle};
 use super::TerminalView;
 #[cfg(not(target_family = "wasm"))]
 use crate::ai::agent_sdk::driver::{
-    WARP_DRIVE_SYNC_TIMEOUT,
+    TORCH_DRIVE_SYNC_TIMEOUT,
     environment::{WorkspaceConfiguration, prepare_environment},
     terminal::TerminalDriver,
 };
@@ -258,10 +258,10 @@ impl TerminalView {
         let sync_future = UpdateManager::as_ref(ctx).initial_load_complete();
         ctx.spawn(
             async move {
-                // Wait for Warp Drive initial sync so environment lookup succeeds.
+                // Wait for Torch Drive initial sync so environment lookup succeeds.
 
                 if sync_future
-                    .with_timeout(WARP_DRIVE_SYNC_TIMEOUT)
+                    .with_timeout(TORCH_DRIVE_SYNC_TIMEOUT)
                     .await
                     .is_err()
                 {

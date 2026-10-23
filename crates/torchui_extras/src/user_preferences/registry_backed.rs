@@ -12,23 +12,23 @@ pub struct RegistryBackedPreferences {
     app_key_path: String,
 }
 
-static WARP_REGISTRY_BASE_PATH: &str = "Software\\Warp.dev\\";
+static TORCH_REGISTRY_BASE_PATH: &str = "Software\\Torch.dev\\";
 pub const KEY_NOT_FOUND_ERR: HRESULT = HRESULT::from_win32(0x80070002);
 
 impl RegistryBackedPreferences {
     /// Construct a separate registry path for each channel (stable, dev, local, etc.)
     pub fn new(app_name: &str) -> Self {
         Self {
-            app_key_path: WARP_REGISTRY_BASE_PATH.to_owned() + app_name,
+            app_key_path: TORCH_REGISTRY_BASE_PATH.to_owned() + app_name,
         }
     }
 
-    /// Gets Warp's registry key, creating it if it does not already exist.
+    /// Gets Torch's registry key, creating it if it does not already exist.
     fn get_warp_registry(&self) -> Result<Key, super::Error> {
         CURRENT_USER.create(self.app_key_path.clone()).map_err(|e| {
             report_error!(
                 anyhow::Error::new(e.clone())
-                    .context("unable to access Warp app key in Windows Registry")
+                    .context("unable to access Torch app key in Windows Registry")
             );
             super::Error::IoError(io::Error::from(e))
         })

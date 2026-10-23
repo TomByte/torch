@@ -10,7 +10,6 @@ use http::header::RETRY_AFTER;
 use instant::{Duration, Instant};
 use oauth2::TokenResponse as _;
 use parking_lot::Mutex;
-use url::Url;
 use torch_core::channel::ChannelState;
 use torch_errors::{ErrorExt, register_error};
 use torch_server_auth::auth_state::AuthState;
@@ -19,6 +18,7 @@ use torch_server_auth::credentials::{
 };
 use torch_server_auth::user::FirebaseAuthTokens;
 use torchui_core::r#async::{BoxFuture, Timer};
+use url::Url;
 
 use super::UserAuthenticationError;
 
@@ -180,7 +180,7 @@ impl fmt::Debug for AuthEvent {
     }
 }
 
-/// The OAuth client type configured for Warp's device authorization endpoints.
+/// The OAuth client type configured for Torch's device authorization endpoints.
 type OAuth2Client = oauth2::basic::BasicClient<
     oauth2::EndpointNotSet,
     oauth2::EndpointSet,

@@ -41,7 +41,7 @@ pub struct OneTimeModalModel {
     /// Whether the OpenWarp launch modal is currently being shown.
     is_openwarp_launch_modal_open: bool,
     is_orchestration_launch_modal_open: bool,
-    /// Whether the Warp Agent CLI launch modal is currently being shown.
+    /// Whether the Torch Agent CLI launch modal is currently being shown.
     is_agent_cli_launch_modal_open: bool,
     /// Whether the auto-handoff sleep discoverability modal is currently being shown.
     is_auto_handoff_sleep_modal_open: bool,

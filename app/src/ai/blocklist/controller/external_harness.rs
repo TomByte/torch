@@ -1,13 +1,13 @@
-// Plumbing for harnesses that run outside Warp's agent loop but render through a native
+// Plumbing for harnesses that run outside Torch's agent loop but render through a native
 // conversation: the harness translates its own protocol into MAA response events, which flow
 // through the same controller path as events from the MAA server. The conversation stays owned
 // by this client (so task status syncing keeps working); only the turn itself is the harness's.
 use session_sharing_protocol::common::{AgentAttachment, ParticipantId};
-use uuid::Uuid;
 use torch_errors::report_error;
+use torchui::{ModelContext, SingletonEntity};
+use uuid::Uuid;
 use warp_multi_agent_api::response_event::{StreamFinished, StreamInit, stream_finished};
 use warp_multi_agent_api::{ResponseEvent, response_event};
-use torchui::{ModelContext, SingletonEntity};
 
 use super::response_stream::ResponseStreamId;
 use super::{BlocklistAIController, RequestInput};
@@ -49,7 +49,7 @@ impl BlocklistAIController {
     /// (the conversation is bound at driver construction, long before the harness is up) are
     /// relayed first, in arrival order, so the harness sees them ahead of anything injected
     /// later. The native setup barrier is left in place: nothing may dispatch from the queue
-    /// to Warp's agent while the harness owns the conversation.
+    /// to Torch's agent while the harness owns the conversation.
     pub(in crate::ai) fn set_external_harness_prompt_sink(
         &mut self,
         sink: async_channel::Sender<ExternalHarnessPrompt>,

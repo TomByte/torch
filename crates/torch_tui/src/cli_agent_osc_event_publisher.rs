@@ -9,24 +9,24 @@ use torch::tui_export::{
     ConversationStatus, ConversationStatusUpdate,
 };
 use torch_core::cli_agent_protocol::{
-    CLI_AGENT_NOTIFICATION_SENTINEL, CLIAgentNotification, WARP_CLI_AGENT_PROTOCOL_VERSION_ENV,
-    WARP_CLIENT_VERSION_ENV,
+    CLI_AGENT_NOTIFICATION_SENTINEL, CLIAgentNotification, TORCH_CLIENT_VERSION_ENV,
+    WARP_CLI_AGENT_PROTOCOL_VERSION_ENV,
 };
 use torch_terminal::model::escape_sequences::{C0, C1, tmux_passthrough};
 use torchui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity as _};
 
 use crate::tool_call_labels::tool_call_label;
 
-const WARP_TUI_AGENT_NAME: &str = "warp-tui";
+const TORCH_TUI_AGENT_NAME: &str = "warp-tui";
 const MAX_NOTIFICATION_DESCRIPTION_CHARS: usize = 320;
 
-/// Returns whether the host terminal advertises structured Warp notifications.
+/// Returns whether the host terminal advertises structured Torch notifications.
 ///
 /// Requiring both values matches the Claude plugin's structured-notification
-/// capability check and prevents standalone TUI runs from emitting Warp OSC.
+/// capability check and prevents standalone TUI runs from emitting Torch OSC.
 pub(crate) fn host_supports_cli_agent_notifications() -> bool {
     let protocol_version = env::var_os(WARP_CLI_AGENT_PROTOCOL_VERSION_ENV);
-    let client_version = env::var_os(WARP_CLIENT_VERSION_ENV);
+    let client_version = env::var_os(TORCH_CLIENT_VERSION_ENV);
     has_warp_host_capability(protocol_version.as_deref(), client_version.as_deref())
 }
 
@@ -79,14 +79,14 @@ impl CliAgentOscEventPublisher {
 
     pub(crate) fn publish_session_start(&self, ctx: &AppContext) {
         let mut notification = self.notification("session_start", ctx);
-        notification.summary = Some("Warp Agent session started.".to_owned());
+        notification.summary = Some("Torch Agent session started.".to_owned());
         self.publish(notification);
     }
 
     pub(crate) fn publish_prompt_submit(&self, prompt: String, ctx: &AppContext) {
         let mut notification = self.notification("prompt_submit", ctx);
         notification.query = notification_excerpt(&prompt);
-        notification.summary = Some("Warp Agent is working on your request.".to_owned());
+        notification.summary = Some("Torch Agent is working on your request.".to_owned());
         self.publish(notification);
     }
 
@@ -194,13 +194,13 @@ impl CliAgentOscEventPublisher {
         notification.error_type = status_event.error_type.map(str::to_owned);
         notification.summary = Some(
             match new_status {
-                ConversationStatus::Success => "Warp Agent completed your request.",
-                ConversationStatus::Error => "Warp Agent encountered an error.",
-                ConversationStatus::Cancelled => "Warp Agent was cancelled.",
-                ConversationStatus::InProgress => "Warp Agent is working on your request.",
-                ConversationStatus::Blocked { .. } => "Warp Agent is waiting for your input.",
-                ConversationStatus::TransientError => "Warp Agent is reconnecting.",
-                ConversationStatus::WaitingForEvents => "Warp Agent is waiting for events.",
+                ConversationStatus::Success => "Torch Agent completed your request.",
+                ConversationStatus::Error => "Torch Agent encountered an error.",
+                ConversationStatus::Cancelled => "Torch Agent was cancelled.",
+                ConversationStatus::InProgress => "Torch Agent is working on your request.",
+                ConversationStatus::Blocked { .. } => "Torch Agent is waiting for your input.",
+                ConversationStatus::TransientError => "Torch Agent is reconnecting.",
+                ConversationStatus::WaitingForEvents => "Torch Agent is waiting for events.",
             }
             .to_owned(),
         );
@@ -270,7 +270,7 @@ impl CliAgentOscEventPublisher {
                     .map(|name| name.to_string_lossy().into_owned())
             }),
             cwd,
-            ..CLIAgentNotification::new(WARP_TUI_AGENT_NAME, event)
+            ..CLIAgentNotification::new(TORCH_TUI_AGENT_NAME, event)
         }
     }
 

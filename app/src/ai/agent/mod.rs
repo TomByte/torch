@@ -37,10 +37,10 @@ use serde::{Deserialize, Serialize};
 use session_sharing_protocol::common::ParticipantId;
 use task::TaskId;
 pub use telemetry::AIIdentifiers;
-use uuid::Uuid;
 use torch_core::channel::ChannelState;
 use torch_core::features::FeatureFlag;
 use torch_editor::render::model::LineCount;
+use uuid::Uuid;
 use warp_multi_agent_api::{AgentEvent, AgentType, diff_hunk as diff_hunk_api};
 
 pub use self::api::{MaybeAIAgentOutputMessage, MessageToAIAgentOutputMessageError};
@@ -90,7 +90,7 @@ impl ServerOutputId {
 pub enum CancellationReason {
     /// The user explicitly cancelled without providing a follow-up.
     ManuallyCancelled,
-    /// Warp automatically cancelled the local run so it could continue in Cloud Mode.
+    /// Torch automatically cancelled the local run so it could continue in Cloud Mode.
     AutomaticCloudHandoff,
 
     /// The user submitted a follow-up query during streaming which implicitly cancelled the current one.
@@ -773,7 +773,7 @@ pub struct ChatGPTSubscriptionErrorAction {
 pub enum ChatGPTSubscriptionErrorActionKind {
     /// Re-issue the turn unchanged, still funded by the ChatGPT subscription.
     Retry,
-    /// Switch the rest of the conversation to Warp-funded inference, then resume.
+    /// Switch the rest of the conversation to Torch-funded inference, then resume.
     ContinueWithWarpCredits,
     /// Open an external page in the browser without changing the conversation.
     OpenUrl { url: String },
@@ -824,7 +824,7 @@ impl RenderableAIError {
 
 impl RenderableAIError {
     const TRANSIENT_NETWORK_ERROR_MESSAGE: &'static str =
-        "Warp lost connection while receiving the agent response. This is usually temporary.";
+        "Torch lost connection while receiving the agent response. This is usually temporary.";
     /// Creates a transient network error. `kind` is the structured cause (including the raw API
     /// error where one exists), preserved so user reports can disambiguate the different causes
     /// behind the shared user-facing copy.
@@ -980,9 +980,9 @@ impl Display for RenderableAIError {
                 }
             }
             Self::ServerOverloaded => {
-                write!(f, "Warp is currently overloaded. Please try again later.")
+                write!(f, "Torch is currently overloaded. Please try again later.")
             }
-            Self::InternalWarpError => write!(f, "Internal Warp error."),
+            Self::InternalWarpError => write!(f, "Internal Torch error."),
             Self::ContextWindowExceeded(message) => {
                 write!(f, "Context window exceeded: {message}")
             }

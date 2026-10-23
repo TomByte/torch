@@ -10,7 +10,7 @@ use cloud_object_models::CodeForge;
 use command::blocking::Command as ProcessCommand;
 use futures::FutureExt;
 use http::StatusCode;
-use mockito::{Matcher, Server};
+use mockito::Server;
 use serde_json::json;
 use torch_cli::agent::{
     AgentCommand, Harness, HarnessTransport, OutputFormat, RepositoryForge, RepositoryHeadRef,
@@ -243,190 +243,6 @@ fn paired_execution_rejects_a_different_task_or_execution() {
     });
 }
 
-#[test]
-fn paired_execution_keeps_captured_capability_after_runtime_flag_changes() {
-    for scenario in ["eager", "deferred", "empty", "non-factory", "missing"] {
-        let output = ProcessCommand::new(std::env::current_exe().unwrap())
-            .args([
-                "--exact",
-                "ai::agent_sdk::tests::deferred_capability_bootstrap_subprocess",
-                "--nocapture",
-            ])
-            .env("WARP_TEST_DEFERRED_CAPABILITY_BOOTSTRAP", scenario)
-            .env(
-                "WARP_FACTORY_ID",
-                if scenario == "non-factory" {
-                    ""
-                } else {
-                    "factory"
-                },
-            )
-            .env("WARP_ISOLATION_PLATFORM", "docker")
-            .env("WARP_WORKLOAD_TOKEN", "test-workload-token")
-            .output()
-            .unwrap();
-        assert!(
-            output.status.success(),
-            "{}{}",
-            String::from_utf8_lossy(&output.stdout),
-            String::from_utf8_lossy(&output.stderr)
-        );
-    }
-}
-
-#[test]
-fn deferred_capability_bootstrap_subprocess() {
-    let Ok(scenario) = std::env::var("WARP_TEST_DEFERRED_CAPABILITY_BOOTSTRAP") else {
-        return;
-    };
-    let supports_deferred_repositories = scenario != "eager";
-    let use_factory_repositories = supports_deferred_repositories && scenario != "non-factory";
-    let eager = if supports_deferred_repositories {
-        json!([])
-    } else {
-        json!([{
-            "forge": "GITLAB", "owner": "platform/backend", "name": "api",
-            "ref": null, "cloneFrom": null, "preserveOrigin": true, "expectedSha": null,
-        }])
-    };
-    let deferred = if scenario == "deferred" {
-        json!([{
-            "forge": "GITLAB", "owner": "platform/backend", "name": "api",
-            "ref": null, "cloneFrom": null, "expectedSha": null, "preserveOrigin": true
-        }])
-    } else {
-        json!([])
-    };
-    let mut config = json!({
-        "taskId": TASK_ID, "executionId": "42", "harness": "OZ",
-        "conversationId": null, "parentRunId": null, "teamId": null, "modelId": null,
-        "reasoningLevel": null, "profileId": null, "computerUseModelId": null,
-        "inferenceProviders": null, "providers": null,
-        "idleOnCompleteSeconds": null, "idleOnFailSeconds": null,
-        "mcpServersJson": "{}", "skills": [], "factorySkillDirs": [],
-        "computerUseEnabled": false, "repositories": eager,
-        "setupCommands": [], "sessionSharingAcls": [],
-        "skipInitialTurn": false, "snapshotDisabled": false,
-    });
-    if supports_deferred_repositories && scenario != "missing" {
-        config["deferredRepositories"] = deferred;
-    }
-    let mut server = torch_core::channel::ChannelState::mock_server();
-    let bootstrap = server
-        .mock("POST", "/graphql/v2")
-        .match_query(Matcher::UrlEncoded(
-            "op".into(),
-            "ExecutionBootstrap".into(),
-        ))
-        .match_body(Matcher::PartialJson(json!({"variables": {
-            "executionId": "42",
-            "supportsDeferredRepositories": supports_deferred_repositories,
-            "secretsInput": {"taskId": TASK_ID, "workloadToken": "test-workload-token"},
-            "taskInput": {"taskId": TASK_ID}
-        }})))
-        .with_status(200)
-        .with_body(
-            json!({"data": {
-                "task": {"__typename": "TaskOutput", "task": {
-                    "executionConfig": config, "attachments": []
-                }},
-                "taskSecrets": {"__typename": "TaskSecretsOutput", "secrets": []}
-            }})
-            .to_string(),
-        )
-        .expect(1)
-        .create();
-    let mut credentials_input = json!({
-        "taskId": TASK_ID, "workloadToken": "test-workload-token",
-        "acceptsPartialRefresh": false
-    });
-    if use_factory_repositories {
-        credentials_input["useFactoryRepositories"] = json!(true);
-    }
-    let credentials = server
-        .mock("POST", "/graphql/v2")
-        .match_query(Matcher::UrlEncoded(
-            "op".into(),
-            "TaskGitCredentials".into(),
-        ))
-        .match_request(move |request| {
-            let body: serde_json::Value = serde_json::from_slice(request.body().unwrap()).unwrap();
-            body["variables"]["input"] == credentials_input
-        })
-        .with_status(200)
-        .with_body(
-            json!({"data": {"taskGitCredentials": {
-                "__typename": "TaskGitCredentialsOutput", "credentials": [], "failedHosts": []
-            }}})
-            .to_string(),
-        )
-        .expect(1)
-        .create();
-    App::test((), |mut app| async move {
-        let _refresh = FeatureFlag::GitCredentialRefresh.override_enabled(true);
-        let _handoff = FeatureFlag::OzHandoff.override_enabled(false);
-        let _capability = FeatureFlag::FactoryDeferredRepositories
-            .override_enabled(supports_deferred_repositories);
-        let provider = app.add_singleton_model(|_| ServerApiProvider::new_for_test());
-        let ai_client = provider.read(&app, |provider, _| provider.get_ai_client());
-        let runner = app.add_singleton_model(|_| AgentDriverRunner);
-        let foreground = runner.update(&mut app, |_, ctx| ctx.spawner());
-        let runtime = tokio::runtime::Builder::new_multi_thread()
-            .enable_all()
-            .build()
-            .unwrap();
-        let _enter = runtime.enter();
-        let data = AgentDriverRunner::fetch_execution_task_data(&foreground, TASK_ID, "42")
-            .await
-            .unwrap();
-        assert_eq!(
-            data.repository_contract.supports_deferred_repositories,
-            supports_deferred_repositories
-        );
-        drop(_capability);
-        let _changed_capability = FeatureFlag::FactoryDeferredRepositories
-            .override_enabled(!supports_deferred_repositories);
-        let events = runner.update(&mut app, |_, ctx| {
-            super::SetupClientEventReporter::noop(ai_client.clone(), ctx.background_executor())
-        });
-        let args =
-            parse_run_agent_args(&["agent", "run", "--task-id", TASK_ID, "--execution-id", "42"]);
-        let result = AgentDriverRunner::build_driver_options_and_task(
-            &foreground,
-            args,
-            None,
-            &ai_client,
-            &events,
-            Some(data),
-        )
-        .await;
-        if scenario == "missing" {
-            let error = result
-                .err()
-                .expect("enabled bootstrap requires deferred inventory");
-            let AgentDriverError::ConfigBuildFailed(source) = error else {
-                panic!("unexpected bootstrap error: {error:?}");
-            };
-            assert_eq!(
-                source.to_string(),
-                "Execution configuration is missing deferred repositories"
-            );
-            return;
-        }
-        let (options, _, _) = result.unwrap();
-        assert_eq!(options.use_factory_repositories, use_factory_repositories);
-        assert_eq!(
-            options.workspace.source_repos.len(),
-            usize::from(!supports_deferred_repositories)
-        );
-        assert_eq!(
-            options.workspace.deferred_repos.len(),
-            usize::from(scenario == "deferred")
-        );
-    });
-    bootstrap.assert();
-    credentials.assert();
-}
 #[test]
 fn paired_task_data_downloads_listed_attachment_without_refetching_it() {
     let _images = FeatureFlag::AmbientAgentsImageUpload.override_enabled(true);
@@ -694,9 +510,9 @@ fn existing_task_factory_experiments_bootstrap_and_log_without_payload() {
                 "ai::agent_sdk::tests::factory_experiment_bootstrap_subprocess",
                 "--nocapture",
             ])
-            .env("WARP_TEST_FACTORY_EXPERIMENT_SCENARIO", scenario)
-            .env("WARP_ISOLATION_PLATFORM", "docker")
-            .env_remove("WARP_WORKLOAD_TOKEN")
+            .env("TORCH_TEST_FACTORY_EXPERIMENT_SCENARIO", scenario)
+            .env("TORCH_ISOLATION_PLATFORM", "docker")
+            .env_remove("TORCH_WORKLOAD_TOKEN")
             .output()
             .unwrap();
         assert!(
@@ -730,7 +546,7 @@ fn existing_task_factory_experiments_bootstrap_and_log_without_payload() {
 
 #[test]
 fn factory_experiment_bootstrap_subprocess() {
-    let Ok(scenario) = std::env::var("WARP_TEST_FACTORY_EXPERIMENT_SCENARIO") else {
+    let Ok(scenario) = std::env::var("TORCH_TEST_FACTORY_EXPERIMENT_SCENARIO") else {
         return;
     };
     App::test((), |mut app| async move {

@@ -776,7 +776,7 @@ pub struct Block {
     pub host: Option<String>,
     pub is_background: bool,
     pub rprompt: Option<String>,
-    /// JSON-serialized representation of the Warp prompt snapshot (Context Chips). Note that this
+    /// JSON-serialized representation of the Torch prompt snapshot (Context Chips). Note that this
     /// is different from PS1 and RPROMPT1
     pub prompt_snapshot: Option<String>,
     pub block_id: String,
@@ -1233,7 +1233,7 @@ pub struct AgentConversationData {
     /// pill bar. Orchestrator conversations always serialize as `false`.
     #[serde(default, skip_serializing_if = "is_false")]
     pub pinned: bool,
-    /// Whether the user chose Warp-funded inference for this conversation after a ChatGPT
+    /// Whether the user chose Torch-funded inference for this conversation after a ChatGPT
     /// token-sharing failure. Sent as `skip_chatgpt_subscription` on every request.
     #[serde(default, skip_serializing_if = "is_false")]
     pub use_warp_credits_instead_of_chatgpt: bool,

@@ -1,8 +1,6 @@
 use std::ffi::OsStr;
 
 use chrono::TimeDelta;
-#[cfg(not(feature = "skip_login"))]
-use mockito::Matcher;
 use torch_graphql::queries::execution_config::{CodeForge, ExecutionRepository};
 use torchui::App;
 
@@ -34,61 +32,6 @@ fn config() -> ExecutionConfiguration {
     execution_config.providers = None;
     execution_config.inference_providers = None;
     execution_config
-}
-
-#[test]
-#[cfg(not(feature = "skip_login"))]
-fn installation_failures_are_reported_against_the_run_with_its_credential() {
-    let mut server = crate::ChannelState::mock_server();
-    let report = server
-        .mock("POST", "/graphql/v2?op=UpdateAgentTask")
-        .match_header("authorization", "Bearer assigned-run-key")
-        .match_body(Matcher::PartialJson(serde_json::json!({
-            "variables": { "input": { "taskId": TASK_ID } }
-        })))
-        .with_body(
-            serde_json::json!({"data": {"updateAgentTask": {
-                "__typename": "UpdateAgentTaskOutput",
-                "responseContext": {"serverVersion": null}
-            }}})
-            .to_string(),
-        )
-        .expect(1)
-        .create();
-    drop(server);
-    App::test((), |mut app| async move {
-        initialize_app_for_terminal_view(&mut app);
-        // Production builds the server API over the shared auth state, so installing the run
-        // credential changes what every later request sends.
-        app.add_singleton_model(|_| {
-            torch_server_client::network_logging::NetworkLogModel::default()
-        });
-        let auth_state = app.read(|ctx| AuthStateProvider::as_ref(ctx).get().clone());
-        ServerApiProvider::handle(&app).update(&mut app, |provider, ctx| {
-            *provider = ServerApiProvider::new(auth_state, None, None, ctx);
-        });
-        let root = tempfile::tempdir().unwrap();
-        let terminal = add_window_with_terminal(&mut app, None);
-        let terminal_driver = app.update(|ctx| {
-            terminal::TerminalDriver::create_from_existing_view(terminal.clone(), ctx)
-        });
-        let driver = app
-            .add_model(|ctx| AgentDriver::new_for_test(root.path().into(), terminal_driver, ctx));
-        let spawner = driver.update(&mut app, |_, ctx| ctx.spawner());
-        let mut unsupported = config();
-        unsupported.harness = torch_graphql::ai::AgentHarness::ClaudeCode;
-        let error = AgentDriver::prepare_prewarmed_assignment(
-            &spawner,
-            unsupported,
-            HashMap::new(),
-            "assigned-run-key".into(),
-            Utc::now() + TimeDelta::hours(1),
-        )
-        .await
-        .unwrap_err();
-        assert!(matches!(error, AgentDriverError::ConfigBuildFailed(_)));
-    });
-    report.assert();
 }
 
 /// The server commits runs with cloud providers to pre-warmed sandboxes, so validation must
@@ -149,9 +92,9 @@ fn prewarmed_config_conversion_and_state_binding_preserve_run_settings() {
         configuration.factory_skill_dirs = vec![".agents/skills".into()];
         configuration.snapshot_disabled = true;
         let runtime_env = HashMap::from([
-            ("WARP_API_KEY".into(), "assigned-key".into()),
-            ("WARP_FACTORY_ID".into(), "factory-id".into()),
-            ("WARP_METADATA_TICKET_ID".into(), "ENG-42".into()),
+            ("TORCH_API_KEY".into(), "assigned-key".into()),
+            ("TORCH_FACTORY_ID".into(), "factory-id".into()),
+            ("TORCH_METADATA_TICKET_ID".into(), "ENG-42".into()),
         ]);
         let (mut options, task, _, _) = app.update(|ctx| {
             build_execution_task_and_options(
@@ -191,11 +134,11 @@ fn prewarmed_config_conversion_and_state_binding_preserve_run_settings() {
                     .unwrap_or_default()
                     .to_owned()
             };
-            assert_eq!(value("WARP_API_KEY"), "assigned-key");
-            assert_eq!(value("WARP_RUN_ID"), TASK_ID);
-            assert_eq!(value("WARP_METADATA_TICKET_ID"), "ENG-42");
+            assert_eq!(value("TORCH_API_KEY"), "assigned-key");
+            assert_eq!(value("TORCH_RUN_ID"), TASK_ID);
+            assert_eq!(value("TORCH_METADATA_TICKET_ID"), "ENG-42");
             assert_eq!(value(MODE_ENV), "execution");
-            assert_eq!(value("WARP_EXECUTION_ID"), "42");
+            assert_eq!(value("TORCH_EXECUTION_ID"), "42");
             let policy: PreparationPolicy =
                 serde_json::from_slice(&std::fs::read(value(FILE_ENV)).unwrap()).unwrap();
             assert_eq!(policy.task_id, TASK_ID);

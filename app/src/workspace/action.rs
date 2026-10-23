@@ -3,7 +3,6 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use session_sharing_protocol::common::SessionId;
-use ui_components::lightbox;
 use torch_util::path::LineAndColumnArg;
 use torchui::accessibility::AccessibilityVerbosity;
 use torchui::geometry::rect::RectF;
@@ -11,6 +10,7 @@ use torchui::geometry::vector::Vector2F;
 use torchui::platform::Cursor;
 use torchui::platform::keyboard::KeyCode;
 use torchui::{EntityId, WeakViewHandle, WindowId};
+use ui_components::lightbox;
 
 use super::global_actions::{ForkFromExchange, ForkedConversationDestination};
 use super::tab_settings::{
@@ -413,13 +413,13 @@ pub enum WorkspaceAction {
         cursor_position: Vector2F,
     },
     DropGroup,
-    /// Toggles the left panel. In Code Mode V1 this toggles Warp Drive.
+    /// Toggles the left panel. In Code Mode V1 this toggles Torch Drive.
     /// In Code Mode V2 this toggles the left panel which contains both the project explorer and
-    /// Warp Drive. This happens as explicit action from the user.
+    /// Torch Drive. This happens as explicit action from the user.
     ToggleLeftPanel,
-    /// Toggles directly to the Warp Drive tab of the left panel in Code Mode V2
+    /// Toggles directly to the Torch Drive tab of the left panel in Code Mode V2
     ToggleWarpDrive,
-    /// Unconditionally opens Warp Drive.
+    /// Unconditionally opens Torch Drive.
     OpenWarpDrive,
     /// Toggles the right panel. This happens as an explicit action from the user.
     ToggleRightPanel,
@@ -482,7 +482,7 @@ pub enum WorkspaceAction {
     SignupAnonymousUser,
     SignInAnonymousWebUser,
     OpenLink(String),
-    /// On WASM, opens a given URL in the desktop Warp app (if installed) or redirects to download page.
+    /// On WASM, opens a given URL in the desktop Torch app (if installed) or redirects to download page.
     #[cfg(target_family = "wasm")]
     OpenLinkOnDesktop(url::Url),
     ReopenClosedSession,
@@ -525,7 +525,7 @@ pub enum WorkspaceAction {
     },
     TerminateApp,
     CloseWindow,
-    /// Help the user call the Warp executable with the [`crate::args::DEBUG_DUMP_FLAG`].
+    /// Help the user call the Torch executable with the [`crate::args::DEBUG_DUMP_FLAG`].
     DumpDebugInfo,
     /// Log review comment send eligibility for panes in the active tab.
     LogReviewCommentSendStatusForActiveTab,
@@ -701,10 +701,10 @@ pub enum WorkspaceAction {
     /// Uninstall the Oz CLI command from /usr/local/bin
     #[cfg(target_os = "macos")]
     UninstallOz,
-    /// Install the Warp Control CLI command to /usr/local/bin
+    /// Install the Torch Control CLI command to /usr/local/bin
     #[cfg(target_os = "macos")]
     InstallWarpctrl,
-    /// Uninstall the Warp Control CLI command from /usr/local/bin
+    /// Uninstall the Torch Control CLI command from /usr/local/bin
     #[cfg(target_os = "macos")]
     UninstallWarpctrl,
     UndoRevertInCodeReviewPane {
@@ -774,10 +774,10 @@ pub enum WorkspaceAction {
     /// Reset the orchestration launch modal dismissed state (for debugging)
     #[cfg(debug_assertions)]
     ResetOrchestrationLaunchModalState,
-    /// Open the Warp Agent CLI Launch Modal (for debugging)
+    /// Open the Torch Agent CLI Launch Modal (for debugging)
     #[cfg(debug_assertions)]
     OpenAgentCliLaunchModal,
-    /// Reset the Warp Agent CLI launch modal dismissed state (for debugging)
+    /// Reset the Torch Agent CLI launch modal dismissed state (for debugging)
     #[cfg(debug_assertions)]
     ResetAgentCliLaunchModalState,
     /// Open the Feature Intro Modal (for debugging)

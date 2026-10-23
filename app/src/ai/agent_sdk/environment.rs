@@ -20,7 +20,7 @@ use torchui::r#async::FutureExt;
 use torchui::{AppContext, ModelContext, SingletonEntity};
 
 use crate::CloudObjectTypeAndId;
-use crate::ai::agent_sdk::driver::WARP_DRIVE_SYNC_TIMEOUT;
+use crate::ai::agent_sdk::driver::TORCH_DRIVE_SYNC_TIMEOUT;
 use crate::ai::agent_sdk::oauth_flow::poll_oauth_until_terminal;
 use crate::ai::agent_sdk::output::{self, TableFormat};
 use crate::ai::cloud_environments::{
@@ -39,7 +39,7 @@ use crate::server::server_api::factory::FactoryClient;
 use crate::util::time_format::format_approx_duration_from_now_utc;
 use crate::workspaces::user_profiles::UserProfiles;
 
-const WARP_DEV_ENVIRONMENTS_REPO: &str = "https://github.com/warpdotdev/warp-dev-environments";
+const TORCH_DEV_ENVIRONMENTS_REPO: &str = "https://github.com/warpdotdev/warp-dev-environments";
 
 /// Parse repo strings in the format "owner/repo" into GithubRepo objects.
 fn parse_repos(repo_strings: Vec<String>) -> anyhow::Result<Vec<GithubRepo>> {
@@ -172,8 +172,8 @@ impl EnvironmentCommandRunner {
                         OutputFormat::Text | OutputFormat::Pretty
                     ) {
                         println!(
-                            "All Warp dev images contain Python and Node. For more information, see: {}\n",
-                            WARP_DEV_ENVIRONMENTS_REPO
+                            "All Torch dev images contain Python and Node. For more information, see: {}\n",
+                            TORCH_DEV_ENVIRONMENTS_REPO
                         );
                     }
                     output::print_list(image_infos, global_options.output_format);
@@ -281,12 +281,12 @@ impl EnvironmentCommandRunner {
     fn get(&mut self, id: String, ctx: &mut ModelContext<Self>) {
         let initial_sync = UpdateManager::as_ref(ctx)
             .initial_load_complete()
-            .with_timeout(WARP_DRIVE_SYNC_TIMEOUT);
+            .with_timeout(TORCH_DRIVE_SYNC_TIMEOUT);
 
         ctx.spawn(initial_sync, move |_, result, ctx| {
             if result.is_err() {
                 super::report_fatal_error(
-                    anyhow::anyhow!("Timed out waiting for Warp Drive to sync"),
+                    anyhow::anyhow!("Timed out waiting for Torch Drive to sync"),
                     ctx,
                 );
                 return;
@@ -381,7 +381,7 @@ impl EnvironmentCommandRunner {
                 ListWarpDevImagesResult::ListWarpDevImagesOutput(output) => {
                     if output.images.is_empty() {
                         super::report_fatal_error(
-                            anyhow::anyhow!("No Warp dev images available."),
+                            anyhow::anyhow!("No Torch dev images available."),
                             ctx,
                         );
                         return;
@@ -392,7 +392,7 @@ impl EnvironmentCommandRunner {
                     );
                     println!(
                         "All warpdotdev images contain Python and Node, in addition to language-specific tooling. For more info: {}\n",
-                        WARP_DEV_ENVIRONMENTS_REPO
+                        TORCH_DEV_ENVIRONMENTS_REPO
                     );
 
                     let mut image_choices: Vec<String> =
@@ -497,12 +497,12 @@ impl EnvironmentCommandRunner {
     ) {
         let initial_sync = UpdateManager::as_ref(ctx)
             .initial_load_complete()
-            .with_timeout(WARP_DRIVE_SYNC_TIMEOUT);
+            .with_timeout(TORCH_DRIVE_SYNC_TIMEOUT);
 
         ctx.spawn(initial_sync, move |_, result, ctx| {
             if result.is_err() {
                 super::report_fatal_error(
-                    anyhow::anyhow!("Timed out waiting for Warp Drive to sync"),
+                    anyhow::anyhow!("Timed out waiting for Torch Drive to sync"),
                     ctx,
                 );
                 return;
@@ -879,12 +879,12 @@ impl EnvironmentCommandRunner {
     ) {
         let initial_sync = UpdateManager::as_ref(ctx)
             .initial_load_complete()
-            .with_timeout(WARP_DRIVE_SYNC_TIMEOUT);
+            .with_timeout(TORCH_DRIVE_SYNC_TIMEOUT);
 
         ctx.spawn(initial_sync, move |_, result, ctx| {
             if result.is_err() {
                 super::report_fatal_error(
-                    anyhow::anyhow!("Timed out waiting for Warp Drive to sync"),
+                    anyhow::anyhow!("Timed out waiting for Torch Drive to sync"),
                     ctx,
                 );
                 return;
@@ -1074,12 +1074,12 @@ impl EnvironmentCommandRunner {
     fn delete(&mut self, id: String, force: bool, ctx: &mut ModelContext<Self>) {
         let initial_sync = UpdateManager::as_ref(ctx)
             .initial_load_complete()
-            .with_timeout(WARP_DRIVE_SYNC_TIMEOUT);
+            .with_timeout(TORCH_DRIVE_SYNC_TIMEOUT);
 
         ctx.spawn(initial_sync, move |_, result, ctx| {
             if result.is_err() {
                 super::report_fatal_error(
-                    anyhow::anyhow!("Timed out waiting for Warp Drive to sync"),
+                    anyhow::anyhow!("Timed out waiting for Torch Drive to sync"),
                     ctx,
                 );
                 return;

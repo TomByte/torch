@@ -303,10 +303,10 @@ async fn parse_outcomes_distinguish_missing_invalid_and_valid_configs() {
     }
 
     // TODO: Audit that the environment access only happens in single-threaded code.
-    unsafe { std::env::remove_var("WARP_MCP_TEST_MISSING") };
+    unsafe { std::env::remove_var("TORCH_MCP_TEST_MISSING") };
     std::fs::write(
         &path,
-        r#"{"mcpServers":{"test":{"command":"${WARP_MCP_TEST_MISSING}"}}}"#,
+        r#"{"mcpServers":{"test":{"command":"${TORCH_MCP_TEST_MISSING}"}}}"#,
     )
     .expect("missing-env config should be written");
     match parse_mcp_config_file(&path, MCPProvider::Warp).await {

@@ -12,7 +12,7 @@ pub struct ChannelConfig {
     /// The name of the file to which logs should be written.
     pub logfile_name: Cow<'static, str>,
 
-    /// Configuration for talking to Warp's servers.
+    /// Configuration for talking to Torch's servers.
     pub server_config: WarpServerConfig,
     /// Configuration for Oz/ambient agents.
     pub oz_config: OzConfig,
@@ -35,7 +35,7 @@ pub struct IapConfig {
 pub struct WarpServerConfig {
     /// The root URL for the standard server pool.
     pub server_root_url: Cow<'static, str>,
-    /// The URL for the RTC server, which serves real-time updates for Warp Drive objects.
+    /// The URL for the RTC server, which serves real-time updates for Torch Drive objects.
     pub rtc_server_url: Cow<'static, str>,
     /// The URL for the session sharing server, or [`None`] if session sharing is not
     /// supported.

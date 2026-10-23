@@ -51,7 +51,7 @@ pub(crate) struct AutoCloudHandoffEligibility {
     /// active local child agent. Handing such a session off to the cloud would
     /// fork only the parent and orphan its local children, so we skip it.
     pub(crate) has_local_orchestrated_children: bool,
-    /// True when the pane's active Agent Mode model can't run in a Warp cloud
+    /// True when the pane's active Agent Mode model can't run in a Torch cloud
     /// (Oz) agent (e.g. a custom-endpoint/BYOK model or local custom router).
     /// Handing off would silently swap the run onto a different model, so we
     /// skip instead.

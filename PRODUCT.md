@@ -4,7 +4,7 @@
 
 ## Platform
 
-Native desktop (Rust and WarpUI), currently verified on macOS.
+Native desktop (Rust and TorchUI), currently verified on macOS.
 
 ## Product Purpose
 

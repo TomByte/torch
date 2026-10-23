@@ -1,4 +1,4 @@
-//! Warp Home
+//! Torch Home
 //!
 //! This is the landing page for new tabs if session creation isn't supported (e.g. on the web).
 //! It's barebones at the moment, but may grow into a more full-featured admin experience.
@@ -8,15 +8,15 @@ use torchui::ViewContext;
 use super::view::Workspace;
 use crate::pane_group::{AnyPaneContent, FilePane};
 
-const WARP_HOME_TITLE: &str = "Welcome to Torch on Web";
-const WARP_HOME_CONTENT: &str = r#"
-Welcome to Warp on Web - your browser-based home for Warp! 
-Use Warp on Web to:
+const TORCH_HOME_TITLE: &str = "Welcome to Torch on Web";
+const TORCH_HOME_CONTENT: &str = r#"
+Welcome to Torch on Web - your browser-based home for Torch! 
+Use Torch on Web to:
 * Join Shared Sessions
-* Create, View, and Edit Warp Drive Objects
-* Manage your Warp Settings
+* Create, View, and Edit Torch Drive Objects
+* Manage your Torch Settings
 
-Warp on Web can also be used by your teammates and peers who don't have Warp downloaded yet to view your shared sessions, notebooks, and workflows."#;
+Torch on Web can also be used by your teammates and peers who don't have Torch downloaded yet to view your shared sessions, notebooks, and workflows."#;
 
 /// Create a static "home page" pane.
 pub fn create_home_pane(ctx: &mut ViewContext<Workspace>) -> Box<dyn AnyPaneContent> {
@@ -28,7 +28,7 @@ pub fn create_home_pane(ctx: &mut ViewContext<Workspace>) -> Box<dyn AnyPaneCont
         ctx,
     );
     pane.file_view(ctx).update(ctx, |pane, ctx| {
-        pane.open_static(WARP_HOME_TITLE, WARP_HOME_CONTENT, ctx);
+        pane.open_static(TORCH_HOME_TITLE, TORCH_HOME_CONTENT, ctx);
     });
     Box::new(pane)
 }

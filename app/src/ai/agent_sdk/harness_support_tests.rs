@@ -9,7 +9,7 @@ use super::{
 #[test]
 fn matches_out_of_memory_killed_process_line_for_pid() {
     assert!(oom_kill_line_matches_pid(
-        "[123.456] Out of memory: Killed process 4242 (warp) total-vm:1000kB",
+        "[123.456] Out of memory: Killed process 4242 (torch) total-vm:1000kB",
         4242
     ));
 }
@@ -41,7 +41,7 @@ fn matches_spaced_oom_kill_pid_field() {
 #[test]
 fn rejects_killed_process_line_without_oom_marker() {
     assert!(!oom_kill_line_matches_pid(
-        "[123.456] Killed process 4242 (warp) with signal SIGKILL",
+        "[123.456] Killed process 4242 (torch) with signal SIGKILL",
         4242
     ));
 }
@@ -65,7 +65,7 @@ fn rejects_oom_killer_invocation_without_victim() {
 #[test]
 fn rejects_killed_process_line_for_longer_pid() {
     assert!(!oom_kill_line_matches_pid(
-        "[123.456] Out of memory: Killed process 42420 (warp) total-vm:1000kB",
+        "[123.456] Out of memory: Killed process 42420 (torch) total-vm:1000kB",
         4242
     ));
 }

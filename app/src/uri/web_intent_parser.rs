@@ -1,8 +1,8 @@
 use anyhow::{Result, anyhow};
-use url::Url;
-use uuid::Uuid;
 #[cfg(target_family = "wasm")]
 use torch_core::context_flag::ContextFlag;
+use url::Url;
+use uuid::Uuid;
 
 use crate::ChannelState;
 #[cfg(target_family = "wasm")]
@@ -129,7 +129,7 @@ impl WebIntent {
                         }
                         let action_type = segments[1];
                         // Allowlist of valid actions,
-                        // since we shouldn't expose all Warp actions as web URLs.
+                        // since we shouldn't expose all Torch actions as web URLs.
                         const ALLOWED_ACTIONS: &[&str] = &["open-repo", "focus_cloud_mode"];
                         if !ALLOWED_ACTIONS.contains(&action_type) {
                             return Err(anyhow!("Unknown action type in url: {}", action_type));
@@ -171,8 +171,8 @@ impl WebIntent {
     }
 }
 
-/// Attempts to rewrite a Warp web URL into a native desktop intent URL (warp://...).
-/// Returns `None` if the URL is not a recognized Warp web intent.
+/// Attempts to rewrite a Torch web URL into a native desktop intent URL (warp://...).
+/// Returns `None` if the URL is not a recognized Torch web intent.
 pub fn maybe_rewrite_web_url_to_intent(url: &Url) -> Option<Url> {
     WebIntent::try_from_url(url)
         .ok()

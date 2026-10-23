@@ -2,8 +2,8 @@
 set -eo pipefail
 
 # Bootstrap dispatches to the platform-specific install scripts. Each step
-# that needs root sources `script/warp_sudo` and asks for confirmation
-# before running. Pass -y / --yes (or set WARP_SKIP_SUDO_PROMPT=1) to skip
+# that needs root sources `script/torch_sudo` and asks for confirmation
+# before running. Pass -y / --yes (or set TORCH_SKIP_SUDO_PROMPT=1) to skip
 # the prompts in unattended environments.
 
 OS_TYPE="$(uname -s)"
@@ -49,7 +49,7 @@ for arg in "$@"; do
       exit 0
       ;;
     -y|--yes)
-      export WARP_SKIP_SUDO_PROMPT=1
+      export TORCH_SKIP_SUDO_PROMPT=1
       if [[ ! "$OS_TYPE" =~ ^(MINGW64_NT|MSYS_NT) ]]; then
         PLATFORM_ARGS+=("${arg}")
       fi

@@ -186,7 +186,7 @@ pub enum QueryFilter {
     /// Filter results for launch configurations.
     LaunchConfigurations,
 
-    /// Filter for objects in Warp Drive
+    /// Filter for objects in Torch Drive
     Drive,
 
     /// Filter results for environment variables.
@@ -321,7 +321,7 @@ impl QueryFilter {
             QueryFilter::Conversations => "conversations",
             QueryFilter::Agents => "agents",
             QueryFilter::LaunchConfigurations => "launch configurations",
-            QueryFilter::Drive => "Warp Drive",
+            QueryFilter::Drive => "Torch Drive",
             QueryFilter::EnvironmentVariables => "environment variables",
             QueryFilter::PromptHistory => "prompt history",
             QueryFilter::Files => "files",

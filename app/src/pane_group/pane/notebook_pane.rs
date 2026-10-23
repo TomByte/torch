@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use anyhow::Context;
-use url::Url;
 use torchui::{AppContext, ModelHandle, SingletonEntity, ViewContext, ViewHandle};
+use url::Url;
 
 use super::super::{DefaultSessionModeBehavior, Direction};
 use super::view::PaneView;
@@ -201,7 +201,7 @@ pub(super) fn subscribe_to_link_model(
             target,
             line_col,
         } => {
-            // Emit event to workspace to handle opening in Warp
+            // Emit event to workspace to handle opening in Torch
             ctx.emit(crate::pane_group::Event::OpenFileWithTarget {
                 path: path.clone(),
                 target: target.clone(),

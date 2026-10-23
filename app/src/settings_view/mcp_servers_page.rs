@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
-use uuid::Uuid;
 use torch_errors::report_error;
 use torchui::elements::{ChildView, Container};
 use torchui::ui_components::components::{Coords, UiComponentStyles};
 use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
+use uuid::Uuid;
 
 use crate::ai::mcp::gallery::MCPGalleryManager;
 use crate::ai::mcp::templatable_installation::VariableValue;
@@ -43,7 +43,7 @@ use crate::workspace::ToastStack;
 /// See `specs/GH686/product.md`.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum InstallOrigin {
-    /// Triggered by a user gesture inside Warp (gallery card click,
+    /// Triggered by a user gesture inside Torch (gallery card click,
     /// reinstall button, programmatic in-app flows, etc.).
     InApp,
     /// Triggered by a `warp://settings/mcp?autoinstall=...` deeplink; must be

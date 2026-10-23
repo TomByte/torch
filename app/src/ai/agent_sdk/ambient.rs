@@ -1,4 +1,4 @@
-//! Commands to interact with ambient agents on Warp's platform.
+//! Commands to interact with ambient agents on Torch's platform.
 use std::io::Write as _;
 use std::sync::Arc;
 use std::time::Duration;
@@ -1524,7 +1524,7 @@ pub fn get_run_conversation(ctx: &mut AppContext, run_id: String) -> anyhow::Res
     runner.update(ctx, |runner, ctx| runner.get_run_conversation(run_id, ctx))
 }
 
-/// Normalized Warp conversation JSON, or a raw third-party harness transcript.
+/// Normalized Torch conversation JSON, or a raw third-party harness transcript.
 #[derive(Debug, PartialEq)]
 enum ConversationCliOutput {
     Normalized(serde_json::Value),

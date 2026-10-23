@@ -9,7 +9,7 @@ metadata:
 
 ## Overview
 
-This skill creates or updates Figma designs directly from a natural-language description. It combines Figma library search with direct file authoring, and uses Warp's broader agent capabilities only when they are needed to make the design more product-aware or codebase-aware.
+This skill creates or updates Figma designs directly from a natural-language description. It combines Figma library search with direct file authoring, and uses Torch's broader agent capabilities only when they are needed to make the design more product-aware or codebase-aware.
 
 ## When to use this skill
 
@@ -71,7 +71,7 @@ Decide how much non-Figma context is actually necessary.
 
 **Stay inside Figma MCP only** when the user wants an exploratory concept, wireframe, or mockup and does not ask for codebase alignment.
 
-**Use Warp agent context selectively** when the user wants the design to match an existing product or design system:
+**Use Torch agent context selectively** when the user wants the design to match an existing product or design system:
 
 - read project rules from `AGENTS.md` and/or `WARP.md` if they exist
 - use semantic codebase search, grep, and file reads to find relevant components, product vocabulary, layout patterns, and design-token sources
@@ -133,11 +133,11 @@ When the first usable draft is ready:
 
 If the user asks to implement the approved design in code, stop using this skill and consult `implement-design`.
 
-## Warp-agent guidance
+## Torch-agent guidance
 
-Use Warp's broader capabilities to reduce manual prompting, not to add unnecessary work.
+Use Torch's broader capabilities to reduce manual prompting, not to add unnecessary work.
 
-**Good uses of Warp agent capabilities in this skill:**
+**Good uses of Torch agent capabilities in this skill:**
 
 - finding existing component names or design tokens in the repo
 - reading project rules that constrain layout, naming, or branding

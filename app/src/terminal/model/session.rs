@@ -21,8 +21,6 @@ use instant::Instant;
 use once_cell::sync::OnceCell;
 use parking_lot::{Mutex, RwLock};
 use smol_str::SmolStr;
-use typed_path::{TypedPath, TypedPathBuf, WindowsPath};
-use version_compare::Version;
 use torch_completer::completer::{
     CommandExitStatus, CommandOutput, PathSeparators, TopLevelCommandCaseSensitivity,
 };
@@ -33,6 +31,8 @@ use torch_util::path::{
 };
 use torchui::platform::OperatingSystem;
 use torchui::{Entity, ModelContext, SingletonEntity};
+use typed_path::{TypedPath, TypedPathBuf, WindowsPath};
+use version_compare::Version;
 
 use super::ansi::{BootstrappedValue, InitShellValue, SSHValue};
 use super::terminal_model::{HistoryEntry, SubshellInitializationInfo};
@@ -567,7 +567,7 @@ impl From<&SessionType> for command_corrections::SessionType {
     }
 }
 
-/// Whether a session was established by Warp's in-band SSH wrapper — the shell function our
+/// Whether a session was established by Torch's in-band SSH wrapper — the shell function our
 /// bootstrap injects that intercepts `ssh`, sets up a ControlMaster connection, and bootstraps
 /// the remote shell. This applies to all SSH warpification today: the remote-server SSH
 /// extension also runs on top of a wrapper session (reusing the ControlMaster socket for its
@@ -584,7 +584,7 @@ pub enum IsSSHWrapperSession {
         socket_path: PathBuf,
         /// `true` when `socket_path` points at a ControlMaster the user
         /// already had running (the SSH wrapper attached to it instead of
-        /// creating a Warp-owned one). Warp must not tear down such a
+        /// creating a Torch-owned one). Torch must not tear down such a
         /// master on session exit.
         external_control_master: bool,
     },
@@ -896,19 +896,19 @@ impl SessionInfo {
 /// which happens *after* the session is bootstrapped.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum BootstrapSessionType {
-    /// The session host is the same host where Warp is running.
+    /// The session host is the same host where Torch is running.
     Local,
 
-    /// The session host is a different host from where Warp is running.
+    /// The session host is a different host from where Torch is running.
     WarpifiedRemote,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SessionType {
-    /// The session host is the same host where Warp is running.
+    /// The session host is the same host where Torch is running.
     Local,
 
-    /// The session host is a different host from where Warp is running.
+    /// The session host is a different host from where Torch is running.
     /// Note that we only know this for sure when we Warpify a block.
     ///
     /// `host_id` is `Some` when the remote server feature flag is enabled and
@@ -1051,7 +1051,7 @@ impl Session {
         self.info.host_info.clone()
     }
 
-    /// Returns whether this session was established by Warp's in-band SSH wrapper (see
+    /// Returns whether this session was established by Torch's in-band SSH wrapper (see
     /// [`IsSSHWrapperSession`]). Note this stays `false` for remote sessions warpified via
     /// the auto-warpify RC snippet inside an unwrapped `ssh` session.
     pub fn is_ssh_wrapper_session(&self) -> bool {

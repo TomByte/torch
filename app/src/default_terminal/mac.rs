@@ -84,7 +84,7 @@ fn set_default_terminal(bundle_id: &str) -> Result<(), String> {
     }
 }
 
-/// Gets Warp's bundle identifier. This may be `None` if not running as a bundle, i.e. through
+/// Gets Torch's bundle identifier. This may be `None` if not running as a bundle, i.e. through
 /// `cargo run` without `cargo bundle`.
 fn get_warp_bundle_id() -> Option<String> {
     Some(NSBundle::mainBundle().bundleIdentifier()?.to_string())

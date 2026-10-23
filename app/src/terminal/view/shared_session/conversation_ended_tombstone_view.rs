@@ -521,29 +521,6 @@ impl ConversationEndedTombstoneView {
     }
 }
 
-#[cfg(test)]
-impl ConversationEndedTombstoneView {
-    pub(in crate::terminal::view) fn title_for_test(&self) -> Option<&str> {
-        self.display_data.title.as_deref()
-    }
-
-    pub(in crate::terminal::view) fn error_message_for_test(&self) -> Option<&str> {
-        self.display_data.error_message.as_deref()
-    }
-
-    pub(in crate::terminal::view) fn credits_for_test(&self) -> Option<&str> {
-        self.display_data.credits.as_deref()
-    }
-
-    #[cfg(not(target_family = "wasm"))]
-    pub(in crate::terminal::view) fn has_continue_locally_button_for_test(&self) -> bool {
-        self.continue_locally_button.is_some()
-    }
-
-    pub(in crate::terminal::view) fn has_continue_in_cloud_button_for_test(&self) -> bool {
-        self.continue_in_cloud_button.is_some()
-    }
-}
 #[derive(Debug, Clone)]
 pub enum ConversationEndedTombstoneAction {
     ContinueInCloud {

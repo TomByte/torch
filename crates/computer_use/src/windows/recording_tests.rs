@@ -35,8 +35,8 @@ fn recording_process(mode: &str, path: &Path, stdin: Stdio) -> Child {
     let mut command = Command::new(std::env::current_exe().unwrap());
     command
         .args(["recording_process_helper", "--ignored", "--test-threads=1"])
-        .env("WARP_RECORDING_PROCESS_MODE", mode)
-        .env("WARP_RECORDING_PROCESS_PATH", path)
+        .env("TORCH_RECORDING_PROCESS_MODE", mode)
+        .env("TORCH_RECORDING_PROCESS_PATH", path)
         .stdin(stdin)
         .stdout(Stdio::null())
         .stderr(Stdio::null())
@@ -367,8 +367,8 @@ async fn stop_rejects_empty_and_invalid_media() {
 #[tokio::test]
 #[ignore = "requires ffmpeg/gdigrab and an interactive Windows desktop"]
 async fn records_real_virtual_desktop_when_requested() {
-    let output_dir = std::env::var("WARP_RECORDING_TEST_OUTPUT_DIR")
-        .expect("set WARP_RECORDING_TEST_OUTPUT_DIR to run the live recording test");
+    let output_dir = std::env::var("TORCH_RECORDING_TEST_OUTPUT_DIR")
+        .expect("set TORCH_RECORDING_TEST_OUTPUT_DIR to run the live recording test");
     let geometry = query_virtual_screen_geometry().unwrap();
     let recorder = Recorder::new();
     let handle = recorder
@@ -552,8 +552,8 @@ fn identifies_desktop_session_access_denial() {
 #[test]
 #[ignore]
 fn recording_process_helper() {
-    let mode = std::env::var("WARP_RECORDING_PROCESS_MODE").unwrap();
-    let path = PathBuf::from(std::env::var_os("WARP_RECORDING_PROCESS_PATH").unwrap());
+    let mode = std::env::var("TORCH_RECORDING_PROCESS_MODE").unwrap();
+    let path = PathBuf::from(std::env::var_os("TORCH_RECORDING_PROCESS_PATH").unwrap());
 
     match mode.as_str() {
         "delayed-output" => {

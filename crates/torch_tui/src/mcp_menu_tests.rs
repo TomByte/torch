@@ -1,9 +1,9 @@
-use uuid::Uuid;
 use torch::tui_export::{
     TuiMcpAction, TuiMcpConfigDiagnostic, TuiMcpFileScope, TuiMcpFileSource, TuiMcpServerId,
     TuiMcpServerSnapshot, TuiMcpServerSource, TuiMcpServerStatus, TuiMcpSnapshot,
     TuiMcpSyncedTemplateProvenance, TuiMcpTransport,
 };
+use uuid::Uuid;
 
 use super::{menu_rows, row_is_selectable};
 
@@ -90,7 +90,7 @@ fn available_row_is_distinct_from_offline_and_requires_enable() {
     assert_eq!(rows[0].primary_action, Some(TuiMcpAction::Enable(id)));
     assert_eq!(
         rows[0].description.as_deref(),
-        Some("shared by Warp · stdio · available")
+        Some("shared by Torch · stdio · available")
     );
 }
 

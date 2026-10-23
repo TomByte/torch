@@ -11,7 +11,6 @@ use itertools::Itertools;
 use parking_lot::FairMutex;
 use pathfinder_color::ColorU;
 use session_sharing_protocol::common::{ParticipantId, Selection};
-use vec1::Vec1;
 use torch_core::semantic_selection::SemanticSelection;
 use torch_core::ui::builder::UiBuilder;
 use torch_core::ui::theme::AnsiColorIdentifier;
@@ -36,6 +35,7 @@ use torchui::{
     AfterLayoutContext, AppContext, ClipBounds, Element, EntityId, Event, EventContext,
     LayoutContext, ModelHandle, PaintContext, SingletonEntity as _, SizeConstraint,
 };
+use vec1::Vec1;
 
 use super::block_list_viewport::{ClampingMode, InputMode, ScrollPosition, ViewportState};
 use super::blockgrid_renderer::{BlockGridRenderer, GridRenderParams};
@@ -713,7 +713,7 @@ pub struct BlockListElement {
     use_ligature_rendering: bool,
 
     /// When true, suppresses cursor rendering for CLI agents when rich input is open. For agents that draw their own cursor (SHOW_CURSOR off),
-    /// the cursor cell is skipped. For agents that let Warp draw the cursor
+    /// the cursor cell is skipped. For agents that let Torch draw the cursor
     /// (SHOW_CURSOR on), the `draw_cursor` call and cursor contrast colouring
     /// are suppressed instead.
     hide_cursor_cell: bool,
@@ -2577,7 +2577,7 @@ impl BlockListElement {
                 }
             }
 
-            // If Warp prompt (non-PS1) is being used, the command is drawn below the prompt,
+            // If Torch prompt (non-PS1) is being used, the command is drawn below the prompt,
             // hence we account for the prompt's vertical offset.
             let prompt_vertical_offset_px = if !block.honor_ps1() {
                 cell_size_height
@@ -2729,9 +2729,9 @@ impl BlockListElement {
             );
 
             if block.is_output_cursor_visible()
-            // Don't draw the Warp cursor when rich input is hiding
+            // Don't draw the Torch cursor when rich input is hiding
             // the CLI agent's cursor cell — agents like OpenCode and Codex
-            // rely on Warp's cursor, so we suppress it here too.
+            // rely on Torch's cursor, so we suppress it here too.
             && !block_grid_params.grid_render_params.hide_cursor_cell
             {
                 block.output_grid().draw_cursor(

@@ -1,6 +1,6 @@
 #!/usr/bin/env powershell
 #
-# Install all dependencies required to build Warp on Windows.
+# Install all dependencies required to build Torch on Windows.
 
 # Install Rust + cargo.
 bash (($PWD.Path) + '\script\install_rust')

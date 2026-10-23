@@ -276,11 +276,11 @@ pub trait Actor: Send + Sync + 'static {
 ///
 /// Real recorders are available on Linux (X11), macOS (avfoundation), and
 /// Windows (gdigrab). Other platforms and any `test-util` build get a no-op
-/// recorder. On macOS, setting `WARP_MOCK_RECORDER` opts into a mock recorder
+/// recorder. On macOS, setting `TORCH_MOCK_RECORDER` opts into a mock recorder
 /// for UI testing (see `mock`).
 pub fn create_recorder() -> Box<dyn Recorder> {
     #[cfg(macos)]
-    if std::env::var_os("WARP_MOCK_RECORDER").is_some() {
+    if std::env::var_os("TORCH_MOCK_RECORDER").is_some() {
         return Box::new(mock::Recorder::new());
     }
     if cfg!(feature = "test-util") {

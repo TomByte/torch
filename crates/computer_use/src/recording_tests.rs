@@ -93,7 +93,7 @@ async fn start_reports_unsupported_when_ffmpeg_absent() {
     // SAFETY: these env mutations are process-local; this test runs in process
     // isolation under `cargo nextest`, so no other task observes them.
     unsafe {
-        std::env::remove_var("WARP_MOCK_RECORDER");
+        std::env::remove_var("TORCH_MOCK_RECORDER");
     }
     let saved_path = std::env::var_os("PATH");
     unsafe {

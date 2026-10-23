@@ -24,11 +24,11 @@ use super::{
 use super::{PREVIOUS_POINTER_NAME, installer_dir_argument};
 
 const BINARY_NAME: &str = "warp-tui-dev";
-const HELPER_MODE_ENV: &str = "WARP_TUI_AUTOUPDATE_HELPER_MODE";
-const HELPER_ROOT_ENV: &str = "WARP_TUI_AUTOUPDATE_HELPER_ROOT";
-const HELPER_VERSION_ENV: &str = "WARP_TUI_AUTOUPDATE_HELPER_VERSION";
-const HELPER_READY_ENV: &str = "WARP_TUI_AUTOUPDATE_HELPER_READY";
-const HELPER_RELEASE_ENV: &str = "WARP_TUI_AUTOUPDATE_HELPER_RELEASE";
+const HELPER_MODE_ENV: &str = "TORCH_TUI_AUTOUPDATE_HELPER_MODE";
+const HELPER_ROOT_ENV: &str = "TORCH_TUI_AUTOUPDATE_HELPER_ROOT";
+const HELPER_VERSION_ENV: &str = "TORCH_TUI_AUTOUPDATE_HELPER_VERSION";
+const HELPER_READY_ENV: &str = "TORCH_TUI_AUTOUPDATE_HELPER_READY";
+const HELPER_RELEASE_ENV: &str = "TORCH_TUI_AUTOUPDATE_HELPER_RELEASE";
 
 fn temp_root(name: &str) -> tempfile::TempDir {
     tempfile::Builder::new()
@@ -238,9 +238,9 @@ fn rejects_unrelated_homebrew_casks_and_binary_names() {
 #[test]
 fn installer_dir_argument_strips_verbatim_prefix() {
     assert_eq!(
-        installer_dir_argument(Path::new(r"\\?\C:\Users\dev\AppData\Local\Warp\tui-dev"))
+        installer_dir_argument(Path::new(r"\\?\C:\Users\dev\AppData\Local\Torch\tui-dev"))
             .to_string_lossy(),
-        r"/DIR=C:\Users\dev\AppData\Local\Warp\tui-dev"
+        r"/DIR=C:\Users\dev\AppData\Local\Torch\tui-dev"
     );
 }
 
@@ -248,9 +248,9 @@ fn installer_dir_argument_strips_verbatim_prefix() {
 #[test]
 fn installer_dir_argument_preserves_plain_paths() {
     assert_eq!(
-        installer_dir_argument(Path::new(r"C:\Users\dev\AppData\Local\Warp\tui-dev"))
+        installer_dir_argument(Path::new(r"C:\Users\dev\AppData\Local\Torch\tui-dev"))
             .to_string_lossy(),
-        r"/DIR=C:\Users\dev\AppData\Local\Warp\tui-dev"
+        r"/DIR=C:\Users\dev\AppData\Local\Torch\tui-dev"
     );
 }
 

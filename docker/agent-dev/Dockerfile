@@ -1,7 +1,7 @@
 FROM ubuntu:24.04
 
 # Opt into the agent entrypoint's non-root rollout gate (see warp-agent-docker's README).
-ENV WARP_AGENT_NONROOT=1
+ENV TORCH_AGENT_NONROOT=1
 
 ENV RUSTUP_HOME=/usr/local/rustup
 ENV CARGO_HOME=/usr/local/cargo
@@ -9,7 +9,7 @@ ENV TFENV_ROOT=/usr/local/tfenv
 ENV PATH=/usr/local/cargo/bin:/usr/local/go/bin:/usr/local/tfenv/bin:$PATH
 
 # This set of packages is adapted from ./script/bootstrap in warp-internal and warp-server.
-# It doesn't include *everything* (ex. no wgslfmt), but is enough to build and test Warp.
+# It doesn't include *everything* (ex. no wgslfmt), but is enough to build and test Torch.
 
 # Install system-level packages. These are needed to build on Linux, and/or to run integration tests.
 #
@@ -113,7 +113,7 @@ RUN set -eux; \
   rustup toolchain install; \
   rustup default "$(rustup show active-toolchain | cut -d' ' -f1)"
 
-# Install all dependencies needed to build, run, and test Warp
+# Install all dependencies needed to build, run, and test Torch
 COPY ./script ./setup/script
 RUN cd ./setup && ./script/linux/install_test_deps
 

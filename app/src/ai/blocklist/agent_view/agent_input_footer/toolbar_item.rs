@@ -332,7 +332,7 @@ impl AgentToolbarItemKind {
             items.push(Self::FileExplorer);
         }
         items.extend([Self::RichInput, Self::FileAttach]);
-        // Voice input needs Warp AI.
+        // Voice input needs Torch AI.
         if !ChannelState::is_local_only() {
             items.push(Self::VoiceInput);
         }

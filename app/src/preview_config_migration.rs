@@ -12,7 +12,7 @@
 use std::path::Path;
 
 use torch_core::channel::{Channel, ChannelState};
-use torch_core::paths::{WARP_CONFIG_DIR, data_dir};
+use torch_core::paths::{TORCH_CONFIG_DIR, data_dir};
 
 /// Files that should not be symlinked during the Preview config directory
 /// migration. These are intentionally kept separate between Stable and
@@ -37,7 +37,7 @@ pub(crate) fn migrate_preview_config_dir_if_needed() {
         return;
     };
 
-    let old_dir = home.join(WARP_CONFIG_DIR);
+    let old_dir = home.join(TORCH_CONFIG_DIR);
     // `data_dir()` is already channel-aware; for Preview it resolves to
     // `~/.warp-preview`.
     let new_dir = data_dir();

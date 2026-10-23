@@ -130,7 +130,7 @@ pub struct CreateScheduleArgs {
 
     /// Where this job should be hosted.
     ///
-    /// Setting "warp" (or omitting this flag) runs it on Warp's infrastructure.
+    /// Setting "warp" (or omitting this flag) runs it on Torch's infrastructure.
     /// Any other value is treated as a self-hosted job and the value will be matched
     /// with the self-hosted worker's name.
     #[arg(long = "host", value_name = "WORKER_ID")]
@@ -206,7 +206,7 @@ pub struct UpdateScheduleArgs {
 
     /// Where this job should be hosted.
     ///
-    /// Setting "warp" runs it on Warp's infrastructure.
+    /// Setting "warp" runs it on Torch's infrastructure.
     /// Any other value is treated as a self-hosted job and the value will be matched
     /// with the self-hosted worker's name.
     #[arg(long = "host", value_name = "WORKER_ID")]

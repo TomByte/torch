@@ -9,7 +9,6 @@ use anyhow::Result;
 use async_trait::async_trait;
 use lazy_static::lazy_static;
 use smol_str::SmolStr;
-use typed_path::{TypedPath, TypedPathBuf};
 use torch_completer::completer::{
     CommandExitStatus, CommandOutput, CompletionContext, EngineDirEntry, EngineFileType,
     GeneratorContext, PathCompletionContext, PathSeparators, TopLevelCommandCaseSensitivity,
@@ -18,6 +17,7 @@ use torch_completer::signatures::CommandRegistry;
 use torch_core::features::FeatureFlag;
 use torch_util::path::{EscapeChar, ShellFamily};
 use torchui::{AppContext, SingletonEntity};
+use typed_path::{TypedPath, TypedPathBuf};
 
 use crate::safe_warn;
 use crate::terminal::model::session::{ExecuteCommandOptions, Session, SessionType};
@@ -46,7 +46,7 @@ pub struct SessionContext {
     /// current contents should use `refresh_directory_entries` to re-read from disk.
     cached_directory_entries: Arc<dashmap::DashMap<TypedPathBuf, Arc<Vec<EngineDirEntry>>>>,
 
-    /// Snapshot of all Warp workflow aliases.
+    /// Snapshot of all Torch workflow aliases.
     workflow_aliases: HashMap<String, String>,
 }
 
@@ -218,7 +218,7 @@ impl GeneratorContext for SessionContext {
     ) -> Result<CommandOutput> {
         let mut env_vars = session_env_vars.unwrap_or_default();
         // We need to run the command with the PATH var set explicitly even if we have session env vars
-        // because if the user opened Warp through a parent process that didn't have the PATH var set
+        // because if the user opened Torch through a parent process that didn't have the PATH var set
         // (i.e. outside of a shell, for example opening the app via Finder),
         // the subshell won't inherit the PATH var, but we need the PATH var
         // to reference executables we might run as part of generators.

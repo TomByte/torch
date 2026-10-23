@@ -19,10 +19,6 @@ use session_sharing_protocol::common::{
     ParticipantId, Role, RoleRequestId, RoleRequestRejectedReason, RoleRequestResponse, SessionId,
 };
 use settings::Setting as _;
-use tree::DEFAULT_FLEX_VALUE;
-use typed_path::TypedPath;
-use url::Url;
-use uuid::Uuid;
 use torch_cli::agent::Harness;
 use torch_core::command::ExitCode;
 use torch_core::context_flag::ContextFlag;
@@ -45,6 +41,10 @@ use torchui::{
     AppContext, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle, WeakViewHandle, WindowId,
 };
+use tree::DEFAULT_FLEX_VALUE;
+use typed_path::TypedPath;
+use url::Url;
+use uuid::Uuid;
 
 use crate::ai::active_agent_views_model::ActiveAgentViewsModel;
 use crate::ai::agent::conversation::{AIAgentHarness, AIConversation, AIConversationId};
@@ -208,8 +208,8 @@ pub use pane::{
     AnyPaneContent, BackingView, PaneConfiguration, PaneConfigurationEvent, PaneContent, PaneEvent,
     PaneHeaderAction, PaneHeaderCustomAction, PaneId, PaneView, TerminalPaneId,
 };
-pub use tree::{Direction, PaneData, PaneFlex, PaneNode, SplitDirection};
 use torch_errors::report_error;
+pub use tree::{Direction, PaneData, PaneFlex, PaneNode, SplitDirection};
 pub use working_directories::{WorkingDirectoriesEvent, WorkingDirectoriesModel};
 
 use self::pane::{DetachType, PaneViewEvent};
@@ -247,7 +247,7 @@ fn get_minimum_pane_size(app: &AppContext) -> f32 {
 /// 2. Otherwise look up by command name in the already-discovered
 ///    [`AvailableShells`]. Its shell discovery supplements the process `PATH`
 ///    with well-known install locations (e.g. `/opt/homebrew/bin` on macOS,
-///    MSYS2/WSL on Windows) that a raw `PATH` lookup would miss when Warp is
+///    MSYS2/WSL on Windows) that a raw `PATH` lookup would miss when Torch is
 ///    launched outside an interactive shell.
 /// 3. As a final fallback, perform a plain `PATH` lookup via
 ///    [`AvailableShell::try_from`] in case the user put something exotic in
@@ -264,7 +264,7 @@ fn resolve_tab_config_shell(name: &str, ctx: &AppContext) -> Option<AvailableShe
 
     AvailableShell::try_from(name).ok()
 }
-const WARP_SHELL_COMPATIBILITY_DOCS: &str =
+const TORCH_SHELL_COMPATIBILITY_DOCS: &str =
     "https://docs.warp.dev/getting-started/supported-shells";
 // Default minimum width for a newly created Agent Mode pane so that it is legible. Called "default"
 // because this value may be too large for small windows. In that case, we fall back to 50% of the
@@ -533,7 +533,7 @@ pub enum Event {
     OpenPromptEditor,
     OpenAgentToolbarEditor,
     OpenCLIAgentToolbarEditor,
-    /// tell the workspace to open a file within Warp.
+    /// tell the workspace to open a file within Torch.
     OpenFileInWarp {
         /// The file path to open.
         path: LocalOrRemotePath,
@@ -2561,7 +2561,7 @@ impl PaneGroup {
     }
 
     /// Send prompt change bindkey events to all terminal sessions in this pane group. This
-    /// is used for intra-session prompt switching between Warp prompt and PS1.
+    /// is used for intra-session prompt switching between Torch prompt and PS1.
     #[cfg_attr(not(feature = "local_tty"), allow(unused_variables))]
     pub fn send_prompt_change_bindkey_to_all_sessions(
         &self,
@@ -3117,7 +3117,7 @@ impl PaneGroup {
                     FormattedTextFragment::plain_text(
                         "Torch doesn't currently support your default shell, falling back to zsh.  ",
                     ),
-                    FormattedTextFragment::hyperlink("Learn more", WARP_SHELL_COMPATIBILITY_DOCS),
+                    FormattedTextFragment::hyperlink("Learn more", TORCH_SHELL_COMPATIBILITY_DOCS),
                 ]),
             )
         });
@@ -3878,7 +3878,7 @@ impl PaneGroup {
             });
         }
 
-        // Insert the conversation ended tombstone (includes Open in Warp button on WASM).
+        // Insert the conversation ended tombstone (includes Open in Torch button on WASM).
         if terminal_manager.is_some() {
             terminal_view.update(ctx, |view, ctx| {
                 view.insert_conversation_ended_tombstone_with_resolved_cta(ctx);
@@ -5489,7 +5489,7 @@ impl PaneGroup {
         mark_as_viewing_shared_session: bool,
         ctx: &mut ViewContext<Self>,
     ) -> Option<AIConversationId> {
-        // URL-loaded conversation transcripts (e.g. Warp-on-Web deep links)
+        // URL-loaded conversation transcripts (e.g. Torch-on-Web deep links)
         // restore from conversation data before the ambient task cache is
         // guaranteed to contain this task. Native continuation usually reaches
         // this path after task-backed navigation, but the restored cloud-mode
@@ -6390,7 +6390,7 @@ impl PaneGroup {
                 .set_conversation_transcript_viewer_status(Some(viewer_status.clone()));
         });
 
-        // Insert the conversation ended tombstone (includes Open in Warp button on WASM)
+        // Insert the conversation ended tombstone (includes Open in Torch button on WASM)
         terminal_view.update(ctx, |view, ctx| {
             view.insert_conversation_ended_tombstone_with_resolved_cta(ctx);
         });

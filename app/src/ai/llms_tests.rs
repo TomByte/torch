@@ -550,7 +550,7 @@ fn is_cloud_runnable_oz_model_id_classifies_ids() {
     assert!(
         preferences.is_cloud_runnable_oz_model_id(&LLMId::from("custom-router:cloud:team-router"))
     );
-    // Warp Oz slugs — cloud-runnable.
+    // Torch Oz slugs — cloud-runnable.
     assert!(preferences.is_cloud_runnable_oz_model_id(&LLMId::from("auto")));
     assert!(preferences.is_cloud_runnable_oz_model_id(&LLMId::from("auto-genius")));
     // A server-provided (non-custom, non-local-router) id is treated as
@@ -908,7 +908,7 @@ fn team_catalog_hydration_preserves_shared_profile_and_resolves_against_active_t
         );
         let workspace = Workspace::from_local_cache(
             ServerId::from(100).into(),
-            "Warp".to_string(),
+            "Torch".to_string(),
             Some(vec![engineering_team, disabled_team]),
             Some(disabled_models.clone()),
         );

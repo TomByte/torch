@@ -11,7 +11,7 @@ fn escape_html_attribute_escapes_attribute_breakout_characters() {
 #[test]
 fn escape_html_attribute_leaves_safe_text_unchanged() {
     assert_eq!(
-        escape_html_attribute("embedded warp block"),
-        "embedded warp block"
+        escape_html_attribute("embedded torch block"),
+        "embedded torch block"
     );
 }

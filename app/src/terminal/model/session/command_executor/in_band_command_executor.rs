@@ -384,8 +384,8 @@ impl CommandExecutor for InBandCommandExecutor {
     /// the `pty_controller` passed to this executor during construction.
     ///
     /// The given `command` is executed in the active session using the
-    /// `warp_run_generator_command`/`Warp-Run-GeneratorCommand` shell script API that is declared as
-    /// part of Warp's bootstrap script.
+    /// `warp_run_generator_command`/`Torch-Run-GeneratorCommand` shell script API that is declared as
+    /// part of Torch's bootstrap script.
     ///
     /// Internally, `command` is added to a queue of commands to be executed serially (this is to
     /// avoid output from multiple commands corrupting one another since the pty is a single

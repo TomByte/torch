@@ -187,7 +187,7 @@ fn prompt_ids_for_query(
 }
 
 /// The `#` menu's empty-query path reads the cloud model directly rather than going through the
-/// Warp Drive data source, so it needs its own window scoping.
+/// Torch Drive data source, so it needs its own window scoping.
 #[test]
 fn test_prompts_menu_empty_query_only_returns_prompts_in_the_window() {
     let in_window_team = team_for_test(123, "selected");
@@ -249,7 +249,7 @@ fn test_prompts_menu_single_character_query_only_returns_prompts_in_the_window()
     })
 }
 
-/// The normal search path delegates to the window-scoped Warp Drive data source.
+/// The normal search path delegates to the window-scoped Torch Drive data source.
 #[test]
 fn test_prompts_menu_search_query_only_returns_prompts_in_the_window() {
     let in_window_team = team_for_test(123, "selected");

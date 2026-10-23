@@ -19,7 +19,7 @@ pub struct TemplatableMCPServerInfo {
     resources: Vec<rmcp::model::Resource>,
     tools: Vec<rmcp::model::Tool>,
     installation_id: Uuid,
-    /// Warp-side id the installation was resolved from (managed uid or
+    /// Torch-side id the installation was resolved from (managed uid or
     /// well-known integration id); `None` for local servers.
     warp_id: Option<String>,
     description: Option<String>,

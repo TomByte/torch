@@ -210,7 +210,7 @@ impl fmt::Debug for BaseUserQuery {
     }
 }
 
-/// The origin of a query a person typed in a Warp client.
+/// The origin of a query a person typed in a Torch client.
 pub(crate) fn warp_client_origin() -> api::UserQueryOrigin {
     api::UserQueryOrigin {
         variant: Some(api::user_query_origin::Variant::WarpClient(

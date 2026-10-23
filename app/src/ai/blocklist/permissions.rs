@@ -713,7 +713,7 @@ impl BlocklistAIPermissions {
         self.can_read_files(Some(conversation_id), paths, terminal_view_id, scope, ctx)
     }
 
-    /// Returns whether or not Warp can auto-read the given files (e.g. for codebase indexing).
+    /// Returns whether or not Torch can auto-read the given files (e.g. for codebase indexing).
     pub fn can_read_files(
         &self,
         conversation_id: Option<&AIConversationId>,

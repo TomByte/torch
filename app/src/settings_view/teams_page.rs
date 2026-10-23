@@ -1299,7 +1299,7 @@ impl TeamsPageView {
             UserWorkspacesEvent::JoinTeamWithTeamDiscoverySuccess => {
                 self.discovery_join_target = None;
                 self.workspace_discovery_screen.show_options();
-                // Force refresh of Warp Drive objects after joining a team
+                // Force refresh of Torch Drive objects after joining a team
                 UpdateManager::handle(ctx).update(ctx, move |update_manager, ctx| {
                     update_manager.refresh_updated_objects(ctx);
                 });

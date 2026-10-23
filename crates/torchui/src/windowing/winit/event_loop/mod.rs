@@ -496,7 +496,7 @@ pub(super) struct EventLoop {
     ime_enabled: bool,
     /// Last IME cursor area sent to winit, keyed by the target window. On Wayland, used to skip
     /// redundant `set_ime_cursor_area` calls (which can re-trigger IME events on some compositors,
-    /// notably KDE Plasma). The window id is part of the key so focusing another Warp window with
+    /// notably KDE Plasma). The window id is part of the key so focusing another Torch window with
     /// the same logical rect still updates the newly focused surface. On X11 this is still recorded
     /// but identical areas are not skipped so the position nudge can run.
     last_ime_cursor_area: Option<(WindowId, LogicalPosition<f32>, LogicalSize<f32>)>,
@@ -901,7 +901,7 @@ impl EventLoop {
                 };
 
                 // There is a winit bug such that events which cause a window to switch displays to
-                // one with a different scale factor resize the Warp window to an absurdly small
+                // one with a different scale factor resize the Torch window to an absurdly small
                 // size, <157, 25> on my system when I repro it. Events include unplugging a
                 // display, changing a display from extended to mirrored, and the like. We work
                 // around that by listening for [`WindowEvent::ScaleFactorChanged`] and changing
@@ -1285,7 +1285,7 @@ impl EventLoop {
                 }
 
                 // If the event is a modifier key, just by itself, we handle it specially, issuing
-                // the appropriate Warp-side event (ModifierKeyChanged).
+                // the appropriate Torch-side event (ModifierKeyChanged).
                 if let (None, keyboard::PhysicalKey::Code(keycode)) =
                     (&event.text, &event.physical_key)
                     && let Ok(mapped_keycode) = try_from_winit_keycode(keycode)

@@ -18,7 +18,7 @@ use crate::ai::blocklist::{
 };
 use crate::appearance::Appearance;
 use crate::terminal::block_list_element::render_hoverable_block_button;
-use crate::terminal::view::{TerminalAction, WARP_PROMPT_HEIGHT_LINES};
+use crate::terminal::view::{TORCH_PROMPT_HEIGHT_LINES, TerminalAction};
 use crate::ui_components::blended_colors;
 use crate::ui_components::icons::Icon;
 use crate::view_components::action_button::ActionButton;
@@ -253,5 +253,5 @@ pub(super) fn render_overflow_menu_button(
 ///
 /// This matches the font size used for the warp prompt in completed command blocks.
 fn prompt_font_size(appearance: &Appearance) -> f32 {
-    appearance.monospace_font_size() * WARP_PROMPT_HEIGHT_LINES
+    appearance.monospace_font_size() * TORCH_PROMPT_HEIGHT_LINES
 }

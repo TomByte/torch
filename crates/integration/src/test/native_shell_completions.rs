@@ -101,8 +101,8 @@ fn enable_native_shell_completions_feature() {
     FeatureFlag::NativeShellCompletions.set_enabled(true);
 }
 
-/// Warp completions off, native on, resolving to `CompletionSources::NativeOnly`: the shell is
-/// asked before Warp considers file-path suggestions.
+/// Torch completions off, native on, resolving to `CompletionSources::NativeOnly`: the shell is
+/// asked before Torch considers file-path suggestions.
 fn native_only_completion_defaults() -> HashMap<String, String> {
     HashMap::from([
         (
@@ -162,7 +162,7 @@ fn write_specless_completion_rc_files(dir: impl AsRef<Path>, with_marker: bool) 
         [ShellRcType::Bash],
     );
 
-    // Warp's bootstrap does not initialize zsh's completion system, so `compdef` needs it here.
+    // Torch's bootstrap does not initialize zsh's completion system, so `compdef` needs it here.
     let zsh_marker = if with_marker {
         format!("printf 'x' >> \"$HOME/{SHELL_ASKED_MARKER_FILE}\"; ")
     } else {
@@ -192,7 +192,7 @@ fn write_specless_completion_rc_files(dir: impl AsRef<Path>, with_marker: bool) 
         [ShellRcType::Fish],
     );
 
-    // pwsh is launched `-NoProfile`, but Warp's bootstrap dot-sources the user profile afterward,
+    // pwsh is launched `-NoProfile`, but Torch's bootstrap dot-sources the user profile afterward,
     // so a profile written here is still sourced.
     let pwsh_marker = if with_marker {
         format!("  [System.IO.File]::AppendAllText(\"$env:HOME/{SHELL_ASKED_MARKER_FILE}\", 'x')\n")
@@ -214,7 +214,7 @@ fn write_specless_completion_rc_files(dir: impl AsRef<Path>, with_marker: bool) 
     );
 }
 
-/// Overrides `git`'s completion -- a command with a bundled Warp spec -- with an instrumented one
+/// Overrides `git`'s completion -- a command with a bundled Torch spec -- with an instrumented one
 /// offering sentinels the spec would never produce, so a test can tell whether the shell was asked
 /// for a spec-backed command. Two sentinels rather than one because a lone match is inserted
 /// straight into the buffer instead of opening the menu.
@@ -265,7 +265,7 @@ fn write_spec_command_marker_override_rc_files(dir: impl AsRef<Path>) {
 
 /// Asserts no user-visible block holds the generator command. Its own block is hidden (zero
 /// height), so a non-zero-height block carrying it is the ghost block this guards against. The name
-/// is normalized to match both `warp_run_generator_command*` and `Warp-Run-GeneratorCommand*`.
+/// is normalized to match both `warp_run_generator_command*` and `Torch-Run-GeneratorCommand*`.
 fn assert_no_visible_generator_block()
 -> impl Fn(&mut torchui_core::App, torchui_core::WindowId) -> torchui_core::integration::AssertionOutcome
 {

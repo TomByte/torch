@@ -3,10 +3,10 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use torch_util::path::ShellFamily;
-use warp_workflows::workflows as global_workflows;
 #[cfg(not(target_family = "wasm"))]
 use torchui::platform::OperatingSystem;
 use torchui::{AppContext, Entity, ModelContext, SingletonEntity};
+use warp_workflows::workflows as global_workflows;
 
 use super::WorkflowSource;
 use super::workflow::Workflow;
@@ -43,12 +43,12 @@ impl LocalWorkflows {
         }
     }
 
-    /// Returns an iterator over hardcoded "application" workflows included in the Warp binary.
+    /// Returns an iterator over hardcoded "application" workflows included in the Torch binary.
     pub fn app_workflows(&self) -> impl Iterator<Item = &Workflow> {
         self.app_workflows.iter()
     }
 
-    /// Returns an iterator over the static set of workflows for 3rd party tools loaded from Warp's
+    /// Returns an iterator over the static set of workflows for 3rd party tools loaded from Torch's
     /// workflows GitHub repo.
     pub fn global_workflows(
         &self,
@@ -183,7 +183,7 @@ pub(super) fn load_project_workflows(path: &Path) -> Vec<Workflow> {
     match git2::Repository::discover(path) {
         Ok(repository) => repository.workdir().map_or(Vec::new(), |workdir| {
             load_workflows(&workflows_dir(
-                workdir.join(torch_core::paths::WARP_CONFIG_DIR),
+                workdir.join(torch_core::paths::TORCH_CONFIG_DIR),
             ))
         }),
         Err(_) => Vec::new(),

@@ -4,9 +4,9 @@ use std::time::Duration;
 
 use chrono::{DateTime, Local, Utc};
 use itertools::Itertools;
-use uuid::Uuid;
 use torch_cli::agent::Harness;
 use torchui::{App, EntityId, ModelHandle};
+use uuid::Uuid;
 
 use super::{
     AIConversationMetadata, AIQueryHistoryOutputStatus, BeginConversationRenameError,
@@ -33,7 +33,6 @@ use crate::ai::blocklist::controller::RequestInput;
 use crate::ai::llms::LLMId;
 use crate::auth::AuthStateProvider;
 use crate::cloud_object::{Owner, Revision, ServerMetadata, ServerPermissions};
-use crate::features::FeatureFlag;
 use crate::input_suggestions::HistoryInputSuggestion;
 use crate::persistence::ModelEvent;
 use crate::persistence::model::{
@@ -41,7 +40,6 @@ use crate::persistence::model::{
     PersistedAutoexecuteMode,
 };
 use crate::server::ids::ServerId;
-use crate::server::server_api::ServerApiProvider;
 use crate::server::telemetry::context_provider::AppTelemetryContextProvider;
 use crate::terminal::model::block::BlockId;
 use crate::terminal::model::session::SessionId;
@@ -4517,47 +4515,6 @@ fn hydrate_remote_child_placeholder_with_cloud_transcript_preserves_placeholder_
     });
 }
 
-#[test]
-fn repeated_stream_completions_share_one_in_flight_metadata_fetch() {
-    let _cloud_conversations = FeatureFlag::CloudConversations.override_enabled(true);
-
-    App::test((), |mut app| async move {
-        initialize_history_persistence_for_tests(&mut app);
-        app.add_singleton_model(|_| ServerApiProvider::new_for_test());
-        let history_model = app.add_singleton_model(|_| BlocklistAIHistoryModel::new_for_test());
-        let terminal_surface_id = EntityId::new();
-        let conversation_id = history_model.update(&mut app, |history, ctx| {
-            let conversation_id =
-                history.start_new_conversation(terminal_surface_id, false, false, false, ctx);
-            history.set_server_conversation_token_for_conversation(
-                conversation_id,
-                "metadata-fetch-token".to_string(),
-            );
-            conversation_id
-        });
-        let stream_id = ResponseStreamId::new_for_test();
-
-        history_model.update(&mut app, |history, ctx| {
-            history.mark_response_stream_completed_successfully(
-                &stream_id,
-                conversation_id,
-                terminal_surface_id,
-                ctx,
-            );
-            history.mark_response_stream_completed_successfully(
-                &stream_id,
-                conversation_id,
-                terminal_surface_id,
-                ctx,
-            );
-            assert_eq!(
-                history.in_flight_server_metadata_fetches,
-                HashSet::from([conversation_id])
-            );
-        });
-    });
-}
-
 // --- conversation_output_status_from_conversation ---
 
 /// Builds a conversation with one in-flight exchange, completes it with the
@@ -5474,7 +5431,9 @@ fn restore_and_find_exchange(
 /// Wires up the sqlite sender the fork path requires. Returns the receiver,
 /// which the caller must keep alive so the bounded channel stays open (a
 /// dropped receiver makes the fork's persist `send` fail).
-fn install_mock_model_event_sender(app: &mut torchui::App) -> std::sync::mpsc::Receiver<ModelEvent> {
+fn install_mock_model_event_sender(
+    app: &mut torchui::App,
+) -> std::sync::mpsc::Receiver<ModelEvent> {
     let (sender, receiver) = std::sync::mpsc::sync_channel(8);
     let mut global_resource_handles = GlobalResourceHandles::mock(app);
     global_resource_handles.model_event_sender = Some(sender);

@@ -28,12 +28,12 @@ python3 "<skill-dir>/scripts/validate_factory_files.py" "<factory-root>"
 python3 "<skill-dir>/scripts/validate_factory_files.py" "<factory-root>" --json
 ```
 
-`--server-root <url>`, `WARP_SERVER_ROOT`, or `WARP_SERVER_ROOT_URL` selects a
+`--server-root <url>`, `TORCH_SERVER_ROOT`, or `TORCH_SERVER_ROOT_URL` selects a
 local, staging, or self-hosted server, in that order of precedence. An Oz
 sandbox exports its own server root under the last of those names, so a
 sandbox validates against the server it belongs to rather than production.
 
-The endpoint needs no credential; `WARP_API_KEY` is forwarded when the
+The endpoint needs no credential; `TORCH_API_KEY` is forwarded when the
 environment already has one, which makes the request attributable inside an
 agent sandbox. If the server answers a forwarded key with 401 or 403, the
 request is retried once without it and the drop is noted on stderr, so a stale
@@ -129,7 +129,7 @@ They are ordinary JSON Schema 2020-12 documents, exact for the version they
 describe, so any standard validator works if a tree is already converted to
 JSON. `x-warp-*` annotations carry constraints JSON Schema cannot express
 portably, such as trimmed Unicode alias rules and the power-of-two Linux
-compute sizes; only a Warp validator enforces those.
+compute sizes; only a Torch validator enforces those.
 
 Fetching a schema is not validation. A successful fetch says the server is
 reachable, nothing more.
@@ -138,7 +138,7 @@ reachable, nothing more.
 This skill used to bundle the schemas and a local validator so authoring worked
 without a server. That was removed, and should not be reintroduced.
 
-The copy shipped inside a Warp release, so it was routinely older than the
+The copy shipped inside a Torch release, so it was routinely older than the
 server a Factory syncs against. A stale copy does not degrade gracefully: it
 reports a field the server accepts as unknown, and an agent trying to reach a
 clean run resolves that by deleting working configuration. It happened — an

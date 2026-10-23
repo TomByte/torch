@@ -234,12 +234,12 @@ where
         .finish()
 }
 
-/// Returns whether "Open in Warp" should be offered for the given file path.
+/// Returns whether "Open in Torch" should be offered for the given file path.
 ///
 /// This checks:
-/// - Whether Warp is already the default editor (skip if so)
-/// - Whether this file is openable in Warp (skips binary files and directories)
-/// - Whether the file renders in Warp's notebook viewer, which is reached via a
+/// - Whether Torch is already the default editor (skip if so)
+/// - Whether this file is openable in Torch (skips binary files and directories)
+/// - Whether the file renders in Torch's notebook viewer, which is reached via a
 ///   different affordance (skips Markdown and, when enabled, Jupyter notebooks)
 #[cfg(feature = "local_fs")]
 pub fn should_show_open_in_warp_link(path: &Path, app: &AppContext) -> bool {

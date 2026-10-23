@@ -1,4 +1,4 @@
-//! Context chips built into Warp
+//! Context chips built into Torch
 
 use chrono::Local;
 use torch_util::path::user_friendly_path;

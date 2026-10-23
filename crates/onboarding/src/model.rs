@@ -135,7 +135,7 @@ impl std::fmt::Display for AiSetupChoice {
     }
 }
 
-/// The access method selected on the "Choose how to access AI" slide (Warp Agent path).
+/// The access method selected on the "Choose how to access AI" slide (Torch Agent path).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum AiAccessChoice {
     #[default]
@@ -978,7 +978,7 @@ impl OnboardingStateModel {
 
         let is_terminal = matches!(self.intention, OnboardingIntention::Terminal);
 
-        // The Warp Agent path has the extra "Choose how to access AI" step, so it
+        // The Torch Agent path has the extra "Choose how to access AI" step, so it
         // is one longer than the third-party-agent path.
         let is_warp_agent_path =
             !is_terminal && matches!(self.ai_setup_choice, AiSetupChoice::WarpAgent);

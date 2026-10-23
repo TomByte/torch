@@ -26,7 +26,7 @@ fn external_client_omits_automatic_headers_and_preserves_signing_headers() {
         assert!(
             api_request
                 .headers()
-                .contains_key(headers::WARP_OS_CATEGORY)
+                .contains_key(headers::TORCH_OS_CATEGORY)
         );
         assert!(
             api_request
@@ -110,7 +110,7 @@ fn omits_trace_link_header_when_no_span() {
 #[test]
 fn request_carries_trace_link_header_on_warp_header_path() {
     // The header rides the same `include_warp_http_headers` gate as every other
-    // X-Warp-* header (added only inside `add_warp_http_headers`), so building a
+    // X-Torch-* header (added only inside `add_warp_http_headers`), so building a
     // request through the client while a span is active carries it.
     let value = with_active_span(|| {
         let client = Client::new();

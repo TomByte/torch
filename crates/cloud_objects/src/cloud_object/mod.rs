@@ -572,7 +572,7 @@ pub struct CloudObjectMetadata {
     pub trashed_ts: Option<ServerTimestamp>,
     pub folder_id: Option<SyncId>,
     /// Welcome objects are created on the server when a user first receives
-    /// access to Warp Drive as part of onboarding.
+    /// access to Torch Drive as part of onboarding.
     pub is_welcome_object: bool,
     pub last_editor_uid: Option<String>,
     pub creator_uid: Option<String>,
@@ -970,7 +970,9 @@ impl TryFrom<torch_graphql::object_permissions::ObjectPermissions> for ServerPer
 impl TryFrom<torch_graphql::object_permissions::ObjectGuest> for ServerObjectGuest {
     type Error = anyhow::Error;
 
-    fn try_from(value: torch_graphql::object_permissions::ObjectGuest) -> Result<Self, Self::Error> {
+    fn try_from(
+        value: torch_graphql::object_permissions::ObjectGuest,
+    ) -> Result<Self, Self::Error> {
         let object_guest = ServerObjectGuest {
             subject: value.subject.try_into()?,
             access_level: value.access_level,
@@ -1014,7 +1016,9 @@ impl TryFrom<torch_graphql::object_permissions::GuestSubject> for ServerGuestSub
 impl TryFrom<torch_graphql::object_permissions::LinkSharing> for ServerLinkSharing {
     type Error = anyhow::Error;
 
-    fn try_from(value: torch_graphql::object_permissions::LinkSharing) -> Result<Self, Self::Error> {
+    fn try_from(
+        value: torch_graphql::object_permissions::LinkSharing,
+    ) -> Result<Self, Self::Error> {
         Ok(ServerLinkSharing {
             access_level: value.access_level,
             source: value.source.map(TryInto::try_into).transpose()?,

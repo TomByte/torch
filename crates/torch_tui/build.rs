@@ -37,7 +37,7 @@ fn generate_channel_config_if_needed(target_os: &str) {
     let config_bin = "warp-channel-config";
 
     // If the generator is not on PATH we can't embed configs. This is expected
-    // for external contributors building Warp OSS.
+    // for external contributors building Torch OSS.
     if Command::new(config_bin)
         .arg("--help")
         .stdout(std::process::Stdio::null())

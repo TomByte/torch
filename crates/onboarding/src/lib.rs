@@ -36,11 +36,11 @@ pub const AI_FEATURES: &[&str] = &[
     "Remote control for Claude Code, Codex, and other agents",
 ];
 
-/// User-facing names of the Warp Drive features enabled when the terminal
-/// intention is selected with Warp Drive turned on. Shared by the login slide's
+/// User-facing names of the Torch Drive features enabled when the terminal
+/// intention is selected with Torch Drive turned on. Shared by the login slide's
 /// skip-login confirmation dialog so the list stays in sync with any future
 /// surfaces that need it.
-pub const WARP_DRIVE_FEATURES: &[&str] = &["Torch Drive", "Session Sharing"];
+pub const TORCH_DRIVE_FEATURES: &[&str] = &["Torch Drive", "Session Sharing"];
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "bin")] {

@@ -310,7 +310,7 @@ fn oz_model_menu_items<A: OrchestrationControlAction, V: View>(
 }
 
 /// Populates the model picker from [`model_snapshot`] for the active
-/// harness (Warp LLM catalog for Oz, "Default model" for local Codex,
+/// harness (Torch LLM catalog for Oz, "Default model" for local Codex,
 /// "Default model" plus the server-provided catalog otherwise).
 pub fn populate_model_picker_for_harness<A: OrchestrationControlAction, V: View>(
     dropdown: &ViewHandle<FilterableDropdown<A>>,
@@ -737,7 +737,7 @@ pub fn apply_created_auth_secret_if_matches<V: View>(
 // ── Shared action helpers ───────────────────────────────────
 
 /// Worker host to display for the current execution mode (Local always
-/// shows the Warp host).
+/// shows the Torch host).
 fn current_worker_host(state: &OrchestrationConfigState) -> &str {
     match &state.execution_mode {
         RunAgentsExecutionMode::Remote { worker_host, .. } => worker_host.as_str(),

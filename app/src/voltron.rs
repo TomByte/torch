@@ -1,4 +1,4 @@
-//! Voltron (https://en.wikipedia.org/wiki/Voltron) in Warp is a code name for the UI element used
+//! Voltron (https://en.wikipedia.org/wiki/Voltron) in Torch is a code name for the UI element used
 //! for workflows, ai commands and history search. As @charlespierce pointed out: it's 3 mini lions
 //! (features) coming together to form one super bot (this view). Hence the name. Don't ask me, I
 //! haven't watched it.
@@ -17,7 +17,6 @@ use std::path::PathBuf;
 
 use enclose::enclose;
 use pathfinder_geometry::vector::Vector2F;
-use vec1::Vec1;
 use torch_errors::report_error;
 use torchui::accessibility::AccessibilityContent;
 use torchui::elements::{
@@ -35,6 +34,7 @@ use torchui::{
     AppContext, Entity, FocusContext, SingletonEntity, TypedActionView, View, ViewContext,
     ViewHandle,
 };
+use vec1::Vec1;
 
 use crate::appearance::Appearance;
 use crate::editor::{

@@ -155,7 +155,7 @@ winget install jqlang.jq
 # CMake is needed to build some dependencies, e.g.: sentry-contrib-native.
 winget install -e --id Kitware.CMake
 
-# Protoc is required by prost-build for warp-proto-apis generated crates.
+# Protoc is required by prost-build for the generated protobuf API crates.
 winget install -e --id Google.Protobuf
 Add-WinGetPackageCommandToPath -CommandName 'protoc' -PackageId 'Google.Protobuf'
 

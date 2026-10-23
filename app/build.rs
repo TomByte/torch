@@ -1,5 +1,5 @@
 // We can use `std::process:Command` here because this is invoked within a build script,
-// _not_ within the Warp binary (where it could cause a terminal to temporarily flash on
+// _not_ within the Torch binary (where it could cause a terminal to temporarily flash on
 // Windows).
 #![allow(clippy::disallowed_types)]
 
@@ -10,12 +10,12 @@ use std::{env, fs};
 use anyhow::Result;
 use cfg_aliases::cfg_aliases;
 use sha2::Digest;
-use walkdir::WalkDir;
 use torch_util::assets::{
     ASSETS_DIR, ASYNC_ASSETS_DIR, CONPTY_DLL_FILE, DXCOMPILER_DLL_FILE, DXIL_DLL_FILE,
     OPEN_CONSOLE_EXE_FILE, REMOTE_ASSETS_DIR, WINDOWS_ASSETS_DIR,
 };
 use torch_util::path::app_target_dir;
+use walkdir::WalkDir;
 
 fn main() -> Result<()> {
     cfg_aliases! {
@@ -65,7 +65,7 @@ fn main() -> Result<()> {
         println!("cargo:rerun-if-env-changed=CARGO_FULL_PROFILE");
         println!("cargo:rerun-if-env-changed=CARGO_BIN_NAME");
         println!("cargo:rerun-if-env-changed=GIT_RELEASE_TAG");
-        println!("cargo:rerun-if-env-changed=WARP_APP_NAME");
+        println!("cargo:rerun-if-env-changed=TORCH_APP_NAME");
         // Retrieve the Cargo profile name so that we can put a copy of ConPTY in
         // the correct target subdirectory.
         //
@@ -108,7 +108,7 @@ fn generate_channel_config_if_needed(target_family: &str, target_os: &str) {
     let config_bin = "warp-channel-config";
 
     // Check if the config binary is available on PATH. If not, we can't generate embedded
-    // configs. This is expected for external contributors building Warp OSS.
+    // configs. This is expected for external contributors building Torch OSS.
     if Command::new(config_bin)
         .arg("--help")
         .stdout(std::process::Stdio::null())
@@ -214,7 +214,7 @@ fn copy_async_assets() {
     }
 }
 
-/// Copies the DLLs needed to run Warp on Windows.
+/// Copies the DLLs needed to run Torch on Windows.
 ///
 /// They are organized as follows:
 /// - `conpty.dll`
@@ -274,7 +274,7 @@ fn embed_resource_file(target_dir: &Path) {
     use std::io::Write;
 
     let version = env::var("GIT_RELEASE_TAG").unwrap_or("v0".to_owned());
-    let app_name = env::var("WARP_APP_NAME").unwrap_or("Warp".to_owned());
+    let app_name = env::var("TORCH_APP_NAME").unwrap_or("Torch".to_owned());
     let bin_name = env::var("CARGO_BIN_NAME").unwrap_or("local".to_owned());
 
     let icon_path = Path::new("channels")
@@ -315,7 +315,7 @@ BEGIN
             VALUE "LegalCopyright",   "© 2025, Denver Technologies, Inc\0"
             VALUE "InternalName",     "\0"
             VALUE "OriginalFilename", "\0"
-            VALUE "ProductName",      "Warp\0"
+            VALUE "ProductName",      "Torch\0"
             VALUE "ProductVersion",   "{version}\0"
         END
     END

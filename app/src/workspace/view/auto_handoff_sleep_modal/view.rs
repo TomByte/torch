@@ -182,7 +182,7 @@ impl AutoHandoffSleepModal {
 
     fn render_description(appearance: &Appearance) -> Box<dyn Element> {
         Text::new(
-            "Give Warp the option to automatically move active local agents to the cloud when \
+            "Give Torch the option to automatically move active local agents to the cloud when \
              your computer sleeps.",
             appearance.ui_font_family(),
             14.,

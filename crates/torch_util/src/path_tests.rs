@@ -1095,7 +1095,7 @@ fn test_resolve_command() {
         &resolve_executable("env").unwrap(),
         Path::new("/usr/bin/env")
     );
-    // This path exists in the Warp repo, so it should resolve. The `../../`
+    // This path exists in the Torch repo, so it should resolve. The `../../`
     // is because Rust unit tests run from the root of the crate (`torch_util` in
     // this case).
     assert_eq!(

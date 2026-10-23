@@ -17,7 +17,7 @@ id warp_get_accessibility_contents(WarpHostView *);
 void warp_marked_text_updated(WarpHostView *, NSString *, NSRange);
 void warp_marked_text_cleared(WarpHostView *);
 
-@implementation NSPasteboard (Warp)
+@implementation NSPasteboard (Torch)
 
 - (NSArray *)getFilePaths {
     NSMutableArray *paths = [NSMutableArray array];
@@ -210,7 +210,7 @@ void warp_marked_text_cleared(WarpHostView *);
 
 - (BOOL)acceptsFirstMouse:(NSEvent *)event {
     // We want to receive mouseDown events even if the window is not key
-    // and we explicity fire the event here so that Warp can handle it.
+    // and we explicity fire the event here so that Torch can handle it.
     if (self.readyForWarp) warp_handle_first_mouse_event(self, event);
 
     // We return NO though so that the event is not fired twice (returning YES
@@ -222,7 +222,7 @@ void warp_marked_text_cleared(WarpHostView *);
     if (self.readyForWarp) {
         BOOL eventHandled = warp_handle_view_event(self, event, NO);
         if (self->titlebarDragEnabled && !eventHandled && [self mouseInTitleBar:event]) {
-            // If Warp doesn't do anything with the event, indicated by returning `false`, and
+            // If Torch doesn't do anything with the event, indicated by returning `false`, and
             // if the drag starts in the titlebar, begin dragging the window
             [self.window performWindowDragWithEvent:event];
         }

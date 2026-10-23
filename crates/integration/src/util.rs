@@ -5,7 +5,6 @@ use std::path::{Path, PathBuf};
 use itertools::Itertools as _;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
-use version_compare::Version;
 use torch::integration_testing::terminal::util::{
     ExpectedOutput, current_shell_starter_and_version, default_histfile_directory,
 };
@@ -13,6 +12,7 @@ use torch::integration_testing::view_getters;
 use torch::terminal::shell;
 use torch::terminal::shell::ShellType;
 use torchui_core::{App, WindowId};
+use version_compare::Version;
 
 use crate::builder::cargo_target_tmpdir;
 
@@ -130,7 +130,7 @@ pub fn write_rc_files_for_test<P, C>(
     }
 }
 
-/// Writes the same `rc_contents` for all possible shell types supported by Warp.
+/// Writes the same `rc_contents` for all possible shell types supported by Torch.
 pub fn write_all_rc_files_for_test<P, C>(dir: P, rc_contents: C)
 where
     P: AsRef<Path>,

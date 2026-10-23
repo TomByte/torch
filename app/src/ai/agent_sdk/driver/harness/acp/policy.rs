@@ -1,4 +1,4 @@
-//! Applies Warp's agent permission policy to the requests an ACP agent makes of its client:
+//! Applies Torch's agent permission policy to the requests an ACP agent makes of its client:
 //! `session/request_permission` and the `fs/*` methods.
 //!
 //! Runs are unattended, so anything the native executor would *ask* the user about is allowed
@@ -18,7 +18,7 @@ use crate::ai::blocklist::{
     CommandExecutionPermissionDeniedReason, FileWritePermission, FileWritePermissionDeniedReason,
 };
 
-/// Something the agent wants to do that Warp's permission policy has an opinion on.
+/// Something the agent wants to do that Torch's permission policy has an opinion on.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) enum PolicyRequest {
     Execute { command: String },

@@ -5,7 +5,6 @@ use std::{io, process};
 use anyhow::Context as _;
 use itertools::Itertools as _;
 use serde::{Deserialize, Serialize};
-use typed_path::UnixPathBuf;
 use torch_core::channel::{Channel, ChannelState};
 use torch_core::session_id::SessionId;
 use torch_errors::report_error;
@@ -14,6 +13,7 @@ use torch_util::path::windows::{powershell_5_path, powershell_7_path, wsl_path};
 use torch_util::path::{
     canonicalize_git_bash_path, is_msys2_path, resolve_executable, warp_shell_path,
 };
+use typed_path::UnixPathBuf;
 
 #[cfg(unix)]
 use crate::bootstrap::{fish_bootstrap_file, raw_init_shell_script_for_shell};
@@ -32,7 +32,7 @@ pub trait AvailableShell {
 }
 
 /// Returns an iterator of additional PATH entries to append to the shell's PATH.
-/// * On macOS, this includes `$APP_PATH/Contents/Resources/bin`, in which we put a wrapper around the Warp CLI.
+/// * On macOS, this includes `$APP_PATH/Contents/Resources/bin`, in which we put a wrapper around the Torch CLI.
 /// * On all other platforms, this is empty.
 pub fn extra_path_entries() -> impl Iterator<Item = PathBuf> {
     cfg_if::cfg_if! {
@@ -52,7 +52,7 @@ pub fn extra_path_entries() -> impl Iterator<Item = PathBuf> {
 }
 
 /// Returns `true` if the given `path_or_command` is a valid, executable command or path to a
-/// executable binary for one of Warp's supported shell types (bash, fish, zsh).
+/// executable binary for one of Torch's supported shell types (bash, fish, zsh).
 pub fn is_valid_path_or_command_for_supported_shell(path_or_command: &str) -> bool {
     supported_shell_path_and_type(path_or_command).is_some()
 }
@@ -157,7 +157,7 @@ impl ShellStarter {
     }
 
     /// Constructs a `ShellStarter` represent the shell binary (and corresponding arguments) to be
-    /// used to spawn a shell process for a new top-level Warp session. If a WSL Distribution is
+    /// used to spawn a shell process for a new top-level Torch session. If a WSL Distribution is
     /// given, then it will always construct a `ShellStarter` starting the default shell for that
     /// WSL Distribution.
     ///
@@ -254,7 +254,7 @@ impl ShellStarter {
         if let Some(warp_shell_env_var) = warp_shell_path() {
             let (warp_shell_path, shell_type) = supported_shell_path_and_type(&warp_shell_env_var)
                 .unwrap_or_else(|| {
-                    panic!("Cannot spawn shell; $WARP_SHELL_PATH is invalid: {warp_shell_env_var}")
+                    panic!("Cannot spawn shell; $TORCH_SHELL_PATH is invalid: {warp_shell_env_var}")
                 });
             let session_id = generate_session_id();
             let args = arguments_for_session_spawning_command(
@@ -417,7 +417,7 @@ pub struct DirectShellStarter {
     shell_type: ShellType,
     shell_path: PathBuf,
 
-    /// Arguments to be passed to the shell binary at [`shell_path`] when spawning a new Warp
+    /// Arguments to be passed to the shell binary at [`shell_path`] when spawning a new Torch
     /// session.
     args: Vec<OsString>,
 
@@ -433,7 +433,7 @@ pub struct WslShellStarter {
     shell_type: ShellType,
     shell_path: String,
 
-    /// Arguments to be passed to the shell binary at [`shell_path`] when spawning a new Warp
+    /// Arguments to be passed to the shell binary at [`shell_path`] when spawning a new Torch
     /// session.
     args: Vec<OsString>,
     distribution: String,
@@ -449,7 +449,7 @@ pub enum ShellStarterSource {
     /// The user chose the path by setting a custom shell path in settings or selecting a WSL
     /// distribution.
     Override(ShellStarter),
-    /// The user chose the path to the shell by setting the `WARP_SHELL_PATH` environment variable.
+    /// The user chose the path to the shell by setting the `TORCH_SHELL_PATH` environment variable.
     Environment(DirectShellStarter),
     /// The default shell for the user (as indicated by the user's passwd entry on UNIX).
     /// On Windows, this an ordered list of shells hardcoded _by Warp_.
@@ -714,7 +714,7 @@ fn arguments_for_session_spawning_command(
             // The --no-rcs option executes the minimal level of startup files so we can
             // take over. The one exception: "Commands are first read from /etc/zshenv; this cannot be overridden."
             // The -g option sets the HIST_IGNORE_SPACE option, which ignores a command from history if it
-            // begins with a space. We use this to hide Warp bootstrap commands from the history.
+            // begins with a space. We use this to hide Torch bootstrap commands from the history.
             vec![
                 "-c".to_owned().into(),
                 format!("exec -a -zsh '{resolved_shell_path}' -g --no-rcs").into(),
@@ -732,7 +732,7 @@ fn arguments_for_session_spawning_command(
              * 3. The rcfile option reads the startup script from a file
              * 4. Process substitution i.e. <() send the output of a process via
              * /dev/fd/<n> (or temp files if this is unavailable) to another process
-             * 5. Send an InitShell message to Warp through escape sequences.
+             * 5. Send an InitShell message to Torch through escape sequences.
              * The warp_send_message function is inlined here.
              * 6. We disable PS2 and the line editor to work around a gnarly bug involving
              * garbage being inserted in every line. We further disable PS1 and echo'ing
@@ -740,7 +740,7 @@ fn arguments_for_session_spawning_command(
              * restore the echo'ing in the bootstrap script.
              *
              * 7. Because argv[0] is `bash` (no slash) and this isn't a login shell,
-             * bash derives `$BASH` by searching the PATH inherited from Warp. When Warp
+             * bash derives `$BASH` by searching the PATH inherited from Torch. When Torch
              * is launched from the Dock that PATH is launchd's, so `$BASH` can name a
              * different bash than the one running (e.g. `/bin/bash` for Homebrew's
              * bash). The rcfile therefore pins `$BASH` to the binary we exec.
@@ -803,11 +803,11 @@ fn fish_arguments_for_session_spawning_command(session_id: SessionId) -> Vec<OsS
         raw_init_shell_script_for_shell(ShellType::Fish, &crate::ASSETS, session_id);
     if let Some(bootstrap_file) = fish_bootstrap_file(&crate::ASSETS) {
         let bootstrap_file = shell_quote_arg(&bootstrap_file.to_string_lossy(), ShellType::Fish);
-        init_command = format!("set -g WARP_BOOTSTRAP_FILE {bootstrap_file}; {init_command}");
+        init_command = format!("set -g TORCH_BOOTSTRAP_FILE {bootstrap_file}; {init_command}");
     }
     vec![
         // `-f no-mark-prompt` disables OSC 133 (the non-standard FinalTerm escape codes).
-        // Fish's implementation of this breaks Warp by emitting `OSC 133 A` but not
+        // Fish's implementation of this breaks Torch by emitting `OSC 133 A` but not
         // `OSC 133 B` afterwards, which we have assumed. This is a temporary workaround.
         // See this issue: https://github.com/warpdotdev/Warp/issues/7588
         "-f".into(),
@@ -847,7 +847,7 @@ fn fish_exec_arguments_for_session_spawning_command(
             // we want fish to source config files for us (we don't
             // manually do so in the bootstrap script like we do for zsh, for example).
             // `-f no-mark-prompt` disables OSC 133 (the non-standard FinalTerm escape codes).
-            // Fish's implementation of this breaks Warp by emitting `OSC 133 A` but not
+            // Fish's implementation of this breaks Torch by emitting `OSC 133 A` but not
             // `OSC 133 B` afterwards, which we have assumed. This is a temporary workaround.
             // See this issue: https://github.com/warpdotdev/Warp/issues/7588
             r#"exec '{}' -f no-mark-prompt --login --init-command '{}'"#,

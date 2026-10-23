@@ -40,12 +40,12 @@ use num_traits::FromPrimitive;
 use pathfinder_geometry::rect::RectF;
 use pathfinder_geometry::vector::Vector2F;
 use persistence::model::AMBIENT_AGENT_PANE_KIND;
-use uuid::Uuid;
 use torch_core::features::FeatureFlag;
 use torch_errors::{report_error, report_if_error};
 use torchui::platform::FullscreenState;
 use torchui::windowing::{MIN_WINDOW_HEIGHT, MIN_WINDOW_WIDTH};
 use torchui::{AppContext, SingletonEntity};
+use uuid::Uuid;
 
 use super::agent::{
     backfill_conversation_summaries, delete_agent_conversations, read_agent_conversation_metadata,
@@ -124,7 +124,7 @@ diesel::define_sql_function! {
 const CHANNEL_SIZE: usize = 1024;
 const COMMANDS_COUNT_LIMIT: i64 = 10000;
 
-const WARP_SQLITE_FILE_NAME: &str = "warp.sqlite";
+const TORCH_SQLITE_FILE_NAME: &str = "warp.sqlite";
 
 /// Runs any migrations and creates the Sqlite database if it doesn't exist.
 /// Reads from the sqlite database to get the app state for session restoration.
@@ -265,7 +265,7 @@ unsafe fn init_logging() {
                 // According to the docs, this error means that the database file was moved (or deleted),
                 // so SQLite can't safely modify it and the rollback journal:
                 //     https://www.sqlite.org/rescode.html#readonly_dbmoved
-                // This is mostly outside of Warp's control (e.g. the user or some system program is
+                // This is mostly outside of Torch's control (e.g. the user or some system program is
                 // moving around files in the user data directory), so downgrade to a warning.
                 (_, sqlite3::SQLITE_READONLY_DBMOVED) => log::Level::Warn,
                 _ => log::Level::Error,
@@ -339,7 +339,7 @@ pub(super) fn init_db(scope: &PersistenceScope) -> Result<SqliteConnection> {
 }
 
 fn migrate_old_sqlite_into_secure_container_if_needed(db_path: &Path) {
-    let old_db_path = torch_core::paths::state_dir().join(WARP_SQLITE_FILE_NAME);
+    let old_db_path = torch_core::paths::state_dir().join(TORCH_SQLITE_FILE_NAME);
     if old_db_path == db_path || !old_db_path.exists() || db_path.exists() {
         return;
     }
@@ -432,17 +432,17 @@ pub fn database_file_path_for_current_scope() -> PathBuf {
 fn app_database_file_path() -> PathBuf {
     torch_core::paths::secure_state_dir()
         .unwrap_or_else(torch_core::paths::state_dir)
-        .join(WARP_SQLITE_FILE_NAME)
+        .join(TORCH_SQLITE_FILE_NAME)
 }
 
 fn tui_database_file_path() -> PathBuf {
-    torch_core::paths::tui_state_dir().join(WARP_SQLITE_FILE_NAME)
+    torch_core::paths::tui_state_dir().join(TORCH_SQLITE_FILE_NAME)
 }
 
 fn remote_server_daemon_database_file_path(identity_key: &str) -> PathBuf {
     let data_dir = remote_server::setup::remote_server_daemon_data_dir(identity_key);
     let expanded_data_dir = shellexpand::tilde(&data_dir).into_owned();
-    PathBuf::from(expanded_data_dir).join(WARP_SQLITE_FILE_NAME)
+    PathBuf::from(expanded_data_dir).join(TORCH_SQLITE_FILE_NAME)
 }
 
 #[cfg(unix)]

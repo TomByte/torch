@@ -113,7 +113,7 @@ fn custom_endpoint_rows_use_user_names_and_support_key_editing_and_clearing() {
                     ),
                     ("OpenRouter custom endpoint", Some("(Not connected)")),
                     ("Zulu custom endpoint", Some("(Not connected)")),
-                    ("Warp credit fallback", Some("(off)")),
+                    ("Torch credit fallback", Some("(off)")),
                 ]
             );
         });
@@ -217,7 +217,7 @@ fn unconfigured_custom_endpoints_are_hidden_and_fallback_stays_last() {
                     "Google API key",
                     "OpenAI API key",
                     "X premium or SuperGrok subscription",
-                    "Warp credit fallback",
+                    "Torch credit fallback",
                 ]
             );
             assert_eq!(snapshot.selected_index, Some(0));
@@ -242,7 +242,7 @@ fn filtering_keeps_warp_credit_fallback_pinned() {
                     .iter()
                     .map(|row| row.title.as_str())
                     .collect::<Vec<_>>(),
-                vec!["Google API key", "Warp credit fallback"]
+                vec!["Google API key", "Torch credit fallback"]
             );
         });
     });
@@ -392,7 +392,7 @@ fn clear_selected_provider_and_toggle_fallback_keep_menu_open() {
                 .unwrap()
                 .rows
                 .iter()
-                .position(|row| row.title == "Warp credit fallback")
+                .position(|row| row.title == "Torch credit fallback")
                 .unwrap();
             assert!(menu.select_at_snapshot_index(fallback_index, ctx));
             menu.accept_selected(ctx);

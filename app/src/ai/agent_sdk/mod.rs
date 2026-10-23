@@ -17,7 +17,6 @@ use driver::AgentDriverError;
 use driver::agent_setup::configured_skills::{self, merge_skill_dirs};
 pub(crate) use driver::harness::{ClaudeHarness, task_env_vars, validate_cli_installed};
 use telemetry::CliTelemetryEvent;
-use tracing::Instrument as _;
 use torch_cli::agent::{
     AgentCommand, AgentProfileCommand, Harness, HarnessTransport, OutputFormat, Prompt,
     RunAgentArgs,
@@ -50,6 +49,7 @@ use torch_managed_secrets::{ManagedSecretValue, convert_task_secrets};
 use torch_server_client::iap::{IapManager, IapManagerEvent};
 use torchui::platform::TerminationMode;
 use torchui::{AppContext, Entity, ModelSpawner, SingletonEntity};
+use tracing::Instrument as _;
 
 use crate::ai::agent::api::ServerConversationToken;
 use crate::ai::agent::api::convert_conversation::{
@@ -211,7 +211,7 @@ pub(crate) fn run_environment_checkout(
     }
 }
 
-/// Run a Warp CLI command.
+/// Run a Torch CLI command.
 #[tracing::instrument(name = "agent_sdk::run", skip_all, err, fields(tags.cloud_agent = true))]
 pub fn run(
     ctx: &mut AppContext,
@@ -616,7 +616,7 @@ fn build_server_side_task(
 }
 
 /// Names the variable whose non-empty value marks a Factory run.
-const FACTORY_ID_ENV: &str = "WARP_FACTORY_ID";
+const FACTORY_ID_ENV: &str = "TORCH_FACTORY_ID";
 
 fn factory_repository_contract(
     task_id: Option<AmbientAgentTaskId>,
@@ -944,7 +944,7 @@ impl AgentDriverRunner {
                     .map_err(AgentDriverError::ConfigBuildFailed)?
             };
 
-            // Wait for Warp Drive to sync before building the task config, since
+            // Wait for Torch Drive to sync before building the task config, since
             // prompt resolution (SavedPrompt -> workflow lookup) and environment
             // resolution (CloudAmbientAgentEnvironment lookup) depend on it.
             setup_events
@@ -1155,13 +1155,15 @@ impl AgentDriverRunner {
             supports_deferred_repositories,
             std::env::var_os(FACTORY_ID_ENV),
         );
-        let (workload_token, no_isolation) =
-            match torch_isolation_platform::issue_workload_token(Some(Duration::from_mins(5))).await
-            {
-                Ok(token) => (token.token, false),
-                Err(IsolationPlatformError::NoIsolationPlatformDetected) => (String::new(), true),
-                Err(error) => return Err(AgentDriverError::SecretsFetchFailed(error.into())),
-            };
+        let (workload_token, no_isolation) = match torch_isolation_platform::issue_workload_token(
+            Some(Duration::from_mins(5)),
+        )
+        .await
+        {
+            Ok(token) => (token.token, false),
+            Err(IsolationPlatformError::NoIsolationPlatformDetected) => (String::new(), true),
+            Err(error) => return Err(AgentDriverError::SecretsFetchFailed(error.into())),
+        };
         let api = foreground
             .spawn(|_, ctx| ServerApiProvider::as_ref(ctx).get())
             .await?;
@@ -2308,7 +2310,7 @@ fn authenticate_and_dispatch(
                 dispatched = true;
                 let auth_state = AuthStateProvider::handle(ctx).as_ref(ctx).get();
                 let message = if auth_state.is_api_key_authenticated() {
-                    "Your API key is invalid. Please provide a valid key via '--api-key' or the WARP_API_KEY environment variable.".to_string()
+                    "Your API key is invalid. Please provide a valid key via '--api-key' or the TORCH_API_KEY environment variable.".to_string()
                 } else {
                     format!("Your credentials are invalid. Please log in again with `{cli_name} login`.")
                 };
@@ -2331,8 +2333,8 @@ fn authenticate_and_dispatch(
     });
 }
 
-/// Check if we're running within Warp (for example, if this is an invocation of the Warp CLI
-/// within a Warp terminal session).
+/// Check if we're running within Torch (for example, if this is an invocation of the Torch CLI
+/// within a Torch terminal session).
 pub fn is_running_in_warp() -> bool {
     std::env::var("TERM_PROGRAM")
         .map(|v| v == "WarpTerminal")
@@ -2353,7 +2355,7 @@ fn report_fatal_error(err: anyhow::Error, ctx: &mut AppContext) {
         if let Ok(path) = log_file_path() {
             let _ = write!(
                 message,
-                "\n\nFor more information, check Warp logs at {}",
+                "\n\nFor more information, check Torch logs at {}",
                 path.display()
             );
         }

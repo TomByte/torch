@@ -288,7 +288,7 @@ struct ModelChoiceInput {
 
 /// Builds the model options for the active harness, mirroring the GUI's
 /// `populate_model_picker_for_harness` three catalog branches:
-/// - **Oz / empty**: the Warp LLM catalog (auto, then custom, then other
+/// - **Oz / empty**: the Torch LLM catalog (auto, then custom, then other
 ///   models; custom models excluded for Cloud runs).
 /// - **Local Codex**: only a "Default model" entry.
 /// - **Other non-Oz harnesses**: "Default model" plus the server-provided
@@ -332,7 +332,7 @@ pub fn oz_model_snapshot(
     is_local: bool,
     ctx: &AppContext,
 ) -> OptionSnapshot {
-    // Oz / unset: Warp LLM catalog. Custom models are excluded for cloud
+    // Oz / unset: Torch LLM catalog. Custom models are excluded for cloud
     // execution because remote workers cannot use local custom endpoints.
     let llm_prefs = LLMPreferences::as_ref(ctx);
     let (auto_models, rest): (Vec<_>, Vec<_>) = get_base_model_choices(llm_prefs, ctx, is_local)

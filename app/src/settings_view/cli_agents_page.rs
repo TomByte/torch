@@ -1,7 +1,7 @@
 //! The "Third party CLI agents" settings page, shown under the Agents umbrella.
 //!
 //! Everything on this page controls third-party coding agents (Claude Code,
-//! Codex, Gemini CLI) rather than Warp's own AI, so its settings are always
+//! Codex, Gemini CLI) rather than Torch's own AI, so its settings are always
 //! interactive regardless of the global AI toggle.
 
 use std::cell::RefCell;
@@ -621,7 +621,7 @@ fn should_render_cli_agent_rich_input(app: &AppContext) -> bool {
     should_render_cli_agent_detail(app) && FeatureFlag::CLIAgentRichInput.is_enabled()
 }
 
-/// Automatic Rich Input needs Warp AI, which local-only builds never enable.
+/// Automatic Rich Input needs Torch AI, which local-only builds never enable.
 fn should_render_automatic_rich_input(app: &AppContext) -> bool {
     should_render_cli_agent_rich_input(app) && !ChannelState::is_local_only()
 }

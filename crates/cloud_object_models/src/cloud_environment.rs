@@ -210,7 +210,7 @@ pub struct EnvironmentSecretRef {
     pub name: String,
 }
 
-/// An AmbientAgentEnvironment represents an environment that we would run a Warp agent in.
+/// An AmbientAgentEnvironment represents an environment that we would run a Torch agent in.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct AmbientAgentEnvironment {
     /// Environment name

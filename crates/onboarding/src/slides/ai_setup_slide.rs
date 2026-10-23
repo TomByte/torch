@@ -1,4 +1,3 @@
-use ui_components::{Component as _, Options as _, button};
 use torch_core::ui::Icon;
 use torch_core::ui::appearance::Appearance;
 use torch_core::ui::theme::Fill;
@@ -18,13 +17,14 @@ use torchui_core::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity as _, TypedActionView, View,
     ViewContext,
 };
+use ui_components::{Component as _, Options as _, button};
 
 use super::OnboardingSlide;
 use crate::model::{AiSetupChoice, OnboardingStateModel};
 use crate::slides::{bottom_nav, layout, slide_content};
 
-/// Checklist shown on the "Use Warp agent" card.
-const WARP_AGENT_FEATURES: &[&str] = &[
+/// Checklist shown on the "Use Torch agent" card.
+const TORCH_AGENT_FEATURES: &[&str] = &[
     "Best harness for terminal tasks and agentic coding",
     "Frontier models from OpenAI, Anthropic, and Google",
     "Model routing across frontier and open-weight models",
@@ -40,7 +40,7 @@ pub enum AiSetupSlideAction {
 }
 
 /// The "Choose your AI setup" slide (DES-816 V3), shown on the AI-first path for
-/// users enrolled in the FREE_AI_REMOVAL experiment arm. Forks between the Warp
+/// users enrolled in the FREE_AI_REMOVAL experiment arm. Forks between the Torch
 /// agent (paid-plan path) and third-party agents (works on Free).
 pub struct AiSetupSlide {
     onboarding_state: ModelHandle<OnboardingStateModel>,
@@ -65,7 +65,7 @@ impl AiSetupSlide {
 
     // The final DES-816 visual exports have not landed yet, so the right panel
     // reuses existing bundled assets that match each choice: the agent
-    // experience for "Use Warp agent" and the CLI-agent toolbar for
+    // experience for "Use Torch agent" and the CLI-agent toolbar for
     // "Use third party agents".
     pub(crate) const VISUAL_IMAGE_PATHS: &'static [&'static str] = &[
         "async/png/onboarding/welcome_agent.png",
@@ -289,7 +289,7 @@ impl AiSetupSlide {
             let mut col = Flex::column()
                 .with_main_axis_size(MainAxisSize::Min)
                 .with_cross_axis_alignment(CrossAxisAlignment::Start);
-            for &item in WARP_AGENT_FEATURES {
+            for &item in TORCH_AGENT_FEATURES {
                 let icon_el = ConstrainedBox::new(Icon::Check.to_warpui_icon(check_fill).finish())
                     .with_width(16.)
                     .with_height(16.)

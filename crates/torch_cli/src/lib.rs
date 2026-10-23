@@ -4,9 +4,9 @@ use std::path::Path;
 use std::{env, fmt};
 
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
-use url::Url;
 use torch_core::channel::ChannelState;
 use torch_core::features::FeatureFlag;
+use url::Url;
 
 use crate::agent::OutputFormat;
 
@@ -40,28 +40,28 @@ pub mod schedule;
 pub mod secret;
 pub mod share;
 pub mod task;
-// Each of these variables is injected under both its `OZ_` and its `WARP_` name, carrying the
+// Each of these variables is injected under both its `OZ_` and its `TORCH_` name, carrying the
 // identical value. Read sites still use the `OZ_` names.
 pub const OZ_RUN_ID_ENV: &str = "OZ_RUN_ID";
-pub const WARP_RUN_ID_ENV: &str = "WARP_RUN_ID";
+pub const TORCH_RUN_ID_ENV: &str = "TORCH_RUN_ID";
 pub const OZ_PARENT_RUN_ID_ENV: &str = "OZ_PARENT_RUN_ID";
-pub const WARP_PARENT_RUN_ID_ENV: &str = "WARP_PARENT_RUN_ID";
+pub const TORCH_PARENT_RUN_ID_ENV: &str = "TORCH_PARENT_RUN_ID";
 pub const OZ_CLI_ENV: &str = "OZ_CLI";
-pub const WARP_CLI_ENV: &str = "WARP_CLI";
+pub const TORCH_CLI_ENV: &str = "TORCH_CLI";
 pub const OZ_HARNESS_ENV: &str = "OZ_HARNESS";
-pub const WARP_HARNESS_ENV: &str = "WARP_HARNESS";
-pub const SERVER_ROOT_URL_OVERRIDE_ENV: &str = "WARP_SERVER_ROOT_URL";
-pub const WS_SERVER_URL_OVERRIDE_ENV: &str = "WARP_WS_SERVER_URL";
-pub const SESSION_SHARING_SERVER_URL_OVERRIDE_ENV: &str = "WARP_SESSION_SHARING_SERVER_URL";
+pub const TORCH_HARNESS_ENV: &str = "TORCH_HARNESS";
+pub const SERVER_ROOT_URL_OVERRIDE_ENV: &str = "TORCH_SERVER_ROOT_URL";
+pub const WS_SERVER_URL_OVERRIDE_ENV: &str = "TORCH_WS_SERVER_URL";
+pub const SESSION_SHARING_SERVER_URL_OVERRIDE_ENV: &str = "TORCH_SESSION_SHARING_SERVER_URL";
 
-/// Options related to the parent process that spawned this Warp instance.
+/// Options related to the parent process that spawned this Torch instance.
 #[derive(Debug, Default, Clone, clap::Args)]
 pub struct ParentOpts {
-    /// The ID of the Warp process that spawned this one.
+    /// The ID of the Torch process that spawned this one.
     ///
-    /// Used by codepaths that attempt to detect when the parent Warp process
+    /// Used by codepaths that attempt to detect when the parent Torch process
     /// has terminated. Guaranteed to be [`None`] when this is the initial
-    /// Warp process, but may also be [`None`] for Warp child processes if the
+    /// Torch process, but may also be [`None`] for Torch child processes if the
     /// child process doesn't need to keep track of its parent.
     #[arg(long = "parent-pid", hide = true)]
     pub pid: Option<u32>,
@@ -75,7 +75,7 @@ pub struct ParentOpts {
     pub handle: Option<process_handle::ProcessHandle>,
 }
 
-/// Returns whether an argument requests one of Warp's hidden worker modes.
+/// Returns whether an argument requests one of Torch's hidden worker modes.
 pub fn is_worker_invocation(arg: &str) -> bool {
     let command = WorkerCommand::augment_subcommands(clap::Command::new("worker"));
     command.find_subcommand(arg).is_some()
@@ -87,7 +87,7 @@ pub fn is_worker_invocation(arg: &str) -> bool {
 }
 
 /// Hidden worker args used to scope remote-server proxy/daemon sockets by
-/// Warp identity without exposing credentials.
+/// Torch identity without exposing credentials.
 #[derive(Debug, Clone, Default, clap::Args)]
 pub struct RemoteServerIdentityArgs {
     /// Non-secret identity partition key for the remote-server daemon.
@@ -102,7 +102,7 @@ pub struct GlobalOptions {
     #[arg(
         long = "api-key",
         global = true,
-        env = "WARP_API_KEY",
+        env = "TORCH_API_KEY",
         hide_env_values = true
     )]
     pub api_key: Option<String>,
@@ -113,15 +113,15 @@ pub struct GlobalOptions {
         global = true,
         value_enum,
         default_value_t = OutputFormat::Pretty,
-        env = "WARP_OUTPUT_FORMAT"
+        env = "TORCH_OUTPUT_FORMAT"
     )]
     pub output_format: OutputFormat,
 }
 
-/// Normal argument parser for the shared Warp executable across all channels.
+/// Normal argument parser for the shared Torch executable across all channels.
 ///
 /// Oz commands are subcommands of this parser, so invoking an `oz` symlink does
-/// not require a mode flag. Warp Control uses its separate [`local_control::ControlArgs`]
+/// not require a mode flag. Torch Control uses its separate [`local_control::ControlArgs`]
 /// parser, selected before this parser sees the arguments.
 #[derive(Debug, Default, Parser, Clone)]
 #[command(
@@ -150,7 +150,7 @@ pub struct Args {
         long = "server-root-url",
         global = true,
         hide = true,
-        env = "WARP_SERVER_ROOT_URL"
+        env = "TORCH_SERVER_ROOT_URL"
     )]
     server_root_url: Option<String>,
 
@@ -159,7 +159,7 @@ pub struct Args {
         long = "ws-server-url",
         global = true,
         hide = true,
-        env = "WARP_WS_SERVER_URL"
+        env = "TORCH_WS_SERVER_URL"
     )]
     ws_server_url: Option<String>,
 
@@ -168,7 +168,7 @@ pub struct Args {
         long = "session-sharing-server-url",
         global = true,
         hide = true,
-        env = "WARP_SESSION_SHARING_SERVER_URL"
+        env = "TORCH_SESSION_SHARING_SERVER_URL"
     )]
     session_sharing_server_url: Option<String>,
 
@@ -179,11 +179,11 @@ pub struct Args {
     args: AppArgs,
 }
 
-/// Flags for the Warp application. Additional binaries, like test runners, may use this type
+/// Flags for the Torch application. Additional binaries, like test runners, may use this type
 /// along with their own flags, or convert their flags into an `AppArgs` value.
 #[derive(Debug, Default, clap::Args, Clone)]
 pub struct AppArgs {
-    /// True if this instance of Warp was launched at the end of the auto-update process.
+    /// True if this instance of Torch was launched at the end of the auto-update process.
     #[arg(long = "finish-update", hide = true)]
     pub finish_update: bool,
 
@@ -192,11 +192,11 @@ pub struct AppArgs {
     #[arg(long = "crash-recovery-mechanism", value_enum, requires = "ParentOpts")]
     pub crash_recovery_mechanism: Option<RecoveryMechanism>,
 
-    /// Options related to the parent process that spawned this Warp instance.
+    /// Options related to the parent process that spawned this Torch instance.
     #[clap(flatten)]
     pub parent: ParentOpts,
 
-    /// URLs to open in Warp.
+    /// URLs to open in Torch.
     #[arg(hide = true)]
     pub urls: Vec<Url>,
 }
@@ -447,12 +447,12 @@ impl Args {
         self.command.as_ref()
     }
 
-    /// Args for the main Warp application, if not running a subcommand.
+    /// Args for the main Torch application, if not running a subcommand.
     pub fn app_args(&self) -> &AppArgs {
         &self.args
     }
 
-    /// Extract the main Warp application args.
+    /// Extract the main Torch application args.
     pub fn into_app_args(self) -> AppArgs {
         self.args
     }
@@ -490,9 +490,9 @@ impl Args {
     }
 }
 
-/// Warp may spawn several worker processes - mostly servers that support the main application.
+/// Torch may spawn several worker processes - mostly servers that support the main application.
 ///
-/// These subcommands run those worker processes, which are bundled into the Warp binary.
+/// These subcommands run those worker processes, which are bundled into the Torch binary.
 #[derive(Debug, Clone, Subcommand)]
 pub enum WorkerCommand {
     /// Run the terminal server.
@@ -543,8 +543,8 @@ pub enum WorkerCommand {
     },
 }
 
-/// CLI-related subcommands. The command-line interface to Warp isn't a full SDK (e.g. with language bindings),
-/// but it allows scripting some Warp functionality.
+/// CLI-related subcommands. The command-line interface to Torch isn't a full SDK (e.g. with language bindings),
+/// but it allows scripting some Torch functionality.
 #[derive(Debug, Clone, Subcommand)]
 pub enum CliCommand {
     /// Interact with Oz.
@@ -576,9 +576,9 @@ pub enum CliCommand {
     #[command(subcommand)]
     Memory(crate::memory_store::MemoryCommand),
 
-    /// Log in to Warp.
+    /// Log in to Torch.
     Login,
-    /// Log out of Warp.
+    /// Log out of Torch.
     Logout,
     /// Print information about the logged-in user.
     Whoami,
@@ -649,13 +649,13 @@ impl CliCommand {
     }
 }
 
-/// A subcommand of the main Warp application. This includes all [`WorkerCommand`]s as well as app-specific debugging tools.
+/// A subcommand of the main Torch application. This includes all [`WorkerCommand`]s as well as app-specific debugging tools.
 #[derive(Debug, Clone, Subcommand)]
 pub enum Command {
     #[clap(flatten)]
     Worker(WorkerCommand),
 
-    /// Commands that make up the Warp CLI.
+    /// Commands that make up the Torch CLI.
     #[clap(flatten)]
     CommandLine(Box<CliCommand>),
 
@@ -674,7 +674,7 @@ pub enum Command {
     /// For Powershell, add the following to $PROFILE:
     ///     path\to\warp | Out-String | Invoke-Expression
     ///
-    /// If no shell is provided, this defaults to the shell that Warp was run from.
+    /// If no shell is provided, this defaults to the shell that Torch was run from.
     #[command(verbatim_doc_comment)]
     Completions {
         /// Shell to generate completions for.
@@ -685,7 +685,7 @@ pub enum Command {
     /// Print debugging information and exit.
     #[clap(long_flag = "dump-debug-info")]
     DumpDebugInfo,
-    /// Print the JSON schema for the current Warp channel's settings and exit.
+    /// Print the JSON schema for the current Torch channel's settings and exit.
     #[cfg(not(target_family = "wasm"))]
     DumpSettingsSchema {
         /// Write the schema to this path instead of standard output.
@@ -792,7 +792,7 @@ pub fn dump_debug_info_flag() -> String {
     format!("--{flag}")
 }
 
-/// Returns a flag that sets the current process as the parent of a Warp subcommand to spawn.
+/// Returns a flag that sets the current process as the parent of a Torch subcommand to spawn.
 pub fn parent_flag() -> String {
     let command = <Args as CommandFactory>::command();
     let flag = command

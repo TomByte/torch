@@ -35,7 +35,6 @@ use torch_core::ui::theme::Fill as ThemeFill;
 use torch_core::ui::theme::color::internal_colors;
 use torch_errors::report_error;
 use torch_terminal::model::escape_sequences::{BRACKETED_PASTE_END, BRACKETED_PASTE_START};
-use warpify_footer::{WarpifyFooterView, WarpifyFooterViewEvent};
 use torchui::r#async::Timer;
 use torchui::elements::{
     ChildView, Container, CrossAxisAlignment, Empty, Expanded, Flex, MainAxisSize, ParentElement,
@@ -45,6 +44,7 @@ use torchui::{
     AppContext, Element, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View,
     ViewContext, ViewHandle,
 };
+use warpify_footer::{WarpifyFooterView, WarpifyFooterViewEvent};
 
 use super::{RichContentInsertionPosition, TerminalAction, TerminalView};
 use crate::ai::blocklist::block::cli_controller::CLISubagentEvent;
@@ -322,7 +322,7 @@ impl TerminalView {
             }
             // For CLI agent commands, only check the CLI agent footer setting.
             // This is independent of the global AI toggle so that users who
-            // disable Warp AI still get the footer for third-party coding agents.
+            // disable Torch AI still get the footer for third-party coding agents.
             if !*ai_settings.should_render_cli_agent_footer {
                 return false;
             }
@@ -402,7 +402,7 @@ impl TerminalView {
     }
 
     /// Returns whether the active long-running command in this terminal is
-    /// Warp's own headless TUI (`torch_tui`).
+    /// Torch's own headless TUI (`torch_tui`).
     pub(super) fn is_running_warp_tui(&self, model: &TerminalModel, ctx: &AppContext) -> bool {
         let active_block = model.block_list().active_block();
         if !active_block.is_active_and_long_running() {

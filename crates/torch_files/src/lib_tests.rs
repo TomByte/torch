@@ -253,7 +253,7 @@ fn test_save_missing_directory() {
 }
 
 /// APP-5243: a bare relative file name has an empty parent, which platform watchers resolve to
-/// Warp's own process directory. Watching (or worse, unwatching) that directory is never what the
+/// Torch's own process directory. Watching (or worse, unwatching) that directory is never what the
 /// caller asked for, so such files get no individual watcher at all.
 #[test]
 fn test_watch_path_ignores_empty_parents() {

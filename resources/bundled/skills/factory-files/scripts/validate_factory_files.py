@@ -285,14 +285,14 @@ class Outcome:
 def server_root(argument: Optional[str]) -> str:
     """Resolve the server to ask, so a local or staging root needs no code change.
 
-    WARP_SERVER_ROOT_URL is the name an Oz sandbox exports; without it here, a
-    sandbox that never sets the older WARP_SERVER_ROOT silently validates
+    TORCH_SERVER_ROOT_URL is the name an Oz sandbox exports; without it here, a
+    sandbox that never sets the older TORCH_SERVER_ROOT silently validates
     against production instead of the server it actually belongs to.
     """
     chosen = (
         argument
-        or os.environ.get("WARP_SERVER_ROOT")
-        or os.environ.get("WARP_SERVER_ROOT_URL")
+        or os.environ.get("TORCH_SERVER_ROOT")
+        or os.environ.get("TORCH_SERVER_ROOT_URL")
         or DEFAULT_SERVER_ROOT
     )
     return chosen.rstrip("/")
@@ -314,7 +314,7 @@ def _request_json(url: str, token: Optional[str] = None, payload: Optional[Any] 
     """Post or fetch JSON, turning every failure class into NotValidated.
 
     A 401 or 403 drawn by a forwarded token is retried once without it: the
-    endpoint needs no credential, so a stale or mismatched WARP_API_KEY must
+    endpoint needs no credential, so a stale or mismatched TORCH_API_KEY must
     not be able to block validation. The drop is reported, because a key the
     server rejects is worth knowing about even when validation then succeeds.
     """
@@ -324,7 +324,7 @@ def _request_json(url: str, token: Optional[str] = None, payload: Optional[Any] 
     except urllib.error.HTTPError as error:
         if token and error.code in (401, 403):
             print(
-                f"WARP_API_KEY was rejected with HTTP {error.code}; retrying without it, "
+                f"TORCH_API_KEY was rejected with HTTP {error.code}; retrying without it, "
                 "since this endpoint needs no credential.",
                 file=sys.stderr,
             )
@@ -355,14 +355,14 @@ def validate(root: Path, base_url: str) -> Outcome:
     unrecognized one as a diagnostic, so there is nothing to pre-flight and no
     reason for this script to read the tree's YAML.
 
-    The endpoint needs no credential. WARP_API_KEY is forwarded when the
+    The endpoint needs no credential. TORCH_API_KEY is forwarded when the
     environment already carries one, as an Oz sandbox does, so the request is
     attributable there; nothing requires it, because a local authoring agent
-    runs in a shell that cannot see the Warp client's session. A stale or
+    runs in a shell that cannot see the Torch client's session. A stale or
     mismatched key is retried without itself, in _request_json, rather than
     blocking validation.
     """
-    token = os.environ.get("WARP_API_KEY")
+    token = os.environ.get("TORCH_API_KEY")
     files, problems = collect_tree(root)
     response = _request_json(base_url + VALIDATE_PATH, token=token, payload={"files": files})
     if not isinstance(response, dict) or not isinstance(response.get("diagnostics"), list):
@@ -399,8 +399,8 @@ def main() -> int:
     parser.add_argument(
         "--server-root",
         default=None,
-        help="warp-server root to validate against; defaults to $WARP_SERVER_ROOT, then "
-        "$WARP_SERVER_ROOT_URL, then " + DEFAULT_SERVER_ROOT,
+        help="warp-server root to validate against; defaults to $TORCH_SERVER_ROOT, then "
+        "$TORCH_SERVER_ROOT_URL, then " + DEFAULT_SERVER_ROOT,
     )
     args = parser.parse_args()
 

@@ -11,7 +11,7 @@ use crate::server::server_api::ServerApiProvider;
 use crate::server::server_api::ai::ConnectedSelfHostedWorker;
 use crate::server::team_scope::RequestTeamScope;
 use crate::workspaces::user_workspaces::{TeamScope, UserWorkspaces, UserWorkspacesEvent};
-pub const WARP_WORKER_HOST: &str = "warp";
+pub const TORCH_WORKER_HOST: &str = "warp";
 
 pub enum ConnectedSelfHostedWorkersEvent {
     Changed,
@@ -69,7 +69,7 @@ impl ConnectedSelfHostedWorkersModel {
             .iter()
             .map(|worker| worker.worker_host.clone())
             .filter(|host| !host.trim().is_empty())
-            .filter(|host| !host.eq_ignore_ascii_case(WARP_WORKER_HOST))
+            .filter(|host| !host.eq_ignore_ascii_case(TORCH_WORKER_HOST))
             .filter(|host| match excluded {
                 Some(excluded) => !host.eq_ignore_ascii_case(excluded),
                 None => true,

@@ -5,9 +5,9 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use shell_words::quote as shell_quote;
-use uuid::Uuid;
 use torch_cli::agent::Harness;
 use torch_graphql::ai::AgentTaskState;
+use uuid::Uuid;
 
 use super::super::claude_transcript::{
     ClaudeTranscriptEnvelope, claude_config_dir, write_envelope, write_session_index_entry,
@@ -251,7 +251,7 @@ fn local_wake_task_env_vars(
 ) -> HashMap<OsString, OsString> {
     let mut env_vars = task_env_vars(task_id, parent_run_id, Harness::Claude);
     // The local wake command is executed directly in the existing child
-    // terminal, not through `AgentDriver::run_harness`, so Warp does not start
+    // terminal, not through `AgentDriver::run_harness`, so Torch does not start
     // `MessageBridge` for this resumed Claude process. Leave the listener in
     // the Claude plugin's self-managed mode; otherwise the hook waits for
     // state files that no managed bridge is producing and the wake message is

@@ -108,7 +108,7 @@ fn transient_network_error_includes_user_facing_message_and_debug_details() {
     let rendered = error.to_string();
     assert!(
         rendered.starts_with(
-            "Warp lost connection while receiving the agent response. This is usually temporary.\n\nDebug info: "
+            "Torch lost connection while receiving the agent response. This is usually temporary.\n\nDebug info: "
         ),
         "unexpected rendering: {rendered}"
     );
@@ -142,7 +142,7 @@ fn chatgpt_subscription_error_maps_known_actions_and_drops_unknown_kinds() {
     let error = RenderableAIError::from_chatgpt_subscription_error(ChatGptSubscriptionError {
         code: "subscription_sharing_usage_unavailable".to_string(),
         title: "ChatGPT couldn't verify your subscription usage".to_string(),
-        message: "Try again, or continue with Warp credits.".to_string(),
+        message: "Try again, or continue with Torch credits.".to_string(),
         actions: vec![
             Action {
                 label: "Try again".to_string(),
@@ -154,7 +154,7 @@ fn chatgpt_subscription_error_maps_known_actions_and_drops_unknown_kinds() {
                 kind: None,
             },
             Action {
-                label: "Continue with Warp credits".to_string(),
+                label: "Continue with Torch credits".to_string(),
                 kind: Some(Kind::ContinueWithWarpCredits(ContinueWithWarpCredits {})),
             },
         ],
@@ -171,7 +171,7 @@ fn chatgpt_subscription_error_maps_known_actions_and_drops_unknown_kinds() {
     };
     assert_eq!(code, "subscription_sharing_usage_unavailable");
     assert_eq!(title, "ChatGPT couldn't verify your subscription usage");
-    assert_eq!(message, "Try again, or continue with Warp credits.");
+    assert_eq!(message, "Try again, or continue with Torch credits.");
     assert_eq!(
         actions,
         &[
@@ -181,14 +181,14 @@ fn chatgpt_subscription_error_maps_known_actions_and_drops_unknown_kinds() {
             },
             ChatGPTSubscriptionErrorAction {
                 kind: ChatGPTSubscriptionErrorActionKind::ContinueWithWarpCredits,
-                label: "Continue with Warp credits".to_string(),
+                label: "Continue with Torch credits".to_string(),
             },
         ]
     );
     assert!(error.is_chatgpt_subscription_error());
     assert_eq!(
         error.to_string(),
-        "ChatGPT couldn't verify your subscription usage\n\nTry again, or continue with Warp credits."
+        "ChatGPT couldn't verify your subscription usage\n\nTry again, or continue with Torch credits."
     );
 }
 
@@ -253,7 +253,7 @@ fn chatgpt_subscription_error_maps_open_url_action_and_includes_link_in_text() {
                 })),
             },
             Action {
-                label: "Continue with Warp credits".to_string(),
+                label: "Continue with Torch credits".to_string(),
                 kind: Some(Kind::ContinueWithWarpCredits(ContinueWithWarpCredits {})),
             },
         ],
@@ -273,7 +273,7 @@ fn chatgpt_subscription_error_maps_open_url_action_and_includes_link_in_text() {
             },
             ChatGPTSubscriptionErrorAction {
                 kind: ChatGPTSubscriptionErrorActionKind::ContinueWithWarpCredits,
-                label: "Continue with Warp credits".to_string(),
+                label: "Continue with Torch credits".to_string(),
             },
         ]
     );

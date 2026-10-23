@@ -3,7 +3,7 @@ use std::ops::Range;
 use std::sync::Arc;
 
 use itertools::Itertools;
-use markdown_parser::html_parser::WARP_EMBED_ATTRIBUTE_NAME;
+use markdown_parser::html_parser::TORCH_EMBED_ATTRIBUTE_NAME;
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::{Vector2F, vec2f};
 use serde_yaml::Mapping;
@@ -14,7 +14,9 @@ use torch_editor::content::text::TextStylesWithMetadata;
 use torch_editor::editor::EmbeddedItemModel;
 use torch_editor::extract_block;
 use torch_editor::render::BLOCK_FOOTER_HEIGHT;
-use torch_editor::render::element::{CursorData, CursorDisplayType, RenderContext, RenderableBlock};
+use torch_editor::render::element::{
+    CursorData, CursorDisplayType, RenderContext, RenderableBlock,
+};
 use torch_editor::render::layout::TextLayout;
 use torch_editor::render::model::viewport::ViewportItem;
 use torch_editor::render::model::{
@@ -305,7 +307,7 @@ impl EmbeddedItem for EmbeddedWorkflow {
 
         // If the workflow is no longer accessible or is trashed, set the content to
         // an empty string. But we should still keep the HTML element formatting and
-        // attributes so we could re-parse the ID and metadata when pasted into Warp.
+        // attributes so we could re-parse the ID and metadata when pasted into Torch.
         let workflow_content = workflow
             .and_then(|workflow| {
                 if !workflow.is_trashed(cloud_model) {
@@ -321,7 +323,7 @@ impl EmbeddedItem for EmbeddedWorkflow {
             html: EmbeddedItemHTMLRepresentation {
                 element_name: "pre",
                 content: workflow_content,
-                attributes: HashMap::from([(WARP_EMBED_ATTRIBUTE_NAME, self.hashed_id())]),
+                attributes: HashMap::from([(TORCH_EMBED_ATTRIBUTE_NAME, self.hashed_id())]),
             },
         }
     }
@@ -611,7 +613,9 @@ impl RenderableBlock for RenderableEmbeddedWorkflow {
             );
         }
 
-        ctx.paint.scene.start_layer(torchui::ClipBounds::ActiveLayer);
+        ctx.paint
+            .scene
+            .start_layer(torchui::ClipBounds::ActiveLayer);
 
         // Position the block footer right below the content area, flush with its right-hand edge.
         // This gives the footer some padding relative to the visible area with a background.

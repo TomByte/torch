@@ -12,7 +12,7 @@ fn oz_install_target_path() -> PathBuf {
     PathBuf::from("/usr/local/bin").join(ChannelState::channel().cli_command_name())
 }
 
-/// Compute the target path where the Warp Control symlink should be installed, based on channel
+/// Compute the target path where the Torch Control symlink should be installed, based on channel
 fn warpctrl_install_target_path() -> PathBuf {
     PathBuf::from("/usr/local/bin").join(ChannelState::channel().warpctrl_command_name())
 }
@@ -20,10 +20,10 @@ fn warpctrl_install_target_path() -> PathBuf {
 /// Compute the source path of the warpctrl wrapper inside the current app bundle.
 ///
 /// Oz commands are part of the shared executable's normal argument parser, so
-/// Oz can symlink directly to the current executable. Warp Control has a
+/// Oz can symlink directly to the current executable. Torch Control has a
 /// separate parser selected by the hidden `--warpctrl` flag, so its installed
 /// symlink must target the bundled wrapper that injects that flag. Without it,
-/// Warp Control subcommands such as `tab` would reach the normal parser and be
+/// Torch Control subcommands such as `tab` would reach the normal parser and be
 /// rejected as unknown.
 fn warpctrl_bundle_source_path() -> Result<PathBuf> {
     let current_binary =
@@ -47,7 +47,7 @@ fn path_resolves_to(path: &Path, expected_path: &Path) -> bool {
     path == expected_path
 }
 
-/// Whether the installed Warp Control command resolves to this app bundle's wrapper.
+/// Whether the installed Torch Control command resolves to this app bundle's wrapper.
 pub fn is_warpctrl_installed() -> bool {
     let Ok(source) = warpctrl_bundle_source_path() else {
         return false;
@@ -196,7 +196,7 @@ fn uninstall_symlink(target: &Path, command_name: &str) -> Result<()> {
     Ok(())
 }
 
-/// Install the Oz CLI by symlinking the shared Warp executable into /usr/local/bin.
+/// Install the Oz CLI by symlinking the shared Torch executable into /usr/local/bin.
 ///
 /// The normal argument parser dispatches Oz subcommands directly. It also uses
 /// the `oz`-prefixed invocation name to print CLI help rather than launch the
@@ -213,11 +213,11 @@ pub fn uninstall_oz() -> Result<()> {
     uninstall_symlink(&oz_install_target_path(), "Oz command")
 }
 
-/// Install Warp Control by symlinking its bundled wrapper into /usr/local/bin.
+/// Install Torch Control by symlinking its bundled wrapper into /usr/local/bin.
 ///
 /// The wrapper contains no control implementation. It resolves this installed
-/// symlink back into the app bundle, launches the shared Warp executable, and
-/// injects `--warpctrl` so startup selects the separate Warp Control parser
+/// symlink back into the app bundle, launches the shared Torch executable, and
+/// injects `--warpctrl` so startup selects the separate Torch Control parser
 /// before normal parsing or GUI startup.
 pub fn install_warpctrl() -> Result<()> {
     let warpctrl_path = warpctrl_install_target_path();
@@ -233,7 +233,7 @@ pub fn install_warpctrl() -> Result<()> {
     install_symlink(&warpctrl_source, &warpctrl_path, "Torch Control CLI")
 }
 
-/// Uninstall the Warp Control CLI by removing the symlink from /usr/local/bin
+/// Uninstall the Torch Control CLI by removing the symlink from /usr/local/bin
 pub fn uninstall_warpctrl() -> Result<()> {
     uninstall_symlink(&warpctrl_install_target_path(), "Torch Control command")
 }

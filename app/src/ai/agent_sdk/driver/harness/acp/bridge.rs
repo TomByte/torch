@@ -20,7 +20,7 @@
 //!
 //! This requires the driver, the shell session, and the agent to share one OS instance (the
 //! socket and the launch file are both host-local). That holds for every cloud-runner shell; it
-//! would not for a sandboxed, WSL, or SSH session launched from a host Warp.
+//! would not for a sandboxed, WSL, or SSH session launched from a host Torch.
 use std::fmt;
 use std::io::{self, Read, Write};
 use std::net::{Ipv4Addr, Shutdown, SocketAddr, TcpListener, TcpStream};

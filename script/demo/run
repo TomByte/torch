@@ -22,6 +22,6 @@ fi
 "$KIT/setup"
 # Start from a clean window state so earlier demo runs are not restored alongside this one.
 rm -rf "$HOME/Library/Application Support/dev.tombyte.Torch-demo"
-TORCH_DEMO_STAGGER="$STAGGER" ZDOTDIR="$KIT/zsh" WARP_DATA_PROFILE=demo "$APP/Contents/MacOS/torch" "torch://launch/torch-demo.yaml" \
+TORCH_DEMO_STAGGER="$STAGGER" ZDOTDIR="$KIT/zsh" TORCH_DATA_PROFILE=demo "$APP/Contents/MacOS/torch" "torch://launch/torch-demo.yaml" \
   >/dev/null 2>&1 &
 echo "Torch demo started (pid $!)."

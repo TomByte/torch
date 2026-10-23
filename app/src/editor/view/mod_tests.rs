@@ -2,13 +2,13 @@ use anyhow::Error;
 use itertools::Itertools;
 use pathfinder_geometry::vector::vec2f;
 use settings::ToggleableSetting;
-use unindent::Unindent;
 use torch_errors::report_if_error;
 use torchui::color::ColorU;
 use torchui::platform::WindowStyle;
 use torchui::text_layout::TextFrame;
 use torchui::windowing::WindowManager;
 use torchui::{AddSingletonModel, App, UpdateModel, UpdateView};
+use unindent::Unindent;
 
 use super::*;
 use crate::auth::AuthStateProvider;
@@ -3477,7 +3477,7 @@ fn test_autocomplete_symbols() {
 
         app.add_window(WindowStyle::NotStealFocus, |ctx| {
             let mut editor =
-                EditorView::new_with_base_text("word warp word", Default::default(), ctx);
+                EditorView::new_with_base_text("word torch word", Default::default(), ctx);
 
             editor.set_autocomplete_symbols_allowed(true);
             editor
@@ -3491,12 +3491,12 @@ fn test_autocomplete_symbols() {
                 .unwrap();
             editor.add_next_occurrence(ctx);
             editor.user_insert("[", ctx);
-            assert_eq!(editor.buffer_text(ctx), "[word] warp [word]");
+            assert_eq!(editor.buffer_text(ctx), "[word] torch [word]");
 
             editor.undo(ctx);
-            assert_eq!(editor.buffer_text(ctx), "word warp word");
+            assert_eq!(editor.buffer_text(ctx), "word torch word");
             editor.redo(ctx);
-            assert_eq!(editor.buffer_text(ctx), "[word] warp [word]");
+            assert_eq!(editor.buffer_text(ctx), "[word] torch [word]");
 
             editor
         });
@@ -3517,11 +3517,11 @@ fn test_autocomplete_symbols() {
                 autocomplete_symbols: true,
                 ..Default::default()
             };
-            let mut editor = EditorView::new_with_base_text("word warp word", options, ctx);
+            let mut editor = EditorView::new_with_base_text("word torch word", options, ctx);
 
             editor.move_to_visual_line_end(ctx);
             editor.user_insert("(", ctx);
-            assert_eq!(editor.buffer_text(ctx), "word warp word(");
+            assert_eq!(editor.buffer_text(ctx), "word torch word(");
 
             editor
         });

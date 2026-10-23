@@ -138,8 +138,8 @@ use torch_graphql::queries::task_git_credentials::{
 };
 #[cfg(not(target_family = "wasm"))]
 use torch_graphql::queries::task_secrets::{ManagedSecretValue, TaskSecretsInput};
-use warp_multi_agent_api::ConversationData;
 use torch_server_client::PresignedDownloadResponse;
+use warp_multi_agent_api::ConversationData;
 
 use super::ServerApi;
 #[cfg(not(target_family = "wasm"))]
@@ -1630,7 +1630,7 @@ pub trait AIClient: 'static + Send + Sync {
         artifact_uid: &str,
     ) -> anyhow::Result<ArtifactDownloadResponse, anyhow::Error>;
 
-    /// Downloads the bytes of a computer-use screenshot stored in Warp-managed
+    /// Downloads the bytes of a computer-use screenshot stored in Torch-managed
     /// object storage. Requires view access to the conversation.
     async fn download_stored_screenshot(
         &self,
@@ -3745,7 +3745,9 @@ impl From<torch_graphql::workspace::LlmSpec> for LLMSpec {
     }
 }
 
-impl From<torch_graphql::queries::get_feature_model_choices::LlmUsageMetadata> for LLMUsageMetadata {
+impl From<torch_graphql::queries::get_feature_model_choices::LlmUsageMetadata>
+    for LLMUsageMetadata
+{
     fn from(value: torch_graphql::queries::get_feature_model_choices::LlmUsageMetadata) -> Self {
         Self {
             request_multiplier: value.request_multiplier.max(1) as usize,
@@ -3790,7 +3792,9 @@ impl From<torch_graphql::workspace::DisableReason> for DisableReason {
         match value {
             torch_graphql::workspace::DisableReason::AdminDisabled => DisableReason::AdminDisabled,
             torch_graphql::workspace::DisableReason::OutOfRequests => DisableReason::OutOfRequests,
-            torch_graphql::workspace::DisableReason::ProviderOutage => DisableReason::ProviderOutage,
+            torch_graphql::workspace::DisableReason::ProviderOutage => {
+                DisableReason::ProviderOutage
+            }
             torch_graphql::workspace::DisableReason::RequiresUpgrade => {
                 DisableReason::RequiresUpgrade
             }

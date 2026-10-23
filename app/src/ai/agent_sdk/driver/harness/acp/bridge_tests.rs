@@ -15,24 +15,24 @@ use super::{
 #[test]
 fn bridge_command_names_the_executable_and_the_launch_file_escaped_for_the_shell() {
     let command = render_bridge_command(
-        Path::new("/Applications/Warp Preview.app/Contents/MacOS/preview"),
+        Path::new("/Applications/Torch Preview.app/Contents/MacOS/preview"),
         Path::new("/tmp/oz-acp x/launch.json"),
         ShellFamily::Posix,
     );
     assert_eq!(
         command,
-        "/Applications/Warp\\ Preview.app/Contents/MacOS/preview acp-bridge --launch-file \
+        "/Applications/Torch\\ Preview.app/Contents/MacOS/preview acp-bridge --launch-file \
          /tmp/oz-acp\\ x/launch.json"
     );
 
     let command = render_bridge_command(
-        Path::new(r"C:\Program Files\Warp\warp.exe"),
+        Path::new(r"C:\Program Files\Torch\warp.exe"),
         Path::new(r"C:\Temp\oz-acp-x\launch.json"),
         ShellFamily::PowerShell,
     );
     assert_eq!(
         command,
-        r"& C:\Program` Files\Warp\warp.exe acp-bridge --launch-file C:\Temp\oz-acp-x\launch.json"
+        r"& C:\Program` Files\Torch\warp.exe acp-bridge --launch-file C:\Temp\oz-acp-x\launch.json"
     );
 }
 

@@ -1,6 +1,6 @@
-//! Shared protocol, discovery, authentication, and client types for local Warp control.
+//! Shared protocol, discovery, authentication, and client types for local Torch control.
 //!
-//! The `local_control` crate is intentionally UI-agnostic so the Warp app and
+//! The `local_control` crate is intentionally UI-agnostic so the Torch app and
 //! `warpctrl` CLI can share the same wire envelopes, action catalog, discovery
 //! records, selectors, and credential validation rules.
 pub mod auth;

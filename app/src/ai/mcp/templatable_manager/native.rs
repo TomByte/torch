@@ -12,8 +12,6 @@ use mcp::oauth::{
 use mcp::runtime::{error_to_user_message, spawn_server};
 use parking_lot::Mutex;
 use simple_logger::manager::LogManager;
-use url::Url;
-use uuid::Uuid;
 use torch_core::channel::ChannelState;
 use torch_core::execution_mode::AppExecutionMode;
 use torch_core::features::FeatureFlag;
@@ -23,6 +21,8 @@ use torch_errors::report_error;
 use torch_server_client::auth::AuthEvent;
 use torchui::windowing::WindowManager;
 use torchui::{AppContext, ModelContext, SingletonEntity};
+use url::Url;
+use uuid::Uuid;
 
 use super::{
     MCPServerState, SpawnedServerInfo, TemplatableMCPServerInfo, TemplatableMCPServerManager,
@@ -97,7 +97,7 @@ enum LegacyToTemplatableMCPConversionError {
     InstallationFailed,
 }
 
-/// An MCP server integration that Warp ships with bundled skills for.
+/// An MCP server integration that Torch ships with bundled skills for.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum McpIntegration {
     Figma,
@@ -382,7 +382,7 @@ impl TemplatableMCPServerManager {
             _ => {}
         });
 
-        // Built-in Warp-hosted MCP servers follow the user's auth lifecycle:
+        // Built-in Torch-hosted MCP servers follow the user's auth lifecycle:
         // attach after login, re-attach with fresh credentials when the
         // access token rotates, and detach on logout. Skipped in tests, which
         // construct the manager without the auth singletons.
@@ -469,7 +469,7 @@ impl TemplatableMCPServerManager {
             }
         }
 
-        // Attach built-in Warp-hosted servers for already-logged-in users
+        // Attach built-in Torch-hosted servers for already-logged-in users
         // (fresh logins are handled by the AuthManager subscription above).
         if !cfg!(test) {
             me.sync_builtin_servers(false, ctx);
@@ -798,7 +798,7 @@ impl TemplatableMCPServerManager {
         self.spawn_ephemeral_server(installation, ctx);
     }
 
-    /// Reconciles built-in Warp-hosted MCP servers (currently the Factory
+    /// Reconciles built-in Torch-hosted MCP servers (currently the Factory
     /// MCP) with the feature-flag and auth state: spawns the server when it
     /// should be running and isn't, and shuts it down when it shouldn't be.
     /// Safe to call repeatedly.
@@ -1004,7 +1004,7 @@ impl TemplatableMCPServerManager {
             // (repo root for project-scoped configs, ~/.warp/ or ~ for globals). This
             // matches user expectations for repo-relative commands in `.mcp.json`.
             // Cloud-templated installations (lookup returns None) are unaffected and
-            // continue to inherit Warp's process cwd.
+            // continue to inherit Torch's process cwd.
             if cli_server.cwd_parameter.is_none()
                 && let Some(spawn_root) =
                     FileBasedMCPManager::as_ref(ctx).spawn_root_for_installation(installation_uuid)
