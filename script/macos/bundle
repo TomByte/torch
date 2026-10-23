@@ -201,7 +201,7 @@ BUILD_BINARY=true
 TARGET_ARCH=""
 DMG_NAME_SUFFIX=""
 # By default we build dev bundles.
-RELEASE_CHANNEL="dev"
+RELEASE_CHANNEL="oss"
 FEATURES="release_bundle,extern_plist"
 REGISTER_SERVICES=true
 DEBUG=false
@@ -286,7 +286,7 @@ while (( "$#" )); do
       OPEN_AFTER_BUNDLE=true
       shift
       ;;
-    # Specify the release channel (local, dev, preview, stable, oss)
+    # Specify the release channel. Torch only ships the oss channel.
     -c|--channel)
       if [ -n "$2" ] && [ "${2:0:1}" != "-" ]; then
         RELEASE_CHANNEL=$2
@@ -339,20 +339,14 @@ done
 # set positional arguments in their proper place
 eval set -- "$PARAMS"
 
+if [[ $RELEASE_CHANNEL != "oss" ]]; then
+  echo "Error: unknown channel '$RELEASE_CHANNEL'. Torch only builds the oss channel." >&2
+  exit 1
+fi
+
 # Infer a cargo profile from the bundle configuration.
 if [[ $DEBUG = true ]]; then
   CARGO_PROFILE="dev"
-elif [[ $RELEASE_CHANNEL = "local" || $RELEASE_CHANNEL = "dev" ]]; then
-  # For dev bundles, we want to enable debug assertions to
-  # catch violations that would otherwise silently pass in
-  # a normal release build (e.g. in stable).
-  if [[ "$ARTIFACT" == "tui" ]]; then
-    CARGO_PROFILE="release-tui-debug-assertions"
-  elif [[ "$ARTIFACT" == "cli" || "$ARTIFACT" == "warpctrl" ]]; then
-    CARGO_PROFILE="release-cli-debug_assertions"
-  else
-    CARGO_PROFILE="release-lto-debug_assertions"
-  fi
 else
   if [[ "$ARTIFACT" == "tui" ]]; then
     CARGO_PROFILE="release-tui"
@@ -368,47 +362,7 @@ if [[ "$CARGO_PROFILE" == "dev" ]]; then
   TARGET_PROFILE_DIR="debug"
 fi
 
-if [[ $RELEASE_CHANNEL = "local" ]]; then
-    WARP_BIN="warp"
-    BUNDLE_ID="dev.warp.Warp-Local"
-    WARP_APP_NAME="WarpLocal"
-    WARP_SCHEME_NAME="warplocal"
-    FEATURES="$FEATURES,agent_mode_debug"
-    # For local builds, use different versions of our bundled frameworks (e.g.:
-    # Sentry).  This needs to be exported so it can be referenced by
-    # app/build.rs later, while running `cargo bundle`.
-    export FRAMEWORK_OVERRIDE="dev"
-elif [[ $RELEASE_CHANNEL = "dev" ]]; then
-    WARP_BIN="dev"
-    BUNDLE_ID="dev.warp.Warp-Dev"
-    WARP_APP_NAME="WarpDev"
-    WARP_SCHEME_NAME="warpdev"
-    FEATURES="$FEATURES,agent_mode_debug"
-    # Enable heap usage tracking & profiling using jemalloc through pprof.
-    FEATURES="$FEATURES,jemalloc_pprof,heap_usage_tracking"
-    # Enable the Warp Control CLI wrapper for local scripting/automation.
-    FEATURES="$FEATURES,warp_control_cli"
-    # For dev builds, use different versions of our bundled frameworks (e.g.:
-    # Sentry).  This needs to be exported so it can be referenced by
-    # app/build.rs later, while running `cargo bundle`.
-    export FRAMEWORK_OVERRIDE="dev"
-    export HANDLE_MARKDOWN=1
-elif [[ $RELEASE_CHANNEL = "preview" ]]; then
-    WARP_BIN="preview"
-    BUNDLE_ID="dev.warp.Warp-Preview"
-    WARP_APP_NAME="WarpPreview"
-    WARP_SCHEME_NAME="warppreview"
-    FEATURES="$FEATURES,preview_channel"
-    # Enable heap usage tracking & profiling using jemalloc through pprof.
-    FEATURES="$FEATURES,jemalloc_pprof,heap_usage_tracking"
-elif [[ $RELEASE_CHANNEL = "stable" ]]; then
-    WARP_BIN="stable"
-    BUNDLE_ID="dev.warp.Warp-Stable"
-    WARP_APP_NAME="Warp"
-    WARP_SCHEME_NAME="warp"
-    # Enable heap usage tracking & profiling using jemalloc through pprof.
-    FEATURES="$FEATURES,jemalloc_pprof,heap_usage_tracking"
-elif [[ $RELEASE_CHANNEL = "oss" ]]; then
+if [[ $RELEASE_CHANNEL = "oss" ]]; then
     WARP_BIN="torch"
     BUNDLE_ID="dev.tombyte.Torch"
     WARP_APP_NAME="Torch"
@@ -484,11 +438,7 @@ elif [[ "$ARTIFACT" == tui ]]; then
   # binary (the TUI is not shipped inside a `.app` bundle).
   UNIVERSAL_BINARY=false
   OPEN_AFTER_BUNDLE=false
-  case "$RELEASE_CHANNEL" in
-    local) WARP_BIN="warp-tui" ;;
-    oss) WARP_BIN="warp-tui-oss" ;;
-    *) WARP_BIN="warp-tui-$RELEASE_CHANNEL" ;;
-  esac
+  WARP_BIN="warp-tui-oss"
   WARP_TUI_FEATURES="release_bundle,standalone,voice_input"
 elif [[ "$ARTIFACT" == app ]]; then
   # All channels ship the v3 classifier and v2 heuristic.
@@ -697,15 +647,8 @@ if [[ "$ARTIFACT" == "app" ]]; then
     "$WORKSPACE_ROOT_DIR/script/prepare_bundled_pprof" "$HELPERS_DIR"
   fi
 
-  # Determine CLI wrapper script path based on release channel.  Each channel's
-  # value here must match `Channel::cli_command_name` in the Rust source.
-  if [[ $RELEASE_CHANNEL = "stable" ]]; then
-    CLI_SCRIPT_PATH="$BUNDLED_RESOURCES_DIR/bin/oz"
-  elif [[ $RELEASE_CHANNEL = "oss" ]]; then
-    CLI_SCRIPT_PATH="$BUNDLED_RESOURCES_DIR/bin/torch"
-  else
-    CLI_SCRIPT_PATH="$BUNDLED_RESOURCES_DIR/bin/oz-$RELEASE_CHANNEL"
-  fi
+  # Must match `Channel::cli_command_name` in the Rust source.
+  CLI_SCRIPT_PATH="$BUNDLED_RESOURCES_DIR/bin/torch"
 
   echo "Creating Resources/bin directory and CLI wrapper script..."
   mkdir -p "$BUNDLED_RESOURCES_DIR/bin"
@@ -723,14 +666,8 @@ EOF
   chmod +x "$CLI_SCRIPT_PATH"
 
   if [[ ",$FEATURES," =~ ",warp_control_cli," ]]; then
-    # Each value must match `Channel::warpctrl_command_name` in the Rust source.
-    if [[ $RELEASE_CHANNEL = "stable" ]]; then
-      WARPCTRL_COMMAND_NAME="warpctrl"
-    elif [[ $RELEASE_CHANNEL = "oss" ]]; then
-      WARPCTRL_COMMAND_NAME="warpctrl-oss"
-    else
-      WARPCTRL_COMMAND_NAME="warpctrl-$RELEASE_CHANNEL"
-    fi
+    # Must match `Channel::warpctrl_command_name` in the Rust source.
+    WARPCTRL_COMMAND_NAME="warpctrl-oss"
     WARPCTRL_SCRIPT_PATH="$BUNDLED_RESOURCES_DIR/bin/$WARPCTRL_COMMAND_NAME"
     echo "Creating warpctrl wrapper script at $WARPCTRL_SCRIPT_PATH..."
     "$WORKSPACE_ROOT_DIR/script/macos/create_warpctrl_wrapper" \

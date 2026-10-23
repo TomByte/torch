@@ -25,7 +25,6 @@ chrome_profiler.json
 crates/warp_files/test_data/test_write
 
 # Don't include fonts downloaded by the script used to generate font fallback code.
-script/font_fallback/downloaded_fonts
 
 # Don't include the generated Windows installer
 script/windows/Output

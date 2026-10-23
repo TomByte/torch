@@ -62,7 +62,6 @@ brew update
 
 brew install jq
 brew install shellcheck
-brew install getsentry/tools/sentry-cli
 brew install clang-format
 brew install create-dmg
 brew install multitime
@@ -81,20 +80,6 @@ brew install protobuf
 
 # Install PSScriptAnalyzer for PowerShell linting
 pwsh -Command "Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser"
-
-if ! [ "$(command -v docker)" ]; then
-    brew install --cask docker
-fi
-
-if ! [ "$(command -v gcloud)" ]; then
-    brew install google-cloud-sdk
-fi
-
-if [[ "${WARP_SKIP_GCLOUD_AUTH:-0}" != "1" ]] && [[ -z $(gcloud auth print-identity-token) ]]; then
-    echo "gcloud CLI authentication missing.  Press enter to continue..."
-    read var
-    gcloud auth login
-fi
 
 # Needed for building for Mac ARM machines (e.g. M1)
 rustup target add aarch64-apple-darwin
