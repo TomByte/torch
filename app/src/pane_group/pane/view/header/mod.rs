@@ -31,8 +31,6 @@ use crate::pane_group::pane::{
 use crate::pane_group::{
     BackingView, Direction, PaneDragDropLocation, PaneId, TabBarAxis, TabBarHoverIndex,
 };
-use crate::send_telemetry_from_ctx;
-use crate::server::telemetry::TelemetryEvent;
 use crate::settings::CodeSettings;
 use crate::tab::tab_position_id;
 use crate::terminal::view::TerminalAction;
@@ -97,7 +95,6 @@ pub enum PaneHeaderAction<A: ActionPayload, B: ActionPayload> {
     CustomAction(B),
     OpenOverflowMenu,
     Close,
-    PaneHeaderDragStarted,
     PaneHeaderDragged {
         origin: ActionOrigin,
         drag_location: PaneDragDropLocation,
@@ -872,9 +869,6 @@ impl<P: BackingView> TypedActionView for PaneHeader<P> {
                 ctx.emit(Event::PaneHeaderOverflowMenuToggled(true));
                 ctx.notify();
             }
-            PaneHeaderAction::PaneHeaderDragStarted => {
-                send_telemetry_from_ctx!(TelemetryEvent::PaneDragInitiated, ctx);
-            }
             PaneHeaderAction::PaneHeaderDragged {
                 origin,
                 drag_location,
@@ -941,12 +935,6 @@ impl<P: BackingView> TypedActionView for PaneHeader<P> {
                         ctx.emit(Event::PaneDroppedOutsideofTabBarOrPaneGroup)
                     }
                 }
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::PaneDropped {
-                        drop_location: *drop_location
-                    },
-                    ctx
-                );
             }
             PaneHeaderAction::PaneHeaderClicked => ctx.emit(Event::PaneHeaderClicked),
         }
@@ -1009,12 +997,6 @@ pub fn render_pane_header_draggable<P: BackingView>(
             } else {
                 AcceptedByDropTarget::No
             }
-        })
-        .on_drag_start(move |ctx, _, _| {
-            ctx.dispatch_typed_action(PaneHeaderAction::<
-                P::PaneHeaderOverflowMenuAction,
-                P::CustomAction,
-            >::PaneHeaderDragStarted);
         })
         .on_drag(move |ctx, _, drag_position, data| {
             if let Some(pane_drop_data) =

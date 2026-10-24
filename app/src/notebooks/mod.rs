@@ -3,7 +3,6 @@ pub mod editor;
 pub mod file;
 pub mod link;
 mod styles;
-pub mod telemetry;
 
 use serde::{Deserialize, Serialize};
 use torchui::AppContext;

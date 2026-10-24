@@ -10,7 +10,7 @@ pub fn update_browser_url(url: Option<Url>, force_redirect: bool) {
     if url.is_none() && current_url.is_none() {
         report_error!("Failed to get the base url");
     }
-    let new_url = resolve_browser_url(current_url, url, force_redirect);
+    let new_url = resolve_browser_url(current_url, url);
 
     if let Some(unwrapped_url) = new_url.and_then(safe_browser_navigation_url) {
         let window = gloo::utils::window();

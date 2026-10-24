@@ -13,7 +13,6 @@ default-members = [
   "crates/channel_versions",
   "crates/command",
   "crates/editor",
-  "crates/graphql",
   "crates/markdown_parser",
   "crates/sum_tree",
   "crates/torchui",
@@ -35,7 +34,6 @@ asset_macro = { path = "crates/asset_macro" }
 channel_versions = { path = "crates/channel_versions", default-features = false }
 command = { path = "crates/command" }
 field_mask = { path = "crates/field_mask" }
-firebase = { path = "crates/firebase" }
 fuzzy_match = { path = "crates/fuzzy_match" }
 handlebars = { path = "crates/handlebars" }
 http_client = { path = "crates/http_client" }
@@ -75,16 +73,10 @@ torch_editor = { path = "crates/editor" }
 torch_errors = { path = "crates/torch_errors" }
 torch_features = { path = "crates/torch_features" }
 torch_files = { path = "crates/torch_files" }
-torch_graphql = { path = "crates/graphql" }
-torch_graphql_schema = { path = "crates/torch_graphql_schema" }
 torch_isolation_platform = { path = "crates/isolation_platform" }
 torch_logging = { path = "crates/torch_logging" }
-torch_managed_secrets = { path = "crates/managed_secrets" }
-torch_multi_agent_client = { path = "crates/torch_multi_agent_client" }
 torch_ripgrep = { path = "crates/torch_ripgrep" }
 torch_search_core = { path = "crates/torch_search_core" }
-torch_server_auth = { path = "crates/torch_server_auth" }
-torch_server_client = { path = "crates/torch_server_client" }
 torch_terminal = { path = "crates/torch_terminal" }
 torch_util = { path = "crates/torch_util" }
 torch_web_event_bus = { path = "crates/torch_web_event_bus" }
@@ -92,7 +84,6 @@ torchui = { path = "crates/torchui" }
 torchui_core = { path = "crates/torchui_core" }
 torchui_extras = { path = "crates/torchui_extras", default-features = false }
 watcher = { path = "crates/watcher" }
-websocket = { path = "crates/websocket" }
 
 # Workspace-level dependencies used by multiple crates. Prefer adding dependencies
 # here to copying-and-pasting versions.
@@ -130,8 +121,6 @@ clap = { version = "4.5", features = ["derive"] }
 cocoa = "=0.26.0"
 ctrlc = "3.4.7"
 crc = "3.4.0"
-cynic = { version = "3" }
-cynic-codegen = { version = "3", features = ["rkyv"] }
 dashmap = "6.1.0"
 derive_more = "0.99.17"
 diesel = { version = "2.3.8", default-features = false }
@@ -155,7 +144,6 @@ gloo = { version = "0.11.0", default-features = false, features = [
   "futures",
   "utils",
 ] }
-graphql-ws-client = { version = "0.11.1", default-features = false }
 hashbrown = "0.17.1"
 hex = "0.4.3"
 # This matches the version of hyper used by reqwest.
@@ -193,16 +181,6 @@ nix = { version = "0.26.4", default-features = false, features = ["signal"] }
 notify-debouncer-full = { git = "https://github.com/warpdotdev/notify", rev = "91b719849bc04ef251bcb2cc61076b099204e970" }
 nom = "7.1.1"
 num-traits = "0.2"
-oauth2 = { version = "5.0.0", default-features = false }
-opentelemetry = { version = "0.32.0", default-features = false, features = ["trace"] }
-opentelemetry-http = "0.32.0"
-opentelemetry-otlp = { version = "0.32.0", default-features = false, features = [
-  "gzip-http",
-  "http-proto",
-  "trace",
-  "zstd-http",
-] }
-opentelemetry_sdk = { version = "0.32.1", default-features = false, features = ["trace"] }
 openh264 = "0.8"
 static_assertions = "1.1.0"
 url = "2.5.4"
@@ -255,7 +233,6 @@ serde_json = { version = "1.0", features = ["raw_value"] }
 serde_urlencoded = "0.7"
 serde_with = "^3.21"
 serde_yaml = "0.8"
-session-sharing-protocol = { git = "https://github.com/warpdotdev/session-sharing-protocol.git", rev = "f86afe16e65a56ecb9c062c961fcd91167192e9f" }
 similar = { version = "2.7", features = ["inline"] }
 simplelog = "0.12.2"
 smallvec = "1.6.1"
@@ -272,7 +249,6 @@ tower = "0.5.2"
 tower-http = "0.6.6"
 tracing = "0.1.40"
 tracing-futures = "0.2.5"
-tracing-opentelemetry = { version = "0.33.0", default-features = false }
 tracing-subscriber = { version = "0.3.22", default-features = false, features = [
   "registry",
   "std",
@@ -370,7 +346,6 @@ shellexpand = "3.1.1"
 warp-command-signatures = { git = "https://github.com/warpdotdev/command-signatures.git", rev = "48fd7aa5b7b4d99f5db57d1c5a25c47c05567fcf", default-features = false }
 winit = { git = "https://github.com/warpdotdev/winit.git", rev = "14db95a686387211d57cf2afd1d908b2d82a20fe" }
 x11rb = "0.13.0"
-mockito = "1.7.0"
 sysinfo = { version = "0.37.0", default-features = false, features = [
   "system",
   "multithread",
@@ -534,17 +509,9 @@ objc = { git = "https://github.com/warpdotdev/rust-objc.git", rev = "5b656827fa9
 pathfinder_simd = { git = "https://github.com/warpdotdev/pathfinder.git", rev = "34128a129ca6aee168fbc5060a4f21b4f7e486a9" }
 yaml-rust = { git = "https://github.com/warpdotdev/yaml-rust.git", rev = "51684719d0102ca85ff4b21cec39877a0c669e19" }
 
-tink-core = { git = "https://github.com/warpdotdev/tink-rust", rev = "54b9ac9af93b0c08b446a7bc0582836c9403a71b" }
-tink-proto = { git = "https://github.com/warpdotdev/tink-rust", rev = "54b9ac9af93b0c08b446a7bc0582836c9403a71b" }
-tink-hybrid = { git = "https://github.com/warpdotdev/tink-rust", rev = "54b9ac9af93b0c08b446a7bc0582836c9403a71b" }
-
 tikv-jemallocator = { git = "https://github.com/warpdotdev/jemallocator.git", rev = "2ee30bfdf7059223b54810e4ea6c666f0a379e0b" }
 tikv-jemalloc-sys = { git = "https://github.com/warpdotdev/jemallocator.git", rev = "2ee30bfdf7059223b54810e4ea6c666f0a379e0b" }
 
 [patch."https://github.com/warpdotdev/warp-proto-apis.git"]
 # Uncomment for local development of warp-proto-apis
 # warp_multi_agent_api = { path = "../warp-proto-apis/apis/multi_agent/v1/gen/rust" }
-
-[patch."https://github.com/warpdotdev/session-sharing-protocol.git"]
-# Uncomment for local development of session-sharing-protocol
-# session-sharing-protocol = { path = "../session-sharing-protocol" }

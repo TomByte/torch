@@ -24,7 +24,6 @@ float-cmp.workspace = true
 instant.workspace = true
 lazy_static = "1.4.0"
 log = { version = "0.4", features = ["serde"] }
-mockito.workspace = true
 parking_lot = { version = "0.12.1", features = ["serde"] }
 pathfinder_geometry.workspace = true
 rand = "0.8.2"
@@ -42,7 +41,6 @@ torch = { workspace = true, features = ["integration_tests"] }
 torch_cli.workspace = true
 torch_core.workspace = true
 warp-command-signatures.workspace = true
-warp_multi_agent_api.workspace = true
 warp-workflows.workspace = true
 torchui_core.workspace = true
 torchui_extras = { workspace = true, features = [

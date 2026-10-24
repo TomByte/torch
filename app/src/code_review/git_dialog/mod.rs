@@ -10,7 +10,6 @@
 //! outcome variant, and wire up dispatch.
 
 use pathfinder_geometry::vector::vec2f;
-use torch_core::send_telemetry_from_ctx;
 use torch_core::ui::appearance::Appearance;
 use torchui::elements::{
     Align, Border, ChildAnchor, ChildView, ClippedScrollStateHandle, ClippedScrollable,
@@ -28,12 +27,7 @@ use torchui::{
 
 use crate::code::buffer_location::LocalOrRemotePath;
 use crate::code::editor::{add_color, remove_color};
-use crate::code_review::diff_state::{
-    CommitChainMode, DiffStateModel, DiffStateModelEvent, GitOpResult,
-};
-use crate::code_review::telemetry_event::{
-    CodeReviewTelemetryEvent, GitDialogStatus, GitOperationKind,
-};
+use crate::code_review::diff_state::{DiffStateModel, DiffStateModelEvent, GitOpResult};
 use crate::ui_components::dialog::{Dialog, dialog_styles};
 use crate::ui_components::icons::Icon;
 use crate::util::git::{Commit, FileChangeEntry};
@@ -630,10 +624,9 @@ impl GitDialog {
                     GitDialogMode::Commit(state) => state.intent,
                     _ => return,
                 };
-                // Unified completion path (toast + telemetry + close) for both
-                // backends; the model already applied the delta / PR info to
-                // metadata before emitting this event.
-                commit::finish_commit_chain(self, intent, result.clone(), ctx);
+                // Unified completion path (toast + close) for both backends; the model already
+                // applied the delta / PR info to metadata before emitting this event.
+                commit::finish_commit_chain(intent, result.clone(), ctx);
             }
             GitOpResult::PushCompleted(result) => {
                 let publish = match &self.mode {
@@ -641,14 +634,13 @@ impl GitDialog {
                     _ => return,
                 };
                 push::finish_push(
-                    self,
                     publish,
                     result.clone().map_err(|e| anyhow::anyhow!(e)),
                     ctx,
                 );
             }
             GitOpResult::PrCreated(result) => {
-                pr::finish_create_pr(self, result.clone().map_err(|e| anyhow::anyhow!(e)), ctx);
+                pr::finish_create_pr(result.clone().map_err(|e| anyhow::anyhow!(e)), ctx);
             }
         }
     }
@@ -852,36 +844,6 @@ impl TypedActionView for GitDialog {
         match action {
             GitDialogAction::Cancel => {
                 if !self.loading {
-                    let operation = match &self.mode {
-                        GitDialogMode::Commit(state) => match state.intent {
-                            CommitChainMode::CommitOnly => GitOperationKind::CommitOnly,
-                            CommitChainMode::CommitAndPush => GitOperationKind::CommitAndPush,
-                            CommitChainMode::CommitAndCreatePr => {
-                                GitOperationKind::CommitAndCreatePr
-                            }
-                        },
-                        GitDialogMode::Push(state) => {
-                            if state.publish {
-                                GitOperationKind::Publish
-                            } else {
-                                GitOperationKind::Push
-                            }
-                        }
-                        GitDialogMode::CreatePr(_) => GitOperationKind::CreatePr,
-                    };
-                    // Derive the real local/remote value rather than hardcoding
-                    // it, so cancel telemetry matches the repo the dialog acts
-                    // on (the completion paths report the same value).
-                    let is_local = !self.repo_location.is_remote();
-                    send_telemetry_from_ctx!(
-                        CodeReviewTelemetryEvent::GitDialogCompleted {
-                            is_local: Some(is_local),
-                            operation,
-                            status: GitDialogStatus::Cancelled,
-                            error: None,
-                        },
-                        ctx
-                    );
                     ctx.emit(GitDialogEvent::Cancelled);
                 }
             }

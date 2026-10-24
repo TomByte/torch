@@ -45,10 +45,8 @@ use crate::code_review::comments::{
     AttachedReviewComment, AttachedReviewCommentTarget, CommentId,
     ReviewCommentBatch, ReviewCommentBatchEvent,
 };
-use crate::code_review::telemetry_event::CodeReviewTelemetryEvent;
 use crate::menu::{Event, Menu, MenuItem, MenuItemFields};
 use crate::notebooks::editor::view::{EditorViewEvent, RichTextEditorView};
-use crate::send_telemetry_from_ctx;
 use crate::ui_components::icons::Icon;
 use crate::view_components::action_button::{
     ActionButton, ActionButtonTheme, ButtonSize, KeystrokeSource, NakedTheme, PrimaryTheme,
@@ -282,10 +280,6 @@ impl CommentListView {
             self.sync_send_button(ctx);
             ctx.notify();
         }
-    }
-
-    fn repo_is_local(&self) -> Option<bool> {
-        self.repo_path.as_ref().map(LocalOrRemotePath::is_local)
     }
 
     pub fn debug_state(&self, _ctx: &AppContext) -> CommentListDebugState {
@@ -1114,13 +1108,6 @@ impl TypedActionView for CommentListView {
                     }
 
                     // Telemetry: comment list view expanded.
-                    send_telemetry_from_ctx!(
-                        CodeReviewTelemetryEvent::CommentListExpanded {
-                            is_local: self.repo_is_local(),
-                            comment_count: self.comments_by_id.len(),
-                        },
-                        ctx
-                    );
                 }
                 ctx.notify();
             }
@@ -1195,12 +1182,6 @@ impl TypedActionView for CommentListView {
                 ctx.notify();
             }
             CommentListAction::JumpToCommentLocation(comment_id) => {
-                send_telemetry_from_ctx!(
-                    CodeReviewTelemetryEvent::CommentListItemClicked {
-                        is_local: self.repo_is_local(),
-                    },
-                    ctx
-                );
                 ctx.emit(CommentListEvent::JumpToCommentLocation(*comment_id));
             }
         }

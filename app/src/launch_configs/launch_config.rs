@@ -244,8 +244,7 @@ impl TryFrom<PaneNodeSnapshot> for PaneTemplateType {
                 LeafContents::Notebook(_)
                 | LeafContents::Code(_)
                 | LeafContents::Settings(_)
-                | LeafContents::CodeReview(_)
-                | LeafContents::NetworkLog => Err(()),
+                | LeafContents::CodeReview(_) => Err(()),
             },
         }
     }

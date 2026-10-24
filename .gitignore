@@ -9,7 +9,6 @@ app/frameworks/**/*.xcframework
 .idea/
 .DS_Store
 *.icloud
-app/src/server/graphql/schema/generated
 crates/command-signatures-v2/js/build
 crates/command-signatures-v2/js/node_modules
 

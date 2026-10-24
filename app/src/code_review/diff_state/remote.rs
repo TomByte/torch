@@ -10,19 +10,17 @@
 
 use std::sync::Arc;
 
-use instant::Instant;
 use remote_server::manager::{RemoteServerManager, RemoteServerManagerEvent};
-use torch_core::{HostId, SessionId, send_telemetry_from_ctx};
+use torch_core::{HostId, SessionId};
 use torch_util::remote_path::RemotePath;
 use torch_util::standardized_path::StandardizedPath;
 use torchui::{ModelContext, SingletonEntity};
 
 use super::{
-    BackendOrigin, CommitChainMode, DiffMetadata, DiffMode, DiffOperation, DiffState,
+    CommitChainMode, DiffMetadata, DiffMode, DiffState,
     DiffStateError, DiffStateModelEvent, DiffStats, FileDiffAndContent, GitDiffData,
     GitDiffWithBaseContent,
 };
-use crate::code_review::telemetry_event::CodeReviewTelemetryEvent;
 use crate::remote_server::diff_state_proto::{try_decode_file_delta, try_decode_snapshot};
 use crate::remote_server::proto;
 use crate::util::git::{BranchEntry, Commit, FileChangeEntry, PrInfo};
@@ -48,8 +46,6 @@ pub struct RemoteDiffStateModel {
     mode: DiffMode,
     state: InternalRemoteDiffState,
     metadata: Option<DiffMetadata>,
-    /// Start time for the latest caller-tracked full diff snapshot request.
-    tracked_diff_load_start_time: Option<Instant>,
 }
 
 impl torchui::Entity for RemoteDiffStateModel {
@@ -103,7 +99,6 @@ impl RemoteDiffStateModel {
             mode,
             state: InternalRemoteDiffState::Loading,
             metadata: None,
-            tracked_diff_load_start_time: None,
         }
     }
 
@@ -216,7 +211,7 @@ impl RemoteDiffStateModel {
                 // Reconnect is event-driven with no viewing-session in scope
                 // (and the prior session may be gone), so re-subscribe over
                 // any connected session for the host.
-                self.resubscribe(false, None, ctx);
+                self.resubscribe(None, ctx);
             }
             _ => {}
         }
@@ -228,7 +223,6 @@ impl RemoteDiffStateModel {
         if matches!(self.state, InternalRemoteDiffState::Disconnected) {
             return;
         }
-        self.tracked_diff_load_start_time = None;
         self.state = InternalRemoteDiffState::Disconnected;
         ctx.emit(DiffStateModelEvent::ConnectionLost);
     }
@@ -241,13 +235,9 @@ impl RemoteDiffStateModel {
     /// result; `None` (e.g. reconnect) falls back to any connected session.
     fn resubscribe(
         &mut self,
-        track_load_duration: bool,
         preferred_session: Option<SessionId>,
         ctx: &mut ModelContext<Self>,
     ) {
-        // Always overwrite to avoid carrying a stale `Instant` from a prior
-        // tracked load that was interrupted by a session blip.
-        self.tracked_diff_load_start_time = track_load_duration.then(Instant::now);
         let host_id = self.remote_path.host_id.clone();
         let repo_path = self.remote_path.path.clone();
         let mode = self.mode.clone();
@@ -261,10 +251,7 @@ impl RemoteDiffStateModel {
             );
         });
         self.state = InternalRemoteDiffState::Loading;
-        ctx.emit(DiffStateModelEvent::NewDiffsComputed {
-            diffs: None,
-            load_duration: None,
-        });
+        ctx.emit(DiffStateModelEvent::NewDiffsComputed { diffs: None });
     }
 
     // ── Proto → state conversion helpers ────────────────────────────────────────────────
@@ -277,7 +264,6 @@ impl RemoteDiffStateModel {
         match try_decode_snapshot(snapshot) {
             Ok((metadata, state, diffs)) => self.apply_snapshot(metadata, state, diffs, ctx),
             Err(error) => {
-                self.tracked_diff_load_start_time = None;
                 torch_core::safe_error!(
                     safe: ("RemoteDiffStateModel: failed to decode diff state snapshot"),
                     full: ("RemoteDiffStateModel: failed to decode diff state snapshot: {error}")
@@ -339,13 +325,9 @@ impl RemoteDiffStateModel {
     /// flows through `apply_snapshot` normally.
     pub(crate) fn fetch_fresh_snapshot(
         &mut self,
-        track_load_duration: bool,
         preferred_session: Option<SessionId>,
         ctx: &mut ModelContext<Self>,
     ) {
-        if track_load_duration {
-            self.tracked_diff_load_start_time = Some(Instant::now());
-        }
         let host_id = self.remote_path.host_id.clone();
         let repo_path = self.remote_path.path.clone();
         let mode = self.mode.clone();
@@ -380,77 +362,31 @@ impl RemoteDiffStateModel {
             // Disconnected is never produced by proto deserialization.
             DiffState::Disconnected => {}
             DiffState::NotInRepository => {
-                self.tracked_diff_load_start_time = None;
                 self.state = InternalRemoteDiffState::NotInRepository;
-                ctx.emit(DiffStateModelEvent::NewDiffsComputed {
-                    diffs: None,
-                    load_duration: None,
-                });
+                ctx.emit(DiffStateModelEvent::NewDiffsComputed { diffs: None });
             }
             DiffState::Loading => {
                 self.state = InternalRemoteDiffState::Loading;
-                ctx.emit(DiffStateModelEvent::NewDiffsComputed {
-                    diffs: None,
-                    load_duration: None,
-                });
+                ctx.emit(DiffStateModelEvent::NewDiffsComputed { diffs: None });
             }
             DiffState::Error(msg) => {
-                let load_duration = self
-                    .tracked_diff_load_start_time
-                    .take()
-                    .map(|start| start.elapsed());
                 let err = DiffStateError::from_message(&msg);
                 err.report_and_log();
-                send_telemetry_from_ctx!(
-                    CodeReviewTelemetryEvent::LoadDiffFailed {
-                        backend_origin: BackendOrigin::ClientRemote,
-                        operation: DiffOperation::RemoteDiff,
-                        mode: self.mode.clone(),
-                        error: err.to_string(),
-                        load_duration,
-                    },
-                    ctx
-                );
                 self.state = InternalRemoteDiffState::Error(msg);
-                ctx.emit(DiffStateModelEvent::NewDiffsComputed {
-                    diffs: None,
-                    load_duration: None,
-                });
+                ctx.emit(DiffStateModelEvent::NewDiffsComputed { diffs: None });
             }
             DiffState::Loaded => {
                 let Some(base_content) = diffs else {
-                    let load_duration = self
-                        .tracked_diff_load_start_time
-                        .take()
-                        .map(|start| start.elapsed());
                     let err = DiffStateError::empty_diff_data();
                     err.report_and_log();
-                    send_telemetry_from_ctx!(
-                        CodeReviewTelemetryEvent::LoadDiffFailed {
-                            backend_origin: BackendOrigin::ClientRemote,
-                            operation: DiffOperation::RemoteDiff,
-                            mode: self.mode.clone(),
-                            error: err.to_string(),
-                            load_duration,
-                        },
-                        ctx
-                    );
                     self.state = InternalRemoteDiffState::Error(err.to_string());
-                    ctx.emit(DiffStateModelEvent::NewDiffsComputed {
-                        diffs: None,
-                        load_duration: None,
-                    });
+                    ctx.emit(DiffStateModelEvent::NewDiffsComputed { diffs: None });
                     return;
                 };
                 let diffs = GitDiffData::from(&base_content);
-                let load_duration = self
-                    .tracked_diff_load_start_time
-                    .take()
-                    .map(|start| start.elapsed());
                 self.state = InternalRemoteDiffState::Loaded(diffs);
                 ctx.emit(DiffStateModelEvent::NewDiffsComputed {
                     diffs: Some(Arc::new(base_content)),
-                    load_duration,
                 });
             }
         }
@@ -767,7 +703,6 @@ impl RemoteDiffStateModel {
     pub fn set_diff_mode(
         &mut self,
         mode: DiffMode,
-        track_load_duration: bool,
         preferred_session: Option<SessionId>,
         ctx: &mut ModelContext<Self>,
     ) {
@@ -781,7 +716,7 @@ impl RemoteDiffStateModel {
         // session for the host.
         self.unsubscribe(ctx);
         self.mode = mode;
-        self.resubscribe(track_load_duration, preferred_session, ctx);
+        self.resubscribe(preferred_session, ctx);
     }
 
     /// Fetches branches for the remote repository via the `GetBranches` RPC.

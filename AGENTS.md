@@ -61,8 +61,6 @@ This is a Rust-based terminal emulator with a custom UI framework called **Torch
 
 **Main app** (`app/`):
 - Terminal emulation and shell management (`terminal/`)
-- Cloud synchronization and Drive features (`drive/`)
-- Authentication and user management (`auth/`)
 - Settings and preferences (`settings/`)
 - Workspace and session management (`workspace/`)
 
@@ -71,14 +69,12 @@ This is a Rust-based terminal emulator with a custom UI framework called **Torch
 - `crates/editor/` - Text editing functionality
 - `crates/torchui/` and `crates/torchui_core/` - Custom UI framework (core plus the GUI element library)
 - `crates/ipc/` - Inter-process communication
-- `crates/graphql/` - GraphQL client and schema
 
 ### Key Architectural Patterns
 
 1. **Entity-Handle System**: Views reference other views via handles, not direct ownership
 2. **Modular Structure**: Workspace contains multiple workspace configurations, each with terminals, notebooks, etc.
 3. **Cross-Platform**: Native implementations for macOS, Windows, Linux, plus WASM target
-4. **Cloud Sync** (inherited from Warp, disabled in Torch): Warp Drive object synchronization
 
 ### Development Guidelines
 
@@ -172,10 +168,6 @@ for itself.
 - Uses Diesel ORM with SQLite
 - Migrations in `crates/persistence/migrations/`
 - Schema defined in `crates/persistence/src/schema.rs`
-
-**GraphQL**:
-- Schema and client code generation from `crates/torch_graphql_schema/api/schema.graphql`
-- TypeScript types generated for frontend integration
 
 ### Feature Flags
 

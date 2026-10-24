@@ -20,8 +20,6 @@ use crate::resource_center::{
     FeatureItem, FeatureSectionData, Tip, TipsCompleted, complete_tips_and_write_to_user_defaults,
     skip_tips_and_write_to_user_defaults,
 };
-use crate::send_telemetry_from_ctx;
-use crate::server::telemetry::TelemetryEvent;
 use crate::settings_view::keybindings::{KeybindingChangedEvent, KeybindingChangedNotifier};
 use crate::themes::theme::Fill;
 
@@ -145,7 +143,6 @@ impl FeatureSectionView {
 
     // Turns gamification off without rendering completed modal
     pub fn skip_gamified_section(&mut self, ctx: &mut ViewContext<Self>) {
-        send_telemetry_from_ctx!(TelemetryEvent::ResourceCenterTipsSkipped, ctx);
         self.tips_completed.update(ctx, |tips_completed, ctx| {
             skip_tips_and_write_to_user_defaults(tips_completed, ctx);
             ctx.notify();
@@ -154,7 +151,6 @@ impl FeatureSectionView {
 
     // Turns gamification off and renders completed modal
     pub fn complete_gamified_section(&mut self, ctx: &mut ViewContext<Self>) {
-        send_telemetry_from_ctx!(TelemetryEvent::ResourceCenterTipsCompleted, ctx);
         self.tips_completed.update(ctx, |tips_completed, ctx| {
             complete_tips_and_write_to_user_defaults(tips_completed, ctx);
             ctx.notify();

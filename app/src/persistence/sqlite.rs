@@ -24,7 +24,6 @@ use persistence::model::AMBIENT_AGENT_PANE_KIND;
 use torch_errors::report_error;
 use torchui::platform::FullscreenState;
 use torchui::windowing::{MIN_WINDOW_HEIGHT, MIN_WINDOW_WIDTH};
-use torchui::AppContext;
 
 use super::block_list::{delete_blocks, save_block};
 use super::model::{
@@ -49,7 +48,6 @@ use crate::code::editor_management::CodeSource;
 use crate::persisted_workspace::EnablementState;
 use crate::persistence::block_list::get_all_restored_blocks;
 use crate::persistence::model::{CODE_REVIEW_PANE_KIND, GET_STARTED_PANE_KIND};
-use crate::server::telemetry::TelemetryEvent;
 use crate::settings_view::SettingsSection;
 use crate::suggestions::ignored_suggestions_model::SuggestionType;
 use crate::tab::SelectedTabColor;
@@ -58,7 +56,7 @@ use crate::terminal::cli_agent_sessions::resume::ResumableAgentSession;
 use crate::terminal::history::PersistedCommand;
 use crate::themes::theme::AnsiColorIdentifier;
 use crate::workspace::tab_group::TabGroupId;
-use crate::{safe_info, send_telemetry_from_app_ctx};
+use crate::safe_info;
 
 diesel::define_sql_function! {
     fn json_extract(target: diesel::sql_types::Text, path: diesel::sql_types::Text) -> diesel::sql_types::Text;
@@ -75,7 +73,6 @@ const TORCH_SQLITE_FILE_NAME: &str = "warp.sqlite";
 /// Reads from the sqlite database to get the app state for session restoration.
 /// Starts a writer thread that listens for ModelEvents and processes them.
 pub fn initialize(
-    ctx: &mut AppContext,
     scope: PersistenceScope,
     data_scope: PersistedDataScope,
 ) -> (Option<Box<PersistedData>>, Option<WriterHandles>) {
@@ -86,15 +83,11 @@ pub fn initialize(
     let database_path = database_file_path_for_scope(&scope);
     match init_db(&scope) {
         Ok(mut conn) => {
-            let persisted_data = read_persisted_data(&mut conn, ctx, data_scope);
+            let persisted_data = read_persisted_data(&mut conn, data_scope);
 
             let writer_handles = match start_writer(conn, database_path.clone()) {
                 Ok(writer_handles) => Some(writer_handles),
                 Err(err) => {
-                    send_telemetry_from_app_ctx!(
-                        TelemetryEvent::DatabaseWriteError(err.to_string()),
-                        ctx
-                    );
                     report_db_error("starting writer", err, &database_path);
                     None
                 }
@@ -103,10 +96,6 @@ pub fn initialize(
             (persisted_data, writer_handles)
         }
         Err(err) => {
-            send_telemetry_from_app_ctx!(
-                TelemetryEvent::DatabaseStartUpError(err.to_string()),
-                ctx
-            );
             report_db_error("initialization", err, &database_path);
             (None, None)
         }
@@ -115,13 +104,11 @@ pub fn initialize(
 
 fn read_persisted_data(
     conn: &mut SqliteConnection,
-    ctx: &mut AppContext,
     data_scope: PersistedDataScope,
 ) -> Option<Box<PersistedData>> {
     match read_sqlite_data(conn, data_scope) {
         Ok(app_state) => Some(Box::new(app_state)),
         Err(err) => {
-            send_telemetry_from_app_ctx!(TelemetryEvent::DatabaseReadError(err.to_string()), ctx);
             report_error!(anyhow::Error::new(err).context("Failed to read persisted data"));
             None
         }
@@ -758,19 +745,6 @@ fn save_app_state(conn: &mut SqliteConnection, app_state: &AppState) -> Result<(
                         parent_pane_node_id,
                     } = pane_nodes.pop_front().expect("Should have node");
 
-                    // Skip leaves whose content types don't get a
-                    // corresponding `pane_leaves` row on save. Otherwise the
-                    // `pane_nodes` insert below would create an orphan row
-                    // (is_leaf=true, but no matching row in `pane_leaves`),
-                    // and `read_node` would fail to resolve the leaf on
-                    // restore, causing the entire surrounding tab to be
-                    // dropped. See `LeafContents::is_persisted`.
-                    if let PaneNodeSnapshot::Leaf(leaf) = pane_node
-                        && !leaf.contents.is_persisted()
-                    {
-                        continue;
-                    }
-
                     let is_leaf = matches!(pane_node, PaneNodeSnapshot::Leaf(_));
                     let new_pane_node = model::NewPaneNode {
                         tab_id: *tab_id,
@@ -840,18 +814,6 @@ fn save_pane_state(
         LeafContents::Code(_) => CODE_PANE_KIND,
         LeafContents::Settings(_) => SETTINGS_PANE_KIND,
         LeafContents::CodeReview(_) => CODE_REVIEW_PANE_KIND,
-        LeafContents::NetworkLog => {
-            // These pane types are filtered out before this function is
-            // called; see `LeafContents::is_persisted` and the skip in
-            // `save_app_state`. Reaching this arm would mean a `pane_nodes`
-            // row had already been inserted with no corresponding
-            // `pane_leaves` row, which would break restoration.
-            debug_assert!(
-                false,
-                "save_pane_state called for non-persisted LeafContents variant"
-            );
-            return Ok(());
-        }
     };
 
     let leaf = model::NewPane {
@@ -961,9 +923,6 @@ fn save_pane_state(
             diesel::insert_into(schema::code_review_panes::dsl::code_review_panes)
                 .values(code_review)
                 .execute(conn)?;
-        }
-        LeafContents::NetworkLog => {
-            // Unreachable: filtered by `is_persisted` in `save_app_state`.
         }
     }
 

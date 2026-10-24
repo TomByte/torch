@@ -1,22 +1,11 @@
 use chrono::{Local, TimeZone};
 use torch_core::execution_mode::{AppExecutionMode, ExecutionMode};
-use torchui::{App, ModelHandle, ReadModel, UpdateModel};
+use torchui::{App, ModelHandle, UpdateModel};
 
 use super::*;
-use crate::auth::AuthStateProvider;
-use crate::server::server_api::ServerApiProvider;
-use crate::server::telemetry::context_provider::AppTelemetryContextProvider;
 
 fn initialize_app(app: &mut App) -> ModelHandle<AutoupdateState> {
-    let server_api_provider = app.add_singleton_model(|_| ServerApiProvider::new_for_test());
-    app.add_singleton_model(|_| AuthStateProvider::new_for_test());
-    app.add_singleton_model(AppTelemetryContextProvider::new_context_provider);
-
-    let server_api = app.read_model(&server_api_provider, |server_api_provider, _| {
-        server_api_provider.get()
-    });
-
-    app.add_model(|_| AutoupdateState::new(server_api))
+    app.add_model(|_| AutoupdateState::new(Arc::new(http_client::Client::new_for_test())))
 }
 
 #[test]
@@ -190,7 +179,6 @@ fn set_last_successful_daily_update_check(
 fn make_version_info(version_string: impl Into<String>, is_rollback: bool) -> VersionInfo {
     VersionInfo {
         version: version_string.into(),
-        update_by: None,
         soft_cutoff: None,
         last_prominent_update: None,
         is_rollback: Some(is_rollback),

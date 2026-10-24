@@ -21,6 +21,7 @@ use torchui::SingletonEntity;
 use torchui::{AppContext, ModelContext, TypedActionView};
 
 #[cfg(feature = "local_fs")]
+use crate::palette::PaletteSource;
 use crate::code::editor_management::CodeSource;
 use crate::local_control::LocalControlBridge;
 use crate::local_control::handlers::ack;
@@ -33,7 +34,6 @@ use crate::local_control::resolver::{
 };
 use crate::palette::PaletteMode;
 use crate::pane_group::{ActivationReason, Direction, PaneGroupAction};
-use crate::server::telemetry::PaletteSource;
 use crate::settings_view::SettingsSection;
 #[cfg(feature = "local_fs")]
 use crate::util::file::external_editor::EditorSettings;
@@ -673,7 +673,7 @@ fn surface_palette_open(
         action_kind,
         WorkspaceAction::OpenPalette {
             mode,
-            source: PaletteSource::Keybinding,
+            source: PaletteSource::Other,
             query,
         },
         target,

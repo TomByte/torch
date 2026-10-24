@@ -13,10 +13,8 @@ use torch_util::lazy::Lazy;
 use super::history::HistoryEntry;
 use super::model::ansi::{ExternalShellWidgetSelectionValue, FinishUpdateValue};
 use super::model::block::BlockId;
-use super::model::lifecycle::LifecycleRecoveryRecord;
 use super::model::session::{SessionId, SessionInfo};
 use super::model::terminal_model::{BlockIndex, ExitReason};
-use crate::server::telemetry::ImageProtocol;
 use crate::terminal::ClipboardType;
 use crate::terminal::model::block::{BlockMetadata, SerializedBlock};
 use crate::terminal::model::blocks::BlockList;
@@ -106,8 +104,6 @@ pub enum Event {
     /// buffer, and re-echoes them after Precmd.
     Typeahead,
     Handler(HandlerEvent),
-    /// Carries non-UGC lifecycle diagnostics to the model dispatcher for telemetry.
-    LifecycleRecovery(LifecycleRecoveryRecord),
     /// Emitted when the remote server binary has been successfully checked or
     /// installed and is ready. The session is initialized independently on
     /// `Bootstrapped`; when the remote server later connects, the client is
@@ -132,7 +128,6 @@ pub enum Event {
     ImageReceived {
         image_id: u32,
         image_data: Vec<u8>,
-        image_protocol: ImageProtocol,
     },
     BootstrapPrecmdDone,
     /// A pluggable notification triggered via OSC 9 or OSC 777 escape sequences.
@@ -164,11 +159,9 @@ impl From<torch_terminal::event::Event> for Event {
             torch_terminal::event::Event::ImageReceived {
                 image_id,
                 image_data,
-                image_protocol,
             } => Self::ImageReceived {
                 image_id,
                 image_data,
-                image_protocol,
             },
         }
     }
@@ -213,9 +206,6 @@ pub struct BootstrappedEvent {
     // functionally needs to be wrapped in an `Box`.
     pub session_info: Box<SessionInfo>,
     pub restored_block_commands: Vec<HistoryEntry>,
-    /// The time we spent sourcing the user's rcfiles, in seconds.  This may be
-    /// None if the information was not provided by the shell.
-    pub rcfiles_duration_seconds: Option<f64>,
 }
 
 #[derive(Clone)]
@@ -424,7 +414,6 @@ impl Debug for Event {
             Event::HonorPS1OutOfSync => write!(f, "HonorPS1OutOfSync"),
             Event::Typeahead => write!(f, "Typeahead"),
             Event::Handler(handler_event) => write!(f, "Handler({handler_event:?}))"),
-            Event::LifecycleRecovery(record) => write!(f, "LifecycleRecovery({record:?})"),
             Event::RemoteServerReady { session_id } => {
                 write!(f, "RemoteServerReady(session: {session_id:?})")
             }

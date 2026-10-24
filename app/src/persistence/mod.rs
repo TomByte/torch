@@ -36,7 +36,7 @@ pub use sqlite::database_file_path_for_scope;
 pub use sqlite::establish_ro_connection;
 use torch_core::command::ExitCode;
 use torch_errors::report_error;
-use torchui::{AppContext, Entity, SingletonEntity};
+use torchui::{Entity, SingletonEntity};
 
 use self::model::Project;
 use crate::app_state::AppState;
@@ -108,7 +108,6 @@ impl PersistedDataScope {
 #[tracing::instrument(name = "persistence::initialize", skip_all, fields(tags.cloud_agent = true))]
 #[cfg_attr(not(feature = "local_fs"), allow(unused_variables))]
 pub fn initialize(
-    ctx: &mut AppContext,
     scope: PersistenceScope,
     data_scope: PersistedDataScope,
 ) -> (Option<Box<PersistedData>>, Option<WriterHandles>) {
@@ -117,7 +116,7 @@ pub fn initialize(
     let _ = CURRENT_SCOPE.set(scope.clone());
     cfg_if::cfg_if! {
         if #[cfg(feature = "local_fs")] {
-            sqlite::initialize(ctx, scope, data_scope)
+            sqlite::initialize(scope, data_scope)
         } else {
             (None, None)
         }

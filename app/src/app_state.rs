@@ -126,35 +126,6 @@ pub enum LeafContents {
     Code(CodePaneSnapShot),
     Settings(SettingsPaneSnapshot),
     CodeReview(CodeReviewPaneSnapshot),
-    /// The in-app network log pane. Not persisted across restarts because the
-    /// backing log is an in-memory ring buffer that starts empty on launch.
-    NetworkLog,
-}
-
-#[cfg(feature = "local_fs")]
-impl LeafContents {
-    /// Whether this pane content should be written to (and later restored
-    /// from) the SQLite app-state database.
-    ///
-    /// Non-persisted pane types are skipped entirely during the pane tree
-    /// traversal in `save_app_state`, so no `pane_nodes` row is inserted for
-    /// them. This is important: inserting a `pane_nodes` row with
-    /// `is_leaf = true` but no matching `pane_leaves` row leaves an orphan
-    /// that `read_node` cannot resolve, which causes the surrounding tab's
-    /// restoration to fail and the whole tab to disappear on restart.
-    pub(crate) fn is_persisted(&self) -> bool {
-        match self {
-            // Network log: the backing log is an in-memory ring buffer that
-            // starts empty on launch; persisting would also regress back to
-            // an on-disk log via the app-state database.
-            LeafContents::NetworkLog => false,
-            LeafContents::Terminal(_)
-            | LeafContents::Notebook(_)
-            | LeafContents::Code(_)
-            | LeafContents::Settings(_)
-            | LeafContents::CodeReview(_) => true,
-        }
-    }
 }
 
 /// Snapshot of the contents of a terminal pane.

@@ -16,10 +16,9 @@ use super::tab_settings::{
     VerticalTabsTabItemMode, VerticalTabsViewMode,
 };
 use super::view::WorkspaceBanner;
+use crate::palette::PaletteSource;
 use crate::palette::PaletteMode;
-use crate::prompt::editor_modal::OpenSource as PromptEditorOpenSource;
 use crate::search;
-use crate::server::telemetry::{AddTabWithShellSource, PaletteSource};
 use crate::settings_view::{SettingsAction as SettingsTabAction, SettingsSection};
 use crate::tab::{NewSessionMenuItem, SelectedTabColor};
 use crate::tab_configs::TabConfig;
@@ -254,7 +253,6 @@ pub enum WorkspaceAction {
     JumpToAttentionSession,
     AddTabWithShell {
         shell: AvailableShell,
-        source: AddTabWithShellSource,
     },
     OpenNewSessionMenu {
         anchor: NewSessionMenuAnchor,
@@ -399,18 +397,13 @@ pub enum WorkspaceAction {
     ToggleSyncTerminalInputsInTab,
     /// An action to force terminal input syncing off
     DisableTerminalInputSync,
-    OpenPromptEditor {
-        open_source: PromptEditorOpenSource,
-    },
+    OpenPromptEditor,
     OpenCLIAgentToolbarEditor,
     OpenHeaderToolbarEditor,
     ShowHeaderToolbarContextMenu {
         position: Vector2F,
     },
     OpenLink(String),
-    /// On WASM, opens a given URL in the desktop Torch app (if installed) or redirects to download page.
-    #[cfg(target_family = "wasm")]
-    OpenLinkOnDesktop(url::Url),
     ReopenClosedSession,
     AddWindow,
     AddWindowWithShell {
@@ -563,9 +556,6 @@ pub enum WorkspaceAction {
     },
     /// Opens the settings.toml file in a code editor pane.
     OpenSettingsFile,
-    /// Opens (or focuses) the in-app network log pane as a right-split of the
-    /// active pane group. Gated on `ContextFlag::NetworkLogConsole`.
-    OpenNetworkLogPane,
 }
 
 impl WorkspaceAction {
@@ -743,7 +733,7 @@ impl WorkspaceAction {
             | ToggleSyncAllTerminalInputsInAllTabs
             | ToggleSyncTerminalInputsInTab
             | DisableTerminalInputSync
-            | OpenPromptEditor { .. }
+            | OpenPromptEditor
             | OpenCLIAgentToolbarEditor
             | OpenHeaderToolbarEditor
             | ShowHeaderToolbarContextMenu { .. }
@@ -788,8 +778,7 @@ impl WorkspaceAction {
             | TabConfigSidecarMakeDefault { .. }
             | TabConfigSidecarEditConfig { .. }
             | TabConfigSidecarRemoveConfig { .. }
-            | OpenSettingsFile
-            | OpenNetworkLogPane => false,
+            | OpenSettingsFile => false,
             #[cfg(not(target_family = "wasm"))]
             ViewLogs => false,
             #[cfg(target_os = "macos")]
@@ -802,8 +791,6 @@ impl WorkspaceAction {
             FileDeleted { .. } => false, // File deletion doesn't change workspace state
             #[cfg(target_os = "linux")]
             DismissWaylandCrashRecoveryBannerAndOpenLink => false,
-            #[cfg(target_family = "wasm")]
-            OpenLinkOnDesktop(_) => false,
             // actions that are related to updating user settings or
             // managing some ui elements (like closing/opening modals)
             // that don't reflect on actual workspace and don't need to

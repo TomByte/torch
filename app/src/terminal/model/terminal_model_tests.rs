@@ -1236,12 +1236,6 @@ fn precmd_with_completion_metadata_records_completion_mismatch_without_overwriti
             Event::BlockCompleted(_) | Event::Handler(HandlerEvent::CommandFinished { .. })
         )
     }));
-    assert!(events.iter().any(|event| {
-        matches!(
-            event,
-            Event::LifecycleRecovery(record) if record.completion_mismatch
-        )
-    }));
 }
 
 #[test]

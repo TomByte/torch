@@ -15,7 +15,7 @@ use crate::terminal::view::{InlineBannerId, NotificationsTrigger, TerminalAction
 pub enum NotificationsDiscoveryBannerAction {
     LearnMore,
     Troubleshoot,
-    TurnOn(NotificationsTrigger),
+    TurnOn,
     Configure,
     Close,
 }
@@ -89,7 +89,7 @@ pub fn render_inline_notifications_discovery_banner(
                     text_color: active_ui_text_color,
                     button_state: InlineBannerButtonState {
                         on_click_event: TerminalAction::NotificationsDiscoveryBanner(
-                            NotificationsDiscoveryBannerAction::TurnOn(trigger),
+                            NotificationsDiscoveryBannerAction::TurnOn,
                         ),
                         mouse_state_handle: state.mouse_states.turn_on.clone(),
                     },

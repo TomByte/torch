@@ -1,22 +1,15 @@
 use std::env;
 use std::fs::read_to_string;
-use std::sync::Arc;
+use std::time::Duration;
 
 use anyhow::{Context as _, Result};
 use channel_versions::ChannelVersions;
-use torch_errors::report_error;
 
-use crate::channel::{Channel, ChannelState};
-use crate::server::server_api::{FETCH_CHANNEL_VERSIONS_TIMEOUT, ServerApi};
+use crate::channel::ChannelState;
 
-// Fetches channel versions asynchronously from the Torch server. If the Torch server request fails,
-// then fetches from GCP JSON storage as a fallback.
-pub async fn fetch_channel_versions(
-    nonce: &str,
-    server_api: Arc<ServerApi>,
-    include_changelogs: bool,
-    is_daily: bool,
-) -> Result<ChannelVersions> {
+const FETCH_CHANNEL_VERSIONS_TIMEOUT: Duration = Duration::from_secs(60);
+
+pub async fn fetch_channel_versions(client: &http_client::Client) -> Result<ChannelVersions> {
     if let Ok(path) = env::var("TORCH_CHANNEL_VERSIONS_PATH") {
         // Load channel versions from local filesystem. Used for testing both
         // autoupdate and changelog behavior.
@@ -26,30 +19,7 @@ pub async fn fetch_channel_versions(
             .context("Failed to parse channel versions JSON");
     }
 
-    if ChannelState::channel() == Channel::Oss {
-        return fetch_channel_versions_from_github_release(server_api.external_http_client()).await;
-    }
-
-    let channel_versions = server_api
-        .fetch_channel_versions(include_changelogs, is_daily)
-        .await
-        .context("Failed to retrieve channel versions from Torch server");
-    match channel_versions {
-        channel_versions @ Ok(_) => channel_versions,
-        Err(err) => {
-            match ChannelState::channel() {
-                // Only log an error on Dev and Preview -- if this is failing, its likely to be
-                // failing for all users, and Stable has too many users (this error would flood
-                // our Sentry logs).
-                Channel::Dev | Channel::Preview => report_error!(err),
-                _ => log::warn!(
-                    "Failed to retrieve channel versions from Torch server, falling \
-                back to GCP JSON storage."
-                ),
-            }
-            fetch_channel_versions_from_json_storage(server_api.http_client(), nonce).await
-        }
-    }
+    fetch_channel_versions_from_github_release(client).await
 }
 
 /// Fetches the [`ChannelVersions`] published with the latest GitHub release. GitHub's `latest`
@@ -71,30 +41,5 @@ async fn fetch_channel_versions_from_github_release(
         .json()
         .await?;
     log::info!("Received channel versions from the latest release: {versions}");
-    Ok(versions)
-}
-
-// Synchronously fetches updated Torch [`ChannelVersions`] from GCP JSON storage. This will soon
-// be deprecated in favor of retrieving updated channel versions from the Torch Server.
-// Note, in order to run against a test file you can use the "channel_versions_test.json" file
-async fn fetch_channel_versions_from_json_storage(
-    client: &http_client::Client,
-    nonce: &str,
-) -> Result<ChannelVersions> {
-    log::info!("Fetching channel versions from GCP JSON storage");
-    let res = client
-        .get(
-            format!(
-                "{}/channel_versions.json?r={}",
-                ChannelState::releases_base_url(),
-                nonce
-            )
-            .as_str(),
-        )
-        .timeout(FETCH_CHANNEL_VERSIONS_TIMEOUT)
-        .send()
-        .await?;
-    let versions: ChannelVersions = res.json().await?;
-    log::info!("Received channel versions from GCP JSON storage: {versions}");
     Ok(versions)
 }

@@ -568,19 +568,3 @@ fn test_markdown_table_render_starts_at_zero_offset() {
         });
     });
 }
-
-#[test]
-fn test_markdown_table_count_counts_rendered_tables() {
-    App::test((), |mut app| async move {
-        let _flag = FeatureFlag::MarkdownTables.override_enabled(true);
-        let state = TestState::new(&mut app);
-        state
-            .markdown("| Name | Age |\n| --- | --- |\n| Alice | 30 |\n", &mut app)
-            .await;
-
-        let count = state
-            .render
-            .read(&app, |render_state, _| render_state.markdown_table_count());
-        assert_eq!(count, 1);
-    });
-}

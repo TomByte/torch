@@ -14,7 +14,7 @@ use crate::codebase_index_proto::{
     proto_to_codebase_index_statuses_snapshot,
 };
 use crate::proto::{
-    Abort, Authenticate, BufferEdit, ClientMessage, CloseBuffer, CodebaseIndexLimits, DiffMode,
+    Abort, BufferEdit, ClientMessage, CloseBuffer, CodebaseIndexLimits, DiffMode,
     DiffStateFileDelta, DiffStateMetadataUpdate, DiffStateSnapshot, ErrorCode, GitStatusMetadata,
     Initialize, InitializeResponse, LoadRepoMetadataDirectoryResponse,
     NavigatedToDirectoryResponse, PrInfo, RepositoryInfo,
@@ -149,9 +149,6 @@ pub enum ClientEvent {
 /// Parameters for the `Initialize` handshake, sent to the daemon at
 /// connection time.
 pub struct InitializeParams {
-    pub user_id: String,
-    pub user_email: String,
-    pub crash_reporting_enabled: bool,
     pub codebase_index_limits: Option<CodebaseIndexLimits>,
 }
 
@@ -361,9 +358,6 @@ impl RemoteServerClient {
             request_id.to_string(),
             session_scoped_request::Message::Initialize(Initialize {
                 auth_token: auth_token.unwrap_or_default().to_owned(),
-                user_id: params.user_id,
-                user_email: params.user_email,
-                crash_reporting_enabled: params.crash_reporting_enabled,
                 codebase_index_limits: params.codebase_index_limits,
             }),
         );
@@ -380,31 +374,6 @@ impl RemoteServerClient {
                 Err(ClientError::UnexpectedResponse)
             }
         }
-    }
-
-    /// Sends an `Authenticate` notification to rotate the daemon-wide
-    /// credential after initialization.
-    pub fn authenticate(&self, auth_token: &str) {
-        let msg = ClientMessage::notification(notification::Message::Authenticate(Authenticate {
-            auth_token: auth_token.to_owned(),
-        }));
-        self.send_notification(msg);
-    }
-
-    /// Sends an `UpdatePreferences` notification when the user's privacy
-    /// settings change (e.g. toggling crash reporting).
-    pub fn update_preferences(
-        &self,
-        crash_reporting_enabled: bool,
-        codebase_index_limits: Option<CodebaseIndexLimits>,
-    ) {
-        let msg = ClientMessage::notification(notification::Message::UpdatePreferences(
-            crate::proto::UpdatePreferences {
-                crash_reporting_enabled,
-                codebase_index_limits,
-            },
-        ));
-        self.send_notification(msg);
     }
 
     /// Sends a `SessionBootstrapped` notification (fire-and-forget) so the

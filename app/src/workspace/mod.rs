@@ -35,10 +35,10 @@ pub use view::{
     TAB_BAR_HEIGHT, TOTAL_TAB_BAR_HEIGHT, WORKSPACE_PADDING, Workspace,
 };
 
+use crate::palette::PaletteSource;
 use crate::channel::{Channel, ChannelState};
 use crate::features::FeatureFlag;
 use crate::palette::PaletteMode;
-use crate::server::telemetry::PaletteSource;
 use crate::settings_view::{self, SettingsSection, flags};
 use crate::tab::{NewSessionMenuItem, uses_vertical_tabs};
 use crate::util::bindings::{self, CustomAction, cmd_or_ctrl_shift, is_binding_pty_compliant};
@@ -240,7 +240,7 @@ pub fn init(app: &mut AppContext) {
                 cmd_or_ctrl_shift("p"),
                 WorkspaceAction::TogglePalette {
                     mode: PaletteMode::Command,
-                    source: PaletteSource::IntegrationTest,
+                    source: PaletteSource::Other,
                 },
                 id!("Workspace"),
             ),
@@ -445,7 +445,7 @@ pub fn init(app: &mut AppContext) {
                 .with_custom_description(bindings::MAC_MENUS_CONTEXT, "Show Agents"),
             WorkspaceAction::TogglePalette {
                 mode: PaletteMode::Agents,
-                source: PaletteSource::Keybinding,
+                source: PaletteSource::Other,
             },
         )
         .with_context_predicate(id!("Workspace"))
@@ -593,7 +593,7 @@ pub fn init(app: &mut AppContext) {
                 .with_custom_description(bindings::MAC_MENUS_CONTEXT, "Command Palette"),
             WorkspaceAction::TogglePalette {
                 mode: PaletteMode::Command,
-                source: PaletteSource::Keybinding,
+                source: PaletteSource::Other,
             },
         )
         .with_group(bindings::BindingGroup::Settings.as_str())
@@ -878,7 +878,7 @@ pub fn init(app: &mut AppContext) {
                 .with_custom_description(bindings::MAC_MENUS_CONTEXT, "Navigation Palette"),
             WorkspaceAction::TogglePalette {
                 mode: PaletteMode::Navigation,
-                source: PaletteSource::Keybinding,
+                source: PaletteSource::Other,
             },
         )
         .with_group(bindings::BindingGroup::Navigation.as_str())
@@ -889,7 +889,7 @@ pub fn init(app: &mut AppContext) {
             "Launch configuration palette",
             WorkspaceAction::TogglePalette {
                 mode: PaletteMode::LaunchConfig,
-                source: PaletteSource::Keybinding,
+                source: PaletteSource::Other,
             },
         )
         .with_context_predicate(id!("Workspace"))
@@ -900,7 +900,7 @@ pub fn init(app: &mut AppContext) {
             "Toggle Files Palette",
             WorkspaceAction::TogglePalette {
                 mode: PaletteMode::Files,
-                source: PaletteSource::Keybinding,
+                source: PaletteSource::Other,
             },
         )
         .with_context_predicate(id!("Workspace"))

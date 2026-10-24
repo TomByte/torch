@@ -26,7 +26,6 @@ use watcher::HomeDirectoryWatcher;
 use workflows::workflow::{Argument, Workflow};
 
 use super::*;
-use crate::auth::AuthStateProvider;
 use crate::changelog_model::ChangelogModel;
 use crate::context_chips::prompt::Prompt;
 use crate::editor::{DisplayPoint, EditorAction, Point, TextStyleOperation};
@@ -34,8 +33,6 @@ use crate::input_suggestions::Item;
 use crate::network::NetworkStatus;
 use crate::persisted_workspace::PersistedWorkspace;
 use crate::search::files::model::FileSearchModel;
-use crate::server::server_api::ServerApiProvider;
-use crate::server::telemetry::context_provider::AppTelemetryContextProvider;
 use crate::settings::import::model::ImportedConfigModel;
 use crate::settings::{AliasExpansionSettings, AppEditorSettings, PrivacySettings};
 use crate::settings_view::keybindings::KeybindingChangedNotifier;
@@ -46,7 +43,7 @@ use crate::terminal::TerminalView;
 use crate::terminal::alt_screen_reporting::AltScreenReporting;
 use crate::terminal::block_list_viewport::ScrollPosition;
 use crate::terminal::cli_agent_sessions::{
-    CLIAgentInputEntrypoint, CLIAgentInputState, CLIAgentSession, CLIAgentSessionContext,
+    CLIAgentInputState, CLIAgentSession, CLIAgentSessionContext,
     CLIAgentSessionStatus, CLIAgentSessionsModel,
 };
 use crate::terminal::event::{
@@ -223,8 +220,7 @@ pub fn initialize_app(app: &mut App) {
     app.update(init);
 
     // Initialize any global models required by the Input view.
-    app.add_singleton_model(|_| ServerApiProvider::new_for_test());
-    app.add_singleton_model(|ctx| ChangelogModel::new(ServerApiProvider::as_ref(ctx).get()));
+    app.add_singleton_model(|_| ChangelogModel::new(Arc::new(http_client::Client::new_for_test())));
     app.add_singleton_model(|_| NetworkStatus::new());
     app.add_singleton_model(|_| SystemStats::new());
     app.add_singleton_model(|_| Prompt::mock());
@@ -239,8 +235,6 @@ pub fn initialize_app(app: &mut App) {
     app.add_singleton_model(|_| ActiveSession::default());
     app.add_singleton_model(|_| CLIAgentSessionsModel::new());
     app.add_singleton_model(AgentNotificationsModel::new);
-    app.add_singleton_model(|_| AuthStateProvider::new_for_test());
-    app.add_singleton_model(AppTelemetryContextProvider::new_context_provider);
     app.add_singleton_model(DirectoryWatcher::new);
     app.add_singleton_model(|_| DetectedRepositories::default());
     app.add_singleton_model(crate::remote_server::manager::RemoteServerManager::new);
@@ -305,14 +299,12 @@ fn bootstrap_terminal(
             let BootstrappedEvent {
                 session_info,
                 restored_block_commands,
-                rcfiles_duration_seconds,
                 spawning_command,
             } = bootstrapped_event;
             sessions.initialize_bootstrapped_session(
                 *session_info,
                 spawning_command,
                 restored_block_commands,
-                rcfiles_duration_seconds,
                 ctx,
             );
         });
@@ -374,7 +366,6 @@ pub async fn add_window_with_bootstrapped_terminal_and_window_id(
             .into_iter()
             .map(|command| HistoryEntry::command_at_time(command, Local::now(), None, true))
             .collect_vec(),
-        rcfiles_duration_seconds: None,
         spawning_command: "test command".to_string(),
     };
     bootstrap_terminal(&terminal, bootstrapped_event, app);
@@ -1812,7 +1803,6 @@ fn aborting_native_completions_after_empty_specs_cancels_session_commands() {
                 session_info,
                 "test command".to_string(),
                 Vec::new(),
-                None,
                 ctx,
             );
         });
@@ -5798,7 +5788,7 @@ fn open_rich_input_for_terminal(terminal: &ViewHandle<TerminalView>, app: &mut A
             );
         });
         CLIAgentSessionsModel::handle(ctx).update(ctx, |sessions, ctx| {
-            sessions.open_input(view_id, CLIAgentInputEntrypoint::CtrlG, false, ctx);
+            sessions.open_input(view_id, false, ctx);
         });
     });
 }

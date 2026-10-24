@@ -26,7 +26,6 @@ integration_tests = ["torchui_core/integration_tests"]
 defer_scene_build = ["torchui_core/defer_scene_build"]
 # If enabled, writes named telemetry events to the info log.  Should never be
 # enabled in release builds without a PII audit of telemetry data.
-log_named_telemetry_events = ["torchui_core/log_named_telemetry_events"]
 schema_gen = ["torchui_core/schema_gen"]
 settings_value = ["torchui_core/settings_value"]
 # Enables utilities for testing.

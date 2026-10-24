@@ -19,17 +19,14 @@ use torchui::{App, ViewHandle};
 use watcher::HomeDirectoryWatcher;
 
 use super::*;
+use crate::palette::PaletteSource;
 use crate::context_chips::prompt::Prompt;
 use crate::editor::Event;
-use crate::gpu_state::GPUState;
 use crate::menu::MenuAction;
 use crate::network::NetworkStatus;
 use crate::notebooks::editor::keys::NotebookKeybindings;
 use crate::pane_group::{Direction, PaneGroupAction, PaneId};
-use crate::auth::AuthStateProvider;
 use crate::persisted_workspace::PersistedWorkspace;
-use crate::server::server_api::ServerApiProvider;
-use crate::server::telemetry::context_provider::AppTelemetryContextProvider;
 use crate::settings::PrivacySettings;
 use crate::settings_view::DisplayCount;
 use crate::settings_view::keybindings::KeybindingChangedNotifier;
@@ -59,12 +56,9 @@ pub(crate) fn initialize_app(app: &mut App) {
         parent_directories: crate::settings::ProjectParentDirectories::new(None),
     });
     app.add_singleton_model(|_| crate::settings::ProjectCatalog::default());
-    app.add_singleton_model(|_ctx| ServerApiProvider::new_for_test());
-    app.add_singleton_model(|_| AuthStateProvider::new_for_test());
-    app.add_singleton_model(AppTelemetryContextProvider::new_context_provider);
     app.add_singleton_model(|_ctx| PtySpawner::new_for_test());
     app.add_singleton_model(|_| Prompt::mock());
-    app.add_singleton_model(|ctx| AutoupdateState::new(ServerApiProvider::as_ref(ctx).get()));
+    app.add_singleton_model(|_| AutoupdateState::new(Arc::new(http_client::Client::new_for_test())));
     app.add_singleton_model(|_| NetworkStatus::new());
     app.add_singleton_model(|_| SystemStats::new());
     app.add_singleton_model(|_| crate::tab::TabShortcutModifierState::new());
@@ -74,7 +68,7 @@ pub(crate) fn initialize_app(app: &mut App) {
     app.add_singleton_model(PrivacySettings::mock);
     app.add_singleton_model(|_| KeybindingChangedNotifier::new());
     app.add_singleton_model(|_ctx| RelaunchModel::new());
-    app.add_singleton_model(|ctx| ChangelogModel::new(ServerApiProvider::as_ref(ctx).get()));
+    app.add_singleton_model(|_| ChangelogModel::new(Arc::new(http_client::Client::new_for_test())));
     app.add_singleton_model(|_ctx| SyncedInputState::mock());
     app.add_singleton_model(|_| ResizableData::default());
     app.add_singleton_model(LocalWorkflows::new);
@@ -96,18 +90,6 @@ pub(crate) fn initialize_app(app: &mut App) {
 
     #[cfg(feature = "local_fs")]
     app.add_singleton_model(FileModel::new);
-    app.add_singleton_model(|_| GPUState::new());
-    // Register IapManager in a disabled state (no IapState). The settings
-    // page's `IapManager::as_ref(ctx).is_enabled()` check panics if the
-    // singleton isn't registered, even though it's a no-op on production.
-    app.add_singleton_model(|ctx| {
-        torch_server_client::iap::IapManager::new(
-            None,
-            Box::new(|_| futures::FutureExt::boxed(futures::future::ready(None::<String>))),
-            None,
-            ctx,
-        )
-    });
     let global_resource_handles = GlobalResourceHandles::mock(app);
     app.add_singleton_model(|_| GlobalResourceHandlesProvider::new(global_resource_handles));
     app.add_singleton_model(DefaultTerminal::new);
@@ -149,7 +131,6 @@ pub(crate) fn mock_workspace(app: &mut App) -> ViewHandle<Workspace> {
     let (_, workspace) = app.add_window(WindowStyle::NotStealFocus, |ctx| {
         Workspace::new(
             global_resource_handles,
-            None,
             NewWorkspaceSource::Empty {
                 previous_active_window: active_window_id,
                 shell: None,
@@ -168,7 +149,6 @@ fn restored_workspace(
     let (_, workspace) = app.add_window(WindowStyle::NotStealFocus, |ctx| {
         Workspace::new(
             global_resource_handles,
-            None,
             NewWorkspaceSource::Restored {
                 window_snapshot,
                 block_lists: Arc::new(HashMap::new()),
@@ -187,7 +167,6 @@ fn transferred_tab_workspace(
     let (_, workspace) = app.add_window(WindowStyle::NotStealFocus, |ctx| {
         Workspace::new(
             global_resource_handles,
-            None,
             NewWorkspaceSource::TransferredTab {
                 source_window_id: ctx.window_id(),
                 tab_color: None,
@@ -3691,177 +3670,6 @@ fn test_pin_tab_on_grouped_tab_extracts_then_pins() {
     });
 }
 
-#[cfg(target_family = "wasm")]
-mod simplified_wasm_tab_bar {
-    use chrono::Utc;
-    use torchui::{AppContext, ViewContext};
-    use uuid::Uuid;
-
-    use super::*;
-    use crate::auth::user::TEST_USER_UID;
-    use crate::cloud_object::{Owner, Revision, ServerMetadata, ServerPermissions};
-    use crate::persistence::model::ConversationUsageMetadata;
-    use crate::server::ids::ServerId;
-
-    fn mock_workspace_from_cloud_conversation(app: &mut App) -> ViewHandle<Workspace> {
-        let global_resource_handles = GlobalResourceHandles::mock(app);
-        let (_, workspace) = app.add_window(WindowStyle::NotStealFocus, |ctx| {
-            Workspace::new(
-                global_resource_handles,
-                None,
-                NewWorkspaceSource::FromCloudConversationId {
-                    conversation_id: ServerConversationToken::new("test-server-token".to_string()),
-                },
-                ctx,
-            )
-        });
-        workspace
-    }
-
-    fn new_ambient_agent_task_id() -> AmbientAgentTaskId {
-        Uuid::new_v4().to_string().parse().unwrap()
-    }
-
-    fn ambient_agent_task_for_current_user(task_id: AmbientAgentTaskId) -> AmbientAgentTask {
-        let now = Utc::now();
-        AmbientAgentTask {
-            task_id,
-            parent_run_id: None,
-            title: "Owned task".to_string(),
-            state: AmbientAgentTaskState::Succeeded,
-            prompt: "test".to_string(),
-            created_at: now,
-            started_at: Some(now),
-            updated_at: now,
-            run_time: Some("PT1S".parse().unwrap()),
-            status_message: None,
-            source: Some(AgentSource::CloudMode),
-            execution_location: None,
-            session_id: None,
-            session_link: None,
-            executor: None,
-            creator: Some(TaskPrincipalInfo {
-                creator_type: "USER".to_string(),
-                uid: TEST_USER_UID.to_string(),
-                display_name: None,
-            }),
-            conversation_id: None,
-            request_usage: None,
-            is_sandbox_running: false,
-            agent_config_snapshot: None,
-            artifacts: vec![],
-            last_event_sequence: None,
-            children: vec![],
-            debug_agent_available: false,
-            scope: None,
-        }
-    }
-
-    fn mock_server_metadata() -> ServerMetadata {
-        ServerMetadata {
-            uid: ServerId::default(),
-            revision: Revision::now(),
-            metadata_last_updated_ts: Utc::now().into(),
-            trashed_ts: None,
-            folder_id: None,
-            is_welcome_object: false,
-            creator_uid: None,
-            last_editor_uid: None,
-            current_editor_uid: None,
-        }
-    }
-
-    fn mock_server_permissions() -> ServerPermissions {
-        ServerPermissions {
-            space: Owner::mock_current_user(),
-            guests: Vec::new(),
-            anyone_link_sharing: None,
-            permissions_last_updated_ts: Utc::now().into(),
-        }
-    }
-
-    fn test_server_conversation_metadata(
-        task_id: Option<AmbientAgentTaskId>,
-    ) -> ServerAIConversationMetadata {
-        ServerAIConversationMetadata {
-            title: "Restored cloud conversation".to_string(),
-            working_directory: None,
-            harness: AIAgentHarness::Oz,
-            usage: ConversationUsageMetadata {
-                was_summarized: false,
-                context_window_usage: 0.0,
-                credits_spent: 0.0,
-                platform_credits_spent: 0.0,
-                credits_spent_for_last_block: None,
-                charged_usage_for_last_block: None,
-                total_charged_usage: None,
-                token_usage: vec![],
-                tool_usage_metadata: Default::default(),
-                context_window_segments: Vec::new(),
-            },
-            metadata: mock_server_metadata(),
-            creator: None,
-            permissions: mock_server_permissions(),
-            ambient_agent_task_id: task_id,
-            server_conversation_token: ServerConversationToken::new(
-                "test-server-token".to_string(),
-            ),
-            artifacts: Vec::new(),
-        }
-    }
-
-    fn cloud_conversation_with_ambient_task(task_id: AmbientAgentTaskId) -> CloudConversationData {
-        let mut conversation = AIConversation::new(false, false);
-        conversation.set_task_id(task_id);
-        conversation.set_server_metadata(test_server_conversation_metadata(Some(task_id)));
-        CloudConversationData::Oz(Box::new(conversation))
-    }
-
-    fn restore_owned_handoff_cloud_cloud_pane(
-        workspace: &mut Workspace,
-        ctx: &mut ViewContext<Workspace>,
-    ) -> AmbientAgentTaskId {
-        let task_id = new_ambient_agent_task_id();
-        AgentConversationsModel::handle(ctx).update(ctx, |model, _| {
-            model.insert_task_for_test(ambient_agent_task_for_current_user(task_id));
-        });
-        workspace.active_tab_pane_group().update(ctx, |panes, ctx| {
-            panes.load_data_into_conversation_transcript_viewer(
-                cloud_conversation_with_ambient_task(task_id),
-                Some(task_id),
-                ctx,
-            );
-        });
-        task_id
-    }
-
-    fn assert_owned_handoff_restore_is_chrome_hostile(workspace: &Workspace, ctx: &AppContext) {
-        let terminal_view = workspace
-            .active_tab_pane_group()
-            .as_ref(ctx)
-            .focused_session_view(ctx)
-            .expect("restored pane should have an active terminal view");
-        let model = terminal_view.as_ref(ctx).model.lock();
-        assert!(!model.is_conversation_transcript_viewer());
-        assert!(matches!(
-            model.shared_session_status(),
-            SharedSessionStatus::NotShared
-        ));
-    }
-
-    #[test]
-    fn simplified_wasm_tab_bar_is_none_for_empty_workspace() {
-        App::test((), |mut app| async move {
-            initialize_app(&mut app);
-            let workspace = mock_workspace(&mut app);
-            workspace.read(&app, |workspace, ctx| {
-                assert!(!workspace.opened_from_content_deep_link);
-                assert_eq!(workspace.get_simplified_wasm_tab_bar_content(ctx), None);
-            });
-        });
-    }
-}
-
 /// Regression test for #14241.
 ///
 /// Creating a tab group opens the inline name editor and also spawns a terminal. About
@@ -3948,7 +3756,7 @@ fn a_closing_palette_keeps_its_query_until_it_opens_again() {
         };
 
         workspace.update(&mut app, |workspace, ctx| {
-            workspace.toggle_palette(PaletteMode::Command, PaletteSource::Keybinding, ctx);
+            workspace.toggle_palette(PaletteMode::Command, PaletteSource::Other, ctx);
         });
         palette.update(&mut app, |palette, ctx| {
             palette.insert_query_text("torch", ctx)
@@ -3964,7 +3772,7 @@ fn a_closing_palette_keeps_its_query_until_it_opens_again() {
         assert_eq!(query(&app), "torch");
 
         workspace.update(&mut app, |workspace, ctx| {
-            workspace.toggle_palette(PaletteMode::Command, PaletteSource::Keybinding, ctx);
+            workspace.toggle_palette(PaletteMode::Command, PaletteSource::Other, ctx);
             assert!(workspace.closing_palette.is_none());
         });
         assert_eq!(query(&app), "");

@@ -1,5 +1,3 @@
-use chrono::{DateTime, Utc};
-
 use super::*;
 use crate::{ChannelVersion, ChannelVersions};
 
@@ -15,7 +13,6 @@ fn test_only_first_override_is_applied() {
     let version = ChannelVersion {
         version_info: VersionInfo {
             version: "base_version".to_string(),
-            update_by: None,
             soft_cutoff: None,
             last_prominent_update: None,
             is_rollback: None,
@@ -27,7 +24,6 @@ fn test_only_first_override_is_applied() {
                 predicate: predicate.clone(),
                 version_info: VersionInfo {
                     version: "override_version".to_string(),
-                    update_by: Some(DateTime::<Utc>::MIN_UTC.fixed_offset()),
                     soft_cutoff: Some("override_cutoff".to_string()),
                     last_prominent_update: None,
                     is_rollback: None,
@@ -41,7 +37,6 @@ fn test_only_first_override_is_applied() {
                     // This should not be applied; as we only apply the first
                     // matching override.
                     version: "second_override_version".to_string(),
-                    update_by: None,
                     soft_cutoff: None,
                     last_prominent_update: None,
                     is_rollback: None,
@@ -56,14 +51,6 @@ fn test_only_first_override_is_applied() {
     let version_info_with_overrides = version.version_info();
     assert_ne!(version_info.version, version_info_with_overrides.version);
     assert_eq!(version_info_with_overrides.version, "override_version");
-    assert_ne!(
-        version_info.update_by,
-        version_info_with_overrides.update_by
-    );
-    assert_eq!(
-        version_info_with_overrides.update_by,
-        Some(DateTime::<Utc>::MIN_UTC.fixed_offset())
-    );
     assert_ne!(
         version_info.soft_cutoff,
         version_info_with_overrides.soft_cutoff
@@ -137,7 +124,6 @@ fn test_cli_version_override_is_applied() {
     let version = ChannelVersion {
         version_info: VersionInfo {
             version: "base_version".to_string(),
-            update_by: None,
             soft_cutoff: None,
             last_prominent_update: None,
             is_rollback: None,
@@ -148,7 +134,6 @@ fn test_cli_version_override_is_applied() {
             predicate,
             version_info: VersionInfo {
                 version: "override_version".to_string(),
-                update_by: None,
                 soft_cutoff: None,
                 last_prominent_update: None,
                 is_rollback: None,
@@ -181,7 +166,6 @@ fn test_cli_version_preserved_when_override_omits_it() {
     let version = ChannelVersion {
         version_info: VersionInfo {
             version: "base_version".to_string(),
-            update_by: None,
             soft_cutoff: None,
             last_prominent_update: None,
             is_rollback: None,
@@ -192,7 +176,6 @@ fn test_cli_version_preserved_when_override_omits_it() {
             predicate,
             version_info: VersionInfo {
                 version: "override_version".to_string(),
-                update_by: None,
                 soft_cutoff: None,
                 last_prominent_update: None,
                 is_rollback: None,

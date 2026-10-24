@@ -28,10 +28,8 @@ pub use self::changelog::get_current_changelog;
 use self::channel_versions::fetch_channel_versions;
 use crate::channel::Channel;
 use crate::features::FeatureFlag;
-use crate::server::server_api::ServerApi;
-use crate::server::telemetry::TelemetryEvent;
 use crate::workspace::Workspace;
-use crate::{ChannelState, send_telemetry_from_ctx, send_telemetry_sync_from_app_ctx};
+use crate::ChannelState;
 
 /// A successfully downloaded and unpacked target update.
 #[derive(Clone, Debug)]
@@ -107,16 +105,16 @@ pub struct AutoupdateState {
     /// RequestTypes have different behavior and side-effects, so it's important not to skip any
     /// but to queue them instead.
     request_queue: VecDeque<RequestType>,
-    server_api: Arc<ServerApi>,
+    http_client: Arc<http_client::Client>,
     /// Whether the polling loop has been explicitly started. Requests are silently queued but not
     /// executed until `start_polling` is called.
     polling_started: bool,
 }
 
 impl AutoupdateState {
-    pub fn new(server_api: Arc<ServerApi>) -> Self {
+    pub fn new(http_client: Arc<http_client::Client>) -> Self {
         Self {
-            server_api,
+            http_client,
             last_successful_daily_update_check: None,
             stage: AutoupdateStage::default(),
             downloaded_update: None,
@@ -125,8 +123,8 @@ impl AutoupdateState {
         }
     }
 
-    pub fn register(ctx: &mut AppContext, server_api: Arc<ServerApi>) {
-        ctx.add_singleton_model(move |_ctx| Self::new(server_api));
+    pub fn register(ctx: &mut AppContext, http_client: Arc<http_client::Client>) {
+        ctx.add_singleton_model(move |_ctx| Self::new(http_client));
     }
 
     /// Start the autoupdate polling loop. Idempotent: subsequent calls are no-ops.
@@ -256,13 +254,13 @@ impl AutoupdateState {
         self.stage = AutoupdateStage::CheckingForUpdate;
         ctx.notify();
 
-        let server_api = self.server_api.clone();
+        let http_client = self.http_client.clone();
         ctx.spawn(
             async move {
                 let update_id = new_update_id();
                 let channel = ChannelState::channel();
                 log::info!("Checking for update on channel {channel}. Update id is {update_id}");
-                let version = fetch_version(&channel, is_daily, &update_id, server_api)
+                let version = fetch_version(&channel, &http_client)
                     .await
                     .context("Error checking for new version");
                 report_if_error!(version);
@@ -316,7 +314,6 @@ impl AutoupdateState {
                 .version
                 .soft_cutoff
                 .clone_from(&version.soft_cutoff);
-            download.version.update_by = version.update_by;
         }
 
         if version.version == current_version {
@@ -431,7 +428,7 @@ impl AutoupdateState {
                         update_id: update_id.clone(),
                     };
                 }
-                ctx.emit(AutoupdateStateEvent::UpdateAvailable);
+                ctx.emit(());
             }
             Ok(UpdateReady::No) => {
                 self.stage = AutoupdateStage::NoUpdateAvailable;
@@ -472,7 +469,7 @@ impl AutoupdateState {
                 new_version.clone(),
                 update_id.clone(),
                 last_successful_update_id,
-                self.server_api.clone(),
+                self.http_client.clone(),
             ),
             move |autoupdate_state, download_ready, ctx| {
                 autoupdate_state.on_download_update_complete(
@@ -515,7 +512,6 @@ impl AutoupdateState {
                 })
             }
             Ok(DownloadReady::NeedsAuthorization) => {
-                send_telemetry_from_ctx!(TelemetryEvent::UnableToAutoUpdateToNewVersion, ctx);
                 self.stage = AutoupdateStage::UnableToUpdateToNewVersion { new_version };
                 Ok(UpdateReady::No)
             }
@@ -534,7 +530,7 @@ impl AutoupdateState {
             }
         };
 
-        ctx.emit(AutoupdateStateEvent::UpdateAvailable);
+        ctx.emit(());
         self.on_check_complete(was_update_available, request_type, ctx);
     }
 
@@ -564,10 +560,6 @@ impl AutoupdateState {
             ctx.emit_a11y_content(content);
         }
 
-        ctx.emit(AutoupdateStateEvent::CheckComplete {
-            result: Box::new(update_available),
-            request_type,
-        });
         ctx.notify();
 
         // A request might've gotten queued while this last one was in-flight. This point is when
@@ -635,21 +627,9 @@ impl AutoupdateState {
     }
 }
 
-/// The set of events that are emitted from the AutoupdateState model.
-pub enum AutoupdateStateEvent {
-    /// Emitted when an update check has finished.
-    CheckComplete {
-        /// Result of the check of whether there is an update available.
-        result: Box<Result<UpdateReady>>,
-        /// Type of request that this check references.
-        request_type: RequestType,
-    },
-    /// Emitted when an update is available.
-    UpdateAvailable,
-}
-
+/// The model emits `()` when an update is available.
 impl Entity for AutoupdateState {
-    type Event = AutoupdateStateEvent;
+    type Event = ();
 }
 
 impl SingletonEntity for AutoupdateState {}
@@ -761,13 +741,8 @@ fn new_update_id() -> String {
 }
 
 /// Fetch the current version on the given channel.
-async fn fetch_version(
-    channel: &Channel,
-    is_daily: bool,
-    update_id: &str,
-    server_api: Arc<ServerApi>,
-) -> Result<VersionInfo> {
-    let versions = fetch_channel_versions(update_id, server_api.clone(), false, is_daily).await?;
+async fn fetch_version(channel: &Channel, client: &http_client::Client) -> Result<VersionInfo> {
+    let versions = fetch_channel_versions(client).await?;
 
     let channel_version = match channel {
         Channel::Stable => versions.stable,
@@ -797,7 +772,7 @@ async fn download_update(
     update_id: String,
     #[cfg_attr(not(target_os = "macos"), allow(unused_variables))]
     last_successful_update_id: Option<String>,
-    server_api: Arc<ServerApi>,
+    client: Arc<http_client::Client>,
 ) -> Result<DownloadReady> {
     if ChannelState::app_version().is_none() {
         log::info!("No tag set, not performing autoupdate.");
@@ -806,17 +781,11 @@ async fn download_update(
 
     cfg_if::cfg_if! {
         if #[cfg(target_os = "macos")] {
-            // Torch downloads from GitHub, which should not receive Torch's client headers.
-            let client = if ChannelState::channel() == Channel::Oss {
-                server_api.external_http_client()
-            } else {
-                server_api.http_client()
-            };
-            mac::download_update_and_cleanup(&version_info, &update_id, last_successful_update_id.as_deref(), client).await
+            mac::download_update_and_cleanup(&version_info, &update_id, last_successful_update_id.as_deref(), &client).await
         } else if #[cfg(target_os = "linux")] {
-            linux::download_update_and_cleanup(&version_info, &update_id, server_api.http_client()).await
+            linux::download_update_and_cleanup(&version_info, &update_id, &client).await
         } else if #[cfg(windows)] {
-            windows::download_update_and_cleanup(&version_info, &update_id, server_api.http_client()).await
+            windows::download_update_and_cleanup(&version_info, &update_id, &client).await
         } else {
             Err(anyhow::anyhow!("Not implemented"))
         }
@@ -877,7 +846,6 @@ pub fn initiate_relaunch_for_update(app: &mut AppContext) {
         } => {
             // There's a pending update, and we haven't finished applying it.
             let new_version = new_version.clone();
-            let new_version_string = new_version.version.clone();
             let update_id = update_id.clone();
 
             // First, record that we're applying an update.
@@ -902,14 +870,6 @@ pub fn initiate_relaunch_for_update(app: &mut AppContext) {
                     // finalize_update reports the error itself.
                     return;
                 }
-
-                // Report that we're attempting to relaunch for an update, so that we can track failed
-                // relaunches (e.g. if the update got corrupted). This is sent synchronously because
-                // the app is about to quit.
-                let event = TelemetryEvent::AutoupdateRelaunchAttempt {
-                    new_version: new_version_string,
-                };
-                send_telemetry_sync_from_app_ctx!(event, app);
 
                 // Request termination of the app.
                 app.terminate_app(TerminationMode::Cancellable, None);
@@ -1060,11 +1020,6 @@ pub fn manually_download_new_version(ctx: &mut AppContext) {
 fn manually_download_version(channel: &Channel, version: &VersionInfo, ctx: &mut AppContext) {
     #[cfg(target_os = "macos")]
     mac::manually_download_version(channel, version, ctx);
-}
-
-pub(crate) fn check_and_report_update_errors(_ctx: &mut AppContext) {
-    #[cfg(windows)]
-    windows::check_and_report_update_errors(_ctx);
 }
 
 pub fn remove_old_executable() -> Result<()> {

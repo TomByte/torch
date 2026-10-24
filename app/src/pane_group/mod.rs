@@ -36,6 +36,7 @@ use typed_path::TypedPath;
 use uuid::Uuid;
 
 #[cfg(feature = "local_fs")]
+use crate::palette::PaletteSource;
 use crate::app_state::CodePaneSnapShot;
 use crate::app_state::{
     self, BranchSnapshot, LeafContents, LeafSnapshot, NotebookPaneSnapshot, PaneNodeSnapshot,
@@ -62,8 +63,6 @@ use crate::resource_center::{
 };
 #[cfg(target_family = "wasm")]
 use crate::server::ids::{ObjectUid, SyncId};
-use crate::server::server_api::ServerApi;
-use crate::server::telemetry::{PaletteSource, TelemetryEvent};
 use crate::session_management::SessionNavigationData;
 use crate::settings::PaneSettings;
 use crate::settings_view::SettingsSection;
@@ -74,12 +73,10 @@ use crate::terminal::cli_agent_sessions::plugin_manager::PluginModalKind;
 use crate::terminal::general_settings::{GeneralSettings, GeneralSettingsChangedEvent};
 #[cfg(feature = "local_tty")]
 use crate::terminal::local_tty::TerminalManager as LocalTtyTerminalManager;
-#[cfg(all(feature = "local_tty", not(feature = "remote_tty")))]
+#[cfg(feature = "local_tty")]
 use crate::terminal::local_tty::{TerminalViewSurfaceConfig, create_terminal_view_surface};
 use crate::terminal::model::block::SerializedBlock;
 use crate::terminal::model::session::Session;
-#[cfg(feature = "remote_tty")]
-use crate::terminal::remote_tty::TerminalManager as RemoteTtyTerminalManager;
 use crate::terminal::session_settings::{NewSessionSource, SessionSettings};
 use crate::terminal::view::ssh_file_upload::FileUploadId;
 use crate::terminal::view::{
@@ -96,7 +93,7 @@ use crate::view_components::ToastFlavor;
 use crate::workflows::{WorkflowSelectionSource, WorkflowSource, WorkflowType};
 use crate::workspace::tab_group::TabGroupId;
 use crate::workspace::{self, CommandSearchOptions, PaneViewLocator, TabBarLocation};
-use crate::{cmd_or_ctrl_shift, send_telemetry_from_ctx};
+use crate::cmd_or_ctrl_shift;
 
 pub mod focus_state;
 pub mod pane;
@@ -110,7 +107,6 @@ mod tests;
 
 pub use pane::code_pane::CodePane;
 pub use pane::file_pane::FilePane;
-pub use pane::network_log_pane::NetworkLogPane;
 pub use pane::settings_pane::SettingsPane;
 pub use pane::terminal_pane::TerminalPane;
 pub use pane::{
@@ -675,8 +671,6 @@ pub struct PaneGroup {
     /// Mapping from pane IDs to their contents.
     pane_contents: HashMap<PaneId, Box<dyn AnyPaneContent>>,
 
-    server_api: Arc<ServerApi>,
-
     dragged_border: Option<DraggedBorder>,
     user_default_shell_changed_banner: ViewHandle<Banner<PaneGroupAction>>,
 
@@ -714,7 +708,6 @@ pub enum SplitPaneState {
 #[derive(Clone)]
 pub struct TerminalViewResources {
     pub tips_completed: ModelHandle<TipsCompleted>,
-    pub server_api: Arc<ServerApi>,
     pub model_event_sender: Option<SyncSender<ModelEvent>>,
 }
 
@@ -1390,26 +1383,6 @@ impl PaneGroup {
             LeafContents::CodeReview(_) => {
                 Err(anyhow::anyhow!("Code review panes are no longer supported"))
             }
-            LeafContents::NetworkLog => {
-                // Network log panes are intentionally not restored. Two
-                // reasons:
-                //
-                // 1. The in-memory log starts empty on each launch, so a
-                //    restored pane would display a blank editor anyway.
-                // 2. More importantly, persisting the pane's contents would
-                //    effectively regress back to a persisted, on-disk
-                //    network log (via the SQLite app-state database) on app
-                //    shutdown, defeating the purpose of moving the log off
-                //    disk in the first place.
-                //
-                // `save_pane_state` in `persistence/sqlite.rs` skips network
-                // log panes entirely, so reaching this arm indicates a
-                // programmer error on the persistence side. Users reopen the
-                // pane on demand via Privacy settings or the keybinding.
-                Err(anyhow::anyhow!(
-                    "Network log pane should not have been persisted, as it cannot be restored"
-                ))
-            }
         };
 
         if let (Ok((pane_data, _)), Some(title)) = (&result, custom_vertical_tabs_title.as_deref())
@@ -1707,7 +1680,7 @@ impl PaneGroup {
                             }
                         });
                 }
-                // TODO: Potentially handle remote_tty and mock TerminalManager cases here as well?
+                // TODO: Potentially handle the mock TerminalManager case here as well?
             });
     }
 
@@ -1746,7 +1719,6 @@ impl PaneGroup {
     fn new_internal(
         tips_completed: ModelHandle<TipsCompleted>,
         user_default_shell_unsupported_banner_model_handle: ModelHandle<BannerState>,
-        server_api: Arc<ServerApi>,
         model_event_sender: Option<SyncSender<ModelEvent>>,
         initial_layout_callback: InitialLayoutCallback,
         ctx: &mut ViewContext<Self>,
@@ -1758,7 +1730,6 @@ impl PaneGroup {
 
         let resources = TerminalViewResources {
             tips_completed: tips_completed.clone(),
-            server_api: server_api.clone(),
             model_event_sender: model_event_sender.clone(),
         };
 
@@ -1848,7 +1819,6 @@ impl PaneGroup {
             focus_state,
             pane_history,
             pane_contents,
-            server_api,
             dragged_border: None,
             user_default_shell_changed_banner,
             active_file_model,
@@ -1918,7 +1888,6 @@ impl PaneGroup {
     pub fn new_with_panes_layout(
         tips_completed: ModelHandle<TipsCompleted>,
         user_default_shell_unsupported_banner_model_handle: ModelHandle<BannerState>,
-        server_api: Arc<ServerApi>,
         panes_layout: PanesLayout,
         block_lists: Arc<HashMap<PaneUuid, Vec<SerializedBlock>>>,
         model_event_sender: Option<SyncSender<ModelEvent>>,
@@ -1983,7 +1952,6 @@ impl PaneGroup {
         Self::new_internal(
             tips_completed,
             user_default_shell_unsupported_banner_model_handle,
-            server_api,
             model_event_sender.clone(),
             Box::new(initial_layout),
             ctx,
@@ -1994,7 +1962,6 @@ impl PaneGroup {
         pane: Box<dyn AnyPaneContent>,
         tips_completed: ModelHandle<TipsCompleted>,
         user_default_shell_unsupported_banner_model_handle: ModelHandle<BannerState>,
-        server_api: Arc<ServerApi>,
         model_event_sender: Option<SyncSender<ModelEvent>>,
         ctx: &mut ViewContext<Self>,
     ) -> Self {
@@ -2016,7 +1983,6 @@ impl PaneGroup {
         Self::new_internal(
             tips_completed,
             user_default_shell_unsupported_banner_model_handle,
-            server_api,
             model_event_sender,
             Box::new(initial_layout),
             ctx,
@@ -2323,7 +2289,7 @@ impl PaneGroup {
                         pane_group.update(ctx, |_, ctx| {
                             ctx.emit(Event::OpenPalette {
                                 mode: PaletteMode::Navigation,
-                                source: PaletteSource::QuitModal,
+                                source: PaletteSource::Other,
                                 query: Some("running".to_string()),
                             });
                         })
@@ -3421,17 +3387,7 @@ impl PaneGroup {
         add_session_focus_env_vars(&mut env_vars, terminal_session_uuid);
 
         cfg_if::cfg_if! {
-            if #[cfg(feature = "remote_tty")] {
-                let terminal_init = RemoteTtyTerminalManager::create_model(
-                    resources,
-                    initial_size,
-                    model_event_sender,
-                    ctx.window_id(),
-                    ctx,
-                );
-                let terminal_manager = terminal_init.manager;
-                let terminal_view = terminal_init.view;
-            } else if #[cfg(feature = "local_tty")] {
+            if #[cfg(feature = "local_tty")] {
                 let all_restored_blocks = restored_blocks.filter(|blocks| !blocks.is_empty());
                 let has_restored_command_blocks = all_restored_blocks.is_some();
                 let model_event_sender_for_surface = model_event_sender.clone();
@@ -3554,7 +3510,6 @@ impl PaneGroup {
         let uuid = Uuid::new_v4();
         let resources = TerminalViewResources {
             tips_completed: self.tips_completed.clone(),
-            server_api: self.server_api.clone(),
             model_event_sender: self.model_event_sender.clone(),
         };
 
@@ -3711,7 +3666,6 @@ impl PaneGroup {
     ) -> Option<PaneId> {
         if self.pane_count() == 1 {
             // Only sending telemetry event the first time a user enters split pane in a session.
-            send_telemetry_from_ctx!(TelemetryEvent::SplitPane, ctx);
         }
 
         self.tips_completed.update(ctx, |tips_completed, ctx| {

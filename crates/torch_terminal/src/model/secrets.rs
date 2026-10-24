@@ -7,9 +7,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use anyhow::anyhow;
 use rangemap::{RangeInclusiveMap, StepLite};
 pub use secret_redaction::{
-    RegexDisplayInfo, RegexLevelMetadata, SECRETS_REGEX, SecretLevel, SecretsRegex,
-    find_secrets_in_text_with_levels_using_regex, merge_sorted_ranges_with_levels, regexes,
-    set_user_and_enterprise_secret_regexes,
+    RegexDisplayInfo, SECRETS_REGEX, SecretsRegex, regexes, set_user_secret_regexes,
 };
 
 use super::RangeInModel;
@@ -108,8 +106,6 @@ pub struct Secret {
     /// Whether the secret is currently obfuscated.
     is_obfuscated: IsObfuscated,
     range: RangeInclusive<Point>,
-    /// The level/source of this secret's redaction rule
-    secret_level: SecretLevel,
 }
 
 impl RangeInModel for &Secret {
@@ -135,20 +131,11 @@ impl Secret {
         matches!(self.is_obfuscated, IsObfuscated::Yes)
     }
 
-    pub fn new(
-        is_obfuscated: IsObfuscated,
-        range: RangeInclusive<Point>,
-        secret_level: SecretLevel,
-    ) -> Self {
+    pub fn new(is_obfuscated: IsObfuscated, range: RangeInclusive<Point>) -> Self {
         Self {
             is_obfuscated,
             range,
-            secret_level,
         }
-    }
-
-    pub fn secret_level(&self) -> SecretLevel {
-        self.secret_level
     }
 }
 

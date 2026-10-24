@@ -42,7 +42,7 @@ use crate::model::kitty::{
 };
 use crate::model::selection::ScrollDelta;
 use crate::model::{KeyboardModes, KeyboardModesApplyBehavior, ObfuscateSecrets};
-use crate::{ClipboardType, ImageProtocol, SizeInfo};
+use crate::{ClipboardType, SizeInfo};
 
 const MAX_IMAGE_CELL_HEIGHT: u32 = 255;
 
@@ -1390,7 +1390,6 @@ impl ansi::Handler for GridHandler {
             .send_terminal_event(Event::ImageReceived {
                 image_id,
                 image_data: image.data,
-                image_protocol: ImageProtocol::ITerm,
             });
 
         self.images.add_image_placement_data(
@@ -1823,7 +1822,6 @@ impl GridHandler {
                     .send_terminal_event(Event::ImageReceived {
                         image_id: action.image_id,
                         image_data: action.image.data,
-                        image_protocol: ImageProtocol::Kitty,
                     });
             }
             KittyAction::StoreAndDisplay(action) => {
@@ -1884,7 +1882,6 @@ impl GridHandler {
                     .send_terminal_event(Event::ImageReceived {
                         image_id: action.image_id,
                         image_data: action.image.data,
-                        image_protocol: ImageProtocol::Kitty,
                     });
 
                 self.images.add_image_placement_data(

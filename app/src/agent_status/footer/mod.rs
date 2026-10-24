@@ -42,10 +42,6 @@ use crate::context_chips::prompt_type::PromptType;
 use crate::context_chips::{self, ContextChipKind};
 use crate::features::FeatureFlag;
 use crate::local_hooks::{SetupState, StatusAgent};
-use crate::send_telemetry_from_ctx;
-#[cfg(not(target_family = "wasm"))]
-use crate::server::telemetry::PluginChipTelemetryAction;
-use crate::server::telemetry::{PluginChipTelemetryKind, TelemetryEvent};
 use crate::settings::{CLIAgentSettings, CodeSettings, CodeSettingsChangedEvent};
 use crate::settings_view::SettingsSection;
 #[cfg(not(target_family = "wasm"))]
@@ -84,15 +80,6 @@ const PLUGIN_CHIP_DEBOUNCE: Duration = Duration::from_secs(3);
 enum PluginChipKind {
     Install,
     Update,
-}
-
-impl From<PluginChipKind> for PluginChipTelemetryKind {
-    fn from(kind: PluginChipKind) -> Self {
-        match kind {
-            PluginChipKind::Install => PluginChipTelemetryKind::Install,
-            PluginChipKind::Update => PluginChipTelemetryKind::Update,
-        }
-    }
 }
 
 /// Builds a composite key for per-agent, per-host plugin chip dismissal.
@@ -688,7 +675,6 @@ impl CLIAgentFooter {
         progress_toast: &str,
         error_label: &str,
         success_toast: &str,
-        operation_kind: PluginChipTelemetryKind,
         operation: F,
         ctx: &mut ViewContext<Self>,
     ) -> bool
@@ -735,22 +721,7 @@ impl CLIAgentFooter {
                 me.plugin_operation_in_progress = false;
 
                 if result.is_ok() {
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::CLIAgentPluginOperationSucceeded {
-                            cli_agent: agent,
-                            operation: operation_kind,
-                        },
-                        ctx
-                    );
                     ctx.emit(CLIAgentFooterEvent::PluginInstalled(agent));
-                } else {
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::CLIAgentPluginOperationFailed {
-                            cli_agent: agent,
-                            operation: operation_kind,
-                        },
-                        ctx
-                    );
                 }
 
                 ToastStack::handle(ctx).update(ctx, |toast_stack, ctx| {
@@ -804,7 +775,6 @@ impl CLIAgentFooter {
             "Installing Torch plugin...",
             "Failed to install Torch plugin",
             success_msg,
-            PluginChipTelemetryKind::Install,
             |manager| async move { manager.install().await },
             ctx,
         )
@@ -821,7 +791,6 @@ impl CLIAgentFooter {
             "Updating Torch plugin...",
             "Failed to update Torch plugin",
             success_msg,
-            PluginChipTelemetryKind::Update,
             |manager| async move { manager.update().await },
             ctx,
         )
@@ -1019,12 +988,6 @@ impl TypedActionView for CLIAgentFooter {
                 self.select_file(ctx);
             }
             CLIAgentFooterAction::InsertFilePath(path) => {
-                if let Some(agent) = self.cli_agent(ctx) {
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::CLIAgentToolbarImageAttached { cli_agent: agent },
-                        ctx
-                    );
-                }
                 let path_with_space = format!("{path} ");
                 if self.has_active_cli_agent_input_session(ctx) {
                     ctx.emit(CLIAgentFooterEvent::InsertIntoCLIRichInput(path_with_space));
@@ -1033,7 +996,7 @@ impl TypedActionView for CLIAgentFooter {
                 }
             }
             CLIAgentFooterAction::ToggleFileExplorer => {
-                ctx.emit(CLIAgentFooterEvent::ToggleFileExplorer(self.cli_agent(ctx)));
+                ctx.emit(CLIAgentFooterEvent::ToggleFileExplorer);
             }
             CLIAgentFooterAction::ToggleRichInput => {
                 if self.has_active_cli_agent_input_session(ctx) {
@@ -1045,15 +1008,6 @@ impl TypedActionView for CLIAgentFooter {
             CLIAgentFooterAction::InstallPlugin => {
                 #[cfg(not(target_family = "wasm"))]
                 {
-                    if let Some(agent) = self.cli_agent(ctx) {
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::CLIAgentPluginChipClicked {
-                                cli_agent: agent,
-                                action: PluginChipTelemetryAction::Install,
-                            },
-                            ctx
-                        );
-                    }
                     if !self.handle_install_plugin(ctx) {
                         self.record_plugin_auto_failure_and_notify(ctx);
                     }
@@ -1062,15 +1016,6 @@ impl TypedActionView for CLIAgentFooter {
             CLIAgentFooterAction::UpdatePlugin => {
                 #[cfg(not(target_family = "wasm"))]
                 {
-                    if let Some(agent) = self.cli_agent(ctx) {
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::CLIAgentPluginChipClicked {
-                                cli_agent: agent,
-                                action: PluginChipTelemetryAction::Update,
-                            },
-                            ctx
-                        );
-                    }
                     if !self.handle_update_plugin(ctx) {
                         self.record_plugin_auto_failure_and_notify(ctx);
                     }
@@ -1079,13 +1024,6 @@ impl TypedActionView for CLIAgentFooter {
             CLIAgentFooterAction::OpenPluginInstallInstructionsPane => {
                 #[cfg(not(target_family = "wasm"))]
                 if let Some(agent) = self.cli_agent(ctx) {
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::CLIAgentPluginChipClicked {
-                            cli_agent: agent,
-                            action: PluginChipTelemetryAction::InstallInstructions,
-                        },
-                        ctx
-                    );
                     ctx.emit(CLIAgentFooterEvent::OpenPluginInstructionsPane(
                         agent,
                         PluginModalKind::Install,
@@ -1095,13 +1033,6 @@ impl TypedActionView for CLIAgentFooter {
             CLIAgentFooterAction::OpenPluginUpdateInstructionsPane => {
                 #[cfg(not(target_family = "wasm"))]
                 if let Some(agent) = self.cli_agent(ctx) {
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::CLIAgentPluginChipClicked {
-                            cli_agent: agent,
-                            action: PluginChipTelemetryAction::UpdateInstructions,
-                        },
-                        ctx
-                    );
                     ctx.emit(CLIAgentFooterEvent::OpenPluginInstructionsPane(
                         agent,
                         PluginModalKind::Update,
@@ -1111,17 +1042,6 @@ impl TypedActionView for CLIAgentFooter {
             CLIAgentFooterAction::DismissPluginChip => {
                 let chip_kind = self.plugin_chip_kind(ctx);
                 let is_update = matches!(chip_kind, Some(PluginChipKind::Update));
-                if let Some(agent) = self.cli_agent(ctx)
-                    && let Some(kind) = chip_kind
-                {
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::CLIAgentPluginChipDismissed {
-                            cli_agent: agent,
-                            chip_kind: kind.into(),
-                        },
-                        ctx
-                    );
-                }
                 let session = CLIAgentSessionsModel::as_ref(ctx)
                     .session(self.terminal_view_id)
                     .cloned();
@@ -1175,7 +1095,7 @@ pub enum CLIAgentFooterEvent {
     InsertIntoCLIRichInput(String),
     /// Toggle the file explorer side panel. `None` when no CLI agent session is
     /// attached to this pane.
-    ToggleFileExplorer(Option<CLIAgent>),
+    ToggleFileExplorer,
     OpenRichInput,
     HideRichInput,
     ToggledChipMenu {

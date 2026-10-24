@@ -145,10 +145,6 @@ pub struct VersionInfo {
     /// other than in the `apply_overrides` binary used from the `channel-versions` repo.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub version_for_new_users: Option<String>,
-    /// The time by which the client needs to be updated, after which
-    /// the user sees a warning banner.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub update_by: Option<DateTime<FixedOffset>>,
     /// If specified, this field indicates the oldest version of the client that is still
     /// supported. Any version before this version is not supported and the user should update.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -168,7 +164,6 @@ impl VersionInfo {
     pub fn new(version: String) -> Self {
         Self {
             version,
-            update_by: None,
             soft_cutoff: None,
             last_prominent_update: None,
             version_for_new_users: None,

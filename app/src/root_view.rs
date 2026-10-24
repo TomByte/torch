@@ -3,7 +3,6 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::mpsc::SyncSender;
 
-use anyhow::Result;
 use lazy_static::lazy_static;
 use parking_lot::Mutex;
 use pathfinder_geometry::rect::RectF;
@@ -11,7 +10,6 @@ use pathfinder_geometry::vector::{Vector2F, vec2f};
 use serde::{Deserialize, Serialize};
 use settings::Setting as _;
 use torch_core::context_flag::ContextFlag;
-use torch_errors::report_error;
 use torchui::elements::{ParentElement, Stack};
 use torchui::keymap::{EditableBinding, FixedBinding};
 use torchui::platform::{WindowBounds, WindowStyle};
@@ -26,15 +24,13 @@ use torchui::{
 
 use crate::app_state::{AppState, PaneUuid, WindowSnapshot};
 use crate::appearance::Appearance;
-use crate::autoupdate::{AutoupdateState, AutoupdateStateEvent, RequestType, UpdateReady};
+use crate::autoupdate::AutoupdateState;
 use crate::changelog_model::ChangelogRequestType;
 use crate::features::FeatureFlag;
 use crate::interval_timer::IntervalTimer;
 use crate::launch_configs::launch_config;
 use crate::pane_group::{NewTerminalOptions, PanesLayout};
 use crate::persistence::ModelEvent;
-use crate::server::server_api::{ServerApi, ServerApiProvider, ServerTime};
-use crate::server::telemetry::{LaunchConfigUiLocation, TelemetryEvent};
 use crate::settings::QuakeModeSettings;
 use crate::settings_view::{SettingsSection, flags};
 use crate::terminal::available_shells::AvailableShell;
@@ -48,10 +44,7 @@ use crate::uri::OpenSettingsArgs;
 use crate::util::bindings::{self, is_binding_pty_compliant};
 use crate::window_settings::WindowSettings;
 use crate::workspace::{PaneViewLocator, Workspace, WorkspaceAction, WorkspaceRegistry};
-use crate::{
-    ChannelState, GlobalResourceHandles, GlobalResourceHandlesProvider, UpdateQuakeModeEventArg,
-    send_telemetry_from_app_ctx, send_telemetry_from_ctx,
-};
+use crate::{ChannelState, GlobalResourceHandles, GlobalResourceHandlesProvider, UpdateQuakeModeEventArg};
 
 const WINDOW_TITLE: &str = "Torch";
 
@@ -135,7 +128,6 @@ pub struct OpenFromRestoredArg {
 
 pub struct OpenLaunchConfigArg {
     pub launch_config: launch_config::LaunchConfig,
-    pub ui_location: LaunchConfigUiLocation,
 
     /// Tries to open the launch config into the active window, if any.
     ///
@@ -352,13 +344,6 @@ fn open_launch_config(arg: &OpenLaunchConfigArg, ctx: &mut AppContext) {
         }
     }
 
-    send_telemetry_from_app_ctx!(
-        TelemetryEvent::OpenLaunchConfig {
-            ui_location: crate::server::telemetry::LaunchConfigUiLocation::Uri,
-            open_in_active_window: arg.open_in_active_window,
-        },
-        ctx
-    );
 }
 
 fn send_feedback(_: &(), ctx: &mut AppContext) {
@@ -936,7 +921,6 @@ fn toggle_quake_mode_window(global_resource_handles: &GlobalResourceHandles, ctx
     let state = get_quake_mode_state(ctx);
     match state {
         None => {
-            send_telemetry_from_app_ctx!(TelemetryEvent::OpenQuakeModeWindow, ctx);
 
             let config = quake_mode_config(
                 &KeysSettings::as_ref(ctx)
@@ -986,7 +970,6 @@ fn toggle_quake_mode_window(global_resource_handles: &GlobalResourceHandles, ctx
             });
         }
         Some(state) if matches!(state.window_state, WindowState::Hidden) => {
-            send_telemetry_from_app_ctx!(TelemetryEvent::OpenQuakeModeWindow, ctx);
 
             // If quake mode does not have a set pin screen -- move it to the current active screen.
             if KeysSettings::as_ref(ctx)
@@ -1118,14 +1101,11 @@ impl NewWorkspaceSource {
 #[derive(Clone)]
 struct WorkspaceArgs {
     global_resource_handles: GlobalResourceHandles,
-    server_time: Option<Arc<ServerTime>>,
     workspace_setting: NewWorkspaceSource,
 }
 
 pub struct RootView {
     workspace: ViewHandle<Workspace>,
-    server_time: Option<Arc<ServerTime>>,
-    pub server_api: Arc<ServerApi>,
     pub model_event_sender: Option<SyncSender<ModelEvent>>,
 }
 
@@ -1135,20 +1115,15 @@ impl RootView {
         workspace_setting: NewWorkspaceSource,
         ctx: &mut ViewContext<Self>,
     ) -> Self {
-        let server_api = ServerApiProvider::as_ref(ctx).get();
-
         let model_event_sender = global_resource_handles.model_event_sender.clone();
         let workspace = WorkspaceArgs {
             global_resource_handles,
-            server_time: None,
             workspace_setting,
         }
         .create_workspace(ctx);
 
         let root_view = Self {
             workspace,
-            server_time: None,
-            server_api: server_api.clone(),
             model_event_sender,
         };
 
@@ -1158,17 +1133,6 @@ impl RootView {
             });
         }
 
-        let autoupdate_handle = AutoupdateState::handle(ctx);
-        ctx.subscribe_to_model(&autoupdate_handle, |root_view, _handle, evt, ctx| {
-            if let AutoupdateStateEvent::CheckComplete {
-                result,
-                request_type: RequestType::Poll,
-            } = evt
-            {
-                root_view.polling_update_check_complete(result, ctx)
-            }
-        });
-
         AutoupdateState::handle(ctx).update(ctx, |state, ctx| state.start_polling(ctx));
 
         root_view
@@ -1177,46 +1141,6 @@ impl RootView {
     /// Used for integration tests.
     pub fn workspace_view(&self) -> &ViewHandle<Workspace> {
         &self.workspace
-    }
-
-    fn polling_update_check_complete(
-        &mut self,
-        result: &Result<UpdateReady>,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        if let Ok(UpdateReady::Yes { new_version, .. }) = result {
-            log::info!("Update ready for channel version {new_version:?}");
-            if new_version.update_by.is_some() {
-                log::info!("Update ready, there is an update-by time, checking for server time.");
-                let server_api = self.server_api.clone();
-                let _ = ctx.spawn(
-                    async move { server_api.server_time().await },
-                    Self::server_time_updated,
-                );
-            }
-        }
-    }
-
-    fn server_time_updated(
-        &mut self,
-        server_time: Result<ServerTime>,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        if let Ok(server_time) = server_time {
-            let server_time = Arc::new(server_time);
-            self.server_time = Some(server_time.clone());
-
-            let workspace = &self.workspace;
-            workspace.update(ctx, |workspace, ctx| {
-                workspace.set_server_time(server_time);
-                ctx.notify();
-            })
-        } else {
-            report_error!(anyhow::anyhow!(
-                "Error fetching server time {:?}",
-                server_time.err()
-            ));
-        }
     }
 
     fn close_window(&mut self, _: &(), ctx: &mut ViewContext<Self>) -> bool {
@@ -1292,7 +1216,6 @@ impl RootView {
     ) -> bool {
         // Focus the pane that the notification originated from.
         self.focus_pane(pane_view_locator, ctx);
-        send_telemetry_from_ctx!(TelemetryEvent::NotificationClicked, ctx);
         true
     }
 
@@ -1455,7 +1378,6 @@ impl WorkspaceArgs {
         ctx.add_typed_action_view(|ctx| {
             Workspace::new(
                 self.global_resource_handles,
-                self.server_time,
                 self.workspace_setting,
                 ctx,
             )

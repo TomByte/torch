@@ -45,7 +45,6 @@ regex_dfas.workspace = true
 secret_redaction.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-session-sharing-protocol.workspace = true
 shellexpand.workspace = true
 smallvec.workspace = true
 smol_str.workspace = true
@@ -126,5 +125,4 @@ integration_tests = [
 ]
 local_fs = ["torch_core/local_fs"]
 local_tty = []
-remote_tty = []
 test-util = ["torch_core/test-util", "torchui_core/test-util"]

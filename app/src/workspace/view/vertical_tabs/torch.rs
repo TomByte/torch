@@ -16,9 +16,9 @@ use torchui::ViewContext;
 use torchui::elements::DraggableState;
 
 use super::*;
+use crate::palette::PaletteSource;
 use crate::menu::{MenuItem, MenuItemFields};
 use crate::palette::PaletteMode;
-use crate::server::telemetry::PaletteSource;
 use crate::tab::{ColorPickerTarget, color_picker_menu_items};
 use crate::terminal::CLIAgent;
 use crate::terminal::cli_agent_sessions::{
@@ -2300,7 +2300,7 @@ fn agents_panel(
                 .on_click(|ctx, _, _| {
                     ctx.dispatch_typed_action(WorkspaceAction::TogglePalette {
                         mode: PaletteMode::Agents,
-                        source: PaletteSource::Keybinding,
+                        source: PaletteSource::Other,
                     })
                 })
                 .finish(),

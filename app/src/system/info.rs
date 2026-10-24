@@ -7,20 +7,13 @@ use torchui::{Entity, ModelContext, SingletonEntity};
 pub struct SystemInfo {
     /// A structure we can use to efficiently query system information.
     system: sysinfo::System,
-    /// The long OS version.
-    long_os_version: Option<String>,
 }
 
 impl SystemInfo {
     pub fn new(_: &mut ModelContext<Self>) -> Self {
         Self {
             system: sysinfo::System::new(),
-            long_os_version: sysinfo::System::long_os_version(),
         }
-    }
-
-    pub fn long_os_version(&self) -> Option<&str> {
-        self.long_os_version.as_deref()
     }
 
     /// Returns the [`sysinfo::ProcessRefreshKind`] that should be used when enumerating the entire

@@ -10,7 +10,7 @@ use crate::integration_testing::view_getters::{
 };
 use crate::terminal::CLIAgent;
 use crate::terminal::cli_agent_sessions::{
-    CLIAgentInputEntrypoint, CLIAgentInputState, CLIAgentSession, CLIAgentSessionContext,
+    CLIAgentInputState, CLIAgentSession, CLIAgentSessionContext,
     CLIAgentSessionStatus, CLIAgentSessionsModel,
 };
 use crate::terminal::view::TerminalAction;
@@ -44,7 +44,7 @@ pub fn open_cli_agent_rich_input(tab_index: usize) -> TestStep {
                 });
 
                 CLIAgentSessionsModel::handle(ctx).update(ctx, |sessions, ctx| {
-                    sessions.open_input(view_id, CLIAgentInputEntrypoint::CtrlG, false, ctx);
+                    sessions.open_input(view_id, false, ctx);
                 });
             });
         },

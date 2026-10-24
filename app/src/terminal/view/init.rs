@@ -6,7 +6,6 @@ use torchui::units::IntoLines;
 use super::TerminalAction;
 use crate::channel::{Channel, ChannelState};
 use crate::features::FeatureFlag;
-use crate::server::telemetry::ToggleBlockFilterSource;
 use crate::settings_view::flags;
 use crate::terminal::TerminalView;
 use crate::terminal::model::escape_sequences::{self, EscCodes};
@@ -620,7 +619,7 @@ pub fn init(app: &mut AppContext) {
     app.register_editable_bindings([EditableBinding::new(
         TOGGLE_BLOCK_FILTER_KEYBINDING,
         "Toggle block filter on selected or last block",
-        TerminalAction::ToggleBlockFilterOnSelectedOrLastBlock(ToggleBlockFilterSource::Binding),
+        TerminalAction::ToggleBlockFilterOnSelectedOrLastBlock,
     )
     .with_mac_key_binding("shift-alt-F")
     .with_context_predicate(id!("Terminal") & !id!("IMEOpen") & !id!("AltScreen"))]);

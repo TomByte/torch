@@ -2,12 +2,10 @@
 
 mod agent_status;
 mod alloc;
-mod antivirus;
 #[cfg(target_os = "macos")]
 mod app_menus;
 mod app_services;
 mod app_state;
-mod auth;
 mod autoupdate;
 mod banner;
 mod changelog_model;
@@ -25,10 +23,7 @@ mod debug_dump;
 mod default_terminal;
 #[cfg(windows)]
 mod dynamic_libraries;
-#[cfg(target_family = "wasm")]
-mod font_fallback;
 mod global_resource_handles;
-mod gpu_state;
 mod interval_timer;
 #[cfg(feature = "local_fs")]
 mod local_control;
@@ -56,7 +51,6 @@ mod remote_server;
 mod resource_limits;
 mod safe_triangle;
 mod search_bar;
-mod server;
 mod session_management;
 mod shell_indicator;
 mod suggestions;
@@ -75,8 +69,6 @@ mod view_components;
 mod vim_registers;
 mod voltron;
 mod warp_managed_paths_watcher;
-#[cfg(target_family = "wasm")]
-mod wasm_nux_dialog;
 mod window_settings;
 
 // PLEASE DO NOT ADD MORE PUBLIC MODULES!
@@ -110,7 +102,6 @@ pub mod tab_configs;
 pub mod terminal;
 pub mod themes;
 use agent_status::AgentNotificationsModel;
-use auth::auth_state::{AuthState, AuthStateProvider};
 use code::editor_management::CodeManager;
 use code::opened_files::OpenedFilesModel;
 use code_review::GlobalCodeReviewModel;
@@ -120,8 +111,6 @@ use quit_warning::UnsavedStateSummary;
 use repo_metadata::{
     RepoMetadataModel, repositories::DetectedRepositories, watcher::DirectoryWatcher,
 };
-use server::network_log_pane_manager::NetworkLogPaneManager;
-use server::telemetry::context_provider::AppTelemetryContextProvider;
 #[cfg(feature = "local_fs")]
 use settings::import::model::ImportedConfigModel;
 use settings_view::pane_manager::SettingsPaneManager;
@@ -133,9 +122,8 @@ pub use util::bindings::cmd_or_ctrl_shift;
 #[cfg(feature = "local_fs")]
 use watcher::HomeDirectoryWatcher;
 
+use crate::palette::PaletteSource;
 use crate::persisted_workspace::PersistedWorkspace;
-use crate::uri::web_intent_parser::maybe_rewrite_web_url_to_intent;
-use crate::view_components::DismissibleToast;
 pub mod workflows;
 pub mod workspace;
 
@@ -153,24 +141,18 @@ use interval_timer::IntervalTimer;
 use itertools::Itertools;
 #[cfg(feature = "integration_tests")]
 pub use persistence::testing as sqlite_testing;
-use server::server_api::ServerApiProvider;
 use settings::{ExtraMetaKeys, PrivacySettings};
 use terminal::input;
 use terminal::session_settings::SessionSettings;
 // Re-export the debounce function to simplify imports.
 pub use torch_core::r#async::debounce;
 use torch_core::execution_mode::{AppExecutionMode, ExecutionMode};
-// Re-export the send_telemetry_from_ctx macro at the crate root level
-pub use torch_core::send_telemetry_from_app_ctx;
-pub use torch_core::send_telemetry_from_ctx;
 // Re-export the safe logging macros at the crate root level for backwards compatibility
 pub use torch_core::{safe_debug, safe_error, safe_info, safe_warn};
 use torch_errors::{report_error, report_if_error};
 #[cfg(feature = "local_fs")]
 use torch_files::FileModel;
 use torch_logging::{LogDestination, LogFrontend};
-use torch_server_client::iap::{IapManager, IapManagerEvent, IapState};
-use torch_server_client::network_logging::NetworkLogModel;
 use torchui::integration::TestDriver;
 use torchui::platform::TerminationMode;
 use torchui::platform::app::{ApproveTerminateResult, TerminationRequestSource};
@@ -182,7 +164,6 @@ use workspace::sync_inputs::SyncedInputState;
 
 use self::features::FeatureFlag;
 #[cfg(not(target_family = "wasm"))]
-use crate::antivirus::AntivirusInfo;
 use crate::app_state::AppState;
 use crate::autoupdate::{AutoupdateState, RelaunchModel};
 use crate::changelog_model::ChangelogModel;
@@ -192,7 +173,6 @@ use crate::code::language_server_shutdown_manager::LanguageServerShutdownManager
 use crate::context_chips::prompt::Prompt;
 use crate::default_terminal::DefaultTerminal;
 pub use crate::global_resource_handles::{GlobalResourceHandles, GlobalResourceHandlesProvider};
-use crate::gpu_state::GPUState;
 use crate::network::NetworkStatus;
 use crate::notebooks::editor::keys::NotebookKeybindings;
 use crate::notification::NotificationContext;
@@ -202,10 +182,6 @@ use crate::projects::ProjectManagementModel;
 use crate::root_view::{
     OpenFromRestoredArg, OpenPath, quake_mode_window_id, quake_mode_window_is_open,
 };
-#[cfg(not(target_family = "wasm"))]
-use crate::server::server_api::managed_secrets::AppManagedSecretManager as ManagedSecretManager;
-pub use crate::server::telemetry::TelemetryEvent;
-use crate::server::telemetry::{CloseTarget, PaletteSource};
 use crate::session_management::{RunningSessionSummary, SessionNavigationData};
 use crate::settings::manager::SettingsManager;
 use crate::settings::{AccessibilitySettings, ScrollSettings, SelectionSettings};
@@ -434,24 +410,6 @@ pub fn run() -> Result<()> {
     // Parse command-line arguments.
     let args = torch_cli::Args::from_env();
 
-    // Server URL overrides are only honored on internal dev channels. Release channels silently
-    // ignore `--server-root-url` / `--ws-server-url` (and their
-    // `TORCH_*` env-var equivalents) so shipped builds can't be redirected away from their
-    // baked-in server URLs. See `Channel::allows_server_url_overrides`.
-    if ChannelState::channel().allows_server_url_overrides() {
-        if let Some(url) = args.server_root_url()
-            && let Err(e) = ChannelState::override_server_root_url(url.to_owned())
-        {
-            eprintln!("Error: Invalid server root URL: {e:#}");
-        }
-
-        if let Some(url) = args.ws_server_url()
-            && let Err(e) = ChannelState::override_ws_server_url(url.to_owned())
-        {
-            eprintln!("Error: Invalid websocket server URL: {e:#}");
-        }
-    }
-
     if let Some(command) = args.command() {
         #[cfg(windows)]
         if command.prints_to_stdout() {
@@ -469,10 +427,6 @@ pub fn run() -> Result<()> {
             #[cfg(not(target_family = "wasm"))]
             torch_cli::Command::DumpSettingsSchema { output_path } => {
                 return settings::schema_generation::dump_settings_schema(output_path.as_deref());
-            }
-            #[cfg(not(target_family = "wasm"))]
-            torch_cli::Command::PrintTelemetryEvents => {
-                return TelemetryEvent::print_telemetry_events_json();
             }
         }
     }
@@ -611,17 +565,6 @@ fn run_internal(mut launch_mode: LaunchMode) -> Result<()> {
     // any children we spawn (like the terminal server) inherit our adjusted
     // rlimits.
     resource_limits::adjust_resource_limits();
-
-    // For wasm builds we have this special case to parse out the intent
-    // from the url that is used to visite the app on web.
-    #[cfg(target_family = "wasm")]
-    {
-        use uri::web_intent_parser;
-        if let Some(intent) = web_intent_parser::parse_web_intent_from_current_url() {
-            launch_mode.add_url(intent);
-        }
-        web_intent_parser::set_context_flags_from_current_url();
-    }
 
     #[cfg(all(
         feature = "release_bundle",
@@ -895,35 +838,7 @@ pub(crate) fn initialize_app(
         ctx.set_zoom_factor(WindowSettings::as_ref(ctx).zoom_level.as_zoom_factor());
     }
 
-    let auth_state = AuthState::new(ctx);
-    let auth_state = Arc::new(auth_state);
-    timer.mark_interval_end("AUTH_MANAGER_SET_USER");
-
-    // NetworkLogModel must be registered before ServerApiProvider so that
-    // `NetworkLogModel::install_on_clients` can reach it when forwarding items
-    // captured by the HTTP client hooks.
-    ctx.add_singleton_model(|_ctx| NetworkLogModel::default());
-
-    // Create a shared IAP state for staging builds. The same `Arc<IapState>`
-    // is handed to both `ServerApi` (for sync reads on the request path) and
-    // `IapManager` (which owns refresh logic on the main thread).
-    #[cfg(not(target_family = "wasm"))]
-    let iap_state = ChannelState::iap_config().map(|cfg| Arc::new(IapState::new(&cfg)));
-    #[cfg(target_family = "wasm")]
-    let iap_state: Option<Arc<IapState>> = None;
-
-    let server_api_provider = ctx.add_singleton_model({
-        let auth_state = auth_state.clone();
-        let iap_state = iap_state.clone();
-        move |ctx| ServerApiProvider::new(auth_state, iap_state, ctx)
-    });
-
-    let server_api = server_api_provider.as_ref(ctx).get();
-    ctx.add_singleton_model(|_ctx| AuthStateProvider::new(auth_state.clone()));
-
-    ctx.add_singleton_model(AppTelemetryContextProvider::new_context_provider);
-
-    ctx.add_singleton_model(|_ctx| GPUState::new());
+    let http_client = Arc::new(http_client::Client::new());
 
     PrivacySettings::register_singleton(ctx);
 
@@ -950,7 +865,7 @@ pub(crate) fn initialize_app(
         }
     };
     let (sqlite_data, writer_handles) =
-        persistence::initialize(ctx, persistence_scope, persisted_data_scope);
+        persistence::initialize(persistence_scope, persisted_data_scope);
     timer.mark_interval_end("SQLITE_INITIALIZED");
 
     let persistence_writer = PersistenceWriter::new(writer_handles);
@@ -1008,12 +923,6 @@ pub(crate) fn initialize_app(
         );
     }
 
-    ctx.add_singleton_model(AntivirusInfo::new);
-
-    if let LaunchMode::App { .. } = launch_mode {
-        autoupdate::check_and_report_update_errors(ctx);
-    }
-
     ctx.set_fallback_font_source_provider(|url| ::asset_cache::url_source(url));
 
     ctx.set_default_binding_validator(is_binding_cross_platform);
@@ -1036,14 +945,6 @@ pub(crate) fn initialize_app(
     }
 
     ctx.add_singleton_model(|_| SettingsPaneManager::new());
-    ctx.add_singleton_model(|_| NetworkLogPaneManager::default());
-    ctx.add_singleton_model(|ctx| {
-        // Not using the *Provider types isn't ideal, but it's worth it for the ability to move managed secrets to a separate crate.
-        ManagedSecretManager::new(
-            server_api_provider.as_ref(ctx).get_managed_secrets_client(),
-            auth_state.clone(),
-        )
-    });
 
     #[cfg(feature = "local_tty")]
     terminal::available_shells::register(ctx);
@@ -1088,17 +989,6 @@ pub(crate) fn initialize_app(
         let extra_meta_keys = *KeysSettings::as_ref(ctx).extra_meta_keys;
         apply_extra_meta_keys(event, extra_meta_keys);
         apply_scroll_multiplier(event, ctx);
-    });
-
-    // Rewrite recognized Torch web URLs (sessions, Drive, settings, home) into local
-    // intent URLs when possible so they open directly in the desktop app.
-    ctx.set_before_open_url(|url_str, _ctx| {
-        if let Ok(url) = Url::parse(url_str)
-            && let Some(intent) = maybe_rewrite_web_url_to_intent(&url)
-        {
-            return intent.to_string();
-        }
-        url_str.to_owned()
     });
 
     ctx.set_a11y_verbosity(*AccessibilitySettings::as_ref(ctx).a11y_verbosity);
@@ -1222,7 +1112,7 @@ pub(crate) fn initialize_app(
     ctx.add_singleton_model(|_| DisplayCount(display_count));
 
     ctx.add_singleton_model(|_| RelaunchModel::new());
-    ctx.add_singleton_model(|_| ChangelogModel::new(server_api.clone()));
+    ctx.add_singleton_model(|_| ChangelogModel::new(http_client.clone()));
     ctx.add_singleton_model(|_| NetworkStatus::new());
     ctx.add_singleton_model(|_| SystemStats::new());
     ctx.add_singleton_model(|_| KeybindingChangedNotifier::new());
@@ -1260,54 +1150,6 @@ pub(crate) fn initialize_app(
         ctx.add_singleton_model(system::SystemInfo::new);
     }
 
-    // `IapManager` drives IAP token refresh for staging builds.
-    // Register it after `LocalShellState`: the Manager needs to know where the gcloud
-    // cli lives & thus needs PATH config set by ~/.zshrc et al.
-    //
-    // Registered on all targets (including wasm) so consumers such as the
-    // shared-session viewer network — which compiles and runs on wasm — can
-    // read the singleton without panicking. On wasm `iap_state` is always
-    // `None`, making this an inert no-op: `IapManager::new` early-returns from
-    // its refresh loop and `iap_state()` yields no proxy-auth header.
-    ctx.add_singleton_model(move |ctx| {
-        let path_resolver = Box::new(|_ctx: &mut AppContext| {
-            #[cfg(feature = "local_tty")]
-            let path_future = LocalShellState::handle(_ctx).update(_ctx, |shell_state, ctx| {
-                shell_state.get_interactive_path_env_var(ctx)
-            });
-
-            #[cfg(not(feature = "local_tty"))]
-            let path_future =
-                futures::FutureExt::boxed_local(futures::future::ready(None::<String>));
-
-            path_future
-        });
-        IapManager::new(iap_state, path_resolver, None, ctx)
-    });
-    // Subscribe to IAP manager events to show toasts when refresh fails.
-    ctx.subscribe_to_model(&IapManager::handle(ctx), |_, e, ctx| {
-        match e {
-            IapManagerEvent::RefreshFailed {
-                message,
-                is_first_failure_of_streak,
-            } if *is_first_failure_of_streak => {
-                let window_id = ctx
-                    .windows()
-                    .active_window()
-                    .or_else(|| ctx.windows().ordered_window_ids().first().copied());
-                let Some(window_id) = window_id else {
-                    return;
-                };
-                let toast: DismissibleToast<WorkspaceAction> =
-                    DismissibleToast::error(format!("IAP credential refresh failed: {message}"));
-                ToastStack::handle(ctx).update(ctx, |stack, ctx| {
-                    stack.add_ephemeral_toast(toast, window_id, ctx);
-                });
-            }
-            _ => {}
-        };
-    });
-
     // Add a singleton model that holds the current prompt configuration.
     ctx.add_singleton_model(Prompt::new);
 
@@ -1315,7 +1157,7 @@ pub(crate) fn initialize_app(
     ctx.add_singleton_model(|_| ResizableData::default());
 
 
-    AutoupdateState::register(ctx, server_api.clone());
+    AutoupdateState::register(ctx, http_client);
 
     ctx.add_singleton_model(LocalWorkflows::new);
 
@@ -1455,12 +1297,6 @@ pub(crate) fn app_callbacks(is_integration_test: bool) -> torchui::platform::App
 
             let summary = UnsavedStateSummary::for_window(window_id, ctx);
 
-            send_telemetry_from_app_ctx!(
-                TelemetryEvent::UserInitiatedClose {
-                    initiated_on: CloseTarget::Window,
-                },
-                ctx
-            );
 
             // Don't show dialog on integration test. Machine can't press buttons.
             if !is_integration_test && summary.save_unsaved_code_and_should_warn(ctx) {
@@ -1500,12 +1336,6 @@ pub(crate) fn app_callbacks(is_integration_test: bool) -> torchui::platform::App
                 return ApproveTerminateResult::Terminate;
             }
 
-            send_telemetry_from_app_ctx!(
-                TelemetryEvent::UserInitiatedClose {
-                    initiated_on: CloseTarget::App,
-                },
-                ctx
-            );
 
             // If there's a pending autoupdate, apply that before showing the unsaved changes
             // dialog. We apply the update first so that the dialog can force-terminate.
@@ -1543,7 +1373,6 @@ pub(crate) fn app_callbacks(is_integration_test: bool) -> torchui::platform::App
                         .toggle_and_save_value(ctx)
                 );
             });
-            send_telemetry_from_app_ctx!(TelemetryEvent::QuitModalDisabled, ctx);
         })),
         on_notification_clicked: Some(Box::new(move |notification_response, ctx| {
             if let Some(notification_data) = notification_response.data() {
@@ -1635,13 +1464,6 @@ pub(crate) fn app_callbacks(is_integration_test: bool) -> torchui::platform::App
 fn on_close_app_cancelled(open_navigation_palette: bool, ctx: &mut AppContext) {
     autoupdate::cancel_relaunch(ctx);
 
-    send_telemetry_from_app_ctx!(
-        TelemetryEvent::QuitModalCancel {
-            nav_palette: open_navigation_palette,
-            modal_for: CloseTarget::App,
-        },
-        ctx
-    );
 
     let sessions = SessionNavigationData::all_sessions(ctx).collect_vec();
     let sessions_summary = RunningSessionSummary::new(&sessions);
@@ -1677,7 +1499,7 @@ fn on_close_app_cancelled(open_navigation_palette: bool, ctx: &mut AppContext) {
             handle.id(),
             &WorkspaceAction::OpenPalette {
                 mode: PaletteMode::Navigation,
-                source: PaletteSource::QuitModal,
+                source: PaletteSource::Other,
                 query: Some("running".to_owned()),
             },
         );
@@ -1689,13 +1511,6 @@ fn on_close_window_cancelled(
     open_navigation_palette: bool,
     ctx: &mut AppContext,
 ) {
-    send_telemetry_from_app_ctx!(
-        TelemetryEvent::QuitModalCancel {
-            nav_palette: open_navigation_palette,
-            modal_for: CloseTarget::Window,
-        },
-        ctx
-    );
 
     let sessions = SessionNavigationData::all_sessions(ctx).collect_vec();
     let sessions_summary = RunningSessionSummary::new(&sessions);
@@ -1722,7 +1537,7 @@ fn on_close_window_cancelled(
             handle.id(),
             &WorkspaceAction::OpenPalette {
                 mode: PaletteMode::Navigation,
-                source: PaletteSource::QuitModal,
+                source: PaletteSource::Other,
                 query: Some("running".to_owned()),
             },
         );
@@ -1749,10 +1564,6 @@ fn launch(ctx: &mut torchui::AppContext, app_state: Option<AppState>, launch_mod
     IntervalTimer::handle(ctx).update(ctx, |timer, _ctx| {
         timer.mark_interval_end("KEYBINDINGS_LOADED");
     });
-
-    // For now, we only specify application-level fallback fonts on web.
-    #[cfg(target_family = "wasm")]
-    ctx.set_fallback_font_fn(font_fallback::fallback_font_fn);
 
     match launch_mode {
         LaunchMode::App { .. } | LaunchMode::Test { .. } => {

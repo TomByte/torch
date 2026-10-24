@@ -67,24 +67,6 @@ pub struct RemoteServerIdentityArgs {
 )]
 #[clap(subcommand_precedence_over_arg = true)]
 pub struct Args {
-    /// Override the server root URL.
-    #[arg(
-        long = "server-root-url",
-        global = true,
-        hide = true,
-        env = "TORCH_SERVER_ROOT_URL"
-    )]
-    server_root_url: Option<String>,
-
-    /// Override the websocket server URL.
-    #[arg(
-        long = "ws-server-url",
-        global = true,
-        hide = true,
-        env = "TORCH_WS_SERVER_URL"
-    )]
-    ws_server_url: Option<String>,
-
     #[command(subcommand)]
     command: Option<Command>,
 
@@ -167,14 +149,6 @@ impl Args {
     pub fn into_app_args(self) -> AppArgs {
         self.args
     }
-
-    pub fn server_root_url(&self) -> Option<&str> {
-        self.server_root_url.as_deref()
-    }
-
-    pub fn ws_server_url(&self) -> Option<&str> {
-        self.ws_server_url.as_deref()
-    }
 }
 
 /// Torch may spawn several worker processes - mostly servers that support the main application.
@@ -256,11 +230,6 @@ pub enum Command {
         /// Write the schema to this path instead of standard output.
         output_path: Option<std::path::PathBuf>,
     },
-
-    /// Print telemetry events in production and exit.
-    #[clap(long_flag = "print-telemetry-events", hide = true)]
-    #[cfg(not(target_family = "wasm"))]
-    PrintTelemetryEvents,
 }
 
 impl Command {
@@ -272,8 +241,6 @@ impl Command {
             Command::Completions { .. } => true,
             #[cfg(not(target_family = "wasm"))]
             Command::DumpSettingsSchema { output_path } => output_path.is_none(),
-            #[cfg(not(target_family = "wasm"))]
-            Command::PrintTelemetryEvents => true,
         }
     }
 }

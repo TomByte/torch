@@ -5,7 +5,7 @@
 use anyhow::Result;
 use torch_core::AppId;
 use torch_core::channel::{
-    AutoupdateConfig, Channel, ChannelConfig, ChannelState, OzConfig, WarpServerConfig,
+    AutoupdateConfig, Channel, ChannelConfig, ChannelState,
 };
 
 // Simple wrapper around torch::run() for Torch OSS builds.
@@ -18,14 +18,11 @@ fn main() -> Result<()> {
         ChannelConfig {
             app_id: AppId::new("dev", "tombyte", "Torch"),
             logfile_name: "torch.log".into(),
-            server_config: WarpServerConfig::disabled(),
-            oz_config: OzConfig::disabled(),
             // Updates are published as GitHub releases, which only carry macOS builds.
             autoupdate_config: cfg!(target_os = "macos").then(|| AutoupdateConfig {
                 releases_base_url: "https://github.com/TomByte/torch/releases".into(),
                 show_autoupdate_menu_items: true,
             }),
-            mcp_static_config: None,
         },
     );
     ChannelState::set(state);

@@ -16,7 +16,6 @@ use torchui::elements::{
 };
 use torchui::keymap::{ContextPredicate, FixedBinding, Keystroke};
 use torchui::platform::{Cursor, GraphicsBackend};
-use torchui::rendering::GPUPowerPreference;
 use torchui::ui_components::button::ButtonVariant;
 use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use torchui::ui_components::switch::SwitchStateHandle;
@@ -50,10 +49,8 @@ use crate::editor::{
     SingleLineEditorOptions, TextOptions,
 };
 use crate::features::FeatureFlag;
-use crate::gpu_state::GPUState;
 use crate::root_view::QuakeModePinPosition;
 use crate::search::command_search::settings::CommandSearchSettings;
-use crate::server::telemetry::TelemetryEvent;
 use crate::settings::native_preference::{NativePreferenceSettings, UserNativePreference};
 use crate::settings::{
     AliasExpansionSettings, AppEditorSettings, CLIAgentSettings, ChangelogSettings,
@@ -85,7 +82,7 @@ use crate::util::bindings::{
 use crate::view_components::{Dropdown, DropdownItem};
 use crate::workspace::WorkspaceAction;
 use crate::workspace::tab_settings::{NewTabPlacement, TabSettings, TabSettingsChangedEvent};
-use crate::{GlobalResourceHandles, send_telemetry_from_ctx, themes};
+use crate::{GlobalResourceHandles, themes};
 
 cfg_if::cfg_if! {
     if #[cfg(target_os = "macos")] {
@@ -566,24 +563,6 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
         flags::PRESERVE_INPUT_FOCUS_ON_BLOCK_SELECTION_FLAG,
     ));
 
-    if GPUState::as_ref(app).is_low_power_gpu_available() {
-        toggle_binding_pairs.push(
-            ToggleSettingActionPair::new(
-                "integrated GPU rendering (low power)",
-                builder(SettingsAction::FeaturesPageToggle(
-                    FeaturesPageAction::TogglePreferLowPowerGPU,
-                )),
-                context,
-                flags::PREFER_LOW_POWER_GPU_FLAG,
-            )
-            .is_supported_on_current_platform(
-                GPUSettings::as_ref(app)
-                    .prefer_low_power_gpu
-                    .is_supported_on_current_platform(),
-            ),
-        );
-    }
-
     #[cfg(any(target_os = "linux", target_os = "freebsd"))]
     {
         if windowing_system_is_customizable(app) {
@@ -649,7 +628,6 @@ pub enum FeaturesPageAction {
     ToggleCodeAsDefaultEditor,
     ToggleShowInputHintText,
     ToggleUseAudibleBell,
-    TogglePreferLowPowerGPU,
     ToggleVimMode,
     ToggleVimUnnamedSystemClipboard,
     ToggleVimStatusBar,
@@ -779,429 +757,6 @@ fn block_maximum_rows_description() -> String {
     )
 }
 
-fn to_string(b: bool) -> String {
-    format!("{b}")
-}
-
-impl FeaturesPageAction {
-    fn telemetry_event(&self, ctx: &AppContext) -> TelemetryEvent {
-        let reporting_settings = AltScreenReporting::as_ref(ctx);
-        let selection_settings = SelectionSettings::as_ref(ctx);
-        let input_settings = InputSettings::as_ref(ctx);
-        let keys_settings = KeysSettings::as_ref(ctx);
-        match self {
-            Self::ToggleCopyOnSelect => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleCopyOnSelect".to_string(),
-                value: to_string(selection_settings.copy_on_select_enabled()),
-            },
-            Self::ToggleOpenLinksInDesktopApp => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleOpenLinksInDesktopApp".to_string(),
-                value: to_string(matches!(
-                    NativePreferenceSettings::as_ref(ctx)
-                        .user_native_redirect_preference
-                        .value(),
-                    UserNativePreference::Desktop
-                )),
-            },
-            Self::ToggleSnackbar => {
-                let settings = BlockListSettings::as_ref(ctx);
-                TelemetryEvent::FeaturesPageAction {
-                    action: "ToggleSnackbar".to_string(),
-                    value: to_string(*settings.snackbar_enabled),
-                }
-            }
-            Self::ToggleNotifications => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleNotifications".to_string(),
-                value: to_string(matches!(
-                    SessionSettings::as_ref(ctx).notifications.mode,
-                    NotificationsMode::Enabled
-                )),
-            },
-            Self::ToggleRestoreSession => {
-                TelemetryEvent::ToggleRestoreSession(*GeneralSettings::as_ref(ctx).restore_session)
-            }
-            Self::ToggleAutocompleteSymbols => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleAutocompleteSymbols".to_string(),
-                value: to_string(*AppEditorSettings::as_ref(ctx).autocomplete_symbols),
-            },
-            Self::ToggleSshReuseControlMaster => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleSshReuseControlMaster".to_string(),
-                value: to_string(
-                    *SshSettings::as_ref(ctx)
-                        .reuse_existing_control_master
-                        .value(),
-                ),
-            },
-            Self::SetGlobalHotkeyMode(mode) => TelemetryEvent::FeaturesPageAction {
-                action: "SetGlobalHotkeyMode".to_string(),
-                value: format!("{mode:?}"),
-            },
-            Self::ToggleLinkTooltip => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleLinkTooltip".to_string(),
-                value: to_string(*GeneralSettings::as_ref(ctx).link_tooltip),
-            },
-            Self::ToggleCompletionsOpenWhileTyping => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleCompletionsOpenWhileTyping".to_string(),
-                value: to_string(*input_settings.completions_open_while_typing.value()),
-            },
-            Self::ToggleWarpCompletions => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleWarpCompletions".to_string(),
-                value: to_string(*input_settings.warp_completions_enabled.value()),
-            },
-            Self::ToggleNativeShellCompletions => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleNativeShellCompletions".to_string(),
-                value: to_string(*input_settings.native_shell_completions_enabled.value()),
-            },
-            Self::ToggleCommandCorrections => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleCommandCorrections".to_string(),
-                value: to_string(*input_settings.command_corrections.value()),
-            },
-            Self::ToggleErrorUnderlining => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleErrorUnderlining".to_string(),
-                value: to_string(*input_settings.error_underlining.value()),
-            },
-            Self::ToggleSyntaxHighlighting => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleSyntaxHighlighting".to_string(),
-                value: to_string(*input_settings.syntax_highlighting.value()),
-            },
-            Self::ToggleAliasExpansion => {
-                let settings = AliasExpansionSettings::as_ref(ctx);
-                TelemetryEvent::FeaturesPageAction {
-                    action: "ToggleAliasExpansion".to_string(),
-                    value: to_string(*settings.alias_expansion_enabled),
-                }
-            }
-            Self::ToggleMiddleClickPaste => {
-                let settings = SelectionSettings::as_ref(ctx);
-                TelemetryEvent::FeaturesPageAction {
-                    action: "ToggleMiddleClickPaste".to_string(),
-                    value: to_string(*settings.middle_click_paste_enabled),
-                }
-            }
-            Self::ToggleCodeAsDefaultEditor => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleCodeAsDefaultEditor".to_string(),
-                value: to_string(*CodeSettings::as_ref(ctx).code_as_default_editor.value()),
-            },
-            Self::ToggleShowInputHintText => {
-                let settings = InputSettings::as_ref(ctx);
-                TelemetryEvent::FeaturesPageAction {
-                    action: "ToggleShowInputHintText".to_string(),
-                    value: to_string(*settings.show_hint_text),
-                }
-            }
-            Self::ActivationKeybindEditorClicked => TelemetryEvent::FeaturesPageAction {
-                action: "ActivationKeybindEditorClicked".to_string(),
-                value: String::new(),
-            },
-            Self::ActivationKeybindEditorCancel => TelemetryEvent::FeaturesPageAction {
-                action: "ActivationKeybindEditorCancel".to_string(),
-                value: String::new(),
-            },
-            Self::ActivationKeybindEditorSave => TelemetryEvent::FeaturesPageAction {
-                action: "ActivationKeybindEditorSave".to_string(),
-                value: String::new(),
-            },
-            Self::ActivationKeystrokeDefined(keystroke) => TelemetryEvent::FeaturesPageAction {
-                action: "ActivationKeystrokeDefined".to_string(),
-                value: keystroke.normalized(),
-            },
-            Self::QuakeKeybindEditorClicked => TelemetryEvent::FeaturesPageAction {
-                action: "QuakeKeybindEditorClicked".to_string(),
-                value: String::new(),
-            },
-            Self::QuakeKeystrokeDefined(keystroke) => TelemetryEvent::FeaturesPageAction {
-                action: "QuakeKeystrokeDefined".to_string(),
-                value: keystroke.normalized(),
-            },
-            Self::QuakeKeybindEditorCancel => TelemetryEvent::FeaturesPageAction {
-                action: "QuakeKeybindEditorCancel".to_string(),
-                value: String::new(),
-            },
-            Self::QuakeKeybindEditorSave => TelemetryEvent::FeaturesPageAction {
-                action: "QuakeKeybindEditorSave".to_string(),
-                value: String::new(),
-            },
-            Self::OpenUrl(url) => TelemetryEvent::FeaturesPageAction {
-                action: "OpenUrl".to_string(),
-                value: url.clone(),
-            },
-            Self::SetExtraMetaKeys(extra_metas) => TelemetryEvent::FeaturesPageAction {
-                action: "SetExtraMetaKeys".to_string(),
-                value: format!("{extra_metas:?}"),
-            },
-            Self::ToggleLeftMetaKey => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleLeftMetaKey".to_string(),
-                value: to_string(keys_settings.extra_meta_keys.left_alt),
-            },
-            Self::ToggleRightMetaKey => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleRightMetaKey".to_string(),
-                value: to_string(keys_settings.extra_meta_keys.right_alt),
-            },
-            Self::ToggleMouseReporting => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleMouseReporting".to_string(),
-                value: to_string(*reporting_settings.mouse_reporting_enabled),
-            },
-            Self::ToggleScrollReporting => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleScrollReporting".to_string(),
-                value: to_string(*reporting_settings.scroll_reporting_enabled),
-            },
-            Self::ToggleFocusReporting => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleFocusReporting".to_string(),
-                value: to_string(*reporting_settings.focus_reporting_enabled),
-            },
-            Self::QuakeEditorSetPinPosition(position) => TelemetryEvent::FeaturesPageAction {
-                action: "QuakeEditorSetPinPosition".to_string(),
-                value: format!("{position:?}"),
-            },
-            Self::QuakeEditorSetPinScreen(screen) => TelemetryEvent::FeaturesPageAction {
-                action: "QuakeEditorSetPinScreen".to_string(),
-                value: screen
-                    .map(|idx| format!("{idx}"))
-                    .unwrap_or_else(|| "Active Screen".into()),
-            },
-            Self::QuakeEditorResetWidthHeight => TelemetryEvent::FeaturesPageAction {
-                action: "QuakeEditorResetWidthHeight".to_string(),
-                value: String::new(),
-            },
-            Self::QuakeEditorSetWidthPercentage | Self::QuakeEditorSetHeightPercentage => {
-                TelemetryEvent::FeaturesPageAction {
-                    action: "QuakeEditorSetSizePercentage".to_string(),
-                    value: format!(
-                        "width: {:?}, height: {:?}",
-                        KeysSettings::handle(ctx)
-                            .as_ref(ctx)
-                            .quake_mode_settings
-                            .width_percentage(),
-                        KeysSettings::handle(ctx)
-                            .as_ref(ctx)
-                            .quake_mode_settings
-                            .height_percentage()
-                    ),
-                }
-            }
-            Self::QuakeEditorTogglePinWindow => TelemetryEvent::FeaturesPageAction {
-                action: "QuakeEditorTogglePinWindow".to_string(),
-                value: to_string(
-                    KeysSettings::as_ref(ctx)
-                        .quake_mode_settings
-                        .hide_window_when_unfocused,
-                ),
-            },
-            Self::ToggleLongRunningNotifications => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleLongRunningNotifications".to_string(),
-                value: to_string(
-                    SessionSettings::as_ref(ctx)
-                        .notifications
-                        .is_long_running_enabled,
-                ),
-            },
-            Self::SetLongRunningNotificationThreshold => TelemetryEvent::FeaturesPageAction {
-                action: "SetLongRunningNotificationThreshold".to_string(),
-                value: format!(
-                    "{}s",
-                    SessionSettings::handle(ctx)
-                        .as_ref(ctx)
-                        .notifications
-                        .long_running_threshold
-                        .as_secs_f32()
-                ),
-            },
-            Self::TogglePasswordPromptNotifications => TelemetryEvent::FeaturesPageAction {
-                action: "TogglePasswordPromptNotifications".to_string(),
-                value: to_string(
-                    SessionSettings::as_ref(ctx)
-                        .notifications
-                        .is_password_prompt_enabled,
-                ),
-            },
-            Self::ToggleAgentTaskCompletedNotifications => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleAgentTaskCompletedNotifications".to_string(),
-                value: to_string(
-                    SessionSettings::as_ref(ctx)
-                        .notifications
-                        .is_agent_task_completed_enabled,
-                ),
-            },
-            Self::ToggleNeedsAttentionNotifications => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleNeedsAttentionNotifications".to_string(),
-                value: to_string(
-                    SessionSettings::as_ref(ctx)
-                        .notifications
-                        .is_needs_attention_enabled,
-                ),
-            },
-            Self::ToggleNotificationSound => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleNotificationSound".to_string(),
-                value: to_string(
-                    SessionSettings::as_ref(ctx)
-                        .notifications
-                        .play_notification_sound,
-                ),
-            },
-            Self::ToggleShowWarningBeforeQuitting => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleShowWarningBeforeQuitting".to_string(),
-                value: to_string(
-                    *GeneralSettings::as_ref(ctx)
-                        .show_warning_before_quitting
-                        .value(),
-                ),
-            },
-            Self::ToggleLoginItem => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleLoginItem".to_string(),
-                value: to_string(*GeneralSettings::as_ref(ctx).add_app_as_login_item.value()),
-            },
-            Self::ToggleQuitOnLastWindowClosed => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleQuitOnLastWindowClosed".to_string(),
-                value: to_string(
-                    *GeneralSettings::as_ref(ctx)
-                        .quit_on_last_window_closed
-                        .value(),
-                ),
-            },
-            Self::ToggleSmartSelection => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleSmartSelection".to_string(),
-                value: to_string(SemanticSelection::as_ref(ctx).smart_select_enabled()),
-            },
-            Self::SetWordCharAllowlist => TelemetryEvent::FeaturesPageAction {
-                action: "SetWordCharAllowlist".to_string(),
-                value: SemanticSelection::as_ref(ctx).word_char_allowlist_string(),
-            },
-            Self::ResetWordCharAllowlist => TelemetryEvent::FeaturesPageAction {
-                action: "ResetWordCharAllowlist".to_string(),
-                value: String::new(),
-            },
-            Self::ToggleUseAudibleBell => {
-                let terminal_settings = TerminalSettings::as_ref(ctx);
-                TelemetryEvent::FeaturesPageAction {
-                    action: "ToggleUseAudibleBell".to_string(),
-                    value: to_string(*terminal_settings.use_audible_bell),
-                }
-            }
-            Self::ToggleVimMode => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleVimMode".to_string(),
-                value: to_string(*AppEditorSettings::as_ref(ctx).vim_mode.value()),
-            },
-            Self::ToggleVimUnnamedSystemClipboard => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleVimUnnamedSystemClipboard".to_string(),
-                value: to_string(
-                    *AppEditorSettings::as_ref(ctx)
-                        .vim_unnamed_system_clipboard
-                        .value(),
-                ),
-            },
-            Self::ToggleVimStatusBar => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleVimStatusBar".to_string(),
-                value: to_string(*AppEditorSettings::as_ref(ctx).vim_status_bar.value()),
-            },
-            Self::SetTabBehavior(tab_behavior) => TelemetryEvent::FeaturesPageAction {
-                action: "SetTabBehavior".to_string(),
-                value: format!("{tab_behavior:?}"),
-            },
-            Self::SetCtrlTabBehavior(ctrl_tab_behavior) => TelemetryEvent::FeaturesPageAction {
-                action: "SetCtrlTabBehavior".to_string(),
-                value: format!("{ctrl_tab_behavior:?}"),
-            },
-            Self::SetRightClickBehavior(right_click_behavior) => {
-                TelemetryEvent::FeaturesPageAction {
-                    action: "SetRightClickBehavior".to_string(),
-                    value: format!("{right_click_behavior:?}"),
-                }
-            }
-            Self::SetNewTabPlacement(new_tab_placement) => TelemetryEvent::FeaturesPageAction {
-                action: "SetNewTabPlacement".to_string(),
-                value: format!("{new_tab_placement:?}"),
-            },
-            Self::SetOsc52ClipboardAccess(access) => TelemetryEvent::FeaturesPageAction {
-                action: "SetOsc52ClipboardAccess".to_string(),
-                value: format!("{access:?}"),
-            },
-            Self::SearchForKeybinding(page_name) => TelemetryEvent::FeaturesPageAction {
-                action: "SearchForKeybinding".to_string(),
-                value: page_name.clone(),
-            },
-            Self::ToggleAutosuggestions => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleAutosuggestions".to_string(),
-                value: to_string(*AppEditorSettings::as_ref(ctx).enable_autosuggestions),
-            },
-            Self::ToggleAutosuggestionKeybindingHint => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleHideAutosuggestionKeybindingHint".to_string(),
-                value: to_string(
-                    *AppEditorSettings::as_ref(ctx)
-                        .autosuggestion_keybinding_hint
-                        .value(),
-                ),
-            },
-            Self::ToggleShowAutosuggestionIgnoreButton => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleShowAutosuggestionIgnoreButton".to_string(),
-                value: to_string(
-                    *AppEditorSettings::as_ref(ctx)
-                        .show_autosuggestion_ignore_button
-                        .value(),
-                ),
-            },
-            Self::TogglePreferLowPowerGPU => {
-                let gpu_settings = GPUSettings::as_ref(ctx);
-                TelemetryEvent::FeaturesPageAction {
-                    action: "TogglePreferLowPowerGPU".to_string(),
-                    value: to_string(*gpu_settings.prefer_low_power_gpu.value()),
-                }
-            }
-            Self::SetPreferredGraphicsBackend(backend) => TelemetryEvent::FeaturesPageAction {
-                action: "SetPreferredGraphicsBackend".to_string(),
-                value: format!("{backend:?}"),
-            },
-            Self::ToggleLinuxClipboardSelection => {
-                let selection_setting =
-                    SelectionSettings::as_ref(ctx).linux_selection_clipboard_enabled();
-                TelemetryEvent::FeaturesPageAction {
-                    action: "ToggleLinuxClipboardSelection".to_string(),
-                    value: to_string(selection_setting),
-                }
-            }
-            #[cfg(any(target_os = "linux", target_os = "freebsd"))]
-            Self::ToggleForceX11 => {
-                let setting = *LinuxAppConfiguration::as_ref(ctx).force_x11.value();
-                TelemetryEvent::FeaturesPageAction {
-                    action: "ToggleForceX11".to_string(),
-                    value: to_string(setting),
-                }
-            }
-            Self::MakeWarpDefaultTerminal => TelemetryEvent::FeaturesPageAction {
-                action: "MakeWarpDefaultTerminal".to_string(),
-                value: to_string(DefaultTerminal::as_ref(ctx).is_warp_default()),
-            },
-            Self::ToggleAutoOpenCodeReviewPane => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleAutoOpenCodeReviewPane".to_string(),
-                value: to_string(
-                    *GeneralSettings::as_ref(ctx).auto_open_code_review_pane_on_first_agent_change,
-                ),
-            },
-            Self::TogglePreserveInputFocusOnBlockSelection => {
-                let settings = BlockListSettings::as_ref(ctx);
-                TelemetryEvent::FeaturesPageAction {
-                    action: "TogglePreserveInputFocusOnBlockSelection".to_string(),
-                    value: to_string(*settings.preserve_input_focus_on_block_selection),
-                }
-            }
-            Self::SetNotificationToastDuration => TelemetryEvent::FeaturesPageAction {
-                action: "SetNotificationToastDuration".to_string(),
-                value: format!(
-                    "{}s",
-                    *SessionSettings::as_ref(ctx).notification_toast_duration_secs
-                ),
-            },
-            Self::ToggleAgentInAppNotifications => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleAgentInAppNotifications".to_string(),
-                value: to_string(*CLIAgentSettings::as_ref(ctx).show_agent_notifications),
-            },
-            Self::ToggleAsyncFind => TelemetryEvent::FeaturesPageAction {
-                action: "ToggleAsyncFind".to_string(),
-                value: to_string(*TerminalSettings::as_ref(ctx).async_find_enabled),
-            },
-        }
-    }
-}
-
 #[derive(Default)]
 struct MouseStateHandles {
     activation_hotkey_keybinding_editor: MouseStateHandle,
@@ -1278,7 +833,6 @@ pub struct FeaturesPageView {
 
     #[cfg(any(target_os = "linux", target_os = "freebsd"))]
     force_x11_changed: bool,
-    gpu_power_preference_changed: bool,
     graphics_backend_preference_changed: bool,
 }
 
@@ -1861,20 +1415,6 @@ impl TypedActionView for FeaturesPageView {
                     ctx.notify();
                 })
             }
-            TogglePreferLowPowerGPU => {
-                let new_value = GPUSettings::handle(ctx).update(ctx, |gpu_settings, ctx| {
-                    report_if_error!(gpu_settings.prefer_low_power_gpu.toggle_and_save_value(ctx));
-                    *gpu_settings.prefer_low_power_gpu.value()
-                });
-                ctx.update_rendering_config(|config| {
-                    config.gpu_power_preference = if new_value {
-                        GPUPowerPreference::LowPower
-                    } else {
-                        GPUPowerPreference::default()
-                    }
-                });
-                self.gpu_power_preference_changed = true;
-            }
             SetPreferredGraphicsBackend(graphics_backend) => {
                 GPUSettings::handle(ctx).update(ctx, |gpu_settings, ctx| {
                     report_if_error!(
@@ -1973,7 +1513,6 @@ impl TypedActionView for FeaturesPageView {
             }
         }
 
-        send_telemetry_from_ctx!(action.telemetry_event(ctx), ctx);
     }
 }
 
@@ -2462,7 +2001,6 @@ impl FeaturesPageView {
 
             #[cfg(any(target_os = "linux", target_os = "freebsd"))]
             force_x11_changed: false,
-            gpu_power_preference_changed: false,
             graphics_backend_preference_changed: false,
         };
 
@@ -2714,14 +2252,6 @@ impl FeaturesPageView {
         }
 
         let gpu_settings = GPUSettings::as_ref(ctx);
-        if gpu_settings
-            .prefer_low_power_gpu
-            .is_supported_on_current_platform()
-            && GPUState::as_ref(ctx).is_low_power_gpu_available()
-        {
-            system_widgets.push(Box::new(GPUWidget::default()));
-        }
-
         if gpu_settings
             .preferred_backend
             .is_supported_on_current_platform()
@@ -6287,63 +5817,6 @@ impl SettingsWidget for LinuxSelectionClipboardWidget {
                 .finish(),
             None,
         )
-    }
-}
-
-#[derive(Default)]
-struct GPUWidget {
-    switch_state: SwitchStateHandle,
-}
-
-impl SettingsWidget for GPUWidget {
-    type View = FeaturesPageView;
-
-    fn search_terms(&self) -> &str {
-        "render integrated discrete gpu graphics"
-    }
-
-    fn render(
-        &self,
-        view: &Self::View,
-        appearance: &Appearance,
-        app: &AppContext,
-    ) -> Box<dyn Element> {
-        let gpu_settings = GPUSettings::as_ref(app);
-        let mut col = Flex::column().with_child(render_body_item::<FeaturesPageAction>(
-            "Prefer rendering new windows with integrated GPU (low power)".into(),
-            None,
-            ToggleState::Enabled,
-            appearance,
-            appearance
-                .ui_builder()
-                .switch(self.switch_state.clone())
-                .check(*gpu_settings.prefer_low_power_gpu)
-                .build()
-                .on_click(move |ctx, _, _| {
-                    ctx.dispatch_typed_action(FeaturesPageAction::TogglePreferLowPowerGPU)
-                })
-                .finish(),
-            None,
-        ));
-        if view.gpu_power_preference_changed {
-            let theme = appearance.theme();
-            col.add_child(
-                Container::new(
-                    appearance
-                        .ui_builder()
-                        .wrappable_text("Changes will apply to new windows.", true)
-                        .with_style(UiComponentStyles {
-                            font_color: Some(theme.sub_text_color(theme.background()).into_solid()),
-                            ..Default::default()
-                        })
-                        .build()
-                        .finish(),
-                )
-                .with_margin_bottom(10.)
-                .finish(),
-            );
-        }
-        col.finish()
     }
 }
 

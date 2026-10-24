@@ -9,7 +9,7 @@ use torchui_core::text::words::is_default_word_boundary;
 use super::*;
 use crate::model::blockgrid::BlockGrid;
 use crate::model::char_or_str::CharOrStr;
-use crate::model::secrets::{IsObfuscated, ObfuscateSecrets, SecretLevel};
+use crate::model::secrets::{IsObfuscated, ObfuscateSecrets};
 use crate::test_util::mock_blockgrid;
 
 const MAX_SCROLL_LIMIT: usize = 1000;
@@ -568,7 +568,6 @@ fn test_secrets_serialization() {
         Point::new(0, 4)..=Point::new(0, 16),
         IsObfuscated::Yes,
         "zach@test.org".to_string(),
-        SecretLevel::User,
     );
 
     assert_eq!(

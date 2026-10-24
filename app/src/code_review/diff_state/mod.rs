@@ -7,7 +7,6 @@
 
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::time::Duration;
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -44,46 +43,6 @@ pub enum CommitChainMode {
     CommitOnly,
     CommitAndPush,
     CommitAndCreatePr,
-}
-
-/// Identifies the host of a [`DiffStateModel`] so failure telemetry can be
-/// attributed to where the model actually ran. This is more specific than the
-/// local/remote split already encoded by `is_local`: a [`LocalDiffStateModel`]
-/// can be instantiated on the user's client (`ClientLocal`) or on a remote
-/// daemon (`RemoteDaemon`) serving subscribers, and only the host knows which.
-#[derive(Clone, Copy, Debug, Serialize, PartialEq, Eq)]
-pub enum BackendOrigin {
-    /// `LocalDiffStateModel` running on the user's client against local files.
-    #[serde(rename = "client_local")]
-    ClientLocal,
-    /// `RemoteDiffStateModel` running on the user's client; talks to a daemon.
-    #[serde(rename = "client_remote")]
-    ClientRemote,
-    /// `LocalDiffStateModel` running on a remote daemon, serving subscribers.
-    #[serde(rename = "remote_daemon")]
-    RemoteDaemon,
-}
-
-/// Identifies the diff-state operation that produced a [`DiffStateError`]
-/// on the `LoadDiffFailed` telemetry path. Carried alongside the error so
-/// failures can be sliced by originating operation — every operation shares
-/// the same failure pool, so the error variant alone doesn't reveal where
-/// it came from.
-///
-/// Metadata-load failures are reported through a dedicated
-/// `LoadMetadataFailed` event and therefore don't need a variant here.
-#[derive(Clone, Copy, Debug, Serialize, PartialEq, Eq)]
-#[cfg_attr(not(feature = "local_fs"), allow(dead_code))]
-pub enum DiffOperation {
-    /// Per-file diff refresh triggered by the file-invalidation queue.
-    #[serde(rename = "file_invalidation")]
-    FileInvalidation,
-    /// Full repo-wide diff snapshot load.
-    #[serde(rename = "diff_load")]
-    DiffLoad,
-    /// Client-side reaction to a remote daemon's diff-state response.
-    #[serde(rename = "remote_diff")]
-    RemoteDiff,
 }
 
 // -- Shared types ──────────────────────────────────────────────────────
@@ -385,7 +344,6 @@ pub enum DiffStateModelEvent {
     /// Event dispatched when new diffs are computed (full reload).
     NewDiffsComputed {
         diffs: Option<Arc<GitDiffWithBaseContent>>,
-        load_duration: Option<Duration>,
     },
     /// Event dispatched when a single file's diff is updated incrementally.
     SingleFileUpdated {
@@ -447,8 +405,7 @@ impl DiffStateModel {
     /// to the inner model so it can forward events.
     pub fn new_local(path: PathBuf, ctx: &mut ModelContext<Self>) -> Self {
         let repo_path = Some(path.display().to_string());
-        let local = ctx
-            .add_model(|ctx| LocalDiffStateModel::new(repo_path, BackendOrigin::ClientLocal, ctx));
+        let local = ctx.add_model(|ctx| LocalDiffStateModel::new(repo_path, ctx));
         ctx.subscribe_to_model(&local, |me, _, event, ctx| me.forward_event(event, ctx));
         Self::Local(local)
     }
@@ -479,13 +436,9 @@ impl DiffStateModel {
             DiffStateModelEvent::CurrentBranchChanged => {
                 ctx.emit(DiffStateModelEvent::CurrentBranchChanged);
             }
-            DiffStateModelEvent::NewDiffsComputed {
-                diffs,
-                load_duration,
-            } => {
+            DiffStateModelEvent::NewDiffsComputed { diffs } => {
                 ctx.emit(DiffStateModelEvent::NewDiffsComputed {
                     diffs: diffs.clone(),
-                    load_duration: *load_duration,
                 });
             }
             DiffStateModelEvent::SingleFileUpdated { path, diff } => {
@@ -620,19 +573,18 @@ impl DiffStateModel {
         &self,
         mode: DiffMode,
         should_fetch_base: bool,
-        track_load_duration: bool,
         preferred_session: Option<SessionId>,
         ctx: &mut ModelContext<Self>,
     ) {
         match self {
             Self::Local(local) => {
                 local.update(ctx, |local, ctx| {
-                    local.set_diff_mode(mode, should_fetch_base, track_load_duration, ctx);
+                    local.set_diff_mode(mode, should_fetch_base, ctx);
                 });
             }
             Self::Remote(model) => {
                 model.update(ctx, |model, ctx| {
-                    model.set_diff_mode(mode, track_load_duration, preferred_session, ctx);
+                    model.set_diff_mode(mode, preferred_session, ctx);
                 });
             }
         }
@@ -641,19 +593,18 @@ impl DiffStateModel {
     pub(crate) fn load_diffs_for_current_repo(
         &self,
         should_fetch_base: bool,
-        track_load_duration: bool,
         preferred_session: Option<SessionId>,
         ctx: &mut ModelContext<Self>,
     ) {
         match self {
             Self::Local(local) => {
                 local.update(ctx, |local, ctx| {
-                    local.load_diffs_for_current_repo(should_fetch_base, track_load_duration, ctx);
+                    local.load_diffs_for_current_repo(should_fetch_base, ctx);
                 });
             }
             Self::Remote(remote) => {
                 remote.update(ctx, |remote, ctx| {
-                    remote.fetch_fresh_snapshot(track_load_duration, preferred_session, ctx);
+                    remote.fetch_fresh_snapshot(preferred_session, ctx);
                 });
             }
         }

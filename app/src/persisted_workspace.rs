@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+#[cfg(feature = "local_fs")]
+use std::sync::Arc;
 use std::sync::mpsc::SyncSender;
 
 use anyhow::Context;
@@ -25,13 +27,7 @@ use torchui::{Entity, ModelContext, SingletonEntity};
 
 #[cfg(feature = "local_fs")]
 use crate::code::language_server_shutdown_manager::LanguageServerShutdownManager;
-#[cfg(feature = "local_fs")]
-use crate::code::lsp_telemetry::LspTelemetryEvent;
 use crate::persistence::ModelEvent;
-#[cfg(feature = "local_fs")]
-use crate::send_telemetry_from_ctx;
-#[cfg(feature = "local_fs")]
-use crate::server::server_api::ServerApiProvider;
 #[cfg(feature = "local_fs")]
 use crate::terminal::local_shell::LocalShellState;
 #[cfg(feature = "local_fs")]
@@ -483,7 +479,7 @@ impl PersistedWorkspace {
         let path_future = LocalShellState::handle(ctx).update(ctx, |shell_state, ctx| {
             shell_state.get_interactive_path_env_var(ctx)
         });
-        let http_client = ServerApiProvider::as_ref(ctx).get_http_client();
+        let http_client = Arc::new(http_client::Client::new());
 
         ctx.spawn(
             async move {
@@ -665,7 +661,7 @@ impl PersistedWorkspace {
         let repo_root_clone = repo_root.clone();
         let file_path_clone = file_path.clone();
         let executor = lsp::CommandBuilder::new(path_env_var);
-        let http_client = ServerApiProvider::as_ref(ctx).get_http_client();
+        let http_client = Arc::new(http_client::Client::new());
         ctx.spawn(
             async move {
                 let candidate = server_type.candidate(http_client);
@@ -790,7 +786,7 @@ impl PersistedWorkspace {
             );
             let log_relative_path =
                 crate::code::lsp_logs::relative_log_path(server, &workspace_root);
-            let http_client = ServerApiProvider::as_ref(ctx).get_http_client();
+            let http_client = Arc::new(http_client::Client::new());
             let config = LspServerConfig::new(
                 server,
                 workspace_root.clone(),
@@ -825,23 +821,8 @@ impl PersistedWorkspace {
 
         for server in servers {
             let workspace_root_display = workspace_root_display.clone();
-            let server_type_name = server.as_ref(ctx).server_name();
             ctx.subscribe_to_model(&server, move |_me, _, event, ctx| match event {
-                LspEvent::Started => {
-                    send_telemetry_from_ctx!(
-                        LspTelemetryEvent::ServerStarted {
-                            server_type: server_type_name.clone(),
-                        },
-                        ctx
-                    );
-                }
                 LspEvent::Failed(e) => {
-                    send_telemetry_from_ctx!(
-                        LspTelemetryEvent::ServerFailed {
-                            server_type: server_type_name.clone(),
-                        },
-                        ctx
-                    );
                     if let Some(window_id) = WindowManager::as_ref(ctx).active_window()
                     {
                         ToastStack::handle(ctx).update(ctx, |toast_stack, ctx| {
@@ -947,7 +928,7 @@ impl PersistedWorkspace {
                     shell_state.get_interactive_path_env_var(ctx)
                 });
 
-                let http_client = ServerApiProvider::as_ref(ctx).get_http_client();
+                let http_client = Arc::new(http_client::Client::new());
                 ctx.spawn(
                     async move {
                         // Wait for interactive PATH, then check installation

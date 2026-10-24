@@ -4,8 +4,6 @@ use torchui::App;
 use torchui::platform::WindowStyle;
 
 use super::{Find, FindDirection, FindEvent, FindModel};
-use crate::auth::AuthStateProvider;
-use crate::server::telemetry::context_provider::AppTelemetryContextProvider;
 use crate::settings_view::keybindings::KeybindingChangedNotifier;
 use crate::test_util::settings::initialize_settings_for_tests;
 use crate::vim_registers::VimRegisters;
@@ -31,8 +29,6 @@ impl FindModel for MockFindModel {
 
 fn initialize_test_app(app: &mut App) {
     initialize_settings_for_tests(app);
-    app.add_singleton_model(|_| AuthStateProvider::new_for_test());
-    app.add_singleton_model(AppTelemetryContextProvider::new_context_provider);
     app.add_singleton_model(|_| Appearance::mock());
     app.add_singleton_model(|_| SyncedInputState::mock());
     app.add_singleton_model(|_| VimRegisters::new());

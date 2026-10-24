@@ -13,7 +13,7 @@ release_bundle = []
 # Enabled when building the self-contained standalone CLI binary (see the bundle
 # script). Keep in sync with the `app` crate's `standalone` feature.
 standalone = []
-test-util = ["dep:mockito", "torch_features/test-util"]
+test-util = ["torch_features/test-util"]
 
 [dependencies]
 anyhow.workspace = true
@@ -47,7 +47,6 @@ tracing.workspace = true
 concat-idents.workspace = true
 url.workspace = true
 regex.workspace = true
-websocket.workspace = true
 instant.workspace = true
 schemars = "1"
 settings_value = { workspace = true, features = ["derive"] }
@@ -57,7 +56,6 @@ futures.workspace = true
 line-ending.workspace = true
 torchui_core.workspace = true
 torchui_extras = { workspace = true, features = ["default"] }
-mockito = { workspace = true, optional = true }
 string-offset.workspace = true
 inventory = "0.3.20"
 chrono.workspace = true

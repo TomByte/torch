@@ -30,8 +30,6 @@ use super::WorkflowSource;
 use super::workflow::Workflow;
 use crate::appearance::Appearance;
 use crate::editor::Event as EditorEvent;
-use crate::send_telemetry_from_ctx;
-use crate::server::telemetry::TelemetryEvent;
 use crate::themes::theme::{self, Blend, WarpTheme};
 use crate::user_config::{WarpConfig, WarpConfigUpdateEvent};
 use crate::util::bindings::CustomAction;
@@ -1186,7 +1184,6 @@ impl VoltronFeatureViewMeta for CategoriesView {
             self.load_project_workflows(active_path, ctx);
         }
 
-        send_telemetry_from_ctx!(TelemetryEvent::OpenWorkflowSearch, ctx);
         self.search_term = String::new();
         ctx.notify();
     }

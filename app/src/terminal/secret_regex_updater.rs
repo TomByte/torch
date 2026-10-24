@@ -1,8 +1,7 @@
 use torchui::{Entity, ModelContext, SingletonEntity};
 
-use crate::server::telemetry::secret_redaction::update_telemetry_secrets_regex;
 use crate::settings::{CustomSecretRegex, PrivacySettings, PrivacySettingsChangedEvent};
-use crate::terminal::model::set_user_and_enterprise_secret_regexes;
+use crate::terminal::model::set_user_secret_regexes;
 
 /// Dummy singleton model that is used to update the current set of custom regexes within the
 /// terminal model. We do this via a singleton model since we only want to do this once any time
@@ -32,16 +31,7 @@ impl CustomSecretRegexUpdater {
             .iter()
             .map(CustomSecretRegex::pattern);
 
-        set_user_and_enterprise_secret_regexes(user_secrets, std::iter::empty());
-
-        // Also update the telemetry-side secret regex, which is independent of
-        // the user's safe-mode setting and always includes the default patterns.
-        let user_secrets = privacy_settings
-            .user_secret_regex_list
-            .iter()
-            .map(CustomSecretRegex::pattern);
-
-        update_telemetry_secrets_regex(user_secrets, std::iter::empty());
+        set_user_secret_regexes(user_secrets);
     }
 }
 

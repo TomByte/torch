@@ -34,7 +34,7 @@ use crate::util::bindings::{
     CommandBinding, filter_bindings_including_keystroke, reset_keybinding_to_default,
     set_custom_keybinding,
 };
-use crate::{TelemetryEvent, send_telemetry_from_ctx, themes};
+use crate::themes;
 
 const FONT_DELTA: f32 = 2.;
 const CANCEL_SAVE_BUTTONS_SPACING: f32 = 4.0;
@@ -601,12 +601,6 @@ impl KeybindingsView {
             update_binding_list(&row.binding.name, None, &mut self.bindings);
             row.binding.trigger = None;
 
-            send_telemetry_from_ctx!(
-                TelemetryEvent::KeybindingRemoved {
-                    action: row.binding.name.clone(),
-                },
-                ctx
-            );
             self.modifying_row = None;
             row.editor_open = false;
             ctx.enable_key_bindings_dispatching();
@@ -626,12 +620,6 @@ impl KeybindingsView {
             );
             row.binding.trigger = default_trigger;
 
-            send_telemetry_from_ctx!(
-                TelemetryEvent::KeybindingResetToDefault {
-                    action: row.binding.name.clone(),
-                },
-                ctx
-            );
 
             self.modifying_row = None;
             row.editor_open = false;
@@ -678,13 +666,6 @@ impl KeybindingsView {
                             &mut self.bindings,
                         );
                         row.binding.trigger = Some(key.clone());
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::KeybindingChanged {
-                                action: row.binding.name.clone(),
-                                keystroke: key,
-                            },
-                            ctx
-                        );
                     }
 
                     row.editor_open = false;

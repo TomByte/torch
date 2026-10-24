@@ -7,7 +7,6 @@ use torchui::{App, Element, Entity, TypedActionView, View, ViewHandle, WindowId}
 
 use super::{create_editable_comment_markdown_editor, create_readonly_comment_markdown_editor};
 use crate::appearance::Appearance;
-use crate::auth::AuthStateProvider;
 use crate::notebooks::editor::keys::NotebookKeybindings;
 use crate::notebooks::editor::view::RichTextEditorView;
 use crate::notebooks::link::{NotebookLinks, SessionSource};
@@ -63,7 +62,6 @@ fn initialize_editor(
     app.add_singleton_model(RepoMetadataModel::new);
     app.add_singleton_model(FileSearchModel::new);
     app.add_singleton_model(NotebookKeybindings::new);
-    app.add_singleton_model(|_| AuthStateProvider::new_for_test());
 
 
     let (window, test_view) = app.add_window(WindowStyle::NotStealFocus, |ctx| {

@@ -3,13 +3,10 @@ use std::collections::HashSet;
 
 use lazy_static::lazy_static;
 use parking_lot::Mutex;
-use url::{Origin, ParseError, Url};
 
 use super::Channel;
 use crate::AppId;
-use crate::channel::config::{
-    ChannelConfig, IapConfig, McpOAuthProviderConfig, OzConfig, WarpServerConfig,
-};
+use crate::channel::config::ChannelConfig;
 use crate::features::FeatureFlag;
 
 lazy_static! {
@@ -18,8 +15,6 @@ lazy_static! {
 
 #[cfg(feature = "test-util")]
 lazy_static! {
-    static ref MOCK_SERVER: Mutex<mockito::ServerGuard> = Mutex::new(mockito::Server::new());
-    static ref MOCK_SERVER_URL: String = MOCK_SERVER.lock().url();
     static ref APP_VERSION: Mutex<Option<&'static str>> = Mutex::new(None);
 }
 
@@ -48,19 +43,9 @@ impl ChannelState {
             config: ChannelConfig {
                 app_id,
                 logfile_name: "".into(),
-                server_config: WarpServerConfig::disabled(),
-                oz_config: OzConfig::disabled(),
                 autoupdate_config: None,
-                mcp_static_config: None,
             },
         }
-    }
-
-    /// Returns the server used by test-only URL routing so downstream tests can install mocks.
-    #[cfg(feature = "test-util")]
-    pub fn mock_server() -> parking_lot::MutexGuard<'static, mockito::ServerGuard> {
-        lazy_static::initialize(&MOCK_SERVER_URL);
-        MOCK_SERVER.lock()
     }
 
     pub fn new(channel: Channel, mut config: ChannelConfig) -> Self {
@@ -90,26 +75,6 @@ impl ChannelState {
     pub fn enable_debug_features() -> bool {
         !Self::is_local_only()
             && (cfg!(debug_assertions) || matches!(Self::channel(), Channel::Local | Channel::Dev))
-    }
-
-    pub fn override_server_root_url(url: impl Into<Cow<'static, str>>) -> Result<(), ParseError> {
-        let url = url.into();
-        Url::parse(&url)?;
-        let mut channel_state = CHANNEL_STATE.lock();
-        channel_state.config.server_config.server_root_url = url;
-        channel_state.config.server_config.iap_config = None;
-        Ok(())
-    }
-
-    pub fn override_ws_server_url(url: impl Into<Cow<'static, str>>) -> Result<(), ParseError> {
-        let url = url.into();
-        Url::parse(&url)?;
-        CHANNEL_STATE.lock().config.server_config.rtc_server_url = url;
-        Ok(())
-    }
-
-    pub fn uses_staging_server() -> bool {
-        false
     }
 
     /// Returns the canonical identifier for the application.
@@ -177,81 +142,6 @@ impl ChannelState {
             .unwrap_or_default()
     }
 
-    pub fn firebase_api_key() -> Cow<'static, str> {
-        CHANNEL_STATE
-            .lock()
-            .config
-            .server_config
-            .firebase_auth_api_key
-            .clone()
-    }
-
-    pub fn iap_config() -> Option<IapConfig> {
-        CHANNEL_STATE.lock().config.server_config.iap_config.clone()
-    }
-
-    pub fn ws_server_url() -> Cow<'static, str> {
-        CHANNEL_STATE
-            .lock()
-            .config
-            .server_config
-            .rtc_server_url
-            .clone()
-    }
-
-    /// Returns the HTTP(S) root URL for the RTC server. Used for HTTP endpoints
-    /// served by warp-server-rtc (e.g. the agent event SSE stream).
-    ///
-    /// Derived from [`ws_server_url`] by rewriting the scheme (`wss`→`https`,
-    /// `ws`→`http`) and stripping the path. Falls back to [`server_root_url`]
-    /// when the WS URL cannot be parsed or uses an unexpected scheme — this
-    /// keeps override paths (e.g. `TORCH_WS_SERVER_URL=...`) working without a
-    /// separate override for the HTTP variant.
-    pub fn rtc_http_url() -> Cow<'static, str> {
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "test-util")] {
-                Cow::Owned(MOCK_SERVER_URL.clone())
-            } else {
-                match derive_http_origin_from_ws_url(&Self::ws_server_url()) {
-                    Some(origin) => Cow::Owned(origin),
-                    None => Self::server_root_url(),
-                }
-            }
-        }
-    }
-
-    pub fn oz_root_url() -> Cow<'static, str> {
-        CHANNEL_STATE.lock().config.oz_config.oz_root_url.clone()
-    }
-
-    pub fn server_root_url() -> Cow<'static, str> {
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "test-util")] {
-                Cow::Owned(MOCK_SERVER_URL.clone())
-            } else {
-                CHANNEL_STATE.lock().config.server_config.server_root_url.clone()
-            }
-        }
-    }
-
-    pub fn workload_audience_url() -> Cow<'static, str> {
-        let state = CHANNEL_STATE.lock();
-        match &state.config.oz_config.workload_audience_url {
-            Some(url) => url.clone(),
-            None => {
-                drop(state);
-                Self::server_root_url()
-            }
-        }
-    }
-
-    // Returns the origin url, with scheme, domain, and ports (if any)
-    pub fn server_root_domain() -> Origin {
-        Url::parse(&Self::server_root_url())
-            .expect("Server root URL should be valid")
-            .origin()
-    }
-
     pub fn channel() -> Channel {
         CHANNEL_STATE.lock().channel
     }
@@ -283,28 +173,6 @@ impl ChannelState {
             .unwrap_or_default()
     }
 
-    /// Returns the MCP OAuth provider config matching the given client ID, if any.
-    pub fn mcp_oauth_provider_by_client_id(client_id: &str) -> Option<McpOAuthProviderConfig> {
-        CHANNEL_STATE
-            .lock()
-            .config
-            .mcp_static_config
-            .as_ref()
-            .and_then(|c| c.providers.iter().find(|p| p.client_id == client_id))
-            .cloned()
-    }
-
-    /// Returns the MCP OAuth provider config matching the given issuer URL, if any.
-    pub fn mcp_oauth_provider_by_issuer(issuer: &str) -> Option<McpOAuthProviderConfig> {
-        CHANNEL_STATE
-            .lock()
-            .config
-            .mcp_static_config
-            .as_ref()
-            .and_then(|c| c.providers.iter().find(|p| p.issuer == issuer))
-            .cloned()
-    }
-
     pub fn url_scheme() -> &'static str {
         match Self::channel() {
             Channel::Stable => "warp",
@@ -317,30 +185,6 @@ impl ChannelState {
         }
     }
 }
-
-/// Derives an HTTP(S) origin URL from a WebSocket URL by rewriting the scheme
-/// (`wss`→`https`, `ws`→`http`) and stripping the path, query, and fragment.
-/// Returns [`None`] when the input cannot be parsed as a URL or uses a scheme
-/// other than `ws` or `wss`.
-#[cfg(not(feature = "test-util"))]
-fn derive_http_origin_from_ws_url(ws_url: &str) -> Option<String> {
-    let url = Url::parse(ws_url).ok()?;
-    let http_scheme = match url.scheme() {
-        "wss" => "https",
-        "ws" => "http",
-        _ => return None,
-    };
-    let host = url.host_str()?;
-    let mut origin = format!("{http_scheme}://{host}");
-    if let Some(port) = url.port() {
-        origin.push_str(&format!(":{port}"));
-    }
-    Some(origin)
-}
-
-#[cfg(all(test, not(feature = "test-util")))]
-#[path = "state_tests.rs"]
-mod tests;
 
 fn app_id_from_bundle() -> Option<AppId> {
     // On macOS, attempt to determine the app ID from the containing bundle,

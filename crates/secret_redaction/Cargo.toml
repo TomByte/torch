@@ -13,6 +13,4 @@ parking_lot.workspace = true
 regex.workspace = true
 regex-automata.workspace = true
 regex_dfas.workspace = true
-string-offset.workspace = true
 torch_core.workspace = true
-torch_errors.workspace = true

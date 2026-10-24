@@ -11,14 +11,12 @@ mod anyhow;
 mod registration;
 
 // Built-in `ErrorExt` classifications for common third-party error types. These pull heavier
-// dependencies (reqwest/tokio/websocket), so they are feature-gated and enabled by `torch_core`;
+// dependencies (reqwest/tokio), so they are feature-gated and enabled by `torch_core`;
 // leaf crates that only need `report_error!` don't pull them in.
 #[cfg(feature = "reqwest-errors")]
 mod reqwest;
 #[cfg(feature = "tokio-errors")]
 mod tokio;
-#[cfg(feature = "websocket-errors")]
-mod websocket;
 
 // Re-export for macro use. The `register_error!` macro itself is available at the crate root via
 // `#[macro_export]`; here we only re-export the supporting types it references. Re-export anyhow

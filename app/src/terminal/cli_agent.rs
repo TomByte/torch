@@ -184,31 +184,6 @@ pub enum CLIAgent {
 }
 
 impl CLIAgent {
-    /// Stable analytics values, independent of display names and session-sharing serialization.
-    pub fn telemetry_name(&self) -> &'static str {
-        match self {
-            CLIAgent::Claude => "Claude",
-            CLIAgent::Gemini => "Gemini",
-            CLIAgent::Codex => "Codex",
-            CLIAgent::Amp => "Amp",
-            CLIAgent::Droid => "Droid",
-            CLIAgent::OpenCode => "OpenCode",
-            CLIAgent::Copilot => "Copilot",
-            CLIAgent::Pi => "Pi",
-            CLIAgent::OhMyPi => "OhMyPi",
-            CLIAgent::Auggie => "Auggie",
-            CLIAgent::CursorCli => "Cursor",
-            CLIAgent::Goose => "Goose",
-            CLIAgent::Hermes => "Hermes",
-            CLIAgent::Vibe => "Vibe",
-            CLIAgent::Antigravity => "Antigravity",
-            CLIAgent::Grok => "Grok",
-            CLIAgent::Kiro => "Kiro",
-            CLIAgent::Muse => "Muse",
-            CLIAgent::Unknown => "Unknown",
-        }
-    }
-
     /// Command prefixes that identify this CLI agent.
     pub(crate) fn command_prefixes(&self) -> &'static [&'static str] {
         match self {

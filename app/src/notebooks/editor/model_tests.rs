@@ -30,7 +30,6 @@ use vec1::vec1;
 use super::super::rich_text_styles;
 use super::NotebooksEditorModel;
 use crate::appearance::Appearance;
-use crate::auth::AuthStateProvider;
 use crate::editor::InteractionState;
 use crate::notebooks::editor::keys::NotebookKeybindings;
 use crate::notebooks::editor::model::DEBOUNCED_RESIZE_PERIOD;
@@ -117,7 +116,6 @@ fn setup_editor_window(app: &mut App) -> torchui::WindowId {
 
 fn initialize_deps(app: &mut App) {
     app.add_singleton_model(|_| Appearance::mock());
-    app.add_singleton_model(|_| AuthStateProvider::new_for_test());
     initialize_settings_for_tests(app);
 }
 

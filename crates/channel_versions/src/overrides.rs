@@ -120,9 +120,6 @@ impl VersionInfo {
         if let Some(soft_cutoff) = other.soft_cutoff {
             self.soft_cutoff = Some(soft_cutoff);
         }
-        if let Some(update_by) = other.update_by {
-            self.update_by = Some(update_by);
-        }
         if let Some(last_prominent_update) = other.last_prominent_update {
             self.last_prominent_update = Some(last_prominent_update);
         }

@@ -15,7 +15,6 @@ use torchui_extras::user_preferences;
 use super::{ActiveChipSurfaces, ChipUpdateStatus, CurrentPrompt, PromptContext};
 use crate::CLIAgentSessionsModel;
 use crate::agent_status::footer::toolbar_item::AgentToolbarItemKind;
-use crate::auth::AuthStateProvider;
 #[cfg(feature = "local_fs")]
 use crate::code_review::diff_state::DiffStats;
 #[cfg(feature = "local_fs")]
@@ -28,8 +27,6 @@ use crate::context_chips::display_chip::GitBranchTrackingStatus;
 use crate::context_chips::prompt::Prompt;
 use crate::context_chips::{ChipAvailability, ChipDisabledReason, ContextChipKind};
 use crate::features::FeatureFlag;
-use crate::server::server_api::ServerApiProvider;
-use crate::server::telemetry::context_provider::AppTelemetryContextProvider;
 use crate::settings::WarpPromptSeparator;
 #[cfg(windows)]
 use crate::system::SystemInfo;
@@ -73,9 +70,6 @@ fn add_cli_agent_footer_singletons(app: &mut App) {
             Box::<user_preferences::in_memory::InMemoryPreferences>::default(),
         )
     });
-    app.add_singleton_model(|_| ServerApiProvider::new_for_test());
-    app.add_singleton_model(|_| AuthStateProvider::new_for_test());
-    app.add_singleton_model(AppTelemetryContextProvider::new_context_provider);
     app.add_singleton_model(|_| crate::settings::manager::SettingsManager::default());
     crate::settings::InputSettings::register(app);
     app.update(crate::settings::CLIAgentSettings::register_and_subscribe_to_events);
@@ -193,7 +187,6 @@ fn test_shell_chip_is_disabled_when_required_executable_is_missing() {
                 SessionInfo::new_for_test().with_id(session_id),
                 "test command".to_string(),
                 vec![],
-                None,
                 ctx,
             );
             sessions
@@ -363,9 +356,6 @@ fn test_cli_agent_footer_chips_require_a_visible_supported_footer() {
                 Box::<user_preferences::in_memory::InMemoryPreferences>::default(),
             )
         });
-        app.add_singleton_model(|_| ServerApiProvider::new_for_test());
-        app.add_singleton_model(|_| AuthStateProvider::new_for_test());
-        app.add_singleton_model(AppTelemetryContextProvider::new_context_provider);
         app.add_singleton_model(|_| crate::settings::manager::SettingsManager::default());
         crate::settings::InputSettings::register(&mut app);
         app.update(crate::settings::CLIAgentSettings::register_and_subscribe_to_events);
@@ -446,9 +436,6 @@ fn test_ps1_without_active_agent_surface_runs_no_footer_generators() {
                 settings.honor_ps1.set_value(true, ctx).unwrap();
             });
         });
-        app.add_singleton_model(|_| ServerApiProvider::new_for_test());
-        app.add_singleton_model(|_| AuthStateProvider::new_for_test());
-        app.add_singleton_model(AppTelemetryContextProvider::new_context_provider);
         app.add_singleton_model(|_| crate::settings::manager::SettingsManager::default());
         crate::settings::InputSettings::register(&mut app);
         app.update(crate::settings::CLIAgentSettings::register_and_subscribe_to_events);
@@ -462,7 +449,6 @@ fn test_ps1_without_active_agent_surface_runs_no_footer_generators() {
                 SessionInfo::new_for_test().with_id(session_id),
                 "test command".to_string(),
                 vec![],
-                None,
                 ctx,
             );
             sessions

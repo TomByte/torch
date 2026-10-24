@@ -4,14 +4,12 @@ use remote_server::manager::RemoteServerManagerEvent;
 use torch_util::remote_path::RemotePath;
 
 use super::InternalRemoteDiffState;
-use crate::auth::AuthStateProvider;
 use crate::code_review::diff_size_limits::DiffSize;
 use crate::code_review::diff_state::{
     DiffHunk, DiffLine, DiffLineType, DiffMetadata, DiffMetadataAgainstBase, DiffMode, DiffState,
     DiffStateModelEvent, DiffStats, FileDiff, FileDiffAndContent, GitDiffData,
     GitDiffWithBaseContent, GitFileStatus, RemoteDiffStateModel,
 };
-use crate::server::telemetry::context_provider::AppTelemetryContextProvider;
 use crate::util::git::Commit;
 
 impl RemoteDiffStateModel {
@@ -29,7 +27,6 @@ impl RemoteDiffStateModel {
             mode,
             state,
             metadata,
-            tracked_diff_load_start_time: None,
         }
     }
 }
@@ -131,10 +128,6 @@ fn test_metadata(branch: &str) -> DiffMetadata {
     }
 }
 
-fn initialize_test_app(app: &mut torchui::App) {
-    app.add_singleton_model(|_| AuthStateProvider::new_for_test());
-    app.add_singleton_model(AppTelemetryContextProvider::new_context_provider);
-}
 #[test]
 fn apply_snapshot_loaded_with_diffs() {
     torchui::App::test((), |mut app| async move {
@@ -271,7 +264,6 @@ fn apply_snapshot_loaded_preserves_content_at_base_in_event() {
 #[test]
 fn apply_snapshot_loaded_without_diffs_becomes_error() {
     torchui::App::test((), |mut app| async move {
-        initialize_test_app(&mut app);
         let handle = app.add_model(|_ctx| {
             RemoteDiffStateModel::new_for_test(
                 DiffMode::Head,
@@ -312,7 +304,6 @@ fn apply_snapshot_not_in_repository() {
 #[test]
 fn apply_snapshot_error_stores_message() {
     torchui::App::test((), |mut app| async move {
-        initialize_test_app(&mut app);
         let handle = app.add_model(|_ctx| {
             RemoteDiffStateModel::new_for_test(
                 DiffMode::Head,

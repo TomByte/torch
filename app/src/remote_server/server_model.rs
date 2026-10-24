@@ -813,8 +813,6 @@ impl ServerModel {
                     Some(notification::Message::Abort(m)) => {
                         self.handle_abort(m, &request_id, ctx);
                     }
-                    Some(notification::Message::Authenticate(_)) => {}
-                    Some(notification::Message::UpdatePreferences(_)) => {}
                     Some(notification::Message::SessionBootstrapped(m)) => {
                         self.handle_session_bootstrapped(m);
                     }

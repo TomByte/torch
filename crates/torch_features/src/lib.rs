@@ -10,15 +10,7 @@ pub enum FeatureFlag {
     DebugMode,
     Autoupdate,
 
-    WelcomeTips,
-    ThinStrokes,
-    KnowledgeSidebar,
-
     RuntimeFeatureFlags,
-
-    /// If `true`, fetch updated Torch channel versions from the Torch server endpoint instead of
-    /// from GCP directly.
-    FetchChannelVersionsFromWarpServer,
 
     /// Does grid storage go forwards or backwards
     SequentialStorage,
@@ -36,9 +28,6 @@ pub enum FeatureFlag {
     /// menu bar.
     ToggleBootstrapBlock,
 
-    /// Enabling context chips functionality for prompt
-    ContextChips,
-
     /// Ligature Support in the Editor and Grid
     Ligatures,
 
@@ -46,14 +35,6 @@ pub enum FeatureFlag {
     /// will be enabled. When the `History` rule is enabled, the command_corrections
     /// lib will use the user's history as a last-ditch effort to find a reasonable correction.
     CommandCorrectionsHistoryRule,
-
-    /// Used to gate an experiment we're doing on WarpDev ONLY
-    /// to get a sense of PTY throughput over time.
-    RecordPtyThroughput,
-
-    /// Enables a setting on Intel Dual-GPU Macs to enable use of the integrated GPU over the
-    /// discrete GPU.
-    IntegratedGPU,
 
     /// Torch Agent Mode.
     AgentMode,
@@ -74,19 +55,11 @@ pub enum FeatureFlag {
     /// Enable multiselect in Notebooks and Torch Text.
     RichTextMultiselect,
 
-    /// If enabled, the default input mode is set to waterfall for new users.
-    DefaultWaterfallMode,
-
     /// Makes the input editor's prompt selectable.
     SelectablePrompt,
 
     /// Enables the settings file feature.
     SettingsFile,
-
-    /// Stores GUI execution profiles in the shared settings collection.
-    ///
-    /// TUI builds use the collection on every channel independently of this flag.
-    FileBackedExecutionProfiles,
 
     /// Enables rect selection.
     RectSelection,
@@ -97,16 +70,9 @@ pub enum FeatureFlag {
     /// Enables next action prediction within Torch, powered by AI.
     AgentPredict,
 
-    /// Enables AI rules for use with Agent Mode.
-    AIRules,
-
     /// Enables the shell selector, allowing us to open a new tab in
     /// a shell other than the default shell.
     ShellSelector,
-
-    /// Lazily builds scenes at render time instead of eagerly when a view
-    /// changes.
-    LazySceneBuilding,
 
     /// Enables the full-screen "zen mode" setting, where we hide the tab bar if there's only one
     /// tab.
@@ -140,9 +106,6 @@ pub enum FeatureFlag {
     /// Enables validation of autosuggestions.
     ValidateAutosuggestions,
 
-    /// Enables prompt suggestions sourced via MAA.
-    PromptSuggestionsViaMAA,
-
     /// Enables using `esc` to clear autosuggestions.
     ClearAutosuggestionOnEscape,
 
@@ -152,15 +115,6 @@ pub enum FeatureFlag {
     /// Enables Kitty image rendering
     KittyImages,
 
-    /// Enables suggested rules.
-    SuggestedRules,
-
-    /// Enables prediction of Agent Mode queries.
-    PredictAMQueries,
-
-    /// Enables full source code embedding of repos when using codebase context.
-    FullSourceCodeEmbedding,
-
     /// If enabled, command palette searches will use Tantivy search instead of the default fuzzy search.
     UseTantivySearch,
 
@@ -169,15 +123,6 @@ pub enum FeatureFlag {
 
     /// UNIX shells running "natively" on Windows via MSYS2.
     MSYS2Shells,
-
-    /// Enables cross-repo codebase context.
-    CrossRepoContext,
-
-    /// Persist codebase indices to disk.
-    CodebaseIndexPersistence,
-
-    /// Show speed bump when enabling codebase indexing.
-    CodebaseIndexSpeedbump,
 
     /// Enables inline review comments on specific lines of code.
     ContextLineReviewComments,
@@ -191,26 +136,14 @@ pub enum FeatureFlag {
     /// Enables close button on left side of tabs
     TabCloseButtonOnLeft,
 
-    /// Enables us to render linked code blocks
-    LinkedCodeBlocks,
-
     /// Enables the tabbed file viewer
     TabbedEditorView,
-
-    /// Enables Projects and Project management
-    Projects,
 
     /// Enables the prompt chip that displays the GitHub PR for the current branch.
     GithubPrPromptChip,
 
-    /// A button on the homepage for easily creating new projects.
-    CreateProjectFlow,
-
     /// Enables vim keybindings in the code editor.
     VimCodeEditor,
-
-    /// Allows opening file links using the $EDITOR environment variable.
-    AllowOpeningFileLinksUsingEditorEnv,
 
     /// Enables the ability to undo closed panes.
     UndoClosedPanes,
@@ -254,8 +187,6 @@ pub enum FeatureFlag {
     /// Enables inline code review functionality
     InlineCodeReview,
 
-    /// Enables rendering of images in markdown files and AI responses.
-    MarkdownImages,
     /// Enables rendering Mermaid diagrams in markdown notebooks.
     MarkdownMermaid,
     /// Enables editable Mermaid diagrams to behave atomically in notebook and plan editors.
@@ -267,11 +198,6 @@ pub enum FeatureFlag {
     /// Renders `.ipynb` (Jupyter) files as a formatted, read-only notebook in
     /// Torch's notebook viewer instead of showing the raw JSON in the code editor.
     JupyterNotebookRendering,
-
-    /// Enables rendering markdown tables inline in AI block list responses.
-    BlocklistMarkdownTableRendering,
-    /// Enables rendering markdown images inline in AI block list responses.
-    BlocklistMarkdownImages,
 
     /// Enables v2 of the context window usage UI.
     ContextWindowUsageV2,
@@ -288,22 +214,6 @@ pub enum FeatureFlag {
     InlineHistoryMenu,
 
     /// Enables Torch Managed Secrets functionality.
-    WarpManagedSecrets,
-
-    /// Enables computer use functionality in local clients.
-    LocalComputerUse,
-
-    /// Enables background, per-window computer use: driving a specific window directly without
-    /// raising it or moving the cursor.  Currently only supported on macOS.
-    BackgroundComputerUse,
-
-    /// Enables video recording of computer-use sessions for cloud agents.
-    VideoRecording,
-
-    /// Gates the Windows `gdigrab` recorder behind its own switch, on top of
-    /// [`FeatureFlag::VideoRecording`]. Windows capture is newer and less proven than the
-    /// macOS/Linux ffmpeg paths, so it rolls out and can be killed independently of them.
-    WindowsVideoRecording,
 
     /// Enables cloud conversation loading via the CLI --conversation flag.
     CloudConversations,
@@ -326,16 +236,8 @@ pub enum FeatureFlag {
     /// External programs can trigger system and in-app notifications.
     PluggableNotifications,
 
-    /// Dev-only: simulate a GitHub-unauthed user in the Environments page flow.
-    ///
-    /// This is intended for developer testing and should have no effect in release builds.
-    SimulateGithubUnauthed,
-
     /// When enabled, we expose LSP as a tool to the agent
     LSPAsATool,
-
-    /// Enables auto-syncing ambient plans to Torch Drive.
-    SyncAmbientPlans,
 
     /// Gates populating/reading oz updates from channel versions in the changelog model.
     OzChangelogUpdates,
@@ -358,16 +260,8 @@ pub enum FeatureFlag {
     /// flows while the default behavior temporarily keeps them disabled.
     LocalClaudeCodexChildHarnesses,
 
-    /// Shows a pending user query indicator during summarization when a follow-up
-    /// prompt is queued via `/fork-and-compact` or `/compact-and`.
-    PendingUserQueryIndicator,
-
     /// Enables Kitty keyboard protocol support (CSI u encoding, progressive enhancement).
     KittyKeyboardProtocol,
-
-    /// Detects the word "figma" in the terminal input in real-time and shows a
-    /// contextual button above the input.
-    FigmaDetection,
 
     /// Enables header rows on all inline menus (label, tabs, resize handle).
     InlineMenuHeaders,
@@ -382,10 +276,6 @@ pub enum FeatureFlag {
     /// Enables attaching code review comments, diff hunk, and attach as context
     /// from code review + code editor for House Of Agents work
     HoaCodeReview,
-
-    /// Enables the `--harness` flag for `oz agent run`, allowing external agent
-    /// CLIs (e.g. `claude`) to execute prompts instead of Torch's agent harness.
-    AgentHarness,
 
     /// Enables the upgraded CLI agent session tracking and notifications infrastructure.
     HOANotifications,
@@ -420,11 +310,6 @@ pub enum FeatureFlag {
     VerticalTabsSummaryMode,
     /// Enables on-demand Factory repository checkouts and their credential scope.
     FactoryDeferredRepositories,
-    /// Gates the driver behavior that writes GitHub credentials to disk
-    /// (`~/.git-credentials`, `~/.config/gh/hosts.yaml`) and runs the
-    /// background refresh loop that keeps them fresh during a task run.
-    GitCredentialRefresh,
-
     /// Enables the code review view for remote sessions.
     RemoteCodeReview,
 
@@ -447,21 +332,12 @@ pub enum FeatureFlag {
     /// Uses fzf or atuin for history search instead of Torch's command search.
     ShellWidgetHandoff,
 
-    /// Attaches process-tree liveness signals to long-running command
-    /// snapshots, giving the agent evidence that a silent command is still
-    /// doing work before it decides to cancel.
-    LrcActivitySignal,
-
     /// Gates Ctrl+R / Command Search history ranking on match quality and usage priors (recency,
     /// session, exit status) plus whitespace space-AND tokenization, instead of Skim's raw
     /// fuzzy-match score against the whole query as a single pattern. Disabling this is a full
     /// return to the pre-APP-5650 history search behavior, not an approximation of it.
     HistorySearchRankingV2,
 
-    /// Lets cloud agent environment checkouts build repositories from bare git
-    /// mirrors kept in the persistent build cache instead of cloning each one
-    /// from the remote. Disabling it restores direct, network-only checkouts.
-    GitMirrorCache,
 }
 
 static FLAG_STATES: [AtomicBool; cardinality::<FeatureFlag>()] =
@@ -489,24 +365,12 @@ pub const DOGFOOD_FLAGS: &[FeatureFlag] = &[
     FeatureFlag::ToggleBootstrapBlock,
     FeatureFlag::RemoveAutosuggestionDuringTabCompletions,
     FeatureFlag::ResizeFix,
-    FeatureFlag::LazySceneBuilding,
     FeatureFlag::SshDragAndDrop,
     FeatureFlag::ImeMarkedText,
     FeatureFlag::MSYS2Shells,
     FeatureFlag::ContextLineReviewComments,
     FeatureFlag::RunGeneratorsWithCmdExe,
-    FeatureFlag::Projects,
-    FeatureFlag::MarkdownImages,
     FeatureFlag::FileAndDiffSetComments,
-    FeatureFlag::LocalComputerUse,
-    FeatureFlag::VideoRecording,
-    FeatureFlag::WindowsVideoRecording,
-    // These are enabled via 100% experiment on prod warp-server,
-    // but we need to enable here for dogfood builds.
-    FeatureFlag::CrossRepoContext,
-    FeatureFlag::CodebaseIndexPersistence,
-    FeatureFlag::FullSourceCodeEmbedding,
-    FeatureFlag::CodebaseIndexSpeedbump,
     // End manually enabled Code features.
     FeatureFlag::EditableMarkdownMermaid,
     FeatureFlag::CodeReviewScrollPreservation,
@@ -516,8 +380,6 @@ pub const DOGFOOD_FLAGS: &[FeatureFlag] = &[
     FeatureFlag::TerminalLifecycleRecovery,
     FeatureFlag::JupyterNotebookRendering,
     FeatureFlag::BoxDrawingGlyphs,
-    FeatureFlag::LrcActivitySignal,
-    FeatureFlag::GitMirrorCache,
     FeatureFlag::FactoryDeferredRepositories,
 ];
 
@@ -531,8 +393,6 @@ pub const PREVIEW_FLAGS: &[FeatureFlag] = &[];
 pub const RELEASE_FLAGS: &[FeatureFlag] = &[
     FeatureFlag::Autoupdate,
     FeatureFlag::Changelog,
-    FeatureFlag::VideoRecording,
-    FeatureFlag::WindowsVideoRecording,
     FeatureFlag::ImeMarkedText,
     // Remote server binary is not yet supported on Windows.
     #[cfg(not(windows))]
@@ -559,7 +419,6 @@ impl FeatureFlag {
                     | Self::AgentViewConversationListView
                     | Self::AvatarInTabBar
                     | Self::CloudConversations
-                    | Self::WelcomeTips
                     | Self::Changelog
                     | Self::OzChangelogUpdates
                     | Self::HOANotifications
@@ -642,13 +501,7 @@ impl FeatureFlag {
         // ** ONLY Preview-exclusive features should be added to this list! **
         match self {
             CodeReviewFind => Some("Enables the find bar in the code review pane."),
-            BlocklistMarkdownImages => {
-                Some("Enables rendering markdown images inline in AI block list responses.")
-            }
             GlobalSearch => Some("Enables global search in the left panel"),
-            BlocklistMarkdownTableRendering => {
-                Some("Enables rendering markdown tables inline in AI block list responses.")
-            }
             MarkdownTables => {
                 Some("Enables rendering and interaction support for markdown tables in notebooks.")
             }

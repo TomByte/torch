@@ -7,7 +7,7 @@ use integration::Builder;
 use integration::test::*;
 use torch_cli::WorkerCommand;
 use torch_core::AppId;
-use torch_core::channel::{Channel, ChannelConfig, ChannelState, OzConfig, WarpServerConfig};
+use torch_core::channel::{Channel, ChannelConfig, ChannelState};
 
 /// The Torch integration test runner.
 #[derive(Debug, Default, Parser, Clone)]
@@ -37,22 +37,7 @@ pub fn main() -> Result<()> {
                 },
             ),
             logfile_name: "warp_integration.log".into(),
-            server_config: WarpServerConfig {
-                firebase_auth_api_key: "".into(),
-                iap_config: None,
-                // Use an IP in the IANA testing range, with the TCP discard port, to
-                // black-hole server traffic.
-                server_root_url: "http://192.0.2.0:9".into(),
-                rtc_server_url: "ws://192.0.2.0:9/graphql/v2".into(),
-            },
-            oz_config: OzConfig {
-                // Use an IP in the IANA testing range, with the TCP discard port, to
-                // black-hole server traffic.
-                oz_root_url: "http://192.0.2.0:9".into(),
-                workload_audience_url: None,
-            },
             autoupdate_config: None,
-            mcp_static_config: None,
         },
     ));
 

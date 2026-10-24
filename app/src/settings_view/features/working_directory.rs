@@ -7,8 +7,6 @@ use torchui::{Element, Entity, SingletonEntity, TypedActionView, View, ViewConte
 
 use crate::appearance::Appearance;
 use crate::editor::{EditorView, Event as EditorEvent, SingleLineEditorOptions, TextOptions};
-use crate::send_telemetry_from_ctx;
-use crate::server::telemetry::TelemetryEvent;
 use crate::settings_view::features_page::render_group;
 use crate::terminal::session_settings::*;
 use crate::view_components::dropdown::TOP_MENU_BAR_HEIGHT;
@@ -205,12 +203,6 @@ impl TypedActionView for WorkingDirectoryView {
                     ));
                 });
 
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::InitialWorkingDirectoryConfigurationChanged {
-                        advanced_mode_enabled: mode.is_none()
-                    },
-                    ctx
-                );
 
                 // Redraw settings in case we switched in or out of advanced mode.
                 ctx.notify();

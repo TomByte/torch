@@ -45,22 +45,15 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::ResizeFix,
         #[cfg(feature = "richtext_multiselect")]
         FeatureFlag::RichTextMultiselect,
-        #[cfg(feature = "default_waterfall_mode")]
-        FeatureFlag::DefaultWaterfallMode,
         #[cfg(feature = "settings_file")]
         FeatureFlag::SettingsFile,
-        #[cfg(feature = "file_backed_execution_profiles")]
-        FeatureFlag::FileBackedExecutionProfiles,
         #[cfg(feature = "rect_selection")]
         FeatureFlag::RectSelection,
         #[cfg(feature = "alacritty_settings_import")]
         FeatureFlag::AlacrittySettingsImport,
-        #[cfg(feature = "ai_rules")]
-        FeatureFlag::AIRules,
         #[cfg(feature = "shell_selector")]
         FeatureFlag::ShellSelector,
         #[cfg(all(feature = "simulate_github_unauthed", debug_assertions))]
-        FeatureFlag::SimulateGithubUnauthed,
         #[cfg(feature = "full_screen_zen_mode")]
         FeatureFlag::FullScreenZenMode,
         #[cfg(feature = "minimalist_ui")]
@@ -77,32 +70,20 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::ITermImages,
         #[cfg(feature = "validate_autosuggestions")]
         FeatureFlag::ValidateAutosuggestions,
-        #[cfg(feature = "prompt_suggestions_via_maa")]
-        FeatureFlag::PromptSuggestionsViaMAA,
         #[cfg(feature = "clear_autosuggestion_on_escape")]
         FeatureFlag::ClearAutosuggestionOnEscape,
         #[cfg(feature = "autoupdate_ui_revamp")]
         FeatureFlag::AutoupdateUIRevamp,
         #[cfg(all(not(windows), feature = "kitty_images"))]
         FeatureFlag::KittyImages,
-        #[cfg(feature = "suggested_rules")]
-        FeatureFlag::SuggestedRules,
         #[cfg(feature = "command_correction_key")]
         FeatureFlag::CommandCorrectionKey,
-        #[cfg(feature = "predict_am_queries")]
-        FeatureFlag::PredictAMQueries,
-        #[cfg(feature = "full_source_code_embedding")]
-        FeatureFlag::FullSourceCodeEmbedding,
         #[cfg(feature = "use_tantivy_search")]
         FeatureFlag::UseTantivySearch,
         #[cfg(feature = "markdown_tables")]
         FeatureFlag::MarkdownTables,
         #[cfg(feature = "jupyter_notebook_rendering")]
         FeatureFlag::JupyterNotebookRendering,
-        #[cfg(feature = "blocklist_markdown_table_rendering")]
-        FeatureFlag::BlocklistMarkdownTableRendering,
-        #[cfg(feature = "blocklist_markdown_images")]
-        FeatureFlag::BlocklistMarkdownImages,
         #[cfg(feature = "markdown_mermaid")]
         FeatureFlag::MarkdownMermaid,
         #[cfg(feature = "editable_markdown_mermaid")]
@@ -111,14 +92,6 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::ImageAsContext,
         #[cfg(feature = "msys2_shells")]
         FeatureFlag::MSYS2Shells,
-        #[cfg(feature = "cross_repo_context")]
-        FeatureFlag::CrossRepoContext,
-        #[cfg(feature = "codebase_index_persistence")]
-        FeatureFlag::CodebaseIndexPersistence,
-        #[cfg(feature = "figma_detection")]
-        FeatureFlag::FigmaDetection,
-        #[cfg(feature = "codebase_index_speedbump")]
-        FeatureFlag::CodebaseIndexSpeedbump,
         #[cfg(feature = "context_line_review_comments")]
         FeatureFlag::ContextLineReviewComments,
         #[cfg(feature = "code_find_replace")]
@@ -127,24 +100,14 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::CommandPaletteFileSearch,
         #[cfg(feature = "tab_close_button_on_left")]
         FeatureFlag::TabCloseButtonOnLeft,
-        #[cfg(feature = "linked_code_blocks")]
-        FeatureFlag::LinkedCodeBlocks,
         #[cfg(feature = "tabbed_editor_view")]
         FeatureFlag::TabbedEditorView,
         #[cfg(feature = "undo_closed_panes")]
         FeatureFlag::UndoClosedPanes,
-        #[cfg(feature = "sync_ambient_plans")]
-        FeatureFlag::SyncAmbientPlans,
-        #[cfg(feature = "projects")]
-        FeatureFlag::Projects,
         #[cfg(feature = "github_pr_prompt_chip")]
         FeatureFlag::GithubPrPromptChip,
-        #[cfg(feature = "create_project_flow")]
-        FeatureFlag::CreateProjectFlow,
         #[cfg(feature = "vim_code_editor")]
         FeatureFlag::VimCodeEditor,
-        #[cfg(feature = "allow_opening_file_links_using_editor_env")]
-        FeatureFlag::AllowOpeningFileLinksUsingEditorEnv,
         #[cfg(feature = "revert_diff_hunk")]
         FeatureFlag::RevertDiffHunk,
         #[cfg(feature = "code_review_save_changes")]
@@ -177,12 +140,6 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::FileAndDiffSetComments,
         #[cfg(feature = "agent_view")]
         FeatureFlag::AgentView,
-        #[cfg(feature = "torch_managed_secrets")]
-        FeatureFlag::WarpManagedSecrets,
-        #[cfg(feature = "local_computer_use")]
-        FeatureFlag::LocalComputerUse,
-        #[cfg(feature = "background_computer_use")]
-        FeatureFlag::BackgroundComputerUse,
         #[cfg(feature = "local_claude_codex_child_harnesses")]
         FeatureFlag::LocalClaudeCodexChildHarnesses,
         #[cfg(feature = "cloud_conversations")]
@@ -215,8 +172,6 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::NewTabStyling,
         #[cfg(feature = "incremental_auto_reload")]
         FeatureFlag::IncrementalAutoReload,
-        #[cfg(feature = "pending_user_query_indicator")]
-        FeatureFlag::PendingUserQueryIndicator,
         #[cfg(feature = "kitty_keyboard_protocol")]
         FeatureFlag::KittyKeyboardProtocol,
         #[cfg(feature = "inline_menu_headers")]
@@ -237,8 +192,6 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::PinnedTabs,
         #[cfg(feature = "warp_control_cli")]
         FeatureFlag::WarpControlCli,
-        #[cfg(feature = "agent_harness")]
-        FeatureFlag::AgentHarness,
         #[cfg(feature = "hoa_notifications")]
         FeatureFlag::HOANotifications,
         #[cfg(feature = "cli_agent_rich_input")]
@@ -251,8 +204,6 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::CodexPlugin,
         #[cfg(feature = "trim_trailing_blank_lines")]
         FeatureFlag::TrimTrailingBlankLines,
-        #[cfg(feature = "git_credential_refresh")]
-        FeatureFlag::GitCredentialRefresh,
         #[cfg(feature = "factory_deferred_repositories")]
         FeatureFlag::FactoryDeferredRepositories,
         #[cfg(feature = "remote_code_review")]

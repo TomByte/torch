@@ -10,8 +10,6 @@
 //! used to render a [`PaneView`] which internally renders the pane, including the [`BackingView`].
 pub(super) mod code_pane;
 pub(super) mod file_pane;
-#[cfg(not(target_family = "wasm"))]
-pub(super) mod network_log_pane;
 pub(super) mod settings_pane;
 pub(super) mod terminal_pane;
 pub mod view;
@@ -37,7 +35,6 @@ use crate::code::view::CodeView;
 use crate::menu::MenuItem;
 use crate::notebooks::file::FileNotebookView;
 use crate::pane_group::focus_state::PaneFocusHandle;
-use crate::server::network_log_view::NetworkLogView;
 use crate::settings::PaneSettings;
 use crate::settings_view::SettingsView;
 use crate::terminal::TerminalView;
@@ -106,7 +103,6 @@ pub(crate) enum IPaneType {
     File,
     Code,
     Settings,
-    NetworkLog,
     /// A pane type only for tests.
     #[cfg(test)]
     Dummy,
@@ -119,7 +115,6 @@ impl Display for IPaneType {
             IPaneType::File => write!(f, "File"),
             IPaneType::Code => write!(f, "Code"),
             IPaneType::Settings => write!(f, "Settings"),
-            IPaneType::NetworkLog => write!(f, "Network Log"),
             #[cfg(test)]
             IPaneType::Dummy => write!(f, "Dummy"),
         }
@@ -161,11 +156,6 @@ impl PaneId {
         Self::new_from_ctx(IPaneType::Settings, ctx)
     }
 
-    /// Creates a [`PaneId`] from a [`ViewContext<PaneView<NetworkLogView>>`].
-    pub fn from_network_log_pane_ctx(ctx: &ViewContext<PaneView<NetworkLogView>>) -> Self {
-        Self::new_from_ctx(IPaneType::NetworkLog, ctx)
-    }
-
     /// Creates a [`PaneId`] from a [`PaneView<TerminalView>`] entity ID.
     pub fn from_terminal_pane_view(
         terminal_pane_view: &ViewHandle<terminal_pane::TerminalPaneView>,
@@ -188,13 +178,6 @@ impl PaneId {
         settings_pane_view: &ViewHandle<PaneView<SettingsView>>,
     ) -> Self {
         Self::new(IPaneType::Settings, settings_pane_view)
-    }
-
-    /// Creates a [`PaneId`] from a [`PaneView<NetworkLogView>`] entity ID.
-    pub fn from_network_log_pane_view(
-        network_log_pane_view: &ViewHandle<PaneView<NetworkLogView>>,
-    ) -> Self {
-        Self::new(IPaneType::NetworkLog, network_log_pane_view)
     }
 
     /// Creates a [`PaneId`] for a dummy pane.
@@ -249,9 +232,6 @@ impl PaneId {
             }
             IPaneType::Settings => {
                 ChildView::<PaneView<SettingsView>>::with_id(self.0.pane_view_id).finish()
-            }
-            IPaneType::NetworkLog => {
-                ChildView::<PaneView<NetworkLogView>>::with_id(self.0.pane_view_id).finish()
             }
             #[cfg(test)]
             IPaneType::Dummy => torchui::elements::Empty::new().finish(),

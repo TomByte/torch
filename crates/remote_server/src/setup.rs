@@ -598,14 +598,10 @@ pub fn install_script(staging_tarball_path: Option<&str>) -> String {
         .replace("{staging_tarball_path}", staging_tarball_path.unwrap_or(""))
 }
 
-/// Construct the download URL from the server root URL.
-///
-/// For example, given `https://cloud-disabled.torch.invalid`, returns
-/// `https://cloud-disabled.torch.invalid/download/cli`.
+/// Endpoint that serves the remote server tarball. Torch has no hosted artifact store yet, so
+/// this is a reserved `.invalid` host and installs fall through to the failure path.
 fn download_url() -> String {
-    let base = ChannelState::server_root_url();
-    let base = base.trim_end_matches('/');
-    format!("{base}/download/cli")
+    "https://cloud-disabled.torch.invalid/download/cli".to_string()
 }
 
 /// Maps the client's [`Channel`] to the server's download channel parameter.

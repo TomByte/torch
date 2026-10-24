@@ -193,8 +193,3 @@ pub enum ClipboardType {
     Clipboard,
     Selection,
 }
-#[derive(Clone, Copy, Debug, Serialize)]
-pub enum ImageProtocol {
-    Kitty,
-    ITerm,
-}

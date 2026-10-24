@@ -184,24 +184,6 @@ impl CodeSource {
         }
     }
 
-    /// Returns the variant name as a string for telemetry purposes.
-    pub fn telemetry_source_name(&self) -> &'static str {
-        match self {
-            Self::New { .. } => "new",
-            Self::Link { .. } => "link",
-            Self::ProjectRules { .. } => "project_rules",
-            Self::FileTree {
-                location: LocalOrRemotePath::Remote(_),
-            } => "remote_file_tree",
-            Self::FileTree { .. } => "file_tree",
-            Self::CommandPalette {
-                location: LocalOrRemotePath::Remote(_),
-            } => "remote_command_palette",
-            Self::CommandPalette { .. } => "command_palette",
-            Self::Finder { .. } => "finder",
-        }
-    }
-
     /// Returns `true` if this source should be restored across app restarts.
     ///
     pub fn is_restorable(&self) -> bool {

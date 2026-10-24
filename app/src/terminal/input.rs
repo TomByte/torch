@@ -45,7 +45,6 @@ use torch_completer::parsers::LiteCommand;
 use torch_completer::parsers::simple::command_at_cursor_position;
 use torch_completer::signatures::CommandRegistry;
 use torch_core::r#async::debounce;
-use torch_core::context_flag::ContextFlag;
 use torch_core::ui::theme::AnsiColorIdentifier;
 use torch_core::ui::theme::color::internal_colors;
 use torch_editor::editor::NavigationKey;
@@ -102,7 +101,7 @@ use super::view::{
 use super::warpify::SubshellSource;
 use super::{History, HistoryEntry, SizeInfo, TerminalModel, prompt, should_right_click_paste};
 #[allow(unused_imports)]
-use crate::ASSETS;
+use crate::palette::PaletteSource;
 use crate::agent_status::PendingImages;
 use crate::agent_status::footer::{CLIAgentFooter, CLIAgentFooterEvent};
 use crate::appearance::{Appearance, AppearanceEvent};
@@ -134,15 +133,10 @@ use crate::pane_group::focus_state::PaneFocusHandle;
 #[cfg(feature = "local_fs")]
 use crate::persistence::{database_file_path_for_current_scope, establish_ro_connection};
 use crate::prefix::longest_common_prefix;
-use crate::prompt::editor_modal::OpenSource as PromptEditorOpenSource;
 use crate::resource_center::{
     Tip, TipAction, TipHint, TipsCompleted, mark_feature_used_and_write_to_user_defaults,
 };
 use crate::search::QueryFilter;
-use crate::server::telemetry::{
-    CommandXRayTrigger, PaletteSource, TelemetryEvent,
-    WorkflowTelemetryMetadata,
-};
 use crate::session_management::SessionNavigationPromptElements;
 use crate::settings::{
     AliasExpansionSettings, AppEditorSettings, AppEditorSettingsChangedEvent, CLIAgentSettings,
@@ -193,8 +187,13 @@ use crate::workflows::local_workflows::LocalWorkflows;
 use crate::workflows::{self, WorkflowSelectionSource, WorkflowSource, WorkflowType};
 use crate::workspace::sync_inputs::SyncedInputState;
 use crate::workspace::{CommandSearchOptions, InitContent, ToastStack, WorkspaceAction};
-#[allow(unused_imports)]
-use crate::{ServerApiProvider, send_telemetry_from_ctx};
+
+/// What prompted command x-ray to look at the buffer.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum CommandXRayTrigger {
+    Hover,
+    Keystroke,
+}
 
 /// Drop target data for dropping content on the [`Input`].
 #[derive(Debug, Clone)]
@@ -264,14 +263,6 @@ cfg_if::cfg_if! {
         // On linux and windows, the CmdEnter EditorAction is bound to ctrl-shift-enter.
         const CMD_ENTER_KEYBINDING: &str =  "ctrl-shift-enter";
     }
-}
-
-#[derive(PartialEq, Eq, Copy, Clone, Serialize)]
-pub enum TelemetryInputSuggestionsMode {
-    HistoryFuzzySearch,
-    CompletionSuggestions,
-    HistoryUp,
-    InlineHistoryMenu,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -375,25 +366,6 @@ impl InputSuggestionsMode {
         self.is_inline_menu()
     }
 
-    fn to_telemetry_mode(&self) -> TelemetryInputSuggestionsMode {
-        match *self {
-            InputSuggestionsMode::HistoryUp {
-                search_mode: HistorySearchMode::Prefix,
-                ..
-            } => TelemetryInputSuggestionsMode::HistoryUp,
-            InputSuggestionsMode::HistoryUp {
-                search_mode: HistorySearchMode::Fuzzy,
-                ..
-            } => TelemetryInputSuggestionsMode::HistoryFuzzySearch,
-            InputSuggestionsMode::CompletionSuggestions { .. } => {
-                TelemetryInputSuggestionsMode::CompletionSuggestions
-            }
-            InputSuggestionsMode::InlineHistoryMenu => {
-                TelemetryInputSuggestionsMode::InlineHistoryMenu
-            }
-            InputSuggestionsMode::Closed => unreachable!(),
-        }
-    }
 }
 
 /// Where a command execution request originates from.
@@ -1130,15 +1102,6 @@ pub fn init(app: &mut AppContext) {
     ]);
 
     app.register_editable_bindings([EditableBinding::new(
-        "input:insert_network_logging_workflow",
-        "Show Torch network log",
-        WorkspaceAction::OpenNetworkLogPane,
-    )
-    .with_enabled(|| {
-        ContextFlag::NetworkLogConsole.is_enabled() && !ChannelState::is_local_only()
-    })]);
-
-    app.register_editable_bindings([EditableBinding::new(
         "input:clear_screen",
         "Clear screen",
         InputAction::ClearScreen,
@@ -1167,9 +1130,7 @@ pub fn init(app: &mut AppContext) {
         "workspace:edit_prompt",
         BindingDescription::new("Edit Prompt")
             .with_custom_description(bindings::MAC_MENUS_CONTEXT, "Edit Prompt"),
-        WorkspaceAction::OpenPromptEditor {
-            open_source: PromptEditorOpenSource::CommandPalette,
-        },
+        WorkspaceAction::OpenPromptEditor,
     )
     .with_group(bindings::BindingGroup::Settings.as_str())
     .with_context_predicate(id!("Input") & !id!("LongRunningCommand"))]);
@@ -1392,7 +1353,7 @@ impl Input {
                 // so its subscriber always fires alongside ours for every chip click.
                 CLIAgentFooterEvent::WriteToPty(_)
                 | CLIAgentFooterEvent::InsertIntoCLIRichInput(_)
-                | CLIAgentFooterEvent::ToggleFileExplorer(_)
+                | CLIAgentFooterEvent::ToggleFileExplorer
                 | CLIAgentFooterEvent::OpenRichInput
                 | CLIAgentFooterEvent::HideRichInput => {}
                 CLIAgentFooterEvent::ToggledChipMenu { open } => {
@@ -1976,7 +1937,7 @@ impl Input {
             }
             PromptDisplayEvent::OpenCommandPaletteFiles => {
                 ctx.emit(Event::OpenFilesPalette {
-                    source: PaletteSource::ContextChip,
+                    source: PaletteSource::Other,
                 });
             }
             PromptDisplayEvent::TryExecuteCommand(command) => {
@@ -2565,7 +2526,6 @@ impl Input {
             // We don't want to submit the command if precmd has not
             // been received. Instead, we want the user to be aware
             // that the prompt might not be up to date.
-            send_telemetry_from_ctx!(TelemetryEvent::TriedToExecuteBeforePrecmd, ctx);
             did_execute = false;
         }
 
@@ -2687,14 +2647,6 @@ impl Input {
             } => {
                 let workflow_source = *workflow_source;
 
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::WorkflowSelected(WorkflowTelemetryMetadata {
-                        workflow_source,
-                        workflow_categories: workflow.as_workflow().tags().cloned(),
-                        workflow_selection_source: WorkflowSelectionSource::Voltron,
-                    }),
-                    ctx
-                );
 
                 self.show_workflows_info_box_on_workflow_selection(
                     *workflow.clone(),
@@ -3082,46 +3034,18 @@ impl Input {
         }
 
         match event {
-            InputSuggestionsEvent::ConfirmSuggestion {
-                suggestion,
-                match_type,
-            } => {
+            InputSuggestionsEvent::ConfirmSuggestion { suggestion, .. } => {
                 if !self.confirm_suggestion(suggestion, ctx) {
                     return;
                 }
 
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::ConfirmSuggestion {
-                        mode: self
-                            .suggestions_mode_model
-                            .as_ref(ctx)
-                            .mode()
-                            .to_telemetry_mode(),
-                        match_type: *match_type,
-                    },
-                    ctx
-                );
                 self.close_input_suggestions(/*should_focus_input=*/ true, ctx);
             }
-            InputSuggestionsEvent::ConfirmAndExecuteSuggestion {
-                suggestion,
-                match_type,
-            } => {
+            InputSuggestionsEvent::ConfirmAndExecuteSuggestion { suggestion, .. } => {
                 if !self.confirm_and_execute_suggestion(suggestion, ctx) {
                     return;
                 }
 
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::ConfirmSuggestion {
-                        mode: self
-                            .suggestions_mode_model
-                            .as_ref(ctx)
-                            .mode()
-                            .to_telemetry_mode(),
-                        match_type: *match_type,
-                    },
-                    ctx
-                );
 
                 self.close_input_suggestions(/*should_focus_input=*/ true, ctx);
 
@@ -3500,13 +3424,6 @@ impl Input {
 
     // TODO - Implement PageUp functionality for input suggestions menu
     fn editor_page_up(&mut self, ctx: &mut ViewContext<Self>) {
-        let event = self.editor.read(ctx, |editor, ctx| {
-            TelemetryEvent::PageUpDownInEditorPressed {
-                is_empty_editor: editor.is_empty(ctx),
-                is_down: false,
-            }
-        });
-        send_telemetry_from_ctx!(event, ctx);
         if self.suggestions_mode_model.as_ref(ctx).is_visible() {
             self.editor
                 .update(ctx, |input, ctx| input.move_page_up(ctx));
@@ -3609,13 +3526,6 @@ impl Input {
 
     // TODO - Implement PageDown functionality for input suggestions menu
     fn editor_page_down(&mut self, ctx: &mut ViewContext<Self>) {
-        let event = self.editor.read(ctx, |editor, ctx| {
-            TelemetryEvent::PageUpDownInEditorPressed {
-                is_empty_editor: editor.is_empty(ctx),
-                is_down: true,
-            }
-        });
-        send_telemetry_from_ctx!(event, ctx);
         if self.suggestions_mode_model.as_ref(ctx).is_visible() {
             self.editor
                 .update(ctx, |input, ctx| input.move_page_down(ctx));
@@ -5571,7 +5481,7 @@ impl Input {
                     async move {
                         completer::describe(buffer_text.as_str(), pos, &completion_context).await
                     },
-                    |input, description, ctx| {
+                    move |input, description, ctx| {
                         input.show_xray(description, trigger, ctx);
                     },
                 );
@@ -6144,19 +6054,6 @@ impl Input {
         let workflow_command = {
             match self.workflows_state.selected_workflow_state.as_ref() {
                 Some(selected_workflow_state) => {
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::WorkflowExecuted(WorkflowTelemetryMetadata {
-                            workflow_source: selected_workflow_state.workflow_source,
-                            workflow_categories: selected_workflow_state
-                                .workflow_type
-                                .as_workflow()
-                                .tags()
-                                .cloned(),
-                            workflow_selection_source: selected_workflow_state
-                                .workflow_selection_source,
-                        }),
-                        ctx
-                    );
 
                     // Local workflows have no unique ID and are tracked just by persisting the
                     // workflow contents.

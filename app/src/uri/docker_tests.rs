@@ -1,17 +1,11 @@
 use torchui::App;
 
 use super::*;
-use crate::auth::AuthStateProvider;
-use crate::server::server_api::ServerApiProvider;
-use crate::server::telemetry::context_provider::AppTelemetryContextProvider;
 
 #[test]
 // Tests behavior based on which query parameters are required.
 fn test_open_docker_container() {
     App::test((), |mut app| async move {
-        app.add_singleton_model(|_| ServerApiProvider::new_for_test());
-        app.add_singleton_model(|_| AuthStateProvider::new_for_test());
-        app.add_singleton_model(AppTelemetryContextProvider::new_context_provider);
 
         let base_url = Url::parse("warplocal://action/docker/open_subshell")
             .expect("base url should be successfully parsed");

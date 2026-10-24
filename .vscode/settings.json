@@ -17,7 +17,6 @@
   "files.associations": {
     "**/ui/src/platform/mac/**/*.h": "objective-c"
   },
-  "graphql-config.load.rootDir": "graphql/",
   "rust-analyzer.cargo.targetDir": true,
   "powershell.codeFormatting.addWhitespaceAroundPipe": true,
   "powershell.codeFormatting.alignPropertyValuePairs": false,

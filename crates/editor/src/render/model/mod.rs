@@ -2757,13 +2757,6 @@ impl RenderState {
         self.content().block_items().count()
     }
 
-    pub fn markdown_table_count(&self) -> usize {
-        self.content()
-            .block_items()
-            .filter(|item| matches!(item, BlockItem::Table(_)))
-            .count()
-    }
-
     pub fn is_entire_range_of_type(
         &self,
         range: &Range<CharOffset>,

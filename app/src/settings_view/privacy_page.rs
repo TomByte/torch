@@ -32,8 +32,6 @@ use super::settings_page::{
 use super::{SettingsAction, SettingsSection, ToggleSettingActionPair, flags};
 use crate::appearance::Appearance;
 use crate::modal::{Modal, ModalEvent, ModalViewState};
-use crate::send_telemetry_from_ctx;
-use crate::server::telemetry::TelemetryEvent;
 use crate::settings::{CustomSecretRegex, PrivacySettings, RegexDisplayInfo};
 use crate::settings_view::privacy::AddRegexModalViewState;
 use crate::terminal::safe_mode_settings::{
@@ -191,10 +189,6 @@ impl PrivacyPageView {
         let safe_mode_settings = SafeModeSettings::handle(ctx);
         let new_value = { !*safe_mode_settings.as_ref(ctx).safe_mode_enabled.value() };
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::ToggleSecretRedaction { enabled: new_value },
-            ctx
-        );
 
         ctx.update_model(&safe_mode_settings, move |safe_mode_settings, ctx| {
             report_if_error!(

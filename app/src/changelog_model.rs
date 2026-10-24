@@ -12,23 +12,22 @@ use torchui::{Entity, ModelContext, SingletonEntity};
 use crate::autoupdate::{self};
 use crate::channel::{Channel, ChannelState};
 use crate::features::{FeatureFlag, PREVIEW_FLAGS};
-use crate::server::server_api::ServerApi;
 
 pub struct ChangelogModel {
     pub changelog: ChangelogState,
     pub parsed_changelog: HashMap<String, FormattedText>,
     pub oz_updates: Vec<FormattedText>,
-    pub server_api: Arc<ServerApi>,
+    pub http_client: Arc<http_client::Client>,
     pub image: Option<AssetSource>,
 }
 
 impl ChangelogModel {
-    pub fn new(server_api: Arc<ServerApi>) -> Self {
+    pub fn new(http_client: Arc<http_client::Client>) -> Self {
         Self {
             changelog: ChangelogState::None,
             parsed_changelog: HashMap::new(),
             oz_updates: Vec::new(),
-            server_api,
+            http_client,
             image: None,
         }
     }
@@ -52,12 +51,12 @@ impl ChangelogModel {
             }
             ChangelogState::None => {
                 self.changelog = ChangelogState::Pending;
-                let server_api = self.server_api.clone();
+                let http_client = self.http_client.clone();
                 let _ = ctx.spawn(
                     async move {
                         (
                             request_type,
-                            autoupdate::get_current_changelog(server_api).await,
+                            autoupdate::get_current_changelog(&http_client).await,
                         )
                     },
                     Self::handle_changelog_check,

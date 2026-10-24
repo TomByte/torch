@@ -5,7 +5,7 @@ use super::event::{
     CLIAgentEvent, CLIAgentEventPayload, CLIAgentEventSource, CLIAgentEventType, parse_event,
 };
 use super::{
-    BlockedSource, CLIAgentInputEntrypoint, CLIAgentInputState, CLIAgentSession,
+    BlockedSource, CLIAgentInputState, CLIAgentSession,
     CLIAgentSessionContext, CLIAgentSessionStatus, CLIAgentSessionsModel,
 };
 use crate::terminal::CLIAgent;
@@ -265,9 +265,7 @@ fn parse_droid_stop_notification() {
 
 #[test]
 fn apply_event_preserves_input_session() {
-    let input_state = CLIAgentInputState::Open {
-        entrypoint: CLIAgentInputEntrypoint::CtrlG,
-    };
+    let input_state = CLIAgentInputState::Open;
     let mut session = CLIAgentSession {
         agent: CLIAgent::Claude,
         status: CLIAgentSessionStatus::InProgress,

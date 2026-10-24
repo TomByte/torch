@@ -75,56 +75,15 @@ pub(in crate::terminal) enum LifecycleInput {
     Exit,
 }
 
-/// Identifies a lifecycle input without retaining its input-specific evidence.
-///
-/// Diagnostics use this bounded vocabulary so telemetry remains structured and non-UGC.
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub(in crate::terminal) enum LifecycleInputKind {
-    StartCommand,
-    Preexec,
-    CommandFinished,
-    PrecmdWithCompletionMetadata,
-    PromptOnlyPrecmd,
-    InitShell,
-    Exit,
-}
-
-impl LifecycleInput {
-    /// Returns the bounded input kind used to key and populate lifecycle diagnostics.
-    pub(super) fn kind(self) -> LifecycleInputKind {
-        match self {
-            LifecycleInput::StartCommand(_) => LifecycleInputKind::StartCommand,
-            LifecycleInput::Preexec(_) => LifecycleInputKind::Preexec,
-            LifecycleInput::CommandFinished(_) => LifecycleInputKind::CommandFinished,
-            LifecycleInput::PrecmdWithCompletionMetadata(_) => {
-                LifecycleInputKind::PrecmdWithCompletionMetadata
-            }
-            LifecycleInput::PromptOnlyPrecmd => LifecycleInputKind::PromptOnlyPrecmd,
-            LifecycleInput::InitShell => LifecycleInputKind::InitShell,
-            LifecycleInput::Exit => LifecycleInputKind::Exit,
-        }
-    }
-}
-
 /// Captures live block and terminal evidence at the point an input is planned.
 ///
-/// The snapshot both guards phase reconciliation and supplies an allowlisted, non-UGC diagnostic
-/// record when the transition is ignored or requires recovery.
+/// The snapshot guards phase reconciliation and transition planning.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(in crate::terminal) struct LifecycleSnapshot {
-    pub active_block_id: String,
-    pub active_session_id: Option<u64>,
-    pub supplied_next_block_id: Option<String>,
-    pub hook_session_id: Option<u64>,
     pub block_state: BlockState,
     pub started: bool,
-    pub finished: bool,
     pub received_precmd: bool,
-    pub is_in_band: bool,
-    pub is_bootstrapped: bool,
     pub is_bootstrap_done: bool,
-    pub is_alt_screen_active: bool,
-    pub completion_mismatch: bool,
 }
 
 /// Explains why an input was conservatively ignored instead of mutating terminal state.
@@ -155,22 +114,14 @@ pub(in crate::terminal) enum LifecycleAction {
     Ignore(IgnoreReason),
 }
 
-impl LifecycleAction {
-    /// Returns whether the selected action intentionally avoids lifecycle mutation.
-    pub(super) fn is_ignored(self) -> bool {
-        matches!(self, LifecycleAction::Ignore(_))
-    }
-}
-
 /// Contains the complete plan for handling one lifecycle input.
 ///
-/// Callers apply `action`, emit any attached diagnostic, and then commit `next_phase`.
+/// Callers apply `action` and then commit `next_phase`.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(in crate::terminal) struct LifecycleTransition {
     pub previous_phase: LifecyclePhase,
     pub next_phase: LifecyclePhase,
     pub action: LifecycleAction,
-    pub recovery_record: Option<super::LifecycleRecoveryRecord>,
 }
 
 /// Reconciles a remembered phase against the active block's live state.

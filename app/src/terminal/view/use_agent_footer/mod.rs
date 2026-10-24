@@ -9,7 +9,7 @@ use torchui::clipboard::{ClipboardContent, ImageData};
 
 use crate::agent_status::ImageContext;
 use crate::agent_status::footer::{CLIAgentFooter, CLIAgentFooterEvent};
-use crate::terminal::cli_agent_sessions::{CLIAgentInputEntrypoint, CLIAgentSessionsModel};
+use crate::terminal::cli_agent_sessions::CLIAgentSessionsModel;
 use crate::util::image::{MAX_IMAGE_SIZE_BYTES_FOR_CLI_AGENT, MIME_SNIFF_BYTES, infer_mime_type};
 mod warpify_footer;
 
@@ -20,7 +20,6 @@ use std::time::Duration;
 use parking_lot::FairMutex;
 use pathfinder_color::ColorU;
 use torch_core::features::FeatureFlag;
-use torch_core::send_telemetry_from_ctx;
 use torch_core::ui::appearance::Appearance;
 use torch_core::ui::color::contrast::{
     MinimumAllowedContrast, high_enough_contrast, pick_best_foreground_color,
@@ -38,14 +37,12 @@ use torchui::{
 use warpify_footer::{WarpifyFooterView, WarpifyFooterViewEvent};
 
 use super::{RichContentInsertionPosition, TerminalAction, TerminalView};
-use crate::server::telemetry::{FileTreeSource, TelemetryEvent};
 use crate::settings::{
     CLIAgentSettings, CLIAgentSettingsChangedEvent, CompiledCommandsForCodingAgentToolbar,
     InputModeSettings,
 };
 pub use crate::terminal::CLIAgent;
 use crate::terminal::TerminalModel;
-use crate::terminal::cli_agent_sessions::CLIAgentRichInputCloseReason;
 use crate::terminal::model_events::{ModelEvent, ModelEventDispatcher};
 use crate::ui_components::blended_colors;
 use crate::view_components::action_button::ActionButtonTheme;
@@ -170,7 +167,6 @@ impl TerminalView {
         match event {
             UseAgentToolbarEvent::Dismiss => {
                 self.hide_use_agent_footer_in_blocklist(ctx);
-                send_telemetry_from_ctx!(TelemetryEvent::AgentToolbarDismissed, ctx);
                 ctx.notify();
             }
             UseAgentToolbarEvent::WriteToPty(text) => {
@@ -184,18 +180,12 @@ impl TerminalView {
                     input.insert_into_cli_agent_rich_input(text, ctx);
                 });
             }
-            UseAgentToolbarEvent::ToggleFileExplorer(cli_agent) => {
-                let source = match cli_agent {
-                    Some(_) => FileTreeSource::CLIAgentView,
-                    None => FileTreeSource::AgentToolbelt,
-                };
-                self.toggle_file_tree(source, *cli_agent, ctx);
-            }
+            UseAgentToolbarEvent::ToggleFileExplorer => self.toggle_file_tree(ctx),
             UseAgentToolbarEvent::OpenRichInput => {
                 if self.has_active_cli_agent_input_session(ctx) {
                     self.close_cli_agent_rich_input_and_disable_auto_toggle(ctx);
                 } else {
-                    self.open_cli_agent_rich_input(CLIAgentInputEntrypoint::FooterButton, ctx);
+                    self.open_cli_agent_rich_input(ctx);
                 }
             }
             UseAgentToolbarEvent::HideRichInput => {
@@ -204,10 +194,6 @@ impl TerminalView {
             UseAgentToolbarEvent::Warpify => {
                 self.hide_use_agent_footer_in_blocklist(ctx);
                 self.handle_action(&TerminalAction::TriggerSubshellBootstrap, ctx);
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::WarpifyFooterAcceptedWarpify { is_ssh: false },
-                    ctx
-                );
             }
         }
     }
@@ -291,16 +277,6 @@ impl TerminalView {
 
         let should_insert_after_block = !InputModeSettings::as_ref(ctx).is_pinned_to_top();
 
-        // Send telemetry when showing CLI agent footer
-        if let Some(session) = CLIAgentSessionsModel::as_ref(ctx).session(self.view_id) {
-            send_telemetry_from_ctx!(
-                TelemetryEvent::CLIAgentToolbarShown {
-                    cli_agent: session.agent,
-                },
-                ctx
-            );
-        }
-
         self.insert_rich_content(
             None,
             self.use_agent_footer.clone(),
@@ -322,25 +298,20 @@ impl TerminalView {
     /// Closes the CLI agent rich input session. Side effects (input config restore,
     /// buffer clear, hint text) are handled reactively by subscribers to
     /// `CLIAgentSessionsModelEvent::InputSessionChanged`.
-    pub(in crate::terminal) fn close_cli_agent_rich_input(
-        &mut self,
-        reason: CLIAgentRichInputCloseReason,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        self.close_cli_agent_rich_input_impl(true, reason, ctx);
+    pub(in crate::terminal) fn close_cli_agent_rich_input(&mut self, ctx: &mut ViewContext<Self>) {
+        self.close_cli_agent_rich_input_impl(true, ctx);
     }
 
     pub(in crate::terminal) fn close_cli_agent_rich_input_and_disable_auto_toggle(
         &mut self,
         ctx: &mut ViewContext<Self>,
     ) {
-        self.close_cli_agent_rich_input_impl(false, CLIAgentRichInputCloseReason::Manual, ctx);
+        self.close_cli_agent_rich_input_impl(false, ctx);
     }
 
     fn close_cli_agent_rich_input_impl(
         &mut self,
         should_auto_toggle_input: bool,
-        reason: CLIAgentRichInputCloseReason,
         ctx: &mut ViewContext<Self>,
     ) {
         if !self.has_active_cli_agent_input_session(ctx) {
@@ -355,16 +326,6 @@ impl TerminalView {
             sessions_model.set_draft(view_id, draft);
             sessions_model.close_input(view_id, should_auto_toggle_input, ctx);
         });
-
-        let cli_agent = CLIAgentSessionsModel::as_ref(ctx)
-            .session(self.view_id)
-            .map(|s| s.agent);
-        if let Some(cli_agent) = cli_agent {
-            send_telemetry_from_ctx!(
-                TelemetryEvent::CLIAgentRichInputClosed { cli_agent, reason },
-                ctx
-            );
-        }
 
         self.redetermine_terminal_focus(ctx);
         ctx.notify();
@@ -388,7 +349,7 @@ impl TerminalView {
         };
 
         if should_close {
-            self.close_cli_agent_rich_input(CLIAgentRichInputCloseReason::Submit, ctx);
+            self.close_cli_agent_rich_input(ctx);
         } else {
             self.input.update(ctx, |input, ctx| {
                 input.clear_buffer_and_reset_undo_stack(ctx);
@@ -406,20 +367,6 @@ impl TerminalView {
         }
         if text.trim().is_empty() {
             return;
-        }
-
-        let prompt_length = text.chars().count();
-        let cli_agent = CLIAgentSessionsModel::as_ref(ctx)
-            .session(self.view_id)
-            .map(|s| s.agent);
-        if let Some(cli_agent) = cli_agent {
-            send_telemetry_from_ctx!(
-                TelemetryEvent::CLIAgentRichInputSubmitted {
-                    cli_agent,
-                    prompt_length,
-                },
-                ctx
-            );
         }
 
         // Clear any saved draft so submitted text isn't restored on the next open.
@@ -729,11 +676,7 @@ impl TerminalView {
         }
     }
 
-    pub(in crate::terminal) fn open_cli_agent_rich_input(
-        &mut self,
-        entrypoint: CLIAgentInputEntrypoint,
-        ctx: &mut ViewContext<Self>,
-    ) {
+    pub(in crate::terminal) fn open_cli_agent_rich_input(&mut self, ctx: &mut ViewContext<Self>) {
         if !FeatureFlag::CLIAgentRichInput.is_enabled()
             || self.has_active_cli_agent_input_session(ctx)
         {
@@ -742,25 +685,18 @@ impl TerminalView {
 
         // The Ctrl-G binding and footer button are both gated on an active CLI
         // agent session, so the session should always exist here.
-        let Some(cli_agent) = CLIAgentSessionsModel::as_ref(ctx)
+        if CLIAgentSessionsModel::as_ref(ctx)
             .session(self.view_id)
-            .map(|session| session.agent)
-        else {
+            .is_none()
+        {
             return;
-        };
+        }
 
         let view_id = self.view_id;
         CLIAgentSessionsModel::handle(ctx).update(ctx, |sessions_model, ctx| {
-            sessions_model.open_input(view_id, entrypoint, true, ctx);
+            sessions_model.open_input(view_id, true, ctx);
         });
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::CLIAgentRichInputOpened {
-                cli_agent,
-                entrypoint,
-            },
-            ctx
-        );
 
         // Input mode switch, buffer clear, draft restoration, and hint text
         // are handled reactively by Input's subscription to InputSessionChanged.
@@ -841,8 +777,8 @@ impl UseAgentToolbar {
             CLIAgentFooterEvent::InsertIntoCLIRichInput(text) => {
                 ctx.emit(UseAgentToolbarEvent::InsertIntoRichInput(text.clone()));
             }
-            CLIAgentFooterEvent::ToggleFileExplorer(agent) => {
-                ctx.emit(UseAgentToolbarEvent::ToggleFileExplorer(*agent));
+            CLIAgentFooterEvent::ToggleFileExplorer => {
+                ctx.emit(UseAgentToolbarEvent::ToggleFileExplorer);
             }
             CLIAgentFooterEvent::OpenRichInput => {
                 ctx.emit(UseAgentToolbarEvent::OpenRichInput);
@@ -915,7 +851,7 @@ pub enum UseAgentToolbarEvent {
     InsertIntoRichInput(String),
     /// Toggle the file explorer. `None` when no CLI agent session is attached
     /// to this pane.
-    ToggleFileExplorer(Option<CLIAgent>),
+    ToggleFileExplorer,
     /// Open the rich input editor for composing a prompt.
     OpenRichInput,
     /// Hide the rich input editor (same as Escape).

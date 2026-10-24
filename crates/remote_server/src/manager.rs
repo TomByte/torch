@@ -348,10 +348,6 @@ pub enum RemoteSessionState {
         client: Arc<RemoteServerClient>,
         host_id: HostId,
         /// Identity key that was active when this session was established.
-        /// Used by `rotate_auth_token` to ensure token rotation notifications
-        /// are only delivered to sessions that belong to the current user
-        /// identity, preventing a stale session for a previous identity from
-        /// receiving a different user's bearer token.
         identity_key: String,
         /// The transport's owning `Child`. See `Initializing::_child`.
         #[cfg(not(target_family = "wasm"))]
@@ -2277,9 +2273,6 @@ impl RemoteServerManager {
             .initialize(
                 auth_token.as_deref(),
                 InitializeParams {
-                    user_id: auth_context.user_id().to_owned(),
-                    user_email: auth_context.user_email().to_owned(),
-                    crash_reporting_enabled: auth_context.crash_reporting_enabled(),
                     codebase_index_limits,
                 },
             )
@@ -2451,42 +2444,6 @@ impl RemoteServerManager {
             RemoteSessionState::Connected { client, .. } => Some(client),
             _ => None,
         })
-    }
-
-    /// Rotates the daemon-wide auth credential on each connected remote host.
-    ///
-    /// Only sessions whose stored `identity_key` matches the current identity
-    /// (from `auth_context`) receive the notification. This prevents a stale
-    /// session established under a previous user identity from receiving a
-    /// newly-rotated bearer token that belongs to a different user.
-    ///
-    /// Within the matching identity, a daemon may have multiple client
-    /// connections. The credential is stored daemon-wide, so sending one
-    /// notification per connected host is sufficient.
-    pub fn rotate_auth_token(&self, token: String) {
-        let Some(ref auth_context) = self.auth_context else {
-            log::warn!("Remote server rotate_auth_token: no auth_context available, skipping");
-            return;
-        };
-        let current_identity_key = auth_context.remote_server_identity_key();
-        let mut authenticated_hosts = HashSet::new();
-        for state in self.sessions.values() {
-            let RemoteSessionState::Connected {
-                client,
-                host_id,
-                identity_key,
-                ..
-            } = state
-            else {
-                continue;
-            };
-            if identity_key != &current_identity_key {
-                continue;
-            }
-            if authenticated_hosts.insert(host_id.clone()) {
-                client.authenticate(&token);
-            }
-        }
     }
 
     /// Returns the connection state for this session.

@@ -385,14 +385,13 @@ pub struct Pty {
 impl Pty {
     pub fn new(
         options: PtyOptions,
-        hooks: &dyn super::spawner::PtySpawnHooks,
         event_loop_tx: mio_channel::Sender<writeable_pty::Message>,
         ctx: &mut AppContext,
     ) -> anyhow::Result<Self> {
         let size = options.size;
         PtySpawner::handle(ctx)
-            .update(ctx, |pty_spawner, ctx| {
-                pty_spawner.spawn_pty(options, hooks, event_loop_tx, ctx)
+            .update(ctx, |pty_spawner, _| {
+                pty_spawner.spawn_pty(options, event_loop_tx)
             })
             .map(
                 |(

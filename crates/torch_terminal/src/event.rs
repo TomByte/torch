@@ -7,7 +7,7 @@ use hex::FromHexError;
 use itertools::Itertools as _;
 use torch_util::AsciiDebug;
 
-use crate::{ClipboardType, ImageProtocol};
+use crate::ClipboardType;
 /// Emitted upon completion of an executor command that goes through the pty, such as the
 /// InBandCommandExecutor.
 #[derive(Clone)]
@@ -197,6 +197,5 @@ pub enum Event {
     ImageReceived {
         image_id: u32,
         image_data: Vec<u8>,
-        image_protocol: ImageProtocol,
     },
 }

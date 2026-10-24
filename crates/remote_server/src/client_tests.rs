@@ -175,9 +175,6 @@ async fn initialize_round_trip() {
         .initialize(
             None,
             InitializeParams {
-                user_id: String::new(),
-                user_email: String::new(),
-                crash_reporting_enabled: true,
                 codebase_index_limits: None,
             },
         )
@@ -204,9 +201,6 @@ async fn initialize_sends_empty_auth_token_when_none() {
         .initialize(
             None,
             InitializeParams {
-                user_id: String::new(),
-                user_email: String::new(),
-                crash_reporting_enabled: true,
                 codebase_index_limits: None,
             },
         )
@@ -231,34 +225,11 @@ async fn initialize_sends_auth_token_when_provided() {
         .initialize(
             Some("secret-token"),
             InitializeParams {
-                user_id: String::new(),
-                user_email: String::new(),
-                crash_reporting_enabled: true,
                 codebase_index_limits: None,
             },
         )
         .await
         .unwrap();
-}
-
-#[tokio::test]
-async fn authenticate_sends_fire_and_forget_message() {
-    let (client_stream, server_stream) = tokio::io::duplex(4096);
-    let (server_read, _server_write) = tokio::io::split(server_stream);
-    let (client_read, client_write) = tokio::io::split(client_stream);
-    let executor = executor::Background::default();
-    let (client, _event_rx, _failure_rx, _host_rx) =
-        RemoteServerClient::new(client_read.compat(), client_write.compat_write(), &executor);
-
-    client.authenticate("rotated-secret");
-
-    let msg = protocol::read_client_message(&mut server_read.compat())
-        .await
-        .unwrap();
-    let notification::Message::Authenticate(auth) = unwrap_notification(&msg) else {
-        panic!("Expected Authenticate");
-    };
-    assert_eq!(auth.auth_token, "rotated-secret");
 }
 
 #[tokio::test]
@@ -309,9 +280,6 @@ async fn disconnected_on_closed_stream() {
         .initialize(
             None,
             InitializeParams {
-                user_id: String::new(),
-                user_email: String::new(),
-                crash_reporting_enabled: true,
                 codebase_index_limits: None,
             },
         )
@@ -444,9 +412,6 @@ async fn concurrent_in_flight_requests() {
             c.initialize(
                 None,
                 InitializeParams {
-                    user_id: String::new(),
-                    user_email: String::new(),
-                    crash_reporting_enabled: true,
                     codebase_index_limits: None,
                 },
             )

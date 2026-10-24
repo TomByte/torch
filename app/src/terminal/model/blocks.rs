@@ -13,7 +13,6 @@ use rustc_hash::FxHashMap;
 use selection::BlockListSelection;
 pub use selection::SelectionRange;
 use sum_tree::{Dimension, Item, SeekBias, SumTree};
-use torch_core::command::ExitCode;
 use torch_terminal::model::{KeyboardModes, KeyboardModesApplyBehavior};
 use torchui::r#async::executor::Background;
 use torchui::color::ColorU;
@@ -653,16 +652,6 @@ impl BlockList {
         } else {
             NextBlockIdDisposition::Novel
         }
-    }
-
-    /// Returns the exit code of the completed command immediately preceding the active block.
-    pub(super) fn previous_command_exit_code(&self) -> Option<ExitCode> {
-        [2usize, 3usize]
-            .into_iter()
-            .flat_map(|offset| self.blocks.len().checked_sub(offset))
-            .map(|idx| &self.blocks[idx])
-            .find(|block| !block.is_background() && block.finished())
-            .map(Block::exit_code)
     }
 
     fn next_gap_height(&self) -> Option<Lines> {

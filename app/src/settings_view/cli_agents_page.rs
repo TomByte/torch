@@ -47,7 +47,6 @@ use crate::terminal::CLIAgent;
 use crate::util::bindings;
 use crate::view_components::dropdown::DropdownAction;
 use crate::view_components::{Dropdown, SubmittableTextInput, SubmittableTextInputEvent};
-use crate::{TelemetryEvent, send_telemetry_from_ctx};
 
 const PAGE_TITLE: &str = "Third party CLI agents";
 
@@ -359,22 +358,12 @@ impl TypedActionView for CLIAgentsPageView {
     fn handle_action(&mut self, action: &Self::Action, ctx: &mut ViewContext<Self>) {
         match action {
             CLIAgentsPageAction::ToggleCLIAgentToolbar => {
-                match CLIAgentSettings::handle(ctx).update(ctx, |settings, ctx| {
+                if let Err(e) = CLIAgentSettings::handle(ctx).update(ctx, |settings, ctx| {
                     settings
                         .should_render_cli_agent_footer
                         .toggle_and_save_value(ctx)
                 }) {
-                    Ok(new_value) => {
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::ToggleCLIAgentToolbarSetting {
-                                is_enabled: new_value,
-                            },
-                            ctx
-                        );
-                    }
-                    Err(e) => {
-                        log::warn!("Failed to set value for CLI Agent Footer setting: {e:?}");
-                    }
+                    log::warn!("Failed to set value for CLI Agent Footer setting: {e:?}");
                 }
                 ctx.notify();
             }
