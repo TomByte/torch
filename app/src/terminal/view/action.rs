@@ -4,7 +4,6 @@ use std::path::PathBuf;
 
 use ai::skills::SkillReference;
 use command_corrections::Correction;
-pub use onboarding::OnboardingIntention;
 use pathfinder_geometry::vector::Vector2F;
 use session_sharing_protocol::common::Role;
 use session_sharing_protocol::sharer::RoleUpdateReason;
@@ -46,23 +45,6 @@ use crate::terminal::view::RichContentSecretTooltipInfo;
 use crate::terminal::view::inline_banner::AgentModeSetupSpeedbumpBannerAction;
 use crate::terminal::view::passive_suggestions::PromptSuggestionResolution;
 use crate::workflows::workflow::Workflow;
-
-/// Version of the agent onboarding flow (non-legacy).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum AgentOnboardingVersion {
-    UniversalInput {
-        has_project: bool,
-    },
-    AgentModality {
-        has_project: bool,
-        intention: OnboardingIntention,
-    },
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum OnboardingVersion {
-    Agent(AgentOnboardingVersion),
-}
 
 /// This represents whether entering a subshell for a particular command should become automatic in
 /// the future, or to ask again.
@@ -293,7 +275,6 @@ pub enum TerminalAction {
     AliasExpansionBanner(AliasExpansionBannerAction),
     OpenInWarpBanner(OpenInWarpBannerAction),
     OpenBlockFilterEditor(BlockIndex),
-    OnboardingFlow(OnboardingVersion),
     ImportSettings,
     StopSharingCurrentSession {
         source: SharedSessionActionSource,
@@ -328,7 +309,6 @@ pub enum TerminalAction {
     ToggleCLIAgentVoiceInput(voice_input::VoiceInputToggledFrom),
 
     HyperlinkClick(HyperlinkUrl),
-    AttemptLoginGatedFeature,
     StartFileDropTarget,
     StopFileDropTarget,
     SetMarkedText {
@@ -621,7 +601,6 @@ impl fmt::Debug for TerminalAction {
             OpenBlockFilterEditor(block_index) => {
                 write!(f, "OpenBlockFilterEditor({block_index:?})")
             }
-            OnboardingFlow(version) => write!(f, "OnboardingFlow({version:?})"),
             ImportSettings => write!(f, "ImportSettings"),
             StopSharingCurrentSession { source } => {
                 write!(f, "StopSharingCurrentSession({source:?})")
@@ -657,7 +636,6 @@ impl fmt::Debug for TerminalAction {
             #[cfg(feature = "voice_input")]
             ToggleCLIAgentVoiceInput(source) => write!(f, "ToggleCLIAgentVoiceInput({source:?})"),
             HyperlinkClick(hyperlink_url) => write!(f, "HyperlinkClick({hyperlink_url:?})"),
-            AttemptLoginGatedFeature => write!(f, "AttemptLoginGatedFeature"),
             StartFileDropTarget => write!(f, "StartFileDropTarget"),
             StopFileDropTarget => write!(f, "StopFileDropTarget"),
             RunNativeShellCompletions { buffer_text, .. } => {

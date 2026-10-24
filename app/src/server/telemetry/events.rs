@@ -35,7 +35,6 @@ use crate::ai::predict::generate_ai_input_suggestions::{
     GenerateAIInputSuggestionsRequest, GenerateAIInputSuggestionsResponseV2,
 };
 use crate::ai::predict::next_command_model::HistoryBasedAutosuggestionState;
-use crate::auth::auth_manager::LoginGatedFeature;
 use crate::channel::Channel;
 use crate::cloud_object::model::generic_string_model::GenericStringObjectId;
 use crate::cloud_object::{GenericStringObjectFormat, ObjectType, Space};
@@ -365,8 +364,6 @@ pub enum SharingDialogSource {
     InviteeRequest,
     /// The user jumped from an inherited ACL to its definition on a parent object.
     InheritedPermission,
-    /// The onboarding block shown after users create new personal objects.
-    OnboardingBlock,
     /// The conversation list overflow menu.
     ConversationList,
     /// The AI block context menu.
@@ -596,17 +593,6 @@ pub enum SecretInteraction {
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub enum AnonymousUserSignupEntrypoint {
-    HitDriveObjectLimit,
-    LoginGatedFeature,
-    SignUpButton,
-    RenotificationBlock,
-    SignUpAIPrompt,
-    NextCommandSuggestionsUpgradeBanner,
-    Unknown,
-}
-
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum UndoCloseItemType {
     Window,
     Tab,
@@ -625,12 +611,6 @@ pub enum ToggleBlockFilterSource {
     /// This includes the keybinding and the command palette items.
     Binding,
     ContextMenu,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct TierLimitHitEvent {
-    pub team_uid: ServerId,
-    pub feature: String,
 }
 
 #[derive(Clone, Debug, Copy, Serialize, Deserialize)]
@@ -1026,9 +1006,7 @@ pub enum TelemetryAgentViewEntryOrigin {
     HistoryMenu,
     InlineConversationMenu,
     PromptChip,
-    OnboardingCallout,
     ConversationListView,
-    Onboarding,
     Keybinding,
     SlashInit,
     CreateEnvironment,
@@ -1078,9 +1056,7 @@ impl From<AgentViewEntryOrigin> for TelemetryAgentViewEntryOrigin {
             AgentViewEntryOrigin::InlineHistoryMenu => Self::HistoryMenu,
             AgentViewEntryOrigin::InlineConversationMenu => Self::InlineConversationMenu,
             AgentViewEntryOrigin::PromptChip => Self::PromptChip,
-            AgentViewEntryOrigin::OnboardingCallout => Self::OnboardingCallout,
             AgentViewEntryOrigin::ConversationListView => Self::ConversationListView,
-            AgentViewEntryOrigin::Onboarding => Self::Onboarding,
             AgentViewEntryOrigin::Keybinding(_) => Self::Keybinding,
             AgentViewEntryOrigin::SlashInit => Self::SlashInit,
             AgentViewEntryOrigin::CreateEnvironment => Self::CreateEnvironment,
@@ -1099,13 +1075,6 @@ impl From<AgentViewEntryOrigin> for TelemetryAgentViewEntryOrigin {
 pub enum SlashMenuSource {
     SlashButton,
     UserTyped,
-}
-
-#[derive(Clone, Copy, Debug, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum LoginEventSource {
-    OnboardingSlide,
-    AuthModal,
 }
 
 /// Origin of a queued prompt, mirrored for telemetry so we don't pull serde derives onto the
@@ -1153,22 +1122,6 @@ pub enum SlashCommandAcceptedDetails {
     StaticCommand { command_name: String },
     /// A user-created saved prompt/workflow
     SavedPrompt,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum AutoReloadModalAction {
-    #[serde(rename = "dismissed")]
-    Dismissed,
-    #[serde(rename = "enabled_auto_reload")]
-    EnabledAutoReload,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum OutOfCreditsBannerAction {
-    #[serde(rename = "dismissed")]
-    Dismissed,
-    #[serde(rename = "credits_purchased")]
-    CreditsPurchased,
 }
 
 #[derive(Clone, Copy, Debug, Serialize)]
@@ -1328,7 +1281,6 @@ pub enum TelemetryEvent {
     AutoupdateRelaunchAttempt {
         new_version: String,
     },
-    SkipOnboardingSurvey,
     ToggleRestoreSession(bool),
     DatabaseStartUpError(String),
     DatabaseReadError(String),
@@ -1396,18 +1348,7 @@ pub enum TelemetryEvent {
         option: FindOption,
         enabled: bool,
     },
-    SignUpButtonClicked,
-    LoginButtonClicked {
-        source: LoginEventSource,
-    },
-    LoginLaterButtonClicked {
-        source: LoginEventSource,
-    },
-    LoginLaterConfirmationButtonClicked {
-        source: LoginEventSource,
-    },
     OpenNewSessionFromFilePath,
-    OpenTeamFromURI,
     ShowedSuggestedAgentModeWorkflowChip {
         logging_id: SuggestedLoggingId,
     },
@@ -1428,15 +1369,6 @@ pub enum TelemetryEvent {
     PaletteSearchExited {
         filter: Option<QueryFilter>,
         buffer_length: usize,
-    },
-    AuthCommonQuestionClicked {
-        question: &'static str,
-    },
-    AuthToggleFAQ {
-        open: bool,
-    },
-    OpenAuthPrivacySettings {
-        source: LoginEventSource,
     },
     TabRenamed(TabRenameEvent),
     MoveActiveTab {
@@ -1479,10 +1411,6 @@ pub enum TelemetryEvent {
         ui_location: LaunchConfigUiLocation,
         open_in_active_window: bool,
     },
-    TeamCreated,
-    TeamJoined,
-    TeamLeft,
-    RemovedUserFromTeam,
     DeletedWorkflow,
     DeletedNotebook,
     ToggleApprovalsModal,
@@ -1548,11 +1476,6 @@ pub enum TelemetryEvent {
         modal_for: CloseTarget,
     },
     QuitModalDisabled,
-    UserInitiatedLogOut,
-    LogOutModalShown,
-    LogOutModalCancel {
-        nav_palette: bool,
-    },
     SetOpacity {
         // Represented in percentages from 1-100.
         opacity: u8,
@@ -1666,16 +1589,6 @@ pub enum TelemetryEvent {
     ShowVimKeybindingsBanner,
     EnableVimKeybindingsFromBanner,
     DismissVimKeybindingsBanner,
-    InitiateReauth,
-    InitiateAnonymousUserSignup {
-        entrypoint: AnonymousUserSignupEntrypoint,
-    },
-    AnonymousUserExpirationLockout,
-    AnonymousUserLinkedFromBrowser,
-    AnonymousUserAttemptLoginGatedFeature {
-        feature: LoginGatedFeature,
-    },
-    AnonymousUserHitCloudObjectLimit,
     NeedsReauth,
     WarpDriveOpened {
         source: WarpDriveSource,
@@ -1711,7 +1624,6 @@ pub enum TelemetryEvent {
     },
     DuplicateObject(TelemetryCloudObjectType),
     ExportObject(TelemetryCloudObjectType),
-    DriveSharingOnboardingBlockShown,
     CommandFileRun,
     PageUpDownInEditorPressed {
         // Key pressed when nothing is in the editor (no-op)
@@ -1758,10 +1670,6 @@ pub enum TelemetryEvent {
     },
     LogOut,
     SettingsImportInitiated,
-    InviteTeammates {
-        num_teammates: usize,
-        team_uid: ServerId,
-    },
     CopyObjectToClipboard(TelemetryCloudObjectType),
     OpenAndWarpifyDockerSubshell {
         /// Some variant if we support this shell type, and None otherwise.
@@ -2047,7 +1955,6 @@ pub enum TelemetryEvent {
         is_code_suggestions_enabled: bool,
     },
 
-    TierLimitHit(TierLimitHitEvent),
     SharedObjectLimitHitBannerViewPlansButtonClicked,
     ResourceUsageStats {
         cpu: CpuUsageStats,
@@ -2096,7 +2003,6 @@ pub enum TelemetryEvent {
     SettingsImportResetButtonClicked,
     /// When parsing iTerm for settings it contained multiple hotkey bindings.
     ITermMultipleHotkeys,
-    UserMenuUpgradeClicked,
     ToggleWorkspaceDecorationVisibility {
         previous_value: WorkspaceDecorationVisibility,
         new_value: WorkspaceDecorationVisibility,
@@ -2403,54 +2309,11 @@ pub enum TelemetryEvent {
         was_lock_set_with_empty_buffer: bool,
         block_id: BlockId,
     },
-    /// User submitted a prompt from the create project view - metadata (non-UGC)
-    CreateProjectPromptSubmitted {
-        /// Whether this was a custom prompt or a predefined suggestion
-        is_custom_prompt: bool,
-        /// For suggested prompts, this is always collected. For custom prompts, this is None.
-        suggested_prompt: Option<String>,
-        /// Whether this was from the FTUX
-        is_ftux: bool,
-    },
-    /// User submitted a custom prompt from the create project view - content (UGC)
-    CreateProjectPromptSubmittedContent {
-        /// The custom prompt content - only collected when UGC is enabled
-        custom_prompt: String,
-    },
-    /// User submitted a repository URL from the clone repo view
-    CloneRepoPromptSubmitted {
-        is_ftux: bool,
-    },
-    /// From the first-time user "get started" page, skip straight to terminal without
-    /// creating/opening a project/repository.
-    GetStartedSkipToTerminal,
 
     /// User selected an item from the "Recent" list on the new tab zero state
     RecentMenuItemSelected {
         // The kind of recent menu item selected
         kind: &'static str,
-    },
-
-    /// User selected a folder to open as a repo from the "Open repository" button
-    OpenRepoFolderSubmitted {
-        is_ftux: bool,
-    },
-
-    /// User closed the "Out of credits" banner (dismissed or purchased credits)
-    OutOfCreditsBannerClosed {
-        action: OutOfCreditsBannerAction,
-        selected_credits: Option<i32>,
-        auto_reload_checkbox_enabled: bool,
-        banner_toggle_flag_enabled: bool,
-        post_purchase_modal_flag_enabled: bool,
-    },
-
-    /// User closed the auto-reload modal (either dismissed or enabled auto-reload)
-    AutoReloadModalClosed {
-        action: AutoReloadModalAction,
-        selected_credits: Option<i32>,
-        banner_toggle_flag_enabled: bool,
-        post_purchase_modal_flag_enabled: bool,
     },
 
     /// Emitted when the control state of the CLI subagent changes.
@@ -2629,12 +2492,6 @@ pub enum TelemetryEvent {
     CodexModalOpened,
     /// Emitted when the user clicks "Use Codex" in the Codex modal.
     CodexModalUseCodexClicked,
-    /// Emitted when the cloud agent capacity modal is opened.
-    CloudAgentCapacityModalOpened,
-    /// Emitted when the cloud agent capacity modal is dismissed.
-    CloudAgentCapacityModalDismissed,
-    /// Emitted when the user clicks the upgrade button in the cloud agent capacity modal.
-    CloudAgentCapacityModalUpgradeClicked,
     /// Emitted when a RequestComputerUse action is approved (manually or auto-executed).
     ComputerUseApproved {
         client_conversation_id: AIConversationId,
@@ -3022,11 +2879,6 @@ impl TelemetryEvent {
                 filter: mode,
                 buffer_length,
             } => Some(json!({ "mode": mode, "buffer_length": buffer_length })),
-            TelemetryEvent::AuthCommonQuestionClicked { question } => Some(json!(question)),
-            TelemetryEvent::AuthToggleFAQ { open } => {
-                let payload = if *open { "open" } else { "close" };
-                Some(json!(payload))
-            }
             TelemetryEvent::TabRenamed(rename_event) => Some(json!(rename_event)),
             TelemetryEvent::MoveActiveTab { direction } => Some(json!({ "direction": direction })),
             TelemetryEvent::MoveTab { direction } => Some(json!({ "direction": direction })),
@@ -3088,9 +2940,6 @@ impl TelemetryEvent {
                 nav_palette,
                 modal_for,
             } => Some(json!({ "nav_palette": nav_palette, "modal_for": modal_for })),
-            TelemetryEvent::LogOutModalCancel { nav_palette } => {
-                Some(json!({ "nav_palette": nav_palette }))
-            }
             TelemetryEvent::SetBlurRadius { blur_radius } => {
                 Some(json!({ "blur_radius": blur_radius }))
             }
@@ -3335,10 +3184,6 @@ impl TelemetryEvent {
             TelemetryEvent::PaneDropped { drop_location } => {
                 Some(json!({ "location": drop_location }))
             }
-            TelemetryEvent::InviteTeammates {
-                num_teammates,
-                team_uid,
-            } => Some(json!({"num_teammates": num_teammates, "team_uid": team_uid})),
             TelemetryEvent::AgentModeCreatedAIBlock {
                 client_exchange_id,
                 server_output_id,
@@ -3360,7 +3205,6 @@ impl TelemetryEvent {
                 "conversation_id": conversation_id,
                 "is_udi_enabled": is_udi_enabled,
             })),
-            TelemetryEvent::TierLimitHit(event) => Some(json!(event)),
             TelemetryEvent::AgentModeClickedEntrypoint { entrypoint } => {
                 Some(json!({"entrypoint": entrypoint}))
             }
@@ -3586,12 +3430,6 @@ impl TelemetryEvent {
             ),
             TelemetryEvent::SettingsImportConfigFocused(terminal_type_and_profile) => {
                 Some(json!({"terminal_and_type_profile": terminal_type_and_profile}))
-            }
-            TelemetryEvent::InitiateAnonymousUserSignup { entrypoint } => {
-                Some(json!({"entrypoint": entrypoint}))
-            }
-            TelemetryEvent::AnonymousUserAttemptLoginGatedFeature { feature } => {
-                Some(json!({"feature": feature}))
             }
             TelemetryEvent::ToggleWorkspaceDecorationVisibility {
                 previous_value,
@@ -3859,7 +3697,6 @@ impl TelemetryEvent {
             | TelemetryEvent::DeleteCustomTheme
             | TelemetryEvent::SplitPane
             | TelemetryEvent::UnableToAutoUpdateToNewVersion
-            | TelemetryEvent::SkipOnboardingSurvey
             | TelemetryEvent::LoggedOutStartup
             | TelemetryEvent::OpenWorkflowSearch
             | TelemetryEvent::OpenQuakeModeWindow
@@ -3868,9 +3705,7 @@ impl TelemetryEvent {
             | TelemetryEvent::ShowNotificationsDiscoveryBanner
             | TelemetryEvent::ShowNotificationsErrorBanner
             | TelemetryEvent::NotificationClicked
-            | TelemetryEvent::SignUpButtonClicked
             | TelemetryEvent::OpenNewSessionFromFilePath
-            | TelemetryEvent::OpenTeamFromURI
             | TelemetryEvent::SelectNavigationPaletteItem
             | TelemetryEvent::DragAndDropTab
             | TelemetryEvent::DragAndDropTabGroup
@@ -3881,10 +3716,6 @@ impl TelemetryEvent {
             | TelemetryEvent::ShowInFileExplorer
             | TelemetryEvent::OpenLaunchConfigSaveModal
             | TelemetryEvent::OpenLaunchConfigFile
-            | TelemetryEvent::TeamCreated
-            | TelemetryEvent::TeamJoined
-            | TelemetryEvent::TeamLeft
-            | TelemetryEvent::RemovedUserFromTeam
             | TelemetryEvent::DeletedWorkflow
             | TelemetryEvent::DeletedNotebook
             | TelemetryEvent::ToggleApprovalsModal
@@ -3894,8 +3725,6 @@ impl TelemetryEvent {
             | TelemetryEvent::KeybindingsPageOpened
             | TelemetryEvent::OpenedAltScreenFind
             | TelemetryEvent::QuitModalDisabled
-            | TelemetryEvent::UserInitiatedLogOut
-            | TelemetryEvent::LogOutModalShown
             | TelemetryEvent::WarpAICharacterLimitExceeded
             | TelemetryEvent::OpenInputContextMenu
             | TelemetryEvent::InputCutSelectedText
@@ -3919,11 +3748,7 @@ impl TelemetryEvent {
             | TelemetryEvent::ShowVimKeybindingsBanner
             | TelemetryEvent::EnableVimKeybindingsFromBanner
             | TelemetryEvent::DismissVimKeybindingsBanner
-            | TelemetryEvent::InitiateReauth
             | TelemetryEvent::NeedsReauth
-            | TelemetryEvent::AnonymousUserExpirationLockout
-            | TelemetryEvent::AnonymousUserLinkedFromBrowser
-            | TelemetryEvent::AnonymousUserHitCloudObjectLimit
             | TelemetryEvent::CustomSecretRegexAdded
             | TelemetryEvent::CopySecret
             | TelemetryEvent::AutoGenerateMetadataSuccess
@@ -3940,18 +3765,15 @@ impl TelemetryEvent {
             )
             | TelemetryEvent::SettingsImportResetButtonClicked
             | TelemetryEvent::ITermMultipleHotkeys
-            | TelemetryEvent::DriveSharingOnboardingBlockShown
             | TelemetryEvent::SettingsImportInitiated
             | TelemetryEvent::GrepToolSucceeded
             | TelemetryEvent::FileGlobToolSucceeded
-            | TelemetryEvent::UserMenuUpgradeClicked
             | TelemetryEvent::AIExecutionProfileDeleted
             | TelemetryEvent::FileTreeItemCreated
             | TelemetryEvent::ConversationListItemDeleted
             | TelemetryEvent::ConversationListViewOpened
             | TelemetryEvent::GlobalSearchOpened
-            | TelemetryEvent::GlobalSearchQueryStarted
-            | TelemetryEvent::GetStartedSkipToTerminal => None,
+            | TelemetryEvent::GlobalSearchQueryStarted => None,
             TelemetryEvent::GlobalSearchQueryCompleted {
                 duration_ms,
                 remote_host_count,
@@ -4249,50 +4071,8 @@ impl TelemetryEvent {
                 "was_lock_set_with_empty_buffer": was_lock_set_with_empty_buffer,
                 "block_id": block_id,
             })),
-            TelemetryEvent::CreateProjectPromptSubmitted {
-                is_custom_prompt,
-                suggested_prompt,
-                is_ftux,
-            } => Some(json!({
-                "is_custom_prompt": is_custom_prompt,
-                "suggested_prompt": suggested_prompt,
-                "is_ftux": is_ftux,
-            })),
-            TelemetryEvent::CreateProjectPromptSubmittedContent { custom_prompt } => Some(json!({
-                "custom_prompt": custom_prompt
-            })),
-            TelemetryEvent::CloneRepoPromptSubmitted { is_ftux } => Some(json!({
-                "is_ftux": is_ftux,
-            })),
             TelemetryEvent::RecentMenuItemSelected { kind } => Some(json!({
                 "kind": kind,
-            })),
-            TelemetryEvent::OpenRepoFolderSubmitted { is_ftux } => Some(json!({
-                "is_ftux": is_ftux,
-            })),
-            TelemetryEvent::OutOfCreditsBannerClosed {
-                action,
-                selected_credits,
-                auto_reload_checkbox_enabled,
-                banner_toggle_flag_enabled,
-                post_purchase_modal_flag_enabled,
-            } => Some(json!({
-                "action": action,
-                "selected_credits": selected_credits,
-                "auto_reload_checkbox_enabled": auto_reload_checkbox_enabled,
-                "banner_toggle_flag_enabled": banner_toggle_flag_enabled,
-                "post_purchase_modal_flag_enabled": post_purchase_modal_flag_enabled,
-            })),
-            TelemetryEvent::AutoReloadModalClosed {
-                action,
-                selected_credits,
-                banner_toggle_flag_enabled,
-                post_purchase_modal_flag_enabled,
-            } => Some(json!({
-                "action": action,
-                "selected_credits": selected_credits,
-                "banner_toggle_flag_enabled": banner_toggle_flag_enabled,
-                "post_purchase_modal_flag_enabled": post_purchase_modal_flag_enabled,
             })),
             TelemetryEvent::WarpDriveOpened {
                 source,
@@ -4471,9 +4251,6 @@ impl TelemetryEvent {
             TelemetryEvent::CodexModalOpened => None,
             TelemetryEvent::CodexModalUseCodexClicked => None,
             TelemetryEvent::LinearIssueLinkOpened => None,
-            TelemetryEvent::CloudAgentCapacityModalOpened => None,
-            TelemetryEvent::CloudAgentCapacityModalDismissed => None,
-            TelemetryEvent::CloudAgentCapacityModalUpgradeClicked => None,
             TelemetryEvent::ComputerUseApproved {
                 client_conversation_id,
                 server_conversation_id,
@@ -4501,12 +4278,6 @@ impl TelemetryEvent {
                 "ambient_agent_task_id": ambient_agent_task_id.to_string(),
                 "sandboxed": sandboxed,
                 "os": std::env::consts::OS,
-            })),
-            TelemetryEvent::LoginButtonClicked { source }
-            | TelemetryEvent::LoginLaterButtonClicked { source }
-            | TelemetryEvent::LoginLaterConfirmationButtonClicked { source }
-            | TelemetryEvent::OpenAuthPrivacySettings { source } => Some(json!({
-                "source": source,
             })),
             TelemetryEvent::QueuedPromptEdited { origin } => Some(json!({
                 "origin": origin,
@@ -4541,8 +4312,6 @@ impl TelemetryEvent {
             TelemetryEvent::BootstrappingSlowContents { .. } => true,
             TelemetryEvent::AIInputNotSent { .. } => true,
             TelemetryEvent::AgentExitedShellProcess { .. } => true,
-            TelemetryEvent::CreateProjectPromptSubmitted { .. } => false,
-            TelemetryEvent::CreateProjectPromptSubmittedContent { .. } => true,
             TelemetryEvent::InputBufferSubmitted { .. } => false,
             TelemetryEvent::AgentModePrediction {
                 actual_next_command_run,
@@ -4604,7 +4373,6 @@ impl TelemetryEvent {
             | TelemetryEvent::SplitPane
             | TelemetryEvent::UnableToAutoUpdateToNewVersion
             | TelemetryEvent::AutoupdateRelaunchAttempt { .. }
-            | TelemetryEvent::SkipOnboardingSurvey
             | TelemetryEvent::ToggleRestoreSession(_)
             | TelemetryEvent::DatabaseStartUpError(_)
             | TelemetryEvent::DatabaseReadError(_)
@@ -4635,20 +4403,12 @@ impl TelemetryEvent {
             | TelemetryEvent::NotificationFailedToSend { .. }
             | TelemetryEvent::NotificationClicked
             | TelemetryEvent::ToggleFindOption { .. }
-            | TelemetryEvent::SignUpButtonClicked
-            | TelemetryEvent::LoginButtonClicked { .. }
-            | TelemetryEvent::LoginLaterButtonClicked { .. }
-            | TelemetryEvent::LoginLaterConfirmationButtonClicked { .. }
             | TelemetryEvent::OpenNewSessionFromFilePath
-            | TelemetryEvent::OpenTeamFromURI
             | TelemetryEvent::SelectNavigationPaletteItem
             | TelemetryEvent::SelectCommandPaletteOption(_)
             | TelemetryEvent::PaletteSearchOpened { .. }
             | TelemetryEvent::PaletteSearchResultAccepted { .. }
             | TelemetryEvent::PaletteSearchExited { .. }
-            | TelemetryEvent::AuthCommonQuestionClicked { .. }
-            | TelemetryEvent::AuthToggleFAQ { .. }
-            | TelemetryEvent::OpenAuthPrivacySettings { .. }
             | TelemetryEvent::TabRenamed(_)
             | TelemetryEvent::MoveActiveTab { .. }
             | TelemetryEvent::MoveTab { .. }
@@ -4669,10 +4429,6 @@ impl TelemetryEvent {
             | TelemetryEvent::SaveLaunchConfig { .. }
             | TelemetryEvent::OpenLaunchConfigFile
             | TelemetryEvent::OpenLaunchConfig { .. }
-            | TelemetryEvent::TeamCreated
-            | TelemetryEvent::TeamJoined
-            | TelemetryEvent::TeamLeft
-            | TelemetryEvent::RemovedUserFromTeam
             | TelemetryEvent::DeletedWorkflow
             | TelemetryEvent::DeletedNotebook
             | TelemetryEvent::ToggleApprovalsModal
@@ -4696,9 +4452,6 @@ impl TelemetryEvent {
             | TelemetryEvent::QuitModalShown { .. }
             | TelemetryEvent::QuitModalCancel { .. }
             | TelemetryEvent::QuitModalDisabled
-            | TelemetryEvent::UserInitiatedLogOut
-            | TelemetryEvent::LogOutModalShown
-            | TelemetryEvent::LogOutModalCancel { .. }
             | TelemetryEvent::SetOpacity { .. }
             | TelemetryEvent::SetBlurRadius { .. }
             | TelemetryEvent::ToggleDimInactivePanes { .. }
@@ -4746,12 +4499,6 @@ impl TelemetryEvent {
             | TelemetryEvent::ShowVimKeybindingsBanner
             | TelemetryEvent::EnableVimKeybindingsFromBanner
             | TelemetryEvent::DismissVimKeybindingsBanner
-            | TelemetryEvent::InitiateReauth
-            | TelemetryEvent::InitiateAnonymousUserSignup { .. }
-            | TelemetryEvent::AnonymousUserExpirationLockout
-            | TelemetryEvent::AnonymousUserLinkedFromBrowser
-            | TelemetryEvent::AnonymousUserAttemptLoginGatedFeature { .. }
-            | TelemetryEvent::AnonymousUserHitCloudObjectLimit
             | TelemetryEvent::NeedsReauth
             | TelemetryEvent::WarpDriveOpened { .. }
             | TelemetryEvent::ToggleWarpAI { .. }
@@ -4766,7 +4513,6 @@ impl TelemetryEvent {
             | TelemetryEvent::PtyThroughput { .. }
             | TelemetryEvent::DuplicateObject(_)
             | TelemetryEvent::ExportObject(_)
-            | TelemetryEvent::DriveSharingOnboardingBlockShown
             | TelemetryEvent::CommandFileRun
             | TelemetryEvent::PageUpDownInEditorPressed { .. }
             | TelemetryEvent::StartedSharingCurrentSession { .. }
@@ -4781,7 +4527,6 @@ impl TelemetryEvent {
             | TelemetryEvent::WebCloudObjectOpenedOnDesktop { .. }
             | TelemetryEvent::UnsupportedShell { .. }
             | TelemetryEvent::LogOut
-            | TelemetryEvent::InviteTeammates { .. }
             | TelemetryEvent::CopyObjectToClipboard(_)
             | TelemetryEvent::OpenAndWarpifyDockerSubshell { .. }
             | TelemetryEvent::UpdateBlockFilterQuery
@@ -4810,7 +4555,6 @@ impl TelemetryEvent {
             | TelemetryEvent::AgentModeCodeFilesNavigated { .. }
             | TelemetryEvent::AgentModeCodeDiffHunksNavigated { .. }
             | TelemetryEvent::ToggleCodeSuggestionsSetting { .. }
-            | TelemetryEvent::TierLimitHit(_)
             | TelemetryEvent::SharedObjectLimitHitBannerViewPlansButtonClicked
             | TelemetryEvent::ResourceUsageStats { .. }
             | TelemetryEvent::MemoryUsageStats { .. }
@@ -4871,7 +4615,6 @@ impl TelemetryEvent {
             | TelemetryEvent::InputUXModeChanged { .. }
             | TelemetryEvent::VoiceInputUsed { .. }
             | TelemetryEvent::AtMenuInteracted { .. }
-            | TelemetryEvent::UserMenuUpgradeClicked
             | TelemetryEvent::TabCloseButtonPositionUpdated { .. }
             | TelemetryEvent::ExpandedCodeSuggestions { .. }
             | TelemetryEvent::AIExecutionProfileDeleted
@@ -4889,8 +4632,6 @@ impl TelemetryEvent {
             | TelemetryEvent::AgentModeSetupProjectScopedRulesAction { .. }
             | TelemetryEvent::AgentModeSetupCodebaseContextAction { .. }
             | TelemetryEvent::AgentModeSetupCreateEnvironmentAction { .. }
-            | TelemetryEvent::CloneRepoPromptSubmitted { .. }
-            | TelemetryEvent::GetStartedSkipToTerminal
             | TelemetryEvent::FileTreeItemAttachedAsContext { .. }
             | TelemetryEvent::CodeSelectionAddedAsContext { .. }
             | TelemetryEvent::FileTreeItemCreated
@@ -4904,9 +4645,6 @@ impl TelemetryEvent {
             | TelemetryEvent::InlineConversationMenuItemSelected { .. }
             | TelemetryEvent::AgentShortcutsViewToggled { .. }
             | TelemetryEvent::RecentMenuItemSelected { .. }
-            | TelemetryEvent::OpenRepoFolderSubmitted { .. }
-            | TelemetryEvent::OutOfCreditsBannerClosed { .. }
-            | TelemetryEvent::AutoReloadModalClosed { .. }
             | TelemetryEvent::QueuedPromptEdited { .. }
             | TelemetryEvent::QueuedPromptDeleted { .. }
             | TelemetryEvent::QueuedPromptReordered { .. }
@@ -4940,9 +4678,6 @@ impl TelemetryEvent {
             | TelemetryEvent::CodexModalOpened
             | TelemetryEvent::CodexModalUseCodexClicked
             | TelemetryEvent::LinearIssueLinkOpened
-            | TelemetryEvent::CloudAgentCapacityModalOpened
-            | TelemetryEvent::CloudAgentCapacityModalDismissed
-            | TelemetryEvent::CloudAgentCapacityModalUpgradeClicked
             | TelemetryEvent::ComputerUseApproved { .. }
             | TelemetryEvent::ComputerUseCancelled { .. }
             | TelemetryEvent::ComputerUseUnavailable { .. }
@@ -5040,12 +4775,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             | Self::InlineConversationMenuOpened
             | Self::InlineConversationMenuItemSelected
             | Self::AgentShortcutsViewToggled => EnablementState::Flag(FeatureFlag::AgentView),
-            Self::CreateProjectPromptSubmitted => EnablementState::Flag(FeatureFlag::GetStartedTab),
-            Self::CreateProjectPromptSubmittedContent => {
-                EnablementState::Flag(FeatureFlag::GetStartedTab)
-            }
-            Self::CloneRepoPromptSubmitted => EnablementState::Flag(FeatureFlag::GetStartedTab),
-            Self::GetStartedSkipToTerminal => EnablementState::Flag(FeatureFlag::GetStartedTab),
             Self::PtyThroughput => EnablementState::Flag(FeatureFlag::RecordPtyThroughput),
             Self::AgentModeCreatedAIBlock => EnablementState::Flag(FeatureFlag::AgentMode),
             Self::MCPServerAdded { .. }
@@ -5067,13 +4796,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
                 EnablementState::Flag(FeatureFlag::SuggestedRules)
             }
             Self::ToggleFocusPaneOnHover { .. } => EnablementState::Always,
-            Self::InitiateAnonymousUserSignup { .. }
-            | Self::LoginLaterButtonClicked
-            | Self::LoginLaterConfirmationButtonClicked
-            | Self::AnonymousUserExpirationLockout
-            | Self::AnonymousUserLinkedFromBrowser
-            | Self::AnonymousUserAttemptLoginGatedFeature
-            | Self::AnonymousUserHitCloudObjectLimit => EnablementState::Always,
 
             Self::AgentModeChangedInputType => EnablementState::Always,
             Self::StartedSharingCurrentSession
@@ -5121,7 +4843,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::UnableToAutoUpdateToNewVersion | Self::AutoupdateRelaunchAttempt => {
                 EnablementState::Always
             }
-            Self::SkipOnboardingSurvey => EnablementState::Always,
             Self::ToggleRestoreSession => EnablementState::Always,
             Self::DatabaseStartUpError => EnablementState::Always,
             Self::DatabaseReadError => EnablementState::Always,
@@ -5152,18 +4873,12 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::NotificationFailedToSend => EnablementState::Always,
             Self::NotificationClicked => EnablementState::Always,
             Self::ToggleFindOption => EnablementState::Always,
-            Self::SignUpButtonClicked => EnablementState::Always,
-            Self::LoginButtonClicked => EnablementState::Always,
             Self::OpenNewSessionFromFilePath => EnablementState::Always,
-            Self::OpenTeamFromURI => EnablementState::Always,
             Self::SelectCommandPaletteOption => EnablementState::Always,
             Self::PaletteSearchOpened => EnablementState::Always,
             Self::PaletteSearchResultAccepted => EnablementState::Always,
             Self::PaletteSearchExited => EnablementState::Always,
             Self::SelectNavigationPaletteItem => EnablementState::Always,
-            Self::AuthCommonQuestionClicked => EnablementState::Always,
-            Self::AuthToggleFAQ => EnablementState::Always,
-            Self::OpenAuthPrivacySettings => EnablementState::Always,
             Self::TabRenamed => EnablementState::Always,
             Self::MoveActiveTab => EnablementState::Always,
             Self::MoveTab => EnablementState::Always,
@@ -5183,10 +4898,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::SaveLaunchConfig => EnablementState::Always,
             Self::OpenLaunchConfigFile => EnablementState::Always,
             Self::OpenLaunchConfig => EnablementState::Always,
-            Self::TeamCreated => EnablementState::Always,
-            Self::TeamJoined => EnablementState::Always,
-            Self::TeamLeft => EnablementState::Always,
-            Self::RemovedUserFromTeam => EnablementState::Always,
             Self::DeletedWorkflow => EnablementState::Always,
             Self::DeletedNotebook => EnablementState::Always,
             Self::ToggleApprovalsModal => EnablementState::Always,
@@ -5207,9 +4918,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::QuitModalShown => EnablementState::Always,
             Self::QuitModalCancel => EnablementState::Always,
             Self::QuitModalDisabled => EnablementState::Always,
-            Self::UserInitiatedLogOut => EnablementState::Always,
-            Self::LogOutModalShown => EnablementState::Always,
-            Self::LogOutModalCancel => EnablementState::Always,
             Self::SetOpacity => EnablementState::Always,
             Self::SetBlurRadius => EnablementState::Always,
             Self::ToggleDimInactivePanes => EnablementState::Always,
@@ -5259,7 +4967,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::ShowVimKeybindingsBanner => EnablementState::Always,
             Self::EnableVimKeybindingsFromBanner => EnablementState::Always,
             Self::DismissVimKeybindingsBanner => EnablementState::Always,
-            Self::InitiateReauth => EnablementState::Always,
             Self::NeedsReauth => EnablementState::Always,
             Self::WarpDriveOpened => EnablementState::Always,
             Self::ToggleWarpAI => EnablementState::Always,
@@ -5278,7 +4985,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::UnsupportedShell => EnablementState::Always,
             Self::LogOut => EnablementState::Always,
             Self::SettingsImportInitiated => EnablementState::Always,
-            Self::InviteTeammates => EnablementState::Always,
             Self::CopyObjectToClipboard => EnablementState::Always,
             Self::OpenAndWarpifyDockerSubshell => EnablementState::Always,
             Self::UpdateBlockFilterQuery => EnablementState::Always,
@@ -5291,7 +4997,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::ToggleSnackbarInActivePane => EnablementState::Always,
             Self::PaneDragInitiated => EnablementState::Always,
             Self::PaneDropped => EnablementState::Always,
-            Self::TierLimitHit => EnablementState::Always,
             Self::SharerCancelledGrantRole => EnablementState::Always,
             Self::SharerGrantModalDontShowAgain => EnablementState::Always,
             Self::JumpToSharedSessionParticipant => EnablementState::Always,
@@ -5299,7 +5004,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::WebSessionOpenedOnDesktop => EnablementState::Always,
             Self::WebCloudObjectOpenedOnDesktop => EnablementState::Always,
             Self::ToggleShowBlockDividers => EnablementState::Flag(FeatureFlag::MinimalistUI),
-            Self::DriveSharingOnboardingBlockShown => EnablementState::Always,
             Self::SharedObjectLimitHitBannerViewPlansButtonClicked => EnablementState::Always,
             Self::ResourceUsageStats => EnablementState::Always,
             Self::MemoryUsageStats => EnablementState::ChannelSpecific {
@@ -5384,7 +5088,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::InputUXModeChanged { .. } => EnablementState::Always,
             Self::VoiceInputUsed { .. } => EnablementState::Always,
             Self::AtMenuInteracted { .. } => EnablementState::Always,
-            Self::UserMenuUpgradeClicked => EnablementState::Always,
             Self::TabCloseButtonPositionUpdated { .. } => EnablementState::Always,
             Self::ExpandedCodeSuggestions { .. } => EnablementState::Always,
             Self::AIExecutionProfileDeleted
@@ -5416,9 +5119,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
                 EnablementState::Flag(FeatureFlag::RevertToCheckpoints)
             }
             Self::RecentMenuItemSelected => EnablementState::Always,
-            Self::OpenRepoFolderSubmitted => EnablementState::Always,
-            Self::OutOfCreditsBannerClosed => EnablementState::Always,
-            Self::AutoReloadModalClosed => EnablementState::Always,
             Self::CLISubagentControlStateChanged { .. }
             | Self::CLISubagentResponsesToggled { .. }
             | Self::CLISubagentInputDismissed { .. }
@@ -5455,11 +5155,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::ToggleCLIAgentToolbarSetting { .. } => EnablementState::Always,
             Self::CodexModalOpened | Self::CodexModalUseCodexClicked => EnablementState::Always,
             Self::LinearIssueLinkOpened => EnablementState::Always,
-            Self::CloudAgentCapacityModalOpened
-            | Self::CloudAgentCapacityModalDismissed
-            | Self::CloudAgentCapacityModalUpgradeClicked => {
-                EnablementState::Flag(FeatureFlag::CloudMode)
-            }
             Self::ComputerUseApproved
             | Self::ComputerUseCancelled
             | Self::ComputerUseUnavailable => {
@@ -5507,8 +5202,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::AgentModeRewindExecuted { .. } => "Executed Conversation Rewind",
             Self::ReinputCommands => "Context Menu: Reinput Commands",
             Self::ToggleFocusPaneOnHover => "Toggle Focus Pane On Hover",
-            Self::LoginLaterButtonClicked => "Login Later Button Clicked",
-            Self::LoginLaterConfirmationButtonClicked => "Login Later Confirmation Button Clicked",
             Self::JumpToPreviousCommand => "Jumped to Previous Command",
             Self::ContextMenuFindWithinBlocks => "Context Menu: Find Within Blocks",
             Self::ContextMenuOpenShareModal => "Context Menu: Initiate Block Sharing",
@@ -5534,16 +5227,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
                 "AgentView.InlineConversationMenuItemSelected"
             }
             Self::AgentShortcutsViewToggled => "AgentView.ShortcutsViewToggled",
-            Self::CreateProjectPromptSubmitted => "Create Project Prompt Submitted",
-            Self::CreateProjectPromptSubmittedContent => "Create Project Prompt Submitted Content",
-            Self::CloneRepoPromptSubmitted => "Clone Repo Prompt Submitted",
-            Self::GetStartedSkipToTerminal => "Get Started Skip to Terminal",
-            Self::InitiateAnonymousUserSignup => "Anonymous User Initiated Signup",
-            Self::AnonymousUserExpirationLockout => "Anonymous User Expiration Lockout",
-            Self::AnonymousUserLinkedFromBrowser => "Anonymous User Linked from Browser",
-            Self::AnonymousUserAttemptLoginGatedFeature => {
-                "Anonymous User Attempted Login-Gated Feature"
-            }
             Self::MCPServerAdded { .. } => "MCP Server Added",
             Self::MCPTemplateCreated { .. } => "MCP Template Created",
             Self::MCPServerSpawned { .. } => "MCP Server Spawned",
@@ -5558,7 +5241,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::AISuggestedRuleAdded { .. } => "AI Suggested Rule Added",
             Self::AISuggestedRuleEdited { .. } => "AI Suggested Rule Edited",
             Self::AISuggestedRuleContentChanged { .. } => "AI Suggested Rule Content Changed",
-            Self::AnonymousUserHitCloudObjectLimit => "Anonymous User Hit Cloud Object Limit",
             Self::BootstrappingSucceeded => "Bootstrapping Succeeded",
             Self::SessionAbandonedBeforeBootstrap => "Session Abandoned Before Bootstrap",
             Self::ConfirmSuggestion => "Confirm Suggestion",
@@ -5577,7 +5259,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::UnableToAutoUpdateToNewVersion => "Unable to Update To New Version",
             Self::AutoupdateRelaunchAttempt => "Attempting to Relaunch for Update",
             Self::SplitPane => "Split Pane",
-            Self::SkipOnboardingSurvey => "Skip Onboarding Survey",
             Self::ToggleRestoreSession => "Toggle Restore Session",
             Self::DatabaseStartUpError => "Database Startup Error",
             Self::DatabaseWriteError => "Database Write Error",
@@ -5612,17 +5293,11 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
                 "Notification Request Permissions Outcome"
             }
             Self::ToggleFindOption => "Find Option Toggled",
-            Self::SignUpButtonClicked => "Sign Up Button Clicked in App",
-            Self::LoginButtonClicked => "Log In Button Clicked in App",
             Self::OpenNewSessionFromFilePath => "New Session From Directory",
-            Self::OpenTeamFromURI => "Open Team from URI",
             Self::SelectCommandPaletteOption => "Select Command Palette Option",
             Self::PaletteSearchOpened => "Open Palette",
             Self::PaletteSearchResultAccepted => "Command Palette Search Accepted",
             Self::PaletteSearchExited => "Command Palette Search Exited",
-            Self::AuthCommonQuestionClicked => "Auth Common Question Clicked in App",
-            Self::AuthToggleFAQ => "Auth: Toggle Common Questions",
-            Self::OpenAuthPrivacySettings => "Auth: Open Privacy Settings Overlay",
             Self::TabRenamed => "Tab Renamed",
             Self::MoveActiveTab => "Move Active Tab",
             Self::MoveTab => "Move Tab",
@@ -5663,9 +5338,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::QuitModalShown => "Quit Modal Shown",
             Self::QuitModalCancel => "Quit Modal Cancel Pressed",
             Self::QuitModalDisabled => "Quit Modal Disabled",
-            Self::UserInitiatedLogOut => "User Initiated Log Out",
-            Self::LogOutModalShown => "Log Out Modal Shown",
-            Self::LogOutModalCancel => "Log Out Modal Cancel Pressed",
             Self::SetBlurRadius => "Set Window Blur Radius",
             Self::SetOpacity => "Set Window Opacity",
             Self::ToggleDimInactivePanes => "Toggle Dim Inactive Panes",
@@ -5716,7 +5388,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::ShowAliasExpansionBanner => "Show Alias Expansion Banner",
             Self::DismissAliasExpansionBanner => "Dismiss Alias Expansion Banner",
             Self::EnableAliasExpansionFromBanner => "Enable Alias Expansion From Banner",
-            Self::InitiateReauth => "Initiate Reauth",
             Self::NeedsReauth => "Needs Reauth",
             Self::WarpDriveOpened => "Torch Drive Opened",
             Self::ToggleWarpAI => "Toggle Torch AI",
@@ -5745,10 +5416,8 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::CopiedSharedSessionLink { .. } => "Copied Shared Session Link",
             Self::WebSessionOpenedOnDesktop { .. } => "Web session opened on desktop",
             Self::WebCloudObjectOpenedOnDesktop { .. } => "Torch Drive object opened on desktop",
-            Self::DriveSharingOnboardingBlockShown => "Torch Drive Sharing onboarding block shown",
             Self::UnsupportedShell => "Unsupported Shell",
             Self::SettingsImportInitiated => "Settings Import Initiated",
-            Self::InviteTeammates => "Invited Teammates",
             Self::CopyObjectToClipboard => "Copy Object To Clipboard",
             Self::OpenAndWarpifyDockerSubshell => "OpenAndWarpifyDockerSubshell",
             Self::UpdateBlockFilterQuery => "Update Block Filter Query",
@@ -5767,14 +5436,9 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::PaneDragInitiated => "Pane Drag Inititiated",
             Self::PaneDropped => "Pane Drag Ended",
             Self::AgentModeCreatedAIBlock => "AgentMode.CreatedAIBlock",
-            Self::TeamCreated => "Team Created",
-            Self::TeamJoined => "Team Joined",
-            Self::TeamLeft => "Team Left",
-            Self::RemovedUserFromTeam => "Removed user from team",
             Self::DeletedWorkflow => "Deleted Workflow",
             Self::DeletedNotebook => "Deleted Notebook",
             Self::ToggleApprovalsModal => "Toggle Approvals Modal",
-            Self::TierLimitHit => "Tier Limit Hit",
             Self::SharedObjectLimitHitBannerViewPlansButtonClicked => {
                 "Shared Object Limit Hit Banner View Plans Button Clicked"
             }
@@ -5905,7 +5569,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::InputUXModeChanged { .. } => "Input.InputUXModeChanged",
             Self::VoiceInputUsed { .. } => "Input.VoiceInputUsed",
             Self::AtMenuInteracted { .. } => "Input.AtMenuInteracted",
-            Self::UserMenuUpgradeClicked => "User Menu Upgrade Clicked",
             Self::TabCloseButtonPositionUpdated { .. } => "Update Tab Close Button Position",
             Self::ExpandedCodeSuggestions { .. } => "Expanded Code Suggestion",
             Self::AIExecutionProfileDeleted => "AI Execution Profile Deleted",
@@ -5944,9 +5607,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             }
             Self::InputBufferSubmitted => "AgentMode.NaturalLanguageDetection.InputBufferSubmitted",
             Self::RecentMenuItemSelected { .. } => "Recent Menu Item Selected",
-            Self::OpenRepoFolderSubmitted { .. } => "Open Repo Folder Submitted",
-            Self::OutOfCreditsBannerClosed => "revenue.OutOfCreditsBannerClosed",
-            Self::AutoReloadModalClosed => "revenue.AutoReloadModalClosed",
             Self::CLISubagentControlStateChanged { .. } => "CLI Subagent Control State Changed",
             Self::CLISubagentResponsesToggled { .. } => "CLI Subagent Responses Toggled",
             Self::CLISubagentInputDismissed { .. } => "CLI Subagent Input Dismissed",
@@ -5978,11 +5638,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::CodexModalOpened => "CodexModal.Opened",
             Self::CodexModalUseCodexClicked => "CodexModal.UseCodexClicked",
             Self::LinearIssueLinkOpened => "Linear.IssueLinkOpened",
-            Self::CloudAgentCapacityModalOpened => "AmbientAgent.ConcurrencyModal.Opened",
-            Self::CloudAgentCapacityModalDismissed => "AmbientAgent.ConcurrencyModal.Dismissed",
-            Self::CloudAgentCapacityModalUpgradeClicked => {
-                "AmbientAgent.ConcurrencyModal.UpgradeClicked"
-            }
             Self::ComputerUseApproved => "ComputerUse.Approved",
             Self::ComputerUseCancelled => "ComputerUse.Cancelled",
             Self::ComputerUseUnavailable => "ComputerUse.Unavailable",
@@ -6017,19 +5672,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::BlockCompletedOnDogfoodOnly => {
                 "Completed a block, with extra information for dogfood only"
             }
-            Self::InitiateAnonymousUserSignup => "An anonymous user initiated the sign up flow",
-            Self::AnonymousUserExpirationLockout => {
-                "An anonymous user opened Torch after their conversion deadline and was locked out"
-            }
-            Self::AnonymousUserLinkedFromBrowser => {
-                "Received an auth payload from anonymous user after linking in browser"
-            }
-            Self::AnonymousUserAttemptLoginGatedFeature => {
-                "Anonymous user attempted to access a login-gated feature"
-            }
-            Self::AnonymousUserHitCloudObjectLimit => {
-                "Anonymous user attempted to create a cloud object past their personal object limit"
-            }
             Self::BackgroundBlockStarted => {
                 "Torch created a background-output Block (whenever a processes has been backgrounded and yields some output)"
             }
@@ -6057,10 +5699,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
                 "Content changed by the user in the suggested rule dialog"
             }
             Self::Login => "Login is successful",
-            Self::LoginLaterButtonClicked => "Clicked \"Login later\" button",
-            Self::LoginLaterConfirmationButtonClicked => {
-                "Clicked \"Yes, skip login\" confirmation button"
-            }
             Self::ConfirmSuggestion => "Accepted tab completion suggestion",
             Self::ContextMenuCopy => "Clicked \"Copy\" in context menu",
             Self::ContextMenuOpenShareModal => "Opened \"Share\" modal via context menu",
@@ -6103,7 +5741,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::AutoupdateRelaunchAttempt => {
                 "Attempted to relaunch the app after installing an update"
             }
-            Self::SkipOnboardingSurvey => "Skipped onboarding survey as a whole",
             Self::ToggleRestoreSession => {
                 "Toggled session restoration (\"Restore windows, tabs, panes, on startup\")"
             }
@@ -6154,13 +5791,8 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::NotificationFailedToSend => "Failed to send desktop notification",
             Self::NotificationClicked => "Clicked desktop notification sent from Torch",
             Self::ToggleFindOption => "Changed settings in Find Toggle",
-            Self::SignUpButtonClicked => "Clicked \"Sign Up\" button",
-            Self::LoginButtonClicked => "Clicked on \"Log in\" button",
             Self::OpenNewSessionFromFilePath => {
                 "Dragged a file, folder, etc. into Torch to start a session"
-            }
-            Self::OpenTeamFromURI => {
-                "Showed settings view of their newly joined team within the app"
             }
             Self::SelectCommandPaletteOption => "Selected option from command palette (i.e. CMD-P)",
             Self::PaletteSearchOpened => "Opened the palette",
@@ -6169,9 +5801,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::SelectNavigationPaletteItem => {
                 "Selected session from the Session Navigation Palette (search across panes, tabs, and windows)"
             }
-            Self::AuthCommonQuestionClicked => "Clicked on \"Common Question\" when logging in",
-            Self::AuthToggleFAQ => "Toggled FAQ Page when logging in",
-            Self::OpenAuthPrivacySettings => "Privacy settings are open during sign-in",
             Self::TabRenamed => "Changed tab title",
             Self::MoveActiveTab => "Move active tab left or right",
             Self::MoveTab => "Move tab left or right",
@@ -6206,10 +5835,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
                 "Opened the launch config YAML file from modal once saved successfully"
             }
             Self::OpenLaunchConfig => "Opened launch config for a session",
-            Self::TeamCreated => "Created a Torch Drive team",
-            Self::TeamJoined => "Joined a Torch Drive team",
-            Self::TeamLeft => "Left a Torch Drive team",
-            Self::RemovedUserFromTeam => "Remove user from Torch Drive team",
             Self::DeletedWorkflow => "Deleted workflow from Torch Drive team",
             Self::DeletedNotebook => "Deleted notebook from Torch Drive team",
             Self::ToggleApprovalsModal => "Opened or closed teams modal",
@@ -6240,11 +5865,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::QuitModalDisabled => {
                 "The quit modal dialog has been disabled and will not popup when a user closes Torch while a session is running"
             }
-            Self::UserInitiatedLogOut => {
-                "Confirms a user has explicitly logged out of the application"
-            }
-            Self::LogOutModalShown => "When the log out modal is displayed",
-            Self::LogOutModalCancel => "Escaped the log out flow by canceling the log out modal",
             Self::SetOpacity => {
                 "Changed the opacity (window transparency) from the `Settings -> Appearance` dialog"
             }
@@ -6372,7 +5992,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::DismissVimKeybindingsBanner => {
                 "Dismissed the banner to enable Vim keybindings in the Input Editor"
             }
-            Self::InitiateReauth => "Started the flow to re-authenticate the client",
             Self::NeedsReauth => "User needs to re-authenticate",
             Self::WarpDriveOpened => "Opened Torch Drive panel",
             Self::ToggleWarpAI => {
@@ -6425,13 +6044,9 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::WebCloudObjectOpenedOnDesktop => {
                 "Torch Drive object on the web was opened on the desktop"
             }
-            Self::DriveSharingOnboardingBlockShown => {
-                "Showed onboarding block for Torch Drive sharing"
-            }
             Self::UnsupportedShell => "Booted Torch with a shell that isn't supported",
             Self::LogOut => "Logged out of the Torch client",
             Self::SettingsImportInitiated => "Started the import settings flow for new users",
-            Self::InviteTeammates => "Sent emails to invite teammates to join Torch Drive team",
             Self::CopyObjectToClipboard => "Copied an object to the user's keyboard",
             Self::OpenAndWarpifyDockerSubshell => {
                 "Warpifying a docker subshell from using the docker extension"
@@ -6455,7 +6070,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::PaneDragInitiated => "Initiated dragging a pane via the header",
             Self::PaneDropped => "Ended dragging a pane via the pane header",
             Self::AgentModeCreatedAIBlock => "Created an AI block in agent mode",
-            Self::TierLimitHit => "User hit the tier limit for a feature",
             Self::SharedObjectLimitHitBannerViewPlansButtonClicked => {
                 "Clicked the 'View Plans' button on the persistent drive banner"
             }
@@ -6535,16 +6149,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
                 "User selected an item from the inline conversation menu"
             }
             Self::AgentShortcutsViewToggled => "User toggled the shortcuts view in Agent View",
-            Self::CreateProjectPromptSubmitted => {
-                "User submitted a prompt from the create project view"
-            }
-            Self::CreateProjectPromptSubmittedContent => {
-                "User submitted custom prompt content from the create project view"
-            }
-            Self::CloneRepoPromptSubmitted => {
-                "User submitted a repository URL from the clone repo view"
-            }
-            Self::GetStartedSkipToTerminal => "User clicked skip to terminal from get started view",
             Self::CompletedSettingsImport => {
                 "Imported a terminal's settings via the settings import onboarding block"
             }
@@ -6642,7 +6246,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::InputUXModeChanged { .. } => "Changed the input UX mode",
             Self::VoiceInputUsed { .. } => "Used voice input",
             Self::AtMenuInteracted { .. } => "Interacted with the @ menu",
-            Self::UserMenuUpgradeClicked => "Clicked the 'Upgrade' menu item in the user menu",
             Self::TabCloseButtonPositionUpdated { .. } => "Updated the tab close button position",
             Self::ExpandedCodeSuggestions { .. } => "Expanded the passive code diff suggestion",
             Self::AIExecutionProfileDeleted => "An AI execution profile was deleted",
@@ -6681,15 +6284,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::InputBufferSubmitted => "Input buffer submitted",
             Self::RecentMenuItemSelected { .. } => {
                 "User selected an item from the recents list on the new tab zero state"
-            }
-            Self::OpenRepoFolderSubmitted { .. } => {
-                "User selected a folder to open as a repo from the \"Open repository\" button"
-            }
-            Self::OutOfCreditsBannerClosed => {
-                "User closed the 'Out of credits' banner (dismissed or purchased credits)"
-            }
-            Self::AutoReloadModalClosed => {
-                "User closed the auto-reload modal (either dismissed or enabled auto-reload)"
             }
             Self::CLISubagentControlStateChanged { .. } => {
                 "Control state changed in CLI subagent (agent in control, agent blocked, user in control, or agent tagged in)"
@@ -6761,13 +6355,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::CodexModalUseCodexClicked => "User clicked 'Use Codex' in the Codex modal",
             Self::LinearIssueLinkOpened => {
                 "User opened a warp://linear deeplink to work on an issue"
-            }
-            Self::CloudAgentCapacityModalOpened => "User opened the cloud agent capacity modal",
-            Self::CloudAgentCapacityModalDismissed => {
-                "User dismissed the cloud agent capacity modal"
-            }
-            Self::CloudAgentCapacityModalUpgradeClicked => {
-                "User clicked the upgrade button in the cloud agent capacity modal"
             }
             Self::ComputerUseApproved => {
                 "A RequestComputerUse action was approved (manually or auto-executed)"

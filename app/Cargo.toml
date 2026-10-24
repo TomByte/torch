@@ -222,7 +222,6 @@ torch_terminal.workspace = true
 websocket.workspace = true
 wgpu = { workspace = true, optional = true }
 natural_language_detection.workspace = true
-onboarding.workspace = true
 aho-corasick = "1.1.3"
 strum.workspace = true
 strum_macros.workspace = true
@@ -446,8 +445,6 @@ background_computer_use = []
 agent_mode_debug = []
 agent_mode_primary_xml = []
 agent_mode_pre_plan_xml = []
-agent_onboarding = []
-account_first_onboarding = []
 agent_shared_sessions = []
 ask_user_question = []
 async_find = []
@@ -526,7 +523,6 @@ default = [
     "revert_diff_hunk",
     "code_review_save_changes",
     "create_project_flow",
-    "get_started_tab",
     "file_tree",
     "vim_code_editor",
     "code_launch_modal",
@@ -567,8 +563,6 @@ default = [
     "named_agents",
     "agent_tips",
     "pluggable_notifications",
-    "agent_onboarding",
-    "account_first_onboarding",
     "global_search",
     "cloud_conversations",
     "list_skills",
@@ -632,12 +626,10 @@ default = [
     "grouped_tabs",
     "pinned_tabs",
     "agent_harness",
-    "hoa_onboarding_flow",
     "hoa_remote_control",
     "codex_notifications",
     "codex_plugin",
     "trim_trailing_blank_lines",
-    "skip_firebase_anonymous_user",
     "settings_file",
     "directory_tab_colors",
     "git_credential_refresh",
@@ -706,7 +698,6 @@ nld_prompt_history_match = []
 msys2_shells = []
 file_backed_execution_profiles = []
 file_retrieval_tools = []
-get_started_tab = []
 code_mode_chip = []
 github_pr_prompt_chip = []
 create_project_flow = []
@@ -971,14 +962,12 @@ handoff_local_cloud = []
 hoa_notifications = []
 open_code_notifications = []
 transfer_control_tool = []
-skip_firebase_anonymous_user = []
 custom_model_routers = []
 solo_user_byok = []
 billing_and_usage_page_v2 = []
 gpt_configurable_context_window = []
 configurable_toolbar = []
 warpify_footer = []
-hoa_onboarding_flow = []
 git_operations_in_code_review = []
 hoa_remote_control = []
 codex_notifications = []
@@ -1001,7 +990,6 @@ category = "public.app-category.developer-tools"
 copyright = "© 2026 C10UD Ltd. Portions © 2020–2026 Denver Technologies, Inc."
 identifier = "dev.tombyte.Torch"
 name = "Torch"
-resources = ["assets/onboarding"]
 icon = ["channels/oss/icon/Torch.icns", "channels/oss/icon/no-padding/512x512.png", "channels/oss/icon/no-padding/icon.ico"]
 short_description = "A local terminal with tab completion and command history."
 

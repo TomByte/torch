@@ -764,15 +764,6 @@ impl AIExecutionProfilesModel {
         });
     }
 
-    /// Returns whether onboarding must leave the existing default profile unchanged.
-    pub fn should_preserve_onboarding_profile(&self, ctx: &AppContext) -> bool {
-        if self.settings_are_authoritative() {
-            self.preserve_profile_onboarding_overrides
-        } else {
-            self.default_profile(ctx).sync_id().is_some()
-        }
-    }
-
     /// This function performs one-time migrations from legacy settings into the default profile.
     /// The issue this solves is that, whenever we migrate an existing setting into the profile object,
     /// users will initialize the new field to its default value. We need to manually check to see if

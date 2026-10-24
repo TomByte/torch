@@ -71,7 +71,7 @@ fn command_registry_contains_commands_for_both_surfaces() {
 
     assert_eq!(
         registry
-            .get_command_with_name(UPGRADE.name)
+            .get_command_with_name(EXIT.name)
             .map(|command| command.supported_surfaces),
         Some(SlashCommandSurfaces::TuiOnly)
     );

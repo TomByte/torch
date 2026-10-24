@@ -36,7 +36,6 @@ use crate::ai::facts::{AIFact, CloudAIFactModel};
 #[cfg(not(target_family = "wasm"))]
 use crate::ai::mcp::templatable::{CloudTemplatableMCPServerModel, TemplatableMCPServer};
 use crate::auth::AuthStateProvider;
-use crate::auth::auth_manager::AuthManager;
 use crate::cloud_object::model::actions::{
     ObjectAction, ObjectActionHistory, ObjectActionType, ObjectActions,
 };
@@ -3289,9 +3288,6 @@ impl UpdateManager {
                 count + 1,
             )
         }) {
-            AuthManager::handle(ctx).update(ctx, |auth_manager: &mut AuthManager, ctx| {
-                auth_manager.anonymous_user_hit_drive_object_limit(ctx);
-            });
             return;
         };
 
@@ -3360,9 +3356,6 @@ impl UpdateManager {
                 count + 1,
             )
         }) {
-            AuthManager::handle(ctx).update(ctx, |auth_manager: &mut AuthManager, ctx| {
-                auth_manager.anonymous_user_hit_drive_object_limit(ctx);
-            });
             return;
         };
 
@@ -3423,9 +3416,6 @@ impl UpdateManager {
         if AuthStateProvider::handle(ctx).read(ctx, |auth_state_provider, _ctx| {
             is_feature_gated_anonymous_user_past_env_var_limit(auth_state_provider.get(), count + 1)
         }) {
-            AuthManager::handle(ctx).update(ctx, |auth_manager: &mut AuthManager, ctx| {
-                auth_manager.anonymous_user_hit_drive_object_limit(ctx);
-            });
             return;
         };
 

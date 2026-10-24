@@ -3714,9 +3714,6 @@ impl BlocklistAIController {
                                     );
                                 },
                             );
-                            AIRequestUsageModel::handle(ctx).update(ctx, |model, ctx| {
-                                model.enable_buy_credits_banner(ctx);
-                            });
                         }
 
                         // A resume scheduled for this failure keeps the conversation in

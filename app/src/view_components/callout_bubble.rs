@@ -1,44 +1,11 @@
 use pathfinder_color::ColorU;
 use torch_core::ui::theme::Fill;
 use torch_core::ui::theme::phenomenon::PhenomenonStyle;
-use torchui::Element;
-use torchui::elements::{
-    Border, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Flex, MainAxisSize,
-    MouseStateHandle, ParentElement, Radius, Stack,
-};
+use torchui::elements::{CornerRadius, MouseStateHandle, Radius};
 use torchui::ui_components::checkbox::Checkbox;
 use torchui::ui_components::components::UiComponentStyles;
 
 use crate::appearance::Appearance;
-use crate::ui_components::icons::Icon;
-
-/// Which direction the callout arrow points.
-#[derive(Debug, Clone, Copy)]
-pub enum CalloutArrowDirection {
-    Up,
-    Left,
-}
-
-/// Where the arrow is positioned along the bubble edge.
-#[derive(Debug, Clone, Copy)]
-pub enum CalloutArrowPosition {
-    /// Offset from the start of the bubble edge the arrow sits on.
-    /// For Up arrows: offset from the left edge.
-    /// For Left arrows: offset from the top edge.
-    Start(f32),
-    /// Offset from the end of the bubble edge the arrow sits on.
-    /// For Up arrows: offset from the right edge.
-    End(f32),
-    /// Centered on the bubble edge.
-    Center,
-}
-
-/// Configuration for rendering a callout bubble with an arrow.
-pub struct CalloutBubbleConfig {
-    pub width: f32,
-    pub arrow_direction: CalloutArrowDirection,
-    pub arrow_position: CalloutArrowPosition,
-}
 
 pub fn phenomenon_background_color() -> ColorU {
     PhenomenonStyle::background()
@@ -66,126 +33,6 @@ pub fn phenomenon_disabled_label_text_color() -> ColorU {
 
 pub fn phenomenon_subtle_border_color() -> ColorU {
     PhenomenonStyle::subtle_border()
-}
-
-/// Returns the shared HOA callout background fill using the Phenomenon palette.
-pub fn callout_background_fill(appearance: &Appearance) -> Fill {
-    let _ = appearance;
-    PhenomenonStyle::tinted_surface()
-}
-
-/// Returns the shared HOA callout border color using the Phenomenon palette.
-pub fn callout_border_color(appearance: &Appearance) -> ColorU {
-    let _ = appearance;
-    PhenomenonStyle::surface_border()
-}
-
-/// Renders a callout bubble with an arrow indicator.
-///
-/// The bubble has an accent-tinted background with an accent border,
-/// and a triangular arrow on the specified edge.
-/// The `content` element is placed inside the bubble body.
-pub fn render_callout_bubble(
-    content: Box<dyn Element>,
-    config: &CalloutBubbleConfig,
-    appearance: &Appearance,
-) -> Box<dyn Element> {
-    let background = callout_background_fill(appearance);
-    let border_color = callout_border_color(appearance);
-
-    let bubble = ConstrainedBox::new(
-        Container::new(content)
-            .with_background(background)
-            .with_border(Border::all(1.).with_border_fill(Fill::Solid(border_color)))
-            .with_corner_radius(CornerRadius::with_all(Radius::Pixels(8.)))
-            .finish(),
-    )
-    .with_width(config.width)
-    .finish();
-
-    let (border_icon, fill_icon) = match config.arrow_direction {
-        CalloutArrowDirection::Up => (Icon::CalloutTriangleBorderUp, Icon::CalloutTriangleFillUp),
-        CalloutArrowDirection::Left => (
-            Icon::CalloutTriangleBorderLeft,
-            Icon::CalloutTriangleFillLeft,
-        ),
-    };
-
-    let triangle = Stack::new()
-        .with_child(
-            ConstrainedBox::new(
-                border_icon
-                    .to_warpui_icon(Fill::Solid(border_color))
-                    .finish(),
-            )
-            .with_width(24.)
-            .with_height(24.)
-            .finish(),
-        )
-        .with_child(
-            ConstrainedBox::new(fill_icon.to_warpui_icon(background).finish())
-                .with_width(24.)
-                .with_height(24.)
-                .finish(),
-        )
-        .finish();
-
-    match config.arrow_direction {
-        CalloutArrowDirection::Up => {
-            let arrow_margin = match config.arrow_position {
-                CalloutArrowPosition::Start(offset) => {
-                    Container::new(triangle).with_margin_left(offset)
-                }
-                CalloutArrowPosition::End(offset) => {
-                    let margin_left = (config.width - offset - 24.).max(0.);
-                    Container::new(triangle).with_margin_left(margin_left)
-                }
-                CalloutArrowPosition::Center => {
-                    let margin_left = (config.width - 24.) / 2.;
-                    Container::new(triangle).with_margin_left(margin_left)
-                }
-            };
-
-            let mut column = Flex::column().with_main_axis_size(MainAxisSize::Min);
-            column.add_child(arrow_margin.with_margin_bottom(-3.).finish());
-            column.add_child(bubble);
-            column.finish()
-        }
-        CalloutArrowDirection::Left => {
-            let (arrow_margin, cross_axis_alignment) = match config.arrow_position {
-                CalloutArrowPosition::Start(offset) => (
-                    Container::new(triangle).with_margin_top(offset),
-                    CrossAxisAlignment::Start,
-                ),
-                CalloutArrowPosition::End(offset) => (
-                    Container::new(triangle).with_margin_top(offset),
-                    CrossAxisAlignment::Start,
-                ),
-                CalloutArrowPosition::Center => {
-                    (Container::new(triangle), CrossAxisAlignment::Center)
-                }
-            };
-
-            let mut row = Flex::row()
-                .with_main_axis_size(MainAxisSize::Min)
-                .with_cross_axis_alignment(cross_axis_alignment);
-            row.add_child(arrow_margin.with_margin_right(-3.).finish());
-            row.add_child(bubble);
-            row.finish()
-        }
-    }
-}
-
-/// Title text color for callout content (foreground, 100% opacity).
-pub fn callout_title_color(appearance: &Appearance) -> ColorU {
-    let _ = appearance;
-    phenomenon_foreground_color()
-}
-
-/// Body/description text color for callout content in the Phenomenon palette.
-pub fn callout_body_color(appearance: &Appearance) -> ColorU {
-    let _ = appearance;
-    phenomenon_body_text_color()
 }
 
 /// Label/secondary text color for callout content in the Phenomenon palette.

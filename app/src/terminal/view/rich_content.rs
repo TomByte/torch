@@ -225,10 +225,6 @@ impl RichContent {
 #[derive(Clone, Debug)]
 pub enum RichContentMetadata {
     AIBlock(AIBlockMetadata),
-    AIOnboardingBlock {
-        /// The ID corresponding to the `AIAgentExchange` represented in this block.
-        exchange_id: AIAgentExchangeId,
-    },
     UsageFooter,
     InitStep {
         step_kind: InitStepKind,

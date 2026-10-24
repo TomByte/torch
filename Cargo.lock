@@ -9064,31 +9064,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "onboarding"
-version = "0.1.0"
-dependencies = [
- "ai",
- "anyhow",
- "cfg-if",
- "instant",
- "log",
- "pathfinder_color",
- "pathfinder_geometry",
- "rust-embed 8.7.2",
- "serde",
- "serde_json",
- "strum",
- "strum_macros",
- "torch_core",
- "torch_errors",
- "torch_logging",
- "torchui",
- "torchui_core",
- "ui_components",
- "uuid",
-]
-
-[[package]]
 name = "once_cell"
 version = "1.21.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -13618,7 +13593,6 @@ dependencies = [
  "objc2-app-kit 0.3.2",
  "objc2-core-foundation",
  "objc2-foundation 0.3.2",
- "onboarding",
  "once_cell",
  "opentelemetry",
  "opentelemetry-http",

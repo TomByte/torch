@@ -83,8 +83,6 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::CloudAgentRunners,
         #[cfg(feature = "cloud_agent_execution_config")]
         FeatureFlag::CloudAgentExecutionConfig,
-        #[cfg(feature = "account_first_onboarding")]
-        FeatureFlag::AccountFirstOnboarding,
         #[cfg(all(feature = "simulate_github_unauthed", debug_assertions))]
         FeatureFlag::SimulateGithubUnauthed,
         #[cfg(feature = "session_sharing_acls")]
@@ -133,8 +131,6 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::AgentModePrimaryXML,
         #[cfg(feature = "agent_mode_pre_plan_xml")]
         FeatureFlag::AgentModePrePlanXML,
-        #[cfg(feature = "agent_onboarding")]
-        FeatureFlag::AgentOnboarding,
         #[cfg(feature = "agent_shared_sessions")]
         FeatureFlag::AgentSharedSessions,
         #[cfg(feature = "suggested_rules")]
@@ -237,8 +233,6 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::ConversationArtifacts,
         #[cfg(feature = "sync_ambient_plans")]
         FeatureFlag::SyncAmbientPlans,
-        #[cfg(feature = "get_started_tab")]
-        FeatureFlag::GetStartedTab,
         #[cfg(feature = "projects")]
         FeatureFlag::Projects,
         #[cfg(feature = "drive_objects_as_context")]
@@ -475,10 +469,6 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::BillingAndUsagePageV2,
         #[cfg(feature = "gpt_configurable_context_window")]
         FeatureFlag::GPTConfigurableContextWindow,
-        #[cfg(feature = "skip_firebase_anonymous_user")]
-        FeatureFlag::SkipFirebaseAnonymousUser,
-        #[cfg(feature = "hoa_onboarding_flow")]
-        FeatureFlag::HOAOnboardingFlow,
         #[cfg(feature = "git_operations_in_code_review")]
         FeatureFlag::GitOperationsInCodeReview,
         #[cfg(feature = "hoa_remote_control")]

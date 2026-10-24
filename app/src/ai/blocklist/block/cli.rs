@@ -173,7 +173,6 @@ pub fn init(app: &mut AppContext) {
 
 #[derive(Default)]
 struct StateHandles {
-    subscribe_button_handle: MouseStateHandle,
     debug_copy_button_handle: MouseStateHandle,
     submit_issue_button_handle: MouseStateHandle,
     query_selection_handle: SelectionHandle,
@@ -1216,7 +1215,6 @@ impl View for CLISubagentView {
                     FailedOutputProps {
                         error,
                         is_ai_input_enabled: false,
-                        subscribe_button_handle: &self.state_handles.subscribe_button_handle,
                         aws_bedrock_credentials_error_view: None,
                         gemini_enterprise_credentials_error_view: None,
                         // The CLI subagent block cannot resume the conversation itself; the

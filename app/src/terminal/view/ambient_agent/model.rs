@@ -632,7 +632,6 @@ impl AmbientAgentViewModel {
             }) => self.handle_needs_github_auth(auth_url, message, ctx),
             CloudAgentStartupIssue::Failed(CloudAgentStartupFailure::Capacity { message }) => {
                 self.handle_spawn_error(message, ctx);
-                ctx.emit(AmbientAgentViewModelEvent::ShowCloudAgentCapacityModal);
             }
             CloudAgentStartupIssue::Failed(CloudAgentStartupFailure::OutOfCredits { message }) => {
                 self.handle_spawn_error(message, ctx);
@@ -1386,15 +1385,7 @@ impl AmbientAgentViewModel {
                     ctx.emit(event);
                 }
             }
-            AmbientAgentEvent::AtCapacity => {
-                if ignore_events {
-                    return;
-                }
-
-                if matches!(self.status, Status::WaitingForSession { .. }) {
-                    ctx.emit(AmbientAgentViewModelEvent::ShowCloudAgentCapacityModal);
-                }
-            }
+            AmbientAgentEvent::AtCapacity => {}
             AmbientAgentEvent::TimedOut => {}
         }
     }
@@ -1419,7 +1410,6 @@ impl AmbientAgentViewModel {
             }) => self.handle_needs_github_auth(auth_url, message, ctx),
             CloudAgentStartupIssue::Failed(CloudAgentStartupFailure::Capacity { message }) => {
                 self.handle_spawn_error(message, ctx);
-                ctx.emit(AmbientAgentViewModelEvent::ShowCloudAgentCapacityModal);
             }
             CloudAgentStartupIssue::Failed(CloudAgentStartupFailure::OutOfCredits { message }) => {
                 self.handle_spawn_error(message, ctx);
@@ -1663,7 +1653,6 @@ pub enum AmbientAgentViewModelEvent {
         error_message: String,
     },
     /// Request to show the cloud agent concurrency/capacity modal.
-    ShowCloudAgentCapacityModal,
     /// Request to show the cloud agent AI credits modal.
     ShowAICreditModal,
     /// The ambient agent needs GitHub authentication.

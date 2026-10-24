@@ -30,7 +30,7 @@ use crate::env_vars::manager::EnvVarCollectionSource;
 use crate::notebooks::CloudNotebook;
 use crate::notebooks::manager::NotebookSource;
 use crate::server::cloud_objects::update_manager::{InitiatedBy, UpdateManager};
-use crate::server::ids::{ClientId, ServerId, SyncId};
+use crate::server::ids::{ClientId, SyncId};
 use crate::server::telemetry::SharingDialogSource;
 use crate::workflows::manager::WorkflowOpenSource;
 use crate::workflows::{CloudWorkflow, WorkflowViewMode};
@@ -71,7 +71,6 @@ pub enum DrivePanelEvent {
         in_subshell: bool,
     },
     OpenSearch,
-    OpenSharedObjectsCreationDeniedModal(DriveObjectType, ServerId),
     OpenTeamSettingsPage,
     OpenAIFactCollection,
     OpenMCPServerCollection,
@@ -321,11 +320,6 @@ impl DrivePanel {
                 self.open_workflow_modal_with_existing(*workflow_id, ctx)
             }
             DriveIndexEvent::FocusWarpDrive => ctx.emit(DrivePanelEvent::FocusWarpDrive),
-            DriveIndexEvent::OpenSharedObjectsCreationDeniedModal(object_type, team_uid) => ctx
-                .emit(DrivePanelEvent::OpenSharedObjectsCreationDeniedModal(
-                    *object_type,
-                    *team_uid,
-                )),
             DriveIndexEvent::InvokeEnvVarCollectionInSubshell(id) => {
                 let cloud_model = CloudModel::as_ref(ctx);
                 let object = cloud_model.get_by_uid(&id.uid());
@@ -376,43 +370,11 @@ impl DrivePanel {
         cloud_object_type_and_id: &CloudObjectTypeAndId,
         ctx: &mut ViewContext<Self>,
     ) {
-        // Check if object being duplicated is in team space, if it is, then check
-        // corresponding object limits for that team.
+        // Anonymous users are limited in how many personal objects they can duplicate.
         if let Some(space) =
             CloudViewModel::as_ref(ctx).object_space(&cloud_object_type_and_id.uid(), ctx)
         {
             match space {
-                Space::Team { team_uid } => {
-                    match cloud_object_type_and_id {
-                        CloudObjectTypeAndId::Notebook(_) => {
-                            if !UserWorkspaces::has_capacity_for_shared_notebooks(team_uid, ctx, 1)
-                            {
-                                // If team has reached the limit for notebooks, show the modal
-                                // and return early.
-                                ctx.emit(DrivePanelEvent::OpenSharedObjectsCreationDeniedModal(
-                                    DriveObjectType::Notebook {
-                                        is_ai_document: false,
-                                    },
-                                    team_uid,
-                                ));
-                                return;
-                            }
-                        }
-                        CloudObjectTypeAndId::Workflow(_) => {
-                            if !UserWorkspaces::has_capacity_for_shared_workflows(team_uid, ctx, 1)
-                            {
-                                // If team has reached the limit for workflows, show the modal
-                                // and return early.
-                                ctx.emit(DrivePanelEvent::OpenSharedObjectsCreationDeniedModal(
-                                    DriveObjectType::Workflow,
-                                    team_uid,
-                                ));
-                                return;
-                            }
-                        }
-                        _ => (),
-                    }
-                }
                 Space::Personal => match cloud_object_type_and_id {
                     CloudObjectTypeAndId::Notebook(_) => {
                         if has_feature_gated_anonymous_user_reached_notebook_limit(ctx) {
@@ -437,7 +399,7 @@ impl DrivePanel {
                 },
                 // We're reliant on server checks here, since the client doesn't know how many
                 // objects are in the owning drive.
-                Space::Shared => (),
+                Space::Team { .. } | Space::Shared => (),
             }
         }
 

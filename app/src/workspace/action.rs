@@ -17,7 +17,7 @@ use super::tab_settings::{
     VerticalTabsCompactSubtitle, VerticalTabsDisplayGranularity, VerticalTabsPrimaryInfo,
     VerticalTabsTabItemMode, VerticalTabsViewMode,
 };
-use super::view::{OnboardingTutorial, WorkspaceBanner};
+use super::view::WorkspaceBanner;
 use crate::ai::agent::AIAgentExchangeId;
 use crate::ai::agent::api::ServerConversationToken;
 #[cfg(not(target_family = "wasm"))]
@@ -26,14 +26,13 @@ use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::ambient_agents::AmbientAgentTaskId;
 use crate::ai::blocklist::PendingAttachment;
 use crate::ai::document::ai_document_model::{AIDocumentId, AIDocumentVersion};
-use crate::auth::auth_manager::LoginGatedFeature;
 use crate::drive::CloudObjectTypeAndId;
 use crate::drive::items::WarpDriveItemId;
 use crate::palette::PaletteMode;
 use crate::pane_group::PaneGroup;
 use crate::prompt::editor_modal::OpenSource as PromptEditorOpenSource;
 use crate::search;
-use crate::server::ids::{ServerId, SyncId};
+use crate::server::ids::SyncId;
 use crate::server::telemetry::{
     AddTabWithShellSource, AgentModeEntrypoint, PaletteSource, SharingDialogSource,
 };
@@ -292,7 +291,6 @@ pub enum WorkspaceAction {
         shell: AvailableShell,
         source: AddTabWithShellSource,
     },
-    AddGetStartedTab,
     AddAmbientAgentTab,
     /// Add a new tab that immediately enters agent view with a new conversation.
     AddAgentTab,
@@ -308,7 +306,6 @@ pub enum WorkspaceAction {
     SelectNewSessionMenuItem(NewSessionMenuItem),
     AutoupdateFailureLink,
     ApplyUpdate,
-    LogOut,
     CopyVersion(&'static str),
     DownloadNewVersion,
     ConfigureKeybindingSettings {
@@ -342,7 +339,6 @@ pub enum WorkspaceAction {
         mode: PaletteMode,
         source: PaletteSource,
     },
-    ShowUpgrade,
     JoinSlack,
     ViewUserDocs,
     ViewLatestChangelog,
@@ -477,9 +473,6 @@ pub enum WorkspaceAction {
     ShowHeaderToolbarContextMenu {
         position: Vector2F,
     },
-    Reauth,
-    SignupAnonymousUser,
-    SignInAnonymousWebUser,
     OpenLink(String),
     /// On WASM, opens a given URL in the desktop Torch app (if installed) or redirects to download page.
     #[cfg(target_family = "wasm")]
@@ -555,9 +548,6 @@ pub enum WorkspaceAction {
         zero_state_prompt_suggestion_type: Option<ZeroStatePromptSuggestionType>,
     },
     OpenCloudAgentSetupGuide,
-    AttemptLoginGatedAIUpgrade,
-    /// Open the modal explaining Prompt Suggestions aren't available on the Free plan.
-    OpenPromptSuggestionsUnavailableModal,
     /// Dismisses the Wayland crash recovery banner and opens a link to our docs page with more
     /// information.
     #[cfg(target_os = "linux")]
@@ -721,10 +711,7 @@ pub enum WorkspaceAction {
         path: PathBuf,
     },
     /// Open a repository directory via file picker. The `path` is an `Option` because some
-    /// dispatchers don't know the path to open yet (so the Workspace must open the file picker)
-    /// and some do, e.g. the GetStartedView. The GetStartedView needs to handle the file picker
-    /// because it needs to determine whether or not to close itself based on whether the user
-    /// actually selects a file in the file picker or cancels it.
+    /// dispatchers don't know the path to open yet (so the Workspace must open the file picker).
     OpenRepository {
         path: Option<String>,
     },
@@ -745,12 +732,6 @@ pub enum WorkspaceAction {
     ToggleConversationListView,
     OpenConversationListView,
     OpenAgentManagementView,
-    /// Open the Build Plan Migration Modal (for debugging)
-    #[cfg(debug_assertions)]
-    OpenBuildPlanMigrationModal,
-    /// Reset the build plan migration modal dismissed state (for debugging)
-    #[cfg(debug_assertions)]
-    ResetBuildPlanMigrationModalState,
     /// Reset the AWS Bedrock login banner dismissed state (for debugging).
     #[cfg(debug_assertions)]
     DebugResetAwsBedrockLoginBannerDismissed,
@@ -800,12 +781,6 @@ pub enum WorkspaceAction {
     /// were about to sleep (for debugging)
     #[cfg(debug_assertions)]
     TriggerAutoHandoffToCloud,
-    /// Open the Free AI Removal Modal (for debugging)
-    #[cfg(debug_assertions)]
-    OpenFreeAiRemovalModal,
-    /// Reset the free AI removal modal seen state (for debugging)
-    #[cfg(debug_assertions)]
-    ResetFreeAiRemovalModalState,
     /// Take a process sample of the app (equivalent to Activity Monitor > Sample Process).
     #[cfg(target_os = "macos")]
     SampleProcess,
@@ -858,14 +833,9 @@ pub enum WorkspaceAction {
         index: usize,
         image: lightbox::LightboxImage,
     },
-    StartAgentOnboardingTutorial(OnboardingTutorial),
     ShowSessionConfigModal,
-    DismissSessionConfigTabConfigChip,
     /// Dismiss the non-blocking feature-intro popover without requiring it to hold focus.
     DismissFeatureIntroModal,
-    /// Start the HOA onboarding flow (for debugging)
-    #[cfg(debug_assertions)]
-    ShowHoaOnboardingFlow,
     /// Open the "New worktree" modal for creating a reusable worktree tab config.
     OpenNewWorktreeModal,
     /// Open the native folder picker for the repo field in the new-worktree modal.
@@ -909,45 +879,9 @@ pub enum WorkspaceAction {
     /// Opens (or focuses) the in-app network log pane as a right-split of the
     /// active pane group. Gated on `ContextFlag::NetworkLogConsole`.
     OpenNetworkLogPane,
-    /// Opens or focuses a window scoped to the specified team.
-    OpenNewWindowForTeam {
-        team_uid: ServerId,
-    },
-    /// Shows (toggles) the team-switcher dropdown menu in the title bar.
-    ShowTeamSwitcherMenu,
-}
-
-impl From<&WorkspaceAction> for LoginGatedFeature {
-    fn from(val: &WorkspaceAction) -> LoginGatedFeature {
-        use WorkspaceAction::*;
-        match val {
-            ImportToTeamDrive => "Importing to a team drive",
-            CreateTeamNotebook => "Creating a team notebook",
-            CreateTeamWorkflow => "Creating a team workflow",
-            CreateTeamFolder => "Creating a team folder",
-            CreateTeamEnvVarCollection => "Creating a team environment variable collection",
-            CreateTeamAIPrompt => "Creating a team prompt",
-            OpenShareSessionModal(_) => "Sharing a session",
-            _ => "Unknown reason",
-        }
-    }
 }
 
 impl WorkspaceAction {
-    pub fn blocked_for_anonymous_user(&self) -> bool {
-        use WorkspaceAction::*;
-        matches!(
-            self,
-            ImportToTeamDrive
-                | CreateTeamNotebook
-                | CreateTeamWorkflow
-                | CreateTeamFolder
-                | CreateTeamEnvVarCollection
-                | CreateTeamAIPrompt
-                | OpenShareSessionModal(_)
-        )
-    }
-
     /// Matches what actions require the app state to be saved, and which don't. We match all
     /// actions directly, rather than using _, so we're forced to make a conscious decision for each
     /// of them, rather than following some default.
@@ -1025,7 +959,6 @@ impl WorkspaceAction {
             | NewAgentSessionInDirectory { .. }
             | NewAgentWorktreeSession { .. }
             | AddTabWithShell { .. }
-            | AddGetStartedTab
             | AddAgentTab
             | AddAmbientAgentTab
             | AddDockerSandboxTab
@@ -1068,7 +1001,6 @@ impl WorkspaceAction {
             | ResetZoom
             | OpenPalette { .. }
             | TogglePalette { mode: _, source: _ }
-            | ShowUpgrade
             | JoinSlack
             | ViewUserDocs
             | ViewLatestChangelog
@@ -1100,7 +1032,6 @@ impl WorkspaceAction {
             | ClickedAIAssistantIcon
             | ToggleAIAssistant
             | OpenCloudAgentSetupGuide
-            | OpenPromptSuggestionsUnavailableModal
             | ToggleKeybindingsPage
             | ShowCommandSearch(_)
             | TriggerExternalCtrlTFileSearch
@@ -1168,9 +1099,6 @@ impl WorkspaceAction {
             | OpenCLIAgentToolbarEditor
             | OpenHeaderToolbarEditor
             | ShowHeaderToolbarContextMenu { .. }
-            | Reauth
-            | SignupAnonymousUser
-            | LogOut
             | OpenLink(_)
             | OpenShareSessionModal(_)
             | StopSharingSessionFromTabMenu { .. }
@@ -1190,13 +1118,11 @@ impl WorkspaceAction {
             | RunCommand { .. }
             | InsertInInput { .. }
             | InsertForkSlashCommand
-            | AttemptLoginGatedAIUpgrade
             | UndoTrash(_)
             | OpenFilePath { .. }
             | ViewObjectInWarpDrive(_)
             | OpenObjectSharingSettings { .. }
             | TerminateApp
-            | SignInAnonymousWebUser
             | TabHoverWidthStart { .. }
             | TabHoverWidthEnd
             | OpenAIFactCollection
@@ -1232,9 +1158,7 @@ impl WorkspaceAction {
             | OpenConversationTranscriptViewer { .. }
             | OpenLightbox { .. }
             | UpdateLightboxImage { .. }
-            | StartAgentOnboardingTutorial(_)
             | ShowSessionConfigModal
-            | DismissSessionConfigTabConfigChip
             | DismissFeatureIntroModal
             | SaveCurrentTabAsNewConfig(_)
             | SyncTrafficLights
@@ -1249,17 +1173,11 @@ impl WorkspaceAction {
             | ShowHandoffEnvironmentCreationModal
             | ShowCloudModeV2EnvironmentCreationModal
             | OpenCreateAuthSecretModal { .. }
-            | OpenNetworkLogPane
-            | OpenNewWindowForTeam { .. }
-            | ShowTeamSwitcherMenu => false,
-            #[cfg(debug_assertions)]
-            ShowHoaOnboardingFlow => false,
+            | OpenNetworkLogPane => false,
             #[cfg(target_family = "wasm")]
             ToggleConversationTranscriptDetailsPanel => false,
             #[cfg(debug_assertions)]
-            OpenBuildPlanMigrationModal
-            | ResetBuildPlanMigrationModalState
-            | DebugResetAwsBedrockLoginBannerDismissed
+            DebugResetAwsBedrockLoginBannerDismissed
             | OpenOzLaunchModal
             | ResetOzLaunchModalState
             | OpenOpenWarpLaunchModal
@@ -1274,9 +1192,7 @@ impl WorkspaceAction {
             | ResetAutoHandoffSleepModalState
             | OpenChatGPTPlanModal
             | ResetChatGPTPlanModalState
-            | TriggerAutoHandoffToCloud
-            | OpenFreeAiRemovalModal
-            | ResetFreeAiRemovalModalState => false,
+            | TriggerAutoHandoffToCloud => false,
             #[cfg(not(target_family = "wasm"))]
             ViewLogs => false,
             #[cfg(target_os = "macos")]

@@ -8,7 +8,6 @@ use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::{Vector2F, vec2f};
 use torch_core::context_flag::ContextFlag;
 use torch_core::settings::Setting;
-use torch_core::ui::theme::color::internal_colors;
 use torch_errors::{report_error, report_if_error};
 use torch_util::sync::Condition;
 use torchui::clipboard::ClipboardContent;
@@ -55,9 +54,7 @@ use crate::ai::document::ai_document_model::AIDocumentId;
 use crate::ai::facts::{AIFact, AIMemory};
 use crate::appearance::Appearance;
 use crate::auth::AuthStateProvider;
-use crate::auth::auth_manager::{AuthManager, LoginGatedFeature};
 use crate::auth::auth_state::AuthState;
-use crate::auth::auth_view_modal::AuthViewVariant;
 use crate::banner::BannerState;
 use crate::cloud_object::model::persistence::{CloudModel, CloudModelEvent};
 use crate::cloud_object::model::view::{CloudViewModel, CloudViewModelEvent, UpdateTimestamp};
@@ -78,9 +75,7 @@ use crate::server::cloud_objects::update_manager::{
 };
 use crate::server::ids::{ClientId, ObjectUid, ServerId, SyncId};
 use crate::server::sync_queue::SyncQueue;
-use crate::server::telemetry::{
-    AnonymousUserSignupEntrypoint, SharingDialogSource, TelemetryEvent,
-};
+use crate::server::telemetry::{SharingDialogSource, TelemetryEvent};
 use crate::settings::SharedObjectLimitBannerSettings;
 use crate::settings::app_installation_detection::{
     UserAppInstallDetectionSettings, UserAppInstallStatus,
@@ -369,8 +364,6 @@ pub enum DriveIndexAction {
     ManageBilling {
         team_uid: ServerId,
     },
-    SignupAnonymousUser,
-    DismissPersonalObjectLimits,
     /// Dismiss (and remember dismissing) the shared object limit banner shown
     /// in the Torch Drive sidebar when a plan's notebook/workflow limit is hit.
     DismissObjectLimitBanner {
@@ -409,26 +402,6 @@ impl DriveIndexAction {
                 space,
                 initial_folder_id,
             },
-        }
-    }
-
-    pub fn blocked_for_anonymous_user(&self) -> bool {
-        use DriveIndexAction::*;
-        matches!(
-            self,
-            OpenTeamSettingsPage | ViewPlans { .. } | ManageBilling { .. }
-        )
-    }
-}
-
-impl From<&DriveIndexAction> for LoginGatedFeature {
-    fn from(val: &DriveIndexAction) -> LoginGatedFeature {
-        use DriveIndexAction::*;
-        match val {
-            OpenTeamSettingsPage => "Open Team Settings",
-            ViewPlans { .. } => "View Plans",
-            ManageBilling { .. } => "Manage Billing",
-            _ => "Unknown reason",
         }
     }
 }
@@ -484,7 +457,6 @@ pub enum DriveIndexEvent {
     },
     OpenWorkflowModalWithCloudWorkflow(SyncId),
     FocusWarpDrive,
-    OpenSharedObjectsCreationDeniedModal(DriveObjectType, ServerId),
     AttachPlanAsContext(AIDocumentId),
 }
 
@@ -500,8 +472,6 @@ struct MouseStateHandles {
     shared_object_limit_hit_banner_button_mouse_state: MouseStateHandle,
     shared_object_limit_hit_banner_close_mouse_state: MouseStateHandle,
     payment_issue_banner_button_mouse_state: MouseStateHandle,
-    anonymous_sign_up_button_mouse_state: MouseStateHandle,
-    anonymous_object_limit_close_button_mouse_state: MouseStateHandle,
     search_button_mouse_state: MouseStateHandle,
 }
 
@@ -553,7 +523,6 @@ pub struct DriveIndex {
     auth_state: Arc<AuthState>,
     space_menu_open_for_space: Option<SpaceMenuState>,
     show_warp_drive_loading_icon: bool,
-    should_show_personal_object_limit_status: bool,
     /// A hashmap of location (space/folder) to a list of hashed IDs of objects inside
     /// the space/folder, used for rendering our objects
     sorted_orders_by_location: HashMap<CloudObjectLocation, Vec<ObjectUid>>,
@@ -1067,7 +1036,6 @@ impl DriveIndex {
             has_initialized_sections: Default::default(),
             num_errored_objects: Default::default(),
             share_dialog_open_for_object: None,
-            should_show_personal_object_limit_status: true,
             workspace_dropdown,
             ai_fact_collection,
             ai_fact_collection_item_mouse_states: Default::default(),
@@ -3319,39 +3287,6 @@ impl DriveIndex {
             return;
         }
 
-        // Check if object is being moved into team space, if it is, then check
-        // corresponding object limits for that team.
-        if let CloudObjectLocation::Space(Space::Team { team_uid }) = new_location {
-            match *cloud_object_type_and_id {
-                CloudObjectTypeAndId::Notebook(_) => {
-                    if !UserWorkspaces::has_capacity_for_shared_notebooks(team_uid, ctx, 1) {
-                        // If team has reached the limit for notebooks, show the modal
-                        // and return early.
-                        ctx.emit(DriveIndexEvent::OpenSharedObjectsCreationDeniedModal(
-                            DriveObjectType::Notebook {
-                                is_ai_document: false,
-                            },
-                            team_uid,
-                        ));
-                        return;
-                    }
-                }
-                CloudObjectTypeAndId::Workflow(_) => {
-                    if !UserWorkspaces::has_capacity_for_shared_workflows(team_uid, ctx, 1) {
-                        // If team has reached the limit for workflows, show the modal
-                        // and return early.
-                        ctx.emit(DriveIndexEvent::OpenSharedObjectsCreationDeniedModal(
-                            DriveObjectType::Workflow,
-                            team_uid,
-                        ));
-                        return;
-                    }
-                }
-                _ => (),
-            }
-        }
-
-        // Otherwise allow object move to go through.
         UpdateManager::handle(ctx).update(ctx, move |update_manager, ctx| {
             update_manager.move_object_to_location(*cloud_object_type_and_id, new_location, ctx);
         });
@@ -3442,19 +3377,6 @@ impl DriveIndex {
                     return;
                 }
 
-                // If the new notebook is being created in the team space, check if the team has
-                // reached the limit for notebooks.
-                if let Space::Team { team_uid } = space
-                    && !UserWorkspaces::has_capacity_for_shared_notebooks(team_uid, ctx, 1)
-                {
-                    // If team has reached the limit for notebooks, show the modal
-                    // and return early.
-                    ctx.emit(DriveIndexEvent::OpenSharedObjectsCreationDeniedModal(
-                        object_type,
-                        team_uid,
-                    ));
-                    return;
-                }
                 ctx.emit(DriveIndexEvent::CreateNotebook {
                     space,
                     title,
@@ -3563,96 +3485,11 @@ impl DriveIndex {
         cloud_object_type_and_id: &CloudObjectTypeAndId,
         ctx: &mut ViewContext<Self>,
     ) {
-        // Check if object being untrashed is in team space, if it is, then check
-        // corresponding object limits for that team.
+        // Anonymous users are limited in how many personal objects they can restore.
         if let Some(space) =
             CloudViewModel::as_ref(ctx).object_space(&cloud_object_type_and_id.uid(), ctx)
         {
             match space {
-                Space::Team { team_uid } => {
-                    match cloud_object_type_and_id {
-                        CloudObjectTypeAndId::Notebook(_) => {
-                            if !UserWorkspaces::has_capacity_for_shared_notebooks(team_uid, ctx, 1)
-                            {
-                                // If team has reached the limit for notebooks, show the modal
-                                // and return early.
-                                ctx.emit(DriveIndexEvent::OpenSharedObjectsCreationDeniedModal(
-                                    DriveObjectType::Notebook {
-                                        is_ai_document: false,
-                                    },
-                                    team_uid,
-                                ));
-                                return;
-                            }
-                        }
-                        CloudObjectTypeAndId::Workflow(_) => {
-                            if !UserWorkspaces::has_capacity_for_shared_workflows(team_uid, ctx, 1)
-                            {
-                                // If team has reached the limit for workflows, show the modal
-                                // and return early.
-                                ctx.emit(DriveIndexEvent::OpenSharedObjectsCreationDeniedModal(
-                                    DriveObjectType::Workflow,
-                                    team_uid,
-                                ));
-                                return;
-                            }
-                        }
-                        CloudObjectTypeAndId::Folder(folder_id) => {
-                            let cloud_model = CloudModel::handle(ctx);
-
-                            // When untrashing a folder, check to see if there are any notebooks or workflows
-                            // in the trashed folder and make sure they are within limits.
-                            let trashed_object_types = cloud_model
-                                .as_ref(ctx)
-                                .trashed_cloud_object_types_in_location_with_descendants(
-                                    CloudObjectLocation::Folder(*folder_id),
-                                    ctx,
-                                );
-                            let notebooks_in_trashed_folder = trashed_object_types
-                                .clone()
-                                .into_iter()
-                                .filter(|object_type| *object_type == ObjectType::Notebook)
-                                .count();
-
-                            // Check # of notebooks in the trashed folder and make sure they are within limits
-                            if !UserWorkspaces::has_capacity_for_shared_notebooks(
-                                team_uid,
-                                ctx,
-                                notebooks_in_trashed_folder,
-                            ) {
-                                // If team has reached the limit for notebooks, show the modal
-                                // and return early.
-                                ctx.emit(DriveIndexEvent::OpenSharedObjectsCreationDeniedModal(
-                                    DriveObjectType::Notebook {
-                                        is_ai_document: false,
-                                    },
-                                    team_uid,
-                                ));
-                                return;
-                            }
-
-                            // Check # of workflows in the trashed folder and make sure they are within limits
-                            let workflows_in_trashed_folder = trashed_object_types
-                                .into_iter()
-                                .filter(|object_type| *object_type == ObjectType::Workflow)
-                                .count();
-                            if !UserWorkspaces::has_capacity_for_shared_workflows(
-                                team_uid,
-                                ctx,
-                                workflows_in_trashed_folder,
-                            ) {
-                                // If team has reached the limit for workflows, show the modal
-                                // and return early.
-                                ctx.emit(DriveIndexEvent::OpenSharedObjectsCreationDeniedModal(
-                                    DriveObjectType::Workflow,
-                                    team_uid,
-                                ));
-                                return;
-                            }
-                        }
-                        _ => (),
-                    }
-                }
                 Space::Personal => match cloud_object_type_and_id {
                     CloudObjectTypeAndId::Notebook(_) => {
                         if has_feature_gated_anonymous_user_reached_notebook_limit(ctx) {
@@ -3677,7 +3514,7 @@ impl DriveIndex {
                 },
                 // We have to rely on server checks here, since the client doesn't know how many
                 // objects are in the owning drive.
-                Space::Shared => (),
+                Space::Team { .. } | Space::Shared => (),
             }
         }
 
@@ -3939,11 +3776,6 @@ impl DriveIndex {
         });
     }
 
-    fn dismiss_personal_object_limit_status(&mut self, ctx: &mut ViewContext<Self>) {
-        self.should_show_personal_object_limit_status = false;
-        ctx.notify();
-    }
-
     /// Whether the user has dismissed the shared object limit banner for the
     /// given object type. Persisted across restarts via settings.
     fn is_object_limit_banner_dismissed(
@@ -3976,259 +3808,6 @@ impl DriveIndex {
             report_if_error!(result);
         });
         ctx.notify();
-    }
-
-    fn render_personal_limit_status(
-        &self,
-        appearance: &Appearance,
-        ctx: &AppContext,
-    ) -> Option<Box<dyn Element>> {
-        let personal_object_limits = self.auth_state.personal_object_limits()?;
-
-        let num_workflows = CloudModel::as_ref(ctx)
-            .active_non_welcome_workflows_in_space(Space::Personal, ctx)
-            .count();
-        let num_notebooks = CloudModel::as_ref(ctx)
-            .active_non_welcome_notebooks_in_space(Space::Personal, ctx)
-            .count();
-        let num_env_var_collections = CloudModel::as_ref(ctx)
-            .active_non_welcome_env_var_collections_in_space(Space::Personal, ctx)
-            .count();
-
-        let theme = appearance.theme();
-        let background_color = theme.surface_2();
-        let border_color = theme.outline().into();
-        let sub_text_color = blended_colors::text_sub(theme, background_color);
-
-        let close_icon_button = Hoverable::new(
-            self.mouse_state_handles
-                .anonymous_object_limit_close_button_mouse_state
-                .clone(),
-            |_| {
-                ConstrainedBox::new(
-                    Icon::X
-                        .to_warpui_icon(appearance.theme().main_text_color(background_color))
-                        .finish(),
-                )
-                .with_width(12.)
-                .with_height(12.)
-                .finish()
-            },
-        )
-        .on_click(move |ctx, _, _| {
-            ctx.dispatch_typed_action(DriveIndexAction::DismissPersonalObjectLimits)
-        })
-        .with_cursor(Cursor::PointingHand)
-        .finish();
-
-        let header = Flex::row()
-            .with_cross_axis_alignment(CrossAxisAlignment::Start)
-            .with_main_axis_alignment(MainAxisAlignment::SpaceBetween)
-            .with_child(
-                Text::new_inline("Torch Drive".to_string(), appearance.ui_font_family(), 14.)
-                    .with_color(theme.main_text_color(background_color).into())
-                    .with_style(Properties {
-                        weight: torchui::fonts::Weight::Bold,
-                        ..Default::default()
-                    })
-                    .finish(),
-            )
-            .with_child(Shrinkable::new(1., Empty::new().finish()).finish())
-            .with_child(close_icon_button)
-            .finish();
-
-        let personal_object_limit_description =
-            "Sign up for free to increase your storage limit and unlock more features.";
-
-        let body_text = appearance
-            .ui_builder()
-            .wrappable_text(personal_object_limit_description, true)
-            .with_style(UiComponentStyles {
-                font_size: Some(12.),
-                font_color: Some(sub_text_color),
-                ..Default::default()
-            })
-            .build()
-            .finish();
-
-        let workflow_usage = Container::new(self.render_personal_object_limit_row(
-            appearance,
-            DriveObjectType::Workflow,
-            num_workflows,
-            personal_object_limits.workflow_limit,
-        ))
-        .with_margin_bottom(8.)
-        .finish();
-
-        let notebook_usage = Container::new(self.render_personal_object_limit_row(
-            appearance,
-            DriveObjectType::Notebook {
-                is_ai_document: false,
-            },
-            num_notebooks,
-            personal_object_limits.notebook_limit,
-        ))
-        .with_margin_bottom(8.)
-        .finish();
-
-        let env_var_usage = self.render_personal_object_limit_row(
-            appearance,
-            DriveObjectType::EnvVarCollection,
-            num_env_var_collections,
-            personal_object_limits.env_var_limit,
-        );
-
-        let usage_section = Container::new(
-            Flex::column()
-                .with_children([workflow_usage, notebook_usage, env_var_usage])
-                .with_cross_axis_alignment(CrossAxisAlignment::Stretch)
-                .finish(),
-        )
-        .with_background(theme.surface_3())
-        .with_border(Border::all(1.).with_border_color(border_color))
-        .with_uniform_padding(8.)
-        .with_corner_radius(CornerRadius::with_all(Radius::Pixels(4.)))
-        .finish();
-
-        let button_styles = UiComponentStyles {
-            font_size: Some(14.),
-            font_family_id: Some(appearance.ui_font_family()),
-            font_color: Some(
-                appearance
-                    .theme()
-                    .main_text_color(appearance.theme().accent())
-                    .into(),
-            ),
-            font_weight: Some(Weight::Bold),
-            padding: Some(Coords {
-                top: 8.,
-                bottom: 8.,
-                left: 64.,
-                right: 64.,
-            }),
-            border_color: Some(appearance.theme().outline().into()),
-            background: Some(appearance.theme().accent().into()),
-            ..Default::default()
-        };
-
-        let hovered_and_clicked_styles = UiComponentStyles {
-            background: Some(internal_colors::accent_bg_strong(appearance.theme()).into()),
-            ..button_styles
-        };
-
-        let button = appearance
-            .ui_builder()
-            .button(
-                ButtonVariant::Basic,
-                self.mouse_state_handles
-                    .anonymous_sign_up_button_mouse_state
-                    .clone(),
-            )
-            .with_style(button_styles)
-            .with_hovered_styles(hovered_and_clicked_styles)
-            .with_active_styles(hovered_and_clicked_styles)
-            .with_centered_text_label("Sign up".to_string())
-            .build()
-            .on_click(|ctx, _, _| ctx.dispatch_typed_action(DriveIndexAction::SignupAnonymousUser))
-            .with_cursor(Cursor::PointingHand)
-            .finish();
-
-        Some(
-            ConstrainedBox::new(
-                Container::new(
-                    Flex::column()
-                        .with_main_axis_alignment(MainAxisAlignment::Start)
-                        .with_cross_axis_alignment(CrossAxisAlignment::Stretch)
-                        .with_child(header)
-                        .with_child(
-                            Container::new(body_text)
-                                .with_margin_top(4.)
-                                .with_margin_bottom(12.)
-                                .finish(),
-                        )
-                        .with_child(usage_section)
-                        .with_child(Container::new(button).with_margin_top(12.).finish())
-                        .finish(),
-                )
-                .with_background(background_color)
-                .with_corner_radius(CornerRadius::with_all(Radius::Pixels(6.)))
-                .with_uniform_padding(12.)
-                .with_uniform_margin(12.)
-                .with_border(Border::all(1.).with_border_color(border_color))
-                .finish(),
-            )
-            .with_max_width(350.)
-            .finish(),
-        )
-    }
-
-    fn render_personal_object_limit_row(
-        &self,
-        appearance: &Appearance,
-        object_type: DriveObjectType,
-        amount: usize,
-        max_amount: usize,
-    ) -> Box<dyn Element> {
-        let main_text_color = appearance
-            .theme()
-            .main_text_color(appearance.theme().surface_3())
-            .into();
-        let sub_text_color = appearance
-            .theme()
-            .hint_text_color(appearance.theme().surface_3())
-            .into();
-
-        let text_color = match amount {
-            0 => sub_text_color,
-            _ => main_text_color,
-        };
-
-        let name = match object_type {
-            DriveObjectType::Notebook { .. } => "Notebooks",
-            DriveObjectType::Workflow => "Workflows",
-            DriveObjectType::EnvVarCollection => "Environment Variables",
-            DriveObjectType::Folder => "Folders",
-            DriveObjectType::AgentModeWorkflow => "Agent Workflows",
-            DriveObjectType::AIFact => "AI Fact",
-            DriveObjectType::AIFactCollection => "Rules",
-            DriveObjectType::MCPServer => "MCP Server",
-            DriveObjectType::MCPServerCollection => "MCP Servers",
-        };
-        let name_styles = UiComponentStyles {
-            font_family_id: Some(appearance.ui_font_family()),
-            font_size: Some(12.),
-            font_color: Some(text_color),
-            ..Default::default()
-        };
-
-        let remaining = format!("{amount}/{max_amount}");
-        let remaining_styles = UiComponentStyles {
-            font_family_id: Some(appearance.monospace_font_family()),
-            font_size: Some(12.),
-            font_color: Some(text_color),
-            ..Default::default()
-        };
-
-        Flex::row()
-            .with_main_axis_alignment(MainAxisAlignment::SpaceBetween)
-            .with_main_axis_size(MainAxisSize::Max)
-            .with_child(
-                appearance
-                    .ui_builder()
-                    .span(name)
-                    .with_style(name_styles)
-                    .build()
-                    .finish(),
-            )
-            .with_child(
-                appearance
-                    .ui_builder()
-                    .span(remaining)
-                    .with_style(remaining_styles)
-                    .build()
-                    .finish(),
-            )
-            .finish()
     }
 
     fn render_shared_object_limit_hit_banner(
@@ -4995,13 +4574,6 @@ impl DriveIndex {
         };
 
         if self.auth_state.is_anonymous_or_logged_out() {
-            AuthManager::handle(ctx).update(ctx, |auth_manager, ctx| {
-                auth_manager.attempt_login_gated_feature(
-                    "Share Object",
-                    AuthViewVariant::ShareRequirementCloseable,
-                    ctx,
-                )
-            });
             return;
         }
 
@@ -5228,33 +4800,6 @@ impl View for DriveIndex {
         )
         .finish();
 
-        let index_content = match (
-            self.should_show_personal_object_limit_status,
-            self.render_personal_limit_status(appearance, app),
-        ) {
-            (true, Some(personal_object_limit_card)) => {
-                // Render column with a spacer to ensure the tip appears at the bottom of drive
-                let col = Flex::column()
-                    .with_child(index)
-                    .with_child(Shrinkable::new(1., Empty::new().finish()).finish())
-                    .finish();
-
-                let mut stack = Stack::new().with_constrain_absolute_children();
-                stack.add_child(col);
-                stack.add_positioned_child(
-                    personal_object_limit_card,
-                    OffsetPositioning::offset_from_parent(
-                        vec2f(0., 0.),
-                        ParentOffsetBounds::WindowByPosition,
-                        ParentAnchor::BottomMiddle,
-                        ChildAnchor::BottomMiddle,
-                    ),
-                );
-                stack.finish()
-            }
-            _ => index,
-        };
-
         let mut drive = Flex::column();
 
         // Only show the workspace picker if they are in multiple workspaces.
@@ -5265,12 +4810,12 @@ impl View for DriveIndex {
         match self.index_variant {
             DriveIndexVariant::MainIndex => {
                 drive.add_child(self.render_title(appearance, app));
-                drive.add_child(Shrinkable::new(1., index_content).finish());
+                drive.add_child(Shrinkable::new(1., index).finish());
             }
             DriveIndexVariant::Trash => {
                 drive.add_child(self.render_trash_title(appearance));
                 drive.add_child(self.render_deletion_warning(appearance));
-                drive.add_child(Shrinkable::new(1., index_content).finish());
+                drive.add_child(Shrinkable::new(1., index).finish());
             }
         };
 
@@ -5327,14 +4872,14 @@ impl TypedActionView for DriveIndex {
 
     fn handle_action(&mut self, action: &DriveIndexAction, ctx: &mut ViewContext<Self>) {
         // Block anonymous users from performing team actions
-        if self.auth_state.is_anonymous_or_logged_out() && action.blocked_for_anonymous_user() {
-            AuthManager::handle(ctx).update(ctx, |auth_manager, ctx| {
-                auth_manager.attempt_login_gated_feature(
-                    action.into(),
-                    AuthViewVariant::RequireLoginCloseable,
-                    ctx,
-                )
-            });
+        if self.auth_state.is_anonymous_or_logged_out()
+            && matches!(
+                action,
+                DriveIndexAction::OpenTeamSettingsPage
+                    | DriveIndexAction::ViewPlans { .. }
+                    | DriveIndexAction::ManageBilling { .. }
+            )
+        {
             return;
         }
 
@@ -5739,15 +5284,6 @@ impl TypedActionView for DriveIndex {
                     SharingDialogSource::DriveIndex,
                     ctx,
                 );
-            }
-            DriveIndexAction::SignupAnonymousUser => {
-                let entrypoint = AnonymousUserSignupEntrypoint::SignUpButton;
-                AuthManager::handle(ctx).update(ctx, |auth_manager, ctx| {
-                    auth_manager.initiate_anonymous_user_linking(entrypoint, ctx);
-                });
-            }
-            DriveIndexAction::DismissPersonalObjectLimits => {
-                self.dismiss_personal_object_limit_status(ctx);
             }
             DriveIndexAction::DismissObjectLimitBanner { banner_kind } => {
                 self.dismiss_object_limit_banner(*banner_kind, ctx);

@@ -2,6 +2,7 @@ use torchui::App;
 use torchui::platform::WindowStyle;
 
 use super::*;
+use crate::auth::{AuthManager, AuthStateProvider};
 use crate::cloud_object::model::persistence::CloudModel;
 use crate::network::NetworkStatus;
 use crate::server::cloud_objects::listener::Listener;

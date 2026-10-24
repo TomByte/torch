@@ -4,7 +4,6 @@ use torchui::{Entity, ModelHandle, SingletonEntity};
 
 use crate::banner::BannerState;
 use crate::persistence::ModelEvent;
-use crate::referral_theme_status::ReferralThemeStatus;
 use crate::resource_center::TipsCompleted;
 use crate::settings::SettingsFileError;
 
@@ -20,9 +19,7 @@ use crate::settings::SettingsFileError;
 ///   to mutate it, ModelHandle#read to borrow it, and ViewContext#observe to
 ///   have a view respond to all updates to the model. A lot of things in the
 ///   app will be Models, but they won't necessarily need to be global in the app.
-///   One example of a global model is the referral theme status: there will only
-///   be one value throughout the app on whether the user has activated a referral
-///   theme. One example of a model owned by a view is the terminal sessions model:
+///   One example of a model owned by a view is the terminal sessions model:
 ///   since this is metadata about particular shell sessions that are in a particular
 ///   pane, they belong to that pane's terminal view.
 ///
@@ -52,7 +49,6 @@ use crate::settings::SettingsFileError;
 pub struct GlobalResourceHandles {
     pub model_event_sender: Option<SyncSender<ModelEvent>>,
     pub tips_completed: ModelHandle<TipsCompleted>,
-    pub referral_theme_status: ModelHandle<ReferralThemeStatus>,
     pub user_default_shell_unsupported_banner_model_handle: ModelHandle<BannerState>,
     pub settings_file_error: Option<SettingsFileError>,
 }
@@ -60,7 +56,6 @@ pub struct GlobalResourceHandles {
 impl GlobalResourceHandles {
     #[cfg(any(test, feature = "integration_tests", feature = "test-util"))]
     pub fn mock(app: &mut torchui::App) -> Self {
-        let referral_theme_status = app.add_model(ReferralThemeStatus::new);
         let user_default_shell_unsupported_banner_model_handle =
             app.add_model(|_| BannerState::default());
         let tips_completed = app.add_model(|_| TipsCompleted::default());
@@ -68,7 +63,6 @@ impl GlobalResourceHandles {
         GlobalResourceHandles {
             model_event_sender: None,
             tips_completed,
-            referral_theme_status,
             user_default_shell_unsupported_banner_model_handle,
             settings_file_error: None,
         }

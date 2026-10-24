@@ -77,8 +77,6 @@ use crate::app_state::{
 };
 use crate::appearance::Appearance;
 use crate::auth::AuthStateProvider;
-use crate::auth::auth_manager::AuthManager;
-use crate::auth::auth_view_modal::AuthViewVariant;
 use crate::banner::{Banner, BannerEvent, BannerState, BannerTextContent, DismissalType};
 use crate::channel::{Channel, ChannelState};
 use crate::cloud_object::Space;
@@ -98,7 +96,6 @@ use crate::notebooks::file::FileNotebookView;
 use crate::palette::PaletteMode;
 use crate::pane_group::focus_state::PaneGroupFocusEvent;
 use crate::pane_group::pane::ActionOrigin;
-use crate::pane_group::pane::get_started_pane::GetStartedPane;
 #[cfg(not(target_family = "wasm"))]
 use crate::pane_group::pane::terminal_pane::{
     host_terminal_shared_session_source_type, inherit_share_for_local_child,
@@ -112,9 +109,7 @@ use crate::resource_center::{
 use crate::server::cloud_objects::update_manager::UpdateManager;
 use crate::server::ids::{ObjectUid, SyncId};
 use crate::server::server_api::{ServerApi, ServerApiProvider};
-use crate::server::telemetry::{
-    AnonymousUserSignupEntrypoint, PaletteSource, SharingDialogSource, TelemetryEvent,
-};
+use crate::server::telemetry::{PaletteSource, SharingDialogSource, TelemetryEvent};
 use crate::session_management::SessionNavigationData;
 use crate::settings::{AISettings, DefaultSessionMode, PaneSettings};
 use crate::settings_view::SettingsSection;
@@ -501,9 +496,6 @@ pub enum Event {
         pane_id: PaneId,
     },
     OpenSettings(SettingsSection),
-    OpenAutoReloadModal {
-        purchased_credits: i32,
-    },
     AskAIAssistant(AskAIType),
     /// Pass input sync event up from underlying TerminalViews
     /// to the Workspace to sync throughout the window.
@@ -513,8 +505,6 @@ pub enum Event {
     /// Event used to propagate a state change for one of the terminal views
     /// inside this pane group.
     TerminalViewStateChanged,
-    /// Event used to propagate guided onboarding tutorial completion to the workspace.
-    OnboardingTutorialCompleted,
     // Tell the workspace to open the workflow modal.
     OpenWorkflowModalWithCommand(String),
     // Tell the workspace to open the workflow for edit.
@@ -633,7 +623,6 @@ pub enum Event {
         /// If set, open the fact collection to the specific rule.
         sync_id: Option<SyncId>,
     },
-    AnonymousUserSignup,
     /// Request that the workspace open the command palette.
     OpenPalette {
         mode: PaletteMode,
@@ -670,10 +659,6 @@ pub enum Event {
         flavor: ToastFlavor,
         pane_id: Option<PaneId>,
     },
-    SignupAnonymousUser {
-        entrypoint: AnonymousUserSignupEntrypoint,
-    },
-    OpenThemeChooser,
     InvalidatedActiveConversation,
     OpenConversationHistory,
     OpenAddPromptPane {
@@ -744,9 +729,6 @@ pub enum Event {
     /// Request to open LSP logs in a terminal pane
     OpenLspLogs {
         log_path: PathBuf,
-    },
-    ShowCloudAgentCapacityModal {
-        variant: crate::workspace::view::cloud_agent_capacity_modal::CloudAgentCapacityModalVariant,
     },
     #[cfg(not(target_family = "wasm"))]
     OpenPluginInstructionsPane(crate::terminal::CLIAgent, PluginModalKind),
@@ -2014,21 +1996,6 @@ impl PaneGroup {
                     "Network log pane should not have been persisted, as it cannot be restored"
                 ))
             }
-            LeafContents::GetStarted => {
-                if !FeatureFlag::GetStartedTab.is_enabled() {
-                    Err(anyhow::anyhow!("GetStarted pane not supported"))
-                } else {
-                    let pane: Box<dyn AnyPaneContent + 'static> =
-                        Box::new(GetStartedPane::new(ctx));
-                    let pane_id = pane.as_pane().id();
-                    pane_contents.insert(pane_id, pane);
-                    let focus = InitialFocus {
-                        focused_pane: leaf.is_focused.then_some(pane_id),
-                        active_session: None,
-                    };
-                    Ok((PaneData::new(pane_id), focus))
-                }
-            }
             LeafContents::EnvironmentManagement(_) => {
                 // Environment management panes are not restored from persistence.
                 // They are opened on-demand via workspace actions.
@@ -2633,13 +2600,6 @@ impl PaneGroup {
             .get()
             .is_anonymous_or_logged_out()
         {
-            AuthManager::handle(ctx).update(ctx, |auth_manager, ctx| {
-                auth_manager.attempt_login_gated_feature(
-                    "Share Session",
-                    AuthViewVariant::ShareRequirementCloseable,
-                    ctx,
-                )
-            });
             return;
         }
 

@@ -1092,11 +1092,6 @@ fn handle_terminal_view_event(
             Event::OpenSettings(section) => {
                 ctx.emit(pane_group::Event::OpenSettings(*section));
             }
-            Event::OpenAutoReloadModal { purchased_credits } => {
-                ctx.emit(pane_group::Event::OpenAutoReloadModal {
-                    purchased_credits: *purchased_credits,
-                });
-            }
             #[cfg(not(target_family = "wasm"))]
             Event::OpenPluginInstructionsPane(agent, kind) => {
                 ctx.emit(pane_group::Event::OpenPluginInstructionsPane(*agent, *kind));
@@ -1116,9 +1111,6 @@ fn handle_terminal_view_event(
             }
             Event::TerminalViewStateChanged => {
                 ctx.emit(pane_group::Event::TerminalViewStateChanged);
-            }
-            Event::OnboardingTutorialCompleted => {
-                ctx.emit(pane_group::Event::OnboardingTutorialCompleted);
             }
             Event::OpenWorkflowModalWithCommand(command) => {
                 ctx.emit(pane_group::Event::OpenWorkflowModalWithCommand(
@@ -1276,7 +1268,6 @@ fn handle_terminal_view_event(
                     is_open.then_some(pane_id);
                 ctx.notify();
             }
-            Event::AnonymousUserSignup => ctx.emit(pane_group::Event::AnonymousUserSignup),
             #[cfg(feature = "local_fs")]
             Event::OpenFileWithTarget {
                 path,
@@ -1352,14 +1343,6 @@ fn handle_terminal_view_event(
                     remote_pane_id: terminal_pane_id,
                     upload_id: *upload_id,
                 })
-            }
-            Event::SignupAnonymousUser { entrypoint } => {
-                ctx.emit(pane_group::Event::SignupAnonymousUser {
-                    entrypoint: *entrypoint,
-                });
-            }
-            Event::OpenThemeChooser => {
-                ctx.emit(pane_group::Event::OpenThemeChooser);
             }
             Event::OpenFilesPalette { source } => {
                 ctx.emit(pane_group::Event::OpenFilesPalette { source: *source })
@@ -1479,9 +1462,6 @@ fn handle_terminal_view_event(
                     diff_mode: diff_mode.to_owned(),
                     open_code_review: open_code_review.clone(),
                 });
-            }
-            Event::ShowCloudAgentCapacityModal { variant } => {
-                ctx.emit(pane_group::Event::ShowCloudAgentCapacityModal { variant: *variant });
             }
             Event::RevealChildAgent { conversation_id } => {
                 // Routed through the swap mechanism to land all reveal cases in one path.

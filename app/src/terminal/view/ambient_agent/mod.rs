@@ -147,7 +147,6 @@ pub fn wire_ambient_agent_session_events(
                 | AmbientAgentViewModelEvent::ProgressUpdated
                 | AmbientAgentViewModelEvent::EnvironmentSelected
                 | AmbientAgentViewModelEvent::Failed { .. }
-                | AmbientAgentViewModelEvent::ShowCloudAgentCapacityModal
                 | AmbientAgentViewModelEvent::ShowAICreditModal
                 | AmbientAgentViewModelEvent::NeedsGithubAuth
                 | AmbientAgentViewModelEvent::Cancelled

@@ -52,7 +52,6 @@ use crate::network::NetworkStatus;
 use crate::notebooks::editor::keys::NotebookKeybindings;
 use crate::notebooks::notebook::NotebookView;
 use crate::pane_group::{Direction, PaneGroupAction, PaneId};
-use crate::pricing::PricingInfoModel;
 #[cfg(not(target_family = "wasm"))]
 use crate::remote_server::codebase_index_model::RemoteCodebaseIndexModel;
 use crate::server::cloud_objects::listener::Listener;
@@ -245,16 +244,11 @@ pub(crate) fn initialize_app_with_team_client(app: &mut App, team_client: Arc<dy
 
     app.update(experiments::init);
 
-    app.add_singleton_model(
-        crate::workspace::bonus_grant_notification_model::BonusGrantNotificationModel::new,
-    );
     app.add_singleton_model(|ctx| {
         CodebaseIndexManager::new_for_test(ServerApiProvider::as_ref(ctx).get(), ctx)
     });
     app.add_singleton_model(|ctx| PersistedWorkspace::new(vec![], HashMap::new(), None, ctx));
     app.add_singleton_model(|_| ProjectContextModel::default());
-    app.add_singleton_model(|_| PricingInfoModel::new());
-    app.add_singleton_model(crate::ai::pricing_promotion::PricingPromotionState::new);
     app.add_singleton_model(AIDocumentModel::new);
     app.add_singleton_model(|_| History::new(vec![]));
 
@@ -2038,17 +2032,8 @@ fn set_left_panel_visibility_across_tabs(is_enabled: bool, ctx: &mut ViewContext
     });
 }
 
-fn add_get_started_tab(workspace: &mut Workspace, ctx: &mut ViewContext<Workspace>) {
-    workspace.add_tab_with_pane_layout(
-        PanesLayout::Snapshot(Box::new(PaneNodeSnapshot::Leaf(LeafSnapshot {
-            is_focused: true,
-            custom_vertical_tabs_title: None,
-            contents: LeafContents::GetStarted,
-        }))),
-        Arc::new(HashMap::<PaneUuid, Vec<SerializedBlockListItem>>::new()),
-        None,
-        ctx,
-    );
+fn add_settings_tab(workspace: &mut Workspace, ctx: &mut ViewContext<Workspace>) {
+    workspace.show_settings(ctx);
 }
 
 fn find_terminal_tab_index(workspace: &Workspace, ctx: &AppContext) -> usize {
@@ -2136,7 +2121,6 @@ fn test_left_panel_window_scoped_reconciles_between_terminal_tabs_when_enabled()
 fn test_left_panel_window_scoped_non_following_tab_does_not_reconcile_but_updates_window_state() {
     let _conversation_list_guard =
         FeatureFlag::AgentViewConversationListView.override_enabled(false);
-    let _get_started_guard = FeatureFlag::GetStartedTab.override_enabled(true);
 
     App::test((), |mut app| async move {
         initialize_app(&mut app);
@@ -2150,9 +2134,9 @@ fn test_left_panel_window_scoped_non_following_tab_does_not_reconcile_but_update
             workspace.open_left_panel(ctx);
             assert!(workspace.left_panel_open);
 
-            // Create a non-following tab (e.g. Get Started), which should not auto-open even though
+            // Create a non-following tab (e.g. Settings), which should not auto-open even though
             // the window state is open.
-            add_get_started_tab(workspace, ctx);
+            add_settings_tab(workspace, ctx);
             let non_following_tab_index = find_non_following_tab_index(workspace, ctx);
             workspace.activate_tab(non_following_tab_index, ctx);
 

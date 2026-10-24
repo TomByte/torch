@@ -27,7 +27,6 @@ use crate::auth::{AuthStateProvider, UserUid};
 use crate::channel::ChannelState;
 use crate::cloud_object::model::persistence::CloudModel;
 use crate::cloud_object::{CloudObjectEventEntrypoint, ObjectType, Owner, Space};
-use crate::pricing::PricingInfoModel;
 use crate::server::experiments::{ServerExperiment, ServerExperiments, ServerExperimentsEvent};
 use crate::server::ids::ServerId;
 use crate::server::server_api::team::TeamClient;
@@ -880,12 +879,6 @@ impl UserWorkspaces {
     ) {
         match result {
             Ok(response) => {
-                if let Some(pricing_info) = response.pricing_info {
-                    PricingInfoModel::handle(ctx).update(ctx, |model, ctx| {
-                        model.update_pricing_info(pricing_info, ctx);
-                    });
-                }
-
                 if let Some(availability) = response.metadata.ai_credit_availability {
                     AIRequestUsageModel::handle(ctx).update(ctx, |usage_model, ctx| {
                         usage_model.apply_server_availability(Ok(availability), ctx);

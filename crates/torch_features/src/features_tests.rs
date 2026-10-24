@@ -31,8 +31,6 @@ fn local_child_harnesses_are_local_only_by_default() {
 #[test]
 fn torch_cannot_reenable_accounts_ai_or_cloud_with_runtime_overrides() {
     for flag in [
-        FeatureFlag::ForceLogin,
-        FeatureFlag::AgentOnboarding,
         FeatureFlag::AgentMode,
         FeatureFlag::AgentPredict,
         FeatureFlag::AgentViewPromptChip,
@@ -42,8 +40,6 @@ fn torch_cannot_reenable_accounts_ai_or_cloud_with_runtime_overrides() {
         let _enabled = flag.override_enabled(true);
         assert!(!flag.is_enabled(), "{flag:?} must stay disabled in Torch");
     }
-    let _disabled = FeatureFlag::SkipFirebaseAnonymousUser.override_enabled(false);
-    assert!(FeatureFlag::SkipFirebaseAnonymousUser.is_enabled());
 }
 
 /// Torch's updater only reads its own GitHub releases, so release builds may enable it.

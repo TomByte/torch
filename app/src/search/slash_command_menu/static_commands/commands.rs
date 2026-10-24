@@ -117,24 +117,6 @@ pub const CONNECT_GROK: StaticCommand = StaticCommand {
     argument: None,
 };
 
-pub const MANAGE_BILLING: StaticCommand = StaticCommand {
-    name: "/manage-billing",
-    description: "Open the team billing page in your browser",
-    kind: SlashCommandKind::ManageBilling,
-    supported_surfaces: SlashCommandSurfaces::TuiOnly,
-    availability: Availability::ALWAYS,
-    auto_enter_ai_mode: false,
-    argument: None,
-};
-pub const UPGRADE: StaticCommand = StaticCommand {
-    name: "/upgrade",
-    description: "Open the Torch upgrade page in your browser",
-    kind: SlashCommandKind::Upgrade,
-    supported_surfaces: SlashCommandSurfaces::TuiOnly,
-    availability: Availability::ALWAYS,
-    auto_enter_ai_mode: false,
-    argument: None,
-};
 pub const THEME: StaticCommand = StaticCommand {
     name: "/theme",
     description: "Set color theme",
@@ -163,16 +145,6 @@ pub const STATUS: StaticCommand = StaticCommand {
     name: "/status",
     description: "Show session and account status",
     kind: SlashCommandKind::Status,
-    supported_surfaces: SlashCommandSurfaces::TuiOnly,
-    availability: Availability::ALWAYS,
-    auto_enter_ai_mode: false,
-    argument: None,
-};
-
-pub const LOGOUT: StaticCommand = StaticCommand {
-    name: "/logout",
-    description: "Log out of Torch",
-    kind: SlashCommandKind::Logout,
     supported_surfaces: SlashCommandSurfaces::TuiOnly,
     availability: Availability::ALWAYS,
     auto_enter_ai_mode: false,
@@ -526,19 +498,6 @@ pub static MODEL: LazyLock<StaticCommand> = LazyLock::new(|| StaticCommand {
     auto_enter_ai_mode: true,
     argument: None,
 });
-
-/// TUI-only: the GUI switches teams from the title-bar pill, which opens a new window for the
-/// chosen team rather than re-scoping the current one. The TUI has a single window, so it
-/// switches in place instead.
-pub const TEAM: StaticCommand = StaticCommand {
-    name: "/team",
-    description: "Switch the active team",
-    kind: SlashCommandKind::Team,
-    supported_surfaces: SlashCommandSurfaces::TuiOnly,
-    availability: Availability::ALWAYS,
-    auto_enter_ai_mode: false,
-    argument: None,
-};
 
 pub static HOST: LazyLock<StaticCommand> = LazyLock::new(|| StaticCommand {
     name: "/host",
@@ -937,9 +896,6 @@ fn all_commands_for_all_surfaces() -> Vec<StaticCommand> {
         INIT,
         API_KEYS,
         CONNECT_GROK,
-        UPGRADE,
-        MANAGE_BILLING,
-        LOGOUT,
         OPEN_PROJECT_RULES,
         OPEN_RULES,
         AGENT.clone(),
@@ -958,7 +914,6 @@ fn all_commands_for_all_surfaces() -> Vec<StaticCommand> {
         EXPORT_TO_CLIPBOARD,
         COPY_DEBUGGING_ID,
         MODEL.clone(),
-        TEAM,
         STATUS,
         VIEW_LOGS,
         VOICE,

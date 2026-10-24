@@ -1228,7 +1228,6 @@ pub(super) fn render(props: Props, app: &AppContext) -> Box<dyn Element> {
                     FailedOutputProps {
                         error,
                         is_ai_input_enabled: props.is_ai_input_enabled,
-                        subscribe_button_handle: &props.state_handles.subscribe_button_handle,
                         aws_bedrock_credentials_error_view: props
                             .aws_bedrock_credentials_error_view,
                         gemini_enterprise_credentials_error_view: props

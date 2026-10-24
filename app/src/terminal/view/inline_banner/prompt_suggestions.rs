@@ -18,7 +18,6 @@ use torchui::{
     ViewContext, ViewHandle,
 };
 
-use crate::ai::AIRequestUsageModel;
 use crate::ai::agent::api::ServerConversationToken;
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent::{PassiveSuggestionTrigger, StaticQueryType};
@@ -36,8 +35,6 @@ use crate::terminal::view::{ContextMenuAction, InputType, PromptSuggestion, Term
 use crate::ui_components::blended_colors;
 use crate::ui_components::icons::Icon as WarpUIIcon;
 use crate::util::bindings::keybinding_name_to_keystroke;
-use crate::workspace::WorkspaceAction;
-use crate::workspaces::user_workspaces::UserWorkspaces;
 
 const INLINE_BANNER_SPACING: f32 = 8.;
 const INLINE_BANNER_BUTTON_PADDING: f32 = 8.;
@@ -128,7 +125,6 @@ fn render_button(
     debug_request_token: Option<ServerConversationToken>,
     prompt_alert_state: &PromptAlertState,
     should_shrink: bool,
-    force_enabled: bool,
     appearance: &Appearance,
     app: &AppContext,
 ) -> Box<dyn Element> {
@@ -136,7 +132,6 @@ fn render_button(
     let is_button_disabled = matches!(
         prompt_alert_state,
         PromptAlertState::NoConnection
-            | PromptAlertState::AnonymousUserRequestLimitHardGate
             | PromptAlertState::DelinquentDueToPaymentIssue
             | PromptAlertState::OveragesToggleableButNotEnabled
             | PromptAlertState::MonthlyOveragesSpendLimitReached
@@ -144,7 +139,7 @@ fn render_button(
             | PromptAlertState::EnterpriseIndividualSpendLimitReached
             | PromptAlertState::EnterpriseWorkspaceSpendLimitReached
             | PromptAlertState::RequestLimitReached
-    ) && !force_enabled;
+    );
     let opacity: f32 = if is_button_disabled { 0.5 } else { 1.0 };
     let opacity_u8 = (opacity * 255.0).round() as u8;
     let hoverable = Hoverable::new(mouse_state.clone(), |mouse_state| {
@@ -299,22 +294,8 @@ fn get_tooltip_text_for_alert_state(alert_state: &PromptAlertState) -> Option<St
     alert_state.tooltip_text().map(ToString::to_string)
 }
 
-/// Free-plan users who run out of Torch-provided AI credits should get a modal
-/// offering BYO/upgrade instead of a disabled button. Other disabled states
-/// (offline, payment issues, team overage gates) keep the disabled treatment.
-fn should_open_unavailable_modal(state: &PromptAlertState, app: &AppContext) -> bool {
-    matches!(state, PromptAlertState::RequestLimitReached)
-        && !UserWorkspaces::as_ref(app)
-            .current_workspace()
-            .is_some_and(|workspace| workspace.billing_metadata.is_user_on_paid_plan())
-        // ICPs who still receive base credits on the Free plan keep the disabled
-        // button; only offer the modal once the base allowance is gone.
-        && AIRequestUsageModel::as_ref(app).request_limit() == 0
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PromptSuggestionsEvent {
-    SignupAnonymousUser,
     OpenBillingPortal { team_uid: ServerId },
 }
 
@@ -351,9 +332,6 @@ impl PromptSuggestionsView {
 
     fn handle_prompt_alert_event(&mut self, event: &PromptAlertEvent, ctx: &mut ViewContext<Self>) {
         match event {
-            PromptAlertEvent::SignupAnonymousUser => {
-                ctx.emit(PromptSuggestionsEvent::SignupAnonymousUser);
-            }
             PromptAlertEvent::OpenBillingPortal { team_uid } => {
                 ctx.emit(PromptSuggestionsEvent::OpenBillingPortal {
                     team_uid: *team_uid,
@@ -381,7 +359,6 @@ impl View for PromptSuggestionsView {
             .with_main_axis_size(MainAxisSize::Max);
 
         let prompt_alert_state = self.prompt_alert.as_ref(app).state();
-        let open_unavailable_modal = should_open_unavailable_modal(prompt_alert_state, app);
 
         let Some(banner_state) = &self.banner_state else {
             return Empty::new().finish();
@@ -407,22 +384,15 @@ impl View for PromptSuggestionsView {
                     keybinding_name_to_keystroke(ACCEPT_PROMPT_SUGGESTION_KEYBINDING, app),
                     banner_state.accept_button_mouse_state.clone(),
                     Rc::new(move |ctx: &mut torchui::EventContext<'_>| {
-                        if open_unavailable_modal {
-                            ctx.dispatch_typed_action(
-                                WorkspaceAction::OpenPromptSuggestionsUnavailableModal,
-                            );
-                        } else {
-                            ctx.dispatch_typed_action(TerminalAction::ResolvePromptSuggestion(
-                                PromptSuggestionResolution::Accept {
-                                    interaction_source: InteractionSource::Button,
-                                },
-                            ));
-                        }
+                        ctx.dispatch_typed_action(TerminalAction::ResolvePromptSuggestion(
+                            PromptSuggestionResolution::Accept {
+                                interaction_source: InteractionSource::Button,
+                            },
+                        ));
                     }),
                     debug_request_token,
                     prompt_alert_state,
                     true, // should_shrink
-                    open_unavailable_modal,
                     appearance,
                     app,
                 ),
@@ -459,9 +429,6 @@ impl TypedActionView for PromptSuggestionsView {
 
     fn handle_action(&mut self, action: &PromptSuggestionsEvent, ctx: &mut ViewContext<Self>) {
         match action {
-            PromptSuggestionsEvent::SignupAnonymousUser => {
-                ctx.emit(PromptSuggestionsEvent::SignupAnonymousUser);
-            }
             PromptSuggestionsEvent::OpenBillingPortal { team_uid } => {
                 ctx.emit(PromptSuggestionsEvent::OpenBillingPortal {
                     team_uid: *team_uid,

@@ -1327,17 +1327,13 @@ impl Input {
             | SlashCommandKind::ResetStatusline
             | SlashCommandKind::ApiKeys
             | SlashCommandKind::ConnectGrok
-            | SlashCommandKind::Upgrade
-            | SlashCommandKind::ManageBilling
             | SlashCommandKind::ViewLogs
             | SlashCommandKind::Voice
             | SlashCommandKind::NaturalLanguageDetection
             | SlashCommandKind::Theme
             | SlashCommandKind::VimMode
             | SlashCommandKind::Exit
-            | SlashCommandKind::Logout
             | SlashCommandKind::Clear
-            | SlashCommandKind::Team
             | SlashCommandKind::Status => {
                 debug_assert!(
                     false,

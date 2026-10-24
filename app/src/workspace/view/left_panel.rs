@@ -13,7 +13,6 @@ use torchui::elements::{
 };
 use torchui::fonts::Weight;
 use torchui::platform::Cursor;
-use torchui::ui_components::button::ButtonVariant;
 use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use torchui::{
     AppContext, Entity, FocusContext, ModelHandle, SingletonEntity, TypedActionView, View,
@@ -24,7 +23,6 @@ use crate::TelemetryEvent;
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent_conversations_model::AgentConversationsModel;
 use crate::appearance::Appearance;
-use crate::auth::AuthStateProvider;
 use crate::code::buffer_location::LocalOrRemotePath;
 #[cfg(feature = "local_fs")]
 use crate::code::file_tree::FileTreeEvent;
@@ -77,7 +75,6 @@ struct MouseStateHandles {
     conversation_list_view_button: MouseStateHandle,
     global_search_button: MouseStateHandle,
     warp_drive_button: MouseStateHandle,
-    sign_in_button: MouseStateHandle,
 }
 
 #[derive(Clone, Debug)]
@@ -86,13 +83,12 @@ pub enum LeftPanelAction {
     GlobalSearch { entry_focus: GlobalSearchEntryFocus },
     WarpDrive,
     ConversationListView,
-    SignIn,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum ToolPanelAvailability {
     Available,
-    RequiresAccount,
+    Unavailable,
     RequiresAi,
 }
 
@@ -106,16 +102,11 @@ impl ToolPanelView {
                 if WarpDriveSettings::is_warp_drive_available(app) {
                     ToolPanelAvailability::Available
                 } else {
-                    ToolPanelAvailability::RequiresAccount
+                    ToolPanelAvailability::Unavailable
                 }
             }
             ToolPanelView::ConversationListView => {
-                if AuthStateProvider::as_ref(app)
-                    .get()
-                    .is_anonymous_or_logged_out()
-                {
-                    ToolPanelAvailability::RequiresAccount
-                } else if AISettings::as_ref(app).is_conversation_history_available(app) {
+                if AISettings::as_ref(app).is_conversation_history_available(app) {
                     ToolPanelAvailability::Available
                 } else {
                     ToolPanelAvailability::RequiresAi
@@ -142,7 +133,6 @@ pub enum LeftPanelEvent {
         conversation_title: String,
         terminal_view_id: Option<torchui::EntityId>,
     },
-    SignInRequested,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -255,14 +245,6 @@ impl LeftPanelView {
         availability: ToolPanelAvailability,
     ) -> Box<dyn Element> {
         let (title, description) = match (view, availability) {
-            (ToolPanelView::WarpDrive, ToolPanelAvailability::RequiresAccount) => (
-                "Sign in to access Torch Drive",
-                "Create an account to save and share workflows, notebooks, prompts, and more.",
-            ),
-            (ToolPanelView::ConversationListView, ToolPanelAvailability::RequiresAccount) => (
-                "Sign in to access Agent conversations",
-                "Create an account and enable AI to access your conversation history.",
-            ),
             (ToolPanelView::ConversationListView, ToolPanelAvailability::RequiresAi) => (
                 "Turn on AI to access Agent conversations",
                 "Enable Torch AI to access your conversation history.",
@@ -273,10 +255,6 @@ impl LeftPanelView {
                 | ToolPanelView::WarpDrive,
                 ToolPanelAvailability::RequiresAi,
             )
-            | (
-                ToolPanelView::ProjectExplorer | ToolPanelView::GlobalSearch { .. },
-                ToolPanelAvailability::RequiresAccount,
-            )
             | (_, ToolPanelAvailability::Available) => {
                 debug_assert!(false, "unexpected locked tool-panel state");
                 (
@@ -284,6 +262,10 @@ impl LeftPanelView {
                     "This feature is currently unavailable.",
                 )
             }
+            (_, ToolPanelAvailability::Unavailable) => (
+                "Feature unavailable",
+                "This feature is currently unavailable.",
+            ),
         };
         let theme = appearance.theme();
         let title = appearance
@@ -309,26 +291,11 @@ impl LeftPanelView {
             })
             .build()
             .finish();
-        let mut content = Flex::column()
+        let content = Flex::column()
             .with_main_axis_size(MainAxisSize::Min)
             .with_cross_axis_alignment(CrossAxisAlignment::Center)
             .with_child(title)
             .with_child(Container::new(description).with_margin_top(8.).finish());
-        if availability == ToolPanelAvailability::RequiresAccount {
-            let sign_in = appearance
-                .ui_builder()
-                .button(
-                    ButtonVariant::Accent,
-                    self.mouse_state_handles.sign_in_button.clone(),
-                )
-                .with_text_label("Sign in".to_string())
-                .build()
-                .on_click(|ctx, _, _| {
-                    ctx.dispatch_typed_action(LeftPanelAction::SignIn);
-                })
-                .finish();
-            content = content.with_child(Container::new(sign_in).with_margin_top(16.).finish());
-        }
         let content = ConstrainedBox::new(content.finish())
             .with_max_width(280.)
             .finish();
@@ -1040,7 +1007,6 @@ impl LeftPanelView {
                 LeftPanelAction::ConversationListView => {
                     self.active_view.get() == ToolPanelView::ConversationListView
                 }
-                LeftPanelAction::SignIn => false,
             };
         }
     }
@@ -1185,9 +1151,6 @@ impl LeftPanelView {
                 if self.active_view_availability(ctx) == ToolPanelAvailability::Available {
                     send_telemetry_from_ctx!(TelemetryEvent::ConversationListViewOpened, ctx);
                 }
-            }
-            LeftPanelAction::SignIn => {
-                ctx.emit(LeftPanelEvent::SignInRequested);
             }
         }
     }

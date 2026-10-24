@@ -1352,11 +1352,8 @@ impl AppearanceSettingsPageView {
         }
 
         // Tools panel tab visibility toggles. These control which of the four
-        // tabs appear in the tools panel and mirror the onboarding "Customize
-        // your UI" tools-panel selection (see `crates/onboarding`); each toggle
-        // points at the same backing setting as onboarding so the two surfaces
-        // stay in sync, and the tools panel already recomputes its available
-        // views live when these settings change (see `Workspace::new`).
+        // tabs appear in the tools panel, and the tools panel already recomputes its
+        // available views live when these settings change (see `Workspace::new`).
         // Each toggle is gated only on compile-time / feature-flag availability
         // of the corresponding tab (not on transient login/AI state), so the
         // section stays stable regardless of when the page is built.
@@ -3416,10 +3413,8 @@ impl SettingsWidget for ToolsPanelStateScopeWidget {
     }
 }
 
-/// Tools panel tab-visibility toggles. Each mirrors an onboarding tools-panel
-/// chip and points at the same backing setting so Settings and onboarding stay
-/// in sync; toggling live-updates the tools panel via `Workspace`'s settings
-/// subscriptions.
+/// Tools panel tab-visibility toggles. Toggling live-updates the tools panel via
+/// `Workspace`'s settings subscriptions.
 #[derive(Default)]
 struct ToolsPanelProjectExplorerWidget {
     switch_state: SwitchStateHandle,

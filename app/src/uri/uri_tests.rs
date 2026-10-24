@@ -396,7 +396,7 @@ fn test_action_open_file_editor_parse_rejects_invalid_line_or_column() {
 #[test]
 fn validate_custom_uri_errors_do_not_leak_query_string() {
     // Unexpected scheme.
-    let url = Url::parse("https://auth/desktop_redirect?refresh_token=LEAKED").unwrap();
+    let url = Url::parse("https://home/desktop_redirect?refresh_token=LEAKED").unwrap();
     let err = validate_custom_uri(&url).unwrap_err();
     let msg = format!("{err:?}");
     assert!(!msg.contains("refresh_token"), "{msg}");
@@ -415,7 +415,7 @@ fn validate_custom_uri_errors_do_not_leak_query_string() {
 
     // Unexpected path for a host that doesn't allow arbitrary paths.
     let url = Url::parse(&format!(
-        "{}://auth/not_the_redirect?refresh_token=LEAKED",
+        "{}://home/not_the_redirect?refresh_token=LEAKED",
         ChannelState::url_scheme()
     ))
     .unwrap();
@@ -491,8 +491,6 @@ fn test_settings_section_for_simple_subpage() {
     );
     assert!(settings_section_for_simple_subpage("not_a_subpage").is_none());
 }
-
-// -- post-checkout desktop hand-off ------------------------------------------
 
 // Regression coverage for issue #9005: shell scripts opened via `file://` should run,
 // not open in the editor. Exercised through the pure routing helper to avoid standing

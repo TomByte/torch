@@ -10,13 +10,11 @@ mod app_state;
 mod auth;
 mod autoupdate;
 mod banner;
-mod billing;
 mod changelog_model;
 mod chip_configurator;
 mod cloud_object;
 mod code;
 mod code_review;
-mod coding_entrypoints;
 mod coding_panel_enablement_state;
 mod command_palette;
 mod completer;
@@ -55,16 +53,13 @@ mod platform;
 mod prefix;
 #[cfg(target_os = "macos")]
 mod preview_config_migration;
-mod pricing;
 mod profiling;
 mod projects;
 mod prompt;
 mod quit_warning;
-mod referral_theme_status;
 #[allow(dead_code)]
 mod remote_server;
 mod resource_limits;
-mod reward_view;
 mod safe_triangle;
 mod search_bar;
 mod server;
@@ -200,7 +195,6 @@ use interval_timer::IntervalTimer;
 use itertools::Itertools;
 #[cfg(feature = "integration_tests")]
 pub use persistence::testing as sqlite_testing;
-use referral_theme_status::ReferralThemeStatus;
 use server::server_api::ServerApiProvider;
 use settings::{ExtraMetaKeys, PrivacySettings};
 #[cfg(feature = "local_fs")]
@@ -222,7 +216,6 @@ use torch_logging::{LogDestination, LogFrontend};
 use torch_server_client::iap::{IapManager, IapManagerEvent, IapState, ManagedIapMint};
 use torch_server_client::network_logging::NetworkLogModel;
 use torchui::integration::TestDriver;
-use torchui::modals::{AlertDialogWithCallbacks, AppModalCallback};
 use torchui::platform::TerminationMode;
 use torchui::platform::app::{ApproveTerminateResult, TerminationRequestSource};
 use torchui::windowing::state::ApplicationStage;
@@ -1368,7 +1361,6 @@ pub(crate) fn initialize_app(
 
     let model_event_sender = persistence_writer.sender();
 
-    let referral_theme_status = ctx.add_model(ReferralThemeStatus::new);
     let tips_handle = ctx.add_model(|_| user_defaults_on_startup.tips_data);
     let user_default_shell_unsupported_banner_model_handle =
         ctx.add_model(|_| user_defaults_on_startup.user_default_shell_unsupported_banner_state);
@@ -1389,7 +1381,6 @@ pub(crate) fn initialize_app(
         GlobalResourceHandlesProvider::new(GlobalResourceHandles {
             model_event_sender,
             tips_completed: tips_handle,
-            referral_theme_status,
             user_default_shell_unsupported_banner_model_handle,
             settings_file_error,
         })
@@ -1590,8 +1581,6 @@ pub(crate) fn initialize_app(
     ctx.add_singleton_model(|_| RecordingController::new());
     ctx.add_singleton_model(|_| ExecutionProfileEditorManager::default());
     ctx.add_singleton_model(|_| NetworkLogPaneManager::default());
-    ctx.add_singleton_model(|_| pricing::PricingInfoModel::new());
-    ctx.add_singleton_model(ai::pricing_promotion::PricingPromotionState::new);
     ctx.add_singleton_model(|ctx| {
         // Not using the *Provider types isn't ideal, but it's worth it for the ability to move managed secrets to a separate crate.
         ManagedSecretManager::new(
@@ -1826,7 +1815,6 @@ pub(crate) fn initialize_app(
     terminal::init(ctx);
     input::init(ctx);
     editor::init(ctx);
-    onboarding::init(ctx);
     menu::init(ctx);
     tips::tip_view::init(ctx);
     launch_configs::init(ctx);
@@ -1836,13 +1824,10 @@ pub(crate) fn initialize_app(
     themes::theme_deletion_modal::init(ctx);
     root_view::init(ctx);
     voltron::init(ctx);
-    auth::init(ctx);
-    reward_view::init(ctx);
     crate::view_components::find::init(ctx);
     prompt::editor_modal::init(ctx);
     ai::blocklist::agent_view::editor::init(ctx);
     undo_close::init(ctx);
-    billing::shared_objects_creation_denied_modal::init(ctx);
     tab_configs::new_worktree_modal::init(ctx);
     tab_configs::params_modal::init(ctx);
     ai::blocklist::init(ctx);
@@ -1857,7 +1842,6 @@ pub(crate) fn initialize_app(
     env_vars::view::env_var_collection::init(ctx);
     ai::agent::todos::popup::init(ctx);
     terminal::view::init_environment::mode_selector::init(ctx);
-    coding_entrypoints::project_buttons::init(ctx);
     if FeatureFlag::CodeReviewSaveChanges.is_enabled() {
         code_review::init(ctx);
     }
@@ -1880,9 +1864,6 @@ pub(crate) fn initialize_app(
     ctx.add_singleton_model(|_| ToastStack);
     ctx.add_singleton_model(|_| GlobalCodeReviewModel);
     ctx.add_singleton_model(workspace::OneTimeModalModel::new);
-    ctx.add_singleton_model(
-        workspace::bonus_grant_notification_model::BonusGrantNotificationModel::new,
-    );
     #[cfg(feature = "local_fs")]
     ctx.add_singleton_model(FileModel::new);
     ctx.add_singleton_model(GlobalBufferModel::new);
@@ -2671,34 +2652,6 @@ pub(crate) fn app_callbacks(
             ctx.dispatch_global_action("workspace:save_app", &());
         })),
         ..Default::default()
-    }
-}
-
-/// Focuses the active window or if there isn't one then a window with a running process
-/// and then shows the native modal.
-fn focus_running_window_and_show_native_modal(
-    sessions_summary: RunningSessionSummary,
-    dialog_with_callbacks: AlertDialogWithCallbacks<AppModalCallback>,
-    ctx: &mut AppContext,
-) {
-    let windowing_model = ctx.windows();
-    let active_window_id = windowing_model.active_window();
-    // Show the nav palette in the active window. If there is no active window,
-    // arbitrarily pick one of the windows having a running process.
-    let window_id_to_focus = active_window_id.unwrap_or_else(|| {
-        *sessions_summary
-            .windows_running()
-            .iter()
-            .next()
-            .expect("already checked len > 0")
-    });
-    ctx.windows().show_window_and_focus_app(window_id_to_focus);
-    if let Some(workspaces) = ctx.views_of_type::<Workspace>(window_id_to_focus)
-        && let Some(handle) = workspaces.first()
-    {
-        handle.update(ctx, |view, ctx| {
-            view.show_native_modal(dialog_with_callbacks, ctx);
-        });
     }
 }
 

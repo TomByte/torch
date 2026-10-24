@@ -24,11 +24,9 @@ mod local_control;
 pub mod macros;
 pub mod manager;
 pub mod native_preference;
-mod onboarding;
 mod pane;
 mod privacy;
 pub mod projects;
-mod same_line_prompt_block;
 #[cfg(not(target_family = "wasm"))]
 pub(crate) mod schema_generation;
 mod scroll;
@@ -61,11 +59,9 @@ pub use input_mode::*;
 pub use linux::*;
 pub use local_control::*;
 pub use native_preference::*;
-pub(crate) use onboarding::*;
 pub use pane::*;
 pub use privacy::*;
 pub use projects::*;
-pub use same_line_prompt_block::*;
 #[cfg(not(target_family = "wasm"))]
 pub use schema_generation::dump_settings_schema;
 pub use scroll::*;

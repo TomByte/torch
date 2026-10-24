@@ -1,7 +1,6 @@
 mod action;
 mod active_session;
 pub(crate) mod auto_handoff;
-pub mod bonus_grant_notification_model;
 #[cfg(target_os = "macos")]
 pub(crate) mod cli_install;
 mod close_session_confirmation_dialog;
@@ -10,7 +9,6 @@ pub mod delete_conversation_confirmation_dialog;
 mod global_actions;
 pub mod header_toolbar_editor;
 pub mod header_toolbar_item;
-pub mod hoa_onboarding;
 mod home;
 mod lightbox_view;
 mod native_modal;
@@ -87,7 +85,6 @@ pub fn init(app: &mut AppContext) {
     rewind_confirmation_dialog::init(app);
     delete_conversation_confirmation_dialog::init(app);
     crate::tab_configs::remove_confirmation_dialog::init(app);
-    hoa_onboarding::init(app);
     tab_configs::session_config_modal::init(app);
     view::launch_modal::oz_launch::init(app);
     view::openwarp_launch_modal::init(app);
@@ -96,9 +93,7 @@ pub fn init(app: &mut AppContext) {
     view::feature_intro_modal::init(app);
     view::auto_handoff_sleep_modal::init(app);
     view::chatgpt_plan_modal::init(app);
-    view::cloud_agent_capacity_modal::init(app);
     view::codex_modal::init(app);
-    view::free_ai_removal_modal::init(app);
     if code::editor_available() {
         view::global_search::view::GlobalSearchView::init(app);
     }
@@ -123,16 +118,6 @@ pub fn init(app: &mut AppContext) {
         id!("Workspace"),
     )]);
     app.register_fixed_bindings([
-        FixedBinding::new(
-            "escape",
-            WorkspaceAction::DismissSessionConfigTabConfigChip,
-            id!("Workspace") & id!(flags::SESSION_CONFIG_TAB_CONFIG_CHIP_OPEN),
-        ),
-        FixedBinding::new(
-            "enter",
-            WorkspaceAction::DismissSessionConfigTabConfigChip,
-            id!("Workspace") & id!(flags::SESSION_CONFIG_TAB_CONFIG_CHIP_OPEN),
-        ),
         // Feature intro never steals focus, so Escape must be handled at the workspace
         // level while the popover is open rather than on FeatureIntroModal itself.
         FixedBinding::new(
@@ -159,27 +144,10 @@ pub fn init(app: &mut AppContext) {
             )
             .with_context_predicate(id!("Workspace")),
         ]);
-        app.register_fixed_bindings([FixedBinding::empty(
-            "[Debug] View first-time user experience",
-            WorkspaceAction::AddGetStartedTab,
-            id!("Workspace"),
-        )]);
         #[cfg(debug_assertions)]
         {
-            // Debug actions for build plan migration modal (command palette only)
+            // Debug actions (command palette only)
             app.register_editable_bindings([
-                EditableBinding::new(
-                    "workspace:open_build_plan_migration_modal",
-                    "[Debug] Open Build Plan Migration Modal",
-                    WorkspaceAction::OpenBuildPlanMigrationModal,
-                )
-                .with_context_predicate(id!("Workspace")),
-                EditableBinding::new(
-                    "workspace:reset_build_plan_migration_modal_state",
-                    "[Debug] Reset Build Plan Migration Modal State",
-                    WorkspaceAction::ResetBuildPlanMigrationModalState,
-                )
-                .with_context_predicate(id!("Workspace")),
                 EditableBinding::new(
                     "workspace:debug_reset_aws_bedrock_login_banner_dismissed",
                     "[Debug] Un-dismiss AWS login banner",
@@ -277,27 +245,9 @@ pub fn init(app: &mut AppContext) {
                 )
                 .with_context_predicate(id!("Workspace")),
                 EditableBinding::new(
-                    "workspace:open_free_ai_removal_modal",
-                    "[Debug] Open Free AI Removal Modal",
-                    WorkspaceAction::OpenFreeAiRemovalModal,
-                )
-                .with_context_predicate(id!("Workspace")),
-                EditableBinding::new(
-                    "workspace:reset_free_ai_removal_modal_state",
-                    "[Debug] Reset Free AI Removal Modal State",
-                    WorkspaceAction::ResetFreeAiRemovalModalState,
-                )
-                .with_context_predicate(id!("Workspace")),
-                EditableBinding::new(
                     "workspace:open_session_config_modal",
                     "[Debug] Open Session Config Modal",
                     WorkspaceAction::ShowSessionConfigModal,
-                )
-                .with_context_predicate(id!("Workspace")),
-                EditableBinding::new(
-                    "workspace:show_hoa_onboarding_flow",
-                    "[Debug] Start HOA Onboarding Flow",
-                    WorkspaceAction::ShowHoaOnboardingFlow,
                 )
                 .with_context_predicate(id!("Workspace")),
             ]);
@@ -1266,16 +1216,6 @@ pub fn init(app: &mut AppContext) {
             .with_context_predicate(id!("Workspace") & !id!("AutoupdateState_UpdateReady"))
             .with_enabled(|| ContextFlag::PromptForVersionUpdates.is_enabled()),
         ]);
-    }
-
-    if !ChannelState::is_local_only() {
-        app.register_editable_bindings([EditableBinding::new(
-            "workspace:log_out",
-            "Log out",
-            WorkspaceAction::LogOut,
-        )
-        .with_group(bindings::BindingGroup::Settings.as_str())
-        .with_context_predicate(id!("Workspace") & !id!("IsAnonymousUser"))]);
     }
 
     if !FeatureFlag::AvatarInTabBar.is_enabled() && !ChannelState::is_local_only() {

@@ -21,7 +21,6 @@ use crate::ai::request_usage_model::AIRequestUsageModel;
 use crate::auth::AuthStateProvider;
 use crate::network::{NetworkStatus, NetworkStatusEvent, NetworkStatusKind};
 use crate::persistence::ModelEvent;
-use crate::pricing::PricingInfoModel;
 use crate::server::retry_strategies::{
     OUT_OF_BAND_REQUEST_RETRY_STRATEGY, PERIODIC_POLL, PERIODIC_POLL_RETRY_STRATEGY, with_retry,
 };
@@ -337,12 +336,6 @@ impl TeamUpdateManager {
     ) -> Option<Result<()>> {
         match request_state {
             RequestState::RequestSucceeded(response) => {
-                if let Some(pricing_info) = response.pricing_info.clone() {
-                    PricingInfoModel::handle(ctx).update(ctx, |model, ctx| {
-                        model.update_pricing_info(pricing_info, ctx);
-                    });
-                }
-
                 // Right now, this function is coupled with how we handle leaving a team.
                 // TODO(zheng) refactor so we can separate these two cases and have clearer logic.
                 self.on_workspaces_updated(Ok(response.metadata), ctx);

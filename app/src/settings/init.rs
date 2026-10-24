@@ -17,9 +17,9 @@ use super::{
     AISettings, AccessibilitySettings, AliasExpansionSettings, AppEditorSettings,
     BlockVisibilitySettings, ChangelogSettings, CodeSettings, DebugSettings, EmacsBindingsSettings,
     FontSettings, FontSettingsChangedEvent, GPUSettings, InputBoxType, InputModeSettings,
-    InputSettings, LocalControlSettings, PaneSettings, SameLinePromptBlockSettings, ScrollSettings,
-    SelectionSettings, SharedObjectLimitBannerSettings, SshSettings, ThemeSettings,
-    VimBannerSettings, WarpDrivePrivacySettings,
+    InputSettings, LocalControlSettings, PaneSettings, ScrollSettings, SelectionSettings,
+    SharedObjectLimitBannerSettings, SshSettings, ThemeSettings, VimBannerSettings,
+    WarpDrivePrivacySettings,
 };
 use crate::ai::cloud_agent_settings::CloudAgentSettings;
 use crate::appearance;
@@ -98,7 +98,6 @@ pub fn register_all_settings(ctx: &mut AppContext) {
     WarpDriveSettings::register(ctx);
     WorkflowAliases::register(ctx);
     EmacsBindingsSettings::register(ctx);
-    SameLinePromptBlockSettings::register(ctx);
     SemanticSelection::register(ctx);
     if FeatureFlag::WarpControlCli.is_enabled() {
         LocalControlSettings::register(ctx);

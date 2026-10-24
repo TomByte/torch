@@ -1,6 +1,5 @@
 use settings::macros::define_settings_group;
 use settings::{RespectUserSyncSetting, SupportedPlatforms, SyncToCloud};
-use torch_core::features::FeatureFlag;
 
 use super::DriveSortOrder;
 
@@ -16,14 +15,6 @@ define_settings_group!(WarpDriveSettings, settings: [
         private: false,
         toml_path: "warp_drive.sorting_choice",
         description: "The sort order for items in Torch Drive.",
-    },
-    sharing_onboarding_block_shown: WarpDriveSharingOnboardingBlockShown {
-        type: bool,
-        default: false,
-        supported_platforms: SupportedPlatforms::ALL,
-        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
-        surface: settings::SettingSurfaces::GUI,
-        private: true,
     },
     // Controls whether Torch Drive appears in the tools panel, command palette, and command search.
     enable_warp_drive: EnableWarpDrive {
@@ -51,10 +42,9 @@ impl WarpDriveSettings {
         }
 
         use torchui::SingletonEntity as _;
-        !FeatureFlag::SkipFirebaseAnonymousUser.is_enabled()
-            || !crate::auth::AuthStateProvider::as_ref(app)
-                .get()
-                .is_anonymous_or_logged_out()
+        !crate::auth::AuthStateProvider::as_ref(app)
+            .get()
+            .is_anonymous_or_logged_out()
     }
     /// Returns whether Torch Drive should be considered enabled.
     /// Returns `false` when the user is anonymous or fully logged out,

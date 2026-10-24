@@ -27,7 +27,7 @@ fn test_queueing_behavior() {
         let autoupdate_state = initialize_app(&mut app);
 
         app.update_model(&autoupdate_state, |autoupdate, ctx| {
-            // Simulate post-onboarding state so the polling_started gate doesn't interfere.
+            // Simulate polling having started so the polling_started gate doesn't interfere.
             autoupdate.polling_started = true;
             assert_eq!(autoupdate.get_next_request(ctx), None);
             autoupdate.request_queue.push_back(RequestType::DailyCheck);

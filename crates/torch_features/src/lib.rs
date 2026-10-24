@@ -12,7 +12,6 @@ pub enum FeatureFlag {
 
     WelcomeTips,
     ThinStrokes,
-    WelcomeBlock,
     KnowledgeSidebar,
 
     RuntimeFeatureFlags,
@@ -190,8 +189,6 @@ pub enum FeatureFlag {
     /// Enables partial next command suggestions with a prefix.
     PartialNextCommandSuggestions,
 
-    AIGeneratedOnboardingSuggestions,
-
     /// Enables iTerm image rendering
     ITermImages,
 
@@ -233,17 +230,11 @@ pub enum FeatureFlag {
     /// Enables the XML output system prompt for the pre-plan agent in Agent Mode.
     AgentModePrePlanXML,
 
-    /// Enables Agent Mode onboarding.
-    AgentOnboarding,
-
     /// Enables suggested rules.
     SuggestedRules,
 
     /// Enables suggested workflows for Agent Mode.
     SuggestedAgentModeWorkflows,
-
-    /// Forces users to login.
-    ForceLogin,
 
     /// Enables prediction of Agent Mode queries.
     PredictAMQueries,
@@ -371,9 +362,6 @@ pub enum FeatureFlag {
 
     /// Gates the bundled skill-based implementation of PR comment fetching.
     PRCommentsSkill,
-
-    /// A new first-time user experience which prioritizes choosing a coding repository.
-    GetStartedTab,
 
     /// Enables Projects and Project management
     Projects,
@@ -790,11 +778,6 @@ pub enum FeatureFlag {
     /// Requires HOANotifications to also be enabled.
     GeminiNotifications,
 
-    /// When enabled, the "Skip for now" login flow does not create a Firebase
-    /// anonymous user. The user remains fully logged out (no credentials) and
-    /// login-gated features are disabled until they sign in.
-    SkipFirebaseAnonymousUser,
-
     /// Enables tab configs — user-definable TOML templates for launching custom tab layouts.
     TabConfigs,
 
@@ -812,10 +795,6 @@ pub enum FeatureFlag {
 
     /// Enables conversation retrieval via the CLI (oz run conversation get, oz run get --conversation).
     ConversationApi,
-
-    /// Guided onboarding flow for existing users introducing HOA features
-    /// (vertical tabs, agent inbox, tab configs).
-    HOAOnboardingFlow,
 
     /// Enables commit, push, and create-PR actions in the code review panel.
     GitOperationsInCodeReview,
@@ -935,10 +914,6 @@ pub enum FeatureFlag {
     /// orchestration (`run_agents`) confirmation card and plan-card config
     /// block for choosing a runner when starting remote child agents.
     CloudAgentRunners,
-
-    /// Gates the account-first onboarding flow, including the reordered
-    /// pre-auth slides and post-auth account offer.
-    AccountFirstOnboarding,
 
     /// Accepts well-known non-UUID managed MCP ids (e.g. `"linear"`) as
     /// `warp_id` values in MCP configs and as bare identifiers in CLI
@@ -1112,8 +1087,6 @@ impl FeatureFlag {
                     | Self::AgentViewPromptChip
                     | Self::AgentViewConversationListView
                     | Self::AgentManagementView
-                    | Self::AgentOnboarding
-                    | Self::ForceLogin
                     | Self::AvatarInTabBar
                     | Self::CloudObjects
                     | Self::CloudEnvironments
@@ -1122,9 +1095,7 @@ impl FeatureFlag {
                     | Self::CloudConversations
                     | Self::CreatingSharedSessions
                     | Self::ViewingSharedSessions
-                    | Self::WelcomeBlock
                     | Self::WelcomeTips
-                    | Self::AIGeneratedOnboardingSuggestions
                     | Self::Changelog
                     | Self::OzChangelogUpdates
                     | Self::GlobalAIAnalyticsBanner
@@ -1134,8 +1105,6 @@ impl FeatureFlag {
                     | Self::AIContextMenuEnabled
                     | Self::AmbientAgentsCommandLine
                     | Self::HOANotifications
-                    | Self::HOAOnboardingFlow
-                    | Self::AccountFirstOnboarding
                     | Self::OpenWarpLaunchModal
                     | Self::CodeFindReplace
                     | Self::CommandPaletteFileSearch
@@ -1157,9 +1126,6 @@ impl FeatureFlag {
                     | Self::ChatGPTSubscription
             ) {
                 return false;
-            }
-            if matches!(self, Self::SkipFirebaseAnonymousUser) {
-                return true;
             }
         }
 

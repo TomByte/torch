@@ -44,11 +44,9 @@ pub(crate) mod harness_display;
 pub(crate) mod llms;
 pub(crate) mod local_harness_setup;
 pub(crate) mod metadata_project_rules;
-pub mod onboarding;
 pub(crate) mod orchestration;
 pub(crate) mod persisted_workspace;
 pub(crate) mod predict;
-pub(crate) mod pricing_promotion;
 #[cfg(all(not(target_family = "wasm"), feature = "local_fs"))]
 pub(crate) mod remote_agent_context;
 pub(crate) mod remote_context_files;

@@ -20,8 +20,6 @@ use torchui::windowing::WindowManager;
 use torchui::{AppContext, SingletonEntity};
 
 use crate::ai::persisted_workspace::PersistedWorkspace;
-use crate::auth;
-use crate::auth::AuthStateProvider;
 use crate::default_terminal::DefaultTerminal;
 use crate::features::{FeatureFlag, runtime_flags_menu_items};
 use crate::root_view::OpenLaunchConfigArg;
@@ -231,23 +229,6 @@ fn make_new_app_menu(ctx: &AppContext) -> Menu {
         None,
     )));
     menu_items.push(MenuItem::Separator);
-    if !ChannelState::is_local_only() {
-        menu_items.push(MenuItem::Custom(CustomMenuItem::new(
-            "Log out",
-            auth::maybe_log_out,
-            move |_, ctx| {
-                let is_anonymous = AuthStateProvider::handle(ctx)
-                    .as_ref(ctx)
-                    .get()
-                    .is_anonymous_or_logged_out();
-                MenuItemPropertyChanges {
-                    disabled: Some(is_anonymous),
-                    ..Default::default()
-                }
-            },
-            None,
-        )));
-    }
     menu_items.push(MenuItem::Standard(StandardAction::Quit));
     Menu::new("Torch", menu_items)
 }
@@ -938,13 +919,6 @@ fn debug_menu_items() -> Vec<MenuItem> {
                 }
                 let _ = writer.flush();
             },
-            no_updates,
-            None,
-        )));
-
-        debug_menu_items.push(MenuItem::Custom(CustomMenuItem::new(
-            "Create anonymous user",
-            move |ctx| ctx.dispatch_global_action("workspace:debug_create_anonymous_user", &()),
             no_updates,
             None,
         )));

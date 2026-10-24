@@ -9,23 +9,6 @@ pub mod theme_deletion_modal;
 
 use torch_core::ui::theme::WarpTheme;
 
-pub fn onboarding_theme_picker_themes() -> [WarpTheme; 4] {
-    if torch_core::channel::ChannelState::is_local_only() {
-        return [
-            default_themes::light_theme(),
-            default_themes::dark_theme(),
-            default_themes::kanagawa(),
-            default_themes::ayu(),
-        ];
-    }
-    [
-        default_themes::phenomenon(),
-        default_themes::dark_theme(),
-        default_themes::light_theme(),
-        default_themes::adeberry(),
-    ]
-}
-
 /// Quiet fills for the terminal composer, restored history and command palette.
 /// Keep custom themes driven by their own foreground/background colors.
 pub fn command_surface(theme: &WarpTheme) -> torch_core::ui::theme::Fill {

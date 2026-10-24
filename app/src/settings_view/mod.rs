@@ -345,7 +345,6 @@ pub mod flags {
     pub const SHOW_VERTICAL_TAB_PANEL_IN_RESTORED_WINDOWS_FLAG: &str =
         "Show_Vertical_Tab_Panel_In_Restored_Windows";
     pub const ALT_SCREEN_PADDING_FLAG: &str = "Alt_Screen_Padding";
-    pub const SESSION_CONFIG_TAB_CONFIG_CHIP_OPEN: &str = "Session_Config_Tab_Config_Chip_Open";
     pub const FEATURE_INTRO_MODAL_OPEN: &str = "Feature_Intro_Modal_Open";
     pub const FOCUS_PANES_ON_HOVER_CONTEXT_FLAG: &str = "Focus_Panes_On_Hover";
     pub const HIDE_WORKSPACE_DECORATIONS_CONTEXT_FLAG: &str = "Hide_Workspace_Decorations";

@@ -153,8 +153,6 @@ pub enum LeafContents {
     /// The in-app network log pane. Not persisted across restarts because the
     /// backing log is an in-memory ring buffer that starts empty on launch.
     NetworkLog,
-    /// A new first-time user experience which prioritizes choosing a coding repository.
-    GetStarted,
 }
 
 #[cfg(feature = "local_fs")]
@@ -188,8 +186,7 @@ impl LeafContents {
             | LeafContents::CustomRouterEditor
             | LeafContents::ExecutionProfileEditor
             | LeafContents::CodeReview(_)
-            | LeafContents::AmbientAgent(_)
-            | LeafContents::GetStarted => true,
+            | LeafContents::AmbientAgent(_) => true,
         }
     }
 }

@@ -491,7 +491,6 @@ pub(super) struct AIBlockStateHandles {
     /// Mouse state handle for the invalid API key button
 
     /// Mouse state handle for the Subscribe button shown on the out-of-credits error
-    subscribe_button_handle: MouseStateHandle,
 
     /// Per-action mouse state handles for the recovery buttons on a ChatGPT subscription
     /// error, indexed in the server's action order.
@@ -2971,18 +2970,6 @@ impl AIBlock {
             );
         }
 
-        // This is used to trigger the theme chooser opening when the theme chooser onboarding block is active.
-        if let Some(text_message) = output.text_from_agent_output().last()
-            && text_message.sections.iter().any(|section| {
-                if let AIAgentTextSection::PlainText { text } = section {
-                    text.text().contains("The matrix theme is now available at")
-                } else {
-                    false
-                }
-            })
-        {
-            ctx.emit(AIBlockEvent::OpenThemeChooser);
-        }
         if self.requested_action_ids.is_empty() {
             // There are no actions to be taken in this block, it is finished.
             self.finish(FinishReason::Complete, ctx);
@@ -6221,7 +6208,6 @@ pub enum AIBlockEvent {
         rule_and_id: SuggestedRuleAndId,
     },
     FocusTerminal,
-    OpenThemeChooser,
     #[cfg(windows)]
     WindowsCtrlC,
     AIOutputUpdated,

@@ -48,7 +48,6 @@ use crate::network::NetworkStatus;
 use crate::notebooks::editor::keys::NotebookKeybindings;
 use crate::notebooks::manager::NotebookManager;
 use crate::notebooks::notebook::NotebookView;
-use crate::pricing::PricingInfoModel;
 use crate::resource_center::TipsCompleted;
 use crate::search::files::model::FileSearchModel;
 use crate::server::cloud_objects::listener::Listener;
@@ -192,8 +191,6 @@ fn initialize_app_with_history(app: &mut App, conversations: Vec<AgentConversati
     app.add_singleton_model(|_| WorkspaceRegistry::new());
     app.add_singleton_model(UndoCloseStack::new);
     app.add_singleton_model(|_| IgnoredSuggestionsModel::new(vec![]));
-    app.add_singleton_model(|_| PricingInfoModel::new());
-    app.add_singleton_model(crate::ai::pricing_promotion::PricingPromotionState::new);
     app.add_singleton_model(AIDocumentModel::new);
     app.add_singleton_model(|_| History::new(vec![]));
     app.add_singleton_model(|_| GitHubAuthNotifier::new());
@@ -376,7 +373,7 @@ impl pane::PaneContent for PreAttachReturnsFalsePane {
     }
 
     fn snapshot(&self, _app: &AppContext) -> LeafContents {
-        LeafContents::GetStarted
+        LeafContents::NetworkLog
     }
 
     fn has_application_focus(&self, _ctx: &mut ViewContext<PaneGroup>) -> bool {

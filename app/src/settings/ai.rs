@@ -1621,20 +1621,6 @@ define_settings_group!(AISettings, settings: [
     }
 
     // This is not a user-visible setting - it's merely a one-time flag to track if the
-    // free-AI-removal notice modal has been shown to (or silently marked as seen for) the user.
-    //
-    // We model it as a setting so it's only shown once to a given user regardless of the number of
-    // devices they use.
-    did_check_to_trigger_free_ai_removal_modal: DidShowFreeAiRemovalModal {
-        type: bool,
-        default: false,
-        supported_platforms: SupportedPlatforms::ALL,
-        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::No),
-        surface: settings::SettingSurfaces::GUI,
-        private: true,
-    }
-
-    // This is not a user-visible setting - it's merely a one-time flag to track if the
     // "You're using your ChatGPT plan" modal has been shown for the user's current ChatGPT
     // connection. Reset when the user disconnects so a later reconnect shows it again.
     //

@@ -1162,7 +1162,6 @@ fn save_pane_state(
         LeafContents::ExecutionProfileEditor | LeafContents::CustomRouterEditor => {
             EXECUTION_PROFILE_EDITOR_PANE_KIND
         }
-        LeafContents::GetStarted => GET_STARTED_PANE_KIND,
         LeafContents::AIDocument(_) => AI_DOCUMENT_PANE_KIND,
         LeafContents::EnvironmentManagement(_) | LeafContents::NetworkLog => {
             // These pane types are filtered out before this function is
@@ -1361,9 +1360,6 @@ fn save_pane_state(
         }
         LeafContents::ExecutionProfileEditor | LeafContents::CustomRouterEditor => {
             // Editor panes: no pane-specific data to save.
-        }
-        LeafContents::GetStarted => {
-            // Stateless
         }
         LeafContents::AIDocument(ai_document_snapshot) => match ai_document_snapshot {
             crate::app_state::AIDocumentPaneSnapshot::Local {
@@ -2353,7 +2349,9 @@ fn read_node(conn: &mut SqliteConnection, node: model::PaneNode) -> Result<PaneN
                         }
                     }
                 }
-                GET_STARTED_PANE_KIND => LeafContents::GetStarted,
+                GET_STARTED_PANE_KIND => {
+                    bail!("Legacy get-started panes are no longer supported")
+                }
                 AI_DOCUMENT_PANE_KIND => {
                     let ai_document_pane = schema::ai_document_panes::dsl::ai_document_panes
                         .find(node.id)

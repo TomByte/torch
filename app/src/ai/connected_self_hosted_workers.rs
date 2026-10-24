@@ -36,16 +36,10 @@ impl ConnectedSelfHostedWorkersModel {
             AuthManagerEvent::AuthComplete => {
                 me.clear_workers(ctx);
             }
-            AuthManagerEvent::AuthFailed(_)
-            | AuthManagerEvent::SkippedLogin
-            | AuthManagerEvent::NeedsReauth => {
+            AuthManagerEvent::AuthFailed(_) | AuthManagerEvent::NeedsReauth => {
                 me.clear_workers(ctx);
             }
-            AuthManagerEvent::CreateAnonymousUserFailed
-            | AuthManagerEvent::AttemptedLoginGatedFeature { .. }
-            | AuthManagerEvent::LoginOverrideDetected(_)
-            | AuthManagerEvent::MintCustomTokenFailed(_)
-            | AuthManagerEvent::ReceivedDeviceAuthorizationCode { .. } => {}
+            AuthManagerEvent::ReceivedDeviceAuthorizationCode { .. } => {}
         });
 
         ctx.subscribe_to_model(&UserWorkspaces::handle(ctx), |me, _, event, ctx| {

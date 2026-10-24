@@ -23,11 +23,7 @@ use crate::workspaces::team::Team;
 use crate::workspaces::user_workspaces::{TeamScope, UserWorkspaces};
 use crate::workspaces::workspace::Workspace;
 
-const ANONYMOUS_USER_REQUEST_LIMIT_SOFT_GATE_PERCENTAGE: f32 = 0.5;
-
 const NO_CONNECTION_PRIMARY_TEXT: &str = "No internet connection";
-const ANONYMOUS_USER_REQUEST_LIMIT_SOFT_GATE_PRIMARY_TEXT: &str = "";
-const ANONYMOUS_USER_REQUEST_LIMIT_HARD_GATE_PRIMARY_TEXT: &str = "At Limit -";
 const DELINQUENT_DUE_TO_PAYMENT_ISSUE_PRIMARY_TEXT: &str = "Restricted due to payment issue";
 const OUT_OF_REQUESTS_PRIMARY_TEXT: &str = "Out of credits";
 const MONTHLY_SPEND_LIMIT_PRIMARY_TEXT: &str = "You've reached your monthly spend limit";
@@ -37,7 +33,6 @@ const UNASSIGNED_USER_SPEND_LIMIT_PRIMARY_TEXT: &str =
     "Spend limit reached for members without a team";
 const WORKSPACE_SPEND_LIMIT_PRIMARY_TEXT: &str = "You've reached this workspace's spend limit";
 
-const ANONYMOUS_USER_REQUEST_LIMIT_ACTION_TEXT: &str = "Sign up for more AI credits";
 const DELINQUENT_DUE_TO_PAYMENT_ISSUE_ACTION_TEXT: &str = "Manage billing";
 const MANAGE_LIMIT_TEXT: &str = "Manage limit";
 const UPGRADE_TEXT: &str = "Upgrade";
@@ -82,8 +77,6 @@ fn enterprise_limit_cta(
             NON_ADMIN_CONTACT_WORKSPACE_ADMIN_TEXT,
         ),
         PromptAlertState::NoConnection
-        | PromptAlertState::AnonymousUserRequestLimitSoftGate
-        | PromptAlertState::AnonymousUserRequestLimitHardGate
         | PromptAlertState::DelinquentDueToPaymentIssue
         | PromptAlertState::OveragesToggleableButNotEnabled
         | PromptAlertState::MonthlyOveragesSpendLimitReached
@@ -101,13 +94,11 @@ fn enterprise_limit_cta(
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PromptAlertAction {
-    SignUpClickedForAnonymousUser,
     ManageBillingClicked { team_uid: ServerId },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PromptAlertEvent {
-    SignupAnonymousUser,
     OpenBillingPortal { team_uid: ServerId },
 }
 
@@ -116,11 +107,6 @@ pub enum PromptAlertEvent {
 pub enum PromptAlertState {
     /// The user is offline (no connection).
     NoConnection,
-    /// An anonymous user has reached a certain percentage of requests used.
-    /// This doesn't use a primary text to avoid being too in-your-face.
-    AnonymousUserRequestLimitSoftGate,
-    /// An anonymous user has reached the request limit.
-    AnonymousUserRequestLimitHardGate,
     /// The user is delinquent due to a payment issue.
     DelinquentDueToPaymentIssue,
     /// Overages could be turned on, but aren't enabled.
@@ -141,12 +127,6 @@ impl PromptAlertState {
     fn primary_text(&self) -> &'static str {
         match self {
             Self::NoConnection => NO_CONNECTION_PRIMARY_TEXT,
-            Self::AnonymousUserRequestLimitSoftGate => {
-                ANONYMOUS_USER_REQUEST_LIMIT_SOFT_GATE_PRIMARY_TEXT
-            }
-            Self::AnonymousUserRequestLimitHardGate => {
-                ANONYMOUS_USER_REQUEST_LIMIT_HARD_GATE_PRIMARY_TEXT
-            }
             Self::DelinquentDueToPaymentIssue => DELINQUENT_DUE_TO_PAYMENT_ISSUE_PRIMARY_TEXT,
             Self::OveragesToggleableButNotEnabled | Self::RequestLimitReached => {
                 OUT_OF_REQUESTS_PRIMARY_TEXT
@@ -165,8 +145,6 @@ impl PromptAlertState {
     pub(crate) fn tooltip_text(&self) -> Option<&'static str> {
         match self {
             Self::DelinquentDueToPaymentIssue
-            | Self::AnonymousUserRequestLimitHardGate
-            | Self::AnonymousUserRequestLimitSoftGate
             | Self::OveragesToggleableButNotEnabled
             | Self::MonthlyOveragesSpendLimitReached
             | Self::EnterpriseTeamSpendLimitReached
@@ -236,28 +214,6 @@ impl PromptAlertView {
         }
 
         let request_usage_model = AIRequestUsageModel::as_ref(app);
-        // Anonymous soft/hard gates are based on the base-plan request quota,
-        // not overall AI availability (bonus grants / BYO / etc.).
-        let has_base_plan_requests_remaining =
-            request_usage_model.has_base_plan_requests_remaining();
-        let auth_state = AuthStateProvider::as_ref(app).get();
-
-        // Next, if the user is anonymous, we check if they have reached a certain percentage of requests used.
-        if auth_state
-            .is_anonymous_user_feature_gated()
-            .unwrap_or_default()
-        {
-            let percentage_used = request_usage_model.request_percentage_used();
-
-            if percentage_used >= ANONYMOUS_USER_REQUEST_LIMIT_SOFT_GATE_PERCENTAGE {
-                if has_base_plan_requests_remaining {
-                    return PromptAlertState::AnonymousUserRequestLimitSoftGate;
-                } else {
-                    return PromptAlertState::AnonymousUserRequestLimitHardGate;
-                }
-            }
-        }
-
         // The server-authoritative availability decision drives the alert once
         // it has been fetched; local data below is only a pre-fetch fallback.
         if let Some(availability) = request_usage_model.server_availability() {
@@ -388,14 +344,6 @@ impl PromptAlertView {
 
         match state {
             PromptAlertState::NoConnection => {}
-            PromptAlertState::AnonymousUserRequestLimitSoftGate
-            | PromptAlertState::AnonymousUserRequestLimitHardGate => {
-                text_fragments.push(FormattedTextFragment::plain_text("  "));
-                text_fragments.push(FormattedTextFragment::hyperlink_action(
-                    ANONYMOUS_USER_REQUEST_LIMIT_ACTION_TEXT,
-                    PromptAlertAction::SignUpClickedForAnonymousUser,
-                ));
-            }
             PromptAlertState::DelinquentDueToPaymentIssue => {
                 // Check if user is team admin with billing history
                 let has_billing_history = current_team
@@ -487,9 +435,8 @@ impl PromptAlertView {
 
 fn does_alert_block_ai_requests(state: &PromptAlertState) -> bool {
     match state {
-        PromptAlertState::AnonymousUserRequestLimitSoftGate | PromptAlertState::NoAlert => false,
+        PromptAlertState::NoAlert => false,
         PromptAlertState::NoConnection
-        | PromptAlertState::AnonymousUserRequestLimitHardGate
         | PromptAlertState::DelinquentDueToPaymentIssue
         | PromptAlertState::OveragesToggleableButNotEnabled
         | PromptAlertState::MonthlyOveragesSpendLimitReached
@@ -582,9 +529,6 @@ impl TypedActionView for PromptAlertView {
 
     fn handle_action(&mut self, action: &Self::Action, ctx: &mut ViewContext<Self>) {
         match action {
-            PromptAlertAction::SignUpClickedForAnonymousUser => {
-                ctx.emit(PromptAlertEvent::SignupAnonymousUser);
-            }
             PromptAlertAction::ManageBillingClicked { team_uid } => {
                 ctx.emit(PromptAlertEvent::OpenBillingPortal {
                     team_uid: *team_uid,

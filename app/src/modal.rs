@@ -204,9 +204,6 @@ impl<T: View> Modal<T> {
         self.background_opacity = opacity;
         self
     }
-    pub fn set_title(&mut self, title: Option<String>) {
-        self.title = title;
-    }
 
     pub fn set_header_icon(&mut self, icon: Option<icons::Icon>) {
         self.header_icon = icon;

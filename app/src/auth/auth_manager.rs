@@ -3,44 +3,32 @@ use std::result::Result as StdResult;
 use std::sync::Arc;
 use std::time::Duration;
 
-use ai::api_keys::{ApiKeyManager, ChatGPTConnectFailure};
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use futures::future::Either;
 use settings::Setting as _;
 use torch_core::channel::ChannelState;
 use torch_core::features::FeatureFlag;
 use torch_errors::{report_error, report_if_error};
-use torch_graphql::mutations::create_anonymous_user::{
-    AnonymousUserType, CreateAnonymousUserResult,
-};
 use torch_server_auth::API_KEY_PREFIX;
 use torch_server_auth::user::persistence::PersistedUser;
 use torchui::r#async::Timer;
-use torchui::clipboard::ClipboardContent;
-use torchui::{AppContext, Entity, ModelContext, SingletonEntity, UpdateModel};
+use torchui::{Entity, ModelContext, SingletonEntity, UpdateModel};
 #[cfg(target_family = "wasm")]
 use url::Url;
-use uuid::Uuid;
 
+use super::AuthStateProvider;
 use super::auth_state::{AuthState, PersistAction};
-use super::auth_view_modal::{AuthRedirectPayload, AuthViewVariant};
-use super::credentials::{Credentials, FirebaseToken, LoginToken};
+use super::credentials::{Credentials, LoginToken};
 use super::user::User;
 use super::user_properties::UserProperties;
-use super::{AuthStateProvider, UserUid};
 use crate::ai::AIRequestUsageModel;
 use crate::ai::llms::LLMPreferences;
 use crate::ai::persisted_workspace::PersistedWorkspace;
 use crate::autoupdate::AutoupdateState;
 use crate::persistence::ModelEvent;
 use crate::server::cloud_objects::update_manager::UpdateManager;
-use crate::server::graphql::get_user_facing_error_message;
-use crate::server::server_api::auth::{
-    AnonymousUserCreationError, AuthClient, FetchUserResult, MintCustomTokenError,
-    UserAuthenticationError,
-};
+use crate::server::server_api::auth::{AuthClient, FetchUserResult, UserAuthenticationError};
 use crate::server::server_api::{ServerApi, ServerApiProvider};
-use crate::server::telemetry::AnonymousUserSignupEntrypoint;
 use crate::settings::PrivacySettings;
 use crate::settings::cloud_preferences_syncer::CloudPreferencesSyncer;
 use crate::settings::initializer::SettingsInitializer;
@@ -49,10 +37,7 @@ use crate::terminal::shared_session::manager::Manager as SharedSessionManager;
 #[cfg(target_family = "wasm")]
 use crate::uri::browser_url_handler::{parse_current_url, update_browser_url};
 use crate::workspaces::team_tester::TeamTesterStatus;
-use crate::{
-    GlobalResourceHandlesProvider, TelemetryEvent, persistence, send_telemetry_from_ctx,
-    send_telemetry_sync_from_ctx,
-};
+use crate::{GlobalResourceHandlesProvider, TelemetryEvent, persistence, send_telemetry_from_ctx};
 
 #[derive(Debug)]
 pub enum AuthManagerEvent {
@@ -60,23 +45,10 @@ pub enum AuthManagerEvent {
     AuthComplete,
     /// Failed to authenticate a user, due to a particular `UserAuthenticationError`.
     AuthFailed(UserAuthenticationError),
-    /// Failed to create an anonymous user.
-    CreateAnonymousUserFailed,
-    /// The user chose to skip login entirely (no Firebase user created).
-    SkippedLogin,
     /// The user now needs to reauthenticate. If the user needs to reauth, an `AuthFailed`
     /// event might be triggered instead, but there are some code paths where we don't
     /// refresh the entire user, only their token, which is when this event might be emitted.
     NeedsReauth,
-    /// The user is anonymous and has attempted to access a login-gated feature or link.
-    AttemptedLoginGatedFeature {
-        auth_view_variant: AuthViewVariant,
-    },
-    // The current user is anonymous and the client has received a browser intent to sign in with a different Torch account.
-    // Holds an auth payload from the received browser intent.
-    LoginOverrideDetected(AuthRedirectPayload),
-    /// Failed to mint a new custom token for an anonymous user.
-    MintCustomTokenFailed(MintCustomTokenError),
     /// Received a device authorization code as part of the device auth flow.
     ReceivedDeviceAuthorizationCode {
         #[cfg_attr(target_family = "wasm", allow(unused))]
@@ -87,8 +59,6 @@ pub enum AuthManagerEvent {
         user_code: String,
     },
 }
-
-pub type LoginGatedFeature = &'static str;
 
 const DEVICE_CODE_REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
 const DEVICE_CODE_REQUEST_ATTEMPTS: usize = 2;
@@ -137,8 +107,6 @@ pub struct AuthManager {
     auth_state: Arc<AuthState>,
     server_api: Arc<ServerApi>,
     auth_client: Arc<dyn AuthClient>,
-    /// A generated state token that the web app must provide back to the client.
-    pending_auth_state: Option<String>,
 }
 
 impl AuthManager {
@@ -155,7 +123,6 @@ impl AuthManager {
             auth_state,
             server_api,
             auth_client,
-            pending_auth_state: None,
         }
     }
 
@@ -172,120 +139,7 @@ impl AuthManager {
             auth_state,
             server_api,
             auth_client,
-            pending_auth_state: None,
         }
-    }
-
-    /// Fetches and ultimately sets the user's auth state from an auth payload.
-    /// Typically, this function is triggered when a user clicks the intent link from their browser
-    /// back to Torch after login (or pastes the URL in the app).
-    pub fn initialize_user_from_auth_payload(
-        &mut self,
-        auth_payload: AuthRedirectPayload,
-        enforce_state_validation: bool,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        if ChannelState::is_local_only() {
-            return;
-        }
-
-        let AuthRedirectPayload {
-            refresh_token,
-            user_uid,
-            deleted_anonymous_user,
-            state,
-        } = auth_payload.clone();
-
-        if let Some(received_state) = &state {
-            if !self.consume_auth_state(received_state) {
-                if self.should_silently_ignore_stale_redirect(&user_uid) {
-                    log::info!(
-                        "Dropping auth redirect with stale state for already-logged-in user"
-                    );
-                    return;
-                }
-                ctx.emit(AuthManagerEvent::AuthFailed(
-                    UserAuthenticationError::InvalidStateParameter,
-                ));
-                return;
-            }
-        } else if enforce_state_validation {
-            if self.should_silently_ignore_stale_redirect(&user_uid) {
-                log::info!("Dropping auth redirect without state for already-logged-in user");
-                return;
-            }
-            ctx.emit(AuthManagerEvent::AuthFailed(
-                UserAuthenticationError::MissingStateParameter,
-            ));
-            return;
-        }
-
-        let auth_client = self.auth_client.clone();
-
-        if self.auth_state.is_user_anonymous().unwrap_or_default() {
-            let incoming_user_matches_current_user = match user_uid {
-                None => false,
-                Some(incoming_user_uid) => self
-                    .auth_state
-                    .user_id()
-                    .map(|current_user_uid| current_user_uid == incoming_user_uid)
-                    .unwrap_or_default(),
-            };
-            if !incoming_user_matches_current_user && !deleted_anonymous_user.unwrap_or_default() {
-                ctx.emit(AuthManagerEvent::LoginOverrideDetected(auth_payload));
-                return;
-            }
-            send_telemetry_from_ctx!(TelemetryEvent::AnonymousUserLinkedFromBrowser, ctx);
-        } else if self.incoming_login_conflicts_with_pending_chatgpt_connect(&user_uid, ctx) {
-            // A connect attempt only ever expects a link result, never a login. A login for
-            // another account here would silently switch the user's Torch account.
-            log::warn!(
-                "Ignoring login handoff for a different user while a ChatGPT connect is pending"
-            );
-            ApiKeyManager::handle(ctx).update(ctx, |manager, ctx| {
-                manager.fail_chatgpt_oauth(ChatGPTConnectFailure::AccountMismatch, ctx);
-            });
-            return;
-        }
-
-        let _ = ctx.spawn(
-            async move {
-                auth_client
-                    .fetch_user(
-                        LoginToken::Firebase(FirebaseToken::Refresh(refresh_token)),
-                        false, /* for_refresh */
-                    )
-                    .await
-            },
-            Self::on_user_fetched,
-        );
-    }
-
-    pub fn resume_interrupted_auth_payload(
-        &mut self,
-        auth_payload: AuthRedirectPayload,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        let AuthRedirectPayload {
-            refresh_token,
-            user_uid: _,
-            deleted_anonymous_user: _,
-            state: _,
-        } = auth_payload;
-
-        let auth_client = self.auth_client.clone();
-
-        let _ = ctx.spawn(
-            async move {
-                auth_client
-                    .fetch_user(
-                        LoginToken::Firebase(FirebaseToken::Refresh(refresh_token)),
-                        false, /* for_refresh */
-                    )
-                    .await
-            },
-            Self::on_user_fetched,
-        );
     }
 
     #[cfg(target_family = "wasm")]
@@ -613,10 +467,6 @@ impl AuthManager {
     /// it doesn't shut down any other user-dependent parts of the app.
     /// TODO(jeff): Can we move those pieces in here?
     pub(super) fn log_out(&mut self, ctx: &mut ModelContext<Self>) {
-        // Clear any dangling CSRF token from an auth flow that was started but never
-        // completed before this logout, so it can't be replayed against the next session
-        // in the same process.
-        self.pending_auth_state = None;
         self.set_and_persist(None, None, ctx);
     }
 
@@ -628,314 +478,6 @@ impl AuthManager {
             send_telemetry_from_ctx!(TelemetryEvent::NeedsReauth, ctx);
             ctx.emit(AuthManagerEvent::NeedsReauth);
         }
-    }
-
-    pub fn create_anonymous_user(
-        &self,
-        referral_code: Option<String>,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        if ChannelState::is_local_only() {
-            return;
-        }
-
-        let anonymous_user_type = AnonymousUserType::NativeClientAnonymousUserFeatureGated;
-
-        let auth_client = self.auth_client.clone();
-        let _ = ctx.spawn(
-            async move {
-                auth_client
-                    .create_anonymous_user(referral_code, anonymous_user_type)
-                    .await
-            },
-            Self::on_create_anonymous_user,
-        );
-    }
-
-    fn on_create_anonymous_user(
-        &mut self,
-        response: Result<CreateAnonymousUserResult>,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        let custom_token = match response {
-            Ok(response_data) => match response_data {
-                CreateAnonymousUserResult::CreateAnonymousUserOutput(output) => Ok(output.id_token),
-                CreateAnonymousUserResult::UserFacingError(user_facing_error) => {
-                    Err(AnonymousUserCreationError::UserFacingError(
-                        get_user_facing_error_message(user_facing_error),
-                    ))
-                }
-                CreateAnonymousUserResult::Unknown => Err(AnonymousUserCreationError::Unknown),
-            },
-            Err(_) => Err(AnonymousUserCreationError::CreationFailed),
-        };
-
-        match custom_token {
-            Ok(custom_token) => {
-                // Exchange the custom token for an ID token.
-                let auth_client = self.auth_client.clone();
-                let _ = ctx.spawn(
-                    async move {
-                        auth_client
-                            .fetch_user(
-                                LoginToken::Firebase(FirebaseToken::Custom(custom_token)),
-                                false, /* for_refresh */
-                            )
-                            .await
-                    },
-                    Self::on_user_fetched,
-                );
-            }
-
-            Err(err) => {
-                report_error!(
-                    anyhow!(err).context("Encountered an error trying to create anonymous users")
-                );
-                ctx.emit(AuthManagerEvent::CreateAnonymousUserFailed);
-            }
-        }
-    }
-
-    pub fn attempt_login_gated_feature(
-        &self,
-        feature: LoginGatedFeature,
-        auth_view_variant: AuthViewVariant,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        if ChannelState::is_local_only() {
-            return;
-        }
-
-        if self.auth_state.is_anonymous_or_logged_out() {
-            send_telemetry_from_ctx!(
-                TelemetryEvent::AnonymousUserAttemptLoginGatedFeature { feature },
-                ctx
-            );
-            ctx.emit(AuthManagerEvent::AttemptedLoginGatedFeature { auth_view_variant });
-        };
-    }
-
-    pub fn anonymous_user_hit_drive_object_limit(&self, ctx: &mut ModelContext<Self>) {
-        if ChannelState::is_local_only() {
-            return;
-        }
-
-        if self.auth_state.is_anonymous_or_logged_out() {
-            send_telemetry_from_ctx!(TelemetryEvent::AnonymousUserHitCloudObjectLimit, ctx);
-            ctx.emit(AuthManagerEvent::AttemptedLoginGatedFeature {
-                auth_view_variant: AuthViewVariant::HitDriveObjectLimitCloseable,
-            });
-        };
-    }
-
-    pub fn initiate_anonymous_user_linking(
-        &self,
-        entrypoint: AnonymousUserSignupEntrypoint,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        if ChannelState::is_local_only() {
-            return;
-        }
-
-        let auth_client = self.auth_client.clone();
-        let _ = ctx.spawn(
-            async move { auth_client.fetch_new_custom_token().await },
-            move |me, response, ctx| {
-                let custom_token = me.auth_client.on_custom_token_fetched(response);
-
-                match custom_token {
-                    Ok(custom_token) => {
-                        // Send synchronously since this is an important event in the sign up funnel and we
-                        // don't want to lose events if the user quits before the event queue is flushed.
-                        send_telemetry_sync_from_ctx!(
-                            TelemetryEvent::InitiateAnonymousUserSignup { entrypoint },
-                            ctx
-                        );
-                        let login_options_url = me.login_options_url(&custom_token);
-                        if cfg!(target_family = "wasm") {
-                            #[cfg(target_family = "wasm")]
-                            if let Some(current_url) = parse_current_url() {
-                                update_browser_url(
-                                    Url::parse(&format!(
-                                        "{}?redirect_to={}",
-                                        login_options_url,
-                                        current_url.path()
-                                    ))
-                                    .ok(),
-                                    true,
-                                );
-                            } else {
-                                update_browser_url(Url::parse(&login_options_url).ok(), true);
-                            }
-                        } else {
-                            ctx.open_url(&login_options_url);
-                        }
-                    }
-                    Err(e) => {
-                        ctx.emit(AuthManagerEvent::MintCustomTokenFailed(e));
-                    }
-                }
-            },
-        );
-    }
-
-    // Opens a page in the web app and logs the user in using a customToken if they are an anonymous user.
-    // Accepts a callback that constructs the URL using the customToken to open a page and log in an anonymous user.
-    pub fn copy_anonymous_user_linking_url_to_clipboard(&self, ctx: &mut ModelContext<Self>) {
-        if ChannelState::is_local_only() {
-            return;
-        }
-
-        if !self.auth_state.is_user_anonymous().unwrap_or_default() {
-            return;
-        }
-        let auth_client = self.auth_client.clone();
-        let _ = ctx.spawn(
-            async move { auth_client.fetch_new_custom_token().await },
-            move |me, response, ctx| {
-                let custom_token = me.auth_client.on_custom_token_fetched(response);
-
-                match custom_token {
-                    Ok(custom_token) => {
-                        let login_options_url = me.login_options_url(&custom_token);
-                        ctx.clipboard().write(ClipboardContent {
-                            plain_text: login_options_url,
-                            paths: None,
-                            ..Default::default()
-                        });
-                    }
-                    Err(e) => {
-                        ctx.emit(AuthManagerEvent::MintCustomTokenFailed(e));
-                    }
-                };
-            },
-        );
-    }
-
-    /// Generates a unique state parameter for the authentication flow.
-    fn generate_auth_state(&mut self) -> String {
-        let state = Uuid::new_v4().to_string();
-        self.pending_auth_state = Some(state.clone());
-        state
-    }
-
-    pub fn sign_up_url(&mut self) -> String {
-        let state = self.generate_auth_state();
-        format!(
-            // TODO: we should probably be able to remove the public_beta flag
-            "{}/signup/remote?scheme={}&state={}&public_beta=true",
-            ChannelState::server_root_url(),
-            ChannelState::url_scheme(),
-            state,
-        )
-    }
-
-    pub fn sign_in_url(&mut self) -> String {
-        let state = self.generate_auth_state();
-        format!(
-            "{}/login/remote?scheme={}&state={}",
-            ChannelState::server_root_url(),
-            ChannelState::url_scheme(),
-            state,
-        )
-    }
-
-    /// The upgrade confirmation page will kick the user back to the app with a refresh token
-    /// if we send a `state` query param to /upgrade
-    pub fn upgrade_url(&mut self) -> String {
-        let state = self.generate_auth_state();
-        format!(
-            "{}/upgrade?scheme={}&state={}",
-            ChannelState::server_root_url(),
-            ChannelState::url_scheme(),
-            state,
-        )
-    }
-
-    pub fn login_options_url(&mut self, custom_token: &str) -> String {
-        let state = self.generate_auth_state();
-        format!(
-            "{}/login_options/{}?state={}",
-            ChannelState::server_root_url(),
-            custom_token,
-            state,
-        )
-    }
-
-    pub fn link_sso_url(&mut self, email: &str) -> String {
-        let state = self.generate_auth_state();
-        format!(
-            "{}/link_sso?email={}&state={}",
-            ChannelState::server_root_url(),
-            email,
-            state,
-        )
-    }
-
-    /// Validates and consumes the pending auth state token. Returns `true` if the
-    /// provided state matches; in that case the pending state is cleared so the
-    /// CSRF token is single-use. A subsequent call with the same value will fail.
-    fn consume_auth_state(&mut self, received_state: &str) -> bool {
-        if self.pending_auth_state.as_deref() == Some(received_state) {
-            self.pending_auth_state = None;
-            true
-        } else {
-            false
-        }
-    }
-
-    fn incoming_login_conflicts_with_pending_chatgpt_connect(
-        &self,
-        incoming_user_uid: &Option<UserUid>,
-        ctx: &AppContext,
-    ) -> bool {
-        if !FeatureFlag::ChatGPTSubscription.is_enabled()
-            || self.auth_state.is_anonymous_or_logged_out()
-            || !ApiKeyManager::as_ref(ctx).chatgpt_oauth_pending()
-        {
-            return false;
-        }
-        match (self.auth_state.user_id(), incoming_user_uid) {
-            (Some(current_uid), Some(incoming_uid)) => current_uid != *incoming_uid,
-            _ => false,
-        }
-    }
-
-    /// Returns whether an auth redirect that failed state validation should be
-    /// silently dropped rather than surfaced as an error. This covers the
-    /// "user clicks the browser's 'Take me to Torch' button twice" case: once
-    /// they're fully logged in, a second redirect targeting the same user is
-    /// redundant and should not produce a user-visible error.
-    fn should_silently_ignore_stale_redirect(&self, incoming_user_uid: &Option<UserUid>) -> bool {
-        if self.auth_state.is_anonymous_or_logged_out() {
-            return false;
-        }
-        match (self.auth_state.user_id(), incoming_user_uid) {
-            (Some(current_uid), Some(incoming_uid)) => current_uid == *incoming_uid,
-            _ => false,
-        }
-    }
-
-    /// Sets the user as onboarded both on the server and locally.
-    /// This method:
-    /// 1. Updates the server by calling set_user_is_onboarded
-    /// 2. Updates the local auth state and persists the user data
-    pub fn set_user_onboarded(&self, ctx: &mut ModelContext<Self>) {
-        if ChannelState::is_local_only() {
-            return;
-        }
-
-        // Update server
-        let auth_client = self.auth_client.clone();
-        let _ = ctx.spawn(
-            async move { auth_client.set_user_is_onboarded().await },
-            |_, _, _| {},
-        );
-
-        // Update local auth state and persist
-        self.auth_state.set_is_onboarded(true);
-
-        self.persist(ctx);
     }
 }
 

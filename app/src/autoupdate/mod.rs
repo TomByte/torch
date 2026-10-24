@@ -109,8 +109,7 @@ pub struct AutoupdateState {
     request_queue: VecDeque<RequestType>,
     server_api: Arc<ServerApi>,
     /// Whether the polling loop has been explicitly started. Requests are silently queued but not
-    /// executed until `start_polling` is called. This ensures no version-check requests are made
-    /// before onboarding completes.
+    /// executed until `start_polling` is called.
     polling_started: bool,
 }
 
@@ -132,8 +131,6 @@ impl AutoupdateState {
 
     /// Start the autoupdate polling loop. Idempotent: subsequent calls are no-ops.
     ///
-    /// Must be called explicitly once onboarding (if any) has completed. For returning users
-    /// who bypass onboarding, this should be called during app startup.
     pub fn start_polling(&mut self, ctx: &mut ModelContext<Self>) {
         if self.polling_started {
             return;
@@ -175,8 +172,8 @@ impl AutoupdateState {
             return None;
         }
 
-        // Don't execute any requests until polling has been explicitly started (i.e. onboarding
-        // has completed). Requests enqueued before that point are silently deferred.
+        // Don't execute any requests until polling has been explicitly started. Requests enqueued
+        // before that point are silently deferred.
         if !self.polling_started {
             return None;
         }
@@ -728,7 +725,7 @@ pub enum RequestType {
 }
 
 // We only want to announce autoupdates when there's manual check. Otherwise, the autoupdate check
-// may clash with other announcements, such as log in form or referral form.
+// may clash with other announcements.
 // Users will still get the autoupdate on the next relaunch anyways, so for now it's ok.
 pub fn accessibility_content(
     update_available: &Result<UpdateReady>,

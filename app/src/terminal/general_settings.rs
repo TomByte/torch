@@ -92,14 +92,6 @@ define_settings_group!(GeneralSettings, settings: [
         surface: settings::SettingSurfaces::GUI,
         private: true,
     },
-    agent_mode_onboarding_block_shown: AgentModeOnboardingBlockShown {
-        type: bool,
-        default: false,
-        supported_platforms: SupportedPlatforms::ALL,
-        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
-        surface: settings::SettingSurfaces::GUI,
-        private: true,
-    },
     telemetry_banner_dismissed: TelemetryBannerDismissed {
         type: bool,
         default: false,
@@ -140,14 +132,6 @@ define_settings_group!(GeneralSettings, settings: [
         surface: settings::SettingSurfaces::GUI,
         private: true,
     },
-    build_plan_migration_modal_dismissed: BuildPlanMigrationModalDismissed {
-        type: bool,
-        default: false,
-        supported_platforms: SupportedPlatforms::ALL,
-        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
-        surface: settings::SettingSurfaces::GUI,
-        private: true,
-    },
     // One-time flag tracking whether the OpenWarp launch modal has already been
     // shown to the user. Not user-visible; modeled as a setting so it's only
     // shown once per user regardless of the number of devices they use.
@@ -168,13 +152,5 @@ define_settings_group!(GeneralSettings, settings: [
         private: false,
         toml_path: "code.editor.auto_open_code_review_pane_on_first_agent_change",
         description: "Whether to automatically open the code review pane when the agent makes its first change.",
-    },
-    bonus_grants_shown: BonusGrantsShown {
-        type: HashSet<String>,
-        default: HashSet::new(),
-        supported_platforms: SupportedPlatforms::ALL,
-        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
-        surface: settings::SettingSurfaces::GUI,
-        private: true,
     },
 ]);
