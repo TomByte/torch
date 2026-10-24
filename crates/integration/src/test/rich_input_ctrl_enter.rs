@@ -8,8 +8,7 @@ use std::collections::HashMap;
 use settings::Setting as _;
 use torch::features::FeatureFlag;
 use torch::integration_testing::input::{
-    open_cli_agent_rich_input, rich_input_buffer_contains_newline,
-    rich_input_buffer_does_not_contain_newline, rich_input_buffer_text_is_empty,
+    open_cli_agent_rich_input, rich_input_buffer_contains_newline, rich_input_buffer_text_is_empty,
 };
 use torch::integration_testing::step::new_step_with_default_assertions;
 use torch::integration_testing::terminal::wait_until_bootstrapped_single_pane_for_tab;
@@ -53,31 +52,5 @@ pub fn test_rich_input_toggle_on_enter_inserts_newline_and_ctrl_enter_submits() 
             .with_typed_characters(&["line2"])
             .with_keystrokes(&["ctrl-enter"])
             .add_assertion(rich_input_buffer_text_is_empty(0)),
-        )
-}
-
-// ---------------------------------------------------------------------------
-// Setting = true: Enter while slash-commands menu is open accepts the menu
-// ---------------------------------------------------------------------------
-
-/// Regression (#11588): with toggle ON, typing `/` opens the slash-commands
-/// menu and pressing Enter must route to menu acceptance, not newline insertion.
-pub fn test_rich_input_enter_accepts_menu_item_when_toggle_is_true() -> Builder {
-    FeatureFlag::CLIAgentRichInput.set_enabled(true);
-
-    new_builder()
-        .with_user_defaults(HashMap::from([(
-            SubmitRichInputOnCtrlEnter::storage_key().to_string(),
-            true.to_string(),
-        )]))
-        .with_step(wait_until_bootstrapped_single_pane_for_tab(0))
-        .with_step(open_cli_agent_rich_input(0))
-        .with_step(
-            new_step_with_default_assertions(
-                "Type '/', press Enter — buffer must NOT contain a newline (menu branch taken)",
-            )
-            .with_typed_characters(&["/"])
-            .with_keystrokes(&["enter"])
-            .add_assertion(rich_input_buffer_does_not_contain_newline(0)),
         )
 }

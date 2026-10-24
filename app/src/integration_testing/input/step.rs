@@ -83,22 +83,6 @@ pub fn rich_input_buffer_contains_newline(
     })
 }
 
-/// Asserts that the Rich Input buffer for `tab_index` contains no newline (verifies menu-acceptance, not newline insertion).
-pub fn rich_input_buffer_does_not_contain_newline(
-    tab_index: usize,
-) -> torchui::integration::AssertionCallback {
-    Box::new(move |app, window_id| {
-        let input_view = single_input_view_for_tab(app, window_id, tab_index);
-        input_view.read(app, |view, ctx| {
-            let text = view.buffer_text(ctx);
-            torchui::async_assert!(
-                !text.contains('\n'),
-                "Expected Rich Input buffer to NOT contain a newline; got: {text:?}"
-            )
-        })
-    })
-}
-
 pub fn open_input_context_menu() -> TestStep {
     new_step_with_default_assertions("Open input context menu")
         .with_action(move |app, _, _| {

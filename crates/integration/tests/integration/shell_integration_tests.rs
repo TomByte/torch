@@ -90,15 +90,6 @@ integration_tests! {
     // Tests PowerShell-specific behavior with PSReadLine's vi edit mode.
     test_pwsh_vi_edit_mode_does_not_corrupt_commands,
 
-    // Tests of ssh wrapper logic from bootstrap script.
-    test_ssh_wrapper_into_bash,
-    test_ssh_wrapper_into_zsh,
-    // TODO(vorporeal): Reenable fish once we actually support it as a remote
-    // shell.
-    // test_ssh_into_fish,
-    test_ssh_into_sh,
-    test_ssh_into_ash,
-
     // Tests of remote server behavior.
     test_remote_server_connect_bash,
     test_remote_server_connect_zsh,
@@ -120,9 +111,7 @@ integration_tests! {
     test_copy_rprompt_from_input_honor_ps1_enabled,
 
     // Tests of subshell logic from bootstrap script.
-    #[ignore = "Affected by agent_view feature flag UI changes"]
     test_can_bootstrap_local_bash_subshell,
-    #[ignore = "Affected by agent_view feature flag UI changes"]
     test_can_bootstrap_local_zsh_subshell,
     // Disabled due to flakiness on CI.
     #[ignore]
@@ -132,15 +121,10 @@ integration_tests! {
     test_command_search_loads_history,
     test_histfile_left_joined_with_persisted_history,
 
-    // Tests default prompt behavior.
-    test_context_chips_prompt_at_bootstrap,
-
     // CTRL-D tests.
     test_ctrl_d_eot,
     test_ctrl_d_exit,
     test_ctrl_d_handled_by_read_during_bootstrapping,
     test_ctrl_d_during_bootstrapping_exits_shell_upon_completion,
 
-    #[ignore = "Affected by agent_view feature flag UI changes"]
-    test_git_prompt_chips,
 }

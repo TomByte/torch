@@ -3,12 +3,11 @@ use torchui::{App, ViewHandle, WindowId, async_assert};
 
 use crate::integration_testing::view_getters::{command_palette_view, workspace_view};
 use crate::palette::PaletteMode;
-use crate::pane_group::{PaneId, PaneView};
+use crate::pane_group::PaneGroup;
 use crate::search::QueryFilter;
 use crate::search::command_palette::ItemSummary;
-use crate::terminal::TerminalView;
 
-/// Used to determine which session should be the most recent in Navigation Palette integration tests.
+/// Used to determine which tab should be the most recent in Navigation Palette integration tests.
 pub enum RecentSession {
     First,
     Second,
@@ -28,11 +27,11 @@ pub fn assert_navigation_mode_enabled_in_command_palette() -> AssertionCallback 
     })
 }
 
-/// Asserts that one of `first_pane_view` and `second_pane_view` is the most recent in the
-/// command palette, depending on the value of [`RecentSession`].
+/// Asserts that the command palette lists the tab that is not the most recent one (given by
+/// [`RecentSession`]) ahead of the most recent tab, which holds the current session.
 pub fn check_recency(
-    first_pane_view: ViewHandle<PaneView<TerminalView>>,
-    second_pane_view: ViewHandle<PaneView<TerminalView>>,
+    first_pane_group: ViewHandle<PaneGroup>,
+    second_pane_group: ViewHandle<PaneGroup>,
     recency_test: RecentSession,
     app: &App,
     window_id: WindowId,
@@ -57,41 +56,28 @@ pub fn check_recency(
             .accept_result()
             .to_summary();
 
-        let ItemSummary::Session {
-            pane_view_locator: recent_session,
-        } = first_item
+        let (
+            ItemSummary::Tab {
+                pane_group_id: first_tab,
+            },
+            ItemSummary::Tab {
+                pane_group_id: second_tab,
+            },
+        ) = (first_item, second_item)
         else {
             return AssertionOutcome::failure(
-                "First item in command palette is not a session".to_string(),
+                "The first two items in the command palette are not tabs".to_string(),
             );
         };
 
-        let ItemSummary::Session {
-            pane_view_locator: previous_session,
-        } = second_item
-        else {
-            return AssertionOutcome::failure(
-                "second item in command palette is not a session".to_string(),
-            );
+        // The palette offers the previously used tab first and keeps the current one last.
+        let (expected_first, expected_second) = match recency_test {
+            RecentSession::First => (second_pane_group.id(), first_pane_group.id()),
+            RecentSession::Second => (first_pane_group.id(), second_pane_group.id()),
         };
-
-        match recency_test {
-            RecentSession::First => {
-                async_assert!(
-                    recent_session.pane_id == PaneId::from_terminal_pane_view(&first_pane_view)
-                        && previous_session.pane_id
-                            == PaneId::from_terminal_pane_view(&second_pane_view),
-                    "First session is not most recent., "
-                )
-            }
-            RecentSession::Second => {
-                async_assert!(
-                    recent_session.pane_id == PaneId::from_terminal_pane_view(&second_pane_view)
-                        && previous_session.pane_id
-                            == PaneId::from_terminal_pane_view(&first_pane_view),
-                    "Second session is not most recent."
-                )
-            }
-        }
+        async_assert!(
+            first_tab == expected_first && second_tab == expected_second,
+            "Tabs are not ordered by recency: got {first_tab:?}, {second_tab:?}"
+        )
     })
 }

@@ -696,8 +696,13 @@ impl BlockList {
 
         let gap = BlockHeightItem::Gap(gap_height.into());
         let active_block_height = self.active_block_mut().height().into();
+        // A running command is not rendered until its render delay elapses, but it will appear
+        // above the gap once it does.
+        let active_block = self.active_block_mut();
+        let active_block_will_render =
+            active_block.state() == BlockState::Executing && !active_block.should_hide_block();
 
-        if active_block_height > BlockHeight::zero() {
+        if active_block_height > BlockHeight::zero() || active_block_will_render {
             self.block_heights
                 .push(BlockHeightItem::Block(active_block_height));
             self.block_heights.push(gap);

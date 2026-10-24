@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use std::time::Duration;
 
+use torch::appearance::Appearance;
 use torch::features::FeatureFlag;
 use torch::integration_testing::pane_group::assert_focused_pane_index;
 use torch::integration_testing::settings::set_window_custom_size;
@@ -14,9 +15,10 @@ use torch::integration_testing::{self};
 use torch::search::SyncDataSource;
 use torch::search::command_palette::launch_config;
 use torch::search::data_source::Query;
+use torch::terminal::view::cell_size_and_padding;
 use torch::workspace::NEW_TAB_BUTTON_POSITION_ID;
 use torchui_core::integration::{AssertionOutcome, TestStep};
-use torchui_core::{ModelHandle, async_assert};
+use torchui_core::{ModelHandle, SingletonEntity as _, async_assert};
 
 use super::{TEST_ONLY_ASSETS, assert_approx_eq, new_builder};
 use crate::Builder;
@@ -214,6 +216,9 @@ pub fn test_launch_config_single_child_branch() -> Builder {
         )
 }
 
+const CUSTOM_WINDOW_ROWS: u16 = 40;
+const CUSTOM_WINDOW_COLUMNS: u16 = 20;
+
 pub fn test_open_launch_config_with_custom_size() -> Builder {
     new_builder()
         .with_step(wait_until_bootstrapped_single_pane_for_tab(0))
@@ -221,7 +226,7 @@ pub fn test_open_launch_config_with_custom_size() -> Builder {
             new_step_with_default_assertions("Assert we only have 1 window open at start")
             .add_assertion(assert_num_windows_open(1)),
         )
-        .with_step(set_window_custom_size(40, 20))
+        .with_step(set_window_custom_size(CUSTOM_WINDOW_ROWS, CUSTOM_WINDOW_COLUMNS))
         .with_step(
             new_step_with_default_assertions("Open a launch configuration").with_action(
                 move |app, _, _| {
@@ -243,11 +248,25 @@ pub fn test_open_launch_config_with_custom_size() -> Builder {
                         .window_bounds(&window_id)
                         .expect("Window should exist")
                         .size();
-                    // This doesn't correspond clearly to the given rows and columns due to line
-                    // height and padding. There's also some platform-specific variance and room
-                    // for floating-point error.
-                    assert_approx_eq!(f32, size.x(), 192., epsilon = 2.);
-                    assert_approx_eq!(f32, size.y(), 644., epsilon = 2.);
+                    let cell_size_and_padding = app.read(|ctx| {
+                        let appearance = Appearance::as_ref(ctx);
+                        cell_size_and_padding(
+                            ctx.font_cache(),
+                            appearance.monospace_font_family(),
+                            appearance.monospace_font_size(),
+                            appearance.ui_builder().line_height_ratio(),
+                        )
+                    });
+                    // The cell size follows Torch's default font, so derive the expected window
+                    // size from it rather than from pixel constants.
+                    let expected_width = CUSTOM_WINDOW_COLUMNS as f32
+                        * cell_size_and_padding.cell_width_px.as_f32()
+                        + 2. * cell_size_and_padding.padding_x_px.as_f32();
+                    let expected_height = CUSTOM_WINDOW_ROWS as f32
+                        * cell_size_and_padding.cell_height_px.as_f32()
+                        + 2. * cell_size_and_padding.padding_y_px.as_f32();
+                    assert_approx_eq!(f32, size.x(), expected_width, epsilon = 2.);
+                    assert_approx_eq!(f32, size.y(), expected_height, epsilon = 2.);
                     AssertionOutcome::Success
                 }),
         )

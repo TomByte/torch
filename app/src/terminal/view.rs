@@ -11060,6 +11060,11 @@ impl TerminalView {
         );
     }
 
+    #[cfg(feature = "integration_tests")]
+    pub fn is_warpify_footer_active(&self, ctx: &AppContext) -> bool {
+        self.use_agent_footer.as_ref(ctx).is_warpify_active(ctx)
+    }
+
     #[cfg(any(test, feature = "integration_tests"))]
     pub fn selected_blocks_tail_index(&self) -> Option<BlockIndex> {
         self.selected_blocks.tail()

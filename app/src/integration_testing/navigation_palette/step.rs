@@ -18,7 +18,7 @@ pub fn open_navigation_palette_step() -> TestStep {
 
 pub fn navigate_to_other_session_step() -> TestStep {
     new_step_with_default_assertions("Navigate to original tab using Navigation Palette.")
-        .with_keystrokes(&["down", "enter"])
+        .with_keystrokes(&["enter"])
         .add_assertion(move |app, window_id| {
             let views: Vec<ViewHandle<Workspace>> =
                 app.views_of_type(window_id).expect("No workspace found");

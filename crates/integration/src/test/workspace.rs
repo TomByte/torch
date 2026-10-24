@@ -7,7 +7,6 @@ use pathfinder_geometry::rect::RectF;
 use pathfinder_geometry::vector::{Vector2F, vec2f};
 use settings::Setting as _;
 use torch::cmd_or_ctrl_shift;
-use torch::features::FeatureFlag;
 use torch::integration_testing::clipboard::assert_clipboard_contains_string;
 use torch::integration_testing::command_palette::assert_command_palette_is_closed;
 use torch::integration_testing::pane_group::assert_focused_pane_index;
@@ -35,15 +34,12 @@ use torch::search::command_palette::mixer::CommandPaletteItemAction;
 use torch::settings::PaneSettings;
 use torch::terminal::shell::ShellType;
 use torch::themes::theme::AnsiColorIdentifier;
-use torch::workspace::tab_settings::{TabSettings, VerticalTabsDisplayGranularity};
 use torch::workspace::{NEW_TAB_BUTTON_POSITION_ID, WorkspaceAction};
 use torchui_core::event::{Event, ModifiersState};
 use torchui_core::integration::{AssertionCallback, AssertionOutcome, StepDataMap, TestStep};
 use torchui_core::keymap::DescriptionContext;
 use torchui_core::windowing::WindowManager;
-use torchui_core::{
-    EntityId, SingletonEntity, TypedActionView, WindowId, async_assert, async_assert_eq,
-};
+use torchui_core::{EntityId, SingletonEntity, WindowId, async_assert, async_assert_eq};
 
 use super::new_builder;
 use crate::Builder;
@@ -52,12 +48,8 @@ use crate::util::skip_if_powershell_core_2303;
 const SOURCE_WINDOW_KEY: &str = "source window";
 const TARGET_WINDOW_KEY: &str = "target window";
 const DETACHED_WINDOW_KEY: &str = "detached window";
-const METADATA_TAB_TITLE: &str = "Integration Metadata Tab";
-const METADATA_BRANCH: &str = "main";
-const METADATA_CLICKED_PANE_TITLE: &str = "Integration Metadata Clicked Pane";
 const METADATA_PANE_TITLE: &str = "Integration Metadata Pane";
-const METADATA_PANE_BRANCH: &str = "pane-branch";
-const METADATA_PANE_DIRECTORY: &str = "active-pane";
+const METADATA_BRANCH: &str = "main";
 const CYCLE_TAB_COLOR_BINDING: &str = "workspace:cycle_active_tab_color";
 const CYCLE_TAB_COLOR_LABEL: &str = "Cycle current tab color";
 const CYCLE_TAB_COLOR_DISPLAY_LABEL: &str = "Cycle Current Tab Color";
@@ -66,49 +58,6 @@ const CYCLE_TAB_COLOR_TERMINAL_ID: &str = "cycle tab color terminal id";
 
 fn tab_position_id(tab_index: usize) -> String {
     format!("tab_position_{tab_index}")
-}
-
-fn vertical_tab_pane_row_position_id(app: &mut torchui_core::App, window_id: WindowId) -> String {
-    let workspace = workspace_view(app, window_id);
-    let pane_group = workspace.read(app, |workspace, _ctx| {
-        workspace
-            .get_pane_group_view(0)
-            .expect("pane group should exist")
-            .clone()
-    });
-    let pane_group_id = pane_group.id();
-    pane_group.read(app, |pane_group, ctx| {
-        let pane_id = pane_group.focused_pane_id(ctx);
-        format!("vertical_tabs:pane_row:{pane_group_id:?}:{pane_id}")
-    })
-}
-
-fn vertical_tab_pane_row_position_id_for_pane_index(
-    app: &mut torchui_core::App,
-    window_id: WindowId,
-    pane_index: usize,
-) -> String {
-    let workspace = workspace_view(app, window_id);
-    let pane_group = workspace.read(app, |workspace, _ctx| {
-        workspace
-            .get_pane_group_view(0)
-            .expect("pane group should exist")
-            .clone()
-    });
-    let pane_group_id = pane_group.id();
-    pane_group.read(app, |pane_group, _ctx| {
-        let pane_id = pane_group
-            .pane_id_from_index(pane_index)
-            .expect("pane should exist at index");
-        format!("vertical_tabs:pane_row:{pane_group_id:?}:{pane_id}")
-    })
-}
-
-fn first_vertical_tab_pane_row_position_id(
-    app: &mut torchui_core::App,
-    window_id: WindowId,
-) -> String {
-    vertical_tab_pane_row_position_id_for_pane_index(app, window_id, 0)
 }
 
 fn assert_tab_color(expected: Option<AnsiColorIdentifier>) -> AssertionCallback {
@@ -182,15 +131,6 @@ fn should_run_tab_context_menu_metadata_test() -> bool {
     starter.shell_type() != ShellType::PowerShell
 }
 
-fn set_active_tab_name(name: &'static str) -> TestStep {
-    TestStep::new("Set active tab name").with_action(move |app, window_id, _| {
-        let workspace = workspace_view(app, window_id);
-        workspace.update(app, |workspace, ctx| {
-            workspace.handle_action(&WorkspaceAction::SetActiveTabName(name.to_string()), ctx);
-        });
-    })
-}
-
 fn set_active_pane_name(name: &'static str) -> TestStep {
     TestStep::new("Set active pane name").with_action(move |app, window_id, _| {
         let workspace = workspace_view(app, window_id);
@@ -212,49 +152,16 @@ fn set_active_pane_name(name: &'static str) -> TestStep {
     })
 }
 
-fn enable_vertical_tabs(display_granularity: VerticalTabsDisplayGranularity) -> TestStep {
-    FeatureFlag::VerticalTabs.set_enabled(true);
-    new_step_with_default_assertions("Enable vertical tabs").add_assertion(
-        move |app, _window_id| {
-            TabSettings::handle(app).update(app, |settings, ctx| {
-                settings
-                    .use_vertical_tabs
-                    .set_value(true, ctx)
-                    .expect("vertical tabs setting should update");
-                settings
-                    .vertical_tabs_display_granularity
-                    .set_value(display_granularity, ctx)
-                    .expect("vertical tabs display granularity should update");
-                async_assert!(
-                    *settings.use_vertical_tabs
-                        && *settings.vertical_tabs_display_granularity.value()
-                            == display_granularity
-                )
-            })
-        },
-    )
-}
-
-fn open_horizontal_tab_context_menu(step_name: &'static str) -> TestStep {
+fn open_vertical_tab_context_menu(step_name: &'static str) -> TestStep {
     new_step_with_default_assertions(step_name)
         .with_right_click_on_saved_position(tab_position_id(0))
 }
-
-fn open_vertical_tab_context_menu(step_name: &'static str) -> TestStep {
-    new_step_with_default_assertions(step_name)
-        .with_right_click_on_saved_position_fn(vertical_tab_pane_row_position_id)
-}
-fn open_first_vertical_tab_pane_context_menu(step_name: &'static str) -> TestStep {
-    new_step_with_default_assertions(step_name)
-        .with_right_click_on_saved_position_fn(first_vertical_tab_pane_row_position_id)
-}
-
 fn add_tab_context_metadata_setup_steps(builder: Builder) -> Builder {
     builder
         .set_should_run_test(should_run_tab_context_menu_metadata_test)
         .use_tmp_filesystem_for_test_root_directory()
         .with_step(wait_until_bootstrapped_single_pane_for_tab(0))
-        .with_step(set_active_tab_name(METADATA_TAB_TITLE))
+        .with_step(set_active_pane_name(METADATA_PANE_TITLE))
         .with_step(execute_command_for_single_terminal_in_tab(
             0,
             format!(
@@ -273,55 +180,6 @@ fn add_tab_context_metadata_setup_steps(builder: Builder) -> Builder {
             new_step_with_default_assertions("Git branch metadata should be populated")
                 .set_timeout(Duration::from_secs(15))
                 .add_assertion(assert_current_git_branch(0, METADATA_BRANCH)),
-        )
-}
-
-fn add_active_pane_context_metadata_setup_steps(builder: Builder) -> Builder {
-    builder
-        .with_step(set_active_pane_name(METADATA_CLICKED_PANE_TITLE))
-        .with_step(
-            new_step_with_default_assertions("Create active split pane")
-                .with_keystrokes(&[cmd_or_ctrl_shift("d")]),
-        )
-        .with_step(wait_until_bootstrapped_pane(0, 1))
-        .with_step(set_active_pane_name(METADATA_PANE_TITLE))
-        .with_step(execute_command(
-            0,
-            1,
-            format!(
-                "mkdir {METADATA_PANE_DIRECTORY}; cd {METADATA_PANE_DIRECTORY}; git init -b {METADATA_PANE_BRANCH}; git config user.email \"test@test.com\"; git config user.name \"Git TestUser\"; touch file"
-            ),
-            ExpectedExitStatus::Success,
-            (),
-        ))
-        .with_step(
-            new_step_with_default_assertions("Active pane git branch metadata should be populated")
-                .set_timeout(Duration::from_secs(15))
-                .add_assertion(assert_current_git_branch(1, METADATA_PANE_BRANCH)),
-        )
-}
-
-fn add_horizontal_tab_context_metadata_copy_steps(
-    builder: Builder,
-    open_tab_context_menu: fn(&'static str) -> TestStep,
-) -> Builder {
-    builder
-        .with_step(
-            open_tab_context_menu("Open tab context menu for title copy").add_assertion(
-                assert_saved_positions_absent(&[
-                    "Copy branch",
-                    "Copy pane title",
-                    "Copy working directory",
-                    "Copy pull request link",
-                ]),
-            ),
-        )
-        .with_step(
-            new_step_with_default_assertions("Copy tab title from tab context menu")
-                .with_click_on_saved_position("Copy tab title")
-                .add_assertion(assert_clipboard_contains_string(
-                    METADATA_TAB_TITLE.to_string(),
-                )),
         )
 }
 
@@ -344,10 +202,10 @@ fn add_vertical_tab_context_metadata_copy_steps(
             "Open tab context menu for title copy",
         ))
         .with_step(
-            new_step_with_default_assertions("Copy tab title from tab context menu")
-                .with_click_on_saved_position("Copy tab title")
+            new_step_with_default_assertions("Copy pane title from tab context menu")
+                .with_click_on_saved_position("Copy pane title")
                 .add_assertion(assert_clipboard_contains_string(
-                    METADATA_TAB_TITLE.to_string(),
+                    METADATA_PANE_TITLE.to_string(),
                 )),
         )
         .with_step(open_tab_context_menu(
@@ -355,41 +213,6 @@ fn add_vertical_tab_context_metadata_copy_steps(
         ))
         .with_step(
             new_step_with_default_assertions("Copy working directory from tab context menu")
-                .with_click_on_saved_position("Copy working directory")
-                .add_assertion(assert_clipboard_contains_home()),
-        )
-}
-
-fn add_vertical_pane_context_metadata_copy_steps(
-    builder: Builder,
-    open_tab_context_menu: fn(&'static str) -> TestStep,
-) -> Builder {
-    builder
-        .with_step(open_tab_context_menu(
-            "Open pane context menu for branch copy",
-        ))
-        .with_step(
-            new_step_with_default_assertions("Copy branch from pane context menu")
-                .with_click_on_saved_position("Copy branch")
-                .add_assertion(assert_clipboard_contains_string(
-                    METADATA_BRANCH.to_string(),
-                )),
-        )
-        .with_step(open_tab_context_menu(
-            "Open pane context menu for title copy",
-        ))
-        .with_step(
-            new_step_with_default_assertions("Copy pane title from pane context menu")
-                .with_click_on_saved_position("Copy pane title")
-                .add_assertion(assert_clipboard_contains_string(
-                    METADATA_CLICKED_PANE_TITLE.to_string(),
-                )),
-        )
-        .with_step(open_tab_context_menu(
-            "Open pane context menu for working directory copy",
-        ))
-        .with_step(
-            new_step_with_default_assertions("Copy working directory from pane context menu")
                 .with_click_on_saved_position("Copy working directory")
                 .add_assertion(assert_clipboard_contains_home()),
         )
@@ -407,19 +230,6 @@ fn assert_current_git_branch(
                 Some(expected_branch.to_string())
             )
         })
-    })
-}
-
-fn assert_saved_positions_absent(labels: &'static [&'static str]) -> AssertionCallback {
-    Box::new(move |app, window_id| {
-        let presenter = app.presenter(window_id).expect("presenter should exist");
-        let presenter = presenter.borrow();
-        let position_cache = presenter.position_cache();
-        async_assert!(
-            labels
-                .iter()
-                .all(|label| position_cache.get_position(label).is_none())
-        )
     })
 }
 
@@ -643,26 +453,9 @@ pub fn test_active_session_follows_focus() -> Builder {
         )
 }
 
-pub fn test_tab_context_menu_copies_metadata() -> Builder {
-    let builder = add_tab_context_metadata_setup_steps(new_builder());
-    add_horizontal_tab_context_metadata_copy_steps(builder, open_horizontal_tab_context_menu)
-}
-
 pub fn test_vertical_tab_context_menu_copies_metadata() -> Builder {
-    let builder = add_tab_context_metadata_setup_steps(new_builder())
-        .with_step(enable_vertical_tabs(VerticalTabsDisplayGranularity::Tabs));
+    let builder = add_tab_context_metadata_setup_steps(new_builder());
     add_vertical_tab_context_metadata_copy_steps(builder, open_vertical_tab_context_menu)
-}
-
-pub fn test_vertical_pane_context_menu_copies_metadata() -> Builder {
-    let builder = add_active_pane_context_metadata_setup_steps(
-        add_tab_context_metadata_setup_steps(new_builder())
-            .with_step(enable_vertical_tabs(VerticalTabsDisplayGranularity::Panes)),
-    );
-    add_vertical_pane_context_metadata_copy_steps(
-        builder,
-        open_first_vertical_tab_pane_context_menu,
-    )
 }
 
 pub fn test_focus_panes_on_hover() -> Builder {

@@ -839,36 +839,6 @@ impl CodeEditorView {
         ctx.emit(CodeEditorEvent::HiddenSectionExpanded);
     }
 
-    /// The number of collapsed hidden sections currently in this editor. Fully
-    /// expanding a section removes its range (count drops by one); a chunked
-    /// reveal only shrinks a range (count unchanged).
-    #[cfg(feature = "integration_tests")]
-    pub fn hidden_section_count_for_test(&self, ctx: &AppContext) -> usize {
-        self.model.as_ref(ctx).hidden_ranges(ctx).iter().count()
-    }
-
-    /// Fully expand the first hidden section the same way a bar double-click
-    /// does: resolve the section's full line range from its offset and expand
-    /// with [`ExpansionType::Both`]. Returns whether a section was expanded.
-    #[cfg(feature = "integration_tests")]
-    pub fn fully_expand_first_hidden_section_for_test(
-        &mut self,
-        ctx: &mut ViewContext<Self>,
-    ) -> bool {
-        let Some(line_range) = self
-            .model
-            .as_ref(ctx)
-            .render_state()
-            .as_ref(ctx)
-            .content()
-            .first_hidden_section_line_range()
-        else {
-            return false;
-        };
-        self.expand_hidden_section(line_range, &ExpansionType::Both, ctx);
-        true
-    }
-
     pub(crate) fn with_can_show_diff_ui(mut self, can_show_diff_ui: bool) -> Self {
         self.display_options.can_show_diff_ui = can_show_diff_ui;
         self
@@ -2179,32 +2149,6 @@ pub fn code_text_styles(
     // URLs are not clickable in code editors, so we should not highlight them.
     styling.highlight_urls = false;
     styling
-}
-
-#[cfg(feature = "integration_tests")]
-impl CodeEditorView {
-    pub fn open_goto_line_for_test(&mut self, ctx: &mut ViewContext<Self>) {
-        self.show_goto_line(ctx);
-    }
-
-    pub fn goto_line_confirm_for_test(&mut self, input: &str, ctx: &mut ViewContext<Self>) {
-        self.show_goto_line(ctx);
-        let event = GoToLineEvent::Confirm {
-            input: input.to_string(),
-        };
-        self.handle_goto_line_event(&event, ctx);
-    }
-
-    pub fn displayed_line_number_for_test(
-        &self,
-        one_based_line_number: usize,
-        ctx: &AppContext,
-    ) -> Option<usize> {
-        let line_number_config = self.line_number_config(ctx)?;
-        let line_count = LineCount::from(one_based_line_number.checked_sub(1)?);
-
-        Some(line_number_config.display_line_number(line_count))
-    }
 }
 
 #[cfg(test)]

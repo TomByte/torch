@@ -4,6 +4,8 @@ use std::path::PathBuf;
 use std::pin::Pin;
 use std::time::Duration;
 
+use settings::Setting as _;
+use torch::terminal::session_settings::HonorPS1;
 use torchui_core::integration::{self, PersistedDataMap, TestDriver, TestSetupUtils, TestStep};
 use torchui_core::{App, WindowId};
 use torchui_extras::user_preferences::UserPreferences;
@@ -48,10 +50,14 @@ impl Builder {
             builder = builder.with_real_display();
         }
 
+        // A fresh Torch profile shows the shell's own prompt. Most tests are written against the
+        // Torch prompt (block labels, prompt chips), so they opt out unless they say otherwise.
+        let user_prefs = HashMap::from([(HonorPS1::storage_key().to_owned(), false.to_string())]);
+
         Self {
             inner: builder,
             setup: None,
-            user_prefs: Default::default(),
+            user_prefs,
         }
     }
 

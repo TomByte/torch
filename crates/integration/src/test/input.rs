@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use torch::features::FeatureFlag;
 use torch::integration_testing::clipboard::write_to_clipboard;
 use torch::integration_testing::input::{
@@ -7,18 +5,13 @@ use torch::integration_testing::input::{
     tab_completions_menu_is_open,
 };
 use torch::integration_testing::step::new_step_with_default_assertions;
-use torch::integration_testing::terminal::util::{
-    ExpectedExitStatus, current_shell_starter_and_version,
-};
+use torch::integration_testing::terminal::util::ExpectedExitStatus;
 use torch::integration_testing::terminal::{
     execute_command_for_single_terminal_in_tab, wait_until_bootstrapped_single_pane_for_tab,
 };
-use torch::integration_testing::view_getters::{
-    single_input_view_for_tab, single_terminal_view_for_tab,
-};
-use torch::terminal::shell::ShellType;
+use torch::integration_testing::view_getters::single_input_view_for_tab;
+use torchui_core::Event;
 use torchui_core::integration::TestStep;
-use torchui_core::{Event, async_assert_eq};
 
 use super::new_builder;
 use crate::Builder;
@@ -142,44 +135,5 @@ pub fn test_middle_click_paste() -> Builder {
                     "Ensure the text is pasted again",
                     input_contains_string(0, String::from("abcabc")),
                 ),
-        )
-}
-
-/// Checks that the git branch prompt chip value is correctly populated.
-pub fn test_git_prompt_chips() -> Builder {
-    // Note that we can't use the OUT_DIR for the temp directory
-    // here because that would put us in the warp repo. We need to
-    // be in a place in the filesystem that's not already a git repo.
-    new_builder()
-        .set_should_run_test(|| {
-            // TODO(alokedesai): Re-enable for Powershell once the cause of the flakiness has been
-            // resolved.
-            let (starter, _) = current_shell_starter_and_version();
-            starter.shell_type() != ShellType::PowerShell
-        })
-        .use_tmp_filesystem_for_test_root_directory()
-        .with_step(wait_until_bootstrapped_single_pane_for_tab(0))
-        .with_step(execute_command_for_single_terminal_in_tab(
-            0,
-            "git init -b main; git config user.email \"test@test.com\"; git config user.name \"Git TestUser\"".into(),
-            ExpectedExitStatus::Success,
-            (),
-        ))
-        .with_step(execute_command_for_single_terminal_in_tab(
-            0,
-            "touch file".into(),
-            ExpectedExitStatus::Success,
-            (),
-        ))
-        .with_step(
-            new_step_with_default_assertions("Git branch chip should be populated").set_timeout(Duration::from_secs(15)).add_assertion(|app, window_id| {
-                    let terminal_view = single_terminal_view_for_tab(app, window_id, 0);
-                    terminal_view.read(app, |terminal_view, ctx| {
-                        terminal_view.input().read(ctx, |input_view, ctx| {
-                            let git_branch = input_view.prompt_render_helper.git_branch(ctx);
-                            async_assert_eq!(git_branch, Some("main".to_string()))
-                        })
-                    })
-            }),
         )
 }

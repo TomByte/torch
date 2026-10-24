@@ -7030,13 +7030,6 @@ impl ShowCommentEditorProvider for ShowCommentEditor {
 #[path = "scroll_preservation.rs"]
 mod scroll_preservation;
 use scroll_preservation::RelocatableScrollContext;
-
-#[cfg(feature = "integration_tests")]
-#[path = "code_review_view_integration.rs"]
-mod code_review_view_integration;
-
-#[cfg(feature = "integration_tests")]
-pub use code_review_view_integration::CodeReviewVisibleAnchorForTest;
 use torch_errors::report_error;
 
 #[cfg(test)]

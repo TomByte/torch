@@ -4,7 +4,7 @@ use torchui::windowing::WindowManager;
 use torchui::{App, SingletonEntity, WindowId, async_assert};
 
 use crate::integration_testing::step::new_step_with_default_assertions;
-use crate::integration_testing::view_getters::{settings_view, theme_chooser_view};
+use crate::integration_testing::view_getters::settings_view;
 use crate::settings_view::{
     SEARCH_EDITOR_POSITION_ID, SettingsAction, SettingsSection, nav_page_position_id,
 };
@@ -163,26 +163,6 @@ fn assert_section_selected(
     async_assert!(
         actual == expected,
         "Selected settings section should be {expected:?}, was {actual:?}"
-    )
-}
-
-pub fn assert_theme_chooser_contains(theme_name: &'static str, count: usize) -> TestStep {
-    TestStep::new("Assert the theme chooser contents match our expectations").add_named_assertion(
-        format!("The theme chooser contains {count} theme(s) named \"{theme_name}\""),
-        move |app, window_id| {
-            let theme_chooser = theme_chooser_view(app, window_id);
-
-            let result: usize = theme_chooser.read(app, |theme_chooser, _| {
-                theme_chooser
-                    .themes()
-                    .filter(|theme| theme.matches(theme_name))
-                    .count()
-            });
-            async_assert!(
-                result == count,
-                "Should have exactly {count} theme(s) named test theme. Instead had {result}"
-            )
-        },
     )
 }
 

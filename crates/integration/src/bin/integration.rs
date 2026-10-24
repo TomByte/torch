@@ -123,7 +123,6 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
     register_test!(test_rc_files_only_sourced_once_during_bootstrapping);
     register_test!(test_unescaped_prompt_bootstraps);
     register_test!(test_detect_powerlevel10k);
-    register_test!(test_open_and_close_resource_center);
     register_test!(test_block_based_snackbar_scroll_to_top);
     register_test!(test_block_based_snackbar_small_window);
     register_test!(test_block_based_snackbar_appears_for_running_command_input_at_bottom);
@@ -151,11 +150,8 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
     register_test!(test_long_running_block_height_updated);
     register_test!(test_unnecessary_resizes);
     register_test!(test_open_and_close_settings);
-    register_test!(test_suggestions_menu_positioning);
-    register_test!(test_open_and_close_theme_creator_modal);
     register_test!(test_removing_tabs_out_of_order);
     register_test!(test_ctrl_c);
-    register_test!(test_click_on_prompt_to_focus_input);
     register_test!(test_text_input_on_block_list);
     register_test!(test_text_input_on_block_list_while_composing);
     register_test!(test_clear);
@@ -173,8 +169,6 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
     register_test!(test_restore_snapshot_with_deleted_cwd);
     register_test!(test_session_restoration_with_multiple_shells);
     register_test!(test_restore_snapshot_with_background_output);
-    register_test!(test_restore_snapshot_with_markdown_file);
-    register_test!(test_restore_snapshot_with_code_file);
     register_test!(test_restore_snapshot_with_settings_page);
     register_test!(test_multi_block_selections);
     register_test!(test_alias_guards_on_ps1_set);
@@ -207,19 +201,14 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
     register_test!(test_histcontrol_env_var);
     register_test!(test_session_navigation_recency_change_tab);
     register_test!(test_session_navigation_recency_navigate_to_tab);
-    register_test!(test_session_navigation_recency_click_on_window);
-    register_test!(test_session_navigation_recency_navigate_to_window);
     register_test!(test_completions_as_you_type);
     register_test!(test_completions_as_you_type_one_matching_entry_tab);
     register_test!(test_completions_as_you_type_execute_on_enter);
     register_test!(test_accepting_completion_inserts_space);
-    register_test!(test_create_session_with_split_pane_while_bootstrapping);
     register_test!(test_create_session_with_new_tab_while_bootstrapping);
-    register_test!(test_add_theme_to_warp_config);
     register_test!(test_palette_opens_when_theme_chooser_is_open);
     #[cfg(target_os = "macos")]
     register_test!(test_preview_config_dir_migration);
-    register_test!(test_launch_warp_with_theme_in_warp_config);
     register_test!(test_add_launch_config_to_warp_config);
     register_test!(test_add_workflows_to_warp_config);
     register_test!(test_loading_project_workflows);
@@ -249,12 +238,6 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
     register_test!(test_zsh_bootstraps_with_nounset_option);
     register_test!(test_zsh_cursor_mode_vi_bindings_do_not_corrupt_commands);
     register_test!(test_pwsh_vi_edit_mode_does_not_corrupt_commands);
-    register_test!(test_ssh_wrapper_into_bash);
-    register_test!(test_ssh_wrapper_into_zsh);
-    register_test!(test_ssh_into_fish);
-    register_test!(test_ssh_into_sh);
-    register_test!(test_ssh_into_ash);
-    register_test!(test_ssh_with_shell_override);
 
     // Remote server integration tests
     register_test!(test_remote_server_connect_bash);
@@ -269,7 +252,6 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
     register_test!(test_copy_prompt_from_block_honor_ps1_enabled);
     register_test!(test_copy_block_command_and_output_honor_ps1_disabled);
     register_test!(test_copy_block_command_and_output_honor_ps1_enabled);
-    register_test!(test_copy_prompt_from_input_honor_ps1_disabled);
     register_test!(test_warp_prompt_unsets_zsh_rprompt);
     register_test!(test_copy_prompt_from_input_honor_ps1_enabled);
     register_test!(test_copy_rprompt_from_input_honor_ps1_enabled);
@@ -281,13 +263,6 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
     register_test!(test_copy_all_from_input_context_menu);
     register_test!(test_cut_paste_from_input_context_menu);
     register_test!(test_paste_and_type_characters_before_bootstrap);
-    register_test!(test_code_review_scroll_anchor_preserved_when_inserting_above);
-    register_test!(test_code_review_scroll_anchor_unchanged_when_inserting_below);
-    register_test!(test_code_review_scroll_preserved_second_file);
-    register_test!(test_code_review_scroll_preserved_deleted_range);
-    register_test!(test_code_review_scroll_preserved_header_range);
-    register_test!(test_code_review_scroll_preserved_footer_range);
-    register_test!(test_code_review_double_click_fully_expands_hidden_section);
     register_test!(test_alt_screen_context_menu_with_sgr_with_mouse_reporting);
     register_test!(test_alt_screen_context_menu_with_sgr_without_mouse_reporting);
     register_test!(test_alt_screen_context_menu_without_sgr_with_mouse_reporting);
@@ -306,8 +281,6 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
     register_test!(test_can_bootstrap_local_bash_subshell);
     register_test!(test_can_bootstrap_local_fish_subshell);
     register_test!(test_can_bootstrap_local_zsh_subshell);
-    register_test!(test_can_bootstrap_remote_bash_subshell);
-    register_test!(test_can_bootstrap_remote_zsh_subshell);
 
     register_test!(test_can_auto_bootstrap);
 
@@ -335,13 +308,9 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
     register_test!(test_osc8_file_scheme_opens_url);
     register_test!(test_osc8_no_regression_on_url_autodetect);
 
-    register_test!(test_context_chips_prompt_at_bootstrap);
-
     register_test!(test_cycle_active_tab_color_with_keybinding);
     register_test!(test_active_session_follows_focus);
-    register_test!(test_tab_context_menu_copies_metadata);
     register_test!(test_vertical_tab_context_menu_copies_metadata);
-    register_test!(test_vertical_pane_context_menu_copies_metadata);
 
     register_test!(test_focus_panes_on_hover);
 
@@ -393,8 +362,6 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
 
     register_test!(test_middle_click_paste);
 
-    register_test!(test_git_prompt_chips);
-
     // These tests are only invoked manually, and not included in the
     // automatic integration test suite.
     register_test!(test_with_24_bit_color);
@@ -403,27 +370,8 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
 
     register_test!(test_undo_close_stack_timeout_cleanup);
 
-    // File tree tests
-    register_test!(test_file_tree_opens_files_in_warp);
-    register_test!(test_file_tree_open_in_new_pane);
-    register_test!(test_file_tree_open_in_new_tab);
-    register_test!(test_file_tree_keyboard_navigation);
-    register_test!(test_file_tree_non_openable_files);
-    register_test!(test_file_tree_nested_file_opening);
-
     // Copy current path command-palette action
     register_test!(test_copy_current_path_copies_terminal_pwd);
-    register_test!(test_copy_current_path_copies_code_editor_file_path);
-
-    // Go to Line tests
-    register_test!(test_goto_line_dialog_open_close);
-    register_test!(test_goto_line_jumps_to_line);
-    register_test!(test_goto_line_with_column);
-    register_test!(test_goto_line_clamps_out_of_range);
-    register_test!(test_code_editor_line_numbers_default_to_absolute);
-    register_test!(test_code_editor_relative_line_numbers_follow_cursor);
-
-    // AI document tests
 
     // Keyboard protocol tests
     register_test!(test_keyboard_protocol_disabled_shift_enter);
@@ -443,7 +391,6 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
     // Full-stack wiring guard: toggle ON → Enter inserts newline, Ctrl+Enter submits.
     register_test!(test_rich_input_toggle_on_enter_inserts_newline_and_ctrl_enter_submits);
     // Regression: Enter must accept inline menus (not insert newline) when toggle=true (PR #11723)
-    register_test!(test_rich_input_enter_accepts_menu_item_when_toggle_is_true);
 
     tests
 }

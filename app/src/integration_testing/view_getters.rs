@@ -16,7 +16,6 @@ use crate::settings_view::SettingsView;
 use crate::settings_view::keybindings::KeybindingsView;
 use crate::terminal::TerminalView;
 use crate::terminal::input::Input;
-use crate::themes::theme_chooser::ThemeChooser;
 use crate::view_components::find::{Find, FindEvent, FindModel};
 use crate::workflows::CategoriesView;
 use crate::workspace::Workspace;
@@ -170,11 +169,6 @@ pub fn pane_group_view(app: &App, window_id: WindowId, tab_index: usize) -> View
             })
             .to_owned()
     })
-}
-
-/// Panics if there isn't a single theme chooser view in the view hierarchy.
-pub fn theme_chooser_view(app: &App, window_id: WindowId) -> ViewHandle<ThemeChooser> {
-    singleton_view_of_type(app, window_id)
 }
 
 /// Panics if there isn't a single single keybindings view in the view hierarchy.

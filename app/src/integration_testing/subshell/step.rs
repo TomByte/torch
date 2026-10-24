@@ -4,7 +4,7 @@ use regex::Regex;
 use torchui::integration::{AssertionOutcome, TestStep};
 use torchui::{async_assert, async_assert_eq};
 
-use super::util::{remote_server_ssh_command, remote_server_user_host, ssh_command, user_host};
+use super::util::{remote_server_ssh_command, remote_server_user_host};
 use crate::integration_testing::step::assert_no_pending_model_events;
 use crate::integration_testing::terminal::util::ExpectedExitStatus;
 use crate::integration_testing::terminal::{
@@ -14,7 +14,6 @@ use crate::integration_testing::terminal::{
 };
 use crate::integration_testing::view_getters::{single_terminal_view, terminal_view};
 use crate::terminal::model::rich_content::RichContentType;
-use crate::terminal::view::WithinBlockBanner;
 
 /// Sets environment variables needed by the Google Cloud SDK.
 pub fn setup_gcloud_sdk() -> TestStep {
@@ -26,16 +25,6 @@ pub fn setup_gcloud_sdk() -> TestStep {
     )
 }
 
-/// Initiates an SSH connection, executing the necessary command and then
-/// waiting briefly (to avoid any subsequent steps performing assertions about
-/// long-running command state faster than the ssh command can fail).
-pub fn enter_ssh_command(shell: &str) -> TestStep {
-    let ssh_command = ssh_command(shell, true);
-    TestStep::new(&format!("Start ssh connection with remote shell '{shell}'"))
-        .with_typed_characters(&[&ssh_command])
-        .with_keystrokes(&["enter"])
-        .set_post_step_pause(Duration::from_millis(250))
-}
 pub fn enter_remote_server_ssh_command(shell: &str) -> TestStep {
     let ssh_command = remote_server_ssh_command(shell, true);
     TestStep::new(&format!(
@@ -44,20 +33,6 @@ pub fn enter_remote_server_ssh_command(shell: &str) -> TestStep {
     .with_typed_characters(&[&ssh_command])
     .with_keystrokes(&["enter"])
     .set_post_step_pause(Duration::from_millis(250))
-}
-
-pub fn enter_remote_subshell_command(shell: &str) -> TestStep {
-    let ssh_command = ssh_command(shell, false);
-    TestStep::new(&format!("Start ssh connection with remote shell '{shell}'"))
-        .with_typed_characters(&[&ssh_command])
-        .with_keystrokes(&["enter"])
-        .set_post_step_pause(Duration::from_millis(250))
-}
-
-/// Waits for a password prompt.
-pub fn wait_for_password_prompt(tab_index: usize, shell: &str) -> TestStep {
-    let user_host = user_host(shell);
-    wait_for_password_prompt_for_user_host(tab_index, user_host)
 }
 
 pub fn wait_for_remote_server_password_prompt(tab_index: usize, shell: &str) -> TestStep {
@@ -91,19 +66,12 @@ pub fn enter_local_subshell_command(shell: &str) -> TestStep {
         .set_post_step_pause(Duration::from_millis(50))
 }
 
-pub fn assert_subshell_banner_is_showing() -> TestStep {
-    TestStep::new("Assert the Warpify banner is visible")
+pub fn assert_warpify_footer_is_showing() -> TestStep {
+    TestStep::new("Assert the Warpify footer is visible")
         .add_assertion(move |app, window_id| {
             let terminal_view = single_terminal_view(app, window_id);
-            terminal_view.read(app, |view, _ctx| {
-                async_assert!(matches!(
-                    view.model
-                        .lock()
-                        .block_list_mut()
-                        .active_block()
-                        .block_banner(),
-                    Some(WithinBlockBanner::WarpifyBanner(..))
-                ))
+            terminal_view.read(app, |view, ctx| {
+                async_assert!(view.is_warpify_footer_active(ctx))
             })
         })
         // Wait for outstanding model events to finish before moving to the next step

@@ -1659,6 +1659,8 @@ fn row(
     .build()
     .on_click(move |ctx, _, _| ctx.dispatch_typed_action(WorkspaceAction::CloseTab(index)))
     .finish();
+    let close_button =
+        SavePosition::new(close_button, &format!("close_tab_button:{index}")).finish();
     let transitions = &workspace.vertical_tabs_panel.torch_rows;
     let fills = palette.row_fills();
     let card = active.then(|| transitions.card());
@@ -2334,12 +2336,18 @@ fn sidebar(
                 WorkspaceAction::ToggleVerticalTabsPanel,
                 palette,
             ))
-            .with_child(control(
-                WarpIcon::Plus,
-                state.new_tab_button_state.clone(),
-                WorkspaceAction::AddDefaultTab,
-                palette,
-            ))
+            .with_child(
+                SavePosition::new(
+                    control(
+                        WarpIcon::Plus,
+                        state.new_tab_button_state.clone(),
+                        WorkspaceAction::AddDefaultTab,
+                        palette,
+                    ),
+                    super::super::NEW_TAB_BUTTON_POSITION_ID,
+                )
+                .finish(),
+            )
             .finish(),
     )
     .with_padding_left(80.)

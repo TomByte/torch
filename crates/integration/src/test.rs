@@ -4,11 +4,8 @@
 
 mod block_filtering;
 mod bootstrapping;
-mod code_review;
 mod copy_current_path;
 mod ctrl_d;
-mod file_tree;
-mod goto_line;
 mod history;
 mod input;
 mod keyboard_protocol;
@@ -27,7 +24,6 @@ mod settings_file_hot_reload;
 mod settings_file_migration;
 mod settings_navigation;
 mod settings_private;
-mod ssh;
 mod subshell;
 mod sync_inputs;
 mod typeahead;
@@ -44,12 +40,9 @@ use std::time::Duration;
 use anyhow::{Result, anyhow};
 pub use block_filtering::*;
 pub use bootstrapping::*;
-pub use code_review::*;
 pub use copy_current_path::*;
 pub use ctrl_d::*;
-pub use file_tree::*;
 use float_cmp::assert_approx_eq;
-pub use goto_line::*;
 pub use history::*;
 pub use input::*;
 pub use keyboard_protocol::*;
@@ -74,7 +67,6 @@ pub use settings_file_migration::*;
 pub use settings_navigation::*;
 pub use settings_private::*;
 use shell::ShellType;
-pub use ssh::*;
 pub use subshell::*;
 use sum_tree::SeekBias;
 pub use sync_inputs::*;
@@ -82,9 +74,7 @@ use sysinfo::{Pid, ProcessesToUpdate, System};
 use torch::appearance::Appearance;
 use torch::cmd_or_ctrl_shift;
 use torch::features::FeatureFlag;
-use torch::integration_testing::assertions::{
-    assert_binding_display_string, assert_is_left_panel_open,
-};
+use torch::integration_testing::assertions::assert_binding_display_string;
 use torch::integration_testing::block::{
     BlockPosition, LinePosition, assert_block_visible, assert_bottom_of_block_approx_at,
     assert_num_blocks_in_model,
@@ -93,7 +83,6 @@ use torch::integration_testing::clipboard::assert_clipboard_contains_string;
 use torch::integration_testing::command_palette::{
     TestStepsExt, close_command_palette, open_command_palette, open_command_palette_and_run_action,
 };
-use torch::integration_testing::context_chips::assert_working_dir_is_present;
 use torch::integration_testing::find::{Find, FindWithinBlockState};
 use torch::integration_testing::input::{
     input_contains_string, input_is_empty, open_input_context_menu,
@@ -102,7 +91,7 @@ use torch::integration_testing::navigation_palette::{
     RecentSession, check_recency, navigate_to_other_session_step, open_navigation_palette_step,
 };
 use torch::integration_testing::pane_group::assert_focused_pane_index;
-use torch::integration_testing::settings::{assert_theme_chooser_contains, toggle_setting};
+use torch::integration_testing::settings::toggle_setting;
 use torch::integration_testing::step::{
     assert_no_pending_model_events, new_step_with_default_assertions,
     new_step_with_default_assertions_for_pane,
@@ -131,8 +120,8 @@ use torch::integration_testing::terminal::{
     validate_git_branch, wait_until_bootstrapped_pane, wait_until_bootstrapped_single_pane_for_tab,
 };
 use torch::integration_testing::view_getters::{
-    single_input_suggestions_view_for_tab, single_input_view_for_tab,
-    single_terminal_pane_view_for_tab, single_terminal_view, single_terminal_view_for_tab,
+    pane_group_view, single_input_suggestions_view_for_tab, single_input_view_for_tab,
+    single_terminal_view, single_terminal_view_for_tab,
 };
 use torch::integration_testing::window::{
     add_and_save_window, add_window, add_window_and_check_bounds, close_window,
@@ -169,7 +158,7 @@ use torch::workspace::{
     NEW_SESSION_MENU_BUTTON_POSITION_ID, NEW_TAB_BUTTON_POSITION_ID, Workspace,
 };
 use torchui_core::event::KeyState;
-use torchui_core::integration::{AssertionOutcome, StepData, TestStep};
+use torchui_core::integration::{AssertionOutcome, TestStep};
 use torchui_core::keymap::{Keystroke, PerPlatformKeystroke, Trigger};
 use torchui_core::platform::keyboard::KeyCode;
 use torchui_core::platform::{OperatingSystem, TerminationMode};
@@ -264,65 +253,6 @@ pub fn test_add_workflows_to_warp_config() -> Builder {
                     },
                 ),
         )
-}
-
-pub fn test_launch_warp_with_theme_in_warp_config() -> Builder {
-    new_builder()
-        .with_setup(move |utils| {
-            utils.set_env("TORCH_CONFIG_WATCHER_DELAY_MS", Some((10).to_string()));
-
-            integration_testing::create_file_from_assets(
-                TEST_ONLY_ASSETS,
-                "test_theme.yaml",
-                &integration_testing::themes::themes_dir().join("test_theme.yaml"),
-            );
-        })
-        .with_step(assert_theme_chooser_contains("Test Theme", 1))
-}
-
-/// Adds a theme to the mocked out warp config directory and verifies that
-/// the theme appears in the theme picker.
-pub fn test_add_theme_to_warp_config() -> Builder {
-    new_builder()
-        .with_setup(move |utils| {
-            utils.set_env("TORCH_CONFIG_WATCHER_DELAY_MS", Some((10).to_string()));
-
-            std::fs::create_dir_all(integration_testing::themes::themes_dir())
-                .expect("Should be able to create themes dir");
-        })
-        .with_step(wait_until_bootstrapped_single_pane_for_tab(0))
-        .with_step(assert_theme_chooser_contains("Test Theme", 0))
-        .with_step(TestStep::new("Write a new theme").with_setup(|_utils| {
-            integration_testing::create_file_from_assets(
-                TEST_ONLY_ASSETS,
-                "test_theme.yaml",
-                &integration_testing::themes::themes_dir().join("test_theme.yaml"),
-            );
-        }))
-        .with_step(assert_theme_chooser_contains("Test Theme", 1))
-        .with_step(
-            TestStep::new("Write another new theme").with_setup(|_utils| {
-                integration_testing::create_file_from_assets(
-                    TEST_ONLY_ASSETS,
-                    "test_theme.yaml",
-                    &integration_testing::themes::themes_dir().join("test_theme_2.yaml"),
-                );
-            }),
-        )
-        .with_step(assert_theme_chooser_contains("Test Theme", 2))
-        .with_step(
-            TestStep::new("Write another new theme with a name in the .yaml").with_setup(
-                |_utils| {
-                    integration_testing::create_file_from_assets(
-                        TEST_ONLY_ASSETS,
-                        "test_theme_with_name.yaml",
-                        &integration_testing::themes::themes_dir().join("test_theme_3.yaml"),
-                    );
-                },
-            ),
-        )
-        .with_step(assert_theme_chooser_contains("test_theme", 1))
-        .with_step(assert_theme_chooser_contains("Test Theme", 2))
 }
 
 pub fn test_palette_opens_when_theme_chooser_is_open() -> Builder {
@@ -475,177 +405,14 @@ pub fn test_open_and_close_settings() -> Builder {
         )
         .with_step(
             new_step_with_default_assertions("Close the settings tab with close tab button")
-                .with_hover_over_saved_position("close_tab_button:1")
+                .with_hover_over_saved_position("tab_position_1")
                 .with_click_on_saved_position("close_tab_button:1")
                 .add_assertion(assert_tab_count(1))
                 .add_assertion(assert_tab_title(0, "~")),
         )
 }
 
-pub fn test_open_and_close_theme_creator_modal() -> Builder {
-    new_builder()
-        .with_step(wait_until_bootstrapped_single_pane_for_tab(0))
-        .with_steps(
-            open_command_palette_and_run_action("Open Theme Picker").add_assertion(
-                |app, window_id| {
-                    let views = app.views_of_type(window_id).unwrap();
-                    let workspace: &ViewHandle<Workspace> = views.first().unwrap();
-                    workspace.read(app, |view, _| {
-                        async_assert!(view.is_theme_chooser_open(), "Theme chooser should be open")
-                    })
-                },
-            ),
-        )
-        .with_step(
-            new_step_with_default_assertions("Click on button to open theme creator modal")
-                .with_click_on_saved_position("create_theme_button")
-                .add_assertion(move |app, window_id| {
-                    let views: Vec<ViewHandle<Workspace>> = app.views_of_type(window_id).unwrap();
-                    let workspace = views.first().unwrap();
-                    workspace.read(app, |view, _| {
-                        async_assert!(
-                            view.is_theme_creator_modal_open(),
-                            "Theme creator modal should be open"
-                        )
-                    })
-                }),
-        )
-        .with_step(
-            new_step_with_default_assertions("Click on cancel button to close theme creator modal")
-                .with_click_on_saved_position("theme_creator_cancel_button")
-                .add_assertion(move |app, window_id| {
-                    let views: Vec<ViewHandle<Workspace>> = app.views_of_type(window_id).unwrap();
-                    let workspace = views.first().unwrap();
-                    workspace.read(app, |view, _| {
-                        async_assert!(
-                            !view.is_theme_creator_modal_open(),
-                            "Theme creator modal should be closed"
-                        )
-                    })
-                }),
-        )
-}
-
-pub fn test_suggestions_menu_positioning() -> Builder {
-    new_builder()
-        .with_step(wait_until_bootstrapped_single_pane_for_tab(0))
-        // Make sure there are multiple items in the working directory,
-        // otherwise the tab completion menu will not appear (as there is
-        // nothing for the user to choose between).
-        .with_step(execute_command_for_single_terminal_in_tab(
-            0,
-            "mkdir some_dir && touch some_file".to_owned(),
-            ExpectedExitStatus::Success,
-            (),
-        ))
-        .with_step(
-            new_step_with_default_assertions("Open suggestions")
-                .with_typed_characters(&["ls", " "])
-                .with_keystrokes(&["tab"])
-                .add_named_assertion_with_data_from_prior_step(
-                    "Assert buffer text and save suggestion position",
-                    |app, window_id, step_data| {
-                        let input_view = single_input_view_for_tab(app, window_id, 0);
-                        let outcome = input_view.read(app, |view, ctx| {
-                            view.buffer_text(ctx);
-                            async_assert!(
-                                view.buffer_text(ctx) == *"ls ",
-                                "Input box should contain 'ls '"
-                            )
-                        });
-
-                        app.update(|ctx| {
-                            let presenter = ctx.presenter(window_id).expect("window should exist");
-                            let suggestions_menu_x = presenter
-                                .borrow()
-                                .position_cache()
-                                .get_position("input_suggestions:index_0")
-                                .unwrap()
-                                .origin_x();
-                            step_data.insert("suggestions_menu_x", suggestions_menu_x);
-                        });
-                        outcome
-                    },
-                ),
-        )
-        .with_step(
-            new_step_with_default_assertions("Open Torch Drive")
-                .with_click_on_saved_position("workspace:toggle_left_panel")
-                .add_assertion(assert_is_left_panel_open()),
-        )
-        .with_step(
-            new_step_with_default_assertions("Assert that suggestions menu updated")
-                .add_named_assertion_with_data_from_prior_step(
-                    "Assert suggestions menu shifted to the right",
-                    |app, window_id, step_data| {
-                        app.update(|ctx| {
-                            let presenter = ctx.presenter(window_id).expect("window should exist");
-                            let suggestions_menu_x = presenter
-                                .borrow()
-                                .position_cache()
-                                .get_position("input_suggestions:index_0")
-                                .unwrap()
-                                .origin_x();
-                            assert!(
-                                suggestions_menu_x
-                                    > *step_data
-                                        .get("suggestions_menu_x")
-                                        .expect("data should have been set in earlier step"),
-                                "Suggestions menu should have adjusted rightward"
-                            );
-                        });
-                        AssertionOutcome::Success
-                    },
-                ),
-        )
-}
-
 // TODO(CORE-2721): Block count / index Failed b/c of in-band generators
-pub fn test_click_on_prompt_to_focus_input() -> Builder {
-    new_builder()
-        .with_step(wait_until_bootstrapped_single_pane_for_tab(0))
-        .with_step(clear_blocklist_to_remove_bootstrapped_blocks())
-        .with_step(execute_command_for_single_terminal_in_tab(
-            0,
-            String::new(),
-            ExpectedExitStatus::Success,
-            (),
-        ))
-        .with_step(
-            new_step_with_default_assertions("Click on block to unfocus the input box")
-                .with_click_on_saved_position("block_index:0")
-                .add_assertion(|app, window_id| {
-                    let terminal_view = single_terminal_view_for_tab(app, window_id, 0);
-                    terminal_view.read(app, |view, _ctx| {
-                        view.input().read(app, |input, ctx| {
-                            async_assert!(
-                                !input.editor().is_focused(ctx),
-                                "Input box should not be focused"
-                            )
-                        })
-                    })
-                }),
-        )
-        .with_step(
-            new_step_with_default_assertions("Click on prompt and verify input box is focused")
-                .with_click_on_saved_position_fn(|app, window_id| {
-                    let input = single_input_view_for_tab(app, window_id, 0);
-                    format!("prompt_area_{}", input.id())
-                })
-                .add_assertion(|app, window_id| {
-                    let terminal_view = single_terminal_view_for_tab(app, window_id, 0);
-                    terminal_view.read(app, |view, _ctx| {
-                        view.input().read(app, |input, ctx| {
-                            async_assert!(
-                                input.editor().is_focused(ctx),
-                                "Input box should be focused"
-                            )
-                        })
-                    })
-                }),
-        )
-}
-
 pub fn test_clear() -> Builder {
     new_builder()
         .with_step(wait_until_bootstrapped_single_pane_for_tab(0))
@@ -2049,46 +1816,9 @@ pub fn test_add_and_close_session() -> Builder {
         )
         .with_step(
             new_step_with_default_assertions("Close the first tab with close tab button")
-                .with_hover_over_saved_position("close_tab_button:0")
+                .with_hover_over_saved_position("tab_position_0")
                 .with_click_on_saved_position("close_tab_button:0")
                 .add_assertion(assert_tab_count(1)),
-        )
-}
-
-pub fn test_open_and_close_resource_center() -> Builder {
-    new_builder()
-        .with_step(wait_until_bootstrapped_single_pane_for_tab(0))
-        .with_step(
-            new_step_with_default_assertions("Click the resource center button to show the menu")
-                .with_hover_over_saved_position("resource_center_button")
-                .with_click_on_saved_position("resource_center_button")
-                .add_assertion(|app, window_id| {
-                    let views = app.views_of_type(window_id).expect("No workspace found");
-                    let workspace: &ViewHandle<Workspace> =
-                        views.first().expect("No workspace in views");
-                    let is_resource_center_showing =
-                        workspace.read(app, |workspace, _| workspace.is_resource_center_showing());
-                    async_assert!(
-                        is_resource_center_showing,
-                        "Expected resource center to be showing",
-                    )
-                }),
-        )
-        .with_step(
-            new_step_with_default_assertions("Click the resource center button to hide the menu")
-                .with_hover_over_saved_position("resource_center_button")
-                .with_click_on_saved_position("resource_center_button")
-                .add_assertion(|app, window_id| {
-                    let views = app.views_of_type(window_id).expect("No workspace found");
-                    let workspace: &ViewHandle<Workspace> =
-                        views.first().expect("No workspace in views");
-                    let is_resource_center_showing =
-                        workspace.read(app, |workspace, _| workspace.is_resource_center_showing());
-                    async_assert!(
-                        !is_resource_center_showing,
-                        "Expected resource center not to be showing",
-                    )
-                }),
         )
 }
 
@@ -4064,8 +3794,8 @@ pub fn test_session_navigation_recency_change_tab() -> Builder {
         .with_step(
             new_step_with_default_assertions("Check that second tab is most recent.")
                 .add_assertion(move |app, window_id| {
-                    let first_tab_session = single_terminal_pane_view_for_tab(app, window_id, 0);
-                    let second_tab_session = single_terminal_pane_view_for_tab(app, window_id, 1);
+                    let first_tab_session = pane_group_view(app, window_id, 0);
+                    let second_tab_session = pane_group_view(app, window_id, 1);
                     check_recency(
                         first_tab_session,
                         second_tab_session,
@@ -4098,8 +3828,8 @@ pub fn test_session_navigation_recency_change_tab() -> Builder {
         .with_step(
             new_step_with_default_assertions("Check that first tab is most recent.").add_assertion(
                 move |app, window_id| {
-                    let first_tab_session = single_terminal_pane_view_for_tab(app, window_id, 0);
-                    let second_tab_session = single_terminal_pane_view_for_tab(app, window_id, 1);
+                    let first_tab_session = pane_group_view(app, window_id, 0);
+                    let second_tab_session = pane_group_view(app, window_id, 1);
                     check_recency(
                         first_tab_session,
                         second_tab_session,
@@ -4140,8 +3870,8 @@ pub fn test_session_navigation_recency_navigate_to_tab() -> Builder {
         .with_step(
             new_step_with_default_assertions("Check that first tab is most recent.").add_assertion(
                 move |app, window_id| {
-                    let first_tab_session = single_terminal_pane_view_for_tab(app, window_id, 0);
-                    let second_tab_session = single_terminal_pane_view_for_tab(app, window_id, 1);
+                    let first_tab_session = pane_group_view(app, window_id, 0);
+                    let second_tab_session = pane_group_view(app, window_id, 1);
                     check_recency(
                         first_tab_session,
                         second_tab_session,
@@ -4151,194 +3881,6 @@ pub fn test_session_navigation_recency_navigate_to_tab() -> Builder {
                     )
                 },
             ),
-        )
-}
-
-pub fn test_session_navigation_recency_click_on_window() -> Builder {
-    new_builder()
-        .with_step(wait_until_bootstrapped_single_pane_for_tab(0))
-        .with_step(
-            new_step_with_default_assertions("Opening a new window")
-                .with_action(move |app, _, _| {
-                    app.dispatch_global_action("root_view:open_new", ());
-                })
-                .add_assertion(move |app, window_id| {
-                    let terminal_view = single_terminal_view_for_tab(app, window_id, 0);
-                    terminal_view.read(app, |view, _ctx| {
-                        view.input().read(app, |input, ctx| {
-                            async_assert!(
-                                input.editor().is_focused(ctx),
-                                "Input box of new window should be focused"
-                            )
-                        })
-                    })
-                })
-                .add_assertion(move |app, _| {
-                    let window_id = app.read(|ctx| ctx.windows().active_window());
-                    AssertionOutcome::SuccessWithData(StepData::new(
-                        "first_window_id",
-                        window_id.expect("window id present"),
-                    ))
-                })
-                .set_timeout(Duration::from_secs(10)),
-        )
-        .with_step(open_navigation_palette_step())
-        .with_step(
-            new_step_with_default_assertions("Check that second window session is most recent.")
-                .add_named_assertion_with_data_from_prior_step(
-                    "Check that second window session is most recent",
-                    move |app, window_id, data| {
-                        assert_eq!(app.window_ids().len(), 2, "Should have 2 windows open");
-                        let Some(first_window_id) = data.get("first_window_id") else {
-                            return AssertionOutcome::failure(
-                                "Expected window id to be passed from prior step".to_owned(),
-                            );
-                        };
-                        let first_window_session =
-                            single_terminal_pane_view_for_tab(app, *first_window_id, 0);
-                        let second_window_session =
-                            single_terminal_pane_view_for_tab(app, window_id, 0);
-                        check_recency(
-                            first_window_session,
-                            second_window_session,
-                            RecentSession::Second,
-                            app,
-                            window_id,
-                        )
-                    },
-                ),
-        )
-        .with_step(close_command_palette())
-        .with_step(
-            new_step_with_default_assertions("Click on the first window to focus it.")
-                .set_timeout(Duration::from_secs(10))
-                .with_click_on_saved_position_fn(|app, window_id| {
-                    let input = single_input_view_for_tab(app, window_id, 0);
-                    format!("prompt_area_{}", input.id())
-                })
-                .add_assertion(|app, window_id| {
-                    let terminal_view = single_terminal_view_for_tab(app, window_id, 0);
-                    terminal_view.read(app, |view, _ctx| {
-                        view.input().read(app, |input, ctx| {
-                            async_assert!(
-                                input.editor().is_focused(ctx),
-                                "Input box should be focused."
-                            )
-                        })
-                    })
-                }),
-        )
-        .with_step(open_navigation_palette_step())
-        .with_step(
-            new_step_with_default_assertions("Check that first window session is most recent.")
-                .add_named_assertion_with_data_from_prior_step(
-                    "first window is most recent",
-                    move |app, window_id, data| {
-                        let Some(first_window_id) = data.get("first_window_id") else {
-                            return AssertionOutcome::failure(
-                                "Expected window id to be passed from prior step".to_owned(),
-                            );
-                        };
-                        let first_window_session =
-                            single_terminal_pane_view_for_tab(app, *first_window_id, 0);
-                        let second_window_session =
-                            single_terminal_pane_view_for_tab(app, window_id, 0);
-                        check_recency(
-                            first_window_session,
-                            second_window_session,
-                            RecentSession::First,
-                            app,
-                            window_id,
-                        )
-                    },
-                ),
-        )
-}
-
-pub fn test_session_navigation_recency_navigate_to_window() -> Builder {
-    new_builder()
-        .with_step(wait_until_bootstrapped_single_pane_for_tab(0))
-        .with_step(
-            new_step_with_default_assertions("Opening a new window")
-                .with_action(move |app, _, _| {
-                    app.dispatch_global_action("root_view:open_new", ());
-                })
-                .add_assertion(move |app, window_id| {
-                    let terminal_view = single_terminal_view_for_tab(app, window_id, 0);
-                    terminal_view.read(app, |view, _ctx| {
-                        view.input().read(app, |input, ctx| {
-                            async_assert!(
-                                input.editor().is_focused(ctx),
-                                "Input box of new window should be focused"
-                            )
-                        })
-                    })
-                })
-                .add_assertion(save_active_window_id("first_window_id"))
-                .set_timeout(Duration::from_secs(10)),
-        )
-        .with_step(open_navigation_palette_step())
-        .with_step(
-            new_step_with_default_assertions("Check that second window session is most recent.")
-                .add_named_assertion_with_data_from_prior_step(
-                    "first window is most recent",
-                    move |app, window_id, data| {
-                        let Some(first_window_id) = data.get("first_window_id") else {
-                            return AssertionOutcome::failure(
-                                "Expected window id to be passed from prior step".to_owned(),
-                            );
-                        };
-                        let first_window_session =
-                            single_terminal_pane_view_for_tab(app, *first_window_id, 0);
-                        let second_window_session =
-                            single_terminal_pane_view_for_tab(app, window_id, 0);
-                        check_recency(
-                            first_window_session,
-                            second_window_session,
-                            RecentSession::Second,
-                            app,
-                            window_id,
-                        )
-                    },
-                ),
-        )
-        .with_step(
-            navigate_to_other_session_step().add_assertion(|app, window_id| {
-                let terminal_view = single_terminal_view_for_tab(app, window_id, 0);
-                terminal_view.read(app, |view, _ctx| {
-                    view.input().read(app, |input, ctx| {
-                        async_assert!(
-                            input.editor().is_focused(ctx),
-                            "Input box of original window should be focused"
-                        )
-                    })
-                })
-            }),
-        )
-        .with_step(open_navigation_palette_step())
-        .with_step(
-            new_step_with_default_assertions("Check that first window session is most recent.")
-                .add_named_assertion_with_data_from_prior_step(
-                    "first window is most recent",
-                    move |app, window_id, data| {
-                        let Some(first_window_id) = data.get("first_window_id") else {
-                            return AssertionOutcome::failure(
-                                "Expected window id to be passed from prior step".to_owned(),
-                            );
-                        };
-                        let first_window_session =
-                            single_terminal_pane_view_for_tab(app, *first_window_id, 0);
-                        let second_window_session =
-                            single_terminal_pane_view_for_tab(app, window_id, 0);
-                        check_recency(
-                            first_window_session,
-                            second_window_session,
-                            RecentSession::First,
-                            app,
-                            window_id,
-                        )
-                    },
-                ),
         )
 }
 
@@ -4464,87 +4006,6 @@ pub fn test_accepting_completion_inserts_space() -> Builder {
                     ));
                 });
                 AssertionOutcome::Success
-            }),
-        )
-}
-
-pub fn test_create_session_with_split_pane_while_bootstrapping() -> Builder {
-    // cd to the test's tmp directory so we can test pwd preservation from parent to child
-    // session while the parent is still bootstrapping -- we just need to cd to any non-home
-    // directory.
-    let test_dir = PathBuf::from(cargo_target_tmpdir::get());
-    new_builder()
-        .with_step(wait_until_bootstrapped_single_pane_for_tab(0))
-        .with_step(execute_command_for_single_terminal_in_tab(
-            0,
-            format!(
-                "cd {}",
-                test_dir
-                    .to_str()
-                    .expect("Test temp directory path should be UTF-8 compatible.")
-            ),
-            ExpectedExitStatus::Success,
-            (),
-        ))
-        .with_step(
-            new_step_with_default_assertions(
-                "Create two new sessions in two split panes, with the second being created before \
-                the first is done bootstrapping.",
-            )
-            .with_keystrokes(&[cmd_or_ctrl_shift("d")])
-            .with_keystrokes(&[cmd_or_ctrl_shift("d")]),
-        )
-        .with_step(
-            wait_until_bootstrapped_single_pane_for_tab(1)
-                .set_timeout(Duration::from_secs(10))
-                .add_assertion(|app, window_id| {
-                    assert_single_terminal_in_tab_bootstrapped(app, window_id, 1)
-                }),
-        )
-        .with_step(
-            wait_until_bootstrapped_single_pane_for_tab(2)
-                .set_timeout(Duration::from_secs(10))
-                .add_assertion(|app, window_id| {
-                    assert_single_terminal_in_tab_bootstrapped(app, window_id, 2)
-                }),
-        )
-        .with_step(
-            new_step_with_default_assertions(
-                "Check working directories of newly created sessions.",
-            )
-            .set_timeout(Duration::from_secs(10))
-            .add_assertion(move |app, window_id| {
-                let views = app
-                    .views_of_type(window_id)
-                    .expect("App has no open window.");
-                let workspace: &ViewHandle<Workspace> =
-                    views.first().expect("Window is missing Workspace view.");
-                let test_dir_ref: &PathBuf = &test_dir;
-                workspace.read(app, |workspace, ctx| {
-                    workspace
-                        .get_pane_group_view(0)
-                        .expect("Workspace has no tab view.")
-                        .read(ctx, |pane_group, ctx| {
-                            for pane_index in 0..=2 {
-                                let actual_path = pane_group
-                                    .terminal_view_at_pane_index(pane_index, ctx)
-                                    .unwrap_or_else(|| {
-                                        panic!(
-                                            "Pane group is missing pane view at index {pane_index}"
-                                        )
-                                    })
-                                    .read(ctx, |view, ctx| view.active_session_path_if_local(ctx));
-
-                                if !matches!(actual_path, Some(path) if &path == test_dir_ref) {
-                                    return AssertionOutcome::failure(format!(
-                                        "Pane {pane_index} was not in expected path {}",
-                                        test_dir_ref.display()
-                                    ));
-                                }
-                            }
-                            AssertionOutcome::Success
-                        })
-                })
             }),
         )
 }
@@ -4696,7 +4157,7 @@ pub fn test_cmd_enter() -> Builder {
                 input_view.read(app, |view, ctx| {
                     let history_menu_open = matches!(
                         view.suggestions_mode_model().as_ref(ctx).mode(),
-                        InputSuggestionsMode::HistoryUp { .. }
+                        InputSuggestionsMode::InlineHistoryMenu { .. }
                     );
                     let buffer_text_is_last_executed_command = view.buffer_text(ctx) == *"touch test1";
 
@@ -4711,8 +4172,8 @@ pub fn test_cmd_enter() -> Builder {
             }),
         )
         .with_step(
-            new_step_with_default_assertions("Cmd+enter on history item, command is executed")
-                .with_keystrokes(&[cmd_or_ctrl_shift("enter")])
+            new_step_with_default_assertions("Enter on history item, command is executed")
+                .with_keystrokes(&["enter"])
                 .add_assertion(assert_command_executed_for_single_terminal_in_tab(0, "touch test1".to_string()))
                 .add_assertion(assert_active_block_received_precmd(0, 0))
         )
@@ -5863,7 +5324,7 @@ pub fn test_copy_block_command_and_output_honor_ps1_disabled() -> Builder {
             new_step_with_default_assertions("Copy block copies command and output")
                 .with_click_on_saved_position("Copy")
                 .add_assertion(assert_clipboard_contains_string(format!(
-                    "{command}\nWARP_COPY_E2E_OUTPUT"
+                    "{command}\nTORCH_COPY_E2E_OUTPUT"
                 ))),
         )
 }
@@ -5932,32 +5393,11 @@ function prompt {{
             new_step_with_default_assertions("Copy block includes PS1 prompt, command, and output")
                 .with_click_on_saved_position("Copy")
                 .add_assertion(assert_clipboard_contains_string(format!(
-                    "{prompt_text}{command}\nWARP_PS1_COPY_E2E_OUTPUT"
+                    "{prompt_text}{command}\nTORCH_PS1_COPY_E2E_OUTPUT"
                 ))),
         )
 }
 
-pub fn test_copy_prompt_from_input_honor_ps1_disabled() -> Builder {
-    new_builder()
-        .use_tmp_filesystem_for_test_root_directory()
-        .with_step(wait_until_bootstrapped_single_pane_for_tab(0))
-        .with_step(execute_command_for_single_terminal_in_tab(
-            0,
-            // cding into home gives us a predictable prompt
-            "cd $HOME".into(),
-            ExpectedExitStatus::Success,
-            (),
-        ))
-        .with_step(
-            new_step_with_default_assertions("Copy prompt copies to clipboard properly")
-                .with_right_click_on_saved_position_fn(|app, window_id| {
-                    let input = single_input_view_for_tab(app, window_id, 0);
-                    format!("prompt_area_{}", input.id())
-                })
-                .with_click_on_saved_position("Copy prompt")
-                .add_assertion(assert_clipboard_contains_string("~".into())),
-        )
-}
 pub fn test_warp_prompt_unsets_zsh_rprompt() -> Builder {
     new_builder()
         .set_should_run_test(|| {
@@ -6746,19 +6186,6 @@ pub fn test_tab_behavior_setting() -> Builder {
         ))
 }
 
-pub fn test_context_chips_prompt_at_bootstrap() -> Builder {
-    new_builder()
-        .with_step(wait_until_bootstrapped_single_pane_for_tab(0))
-        .with_user_defaults(HashMap::from([
-            (HonorPS1::storage_key().to_owned(), false.to_string()),
-            (String::from("SavedPrompt"), String::from("Default")),
-        ]))
-        .with_step(
-            new_step_with_default_assertions("Check Torch prompt")
-                .add_assertion(assert_working_dir_is_present(0)),
-        )
-}
-
 pub fn test_pass_control_sequences_to_long_running_block() -> Builder {
     new_builder()
         .with_step(wait_until_bootstrapped_single_pane_for_tab(0))
@@ -6823,7 +6250,7 @@ pub fn test_undo_close_stack_timeout_cleanup() -> Builder {
         .with_step(wait_until_bootstrapped_single_pane_for_tab(1))
         .with_step(
             new_step_with_default_assertions("Close the tab to trigger undo close stack")
-                .with_hover_over_saved_position("close_tab_button:1")
+                .with_hover_over_saved_position("tab_position_1")
                 .with_click_on_saved_position("close_tab_button:1")
                 .add_assertion(assert_tab_count(1)),
         )

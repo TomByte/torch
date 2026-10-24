@@ -359,15 +359,6 @@ impl ThemeChooser {
         self.mode = mode;
     }
 
-    // this is actually used in our integration test assertions,
-    // but rust thinks it's unused when running unit tests in this crate
-    #[allow(dead_code)]
-    pub fn themes(&self) -> impl Iterator<Item = &ThemeKind> {
-        self.themes
-            .iter()
-            .map(|theme_chooser_item| &theme_chooser_item.kind)
-    }
-
     fn close(&mut self, ctx: &mut ViewContext<Self>) {
         *self.selected_theme = None;
         *self.filtered_themes = None;
