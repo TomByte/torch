@@ -39,14 +39,8 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::Ligatures,
         #[cfg(feature = "selectable_prompt")]
         FeatureFlag::SelectablePrompt,
-        #[cfg(feature = "viewing_shared_sessions")]
-        FeatureFlag::ViewingSharedSessions,
-        #[cfg(feature = "creating_shared_sessions")]
-        FeatureFlag::CreatingSharedSessions,
         #[cfg(feature = "agent_mode")]
         FeatureFlag::AgentMode,
-        #[cfg(feature = "shared_session_long_running_commands")]
-        FeatureFlag::SharedSessionWriteToLongRunningCommands,
         #[cfg(feature = "resize_fix")]
         FeatureFlag::ResizeFix,
         #[cfg(feature = "richtext_multiselect")]
@@ -85,8 +79,6 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::CloudAgentExecutionConfig,
         #[cfg(all(feature = "simulate_github_unauthed", debug_assertions))]
         FeatureFlag::SimulateGithubUnauthed,
-        #[cfg(feature = "session_sharing_acls")]
-        FeatureFlag::SessionSharingAcls,
         #[cfg(feature = "full_screen_zen_mode")]
         FeatureFlag::FullScreenZenMode,
         #[cfg(feature = "minimalist_ui")]
@@ -131,8 +123,6 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::AgentModePrimaryXML,
         #[cfg(feature = "agent_mode_pre_plan_xml")]
         FeatureFlag::AgentModePrePlanXML,
-        #[cfg(feature = "agent_shared_sessions")]
-        FeatureFlag::AgentSharedSessions,
         #[cfg(feature = "suggested_rules")]
         FeatureFlag::SuggestedRules,
         #[cfg(feature = "suggested_agent_mode_workflows")]
@@ -373,12 +363,6 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::InlineHistoryMenu,
         #[cfg(feature = "inline_repo_menu")]
         FeatureFlag::InlineRepoMenu,
-        #[cfg(feature = "cloud_mode")]
-        FeatureFlag::CloudMode,
-        #[cfg(feature = "cloud_mode_from_local_session")]
-        FeatureFlag::CloudModeFromLocalSession,
-        #[cfg(feature = "cloud_mode_image_context")]
-        FeatureFlag::CloudModeImageContext,
         #[cfg(feature = "summarization_via_message_replacement")]
         FeatureFlag::SummarizationViaMessageReplacement,
         #[cfg(feature = "pluggable_notifications")]
@@ -451,8 +435,6 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::AgentHarness,
         #[cfg(feature = "oz_handoff")]
         FeatureFlag::OzHandoff,
-        #[cfg(feature = "handoff_local_cloud")]
-        FeatureFlag::HandoffLocalCloud,
         #[cfg(feature = "hoa_notifications")]
         FeatureFlag::HOANotifications,
         #[cfg(feature = "open_code_notifications")]
@@ -471,20 +453,12 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::GPTConfigurableContextWindow,
         #[cfg(feature = "git_operations_in_code_review")]
         FeatureFlag::GitOperationsInCodeReview,
-        #[cfg(feature = "hoa_remote_control")]
-        FeatureFlag::HOARemoteControl,
         #[cfg(feature = "codex_notifications")]
         FeatureFlag::CodexNotifications,
         #[cfg(feature = "codex_plugin")]
         FeatureFlag::CodexPlugin,
         #[cfg(feature = "trim_trailing_blank_lines")]
         FeatureFlag::TrimTrailingBlankLines,
-        #[cfg(feature = "cloud_mode_setup_v2")]
-        FeatureFlag::CloudModeSetupV2,
-        #[cfg(feature = "cloud_mode_input_v2")]
-        FeatureFlag::CloudModeInputV2,
-        #[cfg(feature = "handoff_cloud_cloud")]
-        FeatureFlag::HandoffCloudCloud,
         #[cfg(feature = "git_credential_refresh")]
         FeatureFlag::GitCredentialRefresh,
         #[cfg(feature = "factory_deferred_repositories")]
@@ -507,16 +481,12 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::OscHyperlinks,
         #[cfg(feature = "terminal_lifecycle_recovery")]
         FeatureFlag::TerminalLifecycleRecovery,
-        #[cfg(feature = "ctrl_c_cancels_third_party_harness")]
-        FeatureFlag::CtrlCCancelsThirdPartyHarness,
         #[cfg(feature = "shell_widget_handoff")]
         FeatureFlag::ShellWidgetHandoff,
         #[cfg(feature = "history_search_ranking_v2")]
         FeatureFlag::HistorySearchRankingV2,
         #[cfg(feature = "stored_screenshots")]
         FeatureFlag::StoredScreenshots,
-        #[cfg(feature = "cloud_agent_shell_respawn")]
-        FeatureFlag::CloudAgentShellRespawn,
     ]);
 
     flags

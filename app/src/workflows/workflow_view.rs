@@ -3084,7 +3084,7 @@ impl BackingView for WorkflowView {
 
     fn render_header_content(
         &self,
-        _ctx: &view::HeaderRenderContext<'_>,
+        _ctx: &view::HeaderRenderContext,
         app: &AppContext,
     ) -> view::HeaderContent {
         let mut content =

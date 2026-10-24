@@ -67,11 +67,6 @@ pub enum Event {
     CursorBlinkingChange(bool),
     TerminalClear,
     Bell,
-    /// The shell process exited but the terminal has not been finalized yet; the surface must
-    /// either recover the shell or call `TerminalModel::finalize_exit`.
-    ShellExitObserved {
-        status: ObservedExitStatus,
-    },
     Exit {
         reason: ExitReason,
     },
@@ -111,13 +106,6 @@ pub enum Event {
     /// the running program. The shell stores these characters, inserts them into its internal line
     /// buffer, and re-echoes them after Precmd.
     Typeahead,
-    /// Emitted when the agent is tagged in or out of the active block.
-    /// Users "Tag an agent in" when they ask the agent to take over a long running command
-    /// that was started outside of a conversation (and they tag the agent out when they take control back).
-    AgentTaggedInChanged {
-        block_id: BlockId,
-        is_tagged_in: bool,
-    },
     Handler(HandlerEvent),
     /// Carries non-UGC lifecycle diagnostics to the model dispatcher for telemetry.
     LifecycleRecovery(LifecycleRecoveryRecord),
@@ -443,7 +431,6 @@ impl Debug for Event {
             Event::ClipboardLoad(_, _) => write!(f, "ClipboardLoad()"),
             Event::TerminalClear => write!(f, "TerminalClear"),
             Event::Bell => write!(f, "Bell"),
-            Event::ShellExitObserved { status } => write!(f, "ShellExitObserved({status:?})"),
             Event::Exit { reason } => write!(f, "Exit({reason:?})"),
             Event::CursorBlinkingChange(blinking) => write!(f, "CursorBlinking({blinking})"),
             Event::PreInteractiveSSHSession => write!(f, "Pre-Interactive SSH Session"),
@@ -467,15 +454,6 @@ impl Debug for Event {
             Event::PromptUpdated => write!(f, "PromptUpdated"),
             Event::HonorPS1OutOfSync => write!(f, "HonorPS1OutOfSync"),
             Event::Typeahead => write!(f, "Typeahead"),
-            Event::AgentTaggedInChanged {
-                block_id,
-                is_tagged_in,
-            } => {
-                write!(
-                    f,
-                    "AgentTaggedInChanged(block_id: {block_id:?}, is_tagged_in: {is_tagged_in})"
-                )
-            }
             Event::Handler(handler_event) => write!(f, "Handler({handler_event:?}))"),
             Event::LifecycleRecovery(record) => write!(f, "LifecycleRecovery({record:?})"),
             Event::RemoteServerReady { session_id } => {

@@ -145,10 +145,6 @@ fn no_lrc_control_requirement_not_satisfied_when_in_control() {
 
 // --- CODEBASE_CONTEXT flag tests ---
 
-// --- CLOUD_AGENT flag tests ---
-
-// --- CLOUD_MODE_V2_COMPOSER flag tests ---
-
 // --- AI_ENABLED flag tests ---
 
 // --- Combined flag tests ---

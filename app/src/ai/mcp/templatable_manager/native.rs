@@ -104,36 +104,6 @@ pub enum McpIntegration {
 }
 
 impl TemplatableMCPServerManager {
-    pub(crate) fn replace_runtime_environment(
-        &mut self,
-        environment: HashMap<String, String>,
-        ctx: &mut ModelContext<Self>,
-    ) -> (
-        Vec<TemplatableMCPServerInstallation>,
-        Vec<oneshot::Receiver<()>>,
-    ) {
-        let uuids: HashSet<_> = self
-            .active_servers
-            .keys()
-            .chain(self.spawned_servers.keys())
-            .copied()
-            .collect();
-        let retained = uuids
-            .iter()
-            .filter(|uuid| {
-                !self.cli_spawned_server_uuids.contains(uuid)
-                    && !self.builtin_server_uuids.contains(uuid)
-            })
-            .filter_map(|uuid| self.reconnectable_installation(*uuid).cloned())
-            .collect();
-        self.runtime_environment = environment;
-        let stopped = uuids
-            .into_iter()
-            .map(|uuid| self.shutdown_server_and_wait(uuid, ctx))
-            .collect();
-        (retained, stopped)
-    }
-
     /// Returns `true` if the given MCP integration is currently running.
     pub fn is_mcp_server_running(&self, integration: McpIntegration) -> bool {
         match integration {

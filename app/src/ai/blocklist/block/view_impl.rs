@@ -69,7 +69,6 @@ use crate::ai::blocklist::inline_action::inline_action_icons::icon_size;
 use crate::ai::blocklist::model::AIBlockModelHelper;
 use crate::appearance::Appearance;
 use crate::settings::{AISettings, InputModeSettings, InputSettings};
-use crate::terminal::TerminalView;
 use crate::terminal::block_list_element::BlockListMenuSource;
 use crate::terminal::grid_renderer::URL_COLOR;
 use crate::terminal::model::ObfuscateSecrets;
@@ -77,7 +76,6 @@ use crate::terminal::model::blocks::{BlockHeightItem, RemovableBlocklistItem, Ri
 use crate::terminal::model::rich_content::RichContentType;
 use crate::terminal::safe_mode_settings::get_secret_obfuscation_mode;
 use crate::terminal::view::TerminalAction;
-use crate::terminal::view::ambient_agent::is_cloud_agent_pre_first_exchange;
 use crate::ui_components::blended_colors;
 use crate::ui_components::icons::Icon;
 use crate::util::link_detection::DetectedLinkType;
@@ -889,39 +887,11 @@ impl View for AIBlock {
                 contents.add_child(header.with_content_item_spacing().finish());
                 did_render_header = true;
             }
-            // Derive the display info for the participant who initiated this exchange.
-            // For non-shared sessions, this is just the current user.
-            // For shared sessions, this is the user who initiated the request.
-            let (avatar_display_name, profile_image_path, avatar_color) = self
-                .model
-                .response_initiator(app)
-                .and_then(|participant_id| {
-                    app.view_with_id::<TerminalView>(self.window_id, self.terminal_view_id)
-                        .and_then(|terminal_view| {
-                            terminal_view.read(app, |view, app| {
-                                view.shared_session_presence_manager().and_then(move |pm| {
-                                    pm.as_ref(app).get_participant(&participant_id).map(
-                                        |participant| {
-                                            // Get the display info from the participant
-                                            // who sent this query.
-                                            (
-                                                participant.info.profile_data.display_name.clone(),
-                                                participant.info.profile_data.photo_url.clone(),
-                                                Some(participant.color),
-                                            )
-                                        },
-                                    )
-                                })
-                            })
-                        })
-                })
-                // Fallback to the current user's info if this is not a shared session
-                // or the participant is not found.
-                .unwrap_or((
-                    self.user_display_name.clone(),
-                    self.profile_image_path.clone(),
-                    None,
-                ));
+            let (avatar_display_name, profile_image_path, avatar_color) = (
+                self.user_display_name.clone(),
+                self.profile_image_path.clone(),
+                None,
+            );
             if let Some(rendered_query) = query::maybe_render(
                 query::Props {
                     user_display_name: &avatar_display_name,
@@ -987,25 +957,6 @@ impl View for AIBlock {
         }
 
         let has_accepted_edits = self.has_accepted_file_edits_since_last_query(app);
-        let terminal_model = self.terminal_model.lock();
-        let shared_session_status = terminal_model.shared_session_status().clone();
-        let is_conversation_transcript_viewer = terminal_model.is_conversation_transcript_viewer();
-
-        let is_cloud_agent_pre_first_exchange = is_cloud_agent_pre_first_exchange(
-            self.ambient_agent_view_model.as_ref(),
-            &self.agent_view_controller,
-            &terminal_model,
-            app,
-        );
-        drop(terminal_model);
-
-        #[cfg(not(target_family = "wasm"))]
-        let is_cloud_agent_context = FeatureFlag::CloudMode.is_enabled()
-            && self
-                .ambient_agent_view_model
-                .as_ref()
-                .is_some_and(|model| model.as_ref(app).is_ambient_agent());
-
         contents.add_child(output::render(
             output::Props {
                 model: self.model.as_ref(),
@@ -1060,11 +1011,7 @@ impl View for AIBlock {
                 is_usage_footer_expanded: self.is_usage_footer_expanded,
                 is_turn_panel_expanded: self.is_turn_panel_expanded,
                 turn_panel_view: self.turn_panel_view.as_ref(),
-                shared_session_status: &shared_session_status,
                 terminal_view_id: self.terminal_view_id,
-                is_conversation_transcript_viewer,
-                #[cfg(not(target_family = "wasm"))]
-                is_cloud_agent_context,
                 aws_bedrock_credentials_error_view: self
                     .aws_bedrock_credentials_error_view
                     .as_ref(),
@@ -1083,7 +1030,6 @@ impl View for AIBlock {
                     .is_latest_visible_exchange_in_root_task(app)
                     && self.has_imported_comments_in_current_thread(app),
                 ask_user_question_view: self.ask_user_question_view.as_ref(),
-                is_cloud_agent_pre_first_exchange,
             },
             app,
         ));

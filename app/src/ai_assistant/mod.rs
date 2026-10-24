@@ -19,10 +19,6 @@ use crate::terminal::model::terminal_model::BlockIndex;
 use crate::workflows::workflow::{Argument, Workflow};
 
 pub mod execution_context;
-pub mod panel;
-pub mod requests;
-pub mod transcript;
-pub mod utils;
 
 /// We want to make sure the user doesn't send a prompt too large.s
 /// Since a token is ~ 4 chars, the limit we impose here is 250 tokens.

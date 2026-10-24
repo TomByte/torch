@@ -34,7 +34,6 @@ use torch_cli::provider::ProviderCommand;
 use torch_cli::runner::RunnerCommand;
 use torch_cli::schedule::ScheduleSubcommand;
 use torch_cli::secret::SecretCommand;
-use torch_cli::share::ShareRequest;
 use torch_cli::skill::SkillSpec;
 use torch_cli::task::{MessageCommand, TaskCommand};
 use torch_cli::{CliCommand, GlobalOptions, OZ_HARNESS_ENV};
@@ -124,7 +123,6 @@ mod schedule;
 mod secret;
 pub(crate) mod setup_observability;
 #[cfg(not(target_family = "wasm"))]
-mod standby;
 mod telemetry;
 mod text_layout;
 
@@ -387,12 +385,6 @@ fn run_agent(
                 return Err(anyhow::anyhow!("unexpected argument '--runner' found"));
             }
             ambient::run_ambient_agent(ctx, args)
-        }
-        #[cfg(not(target_family = "wasm"))]
-        AgentCommand::RunCloudStandby(args) => standby::run(ctx, args),
-        #[cfg(target_family = "wasm")]
-        AgentCommand::RunCloudStandby(_) => {
-            Err(anyhow::anyhow!("invalid value 'run-cloud-standby'"))
         }
         AgentCommand::Profile(sub) => profiles::run(ctx, global_options, sub),
         AgentCommand::List(args) => {
@@ -727,7 +719,6 @@ fn build_execution_task_and_options(
         use_factory_repositories,
         experimental: None,
         parent_run_id: config.parent_run_id.map(|id| id.into_inner()),
-        should_share: FeatureFlag::AgentSharedSessions.is_enabled(),
         idle_on_complete,
         idle_on_fail,
         secrets: Default::default(),
@@ -960,11 +951,6 @@ impl AgentDriverRunner {
                 .await?;
 
             // Pull relevant variables out of args before moving it into the closure.
-            let share_requests = match execution_config {
-                Some(config) => Some(execution_config::sharing_acls(config.session_sharing_acls.clone())
-                    .map_err(AgentDriverError::ConfigBuildFailed)?),
-                None => args.share.share.clone(),
-            };
             let bedrock_inference_role = match execution_config {
                 Some(config) => config.inference_providers.as_ref()
                     .and_then(|providers| providers.aws_bedrock.as_ref())
@@ -1078,7 +1064,6 @@ impl AgentDriverRunner {
                         ctx,
                         driver_options,
                         output_format,
-                        share_requests,
                         task,
                     )
                 })
@@ -1524,8 +1509,6 @@ impl AgentDriverRunner {
                 )?;
 
                 let task_id = args.task_id.as_ref().and_then(|s| s.parse().ok());
-                let should_share = (args.share.is_shared() || args.task_id.is_some())
-                    && FeatureFlag::AgentSharedSessions.is_enabled();
 
                 let third_party_harness_model_config = merged_config
                     .harness
@@ -1537,7 +1520,6 @@ impl AgentDriverRunner {
                     use_factory_repositories,
                     experimental: None,
                     parent_run_id: None,
-                    should_share,
                     idle_on_complete: args.idle_on_complete.map(|d| d.into()),
                     idle_on_fail: args.effective_idle_on_fail().map(|d| d.into()),
                     secrets: Default::default(),
@@ -2105,7 +2087,6 @@ impl AgentDriverRunner {
         ctx: &mut AppContext,
         driver_options: driver::AgentDriverOptions,
         output_format: OutputFormat,
-        share_requests: Option<Vec<ShareRequest>>,
         task: driver::Task,
     ) -> Result<(), AgentDriverError> {
         maybe_warn_team_api_key(ctx);
@@ -2113,9 +2094,6 @@ impl AgentDriverRunner {
 
         driver.update(ctx, |driver, ctx| {
             driver.set_output_format(output_format);
-            if let Some(share_requests) = share_requests {
-                driver.add_share_requests(share_requests, ctx);
-            }
             let span =
                 tracing::info_span!("AgentDriver::run", tags.cloud_agent = true, ?task.model, ?task.harness);
             let agent_future = span
@@ -2158,7 +2136,6 @@ fn command_requires_auth(command: &CliCommand) -> bool {
         CliCommand::Agent(agent_cmd) => match agent_cmd {
             AgentCommand::Run { .. } => true,
             AgentCommand::RunCloud { .. } => true,
-            AgentCommand::RunCloudStandby { .. } => true,
             AgentCommand::Profile(sub) => match sub {
                 AgentProfileCommand::List => true,
             },
@@ -2331,14 +2308,6 @@ fn authenticate_and_dispatch(
     });
 }
 
-/// Check if we're running within Torch (for example, if this is an invocation of the Torch CLI
-/// within a Torch terminal session).
-pub fn is_running_in_warp() -> bool {
-    std::env::var("TERM_PROGRAM")
-        .map(|v| v == "WarpTerminal")
-        .unwrap_or(false)
-}
-
 /// Report a fatal error and terminate the app.
 fn report_fatal_error(err: anyhow::Error, ctx: &mut AppContext) {
     let mut message = err.to_string();
@@ -2389,9 +2358,6 @@ fn command_to_telemetry_event(command: &CliCommand) -> CliTelemetryEvent {
             harness: args.harness.to_string(),
         },
         CliCommand::Agent(AgentCommand::RunCloud(_)) => CliTelemetryEvent::AgentRunAmbient,
-        CliCommand::Agent(AgentCommand::RunCloudStandby(_)) => {
-            CliTelemetryEvent::AgentRunCloudStandby
-        }
         CliCommand::Agent(AgentCommand::Profile(sub)) => match sub {
             AgentProfileCommand::List => CliTelemetryEvent::AgentProfileList,
         },

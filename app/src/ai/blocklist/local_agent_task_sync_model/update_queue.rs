@@ -210,7 +210,6 @@ impl LocalTaskUpdate {
         if self.force_task_state
             || newer.force_task_state
             || !options_compatible(&self.task_state, &newer.task_state)
-            || !options_compatible(&self.session_id, &newer.session_id)
             || !options_compatible(
                 &self.server_conversation_token,
                 &newer.server_conversation_token,
@@ -222,16 +221,12 @@ impl LocalTaskUpdate {
 
         let Self {
             task_state,
-            session_id,
             server_conversation_token,
             status_message,
             force_task_state: _,
         } = newer;
         if task_state.is_some() {
             self.task_state = task_state;
-        }
-        if session_id.is_some() {
-            self.session_id = session_id;
         }
         if server_conversation_token.is_some() {
             self.server_conversation_token = server_conversation_token;

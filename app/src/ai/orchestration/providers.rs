@@ -8,7 +8,7 @@ use torch_errors::report_if_error;
 use torchui::{AppContext, SingletonEntity};
 
 use crate::LLMPreferences;
-use crate::ai::auth_secret_types::auth_secret_types_for_harness;
+use crate::ai::auth_secret_types::harness_supports_auth_secrets;
 use crate::ai::cloud_agent_settings::{AuthSecretPreference, CloudAgentSettings};
 use crate::ai::cloud_environments::CloudEnvironmentCatalog;
 use crate::ai::connected_self_hosted_workers::TORCH_WORKER_HOST;
@@ -275,7 +275,7 @@ fn requires_default_auth_secret_for_execution(request: &RunAgentsRequest) -> boo
     let Some(harness) = Harness::parse_orchestration_harness(&request.harness_type) else {
         return false;
     };
-    harness != Harness::Oz && !auth_secret_types_for_harness(harness).is_empty()
+    harness != Harness::Oz && harness_supports_auth_secrets(harness)
 }
 
 /// Whether the request can execute as-is: either it doesn't need a

@@ -56,7 +56,6 @@ use crate::server::retry_strategies::{
 };
 use crate::server::server_api::ServerApiProvider;
 use crate::server::server_api::ai::TaskListFilter;
-use crate::server::server_api::presigned_upload::HttpStatusError;
 use crate::server::team_scope::RequestTeamScope;
 use crate::settings::AISettings;
 use crate::ui_components::icons::Icon;
@@ -87,18 +86,6 @@ pub(crate) struct TaskFetchError {
 }
 
 impl TaskFetchError {
-    fn from_error(e: &anyhow::Error) -> Self {
-        let status = e.chain().find_map(|cause| {
-            cause
-                .downcast_ref::<HttpStatusError>()
-                .map(|http_err| http_err.status)
-        });
-        Self {
-            message: format!("{e}"),
-            status,
-        }
-    }
-
     pub(crate) fn message(&self) -> &str {
         &self.message
     }
@@ -120,12 +107,10 @@ enum TaskFetchState {
     /// The fetch returned a permanent (non-transient) HTTP error such as 401/403/404; remember
     /// when it failed so we can back off for [`PERMANENT_FETCH_FAILURE_COOLDOWN`] before
     /// retrying. We don't refuse forever in case permissions change mid-session.
-    /// The `TaskFetchError` carries structured failure details for display in the UI.
-    PermanentlyFailed { at: Instant, error: TaskFetchError },
+    PermanentlyFailed { at: Instant },
     /// The retry chain just exhausted on a transient error; remember when it failed so we
     /// can back off for [`TRANSIENT_FETCH_FAILURE_COOLDOWN`] before retrying.
-    /// The `TaskFetchError` carries structured failure details for display in the UI.
-    TransientlyFailed { at: Instant, error: TaskFetchError },
+    TransientlyFailed { at: Instant },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1297,21 +1282,6 @@ impl AgentConversationsModel {
         self.tasks.values()
     }
 
-    pub(crate) fn mark_task_execution_ended(
-        &mut self,
-        task_id: AmbientAgentTaskId,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        let Some(task) = self.tasks.get_mut(&task_id) else {
-            return;
-        };
-        let was_active = task.has_active_execution();
-        task.is_sandbox_running = false;
-        if was_active {
-            ctx.emit(AgentConversationsModelEvent::TasksUpdated);
-        }
-    }
-
     /// Returns normalized, owned entries for agent management/navigation surfaces.
     pub fn get_entries<S: TeamScope + ?Sized>(
         &self,
@@ -1458,13 +1428,7 @@ impl AgentConversationsModel {
                 .and_then(|entry| model.resolve_entry_open_action(&entry, restore_layout, app)),
             AgentConversationNavigationSubject::ServerToken(server_token) => model
                 .entry_for_server_token(&server_token, app)
-                .and_then(|entry| model.resolve_entry_open_action(&entry, restore_layout, app))
-                .or_else(|| {
-                    Some(WorkspaceAction::OpenConversationTranscriptViewer {
-                        ambient_agent_task_id: model.task_id_for_server_token(&server_token),
-                        conversation_id: server_token,
-                    })
-                }),
+                .and_then(|entry| model.resolve_entry_open_action(&entry, restore_layout, app)),
         }
     }
 
@@ -1498,12 +1462,6 @@ impl AgentConversationsModel {
                 .get(&task_id)
                 .map(AmbientAgentTask::active_live_session_state)
             {
-                Some(AmbientAgentLiveSessionState::Attachable { session_id }) => {
-                    return Some(WorkspaceAction::OpenOrAttachAmbientAgentConversation {
-                        session_id,
-                        task_id,
-                    });
-                }
                 Some(AmbientAgentLiveSessionState::ActiveUnattachable) => {
                     return active_views_model
                         .get_terminal_view_id_for_ambient_task(task_id)
@@ -1513,7 +1471,9 @@ impl AgentConversationsModel {
                             },
                         );
                 }
-                Some(AmbientAgentLiveSessionState::Inactive) | None => {}
+                Some(AmbientAgentLiveSessionState::Attachable { .. })
+                | Some(AmbientAgentLiveSessionState::Inactive)
+                | None => {}
             }
 
             if let Some(terminal_view_id) =
@@ -1567,14 +1527,7 @@ impl AgentConversationsModel {
             }
         }
 
-        entry
-            .identity
-            .server_conversation_token
-            .as_ref()
-            .map(|token| WorkspaceAction::OpenConversationTranscriptViewer {
-                conversation_id: token.clone(),
-                ambient_agent_task_id: entry.identity.ambient_agent_task_id,
-            })
+        None
     }
 
     fn resolve_entry_copy_link(&self, entry: &AgentConversationEntry) -> Option<String> {
@@ -1623,17 +1576,6 @@ impl AgentConversationsModel {
             &AgentConversationEntryId::Conversation(conversation_id),
             app,
         )
-    }
-
-    fn task_id_for_server_token(
-        &self,
-        server_token: &ServerConversationToken,
-    ) -> Option<AmbientAgentTaskId> {
-        self.tasks.values().find_map(|task| {
-            task.conversation_id()
-                .is_some_and(|conversation_id| conversation_id == server_token.as_str())
-                .then_some(task.task_id)
-        })
     }
 
     fn handle_history_event(
@@ -1736,7 +1678,6 @@ impl AgentConversationsModel {
             | BlocklistAIHistoryEvent::NewConversationRequestComplete { .. }
             | BlocklistAIHistoryEvent::OrchestrationConfigUpdated { .. }
             | BlocklistAIHistoryEvent::ConversationUsageMetadataUpdated { .. }
-            | BlocklistAIHistoryEvent::LocalSharedSessionEstablished { .. }
             | BlocklistAIHistoryEvent::UpdatedConversationMetadata { .. } => {}
 
             BlocklistAIHistoryEvent::ConversationServerTokenAssigned { .. } => {
@@ -1750,19 +1691,6 @@ impl AgentConversationsModel {
     /// Get raw task data by task ID
     pub fn get_task_data(&self, task_id: &AmbientAgentTaskId) -> Option<AmbientAgentTask> {
         self.tasks.get(task_id).cloned()
-    }
-
-    /// Returns the error details when the most recent fetch for `task_id` ended in a
-    /// permanent or transient failure and the cooldown has not yet elapsed. The caller
-    /// can use this to display an error state in the details panel.
-    pub(crate) fn task_fetch_error(&self, task_id: &AmbientAgentTaskId) -> Option<&TaskFetchError> {
-        match self.task_fetch_state.get(task_id) {
-            Some(
-                TaskFetchState::PermanentlyFailed { error, .. }
-                | TaskFetchState::TransientlyFailed { error, .. },
-            ) => Some(error),
-            _ => None,
-        }
     }
 
     /// Updates a cached task to reflect that execution has started and its
@@ -1902,11 +1830,10 @@ impl AgentConversationsModel {
                 }
                 RequestState::RequestFailed(e) => {
                     let now = Instant::now();
-                    let error = TaskFetchError::from_error(&e);
                     let new_state = if is_transient_http_error(&e) {
-                        TaskFetchState::TransientlyFailed { at: now, error }
+                        TaskFetchState::TransientlyFailed { at: now }
                     } else {
-                        TaskFetchState::PermanentlyFailed { at: now, error }
+                        TaskFetchState::PermanentlyFailed { at: now }
                     };
                     model.task_fetch_state.insert(task_id_clone, new_state);
                     report_error!(e);

@@ -9,7 +9,6 @@ use persistence::model::AgentConversation;
 use repo_metadata::RepoMetadataModel;
 use repo_metadata::repositories::DetectedRepositories;
 use repo_metadata::watcher::DirectoryWatcher;
-use shared_session::permissions_manager::SessionPermissionsManager;
 use torch_core::features::FeatureFlag;
 use torch_server_client::iap::IapManager;
 use torchui::platform::{WindowBounds, WindowStyle};
@@ -40,6 +39,7 @@ use crate::ai::outline::RepoOutlines;
 use crate::ai::persisted_workspace::PersistedWorkspace;
 use crate::ai::restored_conversations::RestoredAgentConversations;
 use crate::ai::skills::SkillManager;
+use crate::auth::AuthStateProvider;
 use crate::auth::auth_manager::AuthManager;
 use crate::changelog_model::ChangelogModel;
 use crate::cloud_object::model::persistence::CloudModel;
@@ -131,7 +131,6 @@ fn initialize_app_with_history(app: &mut App, conversations: Vec<AgentConversati
     app.add_singleton_model(|_| Prompt::mock());
     app.add_singleton_model(|_| ResizableData::default());
     app.add_singleton_model(NotebookManager::mock);
-    app.add_singleton_model(shared_session::manager::Manager::new);
     app.add_singleton_model(|_| ActiveSession::default());
     let global_resources = GlobalResourceHandles::mock(app);
     app.add_singleton_model(|_| GlobalResourceHandlesProvider::new(global_resources.clone()));
@@ -166,7 +165,6 @@ fn initialize_app_with_history(app: &mut App, conversations: Vec<AgentConversati
     app.add_singleton_model(|ctx| {
         AIRequestUsageModel::new_for_test(ServerApiProvider::as_ref(ctx).get_ai_client(), ctx)
     });
-    app.add_singleton_model(SessionPermissionsManager::new);
     app.add_singleton_model(LLMPreferences::new);
     app.add_singleton_model(HarnessAvailabilityModel::new);
     #[cfg(feature = "voice_input")]

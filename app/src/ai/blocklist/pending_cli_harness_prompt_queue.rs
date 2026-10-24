@@ -42,17 +42,6 @@ impl PendingCliHarnessPromptQueue {
         Self::default()
     }
 
-    /// Queues `prompt` for `task_id`'s not-yet-started CLI-harness session.
-    #[cfg_attr(target_family = "wasm", allow(dead_code))]
-    pub(crate) fn queue(&mut self, task_id: AmbientAgentTaskId, prompt: QueuedCliHarnessPrompt) {
-        log::info!(
-            "PendingCliHarnessPromptQueue: queuing shared-session prompt for task {task_id} \
-             pending CLI-harness session start (participant_id={:?})",
-            prompt.participant_id
-        );
-        self.pending.entry(task_id).or_default().push(prompt);
-    }
-
     /// Removes and returns any prompts queued for `task_id`, in FIFO order. Called once the
     /// task's CLI-harness session starts.
     #[cfg_attr(target_family = "wasm", allow(dead_code))]

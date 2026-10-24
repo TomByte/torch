@@ -28,8 +28,6 @@ impl Input {
         let appearance = Appearance::as_ref(app);
         let menu_positioning = self.menu_positioning(app);
 
-        let model = self.model.lock();
-
         // We should likely rework this stack to not need to use `with_constrain_absolute_children`,
         // by reworking the positioning of the children to not depend on this.
         let mut stack = Stack::new().with_constrain_absolute_children();
@@ -62,7 +60,7 @@ impl Input {
                 .finish(),
         );
 
-        if should_show_terminal_input_message_bar(&model, app) {
+        if should_show_terminal_input_message_bar(app) {
             column.add_child(
                 Clipped::new(ChildView::new(&self.terminal_input_message_bar).finish()).finish(),
             );

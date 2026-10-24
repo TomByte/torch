@@ -43,7 +43,6 @@ use super::session::{Sessions, command_executor};
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent::redaction::redact_secrets;
 use crate::context_chips::prompt_snapshot::PromptSnapshot;
-use crate::server::block::DisplaySetting;
 use crate::server::ids::SyncId;
 use crate::terminal::block_filter::BlockFilterQuery;
 use crate::terminal::block_list_element::GridType;
@@ -354,10 +353,6 @@ pub struct Block {
     /// Blocks for in-band commands are hidden by default, but still created and stored in the
     /// model because they may be shown for debugging purposes.
     pub(super) is_for_in_band_command: bool,
-
-    /// `true` if this command block corresponds to a startup command in an oz environment executed
-    /// in cloud mode.
-    is_oz_environment_startup_command: bool,
 
     /// Blocklist Env var metadata associated with this block, if any.
     env_var_metadata: Option<BlocklistEnvVarMetadata>,
@@ -1021,7 +1016,6 @@ impl Block {
                 None => AgentViewVisibility::new_from_terminal(),
             },
             nld_overridden: false,
-            is_oz_environment_startup_command: false,
             visible_bootstrap_block_event_sent: false,
         }
     }
@@ -1456,14 +1450,6 @@ impl Block {
         self.hidden = true;
     }
 
-    pub fn is_oz_environment_startup_command(&self) -> bool {
-        self.is_oz_environment_startup_command
-    }
-
-    pub(super) fn set_is_oz_environment_startup_command(&mut self, is_startup_command: bool) {
-        self.is_oz_environment_startup_command = is_startup_command;
-    }
-
     /// Reset the block so it's no longer hidden. Undoes the effects of Self::hide().
     pub fn unhide(&mut self) {
         self.hidden = false;
@@ -1488,15 +1474,6 @@ impl Block {
 
     pub fn set_should_hide_command_grid(&mut self, should_hide: bool) {
         self.should_hide_command_grid = should_hide;
-    }
-
-    /// Returns true iff this block should be used as a scrollback block in a shared session context.
-    /// The active block is included when it is eligible so viewers can restore the active prompt.
-    pub fn is_scrollback_block_for_shared_session(
-        &self,
-        transcript_scope: &TranscriptScope,
-    ) -> bool {
-        !self.should_hide_block(transcript_scope) && !self.is_restored()
     }
 
     pub fn index(&self) -> BlockIndex {
@@ -1536,28 +1513,6 @@ impl Block {
     /// line prompt, we render on the same line for PS1, but not for Torch prompt!
     pub fn render_prompt_on_same_line(&self) -> bool {
         self.honor_ps1()
-    }
-
-    /// Used for determining the height of the block with `DisplaySettings` used when sharing a block.
-    pub fn full_content_height_with_display_options(
-        &self,
-        display_setting: &DisplaySetting,
-        show_prompt: bool,
-    ) -> Lines {
-        let mut height = self.padding_top();
-        if show_prompt && !self.render_prompt_on_same_line() {
-            height += self.prompt_height() + self.command_padding_top();
-        }
-
-        let command_height = self.prompt_and_command_height();
-
-        height += match display_setting {
-            DisplaySetting::Command => command_height,
-            DisplaySetting::Output => self.output_grid_full_content_height(),
-            _ => command_height + self.padding_middle() + self.output_grid_full_content_height(),
-        };
-        height += self.padding_bottom();
-        height
     }
 
     /// The last part of the lifecycle for the block. After this, its contents

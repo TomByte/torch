@@ -15,7 +15,6 @@ pub use selection::SelectionRange;
 use sum_tree::{Dimension, Item, SeekBias, SumTree};
 use torch_core::command::ExitCode;
 use torch_core::features::FeatureFlag;
-use torch_terminal::event::ObservedExitStatus;
 use torch_terminal::model::{KeyboardModes, KeyboardModesApplyBehavior};
 use torchui::r#async::executor::Background;
 use torchui::color::ColorU;
@@ -394,7 +393,6 @@ pub struct BlockList {
     /// of the blocklist. After any other insertion, this item is automatically
     /// removed and re-appended so it stays last.
     pinned_to_bottom: Option<EntityId>,
-    is_executing_oz_environment_startup_commands: bool,
 }
 
 #[cfg(debug_assertions)]
@@ -589,26 +587,6 @@ enum BlockHeightUpdate {
     Removal(TotalIndex),
 }
 
-struct SharedSessionScrollbackBlocks<'a> {
-    completed_blocks: &'a [SerializedBlock],
-    active_block: Option<&'a SerializedBlock>,
-}
-
-impl<'a> SharedSessionScrollbackBlocks<'a> {
-    fn new(scrollback: &'a [SerializedBlock]) -> Self {
-        match scrollback.split_last() {
-            Some((active_block, completed_blocks)) if active_block.completed_ts.is_none() => Self {
-                completed_blocks,
-                active_block: Some(active_block),
-            },
-            _ => Self {
-                completed_blocks: scrollback,
-                active_block: None,
-            },
-        }
-    }
-}
-
 impl BlockList {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
@@ -712,7 +690,6 @@ impl BlockList {
             transcript_scope: TranscriptScope::Terminal,
             active_conversation_context: None,
             pinned_to_bottom: None,
-            is_executing_oz_environment_startup_commands: false,
         }
     }
 
@@ -749,92 +726,6 @@ impl BlockList {
             }
         }
         self.create_warp_input_block();
-    }
-
-    pub(super) fn load_shared_session_scrollback(&mut self, scrollback: &[SerializedBlock]) {
-        let scrollback_blocks = SharedSessionScrollbackBlocks::new(scrollback);
-        // If the snapshot will restore any blocks, finish the placeholder active block first.
-        // For an empty snapshot, keep the existing placeholder active block instead of replacing
-        // it with another hidden block.
-        if !scrollback.is_empty() && !self.active_block().finished() {
-            self.active_block_mut().finish(0);
-        }
-
-        // Simulate finishing bootstrapping once we get the scrollback.
-        self.set_bootstrapped();
-        let mut processor: Processor = Processor::new();
-
-        for block in scrollback_blocks.completed_blocks {
-            if block.start_ts.is_some() && block.completed_ts.is_some() {
-                self.restore_block(block, BootstrapStage::PostBootstrapPrecmd, &mut processor);
-            } else {
-                log::warn!("A non-active scrollback block was either not started or not completed");
-            }
-        }
-        if let Some(active_block) = scrollback_blocks.active_block {
-            self.restore_block(
-                active_block,
-                BootstrapStage::PostBootstrapPrecmd,
-                &mut processor,
-            );
-        } else {
-            self.ensure_active_block_after_shared_session_scrollback();
-        }
-    }
-
-    pub(super) fn append_followup_shared_session_scrollback(
-        &mut self,
-        scrollback: &[SerializedBlock],
-    ) {
-        self.set_bootstrapped();
-        let mut processor = Processor::new();
-        let scrollback_blocks = SharedSessionScrollbackBlocks::new(scrollback);
-
-        for block in scrollback_blocks.completed_blocks {
-            if self.block_index_for_id(&block.id).is_some() {
-                continue;
-            }
-            if block.start_ts.is_some() && block.completed_ts.is_some() {
-                self.finish_active_block_before_followup_append();
-                self.restore_block(block, BootstrapStage::PostBootstrapPrecmd, &mut processor);
-            } else {
-                log::warn!(
-                    "A non-active follow-up scrollback block was either not started or not completed"
-                );
-            }
-        }
-
-        match scrollback_blocks.active_block {
-            Some(active_block) if self.block_index_for_id(&active_block.id).is_none() => {
-                self.finish_active_block_before_followup_append();
-                self.restore_block(
-                    active_block,
-                    BootstrapStage::PostBootstrapPrecmd,
-                    &mut processor,
-                );
-            }
-            Some(_) | None => {
-                self.ensure_active_block_after_shared_session_scrollback();
-            }
-        }
-    }
-
-    fn finish_active_block_before_followup_append(&mut self) {
-        if !self.active_block().finished() {
-            self.active_block_mut().finish(0);
-            self.update_active_block_height();
-        }
-    }
-
-    fn ensure_active_block_after_shared_session_scrollback(&mut self) {
-        if self.active_block().finished() {
-            self.create_new_block(
-                BlockId::new(),
-                BootstrapStage::PostBootstrapPrecmd,
-                None,
-                None,
-            );
-        }
     }
 
     /// This is an important function in the block list lifecycle. After this
@@ -1127,12 +1018,6 @@ impl BlockList {
         let view_id = item.view_id;
         self.append_rich_content(item, true);
         self.pinned_to_bottom = Some(view_id);
-    }
-
-    pub(in crate::terminal) fn unpin_rich_content_from_bottom(&mut self, view_id: EntityId) {
-        if self.pinned_to_bottom == Some(view_id) {
-            self.pinned_to_bottom = None;
-        }
     }
 
     /// If a rich content item is pinned to the bottom, removes it from its
@@ -1431,47 +1316,6 @@ impl BlockList {
 
         // Force a re-draw since the blocklist has changed.
         self.event_proxy.send_wakeup_event();
-    }
-
-    pub fn is_executing_oz_environment_startup_commands(&self) -> bool {
-        self.is_executing_oz_environment_startup_commands
-    }
-
-    pub fn set_is_executing_oz_environment_startup_commands(
-        &mut self,
-        is_executing_startup_commands: bool,
-    ) {
-        self.is_executing_oz_environment_startup_commands = is_executing_startup_commands;
-        if is_executing_startup_commands {
-            self.active_block_mut().hide();
-            self.active_block_mut()
-                .set_is_oz_environment_startup_command(true);
-        } else {
-            self.active_block_mut().unhide();
-            self.active_block_mut()
-                .set_is_oz_environment_startup_command(false);
-        }
-    }
-
-    pub fn finish_oz_environment_startup_commands_at_block(
-        &mut self,
-        block_id: &BlockId,
-        conversation_id: Option<AIConversationId>,
-    ) {
-        self.is_executing_oz_environment_startup_commands = false;
-        if let Some(block_index) = self.block_index_for_id(block_id) {
-            for block in self.blocks.iter_mut().skip(block_index.0) {
-                if block.is_background() || block.is_static() {
-                    continue;
-                }
-                block.unhide();
-                block.set_is_oz_environment_startup_command(false);
-                if let Some(conversation_id) = conversation_id {
-                    block.add_attached_conversation_id(conversation_id);
-                }
-            }
-        }
-        self.update_blocks_and_sumtree(None, None, |_| {}, |_| {});
     }
 
     /// Resets the internal block object's index to its actual index in the block list.
@@ -1830,29 +1674,6 @@ impl BlockList {
             }
         }
         modified_blocks
-    }
-
-    /// Attaches every non-oz-startup block in the list to `conversation_id` so each block is
-    /// visible while that conversation is the active one in agent view. Skips blocks flagged
-    /// as `is_oz_environment_startup_command` since those are hidden by their own mechanism.
-    pub fn attach_non_startup_blocks_to_conversation(&mut self, conversation_id: AIConversationId) {
-        for block in &mut self.blocks {
-            if block.is_oz_environment_startup_command() {
-                continue;
-            }
-            if let AgentViewVisibility::Agent {
-                origin_conversation_id,
-                ..
-            } = block.agent_view_visibility()
-                && *origin_conversation_id == conversation_id
-            {
-                continue;
-            }
-            block.add_attached_conversation_id(conversation_id);
-        }
-
-        self.mark_agent_view_rich_content_dirty();
-        self.update_blocks_and_sumtree(None, None, |_| {}, |_| {});
     }
 
     /// Removes the conversation association from the given blocks, making them disappear from that conversation's agent view.
@@ -2898,11 +2719,6 @@ impl BlockList {
             block.set_prompt_grids_from_cached_data(prompt_grid, rprompt_grid);
         }
 
-        if self.is_executing_oz_environment_startup_commands {
-            block.set_is_oz_environment_startup_command(true);
-            block.hide();
-        }
-
         self.block_heights.push(BlockHeightItem::Block(
             block.height(&self.transcript_scope).into(),
         ));
@@ -2945,16 +2761,6 @@ impl BlockList {
         for block in self.blocks.iter_mut() {
             block.set_obfuscate_secrets(obfuscate_secrets);
         }
-    }
-
-    /// Sets whether subsequent blocks (including the active block) have their grids obfuscated.
-    pub(super) fn set_obfuscate_secrets_for_subsequent_blocks(
-        &mut self,
-        obfuscate_secrets: ObfuscateSecrets,
-    ) {
-        self.obfuscate_secrets = obfuscate_secrets;
-        self.active_block_mut()
-            .set_obfuscate_secrets(obfuscate_secrets);
     }
 
     /// Sets whether the grids of the specified block should be obfuscated.
@@ -3033,9 +2839,9 @@ impl BlockList {
         }
     }
 
-    pub fn reinit_shell(&mut self, interrupted_status: Option<ObservedExitStatus>) {
+    pub fn reinit_shell(&mut self) {
         let active_block = self.active_block_mut();
-        active_block.finish(interrupted_status.map_or(0, ObservedExitStatus::exit_code));
+        active_block.finish(0);
         self.update_active_block_height();
 
         self.create_warp_input_block();

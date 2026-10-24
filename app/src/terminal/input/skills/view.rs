@@ -14,7 +14,6 @@ use crate::terminal::input::suggestions_mode_model::{
     InputSuggestionsModeEvent, InputSuggestionsModeModel,
 };
 use crate::terminal::model::session::active_session::ActiveSession;
-use crate::terminal::view::ambient_agent::AmbientAgentViewModel;
 
 #[derive(Debug, Clone)]
 pub enum InlineSkillSelectorEvent {
@@ -41,17 +40,10 @@ impl InlineSkillSelectorView {
         positioner: &ModelHandle<InlineMenuPositioner>,
         active_session: ModelHandle<ActiveSession>,
         terminal_view_id: EntityId,
-        ambient_agent_view_model: Option<ModelHandle<AmbientAgentViewModel>>,
         ctx: &mut ViewContext<Self>,
     ) -> Self {
-        let data_source = ctx.add_model(|ctx| {
-            SkillSelectorDataSource::new(
-                active_session,
-                terminal_view_id,
-                ambient_agent_view_model,
-                ctx,
-            )
-        });
+        let data_source = ctx
+            .add_model(|ctx| SkillSelectorDataSource::new(active_session, terminal_view_id, ctx));
 
         let mixer = ctx.add_model(|_| {
             let mut mixer = SearchMixer::<AcceptSkill>::new();
@@ -135,17 +127,6 @@ impl InlineSkillSelectorView {
             suggestions_mode_model,
             input_buffer_model: input_buffer_model.clone(),
         }
-    }
-
-    /// Attaches an ambient agent view model after construction. Idempotent.
-    pub fn set_ambient_agent_view_model(
-        &self,
-        view_model: ModelHandle<AmbientAgentViewModel>,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        self.data_source.update(ctx, |ds, ctx| {
-            ds.set_ambient_agent_view_model(view_model, ctx);
-        });
     }
 
     /// Sets whether bundled skills are included in results.

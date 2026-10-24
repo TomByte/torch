@@ -5,7 +5,7 @@ use std::sync::Arc;
 use parking_lot::FairMutex;
 use pathfinder_geometry::vector::Vector2F;
 use settings::Setting as _;
-use torchui::{AppContext, ModelContext, SingletonEntity};
+use torchui::{AppContext, SingletonEntity};
 
 use super::event_listener::ChannelEventListener;
 use super::model::block::BlockSize;
@@ -18,43 +18,11 @@ use crate::PrivacySettings;
 use crate::ai::blocklist::SerializedBlockListItem;
 use crate::ai::blocklist::telemetry_banner::should_collect_ai_ugc_telemetry;
 use crate::appearance::Appearance;
-use crate::pane_group::pane::DetachType;
 use crate::settings::{BlockVisibilitySettings, DebugSettings, InputModeSettings};
-use crate::terminal::shell_recovery::{CloudShellRecoveryRequest, ShellReplacementRequest};
 
 pub trait TerminalManager: Any {
     /// Returns the backing terminal model.
     fn model(&self) -> Arc<FairMutex<TerminalModel>>;
-
-    /// Called when the terminal pane detaches from its pane group. This is a sensitive path -
-    /// do not do anything with high latency here. Note that we cannot rely on events emitted
-    /// here to be processed before the window closes.
-    ///
-    /// Implementations should preserve state on [`DetachType::HiddenForClose`] or
-    /// [`DetachType::Moved`] and clean up only on [`DetachType::Closed`].
-    fn on_view_detached(&self, _detach_type: DetachType, _app: &mut AppContext) {}
-    fn recover_cloud_shell(
-        &mut self,
-        _request: CloudShellRecoveryRequest,
-        _ctx: &mut ModelContext<Box<dyn TerminalManager>>,
-    ) -> bool {
-        false
-    }
-
-    fn replace_shell(
-        &mut self,
-        _request: ShellReplacementRequest,
-        _ctx: &mut ModelContext<Box<dyn TerminalManager>>,
-    ) -> anyhow::Result<()> {
-        anyhow::bail!("this terminal does not support shell replacement")
-    }
-
-    fn on_session_bootstrapped(
-        &mut self,
-        _session_id: crate::terminal::model::session::SessionId,
-        _ctx: &mut ModelContext<Box<dyn TerminalManager>>,
-    ) {
-    }
 
     /// Returns this [`TerminalManager`] as an [`Any`], to support downcasting.
     fn as_any(&self) -> &dyn Any;

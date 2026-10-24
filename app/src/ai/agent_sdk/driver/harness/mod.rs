@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 use std::collections::HashMap;
 use std::ffi::{OsStr, OsString};
 use std::fmt;
@@ -12,8 +11,8 @@ use tempfile::NamedTempFile;
 use torch_cli::agent::{Harness, HarnessTransport};
 use torch_cli::{
     OZ_CLI_ENV, OZ_HARNESS_ENV, OZ_PARENT_RUN_ID_ENV, OZ_RUN_ID_ENV, SERVER_ROOT_URL_OVERRIDE_ENV,
-    SESSION_SHARING_SERVER_URL_OVERRIDE_ENV, TORCH_CLI_ENV, TORCH_HARNESS_ENV,
-    TORCH_PARENT_RUN_ID_ENV, TORCH_RUN_ID_ENV, WS_SERVER_URL_OVERRIDE_ENV,
+    TORCH_CLI_ENV, TORCH_HARNESS_ENV, TORCH_PARENT_RUN_ID_ENV, TORCH_RUN_ID_ENV,
+    WS_SERVER_URL_OVERRIDE_ENV,
 };
 use torch_core::channel::ChannelState;
 use torch_managed_secrets::ManagedSecretValue;
@@ -378,24 +377,6 @@ fn install_docs_url(harness: Harness) -> Option<&'static str> {
     }
 }
 
-/// Returns the harness's auth-check preflight command, if any.
-///
-/// The viewer uses this to recognize preflight blocks via exact string
-/// equality (so they stay grouped under "Set up environment commands"
-/// rather than being mistaken for the main harness invocation, which
-/// shares the same CLI prefix).
-///
-/// Returns `None` for [`Harness::Oz`], for unsupported harnesses, and
-/// for any third-party harness whose `auth_check_command` returns `None`
-/// (e.g. Gemini today).
-pub(crate) fn auth_check_command_for(harness: Harness) -> Option<String> {
-    let HarnessKind::ThirdParty(third_party) = harness_kind(harness, HarnessTransport::Pty).ok()?
-    else {
-        return None;
-    };
-    third_party.auth_check_command()
-}
-
 /// Check that `cli` is installed and on PATH, returning a `HarnessSetupFailed`
 /// error with an optional install-docs link when it isn't.
 pub(crate) fn validate_cli_installed(
@@ -525,15 +506,6 @@ fn task_env_vars_for_harness_name(
             WS_SERVER_URL_OVERRIDE_ENV,
             ChannelState::ws_server_url().into_owned(),
         );
-        if let Some(url) = ChannelState::session_sharing_server_url()
-            .map(Cow::into_owned)
-            .filter(|url| !url.is_empty())
-        {
-            env_vars.insert(
-                OsString::from(SESSION_SHARING_SERVER_URL_OVERRIDE_ENV),
-                OsString::from(url),
-            );
-        }
     }
 
     env_vars

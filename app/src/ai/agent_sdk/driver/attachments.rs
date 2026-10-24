@@ -225,7 +225,6 @@ async fn download_task_attachment(
 
     log::info!("Successfully wrote attachment to: {}", file_path.display());
     Ok(DownloadedAttachment {
-        file_id: attachment.file_id,
         file_name: safe_filename,
         file_path: file_path.to_string_lossy().into_owned(),
     })

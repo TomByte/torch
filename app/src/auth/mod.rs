@@ -20,7 +20,6 @@ use crate::ai::llms::LLMPreferences;
 #[cfg(not(target_family = "wasm"))]
 use crate::ai::mcp::TemplatableMCPServerManager;
 use crate::ai::request_usage_model::AIRequestUsageModel;
-use crate::ai_assistant::requests::REQUEST_LIMIT_INFO_CACHE_KEY;
 use crate::cloud_object::model::persistence::CloudModel;
 use crate::env_vars::manager::EnvVarCollectionManager;
 use crate::notebooks::manager::NotebookManager;
@@ -31,7 +30,6 @@ use crate::settings::{
     AISettings, CRASH_REPORTING_ENABLED_DEFAULTS_KEY, CloudPreferencesSettings, PrivacySettings,
     TELEMETRY_ENABLED_DEFAULTS_KEY,
 };
-use crate::terminal::shared_session::manager::Manager as SharedSessionManager;
 use crate::workflows::manager::WorkflowManager;
 use crate::workspace::OneTimeModalModel;
 use crate::workspaces::update_manager::TeamUpdateManager;
@@ -107,12 +105,6 @@ pub fn log_out(app: &mut AppContext) {
     EnvVarCollectionManager::handle(app).update(app, |manager, _| manager.reset());
     WorkflowManager::handle(app).update(app, |manager, _| manager.reset());
 
-    // Stop and leave all shared sessions
-    SharedSessionManager::handle(app).update(app, |manager, ctx| {
-        manager.stop_all_shared_sessions(ctx);
-        manager.clear_joined();
-    });
-
     #[cfg(target_family = "wasm")]
     crate::platform::wasm::emit_event(crate::platform::wasm::WarpEvent::LoggedOut);
 }
@@ -152,16 +144,6 @@ fn remove_cloud_persisted_settings(app: &mut AppContext) {
             anyhow::Error::new(e).context(
                 "Failed to remove Crash Reporting Enabled Defaults Key from user defaults"
             )
-        );
-    }
-
-    if let Err(e) = app
-        .private_user_preferences()
-        .remove_value(REQUEST_LIMIT_INFO_CACHE_KEY)
-    {
-        report_error!(
-            anyhow::Error::new(e)
-                .context("Failed to remove Request Limit Defaults Key from user defaults")
         );
     }
 

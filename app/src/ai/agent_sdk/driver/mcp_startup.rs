@@ -42,8 +42,6 @@ use crate::server::server_api::managed_mcp::ManagedMcpClient;
 
 /// Default readiness timeout when driver options do not supply an override.
 pub(crate) const MCP_SERVER_STARTUP_TIMEOUT: Duration = Duration::from_secs(20);
-/// Bounds the wait for standby MCP servers to stop before an assignment restarts them.
-const MCP_SERVER_SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(20);
 /// Attempt budget for resolving one managed MCP server's client config
 /// (`ManagedMcpClient::create_managed_mcp_client_config`) in
 /// [`AgentDriver::resolve_mcp_specs_with_local_uuids`].
@@ -242,30 +240,17 @@ async fn builtin_mcp_ambient_headers(
         })
 }
 
-/// Controls whether MCP startup may attach servers that keep run-specific credentials.
-#[derive(Clone, Copy)]
-pub(crate) enum McpStartupMode {
-    /// Skips built-in servers because their transports keep credentials until shutdown.
-    Standby,
-    /// Allows built-in servers even if local task creation failed.
-    Run,
-}
-
 /// Appends the built-in Torch-hosted MCP servers to `installations`.
 ///
 /// Interactive clients attach built-ins via `TemplatableMCPServerManager::sync_builtin_servers`,
 /// which skips CLI agent runs, so setup injects the same code-owned installations here, scoped to
 /// this host.
 async fn attach_builtin_mcp_servers(
-    mode: McpStartupMode,
     task_id: Option<AmbientAgentTaskId>,
     local_uuids: &[Uuid],
     installations: &mut Vec<TemplatableMCPServerInstallation>,
     foreground: &ModelSpawner<AgentDriver>,
 ) -> Result<(), AgentDriverError> {
-    if matches!(mode, McpStartupMode::Standby) {
-        return Ok(());
-    }
     let mut taken_server_names: HashSet<String> = installations
         .iter()
         .map(|installation| installation.templatable_mcp_server().name.clone())
@@ -320,11 +305,10 @@ async fn attach_builtin_mcp_servers(
     Ok(())
 }
 
-/// Starts configured and profile-allowed MCP servers together, with the mode controlling built-ins.
+/// Starts configured and profile-allowed MCP servers together.
 pub(crate) async fn start_task_and_profile_mcp_servers(
     mcp_specs: &[MCPSpec],
     managed_mcp_client: Arc<dyn ManagedMcpClient>,
-    mode: McpStartupMode,
     task_id: Option<AmbientAgentTaskId>,
     foreground: &ModelSpawner<AgentDriver>,
 ) -> Result<(), AgentDriverError> {
@@ -334,7 +318,6 @@ pub(crate) async fn start_task_and_profile_mcp_servers(
     let mut ephemeral_installations = resolved_mcp_specs.ephemeral_installations;
 
     attach_builtin_mcp_servers(
-        mode,
         task_id,
         &existing_uuids,
         &mut ephemeral_installations,
@@ -568,51 +551,6 @@ fn wait_for_mcp_servers_started(
 }
 
 impl AgentDriver {
-    pub(super) async fn replace_prewarmed_mcp_environment(
-        foreground: &ModelSpawner<Self>,
-        environment: HashMap<String, String>,
-    ) -> Result<(), AgentDriverError> {
-        let (retained, stopped) = foreground
-            .spawn(move |_, ctx| {
-                TemplatableMCPServerManager::handle(ctx).update(ctx, |manager, ctx| {
-                    manager.replace_runtime_environment(environment, ctx)
-                })
-            })
-            .await?;
-        futures::future::join_all(stopped)
-            .with_timeout(MCP_SERVER_SHUTDOWN_TIMEOUT)
-            .await
-            .map_err(|_| {
-                AgentDriverError::ConfigBuildFailed(anyhow::anyhow!(
-                    "Standby MCP shutdown timed out"
-                ))
-            })?
-            .into_iter()
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(|_| AgentDriverError::InvalidRuntimeState)?;
-        foreground
-            .spawn(move |me, ctx| {
-                let names = retained
-                    .iter()
-                    .map(|installation| {
-                        (
-                            installation.uuid(),
-                            installation.templatable_mcp_server().name.clone(),
-                        )
-                    })
-                    .collect();
-                let wait = wait_for_mcp_servers_started(me, names, ctx);
-                TemplatableMCPServerManager::handle(ctx).update(ctx, |manager, ctx| {
-                    for installation in retained {
-                        manager.spawn_ephemeral_server(installation, ctx);
-                    }
-                });
-                wait
-            })
-            .await?
-            .await
-    }
-
     /// Resolve MCP specs into a map of MCP name to `JSONMCPServer` for use in
     /// third-party harnesses. Each spec is fully resolved (secrets applied, templates
     /// rendered) so harnesses can serialize directly into their native config format.

@@ -154,7 +154,9 @@ impl BlockLifecycleCoordinator {
         self.phase = transition.next_phase;
     }
 
-    /// Forgets the remembered phase after externally supplied block state replaces or extends it.
+    /// Forgets the remembered phase, as if block state had been supplied from outside the
+    /// lifecycle inputs.
+    #[cfg(test)]
     pub(super) fn reset_unknown(&mut self) {
         self.phase = LifecyclePhase::Unknown;
     }

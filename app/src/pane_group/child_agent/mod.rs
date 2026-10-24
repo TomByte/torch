@@ -1,5 +1,3 @@
-pub(in crate::pane_group) mod hydration;
-pub(crate) mod materialization;
 pub(in crate::pane_group) mod restoration;
 
 use std::collections::HashMap;
@@ -20,7 +18,6 @@ use crate::ai::blocklist::{
 };
 use crate::pane_group::{PaneGroup, PaneId};
 use crate::terminal::TerminalView;
-use crate::terminal::shared_session::IsSharedSessionCreator;
 use crate::workspaces::user_workspaces::{TeamScope, UserWorkspaces};
 
 pub(crate) struct HiddenChildAgentConversation {
@@ -41,11 +38,6 @@ pub(crate) struct HiddenChildAgentConversationRequest {
     pub orchestration_harness: Option<Harness>,
     pub env_vars: HashMap<OsString, OsString>,
     pub task_context: Option<HiddenChildAgentTaskContext>,
-    /// When `Yes`, the child pane's terminal is asked to share its session
-    /// using the embedded `SessionSourceType` once the shell bootstraps.
-    /// The dispatch helpers in `terminal_pane.rs` compute this from the host
-    /// terminal's own shared-session state.
-    pub is_shared_session_creator: IsSharedSessionCreator,
 }
 
 pub(crate) struct ErrorChildAgentConversationRequest {
@@ -109,14 +101,9 @@ pub(crate) fn create_hidden_child_agent_conversation(
         orchestration_harness,
         env_vars,
         task_context,
-        is_shared_session_creator,
     } = request;
-    let new_pane_id = group.insert_terminal_pane_hidden_for_child_agent(
-        parent_pane_id,
-        env_vars,
-        is_shared_session_creator,
-        ctx,
-    );
+    let new_pane_id =
+        group.insert_terminal_pane_hidden_for_child_agent(parent_pane_id, env_vars, ctx);
     let Some(new_terminal_view) = group.terminal_view_from_pane_id(new_pane_id, ctx) else {
         report_error!("Failed to get terminal view for new StartAgent pane");
         group.discard_pane(new_pane_id.into(), ctx);
@@ -185,7 +172,6 @@ fn create_error_child_agent_conversation_context(
             orchestration_harness,
             env_vars: HashMap::new(),
             task_context: None,
-            is_shared_session_creator: IsSharedSessionCreator::No,
         },
         &settings_inheritance_scope,
         ctx,

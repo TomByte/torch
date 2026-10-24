@@ -275,7 +275,6 @@ define_action_catalog! {
         SurfaceThemePickerOpen => { name: "surface.theme_picker.open", status: Implemented, target: Surface, params: None, result: Acknowledgement },
         SurfaceKeybindingsOpen => { name: "surface.keybindings.open", status: Implemented, target: Surface, params: None, result: Acknowledgement },
         SurfaceResourceCenterToggle => { name: "surface.resource_center.toggle", status: Implemented, target: Surface, params: None, result: Acknowledgement },
-        SurfaceAiAssistantToggle => { name: "surface.ai_assistant.toggle", status: Implemented, target: Surface, params: None, result: Acknowledgement },
         SurfaceCodeReviewOpen => { name: "surface.code_review.open", status: Implemented, target: Surface, params: None, result: Acknowledgement },
         SurfaceCodeReviewToggle => { name: "surface.code_review.toggle", status: Implemented, target: Surface, params: None, result: Acknowledgement },
         SurfaceProjectExplorerOpen => { name: "surface.project_explorer.open", status: Implemented, target: Surface, params: None, result: Acknowledgement },

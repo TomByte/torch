@@ -605,12 +605,6 @@ fn make_new_blocks_menu(ctx: &AppContext) -> Menu {
         updateable_custom_item_without_checkmark(CustomAction::CopyBlockOutput, ctx),
     ]);
 
-    if !ChannelState::is_local_only() {
-        items.push(updateable_custom_item_without_checkmark(
-            CustomAction::CreateBlockPermalink,
-            ctx,
-        ));
-    }
     let debug_items = block_menu_debug_items();
     if !debug_items.is_empty() {
         items.push(MenuItem::Separator);

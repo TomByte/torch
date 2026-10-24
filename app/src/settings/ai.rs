@@ -32,7 +32,6 @@ use torchui::{AppContext, Entity, ModelContext, SingletonEntity, UpdateModel, We
 use crate::ai::execution_profiles::ExecutionProfilesConfig;
 use crate::ai::request_usage_model::RequestLimitInfo;
 use crate::auth::AuthStateProvider;
-use crate::settings::PrivacySettings;
 use crate::terminal::{CLIAgent, TerminalView};
 use crate::workspaces::user_workspaces::{TeamScope, UserWorkspaces};
 
@@ -502,8 +501,6 @@ pub enum DefaultSessionMode {
     Terminal,
     /// New sessions start in agent view.
     Agent,
-    /// New sessions start in cloud (ambient) agent mode.
-    CloudAgent,
     /// New sessions open a user-defined tab config.
     /// The specific config is identified by the companion `default_tab_config_path` setting.
     TabConfig,
@@ -529,7 +526,6 @@ impl DefaultSessionMode {
         match self {
             DefaultSessionMode::Terminal => "Terminal",
             DefaultSessionMode::Agent => "Agent",
-            DefaultSessionMode::CloudAgent => "Cloud agent",
             DefaultSessionMode::TabConfig => "Tab Config",
             DefaultSessionMode::DockerSandbox => "Local Docker Sandbox",
         }
@@ -1945,53 +1941,6 @@ define_settings_group!(AISettings, settings: [
         description: "Whether the Torch Agent adds an attribution co-author line to commit messages and pull requests it creates.",
     }
 
-    should_force_disable_cloud_handoff: ShouldForceDisableCloudHandoff {
-        type: bool,
-        default: false,
-        supported_platforms: SupportedPlatforms::DESKTOP,
-        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
-        surface: settings::SettingSurfaces::GUI,
-        private: false,
-        toml_path: "agents.warp_agent.other.should_force_disable_cloud_handoff",
-        description: "Whether to force-disable local-to-cloud handoff.",
-    }
-
-    should_force_disable_ampersand_handoff: ShouldForceDisableAmpersandHandoff {
-        type: bool,
-        default: false,
-        supported_platforms: SupportedPlatforms::DESKTOP,
-        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
-        surface: settings::SettingSurfaces::GUI,
-        private: false,
-        toml_path: "agents.warp_agent.other.should_force_disable_ampersand_handoff",
-        description: "Whether to force-disable the & prefix for cloud handoff compose mode.",
-    }
-
-    auto_handoff_on_sleep_enabled: AutoHandoffOnSleepEnabled {
-        type: bool,
-        default: false,
-        supported_platforms: SupportedPlatforms::MAC,
-        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
-        surface: settings::SettingSurfaces::GUI,
-        private: false,
-        toml_path: "agents.warp_agent.other.auto_handoff_on_sleep_enabled",
-        description: "Whether Torch automatically hands off local agent conversations to cloud when the computer is about to sleep.",
-    }
-
-    // This is not a user-visible setting - it's merely a one-time flag to track if the
-    // auto-handoff sleep modal has been shown to the user.
-    //
-    // We model it as a setting so it's only shown once to a given user regardless of the number of
-    // devices they use.
-    did_show_auto_handoff_sleep_modal: DidShowAutoHandoffSleepModal {
-        type: bool,
-        default: false,
-        supported_platforms: SupportedPlatforms::ALL,
-        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::No),
-        surface: settings::SettingSurfaces::GUI,
-        private: true,
-    }
-
     // Not a user-visible setting - it tracks which one-time feature-intro popups the
     // user has already seen, keyed by the feature-intro id (see `FEATURE_INTROS`).
     //
@@ -2078,8 +2027,8 @@ impl AISettings {
         match mode {
             // Terminal and TabConfig don't require AI.
             DefaultSessionMode::Terminal | DefaultSessionMode::TabConfig => mode,
-            // Agent and CloudAgent require AI to be enabled.
-            DefaultSessionMode::Agent | DefaultSessionMode::CloudAgent => {
+            // Agent requires AI to be enabled.
+            DefaultSessionMode::Agent => {
                 if self.is_any_ai_enabled(app) {
                     mode
                 } else {
@@ -2210,40 +2159,6 @@ impl AISettings {
 
     pub fn is_orchestration_enabled(&self, app: &torchui::AppContext) -> bool {
         self.is_any_ai_enabled(app)
-    }
-
-    /// Returns true when local-to-cloud handoff is effectively enabled.
-    /// False when the user/org has disabled it, cloud conversations are off,
-    /// or AI is globally off.
-    pub fn is_cloud_handoff_enabled(&self, app: &torchui::AppContext) -> bool {
-        if !self.is_any_ai_enabled(app) || *self.should_force_disable_cloud_handoff {
-            return false;
-        }
-        if !FeatureFlag::OzHandoff.is_enabled()
-            || !FeatureFlag::HandoffLocalCloud.is_enabled()
-            || !cfg!(all(feature = "local_fs", not(target_family = "wasm")))
-        {
-            return false;
-        }
-        let privacy = PrivacySettings::as_ref(app);
-        if !privacy.is_cloud_conversation_storage_enabled {
-            return false;
-        }
-        !matches!(
-            UserWorkspaces::as_ref(app).get_cloud_conversation_storage_enablement_setting(),
-            crate::workspaces::workspace::AdminEnablementSetting::Disable
-        )
-    }
-    pub fn is_ampersand_handoff_enabled(&self, app: &torchui::AppContext) -> bool {
-        self.is_cloud_handoff_enabled(app) && !*self.should_force_disable_ampersand_handoff
-    }
-
-    pub fn is_auto_handoff_on_sleep_enabled(&self, app: &torchui::AppContext) -> bool {
-        self.is_cloud_handoff_enabled(app)
-            && self
-                .auto_handoff_on_sleep_enabled
-                .is_supported_on_current_platform()
-            && *self.auto_handoff_on_sleep_enabled
     }
 
     /// Determines whether a quota reset banner should be displayed to the user.

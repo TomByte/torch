@@ -1450,13 +1450,6 @@ impl AgentManagementView {
             AgentTypeSelectorEvent::Selected(agent_type) => {
                 self.is_agent_type_selector_open = false;
                 match agent_type {
-                    AgentType::Cloud => {
-                        send_telemetry_from_ctx!(
-                            AgentManagementTelemetryEvent::SpawnNewCloudAgent,
-                            ctx
-                        );
-                        ctx.dispatch_typed_action(&WorkspaceAction::AddAmbientAgentTab);
-                    }
                     AgentType::Local => {
                         send_telemetry_from_ctx!(
                             AgentManagementTelemetryEvent::SpawnNewLocalAgent,

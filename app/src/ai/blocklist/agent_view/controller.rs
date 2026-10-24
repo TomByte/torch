@@ -33,10 +33,6 @@ pub enum EnterAgentViewError {
 pub enum ExitAgentViewError {
     #[error("Cannot exit agent while command is running.")]
     LongRunningCommand,
-    #[error("Cannot exit conversation as a viewer.")]
-    ConversationViewer,
-    #[error("Cannot exit cloud agent.")]
-    AmbientAgent,
 }
 
 /// The display mode for an active agent view.
@@ -129,8 +125,6 @@ pub enum AgentViewEntryOrigin {
     AcceptedPassiveCodeDiff,
     /// Entered agent view by starting conversation with an inline code review submission.
     InlineCodeReview,
-    /// Entered agent view through a cloud agent prompt.
-    CloudAgent,
     /// Entered agent view by opening an existing non-Oz cloud agent run (live shared-session
     /// viewer or transcript viewer).
     ThirdPartyCloudAgent,
@@ -205,10 +199,6 @@ pub enum AutoTriggerBehavior {
 }
 
 impl AgentViewEntryOrigin {
-    pub fn is_cloud_agent(&self) -> bool {
-        matches!(self, Self::CloudAgent)
-    }
-
     pub fn should_autotrigger_request(&self) -> AutoTriggerBehavior {
         match self {
             AgentViewEntryOrigin::Input {
@@ -446,17 +436,8 @@ impl AgentViewController {
                 .active_block()
                 .is_active_and_long_running();
 
-        // Cloud agent panes do not have the same underlying terminal ownership
-        // constraint (no local shell process), so long-running third party agent
-        // commands should not trap the user in agent view.
-        if is_fullscreen_with_long_running && !model.is_dummy_cloud_mode_session() {
+        if is_fullscreen_with_long_running {
             return Err(ExitAgentViewError::LongRunningCommand);
-        }
-
-        // Conversation viewers have no underlying terminal session to return to,
-        // so exiting agent view is not allowed.
-        if model.is_conversation_transcript_viewer() {
-            return Err(ExitAgentViewError::ConversationViewer);
         }
 
         Ok(())
@@ -727,18 +708,13 @@ impl AgentViewController {
         origin: AgentViewEntryOrigin,
         ctx: &mut ModelContext<Self>,
     ) -> Result<AIConversationId, EnterAgentViewError> {
-        // Block entry to fullscreen mode if there's an active long-running command. Transcript
-        // viewers and 3p cloud viewers are exempt: in those contexts the long-running block is
-        // either a restored snapshot or the harness CLI we want to wrap in agent-view chrome.
-        let is_long_running = {
-            let terminal_model = self.terminal_model.lock();
-            terminal_model
-                .block_list()
-                .active_block()
-                .is_active_and_long_running()
-                && !terminal_model.is_conversation_transcript_viewer()
-                && !matches!(&origin, AgentViewEntryOrigin::ThirdPartyCloudAgent)
-        };
+        // Block entry to fullscreen mode if there's an active long-running command.
+        let is_long_running = self
+            .terminal_model
+            .lock()
+            .block_list()
+            .active_block()
+            .is_active_and_long_running();
 
         if is_long_running {
             return Err(EnterAgentViewError::LongRunningCommand);
@@ -814,7 +790,7 @@ impl AgentViewController {
                     history_model.start_new_conversation(
                         self.terminal_view_id,
                         false,
-                        matches!(&origin, AgentViewEntryOrigin::CloudAgent),
+                        false,
                         matches!(&origin, AgentViewEntryOrigin::ThirdPartyCloudAgent),
                         ctx,
                     )
@@ -832,10 +808,7 @@ impl AgentViewController {
             original_conversation_length: exchange_count,
         };
 
-        let is_cloud = matches!(
-            origin,
-            AgentViewEntryOrigin::CloudAgent | AgentViewEntryOrigin::ThirdPartyCloudAgent
-        );
+        let is_cloud = matches!(origin, AgentViewEntryOrigin::ThirdPartyCloudAgent);
 
         self.terminal_model
             .lock()
@@ -872,18 +845,6 @@ impl AgentViewController {
                 should_confirm: ExitConfirmationRequirement::Required,
             },
             trigger,
-            false,
-            ctx,
-        );
-    }
-
-    /// Exits the active agent view without any confirmation.
-    pub(crate) fn exit_agent_view_without_confirmation(&mut self, ctx: &mut ModelContext<Self>) {
-        self.exit_agent_view_internal(
-            ExitAgentViewOptions {
-                should_confirm: ExitConfirmationRequirement::None,
-            },
-            ExitConfirmationTrigger::Escape,
             false,
             ctx,
         );
@@ -980,14 +941,12 @@ impl AgentViewController {
             .map(|conversation| conversation.exchange_count())
             .unwrap_or(0);
 
-        let was_ambient_agent = origin == AgentViewEntryOrigin::CloudAgent;
         ctx.emit(AgentViewControllerEvent::ExitedAgentView {
             conversation_id,
             origin,
             display_mode,
             original_exchange_count: original_conversation_length,
             final_exchange_count,
-            was_ambient_agent,
             is_exit_before_new_entrance,
         });
     }
@@ -1012,8 +971,6 @@ pub enum AgentViewControllerEvent {
         original_exchange_count: usize,
         /// The number of exchanges in the conversation when agent view is being exited.
         final_exchange_count: usize,
-        /// Whether this was an ambient (cloud) agent session.
-        was_ambient_agent: bool,
         /// Whether this exit is immediately followed by entering a new agent view.
         /// (e.g. Cmd+K while already in agent view to start a new conversation).
         is_exit_before_new_entrance: bool,

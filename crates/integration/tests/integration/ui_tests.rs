@@ -12,7 +12,6 @@ integration_tests! {
     test_ctrl_tab_session_switching,
     test_hover_over_menu,
     test_shell_reinitializing,
-    test_cloud_agent_shell_respawn,
     test_exit_multiple_tabs,
     test_execute_multiple_cursor_command,
     test_home_key_should_not_appear_in_input,
@@ -194,7 +193,6 @@ integration_tests! {
     // For some reason, disabling the `AgentMode` flag does not actually disable Agent Mode in the test
     // run. Ignore for now.
     #[ignore]
-    test_ask_warp_ai_keybinding_for_selected_block,
 
 
     test_tab_behavior_setting,
@@ -267,7 +265,6 @@ integration_tests! {
     test_block_filtering_active_block,
     test_block_filtering_clear_blocklist,
     test_autosuggestions_are_hidden_when_opening_tab_completions,
-    test_latest_buffer_operations,
 
     test_pass_control_sequences_to_long_running_block,
     test_execution_profiles_load_from_settings_file,

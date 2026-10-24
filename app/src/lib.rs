@@ -86,7 +86,6 @@ mod warp_managed_paths_watcher;
 #[cfg(target_family = "wasm")]
 mod wasm_nux_dialog;
 mod window_settings;
-mod word_block_editor;
 mod workspaces;
 
 // PLEASE DO NOT ADD MORE PUBLIC MODULES!
@@ -406,7 +405,6 @@ impl LaunchMode {
             CliCommand::Agent(AgentCommand::Run(args)) => {
                 (args.sandboxed, args.computer_use.computer_use_override())
             }
-            CliCommand::Agent(AgentCommand::RunCloudStandby(_)) => (true, None),
             _ => (false, None),
         };
         Self::CommandLine {
@@ -535,14 +533,7 @@ impl LaunchMode {
     fn supports_indexing(&self) -> bool {
         match self {
             LaunchMode::CommandLine { command, .. } => {
-                // A pre-warmed sandbox indexes its repositories during preparation, so the
-                // claimed run inherits a warm index instead of rebuilding one.
-                matches!(
-                    command,
-                    CliCommand::Agent(
-                        AgentCommand::Run { .. } | AgentCommand::RunCloudStandby { .. }
-                    )
-                )
+                matches!(command, CliCommand::Agent(AgentCommand::Run { .. }))
             }
             LaunchMode::RemoteServerDaemon { .. } => {
                 FeatureFlag::RemoteCodebaseIndexing.is_enabled()
@@ -676,7 +667,7 @@ pub fn run() -> Result<()> {
     let args = torch_cli::Args::from_env();
 
     // Server URL overrides are only honored on internal dev channels. Release channels silently
-    // ignore `--server-root-url` / `--ws-server-url` / `--session-sharing-server-url` (and their
+    // ignore `--server-root-url` / `--ws-server-url` (and their
     // `TORCH_*` env-var equivalents) so shipped builds can't be redirected away from their
     // baked-in server URLs. See `Channel::allows_server_url_overrides`.
     if ChannelState::channel().allows_server_url_overrides() {
@@ -690,12 +681,6 @@ pub fn run() -> Result<()> {
             && let Err(e) = ChannelState::override_ws_server_url(url.to_owned())
         {
             eprintln!("Error: Invalid websocket server URL: {e:#}");
-        }
-
-        if let Some(url) = args.session_sharing_server_url()
-            && let Err(e) = ChannelState::override_session_sharing_server_url(url.to_owned())
-        {
-            eprintln!("Error: Invalid session sharing server URL: {e:#}");
         }
     }
 
@@ -1295,14 +1280,6 @@ pub(crate) fn initialize_app(
         });
     #[cfg(not(target_family = "wasm"))]
     server_api.set_ambient_agent_task_id(ambient_agent_task_id);
-    #[cfg(not(target_family = "wasm"))]
-    if let LaunchMode::CommandLine {
-        command: CliCommand::Agent(AgentCommand::RunCloudStandby(args)),
-        ..
-    } = launch_mode
-    {
-        server_api.set_prewarmed_sandbox_id(args.standby_id.clone());
-    }
     let ai_client = server_api_provider.as_ref(ctx).get_ai_client();
     #[cfg(not(target_family = "wasm"))]
     // Refresh starts only after the authenticated server client exists; tracing initialization
@@ -1831,8 +1808,6 @@ pub(crate) fn initialize_app(
     tab_configs::params_modal::init(ctx);
     ai::blocklist::init(ctx);
     ai::blocklist::block::status_bar::init(ctx);
-    drive::sharing::dialog::init(ctx);
-    ai_assistant::panel::init(ctx);
     settings_view::update_environment_form::init(ctx);
     env_vars::env_var_collection_block::init(ctx);
     context_chips::display_menu::init(ctx);
@@ -1852,7 +1827,6 @@ pub(crate) fn initialize_app(
     ctx.add_singleton_model(|_| GitHubAuthNotifier::new());
     ctx.add_singleton_model(|_| NetworkStatus::new());
     ctx.add_singleton_model(|_| SystemStats::new());
-    workspace::auto_handoff::init(ctx);
     ctx.add_singleton_model(|_| KeybindingChangedNotifier::new());
     ctx.add_singleton_model(|_| TabShortcutModifierState::new());
     ctx.add_singleton_model(|_| search::command_palette::SelectedItems::new());
@@ -2180,13 +2154,6 @@ pub(crate) fn initialize_app(
 
     // Add a singleton model for resizable modals whose size should be persisted through restarts.
     ctx.add_singleton_model(|_| ResizableData::default());
-
-    // Add a singleton model to maintain state of shared session across all windows.
-    ctx.add_singleton_model(terminal::shared_session::manager::Manager::new);
-
-    ctx.add_singleton_model(
-        terminal::shared_session::permissions_manager::SessionPermissionsManager::new,
-    );
 
     ctx.add_singleton_model(EnvVarCollectionManager::new);
     ctx.add_singleton_model(WorkflowManager::new);

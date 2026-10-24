@@ -45,7 +45,6 @@ pub fn initialize_settings_for_tests_with_mode(
     use crate::terminal::safe_mode_settings::SafeModeSettings;
     use crate::terminal::session_settings::SessionSettings;
     use crate::terminal::settings::TerminalSettings;
-    use crate::terminal::shared_session::settings::SharedSessionSettings;
     use crate::terminal::warpify::settings::WarpifySettings;
     use crate::undo_close::UndoCloseSettings;
     use crate::user_config::WarpConfig;
@@ -113,7 +112,6 @@ pub fn initialize_settings_for_tests_with_mode(
     UndoCloseSettings::register(app);
     VimBannerSettings::register(app);
     WindowSettings::register(app);
-    SharedSessionSettings::register(app);
     CodeSettings::register(app);
     SemanticSelection::register(app);
 

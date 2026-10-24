@@ -1,9 +1,7 @@
 mod action;
 mod active_session;
-pub(crate) mod auto_handoff;
 #[cfg(target_os = "macos")]
 pub(crate) mod cli_install;
-mod close_session_confirmation_dialog;
 pub(crate) mod cross_window_tab_drag;
 pub mod delete_conversation_confirmation_dialog;
 mod global_actions;
@@ -23,8 +21,8 @@ pub mod util;
 pub mod view;
 
 pub use action::{
-    AutoCloudHandoffTrigger, CommandSearchOptions, InitContent, RestoreConversationLayout,
-    TabContextMenuAnchor, VerticalTabsPaneContextMenuTarget, WorkspaceAction,
+    CommandSearchOptions, InitContent, RestoreConversationLayout, TabContextMenuAnchor,
+    VerticalTabsPaneContextMenuTarget, WorkspaceAction,
 };
 pub use active_session::ActiveSession;
 pub use global_actions::{
@@ -64,12 +62,12 @@ pub use toast_stack::{ToastStack, ToastStackEvent};
 
 use crate::workspace::view::{
     LEFT_PANEL_AGENT_CONVERSATIONS_BINDING_NAME, LEFT_PANEL_GLOBAL_SEARCH_BINDING_NAME,
-    LEFT_PANEL_PROJECT_EXPLORER_BINDING_NAME, NEW_AGENT_TAB_BINDING_NAME,
-    NEW_AMBIENT_AGENT_TAB_BINDING_NAME, NEW_FILE_BINDING_NAME, NEW_TAB_BINDING_NAME,
-    NEW_TERMINAL_TAB_BINDING_NAME, NEW_WINDOW_BINDING_NAME, OPEN_GLOBAL_SEARCH_BINDING_NAME,
-    TOGGLE_CONVERSATION_LIST_VIEW_BINDING_NAME, TOGGLE_NOTIFICATION_MAILBOX_BINDING_NAME,
-    TOGGLE_PROJECT_EXPLORER_BINDING_NAME, TOGGLE_RIGHT_PANEL_BINDING_NAME,
-    TOGGLE_TAB_CONFIGS_MENU_BINDING_NAME, TOGGLE_VERTICAL_TABS_PANEL_BINDING_NAME,
+    LEFT_PANEL_PROJECT_EXPLORER_BINDING_NAME, NEW_AGENT_TAB_BINDING_NAME, NEW_FILE_BINDING_NAME,
+    NEW_TAB_BINDING_NAME, NEW_TERMINAL_TAB_BINDING_NAME, NEW_WINDOW_BINDING_NAME,
+    OPEN_GLOBAL_SEARCH_BINDING_NAME, TOGGLE_CONVERSATION_LIST_VIEW_BINDING_NAME,
+    TOGGLE_NOTIFICATION_MAILBOX_BINDING_NAME, TOGGLE_PROJECT_EXPLORER_BINDING_NAME,
+    TOGGLE_RIGHT_PANEL_BINDING_NAME, TOGGLE_TAB_CONFIGS_MENU_BINDING_NAME,
+    TOGGLE_VERTICAL_TABS_PANEL_BINDING_NAME,
 };
 
 pub fn init(app: &mut AppContext) {
@@ -90,7 +88,6 @@ pub fn init(app: &mut AppContext) {
     view::orchestration_launch_modal::init(app);
     view::agent_cli_launch_modal::init(app);
     view::feature_intro_modal::init(app);
-    view::auto_handoff_sleep_modal::init(app);
     view::chatgpt_plan_modal::init(app);
     view::codex_modal::init(app);
     if code::editor_available() {
@@ -214,18 +211,6 @@ pub fn init(app: &mut AppContext) {
                 )
                 .with_context_predicate(id!("Workspace")),
                 EditableBinding::new(
-                    "workspace:open_auto_handoff_sleep_modal",
-                    "[Debug] Open Auto-Handoff Sleep Modal",
-                    WorkspaceAction::OpenAutoHandoffSleepModal,
-                )
-                .with_context_predicate(id!("Workspace")),
-                EditableBinding::new(
-                    "workspace:reset_auto_handoff_sleep_modal_state",
-                    "[Debug] Reset Auto-Handoff Sleep Modal State",
-                    WorkspaceAction::ResetAutoHandoffSleepModalState,
-                )
-                .with_context_predicate(id!("Workspace")),
-                EditableBinding::new(
                     "workspace:open_chatgpt_plan_modal",
                     "[Debug] Open ChatGPT Plan Modal",
                     WorkspaceAction::OpenChatGPTPlanModal,
@@ -235,12 +220,6 @@ pub fn init(app: &mut AppContext) {
                     "workspace:reset_chatgpt_plan_modal_state",
                     "[Debug] Reset ChatGPT Plan Modal State",
                     WorkspaceAction::ResetChatGPTPlanModalState,
-                )
-                .with_context_predicate(id!("Workspace")),
-                EditableBinding::new(
-                    "workspace:trigger_auto_handoff_to_cloud",
-                    "[Debug] Trigger Auto-Handoff to Cloud",
-                    WorkspaceAction::TriggerAutoHandoffToCloud,
                 )
                 .with_context_predicate(id!("Workspace")),
                 EditableBinding::new(
@@ -302,7 +281,7 @@ pub fn init(app: &mut AppContext) {
     )
     .with_enabled(code::editor_available)
     .with_custom_action(CustomAction::NewFile)
-    .with_context_predicate(id!("Workspace") & !id!("Workspace_ViewOnlySharedSession"))]);
+    .with_context_predicate(id!("Workspace"))]);
 
     if FeatureFlag::UIZoom.is_enabled() {
         app.register_fixed_bindings([
@@ -638,18 +617,6 @@ pub fn init(app: &mut AppContext) {
             id!("Workspace") & id!(flags::IS_ANY_AI_ENABLED) & !id!("Workspace_PaneDragging"),
         )
         .with_enabled(has_cloud_surfaces),
-        EditableBinding::new(
-            NEW_AMBIENT_AGENT_TAB_BINDING_NAME,
-            BindingDescription::new("New Cloud Agent Tab"),
-            WorkspaceAction::AddAmbientAgentTab,
-        )
-        .with_group(bindings::BindingGroup::WarpAi.as_str())
-        .with_context_predicate(
-            id!("Workspace") & id!(flags::IS_ANY_AI_ENABLED) & !id!("Workspace_PaneDragging"),
-        )
-        .with_enabled(|| {
-            FeatureFlag::AgentView.is_enabled() && FeatureFlag::CloudMode.is_enabled()
-        }),
         EditableBinding::new(
             "workspace:toggle_left_panel",
             BindingDescription::new("Open Left Panel"),
@@ -1078,7 +1045,7 @@ pub fn init(app: &mut AppContext) {
                 source: PaletteSource::Keybinding,
             },
         )
-        .with_context_predicate(id!("Workspace") & !id!("Workspace_ViewOnlySharedSession"))
+        .with_context_predicate(id!("Workspace"))
         .with_custom_action(CustomAction::FilesPalette)
         .with_enabled(|| FeatureFlag::CommandPaletteFileSearch.is_enabled()),
         EditableBinding::new(
@@ -1193,33 +1160,19 @@ pub fn init(app: &mut AppContext) {
         ]);
     }
 
-    // We use the same binding name for the AI Assistant and block list AI to preserve custom
-    // keybindings between them.
-    app.register_editable_bindings([
-        EditableBinding::new(
-            "workspace:toggle_ai_assistant",
-            *NEW_AGENT_PANE_LABEL,
-            WorkspaceAction::NewPaneInAgentMode {
-                entrypoint: AgentModeEntrypoint::NewPaneBinding,
-                zero_state_prompt_suggestion_type: None,
-            },
-        )
-        .with_enabled(|| FeatureFlag::AgentMode.is_enabled())
-        .with_context_predicate(id!("Workspace") & id!(flags::IS_ANY_AI_ENABLED))
-        .with_group(bindings::BindingGroup::WarpAi.as_str())
-        .with_custom_action(CustomAction::NewAgentModePane),
-        EditableBinding::new(
-            "workspace:toggle_ai_assistant",
-            "Toggle Torch AI",
-            WorkspaceAction::ToggleAIAssistant,
-        )
-        .with_enabled(|| !FeatureFlag::AgentMode.is_enabled() && has_cloud_surfaces())
-        .with_context_predicate(id!("Workspace") & id!(flags::IS_ANY_AI_ENABLED))
-        .with_group(bindings::BindingGroup::WarpAi.as_str())
-        // We use the same custom action as AM so that we don't have
-        // two mac menu items for AM vs Torch AI since they are mutually exclusive.
-        .with_custom_action(CustomAction::NewAgentModePane),
-    ]);
+    // The binding name is kept to preserve custom keybindings.
+    app.register_editable_bindings([EditableBinding::new(
+        "workspace:toggle_ai_assistant",
+        *NEW_AGENT_PANE_LABEL,
+        WorkspaceAction::NewPaneInAgentMode {
+            entrypoint: AgentModeEntrypoint::NewPaneBinding,
+            zero_state_prompt_suggestion_type: None,
+        },
+    )
+    .with_enabled(|| FeatureFlag::AgentMode.is_enabled())
+    .with_context_predicate(id!("Workspace") & id!(flags::IS_ANY_AI_ENABLED))
+    .with_group(bindings::BindingGroup::WarpAi.as_str())
+    .with_custom_action(CustomAction::NewAgentModePane)]);
 
     app.register_editable_bindings([
         EditableBinding::new(

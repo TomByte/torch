@@ -15,7 +15,7 @@ use super::providers::{
     get_base_model_choices, resolve_default_host_slug, resolve_recent_host_slug,
 };
 use crate::LLMPreferences;
-use crate::ai::auth_secret_types::auth_secret_types_for_harness;
+use crate::ai::auth_secret_types::harness_supports_auth_secrets;
 use crate::ai::cloud_environments::{CloudAmbientAgentEnvironment, environment_matches_scope};
 use crate::ai::connected_self_hosted_workers::ConnectedSelfHostedWorkersModel;
 use crate::ai::harness_availability::{AuthSecretFetchState, HarnessAvailabilityModel};
@@ -408,7 +408,7 @@ pub fn api_key_snapshot<S: TeamScope + ?Sized>(
         }
         AuthSecretFetchState::Failed(_) => AuthSecretNamesInput::Failed,
     };
-    let supports_create_new = !auth_secret_types_for_harness(harness).is_empty();
+    let supports_create_new = harness_supports_auth_secrets(harness);
     build_api_key_snapshot(names, &state.auth_secret_selection, supports_create_new)
 }
 

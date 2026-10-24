@@ -6,7 +6,6 @@ pub mod focus_env;
 pub mod local_tty;
 pub mod model;
 mod runtime;
-mod shared_session;
 pub mod shell;
 #[cfg(any(test, feature = "test-util"))]
 pub mod test_util;

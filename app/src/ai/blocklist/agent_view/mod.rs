@@ -32,7 +32,6 @@ use torchui::fonts::Properties;
 use torchui::keymap::Keystroke;
 pub use zero_state_block::*;
 
-use crate::terminal::model::TerminalModel;
 use crate::view_components::action_button::ActionButtonTheme;
 
 pub static ENTER_AGENT_VIEW_NEW_CONVERSATION_KEYSTROKE: LazyLock<Keystroke> = LazyLock::new(|| {
@@ -53,34 +52,6 @@ pub static ENTER_AGENT_VIEW_NEW_CONVERSATION_KEYSTROKE: LazyLock<Keystroke> = La
         }
     }
 });
-
-pub static ENTER_CLOUD_AGENT_VIEW_NEW_CONVERSATION_KEYSTROKE: LazyLock<Keystroke> =
-    LazyLock::new(|| {
-        cfg_if::cfg_if! {
-            if #[cfg(target_os = "macos")] {
-                Keystroke {
-                    cmd: true,
-                    alt: true,
-                    key: "enter".to_owned(),
-                    ..Default::default()
-                }
-            } else {
-                Keystroke {
-                    ctrl: true,
-                    alt: true,
-                    key: "enter".to_owned(),
-                    ..Default::default()
-                }
-            }
-        }
-    });
-
-/// Returns `true` when the current pane is in a cloud or remote context.
-pub fn is_in_cloud_context(terminal_model: &TerminalModel) -> bool {
-    terminal_model.block_list().is_cloud_conversation_context()
-        || terminal_model.is_conversation_transcript_viewer()
-        || terminal_model.is_dummy_cloud_mode_session()
-}
 
 pub struct AgentViewHeaderTheme;
 

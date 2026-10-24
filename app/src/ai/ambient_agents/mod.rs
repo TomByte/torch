@@ -10,17 +10,11 @@ pub mod spawn;
 pub mod task;
 pub mod telemetry;
 
+pub use ai_types::AmbientAgentTaskId;
 pub use task::{
     AgentConfigSnapshot, AgentSource, AmbientAgentLiveSessionState, AmbientAgentTask,
-    AmbientAgentTaskState, ExecutionLocation, TaskStatusMessage, cancel_task_silently,
-    cancel_task_with_toast,
+    AmbientAgentTaskState, ExecutionLocation, TaskStatusMessage, cancel_task_with_toast,
 };
-pub const OUT_OF_CREDITS_TASK_FAILURE_MESSAGE: &str =
-    "Out of credits. Upgrade your Torch plan to continue running cloud agents.";
-pub const SERVER_OVERLOADED_TASK_FAILURE_MESSAGE: &str =
-    "Torch is temporarily overloaded. Please try again shortly.";
-
-pub use ai_types::AmbientAgentTaskId;
 
 /// High-level outcome of an ambient agent conversation.
 #[derive(Clone, Debug)]

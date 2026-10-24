@@ -5,7 +5,7 @@ use torch_cli::agent::Harness;
 use torchui::{AppContext, SingletonEntity as _};
 
 use super::config_state::{AuthSecretSelection, OrchestrationConfigState};
-use crate::ai::auth_secret_types::auth_secret_types_for_harness;
+use crate::ai::auth_secret_types::harness_supports_auth_secrets;
 use crate::ai::harness_availability::HarnessAvailabilityModel;
 use crate::ai::local_harness_setup::{LocalHarnessSetupState, local_harness_setup_state};
 use crate::ai::orchestration::providers::ORCHESTRATION_WARP_WORKER_HOST;
@@ -23,7 +23,7 @@ pub fn should_show_auth_secret_picker(state: &OrchestrationConfigState) -> bool 
     if harness == Harness::Oz {
         return false;
     }
-    !auth_secret_types_for_harness(harness).is_empty()
+    harness_supports_auth_secrets(harness)
 }
 
 /// `true` when the user must pick an API key (or Inherit) before Accept is
@@ -43,7 +43,7 @@ pub fn auth_secret_selection_required(state: &OrchestrationConfigState, _ctx: &A
     let Some(harness) = Harness::parse_orchestration_harness(&state.harness_type) else {
         return false;
     };
-    if harness == Harness::Oz || auth_secret_types_for_harness(harness).is_empty() {
+    if harness == Harness::Oz || !harness_supports_auth_secrets(harness) {
         return false;
     }
     true

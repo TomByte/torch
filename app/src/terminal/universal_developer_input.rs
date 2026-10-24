@@ -58,8 +58,6 @@ use crate::terminal::profile_model_selector::{
     calculate_scaled_font_size,
 };
 use crate::terminal::session_settings::{SessionSettings, SessionSettingsChangedEvent};
-use crate::terminal::shared_session::permissions_manager::SessionPermissionsManager;
-use crate::terminal::view::ambient_agent::AmbientAgentViewModel;
 use crate::ui_components::icons::Icon;
 use crate::view_components::action_button::{
     ActionButton, ActionButtonTheme, ButtonSize, NakedTheme, TooltipAlignment,
@@ -172,8 +170,6 @@ impl AtContextMenuDisabledReason {
         // no categories available.
         if AIContextMenu::get_categories_for_mode(
             input_config.input_type.is_ai() || !input_config.is_locked,
-            false,
-            false, /* is_in_ambient_agent */
             false, /* is_cli_agent_input */
             ctx,
         )
@@ -334,7 +330,6 @@ impl UniversalDeveloperInputButtonBar {
         terminal_view_id: EntityId,
         input_model: ModelHandle<BlocklistAIInputModel>,
         cli_subagent_controller: ModelHandle<CLISubagentController>,
-        ambient_agent_view_model: Option<ModelHandle<AmbientAgentViewModel>>,
         terminal_model: std::sync::Arc<parking_lot::FairMutex<crate::terminal::TerminalModel>>,
         ctx: &mut ViewContext<Self>,
     ) -> Self {
@@ -403,7 +398,6 @@ impl UniversalDeveloperInputButtonBar {
                 menu_positioning_provider.clone(),
                 terminal_view_id,
                 input_model.clone(),
-                ambient_agent_view_model.clone(),
                 terminal_model.clone(),
                 None,
                 ctx,
@@ -417,7 +411,6 @@ impl UniversalDeveloperInputButtonBar {
                 menu_positioning_provider.clone(),
                 terminal_view_id,
                 input_model.clone(),
-                ambient_agent_view_model.clone(),
                 terminal_model.clone(),
                 None,
                 ctx,
@@ -587,10 +580,6 @@ impl UniversalDeveloperInputButtonBar {
             me.notify_and_notify_children(ctx);
         });
 
-        // Keep the control disabled state in sync with role changes
-        ctx.subscribe_to_model(&SessionPermissionsManager::handle(ctx), |me, _, _, ctx| {
-            me.update_segmented_control_disabled_state(ctx);
-        });
         // Keep the control disabled state in sync with agent control state
         ctx.subscribe_to_model(&cli_subagent_controller, move |me, _, _, ctx| {
             me.update_segmented_control_disabled_state(ctx);
@@ -662,20 +651,14 @@ impl UniversalDeveloperInputButtonBar {
     }
 
     pub fn update_segmented_control_disabled_state(&mut self, ctx: &mut ViewContext<Self>) {
-        let (is_reader, is_agent_in_control) = {
-            let terminal_model = self.terminal_model.lock();
-            (
-                terminal_model.shared_session_status().is_reader(),
-                terminal_model
-                    .block_list()
-                    .active_block()
-                    .is_active_and_long_running(),
-            )
-        };
+        let is_agent_in_control = self
+            .terminal_model
+            .lock()
+            .block_list()
+            .active_block()
+            .is_active_and_long_running();
 
-        let tooltip = if is_reader {
-            Some("Request edit access to change input mode".to_string())
-        } else if is_agent_in_control {
+        let tooltip = if is_agent_in_control {
             Some("Input mode locked while agent is monitoring a command".to_string())
         } else {
             None
@@ -839,15 +822,7 @@ impl View for UniversalDeveloperInputButtonBar {
 
             buttons = buttons.with_child(ChildView::new(&self.at_button).finish());
 
-            // Viewers cannot attach files in shared sessions at this point.
-            if !self
-                .terminal_model
-                .lock()
-                .shared_session_status()
-                .is_viewer()
-            {
-                buttons = buttons.with_child(ChildView::new(&self.file_button).finish());
-            }
+            buttons = buttons.with_child(ChildView::new(&self.file_button).finish());
 
             let show_model_selector = FeatureFlag::ProfilesDesignRevamp.is_enabled()
                 || *SessionSettings::as_ref(app).show_model_selectors_in_prompt;

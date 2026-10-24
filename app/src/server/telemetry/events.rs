@@ -2,8 +2,6 @@ use std::time::Duration;
 
 use serde::{Deserialize, Serialize, Serializer};
 use serde_json::{Value, json};
-use session_sharing_protocol::common::{ParticipantId, Role, SessionId as SharedSessionId};
-use session_sharing_protocol::sharer::{SessionEndedReason, SessionSourceType};
 use strum_macros::{EnumDiscriminants, EnumIter};
 use torch_completer::completer::MatchType;
 use torch_core::command::ExitCode;
@@ -50,12 +48,12 @@ use crate::pane_group::PaneDragDropLocation;
 use crate::prompt::editor_modal::OpenSource as PromptEditorOpenSource;
 use crate::search::QueryFilter;
 use crate::search::command_search::searcher::CommandSearchItemAction;
-use crate::server::block::DisplaySetting;
 use crate::server::ids::{ObjectUid, ServerId};
 use crate::settings::AgentModeCodingPermissionsType;
 use crate::settings::import::config::ParsedTerminalSetting;
 use crate::settings::import::model::TerminalType;
 use crate::tab::TabTelemetryAction;
+use crate::terminal::CLIAgent;
 use crate::terminal::block_list_viewport::InputMode;
 use crate::terminal::cli_agent_sessions::{CLIAgentInputEntrypoint, CLIAgentRichInputCloseReason};
 use crate::terminal::input::TelemetryInputSuggestionsMode;
@@ -63,7 +61,6 @@ use crate::terminal::model::block::BlockId;
 use crate::terminal::model::session::SessionId;
 use crate::terminal::model::terminal_model::BlockSelectionCardinality;
 use crate::terminal::settings::AltScreenPaddingMode;
-use crate::terminal::shared_session::SharedSessionActionSource;
 use crate::terminal::shell::ShellType;
 use crate::terminal::view::inline_banner::{
     ZeroStatePromptSuggestionTriggeredFrom, ZeroStatePromptSuggestionType,
@@ -72,7 +69,6 @@ use crate::terminal::view::{
     BlockEntity, BlockSelectionDetails, NotificationsDiscoveryBannerAction,
     NotificationsErrorBannerAction, NotificationsTrigger, PromptPart,
 };
-use crate::terminal::{CLIAgent, ShareBlockType};
 use crate::tips::WelcomeTipFeature;
 #[cfg(feature = "local_fs")]
 use crate::util::file::external_editor::settings::EditorLayout;
@@ -335,33 +331,6 @@ impl From<rmcp::RmcpError> for MCPServerTelemetryError {
             _ => Self::InternalError(err.to_string()),
         }
     }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct OpenedSharingDialogEvent {
-    pub source: SharingDialogSource,
-
-    /// Metadata for the object being shared, if it's a Torch Drive object.
-    #[serde(flatten)]
-    pub object_metadata: Option<CloudObjectTelemetryMetadata>,
-
-    /// Metadata for the session being shared, if there is one.
-    pub session_id: Option<SharedSessionId>,
-}
-
-/// How the user opened the Torch Drive sharing dialog.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
-pub enum SharingDialogSource {
-    /// The sharing button in the pane header.
-    PaneHeader,
-    /// The per-pane command palette entry (includes keybindings).
-    CommandPalette,
-    /// The sharing dialog was auto-opened from shared session creation.
-    StartedSessionShare,
-    /// The conversation list overflow menu.
-    ConversationList,
-    /// The AI block context menu.
-    AIBlockContextMenu,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -1014,7 +983,6 @@ impl From<AgentViewEntryOrigin> for TelemetryAgentViewEntryOrigin {
             AgentViewEntryOrigin::AcceptedUnitTestSuggestion => Self::AcceptedUnitTestSuggestion,
             AgentViewEntryOrigin::AcceptedPassiveCodeDiff => Self::AcceptedPassiveCodeDiff,
             AgentViewEntryOrigin::InlineCodeReview => Self::InlineCodeReview,
-            AgentViewEntryOrigin::CloudAgent => Self::AmbientAgent,
             AgentViewEntryOrigin::ThirdPartyCloudAgent => Self::ThirdPartyCloudAgent,
             AgentViewEntryOrigin::Cli => Self::Cli,
             AgentViewEntryOrigin::ImageAdded => Self::ImageAdded,
@@ -1107,34 +1075,6 @@ pub enum CLISubagentControlState {
 
 #[derive(Clone, Copy, Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
-pub enum CloudAgentShellRecoveryOutcome {
-    Started,
-    Succeeded,
-    Failed,
-}
-
-#[derive(Clone, Copy, Debug, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum CloudAgentShellExitDetection {
-    ExitCode,
-    Signal,
-    Unavailable,
-}
-
-#[derive(Clone, Copy, Debug, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum CloudAgentShellRecoveryFailureClass {
-    EventLoopJoin,
-    PtySpawn,
-    BootstrapTimeout,
-    ReplacementShellExit,
-    /// The terminal's shell starter (e.g. a Docker sandbox) cannot produce a replacement shell.
-    Unsupported,
-    SharedSessionRebind,
-}
-
-#[derive(Clone, Copy, Debug, Serialize)]
-#[serde(rename_all = "snake_case")]
 pub enum RemoteCodebaseIndexStatusTelemetrySource {
     Snapshot,
     PushUpdate,
@@ -1215,13 +1155,6 @@ pub enum TelemetryEvent {
     },
     ReinputCommands(BlockSelectionCardinality),
     JumpToPreviousCommand,
-    CopyBlockSharingLink(ShareBlockType),
-    GenerateBlockSharingLink {
-        share_type: ShareBlockType,
-        display_setting: DisplaySetting,
-        show_prompt: bool,
-        redact_secrets: bool,
-    },
     BlockSelection(BlockSelectionDetails),
     BootstrappingSlow(BootstrappingInfo),
     BootstrappingSlowContents(SlowBootstrapInfo),
@@ -1440,7 +1373,6 @@ pub enum TelemetryEvent {
     },
     QuitModalShown {
         running_processes: u32,
-        shared_sessions: u32,
         modal_for: CloseTarget,
     },
     QuitModalCancel {
@@ -1590,37 +1522,6 @@ pub enum TelemetryEvent {
         is_empty_editor: bool,
         // Is PageDown. Otherwise is PageUp
         is_down: bool,
-    },
-    /// Emitted on start share attempt, not on success.
-    StartedSharingCurrentSession {
-        includes_scrollback: bool,
-        source: SharedSessionActionSource,
-    },
-    StoppedSharingCurrentSession {
-        source: SharedSessionActionSource,
-        reason: SessionEndedReason,
-    },
-    JoinedSharedSession {
-        session_id: SharedSessionId,
-        source_type: SessionSourceType,
-    },
-    SharedSessionModalUpgradePressed,
-    /// Emitted when a shared session sharer cancels granting a role
-    /// (currently only applies when granting executor mode).
-    SharerCancelledGrantRole {
-        role: Role,
-    },
-    /// Emitted when a shared session sharer checks "dont show again"
-    /// in confirmation modal when granting a role.
-    SharerGrantModalDontShowAgain,
-    JumpToSharedSessionParticipant {
-        jumped_to: ParticipantId,
-    },
-    CopiedSharedSessionLink {
-        source: SharedSessionActionSource,
-    },
-    WebSessionOpenedOnDesktop {
-        source: SharedSessionActionSource,
     },
     UnsupportedShell {
         shell: String,
@@ -1982,7 +1883,6 @@ pub enum TelemetryEvent {
         conversation_id: AIConversationId,
         server_output_id: Option<ServerOutputId>,
     },
-    OpenedSharingDialog(OpenedSharingDialogEvent),
     ToggleLigatureRendering {
         enabled: bool,
     },
@@ -2325,16 +2225,6 @@ pub enum TelemetryEvent {
     AgentExitedShellProcess {
         command: String,
         server_output_id: Option<ServerOutputId>,
-    },
-    CloudAgentShellRecovery {
-        outcome: CloudAgentShellRecoveryOutcome,
-        detection: CloudAgentShellExitDetection,
-        status_available: bool,
-        exit_code: Option<i32>,
-        signal: Option<i32>,
-        duration_ms: Option<u32>,
-        used_fallback_directory: Option<bool>,
-        failure_class: Option<CloudAgentShellRecoveryFailureClass>,
     },
     /// Emitted when the user uses voice input from the CLI agent footer.
     CLIAgentToolbarVoiceInputUsed {
@@ -2886,11 +2776,8 @@ impl TelemetryEvent {
             }
             TelemetryEvent::QuitModalShown {
                 running_processes,
-                shared_sessions,
                 modal_for,
-            } => Some(
-                json!({ "running_processes": running_processes, "shared_sessions": shared_sessions, "modal_for": modal_for }),
-            ),
+            } => Some(json!({ "running_processes": running_processes, "modal_for": modal_for })),
             TelemetryEvent::QuitModalCancel {
                 nav_palette,
                 modal_for,
@@ -3051,28 +2938,10 @@ impl TelemetryEvent {
             } => Some(json!({
                 "max_bytes_per_second": max_bytes_per_second,
             })),
-            TelemetryEvent::GenerateBlockSharingLink {
-                share_type,
-                display_setting,
-                show_prompt,
-                redact_secrets,
-            } => Some(
-                json!({"share_type": share_type, "display_setting": display_setting, "show_prompt": show_prompt, "redact_secrets": redact_secrets}),
-            ),
-            TelemetryEvent::CopyBlockSharingLink(share_type) => {
-                Some(json!({ "share_type": share_type }))
-            }
             TelemetryEvent::PageUpDownInEditorPressed {
                 is_empty_editor,
                 is_down,
             } => Some(json!({"is_empty_editor": is_empty_editor, "is_down": is_down})),
-            TelemetryEvent::StartedSharingCurrentSession {
-                includes_scrollback,
-                source,
-            } => Some(json!({ "includes_scrollback": includes_scrollback, "source": source })),
-            TelemetryEvent::StoppedSharingCurrentSession { source, reason } => {
-                Some(json!({ "source": source, "reason": reason }))
-            }
             TelemetryEvent::UnsupportedShell { shell } => Some(json!({ "shell": shell })),
             TelemetryEvent::OpenAndWarpifyDockerSubshell { shell_type } => {
                 Some(json!({ "shell_type": shell_type }))
@@ -3102,21 +2971,6 @@ impl TelemetryEvent {
             TelemetryEvent::SetSshExtensionInstallMode { mode } => Some(json!({"mode": mode})),
             TelemetryEvent::SshRemoteServerChoiceDoNotAskAgainToggled { checked } => {
                 Some(json!({"checked": checked}))
-            }
-            TelemetryEvent::JoinedSharedSession {
-                session_id,
-                source_type,
-            } => Some(json!({
-                "session_id": session_id,
-                "source_type": source_type,
-            })),
-            TelemetryEvent::SharerCancelledGrantRole { role } => Some(json!({ "role": role })),
-            TelemetryEvent::JumpToSharedSessionParticipant { jumped_to } => {
-                Some(json!({ "jumped_to": jumped_to }))
-            }
-            TelemetryEvent::CopiedSharedSessionLink { source } => Some(json!({ "source": source })),
-            TelemetryEvent::WebSessionOpenedOnDesktop { source } => {
-                Some(json!({ "source": source}))
             }
             TelemetryEvent::ToggleSnackbarInActivePane { show_snackbar } => {
                 Some(json!({ "show_snackbar": show_snackbar }))
@@ -3400,7 +3254,6 @@ impl TelemetryEvent {
             } => Some(
                 json!({ "citation": citation, "block_id": block_id, "conversation_id": conversation_id, "server_output_id": server_output_id }),
             ),
-            TelemetryEvent::OpenedSharingDialog(event) => Some(json!(event)),
             TelemetryEvent::ToggleLigatureRendering { enabled } => {
                 Some(json!({"enabled": enabled}))
             }
@@ -3693,13 +3546,11 @@ impl TelemetryEvent {
             | TelemetryEvent::CopySecret
             | TelemetryEvent::AutoGenerateMetadataSuccess
             | TelemetryEvent::CommandFileRun
-            | TelemetryEvent::SharerGrantModalDontShowAgain
             | TelemetryEvent::LogOut
             | TelemetryEvent::UpdateBlockFilterQuery
             | TelemetryEvent::BlockFilterToolbeltButtonClicked
             | TelemetryEvent::PaneDragInitiated
             | TelemetryEvent::SharedObjectLimitHitBannerViewPlansButtonClicked
-            | TelemetryEvent::SharedSessionModalUpgradePressed
             | TelemetryEvent::AgentModePotentialAutoDetectionFalsePositive(
                 AgentModeAutoDetectionFalsePositivePayload::ExternalUsers,
             )
@@ -4079,25 +3930,6 @@ impl TelemetryEvent {
                 "command": command,
                 "server_output_id": server_output_id,
             })),
-            TelemetryEvent::CloudAgentShellRecovery {
-                outcome,
-                detection,
-                status_available,
-                exit_code,
-                signal,
-                duration_ms,
-                used_fallback_directory,
-                failure_class,
-            } => Some(json!({
-                "outcome": outcome,
-                "detection": detection,
-                "status_available": status_available,
-                "exit_code": exit_code,
-                "signal": signal,
-                "duration_ms": duration_ms,
-                "used_fallback_directory": used_fallback_directory,
-                "failure_class": failure_class,
-            })),
             TelemetryEvent::CLIAgentToolbarVoiceInputUsed { cli_agent } => Some(json!({
                 "agent_name": cli_agent.telemetry_name(),
             })),
@@ -4290,8 +4122,6 @@ impl TelemetryEvent {
             | TelemetryEvent::PromptEdited { .. }
             | TelemetryEvent::ReinputCommands(_)
             | TelemetryEvent::JumpToPreviousCommand
-            | TelemetryEvent::CopyBlockSharingLink(_)
-            | TelemetryEvent::GenerateBlockSharingLink { .. }
             | TelemetryEvent::BlockSelection(_)
             | TelemetryEvent::BootstrappingSlow(_)
             | TelemetryEvent::SessionAbandonedBeforeBootstrap { .. }
@@ -4443,15 +4273,6 @@ impl TelemetryEvent {
             | TelemetryEvent::PtyThroughput { .. }
             | TelemetryEvent::CommandFileRun
             | TelemetryEvent::PageUpDownInEditorPressed { .. }
-            | TelemetryEvent::StartedSharingCurrentSession { .. }
-            | TelemetryEvent::StoppedSharingCurrentSession { .. }
-            | TelemetryEvent::JoinedSharedSession { .. }
-            | TelemetryEvent::SharedSessionModalUpgradePressed
-            | TelemetryEvent::SharerCancelledGrantRole { .. }
-            | TelemetryEvent::SharerGrantModalDontShowAgain
-            | TelemetryEvent::JumpToSharedSessionParticipant { .. }
-            | TelemetryEvent::CopiedSharedSessionLink { .. }
-            | TelemetryEvent::WebSessionOpenedOnDesktop { .. }
             | TelemetryEvent::UnsupportedShell { .. }
             | TelemetryEvent::LogOut
             | TelemetryEvent::OpenAndWarpifyDockerSubshell { .. }
@@ -4497,7 +4318,6 @@ impl TelemetryEvent {
             | TelemetryEvent::AddTabWithShell { .. }
             | TelemetryEvent::AgentModeSurfacedCitations { .. }
             | TelemetryEvent::AgentModeOpenedCitation { .. }
-            | TelemetryEvent::OpenedSharingDialog(_)
             | TelemetryEvent::ToggleLigatureRendering { .. }
             | TelemetryEvent::WorkflowAliasAdded { .. }
             | TelemetryEvent::WorkflowAliasRemoved { .. }
@@ -4587,7 +4407,6 @@ impl TelemetryEvent {
             | TelemetryEvent::DetectedIsolationPlatform { .. }
             | TelemetryEvent::AgentTipShown { .. }
             | TelemetryEvent::AgentTipClicked { .. }
-            | TelemetryEvent::CloudAgentShellRecovery { .. }
             | TelemetryEvent::CLIAgentToolbarVoiceInputUsed { .. }
             | TelemetryEvent::CLIAgentToolbarImageAttached { .. }
             | TelemetryEvent::CLIAgentToolbarShown { .. }
@@ -4724,12 +4543,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::ToggleFocusPaneOnHover { .. } => EnablementState::Always,
 
             Self::AgentModeChangedInputType => EnablementState::Always,
-            Self::StartedSharingCurrentSession
-            | Self::StoppedSharingCurrentSession
-            | Self::SharedSessionModalUpgradePressed => {
-                EnablementState::Flag(FeatureFlag::CreatingSharedSessions)
-            }
-            Self::JoinedSharedSession => EnablementState::Flag(FeatureFlag::ViewingSharedSessions),
             Self::OpenNotebook | Self::EditNotebook | Self::NotebookAction => {
                 EnablementState::Always
             }
@@ -4751,8 +4564,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::PromptEdited => EnablementState::Always,
             Self::ReinputCommands => EnablementState::Always,
             Self::JumpToPreviousCommand => EnablementState::Always,
-            Self::CopyBlockSharingLink => EnablementState::Always,
-            Self::GenerateBlockSharingLink => EnablementState::Always,
             Self::BlockSelection => EnablementState::Always,
             Self::BootstrappingSlow => EnablementState::Always,
             Self::BootstrappingSlowContents => EnablementState::Always,
@@ -4917,11 +4728,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::ToggleSnackbarInActivePane => EnablementState::Always,
             Self::PaneDragInitiated => EnablementState::Always,
             Self::PaneDropped => EnablementState::Always,
-            Self::SharerCancelledGrantRole => EnablementState::Always,
-            Self::SharerGrantModalDontShowAgain => EnablementState::Always,
-            Self::JumpToSharedSessionParticipant => EnablementState::Always,
-            Self::CopiedSharedSessionLink => EnablementState::Always,
-            Self::WebSessionOpenedOnDesktop => EnablementState::Always,
             Self::ToggleShowBlockDividers => EnablementState::Flag(FeatureFlag::MinimalistUI),
             Self::SharedObjectLimitHitBannerViewPlansButtonClicked => EnablementState::Always,
             Self::ResourceUsageStats => EnablementState::Always,
@@ -4970,7 +4776,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::AgentModeSurfacedCitations | Self::AgentModeOpenedCitation => {
                 EnablementState::Always
             }
-            Self::OpenedSharingDialog => EnablementState::Always,
             Self::ToggleLigatureRendering => EnablementState::Flag(FeatureFlag::Ligatures),
             Self::WorkflowAliasAdded
             | Self::WorkflowAliasRemoved
@@ -5050,9 +4855,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             }
             Self::DetectedIsolationPlatform { .. } => EnablementState::Always,
             Self::AgentExitedShellProcess { .. } => EnablementState::Always,
-            Self::CloudAgentShellRecovery { .. } => {
-                EnablementState::Flag(FeatureFlag::CloudAgentShellRespawn)
-            }
             Self::CLIAgentToolbarVoiceInputUsed { .. } => EnablementState::Always,
             Self::CLIAgentToolbarImageAttached { .. } => EnablementState::Always,
             Self::CLIAgentToolbarShown { .. } => EnablementState::Always,
@@ -5125,8 +4927,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::ContextMenuFindWithinBlocks => "Context Menu: Find Within Blocks",
             Self::ContextMenuOpenShareModal => "Context Menu: Initiate Block Sharing",
             Self::ContextMenuCopy => "Context Menu Copy",
-            Self::CopyBlockSharingLink => "Copy Block Sharing Link",
-            Self::GenerateBlockSharingLink => "Generate Block Sharing Link",
             Self::BlockSelection => "Block Selection",
             Self::BootstrappingSlow => "Bootstrapping Slow",
             Self::BootstrappingSlowContents => "Bootstrap Slow Contents",
@@ -5320,15 +5120,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::PtyThroughput => "PTY Throughput",
             Self::CommandFileRun => "Command File Run",
             Self::PageUpDownInEditorPressed => "Page Up/Down In Editor Pressed",
-            Self::StartedSharingCurrentSession => "Started Sharing Current Session",
-            Self::StoppedSharingCurrentSession => "Stopped Sharing Current Session",
-            Self::JoinedSharedSession => "Joined Shared Session",
-            Self::SharedSessionModalUpgradePressed => "Shared Session Modal Upgrade Pressed",
-            Self::SharerCancelledGrantRole => "Sharer Cancelled Grant Role",
-            Self::SharerGrantModalDontShowAgain => "Don't Show Sharer Grant Modal Again",
-            Self::JumpToSharedSessionParticipant { .. } => "Jumped to Shared Session Participant",
-            Self::CopiedSharedSessionLink { .. } => "Copied Shared Session Link",
-            Self::WebSessionOpenedOnDesktop { .. } => "Web session opened on desktop",
             Self::UnsupportedShell => "Unsupported Shell",
             Self::SettingsImportInitiated => "Settings Import Initiated",
             Self::OpenAndWarpifyDockerSubshell => "OpenAndWarpifyDockerSubshell",
@@ -5397,7 +5188,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::AddTabWithShell => "Add Tab With Shell",
             Self::AgentModeSurfacedCitations => "AgentMode.SurfacedCitations",
             Self::AgentModeOpenedCitation => "AgentMode.OpenedCitation",
-            Self::OpenedSharingDialog => "Opened Sharing Dialog",
             Self::ToggleLigatureRendering => "Toggle Ligature Rendering",
             Self::WorkflowAliasAdded => "Added Workflow Alias",
             Self::WorkflowAliasRemoved => "Removed Workflow Alias",
@@ -5533,7 +5323,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::AgentTipShown => "AgentTip Shown",
             Self::AgentTipClicked => "AgentTip Clicked",
             Self::AgentExitedShellProcess => "AgentMode.ExitedShellProcess",
-            Self::CloudAgentShellRecovery { .. } => "AgentMode.CloudShellRecovery",
             Self::CLIAgentToolbarVoiceInputUsed { .. } => "CLIAgentFooter.VoiceInputUsed",
             Self::CLIAgentToolbarImageAttached { .. } => "CLIAgentFooter.ImageAttached",
             Self::CLIAgentToolbarShown { .. } => "CLIAgentFooter.Shown",
@@ -5624,8 +5413,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::PromptEdited => "Edited the prompt using the built-in prompt editor",
             Self::ReinputCommands => "Clicked \"reinput commands\" in context menu",
             Self::JumpToPreviousCommand => "Jumped to a previous command",
-            Self::CopyBlockSharingLink => "Clicked \"Share block...\" in context menu",
-            Self::GenerateBlockSharingLink => "Generated Block sharing link",
             Self::BlockSelection => "Selected Block",
             Self::BootstrappingSlow => "Slow bootstrap on session startup",
             Self::BootstrappingSlowContents => {
@@ -5925,27 +5712,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::PageUpDownInEditorPressed => {
                 "Pressed `PAGE-UP` or `PAGE-DOWN` within the Input Editor"
             }
-            Self::StartedSharingCurrentSession => "Started sharing the current session",
-            Self::StoppedSharingCurrentSession => "Halted sharing the current session",
-            Self::JoinedSharedSession => {
-                "When you join another instance of Torch using shared sessions"
-            }
-            Self::SharedSessionModalUpgradePressed => {
-                "Pressed upgrade after reaching max session sharing limit"
-            }
-            Self::SharerCancelledGrantRole => {
-                "When you cancel granting a role to a shared session participant"
-            }
-            Self::SharerGrantModalDontShowAgain => {
-                "When you check don't show again on the confirmation modal for granting a role"
-            }
-            Self::JumpToSharedSessionParticipant => {
-                "Clicked on a shared session participant avatar to jump to their location in the session"
-            }
-            Self::CopiedSharedSessionLink => "Copied a shared session link",
-            Self::WebSessionOpenedOnDesktop => {
-                "Shared session viewed on the web was opened on the desktop"
-            }
             Self::UnsupportedShell => "Booted Torch with a shell that isn't supported",
             Self::LogOut => "Logged out of the Torch client",
             Self::SettingsImportInitiated => "Started the import settings flow for new users",
@@ -6071,9 +5837,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
                 "Agent mode used and cited external sources that were used in its response"
             }
             Self::AgentModeOpenedCitation => "Opened a citation that was surfaced in agent mode",
-            Self::OpenedSharingDialog => {
-                "Opened the sharing settings dialog for a session or Torch Drive object"
-            }
             Self::ToggleLigatureRendering => "Toggled ligature rendering",
             Self::WorkflowAliasAdded => "Added an alias to a Torch Drive workflow",
             Self::WorkflowAliasRemoved => "Removed an alias from a Torch Drive workflow",
@@ -6217,9 +5980,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::AgentTipClicked => "User clicked a link or action in an Agent Tip",
             Self::AgentExitedShellProcess => {
                 "An agent-requested command caused the shell process to exit"
-            }
-            Self::CloudAgentShellRecovery { .. } => {
-                "A cloud agent persistent shell recovery changed state"
             }
             Self::CLIAgentToolbarVoiceInputUsed { .. } => {
                 "User used voice input from the CLI agent footer"

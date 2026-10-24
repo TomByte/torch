@@ -25,12 +25,6 @@ use crate::ui_components::icons::Icon;
 
 const DIALOG_WIDTH: f32 = 600.;
 
-#[derive(Clone, Copy, Debug)]
-enum HandoffEnvironmentCreationModalContext {
-    Handoff,
-    Orchestration,
-}
-
 #[derive(Debug, Clone)]
 pub(crate) enum HandoffEnvironmentCreationModalEvent {
     Created { env_id: SyncId },
@@ -50,30 +44,14 @@ pub(crate) struct HandoffEnvironmentCreationModal {
 }
 
 impl HandoffEnvironmentCreationModal {
-    pub(crate) fn new(ctx: &mut ViewContext<Self>) -> Self {
-        Self::new_impl(HandoffEnvironmentCreationModalContext::Handoff, ctx)
-    }
-
     pub(crate) fn new_for_orchestration(ctx: &mut ViewContext<Self>) -> Self {
-        Self::new_impl(HandoffEnvironmentCreationModalContext::Orchestration, ctx)
-    }
-
-    fn new_impl(
-        context: HandoffEnvironmentCreationModalContext,
-        ctx: &mut ViewContext<Self>,
-    ) -> Self {
         let environment_form = ctx.add_typed_action_view(move |ctx| {
             let mut form = UpdateEnvironmentForm::new(EnvironmentFormInitArgs::Create, ctx);
             form.set_github_auth_redirect_target(GithubAuthRedirectTarget::FocusCloudMode);
             form.set_show_header(false, ctx);
             form.set_should_handle_escape_from_editor(true);
             form.set_auth_source(AuthSource::CloudSetup);
-            match context {
-                HandoffEnvironmentCreationModalContext::Handoff => {}
-                HandoffEnvironmentCreationModalContext::Orchestration => {
-                    form.configure_for_orchestration_modal(ctx);
-                }
-            }
+            form.configure_for_orchestration_modal(ctx);
             form
         });
 

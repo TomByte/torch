@@ -20,7 +20,6 @@ use event_listener::Event;
 use futures::future::FusedFuture;
 use futures::{FutureExt, future, pin_mut, select};
 use parking_lot::Mutex;
-use session_sharing_protocol::common::ParticipantId;
 use torchui::r#async::Timer;
 use warp_multi_agent_api::ClientAction;
 use warp_multi_agent_api::response_event::{StreamFinished, stream_finished};
@@ -61,8 +60,8 @@ pub(super) const STEER_INTERRUPTION_NOTE: &str =
 /// against a recording host in tests.
 #[async_trait]
 pub(super) trait TurnHost: Send + Sync {
-    /// Opens a request stream on the conversation, attributed to `initiator` when given.
-    async fn begin_turn(&self, initiator: Option<ParticipantId>) -> Result<ExternalHarnessTurn>;
+    /// Opens a request stream on the conversation.
+    async fn begin_turn(&self) -> Result<ExternalHarnessTurn>;
     async fn apply_actions(
         &self,
         stream_id: &ResponseStreamId,
@@ -308,8 +307,7 @@ impl TurnDriver {
             }
             prompts.push(prompt);
         }
-        let initiator = prompts.first().map(|prompt| prompt.participant_id.clone());
-        let next = match self.host.begin_turn(initiator).await {
+        let next = match self.host.begin_turn().await {
             Ok(next) => next,
             Err(error) => {
                 self.state.set_settling(false);
@@ -612,7 +610,7 @@ impl TurnDriver {
                         )
                         .await?;
                     self.request_save().await;
-                    let next = self.host.begin_turn(None).await?;
+                    let next = self.host.begin_turn().await?;
                     mapper.start_segment(next.request_id.clone());
                     self.turn = next;
                 }

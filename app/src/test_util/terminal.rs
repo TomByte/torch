@@ -58,7 +58,6 @@ use crate::terminal::alt_screen_reporting::AltScreenReporting;
 use crate::terminal::cli_agent_sessions::CLIAgentSessionsModel;
 use crate::terminal::keys::TerminalKeybindings;
 use crate::terminal::resizable_data::ResizableData;
-use crate::terminal::shared_session::permissions_manager::SessionPermissionsManager;
 use crate::terminal::view::inline_banner::ByoLlmAuthBannerSessionState;
 use crate::terminal::{History, TerminalView};
 use crate::undo_close::UndoCloseStack;
@@ -136,7 +135,6 @@ pub fn initialize_app_for_terminal_view(app: &mut App) {
     app.add_singleton_model(HarnessAvailabilityModel::new);
     app.add_singleton_model(|ctx| AITipModel::new_for_agent_tips(ctx));
     app.add_singleton_model(ConnectedSelfHostedWorkersModel::new);
-    app.add_singleton_model(SessionPermissionsManager::new);
     app.add_singleton_model(DirectoryWatcher::new);
     app.add_singleton_model(|_| DetectedRepositories::default());
     #[cfg(feature = "local_fs")]

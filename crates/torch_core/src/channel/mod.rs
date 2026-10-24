@@ -34,8 +34,8 @@ impl Channel {
         }
     }
 
-    /// Whether this channel honors the `--server-root-url` / `--ws-server-url` /
-    /// `--session-sharing-server-url` flags (and their `TORCH_*` env-var equivalents).
+    /// Whether this channel honors the `--server-root-url` / `--ws-server-url` flags (and their
+    /// `TORCH_*` env-var equivalents).
     ///
     /// Release channels (`Stable`, `Preview`, `Oss`) ignore these overrides so shipped
     /// builds can't be redirected away from their baked-in server URLs. Internal-only channels

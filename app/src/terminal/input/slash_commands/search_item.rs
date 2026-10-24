@@ -115,22 +115,16 @@ impl SearchItem for InlineItem {
                     .with_margin_left(4.)
                     .finish(),
                 );
-            if !self.compact_layout {
-                row = row.with_child(Shrinkable::new(1., Empty::new().finish()).finish());
-            }
+            row = row.with_child(Shrinkable::new(1., Empty::new().finish()).finish());
             row.finish()
         } else {
             name_text.finish()
         };
 
         row.add_child(if self.description.is_some() {
-            if self.compact_layout {
-                Container::new(name_element).with_margin_right(8.).finish()
-            } else {
-                ConstrainedBox::new(name_element)
-                    .with_width(inline_width_for_name_column(app))
-                    .finish()
-            }
+            ConstrainedBox::new(name_element)
+                .with_width(inline_width_for_name_column(app))
+                .finish()
         } else {
             name_element
         });

@@ -114,7 +114,6 @@ These are frequently used commands that are safe to invoke directly. For less co
 {{warpctrl_binary_name}} surface theme-picker open
 {{warpctrl_binary_name}} surface keybindings open
 {{warpctrl_binary_name}} surface resource-center toggle
-{{warpctrl_binary_name}} surface ai-assistant toggle
 {{warpctrl_binary_name}} surface project-explorer open
 {{warpctrl_binary_name}} surface global-search open
 {{warpctrl_binary_name}} surface conversation-list open

@@ -1,12 +1,5 @@
-use std::rc::Rc;
-
-use torchui::ViewContext;
-
 use super::Slide;
 use crate::server::telemetry::TelemetryEvent;
-
-/// A callback function for custom CTA button actions.
-type CustomCallback<S> = Rc<dyn Fn(&mut ViewContext<super::LaunchModal<S>>)>;
 
 #[derive(Clone)]
 pub struct CTAButton<S: Slide> {
@@ -43,17 +36,6 @@ impl<S: Slide> CTAButton<S> {
         }
     }
 
-    pub fn custom<F>(label: impl Into<String>, callback: F) -> Self
-    where
-        F: Fn(&mut ViewContext<super::LaunchModal<S>>) + 'static,
-    {
-        Self {
-            label: label.into(),
-            action: CTAButtonAction::Custom(Rc::new(callback)),
-            telemetry_event: None,
-        }
-    }
-
     #[allow(dead_code)]
     pub fn with_telemetry(mut self, event: TelemetryEvent) -> Self {
         self.telemetry_event = Some(event);
@@ -66,7 +48,6 @@ pub enum CTAButtonAction<S: Slide> {
     Close,
     #[allow(dead_code)]
     OpenUrl(String),
-    Custom(CustomCallback<S>),
 }
 
 impl<S: Slide> Clone for CTAButtonAction<S> {
@@ -75,7 +56,6 @@ impl<S: Slide> Clone for CTAButtonAction<S> {
             CTAButtonAction::NextSlide(s) => CTAButtonAction::NextSlide(*s),
             CTAButtonAction::Close => CTAButtonAction::Close,
             CTAButtonAction::OpenUrl(url) => CTAButtonAction::OpenUrl(url.clone()),
-            CTAButtonAction::Custom(f) => CTAButtonAction::Custom(f.clone()),
         }
     }
 }

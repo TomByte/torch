@@ -55,7 +55,7 @@ use crate::ui_components::icons::Icon;
 mod conversation_loader;
 pub use conversation_loader::{
     CLIAgentConversation, CloudConversationData,
-    convert_persisted_conversation_to_ai_conversation_with_metadata, load_conversation_from_server,
+    convert_persisted_conversation_to_ai_conversation_with_metadata,
 };
 use torch_errors::report_error;
 
@@ -3309,13 +3309,6 @@ pub enum BlocklistAIHistoryEvent {
     ConversationUsageMetadataUpdated {
         conversation_id: AIConversationId,
     },
-
-    /// Emitted when a sharer-owned conversation establishes a local
-    /// shared session.
-    LocalSharedSessionEstablished {
-        conversation_id: AIConversationId,
-        session_id: session_sharing_protocol::common::SessionId,
-    },
 }
 
 impl BlocklistAIHistoryEvent {
@@ -3419,8 +3412,6 @@ impl BlocklistAIHistoryEvent {
             // orchestrator footer reading descendant credits) can't be
             // disambiguated by a single terminal surface pane.
             BlocklistAIHistoryEvent::ConversationUsageMetadataUpdated { .. } => None,
-            // Conversation-scoped; subscribers resolve the owning view via conversation_id.
-            BlocklistAIHistoryEvent::LocalSharedSessionEstablished { .. } => None,
         }
     }
 }

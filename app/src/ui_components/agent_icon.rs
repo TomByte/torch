@@ -43,26 +43,18 @@ pub(crate) fn terminal_view_agent_icon_variant(
         .selected_conversation_server_metadata(app)
         .and_then(|m| m.ambient_agent_task_id);
 
-    // Resolve the ambient task id from [`TerminalView::ambient_agent_task_id_for_details_panel`],
-    // falling back to the server metadata above. Used only to look up task data for status; the
-    // cloud-vs-local treatment is decided by `is_cloud` below.
-    let ambient_task_id = terminal_view
-        .ambient_agent_task_id_for_details_panel(app)
-        .or(server_ambient_task_id);
-    let task_data = ambient_task_id
+    // Used only to look up task data for status; the cloud-vs-local treatment is decided by
+    // `is_cloud` below.
+    let task_data = server_ambient_task_id
         .and_then(|task_id| AgentConversationsModel::as_ref(app).get_task_data(&task_id));
 
     // Local orchestration children are dispatched as server tasks (so they carry an ambient
     // task id) but execute on the user's machine, so they must not get the cloud treatment.
     let is_local_child = terminal_view.selected_conversation_is_local_child(app);
 
-    // Whether this pane is genuinely a cloud/ambient conversation for icon purposes. Keys off
-    // [`TerminalView::is_cloud_agent_session`] or a restored cloud transcript (server metadata),
-    // NOT the mere presence of an orchestrator task id — a manually shared *local* (`User`)
-    // session carries a `source_task_id` sidecar but is not cloud (see QUALITY-726). Local
-    // orchestration children always keep the local treatment.
-    let is_cloud = (terminal_view.is_cloud_agent_session(app) || server_ambient_task_id.is_some())
-        && !is_local_child;
+    // Whether this pane is a restored cloud conversation (server metadata) for icon purposes.
+    // Local orchestration children always keep the local treatment.
+    let is_cloud = server_ambient_task_id.is_some() && !is_local_child;
 
     // Defer to the card helper when we have task data and no CLI session takes precedence.
     if cli_agent_session.is_none()
@@ -86,9 +78,7 @@ pub(crate) fn terminal_view_agent_icon_variant(
             status: session.status.to_conversation_status(),
             supports_rich_status: session.supports_rich_status(),
         }),
-        selected_third_party_cli_agent: terminal_view
-            .ambient_agent_view_model()
-            .and_then(|model| model.as_ref(app).selected_third_party_cli_agent()),
+        selected_third_party_cli_agent: None,
         selected_conversation_status: terminal_view.selected_conversation_status_for_display(app),
         has_selected_conversation: terminal_view
             .selected_conversation_display_title(app)

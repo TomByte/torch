@@ -19,7 +19,7 @@ use crate::terminal::ClipboardType;
 use crate::terminal::event::{
     AfterBlockCompletedEvent, BlockCompletedEvent, BlockMetadataReceivedEvent,
     BlockWorkingDirectoryUpdatedEvent, Event, ExecutedExecutorCommandEvent, InitSubshellEvent,
-    ObservedExitStatus, SourcedRcFileInSubshellEvent, TerminalMode,
+    SourcedRcFileInSubshellEvent, TerminalMode,
 };
 use crate::terminal::model::session::Sessions;
 use crate::terminal::shell::ShellType;
@@ -220,7 +220,6 @@ impl ModelEventDispatcher {
                 ModelEvent::DetectedEndOfSshLogin(check_type)
             }
             Event::Bell => ModelEvent::Bell,
-            Event::ShellExitObserved { status } => ModelEvent::ShellExitObserved { status },
             Event::Exit { reason } => ModelEvent::Exit { reason },
             Event::PreInteractiveSSHSession => ModelEvent::PreInteractiveSSHSession,
             Event::SSH(ssh) => ModelEvent::SSH(ssh),
@@ -256,13 +255,6 @@ impl ModelEventDispatcher {
                 image_protocol,
             },
             Event::BootstrapPrecmdDone => ModelEvent::BootstrapPrecmdDone,
-            Event::AgentTaggedInChanged {
-                block_id,
-                is_tagged_in,
-            } => ModelEvent::AgentTaggedInChanged {
-                block_id,
-                is_tagged_in,
-            },
             Event::PluggableNotification { title, body } => {
                 ModelEvent::PluggableNotification { title, body }
             }
@@ -390,11 +382,6 @@ pub enum ModelEvent {
     CursorBlinkingChange(bool),
     TerminalClear,
     Bell,
-    /// The shell process exited but the terminal has not been finalized yet; the surface must
-    /// either recover the shell or call `TerminalModel::finalize_exit`.
-    ShellExitObserved {
-        status: ObservedExitStatus,
-    },
     Exit {
         reason: ExitReason,
     },
@@ -447,10 +434,6 @@ pub enum ModelEvent {
         image_protocol: ImageProtocol,
     },
     BootstrapPrecmdDone,
-    AgentTaggedInChanged {
-        block_id: BlockId,
-        is_tagged_in: bool,
-    },
     /// A pluggable notification triggered via OSC 9 or OSC 777 escape sequences.
     PluggableNotification {
         title: Option<String>,

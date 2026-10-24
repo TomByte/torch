@@ -36,7 +36,7 @@ pub(crate) fn notification_text(
         } => "Needs your input".to_owned(),
         CLIAgentSessionStatus::Success => "Finished".to_owned(),
         CLIAgentSessionStatus::Failed { .. } => "Failed".to_owned(),
-        CLIAgentSessionStatus::InProgress | CLIAgentSessionStatus::Cancelled => return None,
+        CLIAgentSessionStatus::InProgress => return None,
     };
     let title = subject
         .session_title

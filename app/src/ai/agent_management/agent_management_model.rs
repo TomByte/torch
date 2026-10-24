@@ -117,10 +117,7 @@ impl AgentNotificationsModel {
                     ctx.emit(AgentManagementEvent::NotificationUpdated);
                 }
             }
-            ActiveAgentViewsEvent::TerminalViewFocused
-            | ActiveAgentViewsEvent::WindowClosed
-            | ActiveAgentViewsEvent::AmbientSessionOpened { .. }
-            | ActiveAgentViewsEvent::AmbientSessionClosed { .. } => {}
+            ActiveAgentViewsEvent::TerminalViewFocused | ActiveAgentViewsEvent::WindowClosed => {}
         }
     }
 
@@ -249,26 +246,6 @@ impl AgentNotificationsModel {
                         ctx,
                     );
                 }
-                CLIAgentSessionStatus::Cancelled => {
-                    let title = session_context
-                        .display_title()
-                        .unwrap_or_else(|| format!("{} cancelled", agent.display_name()));
-                    let metadata = TerminalViewMetadata::lookup(*terminal_view_id, ctx);
-                    self.add_notification(
-                        title,
-                        "Cancelled by user.".to_owned(),
-                        NotificationCategory::Complete,
-                        NotificationSourceAgent::CLI {
-                            agent: *agent,
-                            is_ambient: metadata.is_ambient,
-                        },
-                        NotificationOrigin::CLISession(*terminal_view_id),
-                        *terminal_view_id,
-                        vec![],
-                        metadata.branch,
-                        ctx,
-                    );
-                }
             },
         }
     }
@@ -288,7 +265,7 @@ impl AgentNotificationsModel {
             CLIAgentSessionStatus::Blocked { .. } => NotificationCategory::Request,
             CLIAgentSessionStatus::Success => NotificationCategory::Complete,
             CLIAgentSessionStatus::Failed { .. } => NotificationCategory::Error,
-            CLIAgentSessionStatus::InProgress | CLIAgentSessionStatus::Cancelled => {
+            CLIAgentSessionStatus::InProgress => {
                 self.remove_notification_by_source(origin, ctx);
                 return;
             }
@@ -673,7 +650,7 @@ impl TerminalViewMetadata {
         };
         let view = terminal_view.as_ref(app);
         Self {
-            is_ambient: view.is_ambient_agent_session(app),
+            is_ambient: false,
             branch: view.current_git_branch(app),
         }
     }

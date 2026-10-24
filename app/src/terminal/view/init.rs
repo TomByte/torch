@@ -1,4 +1,3 @@
-use torch_core::context_flag::ContextFlag;
 use torchui::AppContext;
 use torchui::keymap::{
     BindingDescription, ContextPredicate, EditableBinding, FixedBinding, PerPlatformKeystroke,
@@ -21,7 +20,6 @@ use crate::terminal::input::{
 };
 use crate::terminal::model::escape_sequences::{self, EscCodes};
 use crate::terminal::model::selection::SelectionDirection;
-use crate::terminal::shared_session::{SharedSessionActionSource, SharedSessionStatus};
 use crate::terminal::view::passive_suggestions::PromptSuggestionResolution;
 use crate::terminal::view::{
     LONG_RUNNING_AGENT_REQUESTED_COMMAND_CONTEXT_KEY,
@@ -555,16 +553,6 @@ pub fn init(app: &mut AppContext) {
             id!("Terminal") & id!("TerminalView_NonEmptyBlockList") & !id!("AltScreen"),
         ),
         EditableBinding::new(
-            "terminal:open_share_block_modal",
-            "Share selected block",
-            TerminalAction::OpenShareModal,
-        )
-        .with_enabled(|| !ChannelState::is_local_only())
-        .with_custom_action(CustomAction::CreateBlockPermalink)
-        .with_context_predicate(
-            id!("Terminal") & eq!("TerminalView_BlockSelectionCardinality", "One"),
-        ),
-        EditableBinding::new(
             "terminal:bookmark_selected_block",
             "Bookmark selected block",
             TerminalAction::BookmarkSelectedBlock,
@@ -843,35 +831,6 @@ pub fn init(app: &mut AppContext) {
     )
     .with_context_predicate(id!("Terminal") & id!(flags::HAS_SETTINGS_TO_IMPORT_FLAG))]);
 
-    app.register_editable_bindings([
-        EditableBinding::new(
-            "terminal:share_current_session",
-            "Share current session",
-            TerminalAction::OpenShareSessionModal {
-                source: SharedSessionActionSource::CommandPalette,
-            },
-        )
-        .with_context_predicate(
-            id!("Terminal") & id!(SharedSessionStatus::NotShared.as_keymap_context()),
-        )
-        .with_custom_action(CustomAction::ShareCurrentSession)
-        .with_enabled(|| {
-            FeatureFlag::CreatingSharedSessions.is_enabled()
-                && ContextFlag::CreateSharedSession.is_enabled()
-        }),
-        EditableBinding::new(
-            "terminal:stop_sharing_current_session",
-            "Stop sharing current session",
-            TerminalAction::StopSharingCurrentSession {
-                source: SharedSessionActionSource::CommandPalette,
-            },
-        )
-        .with_context_predicate(
-            id!("Terminal") & id!(SharedSessionStatus::ActiveSharer.as_keymap_context()),
-        )
-        .with_enabled(|| !ChannelState::is_local_only()),
-    ]);
-
     app.register_editable_bindings([EditableBinding::new(
         TOGGLE_BLOCK_FILTER_KEYBINDING,
         "Toggle block filter on selected or last block",
@@ -1012,36 +971,6 @@ pub fn init(app: &mut AppContext) {
         .with_mac_key_binding("ctrl-alt-[")
         .with_linux_or_windows_key_binding("ctrl-alt-["),
     ]);
-
-    // Register bindings for starting a new cloud agent conversation.
-    {
-        app.register_fixed_bindings([FixedBinding::new_per_platform(
-            PerPlatformKeystroke {
-                mac: "cmd-alt-enter",
-                linux_and_windows: "ctrl-alt-enter",
-            },
-            TerminalAction::EnterCloudAgentView,
-            id!("Terminal") & id!(flags::IS_ANY_AI_ENABLED),
-        )
-        .with_enabled(|| {
-            FeatureFlag::AgentView.is_enabled()
-                && FeatureFlag::CloudMode.is_enabled()
-                && FeatureFlag::CloudModeFromLocalSession.is_enabled()
-        })
-        .with_group(bindings::BindingGroup::WarpAi.as_str())]);
-        if cfg!(target_os = "macos") {
-            // On MacOS, if the user has the 'Option as meta' setting enabled, the cmd-alt-enter
-            // binding above will not match.
-            //
-            // TODO(zachbai): Consider if, for the purposes of fixed bindings, alt/meta should work
-            // fungibly regardless of underlying setting.
-            app.register_fixed_bindings([FixedBinding::new(
-                "cmd-meta-enter",
-                TerminalAction::EnterCloudAgentView,
-                id!("Terminal") & id!(flags::IS_ANY_AI_ENABLED),
-            )]);
-        }
-    }
 }
 
 /// Registers bindings related to input modes.

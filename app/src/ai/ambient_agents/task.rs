@@ -729,16 +729,3 @@ pub fn cancel_task_with_toast<V: View>(task_id: AmbientAgentTaskId, ctx: &mut Vi
         },
     );
 }
-
-/// Cancel an ambient agent task without surfacing a toast to the user.
-pub fn cancel_task_silently<V: View>(task_id: AmbientAgentTaskId, ctx: &mut ViewContext<V>) {
-    let ai_client = ServerApiProvider::handle(ctx).as_ref(ctx).get_ai_client();
-    ctx.spawn(
-        async move { ai_client.cancel_ambient_agent_task(&task_id).await },
-        move |_view, result, _| {
-            if let Err(e) = result {
-                report_error!(e.context("Failed to cancel task"));
-            }
-        },
-    );
-}

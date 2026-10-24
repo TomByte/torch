@@ -87,7 +87,6 @@ use crate::terminal::model::session::{BootstrapSessionType, SessionInfo};
 use crate::terminal::model::terminal_model::BlockIndex;
 use crate::terminal::model_events::ModelEvent;
 use crate::terminal::resizable_data::ResizableData;
-use crate::terminal::shared_session::permissions_manager::SessionPermissionsManager;
 use crate::terminal::shell::{Shell, ShellType};
 use crate::terminal::view::Event as TerminalViewEvent;
 use crate::terminal::view::inline_banner::ByoLlmAuthBannerSessionState;
@@ -319,7 +318,6 @@ pub fn initialize_app(app: &mut App) {
     app.add_singleton_model(LLMPreferences::new);
     app.add_singleton_model(HarnessAvailabilityModel::new);
     app.add_singleton_model(ConnectedSelfHostedWorkersModel::new);
-    app.add_singleton_model(SessionPermissionsManager::new);
     app.add_singleton_model(DirectoryWatcher::new);
     app.add_singleton_model(|_| DetectedRepositories::default());
     app.add_singleton_model(crate::remote_server::manager::RemoteServerManager::new);
@@ -1240,7 +1238,7 @@ async fn complete_ctrl_t_handoff(
             apply_mode,
             cursor_offset: Some(ByteOffset::from(cursor_offset)),
         });
-        input.deferred_remote_operations.latest_block_id = BlockId::new();
+        input.latest_block_id = BlockId::new();
         input.handle_block_completed_event(
             BlockCompletedEvent {
                 block_type: user_block_completed_for_test(original_buffer),
@@ -1281,7 +1279,7 @@ async fn complete_ctrl_r_handoff(
             apply_mode: ShellWidgetApplyMode::Replace,
             cursor_offset: None,
         });
-        input.deferred_remote_operations.latest_block_id = BlockId::new();
+        input.latest_block_id = BlockId::new();
         input.handle_block_completed_event(
             BlockCompletedEvent {
                 block_type: user_block_completed_for_test(original_buffer),
@@ -1438,7 +1436,7 @@ fn ctrl_t_handoff_cancel_restores_cursor_captured_by_a_real_trigger() {
         });
 
         input.update(&mut app, |input, _ctx| {
-            input.deferred_remote_operations.latest_block_id = BlockId::new();
+            input.latest_block_id = BlockId::new();
         });
 
         input.update(&mut app, |input, ctx| {

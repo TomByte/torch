@@ -48,7 +48,6 @@ use crate::server::server_api::ai::{
     SendAgentMessageRequest, SendAgentMessageResponse, SpawnAgentRequest, TaskListFilter,
 };
 use crate::server::team_scope::RequestTeamScope;
-use crate::terminal::shared_session;
 use crate::util::time_format::format_approx_duration_from_now_utc;
 use crate::workspaces::user_workspaces::{HeadlessTeamScope, UserWorkspaces};
 
@@ -663,15 +662,7 @@ impl AmbientAgentRunner {
                 Ok(session_join_info) => {
                     if should_open
                         && let Some(session_join_info) = session_join_info {
-                            let url =
-                                match (super::is_running_in_warp(), session_join_info.session_id) {
-                                    (true, Some(session_id)) => {
-                                        shared_session::join_native_intent(&session_id)
-                                    }
-                                    _ => session_join_info.session_link,
-                                };
-
-                            ctx.open_url(&url);
+                            ctx.open_url(&session_join_info.session_link);
                         }
                     ctx.terminate_app(TerminationMode::ForceTerminate, None);
                 }

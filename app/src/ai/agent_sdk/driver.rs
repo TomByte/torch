@@ -17,10 +17,8 @@ use futures::channel::oneshot;
 use futures::future::{self, Either, FusedFuture};
 use itertools::Itertools as _;
 use oneshot::{Canceled, Receiver};
-use session_sharing_protocol::sharer::SessionRetentionReason;
 use torch_cli::agent::{Harness, HarnessTransport, OutputFormat};
 use torch_cli::mcp::MCPSpec;
-use torch_cli::share::ShareRequest;
 use torch_core::features::FeatureFlag;
 use torch_core::{safe_debug, safe_error, safe_info, safe_warn};
 use torch_errors::{ErrorExt, ReportErrorLogMode, register_error, report_error, report_if_error};
@@ -49,7 +47,6 @@ use crate::ai::agent_sdk::driver::harness::{
     task_env_vars,
 };
 use crate::ai::agent_sdk::environment_snapshot::EnvironmentSnapshotReporter;
-use crate::ai::agent_sdk::execution_config;
 use crate::ai::agent_sdk::setup_observability::{
     OzRunTimelineEvent, SetupClientEventReporter, SetupStep,
 };
@@ -76,7 +73,6 @@ use crate::ai::document::ai_document_model::{AIDocumentModel, AIDocumentModelEve
 use crate::ai::execution_profiles::profiles::AIExecutionProfilesModel;
 use crate::ai::llms::{LLMId, LLMPreferences};
 use crate::auth::AuthStateProvider;
-use crate::auth::credentials::Credentials;
 use crate::cloud_object::{CloudObject, CloudObjectLookup as _};
 use crate::send_telemetry_from_app_ctx;
 use crate::server::ids::{ServerId, SyncId};
@@ -85,7 +81,6 @@ use crate::server::server_api::ai::{AIClient, TaskGitCredentialsError, TaskStatu
 use crate::server::server_api::harness_support::{
     HarnessSupportClient, ResolvePromptAttachedSkill, ResolvePromptRequest,
 };
-use crate::server::server_api::managed_secrets::AppManagedSecretManager as ManagedSecretManager;
 use crate::server::team_scope::RequestTeamScope;
 use crate::terminal::cli_agent_sessions::plugin_manager::{
     CliAgentPluginManager, PluginInstallError, plugin_manager,
@@ -116,14 +111,12 @@ pub(crate) mod harness;
 mod harness_output_monitor;
 pub(crate) mod mcp_startup;
 pub(super) mod output;
-mod prewarmed;
 mod snapshot;
 pub(crate) mod terminal;
 mod termination;
 
 use environment::PrepareEnvironmentError;
 pub(crate) use mcp_startup::MCP_SERVER_STARTUP_TIMEOUT;
-pub(crate) use snapshot::upload_snapshot_for_handoff;
 use terminal::TerminalDriverEvent;
 use termination::{Interrupt, InterruptWatch, RunEndCause};
 
@@ -392,17 +385,6 @@ impl<T: Clone + Send + 'static> IdleTimeoutSender<T> {
         }
         self.end_run_after(window, value);
     }
-
-    /// Push an armed deadline out by its original window. Returns that window, or `None` if
-    /// nothing was armed.
-    fn refresh(&self) -> Option<Duration> {
-        let (value, window) = {
-            let pending = self.pending.lock().ok()?;
-            pending.clone()?
-        };
-        self.end_run_after(window, value);
-        Some(window)
-    }
 }
 
 /// Owns the post-failure debug window's idle deadline and the set of debug-turn conversations
@@ -446,15 +428,6 @@ impl<T: Clone + Send + 'static> DebugWindowController<T> {
         }
         self.idle_timeout.arm_refreshable(window, value);
         true
-    }
-
-    /// Pushes a previously armed deadline out by its original window, unless pinned. Used for
-    /// keystroke-level viewer-input refreshes.
-    fn refresh_from_last_armed(&self) -> Option<Duration> {
-        if self.is_pinned() {
-            return None;
-        }
-        self.idle_timeout.refresh()
     }
 
     /// Cancels the idle expiry while at least one debug turn is active. Returns `true` only when
@@ -555,9 +528,7 @@ fn idle_window_for_cli_session_status(
     idle_on_fail: Option<Duration>,
 ) -> Option<Duration> {
     match status {
-        CLIAgentSessionStatus::Success
-        | CLIAgentSessionStatus::Blocked { .. }
-        | CLIAgentSessionStatus::Cancelled => idle_on_complete,
+        CLIAgentSessionStatus::Success | CLIAgentSessionStatus::Blocked { .. } => idle_on_complete,
         CLIAgentSessionStatus::Failed { .. } => idle_on_fail,
         CLIAgentSessionStatus::InProgress => None,
     }
@@ -623,9 +594,9 @@ fn terminal_status_log_outcome(status: &SDKConversationOutputStatus) -> &'static
 /// [`terminal_status_log_outcome`] for a third-party CLI harness session.
 fn cli_session_status_log_outcome(status: &CLIAgentSessionStatus) -> &'static str {
     match status {
-        CLIAgentSessionStatus::Success
-        | CLIAgentSessionStatus::Blocked { .. }
-        | CLIAgentSessionStatus::Cancelled => "non_error_completion",
+        CLIAgentSessionStatus::Success | CLIAgentSessionStatus::Blocked { .. } => {
+            "non_error_completion"
+        }
         CLIAgentSessionStatus::Failed { .. } => "error",
         CLIAgentSessionStatus::InProgress => "in_progress",
     }
@@ -658,8 +629,6 @@ pub struct AgentDriverOptions {
     pub experimental: Option<serde_json::Map<String, serde_json::Value>>,
     /// Parent run ID for child orchestration flows, if this task was spawned by another run.
     pub parent_run_id: Option<String>,
-    /// Whether the agent run should share its session.
-    pub should_share: bool,
     /// How long to keep the session alive after the agent run completes, if at all.
     pub idle_on_complete: Option<Duration>,
     /// How long to keep the session alive after the agent run ends in a terminal error, if at
@@ -708,7 +677,6 @@ pub struct AgentDriverOptions {
 /// These have no matching driver state, and a pre-warmed driver already owns its terminal, so
 /// they are split away from the configuration [`AgentDriver::apply_run_configuration`] installs.
 struct TerminalLaunchInputs {
-    should_share: bool,
     conversation_restoration: Option<ConversationRestorationInNewPaneType>,
     selected_harness: Harness,
     harness_transport: HarnessTransport,
@@ -760,7 +728,6 @@ fn split_run_options(
         use_factory_repositories,
         experimental,
         parent_run_id,
-        should_share,
         idle_on_complete,
         idle_on_fail,
         resume,
@@ -865,7 +832,6 @@ fn split_run_options(
         .unwrap_or_else(parse_skills_dirs_env);
     Ok((
         TerminalLaunchInputs {
-            should_share,
             conversation_restoration,
             selected_harness,
             harness_transport,
@@ -902,22 +868,6 @@ fn split_run_options(
             mcp_startup_timeout: mcp_startup_timeout.unwrap_or(MCP_SERVER_STARTUP_TIMEOUT),
         },
     ))
-}
-
-/// The workspace setup a standby sandbox completed before its assignment arrived.
-pub(crate) struct StandbyWorkspace {
-    /// What was prepared. An assignment is accepted only when its own workspace matches this.
-    pub configuration: environment::WorkspaceConfiguration,
-    /// Repositories to scan for skills, carried over from the preparation.
-    pub repositories: Vec<crate::ai::cloud_environments::SourceRepo>,
-}
-
-/// A run's workspace, before or after setup.
-pub(crate) enum WorkspaceState {
-    /// Set up when the run starts.
-    Pending(environment::WorkspaceConfiguration),
-    /// Set up ahead of time by a standby sandbox, so the run skips preparation entirely.
-    Prepared(StandbyWorkspace),
 }
 
 /// Owns a headless terminal for agent runs or standby resource preparation.
@@ -968,10 +918,6 @@ pub struct AgentDriver {
     // the failed run and keep working in its environment.
     idle_on_fail: Option<Duration>,
 
-    // Whether a viewer-input subscription is already refreshing an open debug window. Guards
-    // against stacking a second subscription when a run fails, is resumed, and fails again.
-    debug_window_refresh_installed: bool,
-
     // When the debug window's deadline was last published to the server, used to throttle
     // republishing on high-frequency viewer input.
     last_published_debug_deadline: Option<SystemTime>,
@@ -987,7 +933,7 @@ pub struct AgentDriver {
     cloud_providers: Vec<Box<dyn cloud_provider::CloudProvider>>,
 
     /// The run's workspace, taken once when setup starts and `None` from then on.
-    workspace: Option<WorkspaceState>,
+    workspace: Option<environment::WorkspaceConfiguration>,
     skill_dirs: Vec<PathBuf>,
     factory_repository_contract: bool,
     computer_use_configured: bool,
@@ -1128,11 +1074,6 @@ pub enum AgentDriverError {
     BootstrapFailed {
         #[source]
         error: terminal::BootstrapError,
-    },
-    #[error("Unable to share agent session")]
-    ShareSessionFailed {
-        #[source]
-        error: terminal::ShareSessionError,
     },
     #[error("Error syncing Torch Drive")]
     WarpDriveSyncFailed,
@@ -1348,7 +1289,6 @@ impl AgentDriver {
         }
         let (terminal_inputs, config) = split_run_options(options)?;
         let TerminalLaunchInputs {
-            should_share,
             conversation_restoration,
             selected_harness,
             harness_transport,
@@ -1361,9 +1301,9 @@ impl AgentDriver {
         let parent_run_id = config.parent_run_id.clone();
 
         safe_info!(
-            safe: ("Initializing agent driver: share={should_share}, idle_on_complete={idle_on_complete:?}, idle_on_fail={idle_on_fail:?}"),
+            safe: ("Initializing agent driver: idle_on_complete={idle_on_complete:?}, idle_on_fail={idle_on_fail:?}"),
             full: (
-                "Initializing agent driver: share={should_share}, idle_on_complete={idle_on_complete:?}, idle_on_fail={idle_on_fail:?}, working_dir={}",
+                "Initializing agent driver: idle_on_complete={idle_on_complete:?}, idle_on_fail={idle_on_fail:?}, working_dir={}",
                 working_dir.display()
             )
         );
@@ -1372,7 +1312,6 @@ impl AgentDriver {
             terminal::TerminalDriverOptions {
                 working_dir: working_dir.clone(),
                 env_vars: HashMap::clone(&config.resolved_env_vars),
-                should_share,
                 task_id,
                 conversation_restoration,
                 team_scope: config.team_scope.as_ref(),
@@ -1380,11 +1319,10 @@ impl AgentDriver {
             ctx,
         )?;
         Ok(ctx.add_singleton_model::<Self, _>(move |ctx| {
-            // Sharing starts asynchronously from terminal creation, before run_internal's setup waits.
-            let native_queue_enabled = renders_natively(selected_harness, harness_transport)
-                && (should_share || task_id.is_some());
+            let native_queue_enabled =
+                renders_natively(selected_harness, harness_transport) && task_id.is_some();
             log::info!(
-                "event=driver_queue_configuration task_id={task_id:?} harness={selected_harness} transport={harness_transport:?} sharing_requested={should_share} native_queue_enabled={native_queue_enabled}",
+                "event=driver_queue_configuration task_id={task_id:?} harness={selected_harness} transport={harness_transport:?} native_queue_enabled={native_queue_enabled}",
             );
             if native_queue_enabled {
                 let terminal = terminal_driver.as_ref(ctx).terminal_view().clone();
@@ -1395,8 +1333,8 @@ impl AgentDriver {
                 });
             }
             // Subscribe to TerminalDriver events for task-specific handling.
-            ctx.subscribe_to_model(&terminal_driver, |me, _, event, ctx| {
-                me.handle_terminal_driver_event(event, ctx);
+            ctx.subscribe_to_model(&terminal_driver, |me, _, event, _| {
+                me.handle_terminal_driver_event(event);
             });
 
             let mut me = Self::with_terminal(working_dir, terminal_driver);
@@ -1435,14 +1373,11 @@ impl AgentDriver {
             harness: None,
             idle_on_complete: None,
             idle_on_fail: None,
-            debug_window_refresh_installed: false,
             last_published_debug_deadline: None,
             restored_conversation_id: None,
             resume_payload: None,
             cloud_providers: Vec::new(),
-            workspace: Some(WorkspaceState::Pending(
-                environment::WorkspaceConfiguration::default(),
-            )),
+            workspace: Some(environment::WorkspaceConfiguration::default()),
             skill_dirs: parse_skills_dirs_env(),
             factory_repository_contract: false,
             computer_use_configured: false,
@@ -1510,12 +1445,7 @@ impl AgentDriver {
         self.restored_conversation_id = restored_conversation_id;
         self.resume_payload = resume_payload;
         self.cloud_providers = cloud_providers;
-        // A standby sandbox already prepared its workspace, and an assignment is accepted only
-        // after `same_preparation` confirms it matches, so those results stand.
-        self.workspace = match self.workspace.take() {
-            prepared @ Some(WorkspaceState::Prepared(_)) => prepared,
-            _ => Some(WorkspaceState::Pending(workspace)),
-        };
+        self.workspace = Some(workspace);
         self.skill_dirs = skill_dirs;
         self.third_party_harness_model_config = third_party_harness_model_config;
         self.team_scope = team_scope;
@@ -1598,26 +1528,6 @@ impl AgentDriver {
 
     pub fn set_output_format(&mut self, output_format: OutputFormat) {
         self.output_format = output_format;
-    }
-
-    pub fn add_share_requests(
-        &self,
-        share_requests: impl IntoIterator<Item = ShareRequest>,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        self.terminal_driver.update(ctx, |td, ctx| {
-            td.add_share_requests(share_requests, ctx);
-        });
-    }
-
-    fn extend_shared_session_retention(
-        &mut self,
-        reason: SessionRetentionReason,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        self.terminal_driver.update(ctx, |driver, ctx| {
-            driver.extend_shared_session_retention(reason, ctx);
-        });
     }
 
     /// Waits until sandbox teardown should begin and returns the corresponding deadline error.
@@ -1724,22 +1634,14 @@ impl AgentDriver {
         };
 
         let (finished, cause) = {
-            let session_share_failure = foreground
-                .spawn(|me, ctx| {
-                    me.terminal_driver
-                        .update(ctx, |driver, _| driver.wait_for_session_share_failure())
-                })
-                .await?
-                .fuse();
             let signal_fut = interrupt_watch.wait();
             let run = Self::run_internal(task, foreground.clone()).fuse();
             let timer = Self::sandbox_shutdown_timer(foreground).fuse();
             let signal = signal_fut.fuse();
-            futures::pin_mut!(run, timer, signal, session_share_failure);
+            futures::pin_mut!(run, timer, signal);
 
             futures::select_biased! {
                 signal = signal => (None, RunEndCause::Signal(signal)),
-                error = session_share_failure => (Some(Err(error)), RunEndCause::Completed),
                 result = run => (Some(result), RunEndCause::Completed),
                 result = timer => (
                     Some(result),
@@ -1771,7 +1673,6 @@ impl AgentDriver {
     ) -> impl Future<Output = Result<(), AgentDriverError>> + use<> {
         let (tx, rx) = oneshot::channel();
         let foreground = ctx.spawner();
-        let foreground_for_error = foreground.clone();
         let server_api = ServerApiProvider::as_ref(ctx).get_ai_client();
         let task_id = self.task_id;
         let background = ctx.background_executor();
@@ -1901,22 +1802,6 @@ impl AgentDriver {
             // Success/blocked/cancelled are handled by LocalAgentTaskSyncModel.
             if let (Some(task_id), Err(err)) = (task_id, &result) {
                 report_driver_error(task_id, err, &server_api_for_error).await;
-                if matches!(
-                    err,
-                    AgentDriverError::EnvironmentSetupFailed(_)
-                        | AgentDriverError::SetupCommandFailed { .. }
-                        | AgentDriverError::SetupCommandTimedOut { .. }
-                        | AgentDriverError::SetupCommandExitedShell { .. }
-                ) {
-                    let _ = foreground_for_error
-                        .spawn(|me, ctx| {
-                            me.extend_shared_session_retention(
-                                SessionRetentionReason::SetupFailed,
-                                ctx,
-                            );
-                        })
-                        .await;
-                }
             }
 
             result
@@ -2132,18 +2017,7 @@ impl AgentDriver {
                 }
             }
 
-            // For all harnesses: wait for the shared session and prepare the environment.
-            setup_events
-                .record_result(SetupStep::SharedSessionEstablishment, async {
-                    foreground
-                        .spawn(|me, ctx| {
-                            me.terminal_driver
-                                .update(ctx, |driver, _| driver.wait_for_session_shared())
-                        })
-                        .await?
-                        .await
-                })
-                .await?;
+            // For all harnesses: prepare the environment.
             // Clone global skill repos before environment prep can change the
             // terminal's cwd into a single environment repo.
             // We do this for all harnesses, so that the skills *may* be discovered by third-party
@@ -2159,100 +2033,80 @@ impl AgentDriver {
                     )
                 })
                 .await?;
-            let (global_skill_resolution, prepared_workspace) = match workspace
-                .ok_or(AgentDriverError::InvalidRuntimeState)?
-            {
-                // A standby sandbox already cloned the repositories and ran the setup
-                // commands, so the run resumes from those results.
-                WorkspaceState::Prepared(prepared) => {
-                    let global_skill_resolution =
-                        agent_setup::resolve_global_skills(&foreground).await?;
-                    let harness_working_dir = foreground
-                        .spawn(|me, _| me.harness_working_dir.clone())
-                        .await?;
-                    (
-                        global_skill_resolution,
-                        agent_setup::PreparedWorkspace {
-                            harness_working_dir,
-                            repositories: prepared.repositories,
-                        },
-                    )
-                }
-                WorkspaceState::Pending(mut workspace) => {
-                    let global_skill_resolution =
-                        agent_setup::prepare_global_skills(&foreground, &setup_events).await?;
-                    // The Factory definition checkout is run-scoped: the dispatch decides
-                    // whether this run gets one by attaching the clone variables,
-                    // independent of which environment the run executes in.
-                    environment::prepend_factory_definition_clone(
-                        &mut workspace.setup_commands,
-                        session_shell_type,
-                    );
-                    let cloud_env_mcp_scan = if workspace.needs_preparation() {
-                        // Subscribe to file-based MCP discovery BEFORE prepare_environment
-                        // triggers the pipeline so no CloudEnvMcpScanComplete events are
-                        // missed.
-                        //
-                        // File-based MCP discovery is Oz-only.
-                        // TODO(REMOTE-1345): handle MCP setup for third-party harnesses.
-                        match &task.harness {
-                            HarnessKind::Oz => {
-                                let source_repos = workspace.source_repos.clone();
-                                Some(
-                                    foreground
-                                        .spawn(move |me, ctx| {
-                                            let expected_repo_paths: Vec<PathBuf> = source_repos
-                                                .iter()
-                                                .map(|repo| me.working_dir.join(&repo.repo))
-                                                .collect();
-                                            me.wait_for_cloud_env_file_based_mcp_scan(
-                                                expected_repo_paths,
-                                                MCP_SERVER_STARTUP_TIMEOUT,
-                                                ctx,
-                                            )
-                                        })
-                                        .await?,
-                                )
-                            }
-                            HarnessKind::ThirdParty(_) | HarnessKind::Unsupported(_) => None,
+            let mut workspace = workspace.ok_or(AgentDriverError::InvalidRuntimeState)?;
+            let (global_skill_resolution, prepared_workspace) = {
+                let global_skill_resolution =
+                    agent_setup::prepare_global_skills(&foreground, &setup_events).await?;
+                // The Factory definition checkout is run-scoped: the dispatch decides
+                // whether this run gets one by attaching the clone variables,
+                // independent of which environment the run executes in.
+                environment::prepend_factory_definition_clone(
+                    &mut workspace.setup_commands,
+                    session_shell_type,
+                );
+                let cloud_env_mcp_scan = if workspace.needs_preparation() {
+                    // Subscribe to file-based MCP discovery BEFORE prepare_environment
+                    // triggers the pipeline so no CloudEnvMcpScanComplete events are
+                    // missed.
+                    //
+                    // File-based MCP discovery is Oz-only.
+                    // TODO(REMOTE-1345): handle MCP setup for third-party harnesses.
+                    match &task.harness {
+                        HarnessKind::Oz => {
+                            let source_repos = workspace.source_repos.clone();
+                            Some(
+                                foreground
+                                    .spawn(move |me, ctx| {
+                                        let expected_repo_paths: Vec<PathBuf> = source_repos
+                                            .iter()
+                                            .map(|repo| me.working_dir.join(&repo.repo))
+                                            .collect();
+                                        me.wait_for_cloud_env_file_based_mcp_scan(
+                                            expected_repo_paths,
+                                            MCP_SERVER_STARTUP_TIMEOUT,
+                                            ctx,
+                                        )
+                                    })
+                                    .await?,
+                            )
                         }
-                    } else {
-                        None
-                    };
-                    let prepared = match agent_setup::prepare_workspace(
-                        &foreground,
-                        task.harness.harness(),
-                        workspace,
-                        &setup_events,
-                        environment_snapshot_reporter,
-                    )
-                    .await
-                    {
-                        Ok(prepared) => prepared,
-                        Err(error) => {
-                            // Preserve the terminal session when environment setup fails.
-                            Self::linger_after_failure(&foreground, "environment_setup", &error)
-                                .await;
-                            return Err(error);
-                        }
-                    };
-                    let harness_working_dir = prepared.harness_working_dir.clone();
-                    foreground
-                        .spawn(move |me, _| me.harness_working_dir = harness_working_dir)
-                        .await?;
-                    if let Some(scan) = cloud_env_mcp_scan {
-                        Self::await_file_based_mcp_startup(
-                            SetupStep::FileBasedMcpDiscovery,
-                            SetupStep::FileBasedMcpReadiness,
-                            scan,
-                            MCP_SERVER_STARTUP_TIMEOUT,
-                            &setup_events,
-                            &foreground,
-                        )
-                        .await?;
+                        HarnessKind::ThirdParty(_) | HarnessKind::Unsupported(_) => None,
                     }
-                    (global_skill_resolution, prepared)
+                } else {
+                    None
+                };
+                let prepared = match agent_setup::prepare_workspace(
+                    &foreground,
+                    task.harness.harness(),
+                    workspace,
+                    &setup_events,
+                    environment_snapshot_reporter,
+                )
+                .await
+                {
+                    Ok(prepared) => prepared,
+                    Err(error) => {
+                        // Preserve the terminal session when environment setup fails.
+                        Self::linger_after_failure(&foreground, "environment_setup", &error).await;
+                        return Err(error);
+                    }
+                };
+                let harness_working_dir = prepared.harness_working_dir.clone();
+                foreground
+                    .spawn(move |me, _| me.harness_working_dir = harness_working_dir)
+                    .await?;
+                if let Some(scan) = cloud_env_mcp_scan {
+                    Self::await_file_based_mcp_startup(
+                        SetupStep::FileBasedMcpDiscovery,
+                        SetupStep::FileBasedMcpReadiness,
+                        scan,
+                        MCP_SERVER_STARTUP_TIMEOUT,
+                        &setup_events,
+                        &foreground,
+                    )
+                    .await?;
                 }
+                (global_skill_resolution, prepared)
             };
             if matches!(&task.harness, HarnessKind::Oz) {
                 let managed_mcp_client = foreground
@@ -2265,7 +2119,6 @@ impl AgentDriver {
                         mcp_startup::start_task_and_profile_mcp_servers(
                             &task.mcp_specs,
                             managed_mcp_client,
-                            mcp_startup::McpStartupMode::Run,
                             task_id,
                             &foreground,
                         ),
@@ -2510,34 +2363,6 @@ impl AgentDriver {
         // run, which reads as already-expired and hides that the session is reachable.
         self.last_published_debug_deadline = None;
         self.publish_debug_window_deadline(window, None, None, ctx);
-
-        if self.debug_window_refresh_installed {
-            return;
-        }
-        self.debug_window_refresh_installed = true;
-
-        self.subscribe_to_viewer_input_refresh(ctx, move || idle_timeout.refresh());
-    }
-
-    /// Subscribes the terminal driver's viewer-input events to `refresh`, publishing the
-    /// resulting deadline on each keystroke. Callers supply the refresh function so a pin-aware
-    /// one and a plain one can share this wiring.
-    fn subscribe_to_viewer_input_refresh(
-        &self,
-        ctx: &mut ModelContext<Self>,
-        refresh: impl Fn() -> Option<Duration> + Send + 'static,
-    ) {
-        let terminal_driver = self.terminal_driver.clone();
-        ctx.subscribe_to_model(&terminal_driver, move |me, _, event, ctx| {
-            if matches!(event, TerminalDriverEvent::SharedSessionViewerInput)
-                && let Some(window) = refresh()
-            {
-                log::debug!(
-                    "Ambient agent idle lifecycle: event=idle_timeout_refreshed trigger=viewer_input"
-                );
-                me.publish_debug_window_deadline(window, None, None, ctx);
-            }
-        });
     }
 
     /// Arms the post-failure debug window for a retained environment-setup failure and installs
@@ -2557,11 +2382,6 @@ impl AgentDriver {
         self.last_published_debug_deadline = Some(SystemTime::now());
 
         let terminal_surface_id = self.terminal_driver.as_ref(ctx).terminal_view().id();
-
-        let viewer_input_controller = controller.clone();
-        self.subscribe_to_viewer_input_refresh(ctx, move || {
-            viewer_input_controller.refresh_from_last_armed()
-        });
 
         let history_model = BlocklistAIHistoryModel::handle(ctx);
         ctx.subscribe_to_model(&history_model, move |me, _, event, ctx| {
@@ -3637,10 +3457,8 @@ impl AgentDriver {
             });
         }
 
-        // ServerSide prompts enter the agent view and emit
-        // `CloudModeSetupPhaseEnded` to tear down the Cloud Mode Setup V2 chip.
-        // (Local prompts have no cloud setup phase; they enter the view with
-        // the user prompt below.)
+        // ServerSide prompts enter the agent view. (Local prompts enter the view with the
+        // user prompt below.)
         //
         // When `skip_initial_turn` is set, also schedule the deferred `Success`
         // now so the run isn't stuck waiting for a turn that will never arrive.
@@ -3657,10 +3475,6 @@ impl AgentDriver {
                             ctx,
                         );
                     }
-                    terminal
-                        .model
-                        .lock()
-                        .send_cloud_mode_setup_phase_ended_for_shared_session();
                 })
             });
             if self.skip_initial_turn && prepared_conversation_id.is_none() {
@@ -3948,8 +3762,7 @@ impl AgentDriver {
                 | BlocklistAIHistoryEvent::ConversationTransferredBetweenTerminalSurfaces { .. }
                 | BlocklistAIHistoryEvent::NewConversationRequestComplete { .. }
                 | BlocklistAIHistoryEvent::OrchestrationConfigUpdated { .. }
-                | BlocklistAIHistoryEvent::ConversationUsageMetadataUpdated { .. }
-                | BlocklistAIHistoryEvent::LocalSharedSessionEstablished { .. } => (),
+                | BlocklistAIHistoryEvent::ConversationUsageMetadataUpdated { .. } => (),
             }
         });
 
@@ -4024,7 +3837,6 @@ impl AgentDriver {
                                 controller.send_user_query_in_conversation_no_lrc_subagent(
                                     prompt_str,
                                     conversation_id,
-                                    None,
                                     ctx,
                                 );
                             });
@@ -4229,8 +4041,7 @@ impl AgentDriver {
                     match status {
                         CLIAgentSessionStatus::Success
                         | CLIAgentSessionStatus::Failed { .. }
-                        | CLIAgentSessionStatus::Blocked { .. }
-                        | CLIAgentSessionStatus::Cancelled => {
+                        | CLIAgentSessionStatus::Blocked { .. } => {
                             if !matches!(status, CLIAgentSessionStatus::Blocked { .. }) {
                                 me.request_harness_save(ctx);
                             }
@@ -4460,11 +4271,7 @@ impl AgentDriver {
     }
 
     /// Handle events re-emitted by the `TerminalDriver`.
-    fn handle_terminal_driver_event(
-        &mut self,
-        event: &TerminalDriverEvent,
-        ctx: &mut ModelContext<Self>,
-    ) {
+    fn handle_terminal_driver_event(&mut self, event: &TerminalDriverEvent) {
         match event {
             TerminalDriverEvent::SlowBootstrap => {
                 tracing::event!(
@@ -4474,46 +4281,6 @@ impl AgentDriver {
                 );
                 eprintln!("Warning: Terminal session is slow to bootstrap.");
             }
-            TerminalDriverEvent::EstablishedSharedSession {
-                session_id,
-                join_url,
-            } => {
-                tracing::event!(
-                    tracing::Level::INFO,
-                    tags.cloud_agent = true,
-                    session_id = %*session_id,
-                    "shared session established",
-                );
-                write_session_joined(join_url, self.output_format);
-
-                // If running as part of a task, store the session-sharing link.
-                if let Some(task_id) = self.task_id {
-                    let server_api = ServerApiProvider::as_ref(ctx).get_ai_client();
-                    let session_id = *session_id;
-                    ctx.spawn(
-                        async move {
-                            report_if_error!(
-                                server_api
-                                    .update_agent_task(
-                                        task_id,
-                                        None,
-                                        Some(session_id),
-                                        None,
-                                        None,
-                                        None,
-                                        None,
-                                    )
-                                    .await
-                                    .context("Error setting ambient agent shared session ID")
-                            );
-                        },
-                        |_, _, _| {},
-                    );
-                }
-            }
-            // Only meaningful while a post-failure debug window is open, which subscribes to
-            // the terminal driver separately. Nothing to do on the steady-state path.
-            TerminalDriverEvent::SharedSessionViewerInput => {}
         }
     }
 
@@ -4917,18 +4684,4 @@ fn stamp_parent_agent_id_if_some(
             conv.set_parent_agent_id(parent_run_id);
         }
     });
-}
-
-/// Write the session URL to stdout using the appropriate output format
-fn write_session_joined(join_url: &str, output_format: OutputFormat) {
-    report_if_error!(
-        output::with_stdout_buffered(|buf| match output_format {
-            OutputFormat::Json | OutputFormat::Ndjson =>
-                output::json::shared_session_established(join_url, buf),
-            OutputFormat::Text | OutputFormat::Pretty => {
-                output::text::shared_session_established(join_url, buf)
-            }
-        })
-        .context("Failed to write shared session event")
-    );
 }

@@ -74,7 +74,7 @@ fn stop_loop(
     sender: &mio_channel::Sender<Message>,
     receiver: mio_channel::Receiver<Message>,
     message: Message,
-) -> (mio_channel::Receiver<Message>, bool) {
+) -> bool {
     let killed = Arc::new(AtomicBool::new(false));
     let pty = TestPty {
         reader: io::empty(),
@@ -94,36 +94,15 @@ fn stop_loop(
         assert!(Instant::now() < deadline, "event loop did not stop");
         thread::sleep(Duration::from_millis(1));
     }
-    (handle.join().unwrap(), killed.load(Ordering::SeqCst))
-}
-
-#[test]
-fn planned_replacement_preserves_terminal_and_reuses_channel() {
-    let terminal = Arc::new(FairMutex::new(TerminalModel::mock(None, None)));
-    let (sender, receiver) = mio_channel::channel();
-    let (receiver, killed) = stop_loop(
-        terminal.clone(),
-        &sender,
-        receiver,
-        Message::ShutdownForReplacement,
-    );
-    assert!(killed);
-    assert!(!terminal.lock().is_read_only());
-    let (_, killed) = stop_loop(
-        terminal.clone(),
-        &sender,
-        receiver,
-        Message::ShutdownForReplacement,
-    );
-    assert!(killed);
-    assert!(!terminal.lock().is_read_only());
+    handle.join().unwrap();
+    killed.load(Ordering::SeqCst)
 }
 
 #[test]
 fn normal_shutdown_still_exits_terminal() {
     let terminal = Arc::new(FairMutex::new(TerminalModel::mock(None, None)));
     let (sender, receiver) = mio_channel::channel();
-    let (_, killed) = stop_loop(terminal.clone(), &sender, receiver, Message::Shutdown);
+    let killed = stop_loop(terminal.clone(), &sender, receiver, Message::Shutdown);
     assert!(killed);
     assert!(terminal.lock().is_read_only());
 }

@@ -44,7 +44,6 @@ pub fn main() -> Result<()> {
                 // black-hole server traffic.
                 server_root_url: "http://192.0.2.0:9".into(),
                 rtc_server_url: "ws://192.0.2.0:9/graphql/v2".into(),
-                session_sharing_server_url: None,
             },
             oz_config: OzConfig {
                 // Use an IP in the IANA testing range, with the TCP discard port, to
@@ -150,7 +149,6 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
     register_test!(test_block_based_snackbar_appears_for_running_command_waterfall_mode);
     register_test!(test_block_based_snackbar_not_visible_pager_command_waterfall_mode);
     register_test!(test_shell_reinitializing);
-    register_test!(test_cloud_agent_shell_respawn);
     register_test!(test_exit_multiple_tabs);
     register_test!(test_open_context_menu_and_execute_command);
     register_test!(test_open_and_close_context_menu_with_keybinding);
@@ -336,8 +334,6 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
 
     register_test!(test_can_auto_bootstrap);
 
-    register_test!(test_ask_warp_ai_keybinding_for_selected_block);
-
     register_test!(test_tab_behavior_setting);
 
     register_test!(test_private_public_settings_routing_with_flag_enabled);
@@ -412,7 +408,6 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
     register_test!(test_block_filtering_clear_blocklist);
 
     register_test!(test_autosuggestions_are_hidden_when_opening_tab_completions);
-    register_test!(test_latest_buffer_operations);
 
     register_test!(test_pass_control_sequences_to_long_running_block);
     register_test!(test_execution_profiles_load_from_settings_file);

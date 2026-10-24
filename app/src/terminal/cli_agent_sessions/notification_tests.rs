@@ -65,13 +65,14 @@ fn completion_and_failure_without_group() {
 }
 
 #[test]
-fn working_and_cancelled_sessions_do_not_notify() {
-    for status in [
-        CLIAgentSessionStatus::InProgress,
-        CLIAgentSessionStatus::Cancelled,
-    ] {
-        assert!(notification_text(&subject(None, None, None), &status).is_none());
-    }
+fn working_sessions_do_not_notify() {
+    assert!(
+        notification_text(
+            &subject(None, None, None),
+            &CLIAgentSessionStatus::InProgress
+        )
+        .is_none()
+    );
 }
 
 #[test]

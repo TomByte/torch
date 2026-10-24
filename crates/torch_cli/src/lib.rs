@@ -52,7 +52,6 @@ pub const OZ_HARNESS_ENV: &str = "OZ_HARNESS";
 pub const TORCH_HARNESS_ENV: &str = "TORCH_HARNESS";
 pub const SERVER_ROOT_URL_OVERRIDE_ENV: &str = "TORCH_SERVER_ROOT_URL";
 pub const WS_SERVER_URL_OVERRIDE_ENV: &str = "TORCH_WS_SERVER_URL";
-pub const SESSION_SHARING_SERVER_URL_OVERRIDE_ENV: &str = "TORCH_SESSION_SHARING_SERVER_URL";
 
 /// Options related to the parent process that spawned this Torch instance.
 #[derive(Debug, Default, Clone, clap::Args)]
@@ -162,15 +161,6 @@ pub struct Args {
         env = "TORCH_WS_SERVER_URL"
     )]
     ws_server_url: Option<String>,
-
-    /// Override the session sharing server URL.
-    #[arg(
-        long = "session-sharing-server-url",
-        global = true,
-        hide = true,
-        env = "TORCH_SESSION_SHARING_SERVER_URL"
-    )]
-    session_sharing_server_url: Option<String>,
 
     #[command(subcommand)]
     command: Option<Command>,
@@ -482,10 +472,6 @@ impl Args {
 
     pub fn ws_server_url(&self) -> Option<&str> {
         self.ws_server_url.as_deref()
-    }
-
-    pub fn session_sharing_server_url(&self) -> Option<&str> {
-        self.session_sharing_server_url.as_deref()
     }
 }
 

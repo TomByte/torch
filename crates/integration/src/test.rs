@@ -3,11 +3,9 @@
 //! to be run.
 
 mod agent_mode;
-mod ai_assistant;
 mod ai_document;
 mod block_filtering;
 mod bootstrapping;
-mod cloud_shell_recovery;
 mod code_review;
 mod copy_current_path;
 mod ctrl_d;
@@ -51,12 +49,10 @@ use std::rc::Rc;
 use std::time::Duration;
 
 pub use agent_mode::*;
-pub use ai_assistant::*;
 pub use ai_document::*;
 use anyhow::{Result, anyhow};
 pub use block_filtering::*;
 pub use bootstrapping::*;
-pub use cloud_shell_recovery::*;
 pub use code_review::*;
 pub use copy_current_path::*;
 pub use ctrl_d::*;

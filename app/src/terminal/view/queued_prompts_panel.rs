@@ -311,17 +311,6 @@ impl QueuedPromptsPanelView {
         self.drag_start_index = None;
     }
 
-    /// Updates whether this terminal can send prompts (false for read-only shared-session
-    /// viewers). Pushed by the host on construction and when the shared-session role changes.
-    pub fn set_can_send_prompt(&mut self, can_send_prompt: bool, ctx: &mut ViewContext<Self>) {
-        if self.can_send_prompt == can_send_prompt {
-            return;
-        }
-        self.can_send_prompt = can_send_prompt;
-        self.update_send_now_availability(ctx);
-        ctx.notify();
-    }
-
     /// True when pressing Enter in the host input should send the top queued row instead of
     /// performing its usual action: the panel is showing, prompts can be sent, the input is
     /// empty (read live from the host editor, so the decision cannot trail same-update buffer
@@ -518,9 +507,6 @@ impl QueuedPromptsPanelView {
             | QueuedQueryEvent::Removed {
                 conversation_id, ..
             }
-            | QueuedQueryEvent::PromptReady {
-                conversation_id, ..
-            }
             | QueuedQueryEvent::RowUnlocked { conversation_id }
             | QueuedQueryEvent::DispatchStateChanged { conversation_id }
             | QueuedQueryEvent::Reordered { conversation_id }
@@ -612,7 +598,6 @@ impl QueuedPromptsPanelView {
                 self.update_send_now_availability(ctx);
             }
             QueuedQueryEvent::RowUnlocked { .. }
-            | QueuedQueryEvent::PromptReady { .. }
             | QueuedQueryEvent::DispatchStateChanged { .. } => {
                 self.update_send_now_availability(ctx);
             }

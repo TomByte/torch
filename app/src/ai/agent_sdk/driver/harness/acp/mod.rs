@@ -40,7 +40,6 @@ use futures::{FutureExt, future, pin_mut, select};
 use parking_lot::Mutex;
 use prost::Message as _;
 use serde_json::Value;
-use session_sharing_protocol::common::ParticipantId;
 use torch_cli::agent::Harness;
 use torch_core::channel::ChannelState;
 use torch_core::safe_warn;
@@ -811,7 +810,7 @@ impl HarnessRunner for AcpHarnessRunner {
             run_id,
             conversation_id: local_conversation_id,
         });
-        let turn = match host.begin_turn(None).await {
+        let turn = match host.begin_turn().await {
             Ok(turn) => turn,
             Err(error) => {
                 connection.close().await;
@@ -1046,10 +1045,7 @@ struct DriverTurnHost {
 
 #[async_trait]
 impl TurnHost for DriverTurnHost {
-    /// `initiator` names the shared-session participant whose prompt opens the stream; `None`
-    /// keeps the previous one, as the streams a tool round trip chains together all answer the
-    /// same prompt.
-    async fn begin_turn(&self, initiator: Option<ParticipantId>) -> Result<ExternalHarnessTurn> {
+    async fn begin_turn(&self) -> Result<ExternalHarnessTurn> {
         let run_id = self.run_id.clone();
         with_ai_controller(
             &self.foreground,
@@ -1058,9 +1054,6 @@ impl TurnHost for DriverTurnHost {
                 let conversation_id = controller
                     .native_prompt_conversation_id()
                     .unwrap_or_else(|| controller.bind_native_prompt_conversation(None, ctx));
-                if let Some(initiator) = initiator {
-                    controller.set_current_response_initiator(initiator);
-                }
                 controller.begin_external_harness_turn(conversation_id, run_id, ctx)
             },
         )

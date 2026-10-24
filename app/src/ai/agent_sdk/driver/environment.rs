@@ -307,14 +307,6 @@ impl WorkspaceConfiguration {
         Ok(())
     }
 
-    /// Compares only the checkouts and commands that standby preparation runs, because a run checks
-    /// out its deferred repositories itself.
-    pub(super) fn same_preparation(&self, other: &Self) -> bool {
-        self.source_repos == other.source_repos
-            && self.setup_commands == other.setup_commands
-            && self.clone_requests == other.clone_requests
-    }
-
     /// Reports whether the workspace requires setup before harness startup.
     pub fn needs_preparation(&self) -> bool {
         self.has_environment || !self.source_repos.is_empty() || !self.setup_commands.is_empty()

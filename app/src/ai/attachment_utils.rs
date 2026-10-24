@@ -11,7 +11,6 @@ use torch_errors::report_error;
 /// Max file attachment size is 10 MB.
 pub(crate) const MAX_ATTACHMENT_SIZE_BYTES: usize = 10 * 1024 * 1024;
 
-use crate::ai::agent::AIAgentAttachment;
 use crate::ai::ambient_agents::AmbientAgentTaskId;
 use crate::server::server_api::ai::AIClient;
 use crate::terminal::model::BlockId;
@@ -34,8 +33,6 @@ pub(crate) fn sanitize_filename(raw: &str) -> &str {
 /// A downloaded file attachment with its resolved path on disk.
 #[derive(Clone)]
 pub(crate) struct DownloadedAttachment {
-    /// The UUID of the attachment.
-    pub file_id: String,
     /// The sanitized display name.
     pub file_name: String,
     /// The full resolved path on disk where the file was downloaded.
@@ -69,36 +66,6 @@ pub(crate) fn resolve_agent_attachments(
         }
     }
     (block_ids, selected_text_parts, file_downloads)
-}
-
-/// Builds a `HashMap<String, AIAgentAttachment>` keyed by (deduplicated) filename
-/// from a list of successfully downloaded attachments.
-pub(crate) fn build_file_attachment_map(
-    downloads: &[DownloadedAttachment],
-) -> HashMap<String, AIAgentAttachment> {
-    let mut map = HashMap::new();
-    for download in downloads {
-        let mut key = download.file_name.clone();
-        if map.contains_key(&key) {
-            let mut suffix = 1;
-            loop {
-                key = format!("{} ({suffix})", download.file_name);
-                if !map.contains_key(&key) {
-                    break;
-                }
-                suffix += 1;
-            }
-        }
-        map.insert(
-            key,
-            AIAgentAttachment::FilePathReference {
-                file_id: download.file_id.clone(),
-                file_name: download.file_name.clone(),
-                file_path: download.file_path.clone(),
-            },
-        );
-    }
-    map
 }
 
 /// Downloads a file from `url` and writes it to `dest`. Returns the number of bytes written.
@@ -165,7 +132,6 @@ pub(crate) async fn download_task_file_attachments(
         let dest = dest_dir.join(format!("{attachment_id}_{safe_name}"));
         match download_file(&http_client, url, &dest).await {
             Ok(_) => downloaded.push(DownloadedAttachment {
-                file_id: attachment_id.clone(),
                 file_name: safe_name,
                 file_path: dest.to_string_lossy().into_owned(),
             }),

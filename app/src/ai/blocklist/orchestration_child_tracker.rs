@@ -37,8 +37,7 @@ use warp_multi_agent_api as api;
 #[cfg(not(test))]
 use super::history_model::BlocklistAIHistoryModel;
 use super::orchestration_event_streamer::{
-    OrchestrationEventStreamer, OrchestrationEventStreamerEvent,
-    conversation_status_from_lifecycle_event_type,
+    OrchestrationEventStreamer, conversation_status_from_lifecycle_event_type,
 };
 use crate::ai::agent::conversation::ConversationStatus;
 // Compiled out of unit-test builds so the state machine can be exercised
@@ -157,7 +156,7 @@ impl OrchestrationChildTracker {
 
         match signal {
             ChildSignal::Registered => {
-                self.register_in_band_child(task_id, child_run_id, ctx);
+                self.register_in_band_child(task_id, child_run_id);
             }
             ChildSignal::SessionLinked { session_uuid } => {
                 self.apply_session_linked(task_id, &session_uuid);
@@ -166,7 +165,7 @@ impl OrchestrationChildTracker {
                 self.apply_lifecycle(task_id, child_run_id, kind, ctx);
             }
             ChildSignal::Seeded(task) => {
-                self.apply_seeded(*task, ctx);
+                self.apply_seeded(*task);
             }
             ChildSignal::Started => {
                 self.apply_started(task_id, child_run_id, ctx);
@@ -204,7 +203,6 @@ impl OrchestrationChildTracker {
                 is_remote_child: true,
                 last_lifecycle: None,
             },
-            ctx,
         );
         // Also kick the metadata fetch to get real task state, session_id,
         // and conversation token for transcript / live-attach decisions.
@@ -228,11 +226,11 @@ impl OrchestrationChildTracker {
             if let Some(child) = self.children.get_mut(&task_id) {
                 child.last_lifecycle = Some(kind);
             }
-            let status = conversation_status_from_lifecycle_event_type(kind);
             // Write status through immediately so the pill bar badge reflects
             // the lifecycle transition without waiting for a redraw cycle.
             #[cfg(not(test))]
             {
+                let status = conversation_status_from_lifecycle_event_type(kind);
                 let child_info = {
                     let history = BlocklistAIHistoryModel::as_ref(ctx);
                     history
@@ -254,11 +252,6 @@ impl OrchestrationChildTracker {
                     });
                 }
             }
-            ctx.emit(OrchestrationEventStreamerEvent::ChildStatusChanged {
-                parent_task_id: self.parent_task_id,
-                run_id: run_id.to_string(),
-                status,
-            });
             self.refetch_metadata_if_incomplete(task_id, run_id, ctx);
             return;
         }
@@ -270,24 +263,13 @@ impl OrchestrationChildTracker {
         if let Some(child) = self.children.get_mut(&task_id) {
             child.last_lifecycle = Some(kind);
         }
-        let status = conversation_status_from_lifecycle_event_type(kind);
-        ctx.emit(OrchestrationEventStreamerEvent::ChildStatusChanged {
-            parent_task_id: self.parent_task_id,
-            run_id: run_id.to_string(),
-            status,
-        });
     }
 
     /// Registers a child created in this process against its existing local
     /// conversation, marking the run already-represented so later
     /// `Started`/`Lifecycle` signals become idempotent status updates rather
     /// than placeholder creation.
-    fn register_in_band_child(
-        &mut self,
-        task_id: AmbientAgentTaskId,
-        run_id: &str,
-        ctx: &mut ModelContext<OrchestrationEventStreamer>,
-    ) {
+    fn register_in_band_child(&mut self, task_id: AmbientAgentTaskId, run_id: &str) {
         // A real conversation already exists for this run, so any speculative
         // metadata fetch is moot.
         self.children_awaiting_metadata.remove(run_id);
@@ -307,17 +289,12 @@ impl OrchestrationChildTracker {
                 is_remote_child: false,
                 last_lifecycle: None,
             },
-            ctx,
         );
     }
 
     /// Applies a REST seed / restore row. Creates the placeholder if new and
     /// records the latest known state and session id.
-    fn apply_seeded(
-        &mut self,
-        task: AmbientAgentTask,
-        ctx: &mut ModelContext<OrchestrationEventStreamer>,
-    ) {
+    fn apply_seeded(&mut self, task: AmbientAgentTask) {
         // The ancestor endpoint includes the parent itself in the response;
         // skip it.
         if task.task_id == self.parent_task_id {
@@ -353,7 +330,6 @@ impl OrchestrationChildTracker {
                 is_remote_child: true,
                 last_lifecycle: None,
             },
-            ctx,
         );
     }
 
@@ -405,19 +381,9 @@ impl OrchestrationChildTracker {
 
     /// Records a new tracked child, keeping both indices in sync, and emits
     /// the `ChildSpawned` pill-bar broadcast exactly once.
-    fn insert_child(
-        &mut self,
-        task_id: AmbientAgentTaskId,
-        run_id: &str,
-        child: TrackedChild,
-        ctx: &mut ModelContext<OrchestrationEventStreamer>,
-    ) {
+    fn insert_child(&mut self, task_id: AmbientAgentTaskId, run_id: &str, child: TrackedChild) {
         self.children.insert(task_id, child);
         self.children_by_run_id.insert(run_id.to_string(), task_id);
-        ctx.emit(OrchestrationEventStreamerEvent::ChildSpawned {
-            parent_task_id: self.parent_task_id,
-            run_id: run_id.to_string(),
-        });
     }
 
     /// Requests metadata for a run, deduplicating concurrent calls. A
@@ -444,7 +410,7 @@ impl OrchestrationChildTracker {
                 });
                 if let Some(task) = cached {
                     self.children_awaiting_metadata.remove(run_id);
-                    self.apply_seeded(task, ctx);
+                    self.apply_seeded(task);
                 }
             }
             return;
@@ -470,7 +436,7 @@ impl OrchestrationChildTracker {
             // leaves the guard set; the shared fetch populates the cache and a
             // later re-drive completes discovery.
             if let Some(task) = cached {
-                self.apply_seeded(task, ctx);
+                self.apply_seeded(task);
             }
         }
     }

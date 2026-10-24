@@ -17,14 +17,6 @@
 
 use std::fmt;
 
-#[cfg(any(test, feature = "local_tty"))]
-use base64::Engine as _;
-#[cfg(any(test, feature = "local_tty"))]
-use prost::Message as _;
-#[cfg(any(test, feature = "local_tty"))]
-use session_sharing_protocol::common::ProfileData;
-#[cfg(any(test, feature = "local_tty"))]
-use torch_errors::report_error;
 use warp_multi_agent_api as api;
 use warp_multi_agent_api::AgentType;
 
@@ -37,63 +29,8 @@ use super::{UserQueryMode, extract_user_query_mode};
 pub struct BaseUserQuery(Box<api::request::input::UserQuery>);
 
 impl BaseUserQuery {
-    /// Decodes the standard-Base64 protobuf carried on `AgentPromptRequest::user_query_b64`.
-    ///
-    /// Returns `None` (after reporting the failure) when the payload is not valid Base64 or not
-    /// a valid `Request.Input.UserQuery`; a partially decoded query is never returned. A payload
-    /// that does not decode means warp-server and this client disagree on the encoding, which
-    /// is a bug on one side, so it is reported rather than only logged.
-    #[cfg(any(test, feature = "local_tty"))]
-    pub(crate) fn decode_b64(encoded: &str) -> Option<Self> {
-        let bytes = match base64::engine::general_purpose::STANDARD.decode(encoded) {
-            Ok(bytes) => bytes,
-            Err(err) => {
-                report_error!(
-                    anyhow::Error::new(err)
-                        .context("Ignoring shared-session user query: payload is not base64")
-                );
-                return None;
-            }
-        };
-        match api::request::input::UserQuery::decode(bytes.as_slice()) {
-            Ok(query) => Some(Self::from_proto(query)),
-            Err(err) => {
-                report_error!(
-                    anyhow::Error::new(err)
-                        .context("Ignoring shared-session user query: payload is not a UserQuery")
-                );
-                None
-            }
-        }
-    }
-
     pub(crate) fn from_proto(query: api::request::input::UserQuery) -> Self {
         Self(Box::new(query))
-    }
-
-    /// The query to send for a prompt a shared-session viewer typed themselves. The relay
-    /// leaves `user_query_b64` unset for those, so the sharer records the viewer from presence:
-    /// a `WarpClient` origin and the viewer as author. The relay authenticated the viewer and
-    /// the sharer only observes them, so the resolution is `CLIENT_SESSION` and no team is
-    /// claimed. A viewer whose profile is unknown gets an explicit `ServerSynthesized` origin,
-    /// so the query is never attributed to the sharer as if they had typed it.
-    #[cfg(any(test, feature = "local_tty"))]
-    pub(crate) fn for_viewer(profile: Option<&ProfileData>) -> Self {
-        let Some(profile) = profile.filter(|profile| !profile.firebase_uid.is_empty()) else {
-            return Self::unattributed("shared_session_author_unavailable");
-        };
-        Self::from_proto(api::request::input::UserQuery {
-            origin: Some(warp_client_origin()),
-            author: Some(api::QueryAuthor {
-                principal: Some(api::query_author::Principal::User(api::WarpUser {
-                    uid: profile.firebase_uid.clone(),
-                    email: profile.email.clone().unwrap_or_default(),
-                    team_uid: String::new(),
-                })),
-                resolution: api::IdentityResolution::ClientSession.into(),
-            }),
-            ..Default::default()
-        })
     }
 
     /// A query whose author cannot be established, marked with a `ServerSynthesized` origin

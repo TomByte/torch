@@ -292,10 +292,6 @@ pub struct QueuedQueryModel {
 /// to so subscribers can filter to the conversation they care about.
 #[derive(Debug, Clone)]
 pub enum QueuedQueryEvent {
-    PromptReady {
-        conversation_id: AIConversationId,
-        query_id: QueuedQueryId,
-    },
     DispatchStateChanged {
         conversation_id: AIConversationId,
     },
@@ -450,61 +446,6 @@ impl QueuedQueryModel {
             return None;
         }
         self.ready_query(conversation_id, first.id)
-    }
-
-    /// Settles attachment preparation once; stale completions never recreate removed rows.
-    pub(crate) fn complete_preparation(
-        &mut self,
-        conversation_id: AIConversationId,
-        query_id: QueuedQueryId,
-        files: HashMap<String, AIAgentAttachment>,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        let Some(row) = self
-            .queues
-            .get_mut(&conversation_id)
-            .and_then(|state| state.queue.iter_mut().find(|row| row.id == query_id))
-        else {
-            return;
-        };
-        let QueuedQueryKind::SharedSessionPrompt {
-            attachments,
-            prepared_files,
-            ..
-        } = &mut row.kind
-        else {
-            return;
-        };
-        if prepared_files.is_some() {
-            return;
-        }
-        let missing: Vec<_> = attachments
-            .iter()
-            .filter_map(|attachment| {
-                let AgentAttachment::FileReference {
-                    attachment_id,
-                    file_name,
-                } = attachment
-                else {
-                    return None;
-                };
-                (!files.values().any(|file| matches!(file,
-                AIAgentAttachment::FilePathReference { file_id, .. } if file_id == attachment_id
-            ))).then_some(file_name.as_str())
-            })
-            .collect();
-        if !missing.is_empty() {
-            row.text
-                .push_str("\nThe following attachments could not be downloaded: ");
-            row.text.push_str(&missing.join(", "));
-            row.text
-                .push_str(". Do not assume their contents are available.\n");
-        }
-        *prepared_files = Some(files);
-        ctx.emit(QueuedQueryEvent::PromptReady {
-            conversation_id,
-            query_id,
-        });
     }
 
     /// Removes and returns every row queued for `conversation_id`, in FIFO order, emitting a
@@ -963,31 +904,6 @@ impl QueuedQueryModel {
         });
     }
 
-    /// Restores a fired row when submission fails after the row was removed.
-    pub(crate) fn restore_fired_row(
-        &mut self,
-        conversation_id: AIConversationId,
-        insert_index: usize,
-        query: QueuedQuery,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        let state = self.queues.entry(conversation_id).or_default();
-        let query_id = query.id;
-        if state.queue.iter().any(|queued| queued.id == query_id) {
-            return;
-        }
-        let insert_index = insert_index.min(state.queue.len());
-        log::warn!(
-            "event=restored_after_failed_send conversation_id={conversation_id} query_id={query_id:?} index={insert_index} queue_len_after={}",
-            state.queue.len() + 1,
-        );
-        state.queue.insert(insert_index, query);
-        ctx.emit(QueuedQueryEvent::Appended {
-            conversation_id,
-            query_id,
-        });
-    }
-
     /// Returns the attachments captured on the queued row `query_id` within `conversation_id`'s
     /// queue, or an empty slice if no such row exists. Used by the send path to attach a fired
     /// queued prompt's images/files without removing the row first.
@@ -1029,32 +945,6 @@ impl QueuedQueryModel {
         ctx.emit(QueuedQueryEvent::Removed {
             conversation_id,
             query_id,
-        });
-        Some(removed)
-    }
-
-    /// Removes the locked initial Cloud Mode row from `conversation_id`'s queue, if it is still
-    /// at the queue head.
-    pub fn remove_initial_cloud_mode_row(
-        &mut self,
-        conversation_id: AIConversationId,
-        ctx: &mut ModelContext<Self>,
-    ) -> Option<QueuedQuery> {
-        let state = self.queues.get_mut(&conversation_id)?;
-        if !state
-            .queue
-            .first()
-            .is_some_and(|row| row.origin == QueuedQueryOrigin::InitialCloudMode)
-        {
-            return None;
-        }
-        let removed = state.queue.remove(0);
-        if state.editing == Some(removed.id) {
-            state.editing = None;
-        }
-        ctx.emit(QueuedQueryEvent::Removed {
-            conversation_id,
-            query_id: removed.id,
         });
         Some(removed)
     }

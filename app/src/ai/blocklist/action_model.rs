@@ -30,9 +30,9 @@ pub use execute::{
     EditResolvedEvent, EditStats, NewConversationDecision, PromptSuggestionExecutor,
     ReadFileContextResult, RequestFileEditsExecutor, RequestFileEditsFormatKind,
     RequestFileEditsTelemetryEvent, RunAgentsExecutor, RunAgentsExecutorEvent,
-    RunAgentsSpawningSnapshot, ShellCommandExecutor, ShellCommandExecutorEvent,
-    ShellRecoveryResult, StartAgentExecutor, StartAgentExecutorEvent, StartAgentRequest,
-    StartAgentRequestId, TEAM_CHANGED_DURING_CHILD_LAUNCH_ERROR, read_local_file_context,
+    RunAgentsSpawningSnapshot, ShellCommandExecutor, ShellCommandExecutorEvent, StartAgentExecutor,
+    StartAgentExecutorEvent, StartAgentRequest, StartAgentRequestId,
+    TEAM_CHANGED_DURING_CHILD_LAUNCH_ERROR, read_local_file_context,
 };
 pub(crate) use execute::{
     FileReadResult, MalformedFinalLineProxyEvent, apply_edits, coerce_integer_args,

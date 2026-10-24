@@ -497,9 +497,6 @@ impl<S: Slide> LaunchModal<S> {
                 ctx.open_url(&url);
                 ctx.emit(LaunchModalEvent::Close);
             }
-            CTAButtonAction::Custom(callback) => {
-                callback(ctx);
-            }
         }
     }
 
@@ -516,9 +513,6 @@ impl<S: Slide> LaunchModal<S> {
             CTAButtonAction::OpenUrl(url) => {
                 ctx.open_url(&url);
                 ctx.emit(LaunchModalEvent::Close);
-            }
-            CTAButtonAction::Custom(callback) => {
-                callback(ctx);
             }
         }
     }

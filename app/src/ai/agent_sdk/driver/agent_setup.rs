@@ -1,6 +1,5 @@
 //! Shared resource setup for normal runs and standby sandboxes before an agent prompt starts.
 
-use std::ffi::OsStr;
 use std::path::PathBuf;
 
 use ai::skills::{
@@ -12,20 +11,13 @@ use itertools::Itertools as _;
 use repo_metadata::local_model::IndexedRepoState;
 use repo_metadata::{RepoMetadataModel, RepositoryIdentifier};
 use torch_cli::agent::Harness;
-use torch_cli::mcp::MCPSpec;
 use torch_cli::skill::SkillSpec;
 use torch_core::features::FeatureFlag;
 use torch_core::safe_info;
 use torch_util::local_or_remote_path::LocalOrRemotePath;
 use torchui::{Entity, ModelSpawner, SingletonEntity};
 
-use super::environment::{
-    FACTORY_REPO_CLONE_URL_ENV_VAR, FACTORY_REPO_DIR_ENV_VAR,
-    prepend_factory_definition_clone_for_values,
-};
-use super::{
-    AgentDriver, AgentDriverError, StandbyWorkspace, WorkspaceState, environment, mcp_startup,
-};
+use super::{AgentDriver, AgentDriverError, environment};
 use crate::ai::agent_sdk::environment_snapshot::{
     EnvironmentSnapshot, EnvironmentSnapshotReporter,
 };
@@ -36,107 +28,9 @@ use crate::ai::skills::{
     read_skills_from_directories, resolve_skill_repos,
 };
 use crate::auth::AuthStateProvider;
-use crate::server::server_api::ServerApiProvider;
-use crate::terminal::shell::ShellType;
 
 pub(crate) mod configured_skills;
-impl AgentDriver {
-    /// Consumes the workspace once to prepare standby resources without starting a prompt.
-    #[cfg_attr(all(target_family = "wasm", not(test)), expect(dead_code))]
-    pub(crate) async fn prepare_resources(
-        foreground: &ModelSpawner<Self>,
-        mcp_specs: Vec<MCPSpec>,
-        global_skills: GlobalSkillResolution,
-        setup_events: &SetupClientEventReporter,
-    ) -> Result<PathBuf, AgentDriverError> {
-        // Standby resolves global skills before this call to check checkout names before any clone.
-        let mut workspace = foreground
-            .spawn(|me, _| match me.workspace.take() {
-                Some(WorkspaceState::Pending(workspace)) => Some(workspace),
-                Some(WorkspaceState::Prepared(_)) | None => None,
-            })
-            .await?
-            .ok_or(AgentDriverError::InvalidRuntimeState)?;
-        let prepared_configuration = workspace.clone();
-        bootstrap_terminal(foreground, setup_events).await?;
-        setup_events
-            .record_result(
-                SetupStep::GlobalSkillRepoClone,
-                clone_global_skill_repos(foreground, &global_skills.repos),
-            )
-            .await?;
-        let (workspace, snapshot_reporter, task_id) = foreground
-            .spawn(move |me, ctx| {
-                let shell_type = me
-                    .terminal_driver
-                    .as_ref(ctx)
-                    .active_session_shell_type(ctx)
-                    .unwrap_or(ShellType::Bash);
-                let env_value = |name| {
-                    me.resolved_env_vars
-                        .get(OsStr::new(name))
-                        .and_then(|value| value.to_str())
-                        .unwrap_or_default()
-                };
-                prepend_factory_definition_clone_for_values(
-                    env_value(FACTORY_REPO_CLONE_URL_ENV_VAR),
-                    env_value(FACTORY_REPO_DIR_ENV_VAR),
-                    shell_type,
-                    &mut workspace.setup_commands,
-                );
-                let ai_client = ServerApiProvider::as_ref(ctx).get_ai_client().clone();
-                (
-                    workspace,
-                    EnvironmentSnapshotReporter::noop(ai_client, ctx.background_executor()),
-                    me.task_id,
-                )
-            })
-            .await?;
-        let prepared = prepare_workspace(
-            foreground,
-            Harness::Oz,
-            workspace,
-            setup_events,
-            snapshot_reporter,
-        )
-        .await?;
-        let working_dir = prepared.harness_working_dir.clone();
-        let repositories = prepared.repositories.clone();
-        foreground
-            .spawn(move |me, _| {
-                me.harness_working_dir = working_dir;
-                me.workspace = Some(WorkspaceState::Prepared(StandbyWorkspace {
-                    configuration: prepared_configuration,
-                    repositories,
-                }));
-            })
-            .await?;
-        let managed_mcp_client = foreground
-            .spawn(|_, ctx| ServerApiProvider::as_ref(ctx).get_managed_mcp_client())
-            .await?;
-        let mcp_result = setup_events
-            .record_result(
-                SetupStep::McpServerStartup,
-                mcp_startup::start_task_and_profile_mcp_servers(
-                    &mcp_specs,
-                    managed_mcp_client,
-                    mcp_startup::McpStartupMode::Standby,
-                    task_id,
-                    foreground,
-                ),
-            )
-            .await;
-        Self::handle_mcp_startup_result(mcp_result, foreground).await?;
-        load_skills(
-            foreground,
-            prepared.repositories,
-            global_skills,
-            setup_events,
-        )
-        .await;
-        Ok(prepared.harness_working_dir)
-    }
-}
+impl AgentDriver {}
 
 /// Keeps workspace setup results for harness startup and skill discovery.
 pub(crate) struct PreparedWorkspace {

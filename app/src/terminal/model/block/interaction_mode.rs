@@ -9,7 +9,6 @@ use crate::ai::agent::task::TaskId;
 use crate::ai::blocklist::block::cli_controller::{
     LongRunningCommandControlState, UserTakeOverReason,
 };
-use crate::terminal::event::Event;
 use crate::terminal::model::RespectObfuscatedSecrets;
 use crate::terminal::model::grid::RespectDisplayedOutput;
 use crate::terminal::model::grid::grid_handler::GridHandler;
@@ -54,18 +53,11 @@ impl Block {
     }
 
     pub fn set_is_agent_tagged_in(&mut self, value: bool) {
-        let block_id = self.id().clone();
         if let InteractionMode::User(UserMode {
             did_user_tag_in_agent,
         }) = &mut self.interaction_mode
-            && *did_user_tag_in_agent != value
         {
             *did_user_tag_in_agent = value;
-            self.event_proxy
-                .send_app_event(Event::AgentTaggedInChanged {
-                    block_id,
-                    is_tagged_in: value,
-                });
         }
     }
 

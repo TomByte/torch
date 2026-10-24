@@ -494,21 +494,6 @@ impl RunAgentsCardView {
         ctx.subscribe_to_model(
             &HarnessAvailabilityModel::handle(ctx),
             |me, _, event, ctx| match event {
-                HarnessAvailabilityEvent::AuthSecretCreated { harness, name } => {
-                    oc::apply_created_auth_secret_if_matches(
-                        &mut me.orchestration_edit_state.orchestration_config_state,
-                        *harness,
-                        name,
-                        ctx,
-                    );
-                    oc::repopulate_all_pickers(
-                        &mut me.orchestration_edit_state.orchestration_config_state,
-                        &me.handles.pickers,
-                        ctx,
-                    );
-                    me.refresh_accept_button_state(ctx);
-                    ctx.notify();
-                }
                 HarnessAvailabilityEvent::Changed
                 | HarnessAvailabilityEvent::AuthSecretsChanged => {
                     oc::repopulate_all_pickers(
@@ -520,9 +505,6 @@ impl RunAgentsCardView {
                     me.maybe_auto_open_create_modal(ctx);
                     ctx.notify();
                 }
-                HarnessAvailabilityEvent::AuthSecretCreationFailed { .. }
-                | HarnessAvailabilityEvent::AuthSecretDeleted { .. }
-                | HarnessAvailabilityEvent::AuthSecretDeletionFailed { .. } => {}
             },
         );
 
@@ -862,9 +844,6 @@ impl RunAgentsCardView {
             return;
         }
         self.has_auto_opened_create_modal = true;
-        ctx.dispatch_typed_action(
-            &crate::workspace::WorkspaceAction::OpenCreateAuthSecretModal { harness },
-        );
     }
 
     /// Re-derives the Accept button's `disabled` + tooltip from the gate.
@@ -1476,16 +1455,6 @@ impl TypedActionView for RunAgentsCardView {
                     &mut self.orchestration_edit_state.orchestration_config_state,
                     ctx,
                 );
-                if let Some(harness) = torch_cli::agent::Harness::parse_orchestration_harness(
-                    &self
-                        .orchestration_edit_state
-                        .orchestration_config_state
-                        .harness_type,
-                ) {
-                    ctx.dispatch_typed_action(
-                        &crate::workspace::WorkspaceAction::OpenCreateAuthSecretModal { harness },
-                    );
-                }
                 self.refresh_accept_button_state(ctx);
                 ctx.notify();
             }

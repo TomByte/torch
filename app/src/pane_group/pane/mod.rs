@@ -49,14 +49,12 @@ use crate::ai::facts::AIFactView;
 #[cfg(feature = "local_fs")]
 use crate::code::buffer_location::LocalOrRemotePath;
 use crate::code::view::CodeView;
-use crate::drive::sharing::ShareableObject;
 use crate::env_vars::view::env_var_collection::EnvVarCollectionView;
 use crate::menu::MenuItem;
 use crate::notebooks::file::FileNotebookView;
 use crate::notebooks::notebook::NotebookView;
 use crate::pane_group::focus_state::PaneFocusHandle;
 use crate::server::network_log_view::NetworkLogView;
-use crate::server::telemetry::SharingDialogSource;
 use crate::settings::PaneSettings;
 use crate::settings_view::SettingsView;
 use crate::settings_view::environments_page::EnvironmentsPageView;
@@ -64,10 +62,6 @@ use crate::terminal::TerminalView;
 use crate::terminal::available_shells::AvailableShell;
 use crate::view_components::action_button::ActionButton;
 use crate::workflows::workflow_view::WorkflowView;
-
-pub(super) fn init(app: &mut AppContext) {
-    self::view::init(app);
-}
 
 /// The opaque identifier for an arbitrary pane. Consumers
 /// should not be concerned with the internal IDs that are used;
@@ -795,37 +789,6 @@ impl PaneConfiguration {
         ctx.emit(PaneConfigurationEvent::HeaderContentChanged);
     }
 
-    /// Sets the shareable object in the current pane. If `None`, the share button is removed.
-    pub fn set_shareable_object(
-        &mut self,
-        shareable_object: Option<ShareableObject>,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        ctx.emit(PaneConfigurationEvent::ShareableObjectChanged(
-            shareable_object,
-        ));
-    }
-
-    pub fn toggle_sharing_dialog(
-        &mut self,
-        source: SharingDialogSource,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        ctx.emit(PaneConfigurationEvent::ToggleSharingDialog(source));
-    }
-
-    pub fn open_sharing_qr_code(
-        &mut self,
-        source: SharingDialogSource,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        ctx.emit(PaneConfigurationEvent::OpenSharingQrCode(source));
-    }
-
-    pub fn notify_shared_session_link_changed(&mut self, ctx: &mut ModelContext<Self>) {
-        ctx.emit(PaneConfigurationEvent::SharedSessionLinkChanged);
-    }
-
     /// Notifies that the header content has changed and the pane header should re-render.
     /// Use this when the backing view's state has changed in a way that affects the header
     /// content returned by `render_header_content()`.
@@ -849,10 +812,6 @@ pub enum PaneConfigurationEvent {
     ShowAccentBorderUpdated,
     OpenModalUpdated,
     RefreshPaneHeaderOverflowMenuItems,
-    ShareableObjectChanged(Option<ShareableObject>),
-    ToggleSharingDialog(SharingDialogSource),
-    OpenSharingQrCode(SharingDialogSource),
-    SharedSessionLinkChanged,
     DimEvenIfFocusedUpdated,
     /// The header content has changed and should be re-rendered.
     /// This is used when the backing view's state changes in a way that
@@ -1062,7 +1021,7 @@ pub trait BackingView: View {
     ///   is responsible for calling `PaneHeader::render_pane_header_draggable()` on appropriate elements
     fn render_header_content(
         &self,
-        ctx: &view::HeaderRenderContext<'_>,
+        ctx: &view::HeaderRenderContext,
         app: &AppContext,
     ) -> view::HeaderContent;
 

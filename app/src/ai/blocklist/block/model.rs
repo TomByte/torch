@@ -4,7 +4,6 @@ mod model_impl;
 use chrono::{DateTime, Local, TimeDelta};
 pub use helper::AIBlockModelHelper;
 pub use model_impl::*;
-use session_sharing_protocol::common::ParticipantId;
 use torch_core::features::FeatureFlag;
 use torchui::{AppContext, ViewContext};
 
@@ -198,12 +197,6 @@ pub trait AIBlockModel {
 
     /// Returns the exchange ID for this block.
     fn exchange_id(&self, _app: &AppContext) -> Option<AIAgentExchangeId> {
-        None
-    }
-
-    /// Returns the participant ID who initiated this exchange, for shared sessions.
-    /// Returns None for local (non-shared) sessions.
-    fn response_initiator(&self, _app: &AppContext) -> Option<ParticipantId> {
         None
     }
 

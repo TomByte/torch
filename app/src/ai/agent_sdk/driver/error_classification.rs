@@ -2,7 +2,6 @@ use torch_graphql::ai::{AgentTaskState, PlatformErrorCode};
 use torch_graphql::platform_error::{PlatformErrorInfo, PlatformErrorMessageFormat};
 
 use super::AgentDriverError;
-use super::terminal::ShareSessionError;
 use crate::ai::blocklist::local_agent_task_sync_model::classify_renderable_error;
 use crate::server::server_api::ai::{TaskGitCredentialsError, TaskStatusUpdate};
 
@@ -25,45 +24,6 @@ pub fn classify_driver_error(error: &AgentDriverError) -> (AgentTaskState, TaskS
                 PlatformErrorCode::InternalError,
             ),
         ),
-        AgentDriverError::ShareSessionFailed { error: share_err } => {
-            let message = match share_err {
-                ShareSessionError::Internal(_) => {
-                    "Failed to share agent session due to an internal error. Please try running your task again.".to_string()
-                }
-                ShareSessionError::Failed(reason) => {
-                    // The reason string comes from the session-sharing layer and is aimed at
-                    // interactive users (e.g. "try sharing again"). Provide a cloud-agent-
-                    // appropriate message instead of wrapping it, which would produce
-                    // repetitive "try again" text.
-                    format!("Failed to share agent session: {reason}")
-                }
-                ShareSessionError::Disabled => {
-                    "Session sharing is not enabled for your account. This is likely because \
-                     an administrator has disabled session sharing for your team. Please \
-                     verify that session sharing is enabled in your team settings, or try \
-                     running without the --share flag."
-                    .to_string()
-                }
-                ShareSessionError::Timeout => {
-                    "Failed to share agent session: timed out waiting for the session sharing \
-                     server to respond. Please check your network connection and try again."
-                    .to_string()
-                }
-                ShareSessionError::Interrupted => {
-                    "Session sharing was interrupted before it could complete. Please try running your task again.".to_string()
-                }
-            };
-            (
-                AgentTaskState::Error,
-                TaskStatusUpdate::with_error_code(
-                    message,
-                    match share_err {
-                        ShareSessionError::Disabled => PlatformErrorCode::FeatureNotAvailable,
-                        _ => PlatformErrorCode::InternalError,
-                    },
-                ),
-            )
-        }
         AgentDriverError::WarpDriveSyncFailed => (
             AgentTaskState::Error,
             TaskStatusUpdate::with_error_code(

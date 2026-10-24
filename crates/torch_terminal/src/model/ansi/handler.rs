@@ -242,11 +242,6 @@ pub trait Handler {
         false
     }
 
-    /// Returns whether DCS hooks should require a registered session ID.
-    fn should_validate_dcs_hook_session_id(&self) -> bool {
-        true
-    }
-
     /// Callback for the Torch CommandFinished hook.
     fn command_finished(&mut self, _data: CommandFinishedValue) {}
 

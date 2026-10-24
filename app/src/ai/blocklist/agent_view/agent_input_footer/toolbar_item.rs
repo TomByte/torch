@@ -5,8 +5,7 @@ use torchui::SingletonEntity;
 use super::editor::AgentToolbarEditorMode;
 use crate::context_chips::{ContextChipKind, agent_footer_available_chips, available_chips};
 use crate::features::FeatureFlag;
-use crate::settings::{AISettings, CodeSettings};
-use crate::terminal::shared_session::SharedSessionStatus;
+use crate::settings::CodeSettings;
 use crate::ui_components::icons::Icon;
 use crate::workspaces::user_workspaces::UserWorkspaces;
 use crate::workspaces::workspace::ChargeUnit;
@@ -68,57 +67,26 @@ pub enum AgentToolbarItemKind {
     // Renamed from ImageAttach; alias preserves existing user toolbar configs.
     #[serde(alias = "ImageAttach")]
     FileAttach,
-    ShareSession,
 
     // CLI agent only – opens settings to the Coding Agents section.
     Settings,
 
     // Agent view only – shows fast-forward (auto-approve) toggle in the footer
     FastForwardToggle,
-
-    // Agent view only – "Hand off to cloud" chip.
-    HandoffToCloud,
 }
 
 impl AgentToolbarItemKind {
     pub fn available_in(&self) -> ToolbarAvailability {
         match self {
-            Self::ContextChip(_)
-            | Self::VoiceInput
-            | Self::FileAttach
-            | Self::ShareSession
-            | Self::FileExplorer => ToolbarAvailability::Both,
+            Self::ContextChip(_) | Self::VoiceInput | Self::FileAttach | Self::FileExplorer => {
+                ToolbarAvailability::Both
+            }
             Self::ModelSelector
             | Self::NLDToggle
             | Self::ContextWindowUsage
             | Self::UsageSummary
-            | Self::FastForwardToggle
-            | Self::HandoffToCloud => ToolbarAvailability::AgentViewOnly,
+            | Self::FastForwardToggle => ToolbarAvailability::AgentViewOnly,
             Self::RichInput | Self::Settings => ToolbarAvailability::CLIAgentOnly,
-        }
-    }
-
-    /// Whether this item should be visible to session viewers.
-    /// Items that control host settings or initiate actions on the host's
-    /// behalf are hidden from viewers.
-    pub fn available_to_session_viewer(
-        &self,
-        status: &SharedSessionStatus,
-        is_cloud_mode: bool,
-    ) -> bool {
-        match self {
-            Self::Settings | Self::ShareSession | Self::FileExplorer => !status.is_viewer(),
-            Self::FileAttach => !status.is_viewer() || is_cloud_mode,
-            Self::FastForwardToggle => !status.is_viewer() || status.is_executor(),
-            // Handoff is host-initiated; viewers cannot hand off another user's conversation.
-            Self::HandoffToCloud => !status.is_viewer(),
-            Self::ContextChip(_)
-            | Self::ModelSelector
-            | Self::NLDToggle
-            | Self::ContextWindowUsage
-            | Self::UsageSummary
-            | Self::RichInput
-            | Self::VoiceInput => true,
         }
     }
 
@@ -133,10 +101,8 @@ impl AgentToolbarItemKind {
             Self::UsageSummary => "Conversation Usage",
             Self::FileExplorer => "File Explorer",
             Self::RichInput => "Rich Input",
-            Self::ShareSession => "/remote-control",
             Self::Settings => "Settings",
             Self::FastForwardToggle => "Fast Forward",
-            Self::HandoffToCloud => "Hand off to cloud",
         }
     }
 
@@ -151,33 +117,8 @@ impl AgentToolbarItemKind {
             Self::UsageSummary => Some(Icon::PieChart),
             Self::FileExplorer => Some(Icon::FileCopy),
             Self::RichInput => Some(Icon::TextInput),
-            Self::ShareSession => Some(Icon::Phone01),
             Self::Settings => Some(Icon::Settings),
             Self::FastForwardToggle => Some(Icon::FastForward),
-            // The bundled `upload-cloud-01.svg` (cloud-with-upward-arrow) is the
-            // closest fit among the existing icons for V0; design may swap it later.
-            Self::HandoffToCloud => Some(Icon::UploadCloud),
-        }
-    }
-
-    /// Whether this item should remain visible during `&` handoff-compose mode.
-    /// Only items relevant to composing a cloud run are shown.
-    pub(super) fn is_available_during_handoff_compose(&self) -> bool {
-        match self {
-            Self::ContextChip(
-                ContextChipKind::ShellGitBranch | ContextChipKind::GitBranchStatus,
-            ) => true,
-            Self::ModelSelector | Self::VoiceInput | Self::FileAttach => true,
-            Self::ContextChip(_)
-            | Self::NLDToggle
-            | Self::ContextWindowUsage
-            | Self::UsageSummary
-            | Self::FastForwardToggle
-            | Self::HandoffToCloud
-            | Self::ShareSession
-            | Self::FileExplorer
-            | Self::RichInput
-            | Self::Settings => false,
         }
     }
 
@@ -186,7 +127,6 @@ impl AgentToolbarItemKind {
     /// handles runtime conditions that depend on user settings or workspace state.
     pub fn is_available(&self, app: &torchui::AppContext) -> bool {
         match self {
-            Self::HandoffToCloud => AISettings::as_ref(app).is_cloud_handoff_enabled(app),
             // Drops the item from the toolbar editor for tiers charged in credits. The render
             // path does not consult this method, so it repeats the check itself.
             Self::UsageSummary => match UserWorkspaces::as_ref(app).charge_unit() {
@@ -242,17 +182,6 @@ impl AgentToolbarItemKind {
             Self::UsageSummary,
             Self::ModelSelector,
         ];
-        if FeatureFlag::CreatingSharedSessions.is_enabled()
-            && FeatureFlag::HOARemoteControl.is_enabled()
-        {
-            items.push(Self::ShareSession);
-        }
-        if FeatureFlag::OzHandoff.is_enabled()
-            && FeatureFlag::HandoffLocalCloud.is_enabled()
-            && cfg!(all(feature = "local_fs", not(target_family = "wasm")))
-        {
-            items.push(Self::HandoffToCloud);
-        }
         items.push(Self::VoiceInput);
         items.push(Self::FileAttach);
         items
@@ -278,17 +207,6 @@ impl AgentToolbarItemKind {
         if FeatureFlag::FastForwardAutoexecuteButton.is_enabled() {
             items.push(Self::FastForwardToggle);
         }
-        if FeatureFlag::CreatingSharedSessions.is_enabled()
-            && FeatureFlag::HOARemoteControl.is_enabled()
-        {
-            items.push(Self::ShareSession);
-        }
-        if FeatureFlag::OzHandoff.is_enabled()
-            && FeatureFlag::HandoffLocalCloud.is_enabled()
-            && cfg!(all(feature = "local_fs", not(target_family = "wasm")))
-        {
-            items.push(Self::HandoffToCloud);
-        }
         items
     }
 
@@ -299,11 +217,6 @@ impl AgentToolbarItemKind {
             Self::VoiceInput,
             Self::ContextChip(ContextChipKind::GitDiffStats),
         ];
-        if FeatureFlag::CreatingSharedSessions.is_enabled()
-            && FeatureFlag::HOARemoteControl.is_enabled()
-        {
-            items.push(Self::ShareSession);
-        }
         if crate::code::editor_available() {
             items.push(Self::FileExplorer);
         }
@@ -337,11 +250,6 @@ impl AgentToolbarItemKind {
             items.push(Self::VoiceInput);
         }
         items.push(Self::Settings);
-        if FeatureFlag::CreatingSharedSessions.is_enabled()
-            && FeatureFlag::HOARemoteControl.is_enabled()
-        {
-            items.push(Self::ShareSession);
-        }
         items
     }
 

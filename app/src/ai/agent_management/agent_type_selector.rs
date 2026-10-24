@@ -48,15 +48,12 @@ const OPTION_DESC_FONT_SIZE: f32 = 12.;
 /// The type of agent selected by the user.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AgentType {
-    /// Cloud agent - runs autonomously in a cloud environment.
-    Cloud,
     /// Local agent - runs on the user's machine.
     Local,
 }
 
 #[derive(Debug, Clone)]
 pub enum AgentTypeSelectorAction {
-    SelectCloudAgent,
     SelectLocalAgent,
     Dismiss,
     HoveredIn(usize),
@@ -73,7 +70,6 @@ pub enum AgentTypeSelectorEvent {
 
 pub struct AgentTypeSelector {
     close_button_mouse_state: MouseStateHandle,
-    cloud_agent_mouse_state: MouseStateHandle,
     local_agent_mouse_state: MouseStateHandle,
     dialog_mouse_state: MouseStateHandle,
     selected_option_index: usize,
@@ -115,10 +111,8 @@ impl AgentTypeSelector {
     pub fn new(_ctx: &mut ViewContext<Self>) -> Self {
         Self {
             close_button_mouse_state: MouseStateHandle::default(),
-            cloud_agent_mouse_state: MouseStateHandle::default(),
             local_agent_mouse_state: MouseStateHandle::default(),
             dialog_mouse_state: MouseStateHandle::default(),
-            // Cloud agent is selected by default (index 0).
             selected_option_index: 0,
         }
     }
@@ -331,19 +325,8 @@ impl AgentTypeSelector {
             .with_padding_right(HEADER_PADDING_HORIZONTAL)
             .finish();
 
-        let cloud_agent_option = self.render_option(
-            0,
-            Icon::CloudFilled,
-            "Cloud agent",
-            "Runs autonomously in a cloud environment you choose. Best for parallel or long-running work.",
-            true,
-            self.cloud_agent_mouse_state.clone(),
-            AgentTypeSelectorAction::SelectCloudAgent,
-            appearance,
-        );
-
         let local_agent_option = self.render_option(
-            1,
+            0,
             Icon::Agent,
             "Local agent",
             "Runs on your machine and requires supervision. Best for quick, interactive tasks.",
@@ -356,7 +339,6 @@ impl AgentTypeSelector {
         let options = Flex::column()
             .with_cross_axis_alignment(CrossAxisAlignment::Stretch)
             .with_spacing(OPTIONS_VERTICAL_GAP)
-            .with_child(cloud_agent_option)
             .with_child(local_agent_option)
             .finish();
 
@@ -422,10 +404,6 @@ impl TypedActionView for AgentTypeSelector {
 
     fn handle_action(&mut self, action: &Self::Action, ctx: &mut ViewContext<Self>) {
         match action {
-            AgentTypeSelectorAction::SelectCloudAgent => {
-                ctx.emit(AgentTypeSelectorEvent::Selected(AgentType::Cloud));
-                ctx.notify();
-            }
             AgentTypeSelectorAction::SelectLocalAgent => {
                 ctx.emit(AgentTypeSelectorEvent::Selected(AgentType::Local));
                 ctx.notify();
@@ -438,25 +416,9 @@ impl TypedActionView for AgentTypeSelector {
                 self.selected_option_index = *index;
                 ctx.notify();
             }
-            AgentTypeSelectorAction::ArrowUp | AgentTypeSelectorAction::ArrowDown => {
-                // Toggle between the two options.
-                self.selected_option_index = if self.selected_option_index == 0 {
-                    1
-                } else {
-                    0
-                };
-                ctx.notify();
-            }
+            AgentTypeSelectorAction::ArrowUp | AgentTypeSelectorAction::ArrowDown => {}
             AgentTypeSelectorAction::Enter => {
-                match self.selected_option_index {
-                    0 => {
-                        ctx.emit(AgentTypeSelectorEvent::Selected(AgentType::Cloud));
-                    }
-                    1 => {
-                        ctx.emit(AgentTypeSelectorEvent::Selected(AgentType::Local));
-                    }
-                    _ => {}
-                }
+                ctx.emit(AgentTypeSelectorEvent::Selected(AgentType::Local));
                 ctx.notify();
             }
         }

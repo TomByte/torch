@@ -32,16 +32,6 @@ impl TerminalView {
         restored_blocks: Option<&[SerializedBlockListItem]>,
         ctx: &mut ViewContext<Self>,
     ) -> Self {
-        Self::new_for_test_with_cloud_mode(tips_model, restored_blocks, false, ctx)
-    }
-
-    #[cfg(test)]
-    pub fn new_for_test_with_cloud_mode(
-        tips_model: ModelHandle<TipsCompleted>,
-        restored_blocks: Option<&[SerializedBlockListItem]>,
-        is_cloud_mode: bool,
-        ctx: &mut ViewContext<Self>,
-    ) -> Self {
         use pathfinder_geometry::vector::vec2f;
         use torchui::units::{IntoPixels as _, Pixels};
 
@@ -118,7 +108,6 @@ impl TerminalView {
             None,
             None, // conversation_restoration - not used for test
             None, // inactive_pty_reads_rx - not used for test
-            is_cloud_mode,
             ctx,
         )
     }

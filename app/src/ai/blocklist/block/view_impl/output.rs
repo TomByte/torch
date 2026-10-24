@@ -121,10 +121,7 @@ use crate::appearance::Appearance;
 use crate::code::diff_viewer::DisplayMode;
 use crate::code::editor_management::CodeSource;
 use crate::terminal::ShellLaunchData;
-#[cfg(not(target_family = "wasm"))]
-use crate::terminal::input::slash_commands::fork_button_action;
 use crate::terminal::model::session::active_session::ActiveSession;
-use crate::terminal::shared_session::SharedSessionStatus;
 use crate::ui_components::blended_colors;
 use crate::ui_components::buttons::icon_button;
 use crate::ui_components::icons::Icon;
@@ -190,11 +187,7 @@ pub(crate) struct Props<'a> {
     pub(super) is_usage_footer_expanded: bool,
     pub(super) is_turn_panel_expanded: bool,
     pub(super) turn_panel_view: Option<&'a ViewHandle<RequestMetadataTurnView>>,
-    pub(super) shared_session_status: &'a SharedSessionStatus,
     pub(super) terminal_view_id: EntityId,
-    pub(super) is_conversation_transcript_viewer: bool,
-    #[cfg(not(target_family = "wasm"))]
-    pub(super) is_cloud_agent_context: bool,
     pub(super) aws_bedrock_credentials_error_view:
         Option<&'a ViewHandle<AwsBedrockCredentialsErrorView>>,
     pub(super) gemini_enterprise_credentials_error_view:
@@ -215,9 +208,6 @@ pub(crate) struct Props<'a> {
     pub(super) thinking_display_mode: crate::settings::ThinkingDisplayMode,
     pub(super) conversation_has_imported_comments: bool,
     pub(super) ask_user_question_view: Option<&'a ViewHandle<AskUserQuestionView>>,
-    /// `true` when this block belongs to a cloud agent pane that is still in its setup phase
-    /// (running environment startup commands before the first agent turn).
-    pub(super) is_cloud_agent_pre_first_exchange: bool,
 }
 
 /// A `UseComputer` call whose actions are all no-ops (typically a single
@@ -303,7 +293,6 @@ pub(super) fn render(props: Props, app: &AppContext) -> Box<dyn Element> {
                         && !is_output_for_static_prompt_suggestions
                         && !is_conversation_in_progress
                         && request_type.is_active()
-                        && !props.is_cloud_agent_pre_first_exchange
                         && !status.error().is_some_and(|e| {
                             e.is_invalid_api_key() || e.is_chatgpt_subscription_error()
                         });
@@ -2473,20 +2462,6 @@ fn render_suggest_new_conversation(
         );
     }
 
-    if props.shared_session_status.is_viewer() {
-        let header_element = HeaderConfig::new("Start a new conversation", app)
-            .with_icon(gray_stop_icon(appearance))
-            .render(app);
-
-        return Some(
-            header_element
-                .with_agent_output_item_spacing(app)
-                .with_corner_radius(CornerRadius::with_all(Radius::Pixels(8.)))
-                .with_background_color(blended_colors::neutral_2(theme))
-                .finish(),
-        );
-    }
-
     let mut content = Flex::column().with_cross_axis_alignment(CrossAxisAlignment::Stretch);
 
     let new_conversation_header_text =
@@ -3492,8 +3467,7 @@ fn render_response_footer(props: Props, app: &AppContext) -> Option<Box<dyn Elem
     let ui_builder = appearance.ui_builder().clone();
 
     // Thumbs up/down buttons.
-    // (we hide these when you're in view-only mode).
-    if !is_passive_code_diff && !props.is_conversation_transcript_viewer {
+    if !is_passive_code_diff {
         let thumbs_up_button = icon_button(
             appearance,
             Icon::ThumbsUp,
@@ -3588,7 +3562,7 @@ fn render_response_footer(props: Props, app: &AppContext) -> Option<Box<dyn Elem
         );
     }
 
-    if !props.shared_session_status.is_finished_viewer() && !FeatureFlag::AgentView.is_enabled() {
+    if !FeatureFlag::AgentView.is_enabled() {
         let ui_builder = appearance.ui_builder().clone();
         let continue_button = icon_button(
             appearance,
@@ -3613,13 +3587,8 @@ fn render_response_footer(props: Props, app: &AppContext) -> Option<Box<dyn Elem
     }
 
     #[cfg(not(target_family = "wasm"))]
-    if !props.is_conversation_transcript_viewer {
-        let fork_button_tooltip = fork_button_action(
-            props.model.conversation_id(app),
-            props.is_cloud_agent_context,
-            app,
-        )
-        .tooltip;
+    {
+        let fork_button_tooltip = "Fork conversation";
 
         let ui_builder = appearance.ui_builder().clone();
         let fork_button = icon_button(
@@ -3667,7 +3636,7 @@ fn render_response_footer(props: Props, app: &AppContext) -> Option<Box<dyn Elem
     }
 
     // Review changes button.
-    if props.has_accepted_edits && !props.shared_session_status.is_viewer() {
+    if props.has_accepted_edits {
         // Only show Review Changes button if we're in a git repository
         let is_in_git_repo = props
             .current_working_directory
@@ -3685,7 +3654,7 @@ fn render_response_footer(props: Props, app: &AppContext) -> Option<Box<dyn Elem
     }
 
     // "Open all review comments" bulk-import button.
-    if props.conversation_has_imported_comments && !props.shared_session_status.is_viewer() {
+    if props.conversation_has_imported_comments {
         flex.add_child(
             Container::new(ChildView::new(props.open_all_comments_button).finish())
                 .with_margin_left(4.)

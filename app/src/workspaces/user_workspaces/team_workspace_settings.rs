@@ -460,42 +460,6 @@ impl UserWorkspaces {
         )
     }
 
-    pub(crate) fn is_anyone_with_link_sharing_enabled<S: TeamScope + ?Sized>(
-        &self,
-        scope: &S,
-    ) -> bool {
-        self.scoped_or_workspace_setting(
-            scope,
-            |team| {
-                team.settings
-                    .link_sharing
-                    .anyone_with_link_sharing_enabled
-                    .value
-            },
-            |workspace| {
-                workspace
-                    .settings
-                    .link_sharing_settings
-                    .anyone_with_link_sharing_enabled
-            },
-            true,
-        )
-    }
-
-    pub(crate) fn is_direct_link_sharing_enabled<S: TeamScope + ?Sized>(&self, scope: &S) -> bool {
-        self.scoped_or_workspace_setting(
-            scope,
-            |team| team.settings.link_sharing.direct_link_sharing_enabled.value,
-            |workspace| {
-                workspace
-                    .settings
-                    .link_sharing_settings
-                    .direct_link_sharing_enabled
-            },
-            true,
-        )
-    }
-
     /// Every team the user belongs to, across all of their workspaces.
     #[cfg(not(target_family = "wasm"))]
     fn all_teams(&self) -> impl Iterator<Item = &Team> {

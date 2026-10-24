@@ -5,7 +5,6 @@ use std::future::Future;
 use std::sync::Arc;
 
 use futures::channel::oneshot;
-use session_sharing_protocol::common::SessionId;
 use torch_graphql::ai::{AgentTaskState, PlatformErrorCode};
 use torchui::{Entity, EntityId, ModelContext, SingletonEntity};
 use update_queue::LocalTaskUpdateQueue;
@@ -24,15 +23,13 @@ use crate::terminal::cli_agent_sessions::{
 
 /// Syncs locally-owned conversation state to the server `ai_tasks` row via
 /// `AIClient::update_agent_task`. This includes task state, status message,
-/// server conversation token (`conversation_id`), and shared session ID.
+/// and server conversation token (`conversation_id`).
 ///
 /// For Oz harness conversations, the model listens to
 /// `BlocklistAIHistoryEvent::UpdatedConversationStatus` (state transitions)
 /// and `BlocklistAIHistoryEvent::ConversationServerTokenAssigned` (so the
 /// server conversation token is persisted as soon as the streamed `Init`
-/// event arrives). It also handles
-/// `BlocklistAIHistoryEvent::LocalSharedSessionEstablished` to link
-/// shared session IDs to the task row.
+/// event arrives).
 ///
 /// For third-party harnesses (e.g. Claude Code), status is derived from
 /// `CLIAgentSessionsModelEvent::StatusChanged`. Because these sessions do
@@ -71,7 +68,6 @@ pub enum LocalAgentTaskSyncModelEvent {}
 struct LocalTaskUpdate {
     task_state: Option<AgentTaskState>,
     force_task_state: bool,
-    session_id: Option<SessionId>,
     server_conversation_token: Option<String>,
     status_message: Option<TaskStatusUpdate>,
 }
@@ -79,7 +75,6 @@ struct LocalTaskUpdate {
 impl LocalTaskUpdate {
     fn is_empty(&self) -> bool {
         self.task_state.is_none()
-            && self.session_id.is_none()
             && self.server_conversation_token.is_none()
             && self.status_message.is_none()
     }
@@ -234,12 +229,6 @@ impl LocalAgentTaskSyncModel {
             } => {
                 self.on_conversation_status_updated(*conversation_id, ctx);
             }
-            BlocklistAIHistoryEvent::LocalSharedSessionEstablished {
-                conversation_id,
-                session_id,
-            } => {
-                self.on_local_shared_session_established(*conversation_id, *session_id, ctx);
-            }
             BlocklistAIHistoryEvent::RemoveConversation { run_id, .. }
             | BlocklistAIHistoryEvent::DeletedConversation { run_id, .. } => {
                 self.remove_queued_update_state_for_run_id(run_id.as_deref());
@@ -326,24 +315,6 @@ impl LocalAgentTaskSyncModel {
         self.enqueue_update(task_id, update, ctx);
     }
 
-    fn on_local_shared_session_established(
-        &mut self,
-        conversation_id: AIConversationId,
-        session_id: SessionId,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        let Some((task_id, update)) =
-            with_local_conversation(conversation_id, ctx, |_| LocalTaskUpdate {
-                session_id: Some(session_id),
-                ..LocalTaskUpdate::default()
-            })
-        else {
-            return;
-        };
-
-        self.enqueue_update(task_id, update, ctx);
-    }
-
     fn on_cli_session_status_changed(
         &mut self,
         terminal_view_id: EntityId,
@@ -391,7 +362,6 @@ impl LocalAgentTaskSyncModel {
         let ai_client = self.ai_client.clone();
         let LocalTaskUpdate {
             task_state,
-            session_id,
             server_conversation_token,
             status_message,
             force_task_state: _,
@@ -402,7 +372,7 @@ impl LocalAgentTaskSyncModel {
                     .update_agent_task(
                         task_id,
                         task_state,
-                        session_id,
+                        None,
                         server_conversation_token.clone(),
                         status_message,
                         None,
@@ -412,7 +382,7 @@ impl LocalAgentTaskSyncModel {
                 if let Err(err) = &result {
                     log::warn!(
                         "LocalAgentTaskSyncModel: failed to update task {task_id} \
-                         (state={task_state:?}, session_id={session_id:?}, \
+                         (state={task_state:?}, \
                          server_conversation_token={server_conversation_token:?}): {err:#}"
                     );
                 }
@@ -697,10 +667,6 @@ fn map_cli_session_status(
         CLIAgentSessionStatus::Blocked { message, .. } => (
             AgentTaskState::Blocked,
             message.as_ref().map(TaskStatusUpdate::message),
-        ),
-        CLIAgentSessionStatus::Cancelled => (
-            AgentTaskState::Cancelled,
-            Some(TaskStatusUpdate::message("Cancelled by user")),
         ),
     }
 }

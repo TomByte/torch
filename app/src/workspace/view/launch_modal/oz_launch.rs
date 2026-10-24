@@ -1,13 +1,10 @@
 use asset_macro::bundled_or_fetched_asset;
 use markdown_parser::{FormattedTextFragment, FormattedTextLine};
-use torch_core::send_telemetry_from_ctx;
 use torchui::assets::asset_cache::AssetSource;
 use torchui::{AppContext, SingletonEntity};
 
-use super::{CTAButton, CheckboxConfig, LaunchModalEvent, Slide};
-use crate::ai::ambient_agents::telemetry::{CloudAgentTelemetryEvent, CloudModeEntryPoint};
+use super::{CTAButton, CheckboxConfig, Slide};
 use crate::ui_components::icons::Icon;
-use crate::workspace::action::WorkspaceAction;
 use crate::workspaces::user_workspaces::UserWorkspaces;
 use crate::workspaces::workspace::{AdminEnablementSetting, UgcCollectionEnablementSetting};
 
@@ -141,16 +138,7 @@ impl Slide for OzLaunchSlide {
                 let next = self.next().expect("Non-final slides should have a next");
                 CTAButton::next_slide(next, format!("Next: {}", next.short_label()))
             }
-            OzLaunchSlide::LaunchCredits => CTAButton::custom("Try it out", |ctx| {
-                send_telemetry_from_ctx!(
-                    CloudAgentTelemetryEvent::EnteredCloudMode {
-                        entry_point: CloudModeEntryPoint::OzLaunchModal,
-                    },
-                    ctx
-                );
-                ctx.emit(LaunchModalEvent::Close);
-                ctx.dispatch_typed_action(&WorkspaceAction::AddAmbientAgentTab);
-            }),
+            OzLaunchSlide::LaunchCredits => CTAButton::close("Close"),
         }
     }
 

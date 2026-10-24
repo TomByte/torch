@@ -49,7 +49,6 @@ use crate::server::experiments::{ServerExperiments, ServerExperimentsEvent};
 use crate::server::server_api::ServerApiProvider;
 use crate::server::team_scope::RequestTeamScope;
 use crate::ui_components::blended_colors;
-use crate::workspace::WorkspaceAction;
 use crate::workspaces::user_workspaces::{
     TeamContextResolver, UserWorkspaces, UserWorkspacesEvent,
 };
@@ -257,22 +256,6 @@ impl OrchestrationConfigBlockView {
         ctx.subscribe_to_model(
             &HarnessAvailabilityModel::handle(ctx),
             |me, _, event, ctx| match event {
-                HarnessAvailabilityEvent::AuthSecretCreated { harness, name } => {
-                    if me.pickers_initialized {
-                        oc::apply_created_auth_secret_if_matches(
-                            &mut me.orchestration_edit_state.orchestration_config_state,
-                            *harness,
-                            name,
-                            ctx,
-                        );
-                        oc::repopulate_all_pickers(
-                            &mut me.orchestration_edit_state.orchestration_config_state,
-                            &me.pickers,
-                            ctx,
-                        );
-                    }
-                    ctx.notify();
-                }
                 HarnessAvailabilityEvent::Changed
                 | HarnessAvailabilityEvent::AuthSecretsChanged => {
                     if me.pickers_initialized {
@@ -285,9 +268,6 @@ impl OrchestrationConfigBlockView {
                     me.maybe_auto_open_create_modal(ctx);
                     ctx.notify();
                 }
-                HarnessAvailabilityEvent::AuthSecretCreationFailed { .. }
-                | HarnessAvailabilityEvent::AuthSecretDeleted { .. }
-                | HarnessAvailabilityEvent::AuthSecretDeletionFailed { .. } => {}
             },
         );
 
@@ -434,7 +414,6 @@ impl OrchestrationConfigBlockView {
         if !self.details_expanded {
             self.details_expanded = true;
         }
-        ctx.dispatch_typed_action(&WorkspaceAction::OpenCreateAuthSecretModal { harness });
         ctx.notify();
     }
 
@@ -1136,16 +1115,6 @@ impl TypedActionView for OrchestrationConfigBlockView {
                     &mut self.orchestration_edit_state.orchestration_config_state,
                     ctx,
                 );
-                if let Some(harness) = Harness::parse_orchestration_harness(
-                    &self
-                        .orchestration_edit_state
-                        .orchestration_config_state
-                        .harness_type,
-                ) {
-                    ctx.dispatch_typed_action(&WorkspaceAction::OpenCreateAuthSecretModal {
-                        harness,
-                    });
-                }
                 ctx.notify();
             }
         }

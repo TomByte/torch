@@ -10,7 +10,6 @@ use parking_lot::Mutex;
 use pathfinder_geometry::rect::RectF;
 use pathfinder_geometry::vector::{Vector2F, vec2f};
 use serde::{Deserialize, Serialize};
-use session_sharing_protocol::common::SessionId;
 use settings::Setting as _;
 use torch_core::context_flag::ContextFlag;
 use torch_errors::report_error;
@@ -27,7 +26,6 @@ use torchui::{
 };
 use url::Url;
 
-use crate::ai::agent::api::ServerConversationToken;
 use crate::ai::blocklist::SerializedBlockListItem;
 use crate::app_state::{AppState, PaneUuid, WindowSnapshot};
 use crate::appearance::Appearance;
@@ -256,26 +254,6 @@ pub fn init(app: &mut AppContext) {
         RootView::toggle_maximize_window,
     );
     app.add_action("root_view:toggle_fullscreen", RootView::toggle_fullscreen);
-
-    if FeatureFlag::ViewingSharedSessions.is_enabled() {
-        app.add_global_action(
-            "root_view:join_shared_session",
-            open_shared_session_as_viewer,
-        );
-        app.add_action(
-            "root_view:join_shared_session_in_existing_window",
-            RootView::join_shared_session_in_existing_window,
-        );
-    }
-
-    app.add_global_action(
-        "root_view:open_conversation_viewer",
-        open_conversation_viewer,
-    );
-    app.add_action(
-        "root_view:open_cloud_conversation_in_existing_window",
-        RootView::open_cloud_conversation_in_existing_window,
-    );
 
     app.add_global_action("root_view:create_environment", create_environment);
     app.add_global_action(
@@ -754,29 +732,6 @@ pub(crate) fn open_new_from_path(
         },
         ctx,
     )
-}
-
-/// Opens a new window and tries to join session identified by the session ID.
-fn open_shared_session_as_viewer(session_id: &SessionId, ctx: &mut AppContext) {
-    open_new_with_workspace_source(
-        NewWorkspaceSource::SharedSessionAsViewer {
-            session_id: *session_id,
-        },
-        ctx,
-    );
-}
-
-/// Opens a new window to view a persisted view-only cloud conversation.
-/// The conversation data is loaded via GraphQL API.
-fn open_conversation_viewer(conversation_id: &ServerConversationToken, ctx: &mut AppContext) {
-    // Trigger the workspace loading mechanism by dispatching the LoadConversationData event
-    // This will open a new window with a loading state, fetch data via GraphQL, and display it
-    open_new_with_workspace_source(
-        NewWorkspaceSource::FromCloudConversationId {
-            conversation_id: conversation_id.clone(),
-        },
-        ctx,
-    );
 }
 
 /// Opens a new window and starts the guided `/create-environment` setup flow.
@@ -1294,12 +1249,6 @@ pub enum NewWorkspaceSource {
         options: Box<NewTerminalOptions>,
         initial_team_uid: Option<ServerId>,
     },
-    SharedSessionAsViewer {
-        session_id: SessionId,
-    },
-    FromCloudConversationId {
-        conversation_id: ServerConversationToken,
-    },
     NotebookFromFilePath {
         file_path: Option<PathBuf>,
     },
@@ -1307,8 +1256,6 @@ pub enum NewWorkspaceSource {
         options: Box<NewTerminalOptions>,
         initial_query: Option<String>,
     },
-    /// Starts the workspace with the Cloud Agent setup tab.
-    AmbientAgent,
     /// A tab is being transferred from another window via the transferable views framework.
     /// The workspace will create a placeholder tab, which will be replaced by the transferred
     /// PaneGroup after window creation.
@@ -1370,11 +1317,8 @@ impl NewWorkspaceSource {
             } => Some(*source_window_id),
             Self::FromTemplate { .. }
             | Self::Session { .. }
-            | Self::SharedSessionAsViewer { .. }
-            | Self::FromCloudConversationId { .. }
             | Self::NotebookFromFilePath { .. }
-            | Self::AgentSession { .. }
-            | Self::AmbientAgent => None,
+            | Self::AgentSession { .. } => None,
             Self::Restored {
                 window_snapshot, ..
             } => {
@@ -1386,17 +1330,6 @@ impl NewWorkspaceSource {
         };
 
         UserWorkspaces::as_ref(ctx).inherited_or_default_team_uid(source_window_id)
-    }
-
-    /// Whether this source points at specific content (e.g. a shared session or a cloud
-    /// conversation) that a new window should reach directly.
-    #[cfg(target_family = "wasm")]
-    pub(crate) fn is_content_deep_link(&self) -> bool {
-        matches!(
-            self,
-            NewWorkspaceSource::SharedSessionAsViewer { .. }
-                | NewWorkspaceSource::FromCloudConversationId { .. }
-        )
     }
 }
 
@@ -1604,40 +1537,6 @@ impl RootView {
             ctx.windows().show_window_and_focus_app(window_id);
             ctx.notify();
         });
-        true
-    }
-
-    pub fn join_shared_session_in_existing_window(
-        &mut self,
-        session_id: &SessionId,
-        ctx: &mut ViewContext<Self>,
-    ) -> bool {
-        let handle = &self.workspace;
-        handle.update(ctx, |workspace, ctx| {
-            // Generic session link: ambient-ness (if any) is discovered at SessionJoined.
-            workspace.add_tab_for_joining_shared_session(*session_id, false, ctx);
-        });
-        let window_id = ctx.window_id();
-        ctx.windows().show_window_and_focus_app(window_id);
-        ctx.notify();
-        true
-    }
-
-    /// Opens a cloud conversation in an existing window.
-    /// If the user owns the conversation, restores or navigates to it directly.
-    /// Otherwise, opens a read-only transcript viewer.
-    pub fn open_cloud_conversation_in_existing_window(
-        &mut self,
-        conversation_id: &ServerConversationToken,
-        ctx: &mut ViewContext<Self>,
-    ) -> bool {
-        let handle = &self.workspace;
-        handle.update(ctx, |workspace, ctx| {
-            workspace.open_cloud_conversation_from_server_token(conversation_id.clone(), ctx);
-        });
-        let window_id = ctx.window_id();
-        ctx.windows().show_window_and_focus_app(window_id);
-        ctx.notify();
         true
     }
 

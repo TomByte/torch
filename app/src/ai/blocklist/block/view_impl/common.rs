@@ -189,15 +189,10 @@ pub struct ButtonProps<'a> {
 }
 
 /// Props for the auto-approve / fast-forward button in the warping indicator.
-///
-/// When `is_locked` is set, the button is rendered in its always-on state and
-/// the click handler (plus the action dispatched by the keybinding) are no-ops.
-/// Used for ambient agent conversations where fast-forward is always conceptually on.
 pub struct AutoExecuteButtonProps<'a> {
     pub button_handle: &'a MouseStateHandle,
     pub keystroke: Option<&'a Keystroke>,
     pub is_active: bool,
-    pub is_locked: bool,
 }
 
 pub struct ForceRefreshButtonProps<'a> {
@@ -921,9 +916,7 @@ fn render_auto_approve_button(
     props: AutoExecuteButtonProps,
     appearance: &Appearance,
 ) -> Box<dyn Element> {
-    // In locked mode (ambient/cloud agent conversations), the button is always
-    // rendered in its "on" state regardless of the underlying conversation state.
-    let is_active = props.is_active || props.is_locked;
+    let is_active = props.is_active;
     let icon = if is_active {
         Icon::FastForwardFilled
     } else {
@@ -941,9 +934,7 @@ fn render_auto_approve_button(
     )
     .finish();
 
-    let tooltip_text = if props.is_locked {
-        "Fast forward is always enabled for cloud agent conversations"
-    } else if is_active {
+    let tooltip_text = if is_active {
         "Turn off auto-approve all agent actions"
     } else {
         "Auto-approve all agent actions for this task"
@@ -956,11 +947,8 @@ fn render_auto_approve_button(
         props.keystroke,
         tooltip_text.to_string(),
         is_active,
-        props.is_locked,
+        false,
         move |ctx| {
-            if props.is_locked {
-                return;
-            }
             ctx.dispatch_typed_action(TerminalAction::ToggleAutoexecuteMode);
         },
     )

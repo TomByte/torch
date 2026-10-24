@@ -40,9 +40,6 @@ use crate::launch_configs::launch_config::LaunchConfig;
 use crate::menu::{MenuAction, MenuItem, MenuItemFields};
 use crate::pane_group::{PaneGroup, PaneId};
 use crate::shell_indicator::ShellIndicatorType;
-use crate::terminal::shared_session::SharedSessionStatus;
-use crate::terminal::shared_session::manager::Manager;
-use crate::terminal::shared_session::render_util::shared_session_indicator_color;
 use crate::terminal::view::TerminalViewState;
 use crate::themes::theme::{AnsiColorIdentifier, Fill as ThemeFill, VerticalGradient};
 use crate::ui_components::buttons::icon_button;
@@ -463,7 +460,6 @@ impl TabData {
         for section_items in [
             self.pin_menu_items(index),
             self.tab_group_menu_items(index, tab_groups, is_only_member_of_group),
-            self.session_sharing_menu_items(index, ctx),
             self.copy_metadata_menu_items(pane_name_target, ctx),
             self.modify_tab_menu_items(index, can_move_left, can_move_right, pane_name_target, ctx),
             self.close_tab_menu_items(index, tabs_len, ctx),
@@ -483,92 +479,6 @@ impl TabData {
             }
             menu_items.extend(section_items);
         }
-        menu_items
-    }
-
-    fn session_sharing_menu_items(
-        &self,
-        index: usize,
-        ctx: &AppContext,
-    ) -> Vec<MenuItem<WorkspaceAction>> {
-        let mut menu_items = vec![];
-
-        if FeatureFlag::CreatingSharedSessions.is_enabled()
-            && ContextFlag::CreateSharedSession.is_enabled()
-        {
-            let shared_session_view_ids = self.pane_group.as_ref(ctx).shared_session_view_ids(ctx);
-            let focused_session_view = self.pane_group.as_ref(ctx).focused_session_view(ctx);
-
-            // If the focused pane is one of the shared sessions, add an option to stop it specifically,
-            // otherwise add an option to share it.
-            if let Some(focused_session_view) = focused_session_view {
-                if focused_session_view
-                    .as_ref(ctx)
-                    .model
-                    .lock()
-                    .shared_session_status()
-                    .is_active_sharer()
-                {
-                    menu_items.push(
-                        MenuItemFields::new("Stop sharing")
-                            .with_on_select_action(WorkspaceAction::StopSharingSessionFromTabMenu {
-                                terminal_view_id: focused_session_view.id(),
-                            })
-                            .into_item(),
-                    );
-                } else {
-                    menu_items.push(
-                        MenuItemFields::new("Share session")
-                            .with_on_select_action(WorkspaceAction::OpenShareSessionModal(index))
-                            .into_item(),
-                    );
-                }
-            }
-
-            // Always show an option to stop sharing all when there's at least 1 shared session in the tab.
-            if !shared_session_view_ids.is_empty() {
-                menu_items.push(
-                    MenuItemFields::new("Stop sharing all")
-                        .with_on_select_action(WorkspaceAction::StopSharingAllSessionsInTab {
-                            pane_group: self.pane_group.downgrade(),
-                        })
-                        .into_item(),
-                );
-            }
-        }
-
-        // Add "Copy link" option if the focused session in this tab is being shared or viewed.
-        // Disable the item (rather than silently no-op) when the Manager does not yet have a
-        // session id (e.g. during ViewPending / SharePending while the session is still setting up).
-        let focused_session_view = self.pane_group.as_ref(ctx).focused_session_view(ctx);
-        let focused_session_status = focused_session_view.as_ref().map(|view| {
-            view.as_ref(ctx)
-                .model
-                .lock()
-                .shared_session_status()
-                .clone()
-        });
-
-        if focused_session_status
-            .as_ref()
-            .is_some_and(SharedSessionStatus::is_sharer_or_viewer)
-        {
-            let has_session_link = focused_session_view
-                .as_ref()
-                .zip(focused_session_status.as_ref())
-                .is_some_and(|(view, status)| {
-                    Manager::as_ref(ctx).has_session_link(&view.id(), status)
-                });
-            menu_items.push(
-                MenuItemFields::new("Copy link")
-                    .with_on_select_action(WorkspaceAction::CopySharedSessionLinkFromTab {
-                        tab_index: index,
-                    })
-                    .with_disabled(!has_session_link)
-                    .into_item(),
-            );
-        }
-
         menu_items
     }
 
@@ -1050,8 +960,6 @@ enum Indicator {
     /// This pane's inputs are being synced.
     Synced,
     Error,
-    /// At least one of the panes in this tab is being shared.
-    Shared,
     /// One of the panes in this tab is maximized.
     Maximized,
     /// We should show a shell indicator for the tab.
@@ -1059,7 +967,6 @@ enum Indicator {
     Agent {
         conversation_status: Option<ConversationStatus>,
     },
-    AmbientAgent,
 }
 
 impl From<TerminalViewState> for Indicator {
@@ -1119,7 +1026,6 @@ pub struct TabComponent<'a> {
 struct TabStyles {
     background: Option<ThemeFill>,
     error_color: ColorU,
-    sharing_color: ColorU,
     synced_input_indicator_color: ColorU,
 
     /// Default styles of the TabComponent
@@ -1144,7 +1050,6 @@ impl TabStyles {
         let active_tab_bar_color: Option<ThemeFill> =
             tab_color.map(|color| color.to_ansi_color(&theme.terminal_colors().normal).into());
         let error_color = theme.ui_error_color();
-        let sharing_color = shared_session_indicator_color(appearance);
         let background = active_tab_bar_color.map(|color| {
             ThemeFill::VerticalGradient(VerticalGradient::new(
                 theme.background().into(),
@@ -1154,7 +1059,6 @@ impl TabStyles {
         TabStyles {
             background,
             error_color,
-            sharing_color,
             synced_input_indicator_color: ColorU::from_u32(TAB_INDICATOR_SYNCED_COLOR),
             default: UiComponentStyles::default()
                 .set_font_color(theme.nonactive_ui_text_color().into())
@@ -1181,12 +1085,6 @@ impl<'a> TabComponent<'a> {
         let appearance = Appearance::as_ref(ctx);
         let title = tab.pane_group.as_ref(ctx).display_title(ctx);
 
-        let active_pane_is_ambient_agent_session = tab
-            .pane_group
-            .as_ref(ctx)
-            .active_session_view(ctx)
-            .map(|view| view.as_ref(ctx).is_cloud_agent_session(ctx))
-            .unwrap_or(false);
         // Auto-save persists edits automatically, so the tab-level unsaved
         // indicator is suppressed for changes it can persist (avoiding flicker
         // as the user types); unsaveable changes (untitled buffers,
@@ -1195,10 +1093,6 @@ impl<'a> TabComponent<'a> {
             .pane_group
             .as_ref(ctx)
             .has_active_code_pane_with_unsaved_indicator(ctx);
-        let is_being_shared = tab
-            .pane_group
-            .as_ref(ctx)
-            .is_terminal_pane_being_shared(ctx);
         let should_show_indicators = *TabSettings::as_ref(ctx).show_indicators.value();
         let shortcut_hint_label = if reveals_tab_shortcut_hints(ctx) {
             tab_activate_binding_name(tab_index, tab_bar.tab_count)
@@ -1218,17 +1112,12 @@ impl<'a> TabComponent<'a> {
         let is_maximized = tab.pane_group.as_ref(ctx).is_focused_pane_maximized(ctx);
         let shell_indicator_type = tab.pane_group.as_ref(ctx).focused_shell_indicator_type(ctx);
 
-        // If a session is being shared, we want to show that indicator in the tab bar above all else.
-        // Otherwise, if the tab indicator setting is explicitly turned off, we don't want to show any indicator.
+        // If the tab indicator setting is explicitly turned off, we don't want to show any indicator.
         // But if it's on, we want to show the synced indicator if this tab is being synced.
         // If we aren't showing the synced indicator (and we know the setting is on),
         // we will show long-running, error indicators, etc. as applicable.
-        let indicator = if active_pane_is_ambient_agent_session {
-            Indicator::AmbientAgent
-        } else if active_pane_has_unsaved_code_changes {
+        let indicator = if active_pane_has_unsaved_code_changes {
             Indicator::UnsavedChanges
-        } else if FeatureFlag::CreatingSharedSessions.is_enabled() && is_being_shared {
-            Indicator::Shared
         } else if !should_show_indicators {
             Indicator::None
         } else if are_inputs_synced {
@@ -1424,7 +1313,7 @@ impl<'a> TabComponent<'a> {
 
     /// Check if the given indicator is an agent task indicator
     fn is_agent_task_indicator(indicator: &Indicator) -> bool {
-        matches!(indicator, Indicator::Agent { .. } | Indicator::AmbientAgent)
+        matches!(indicator, Indicator::Agent { .. })
     }
 
     /// Get the current working directory for the tooltip if this is an agent task
@@ -1681,11 +1570,6 @@ impl<'a> TabComponent<'a> {
                     .to_warpui_icon(self.styles.error_color.into())
                     .finish(),
             ),
-            Indicator::Shared => Some(
-                Icon::Sharing
-                    .to_warpui_icon(self.styles.sharing_color.into())
-                    .finish(),
-            ),
             Indicator::Maximized => Some(
                 Icon::Maximize
                     .to_warpui_icon(
@@ -1717,42 +1601,6 @@ impl<'a> TabComponent<'a> {
                     let icon_color = self.appearance.theme().nonactive_ui_text_color();
                     Some(Icon::Agent.to_warpui_icon(icon_color).finish())
                 }
-            }
-            Indicator::AmbientAgent => {
-                // Always use the active tab font color for the ambient agent cloud icon, with a safe fallback.
-                let active_styles = self.styles.default.merge(self.styles.active);
-                let icon_color = active_styles
-                    .font_color
-                    .unwrap_or_else(|| self.appearance.theme().active_ui_text_color().into());
-
-                let ui_builder = self.ui_builder.clone();
-                let mouse_state = self.tab.indicator_hover_state.clone();
-                Some(
-                    Hoverable::new(mouse_state, move |state| {
-                        let mut stack = Stack::new().with_child(
-                            Icon::CloudFilled.to_warpui_icon(icon_color.into()).finish(),
-                        );
-
-                        if state.is_hovered() {
-                            let tooltip = ui_builder
-                                .tool_tip("Cloud agent run".to_string())
-                                .build()
-                                .finish();
-                            stack.add_positioned_overlay_child(
-                                tooltip,
-                                OffsetPositioning::offset_from_parent(
-                                    vec2f(0., 3.),
-                                    ParentOffsetBounds::WindowByPosition,
-                                    ParentAnchor::BottomMiddle,
-                                    ChildAnchor::TopMiddle,
-                                ),
-                            );
-                        }
-
-                        stack.finish()
-                    })
-                    .finish(),
-                )
             }
         };
 

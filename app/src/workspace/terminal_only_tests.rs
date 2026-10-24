@@ -41,7 +41,7 @@ fn terminal_only_palette_has_sessions_and_projects_without_file_search() {
             workspace.palette.update(ctx, |palette, ctx| {
                 let mixer = palette.search_bar.as_ref(ctx).mixer().clone();
                 palette.data_source_store.update(ctx, |store, ctx| {
-                    store.reset_search_mixer(mixer.clone(), false, ctx);
+                    store.reset_search_mixer(mixer.clone(), ctx);
                 });
                 let filters = mixer
                     .as_ref(ctx)

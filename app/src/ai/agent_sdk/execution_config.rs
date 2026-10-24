@@ -5,11 +5,9 @@ use cloud_object_models::CodeForge as RuntimeForge;
 use serde_json::{Map, Value};
 use torch_cli::agent::{Harness, RepositoryHeadRef};
 use torch_cli::mcp::MCPSpec;
-use torch_cli::share::{ShareAccessLevel, ShareRequest, ShareSubject};
 use torch_graphql::ai::AgentHarness;
 use torch_graphql::queries::execution_config::{
     CloudProviderClientConfigs, CodeForge, ExecutionRepository, ExecutionRepositoryRefType,
-    SessionSharingAccessLevel, SessionSharingAclSpec, SessionSharingSubjectType,
     SourceRepo as ConfigSourceRepo,
 };
 
@@ -94,46 +92,6 @@ pub(super) fn repositories(
                 clone_from,
                 preserve_origin: repo.preserve_origin,
                 expected_sha: repo.expected_sha,
-            })
-        })
-        .collect()
-}
-
-pub(super) fn deferred_repositories(
-    repositories: Vec<ConfigSourceRepo>,
-) -> anyhow::Result<Vec<SourceRepo>> {
-    repositories.into_iter().map(source_repo).collect()
-}
-
-pub(super) fn sharing_acls(acls: Vec<SessionSharingAclSpec>) -> anyhow::Result<Vec<ShareRequest>> {
-    acls.into_iter()
-        .map(|acl| {
-            let subject = match acl.subject_type {
-                SessionSharingSubjectType::Team if acl.email.is_none() => ShareSubject::Team,
-                SessionSharingSubjectType::Public if acl.email.is_none() => ShareSubject::Public,
-                SessionSharingSubjectType::UserEmail => {
-                    let email = acl.email.filter(|email| !email.trim().is_empty());
-                    ShareSubject::User {
-                        email: email.context("User sharing ACL has no email")?,
-                    }
-                }
-                SessionSharingSubjectType::Unknown => {
-                    bail!("Unsupported execution sharing subject")
-                }
-                SessionSharingSubjectType::Team | SessionSharingSubjectType::Public => {
-                    bail!("Invalid execution sharing ACL")
-                }
-            };
-            let access_level = match acl.access {
-                SessionSharingAccessLevel::View => ShareAccessLevel::View,
-                SessionSharingAccessLevel::Edit => ShareAccessLevel::Edit,
-                SessionSharingAccessLevel::Unknown => {
-                    bail!("Unsupported execution sharing access")
-                }
-            };
-            Ok(ShareRequest {
-                subject,
-                access_level,
             })
         })
         .collect()

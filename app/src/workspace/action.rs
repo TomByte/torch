@@ -2,14 +2,13 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use session_sharing_protocol::common::SessionId;
 use torch_util::path::LineAndColumnArg;
 use torchui::accessibility::AccessibilityVerbosity;
 use torchui::geometry::rect::RectF;
 use torchui::geometry::vector::Vector2F;
 use torchui::platform::Cursor;
 use torchui::platform::keyboard::KeyCode;
-use torchui::{EntityId, WeakViewHandle, WindowId};
+use torchui::{EntityId, WindowId};
 use ui_components::lightbox;
 
 use super::global_actions::{ForkFromExchange, ForkedConversationDestination};
@@ -19,15 +18,10 @@ use super::tab_settings::{
 };
 use super::view::WorkspaceBanner;
 use crate::ai::agent::AIAgentExchangeId;
-use crate::ai::agent::api::ServerConversationToken;
-#[cfg(not(target_family = "wasm"))]
-use crate::ai::agent::conversation::AIAgentHarness;
 use crate::ai::agent::conversation::AIConversationId;
-use crate::ai::ambient_agents::AmbientAgentTaskId;
 use crate::ai::blocklist::PendingAttachment;
 use crate::ai::document::ai_document_model::{AIDocumentId, AIDocumentVersion};
 use crate::palette::PaletteMode;
-use crate::pane_group::PaneGroup;
 use crate::prompt::editor_modal::OpenSource as PromptEditorOpenSource;
 use crate::search;
 use crate::server::ids::SyncId;
@@ -113,12 +107,6 @@ impl VerticalTabsPaneContextMenuTarget {
             Self::ClickedPane(locator) | Self::ActivePane(locator) => locator,
         }
     }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum AutoCloudHandoffTrigger {
-    MacOsSleep,
-    Uri,
 }
 
 #[derive(Debug, Clone)]
@@ -287,7 +275,6 @@ pub enum WorkspaceAction {
         shell: AvailableShell,
         source: AddTabWithShellSource,
     },
-    AddAmbientAgentTab,
     /// Add a new tab that immediately enters agent view with a new conversation.
     AddAgentTab,
     /// Add a new tab running a local Docker sandbox via `sbx`.
@@ -363,8 +350,6 @@ pub enum WorkspaceAction {
     DispatchToSettingsTab(SettingsTabAction),
     ToggleResourceCenter,
     ToggleUserMenu,
-    ToggleAIAssistant,
-    ClickedAIAssistantIcon,
     ToggleKeybindingsPage,
     ShowCommandSearch(CommandSearchOptions),
     TriggerExternalCtrlTFileSearch,
@@ -430,11 +415,8 @@ pub enum WorkspaceAction {
     Panic,
     /// Writes a heap profile to disk.
     DumpHeapProfile,
-    ShowAIAssistantWarmWelcome,
-    ClickedAIAssistantWarmWelcome,
     /// An action to open a new window with a view hierarchy debugger.
     OpenViewTreeDebugWindow,
-    DismissAIAssistantWarmWelcome,
     /// An action to either upgrade syncing status from none or just in one tab
     /// to syncing all tabs, or downgrade from syncing all tabs to no syncing
     ToggleSyncAllTerminalInputsInAllTabs,
@@ -459,19 +441,6 @@ pub enum WorkspaceAction {
     #[cfg(target_family = "wasm")]
     OpenLinkOnDesktop(url::Url),
     ReopenClosedSession,
-    OpenShareSessionModal(usize),
-    StopSharingSessionFromTabMenu {
-        terminal_view_id: EntityId,
-    },
-    StopSharingAllSessionsInTab {
-        pane_group: WeakViewHandle<PaneGroup>,
-    },
-    CopySharedSessionLinkFromTab {
-        tab_index: usize,
-    },
-    OpenSharedSessionQrCode {
-        session_id: SessionId,
-    },
     AddWindow,
     AddWindowWithShell {
         shell: AvailableShell,
@@ -610,46 +579,8 @@ pub enum WorkspaceAction {
     ContinueConversationLocally {
         conversation_id: AIConversationId,
     },
-    /// Continue a completed third-party cloud harness run in a local split pane.
-    #[cfg(not(target_family = "wasm"))]
-    ContinueThirdPartyConversationLocally {
-        task_id: AmbientAgentTaskId,
-        harness: AIAgentHarness,
-    },
     /// Insert the /fork slash command into the active terminal's input.
     InsertForkSlashCommand,
-    /// Open a local-to-cloud handoff pane next to the active conversation
-    /// (REMOTE-1486). Triggered by the `/move-to-cloud` slash command
-    /// and the footer chip of the same name. The dispatch site reads the
-    /// active conversation's `server_conversation_token` and gates on
-    /// `FeatureFlag::OzHandoff && FeatureFlag::HandoffLocalCloud`.
-    /// Falls through to splitting a fresh cloud-mode pane when the active
-    /// conversation isn't handoff-able (no synced server token, empty, or no
-    /// active conversation at all).
-    OpenLocalToCloudHandoffPane {
-        #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
-        launch: Option<crate::ai::blocklist::handoff::PendingCloudLaunch>,
-        #[cfg(not(all(feature = "local_fs", not(target_family = "wasm"))))]
-        launch: Option<()>,
-        environment_id: Option<crate::server::ids::SyncId>,
-        entry_point: crate::ai::ambient_agents::telemetry::HandoffEntryPoint,
-    },
-    /// Automatically hand off the active running local agent conversation in the
-    /// given terminal view to Cloud Mode.
-    AutoHandoffActiveAgentToCloud {
-        terminal_view_id: EntityId,
-        conversation_id: AIConversationId,
-        trigger: AutoCloudHandoffTrigger,
-    },
-    /// Show the environment creation modal during `&` handoff compose when no
-    /// environments exist.
-    ShowHandoffEnvironmentCreationModal,
-    ShowCloudModeV2EnvironmentCreationModal,
-    /// Open the workspace modal for creating a new managed auth secret.
-    /// Dispatched by orchestration card pickers' "New API key…" item.
-    OpenCreateAuthSecretModal {
-        harness: torch_cli::agent::Harness,
-    },
     /// Summarize the active AI conversation in the focused pane.
     SummarizeAIConversation {
         prompt: Option<String>,
@@ -738,22 +669,12 @@ pub enum WorkspaceAction {
     /// Reset the feature intro seen state (for debugging)
     #[cfg(debug_assertions)]
     ResetFeatureIntroModalState,
-    /// Open the auto-handoff sleep modal (for debugging)
-    #[cfg(debug_assertions)]
-    OpenAutoHandoffSleepModal,
-    /// Reset the auto-handoff sleep modal shown state (for debugging)
-    #[cfg(debug_assertions)]
-    ResetAutoHandoffSleepModalState,
     /// Open the "You're using your ChatGPT plan" modal (for debugging)
     #[cfg(debug_assertions)]
     OpenChatGPTPlanModal,
     /// Reset the ChatGPT plan modal shown state (for debugging)
     #[cfg(debug_assertions)]
     ResetChatGPTPlanModalState,
-    /// Trigger the auto-handoff-to-cloud flow in-process, as if the machine
-    /// were about to sleep (for debugging)
-    #[cfg(debug_assertions)]
-    TriggerAutoHandoffToCloud,
     /// Take a process sample of the app (equivalent to Activity Monitor > Sample Process).
     #[cfg(target_os = "macos")]
     SampleProcess,
@@ -781,20 +702,6 @@ pub enum WorkspaceAction {
         conversation_id: AIConversationId,
         terminal_view_id: Option<EntityId>,
     },
-    /// Open the canonical ambient agent conversation pane and attach it to a live session.
-    OpenOrAttachAmbientAgentConversation {
-        session_id: SessionId,
-        task_id: AmbientAgentTaskId,
-    },
-    /// Load cloud conversation data into a transcript viewer.
-    /// Used when CloudConversations is enabled and the sandbox is not running.
-    OpenConversationTranscriptViewer {
-        conversation_id: ServerConversationToken,
-        ambient_agent_task_id: Option<AmbientAgentTaskId>,
-    },
-    /// Toggle the conversation transcript details panel (WASM-only).
-    #[cfg(target_family = "wasm")]
-    ToggleConversationTranscriptDetailsPanel,
     /// Open a full-window lightbox displaying the given images.
     OpenLightbox {
         images: Vec<lightbox::LightboxImage>,
@@ -863,8 +770,6 @@ impl WorkspaceAction {
         match self {
             #[cfg(not(target_family = "wasm"))]
             ContinueConversationLocally { .. } => true,
-            #[cfg(not(target_family = "wasm"))]
-            ContinueThirdPartyConversationLocally { .. } => true,
             ActivateTab(_)
             | ActivateTabByNumber(_)
             | JumpToAttentionSession
@@ -933,7 +838,6 @@ impl WorkspaceAction {
             | NewAgentWorktreeSession { .. }
             | AddTabWithShell { .. }
             | AddAgentTab
-            | AddAmbientAgentTab
             | AddDockerSandboxTab
             | AddWindow
             | AddWindowWithShell { .. }
@@ -1001,8 +905,6 @@ impl WorkspaceAction {
             | DispatchToSettingsTab { .. }
             | ToggleResourceCenter
             | ToggleUserMenu
-            | ClickedAIAssistantIcon
-            | ToggleAIAssistant
             | OpenCloudAgentSetupGuide
             | ToggleKeybindingsPage
             | ShowCommandSearch(_)
@@ -1043,9 +945,6 @@ impl WorkspaceAction {
             | Panic
             | DumpHeapProfile
             | OpenViewTreeDebugWindow
-            | ShowAIAssistantWarmWelcome
-            | ClickedAIAssistantWarmWelcome
-            | DismissAIAssistantWarmWelcome
             | DismissWorkspaceBanner(..)
             | ToggleSyncAllTerminalInputsInAllTabs
             | ToggleSyncTerminalInputsInTab
@@ -1058,11 +957,6 @@ impl WorkspaceAction {
             | OpenHeaderToolbarEditor
             | ShowHeaderToolbarContextMenu { .. }
             | OpenLink(_)
-            | OpenShareSessionModal(_)
-            | StopSharingSessionFromTabMenu { .. }
-            | StopSharingAllSessionsInTab { .. }
-            | CopySharedSessionLinkFromTab { .. }
-            | OpenSharedSessionQrCode { .. }
             | ReopenClosedSession
             | FocusLeftPanel
             | FocusRightPanel
@@ -1109,8 +1003,6 @@ impl WorkspaceAction {
             | ShowRewindConfirmationDialog { .. }
             | ExecuteRewindAIConversation { .. }
             | ExecuteDeleteConversation { .. }
-            | OpenOrAttachAmbientAgentConversation { .. }
-            | OpenConversationTranscriptViewer { .. }
             | OpenLightbox { .. }
             | UpdateLightboxImage { .. }
             | ShowSessionConfigModal
@@ -1123,14 +1015,7 @@ impl WorkspaceAction {
             | TabConfigSidecarRemoveConfig { .. }
             | OpenSettingsFile
             | FixSettingsWithOz { .. }
-            | OpenLocalToCloudHandoffPane { .. }
-            | AutoHandoffActiveAgentToCloud { .. }
-            | ShowHandoffEnvironmentCreationModal
-            | ShowCloudModeV2EnvironmentCreationModal
-            | OpenCreateAuthSecretModal { .. }
             | OpenNetworkLogPane => false,
-            #[cfg(target_family = "wasm")]
-            ToggleConversationTranscriptDetailsPanel => false,
             #[cfg(debug_assertions)]
             DebugResetAwsBedrockLoginBannerDismissed
             | OpenOzLaunchModal
@@ -1143,11 +1028,8 @@ impl WorkspaceAction {
             | ResetAgentCliLaunchModalState
             | OpenFeatureIntroModal
             | ResetFeatureIntroModalState
-            | OpenAutoHandoffSleepModal
-            | ResetAutoHandoffSleepModalState
             | OpenChatGPTPlanModal
-            | ResetChatGPTPlanModalState
-            | TriggerAutoHandoffToCloud => false,
+            | ResetChatGPTPlanModalState => false,
             #[cfg(not(target_family = "wasm"))]
             ViewLogs => false,
             #[cfg(target_os = "macos")]

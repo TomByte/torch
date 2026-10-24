@@ -37,7 +37,7 @@ use crate::ai::harness_display;
 use crate::ai::orchestration::{
     AUTH_SECRET_INHERIT_LABEL, OptionBadge, OptionFooter, OptionRow, OptionSnapshot,
     OptionSourceStatus, api_key_snapshot, build_runner_snapshot, harness_snapshot, host_snapshot,
-    model_snapshot, persist_auth_secret_selection,
+    model_snapshot,
 };
 pub use crate::ai::orchestration::{
     AuthSecretSelection, ORCHESTRATION_WARP_WORKER_HOST, OrchestrationConfigState,
@@ -704,34 +704,6 @@ pub fn apply_create_new_auth_secret_requested<V: View>(
     _ctx: &mut ViewContext<V>,
 ) {
     state.select_create_new_auth_secret();
-}
-
-/// Adopts a freshly-created secret as the active selection when its
-/// harness matches the card's current harness. Returns `true` on mutation.
-pub fn apply_created_auth_secret_if_matches<V: View>(
-    state: &mut OrchestrationConfigState,
-    created_harness: Harness,
-    created_name: &str,
-    ctx: &mut ViewContext<V>,
-) -> bool {
-    let Some(card_harness) = Harness::parse_orchestration_harness(&state.harness_type) else {
-        return false;
-    };
-    if card_harness != created_harness {
-        return false;
-    }
-    if matches!(&state.auth_secret_selection, AuthSecretSelection::Named(n) if n == created_name) {
-        return false;
-    }
-    state.auth_secret_selection = AuthSecretSelection::Named(created_name.to_string());
-    let team_scope = UserWorkspaces::as_ref(ctx).team_context_for_operation(ctx);
-    persist_auth_secret_selection(
-        &team_scope,
-        &state.harness_type,
-        &state.auth_secret_selection,
-        ctx,
-    );
-    true
 }
 
 // ── Shared action helpers ───────────────────────────────────

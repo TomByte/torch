@@ -106,7 +106,6 @@ impl LocalControlBridge {
             | ActionKind::SurfaceThemePickerOpen
             | ActionKind::SurfaceKeybindingsOpen
             | ActionKind::SurfaceResourceCenterToggle
-            | ActionKind::SurfaceAiAssistantToggle
             | ActionKind::SurfaceCodeReviewOpen
             | ActionKind::SurfaceCodeReviewToggle
             | ActionKind::SurfaceProjectExplorerOpen

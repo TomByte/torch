@@ -1,6 +1,5 @@
 pub mod ai;
 pub mod auth;
-pub mod block;
 #[cfg(not(target_family = "wasm"))]
 pub(crate) mod download;
 pub mod factory;
@@ -10,7 +9,6 @@ pub mod managed_mcp;
 pub mod managed_secrets;
 pub mod object;
 pub(crate) mod presigned_upload;
-pub mod prewarmed_sandbox;
 pub mod team;
 pub mod workspace;
 
@@ -22,7 +20,6 @@ use ::http::header::CONTENT_LENGTH;
 use ai::AIClient;
 use anyhow::{Context, Result, anyhow};
 use auth::AuthClient;
-use block::BlockClient;
 use channel_versions::ChannelVersions;
 use chrono::{DateTime, FixedOffset, Utc};
 use factory::FactoryClient;
@@ -1459,10 +1456,6 @@ impl ServerApiProvider {
         self.auth_client.clone()
     }
 
-    pub fn get_block_client(&self) -> Arc<dyn BlockClient> {
-        self.server_api.clone()
-    }
-
     pub fn get_workspace_client(&self) -> Arc<dyn WorkspaceClient> {
         self.server_api.clone()
     }
@@ -1504,14 +1497,6 @@ impl ServerApiProvider {
 
     #[cfg_attr(target_family = "wasm", expect(dead_code))]
     pub fn get_harness_support_client(&self) -> Arc<dyn harness_support::HarnessSupportClient> {
-        self.server_api.clone()
-    }
-
-    /// Returns the standby API client with the app's shared authentication state.
-    #[cfg_attr(target_family = "wasm", expect(dead_code))]
-    pub fn get_prewarmed_sandbox_client(
-        &self,
-    ) -> Arc<dyn prewarmed_sandbox::PrewarmedSandboxClient> {
         self.server_api.clone()
     }
 }

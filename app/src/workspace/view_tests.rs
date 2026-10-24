@@ -12,7 +12,6 @@ use repo_metadata::repositories::DetectedRepositories;
 use repo_metadata::watcher::DirectoryWatcher;
 #[cfg(feature = "local_fs")]
 use tempfile::TempDir;
-use terminal::shared_session::permissions_manager::SessionPermissionsManager;
 use terminal::view::ActiveSessionState;
 use torch_editor::editor::NavigationKey;
 #[cfg(feature = "local_fs")]
@@ -141,7 +140,6 @@ pub(crate) fn initialize_app_with_team_client(app: &mut App, team_client: Arc<dy
     app.add_singleton_model(|_| ResizableData::default());
     app.add_singleton_model(LocalWorkflows::new);
     app.add_singleton_model(UndoCloseStack::new);
-    app.add_singleton_model(terminal::shared_session::manager::Manager::new);
     app.add_singleton_model(|_| ActiveSession::default());
     app.add_singleton_model(|_| WorkspaceToastStack);
     app.add_singleton_model(|_| ObjectActions::new(Vec::new()));
@@ -173,7 +171,6 @@ pub(crate) fn initialize_app_with_team_client(app: &mut App, team_client: Arc<dy
     app.add_singleton_model(|_| ActiveAgentViewsModel::new());
     app.add_singleton_model(AgentNotificationsModel::new);
     app.add_singleton_model(AgentConversationsModel::new);
-    app.add_singleton_model(SessionPermissionsManager::new);
     app.add_singleton_model(LLMPreferences::new);
     app.add_singleton_model(HarnessAvailabilityModel::new);
     app.add_singleton_model(|ctx| AITipModel::new_for_agent_tips(ctx));
@@ -2989,7 +2986,6 @@ fn test_vertical_tabs_context_menu_does_not_show_hover_only_tab_bar() {
                 );
                 report_if_error!(settings.use_vertical_tabs.set_value(true, ctx));
             });
-            workspace.should_show_ai_assistant_warm_welcome = false;
             workspace.vertical_tabs_panel_open = true;
 
             workspace.show_tab_right_click_menu =
@@ -3017,7 +3013,6 @@ fn test_standard_tab_context_menu_shows_hover_only_tab_bar() {
                         .set_value(WorkspaceDecorationVisibility::OnHover, ctx)
                 );
             });
-            workspace.should_show_ai_assistant_warm_welcome = false;
 
             workspace.show_tab_right_click_menu =
                 Some((0, TabContextMenuAnchor::Pointer(Vector2F::zero())));

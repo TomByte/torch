@@ -28,16 +28,6 @@ pub enum ActiveAgentViewsEvent {
     ConversationClosed { conversation_id: AIConversationId },
     /// A conversation was entered within a terminal view.
     TerminalViewFocused,
-    /// An ambient agent session was opened in a tab.
-    AmbientSessionOpened {
-        #[allow(dead_code)]
-        task_id: AmbientAgentTaskId,
-    },
-    /// An ambient agent session tab was closed.
-    AmbientSessionClosed {
-        #[allow(dead_code)]
-        task_id: AmbientAgentTaskId,
-    },
     /// A window was closed and its focused state was removed.
     WindowClosed,
 }
@@ -313,21 +303,6 @@ impl ActiveAgentViewsModel {
             .and_then(|state| state.active_conversation_id)
     }
 
-    /// Get the last focused terminal view id (persisted across non-terminal focus changes).
-    pub fn get_last_focused_terminal_id(&self) -> Option<EntityId> {
-        self.last_focused_terminal_state
-            .as_ref()
-            .map(|state| state.focused_terminal_id)
-    }
-
-    /// Get the most recent focused conversation or ambient task ID, persisted
-    /// across non-terminal focus changes.
-    pub fn get_last_focused_conversation(&self) -> Option<ConversationOrTaskId> {
-        self.last_focused_terminal_state
-            .as_ref()
-            .and_then(|state| state.active_conversation_id)
-    }
-
     /// Returns the focused conversation ID if it's a new/empty conversation view.
     /// Only returns Some if the focused agent view was just created to start a new
     /// conversation (i.e. has no exchanges yet).
@@ -365,40 +340,6 @@ impl ActiveAgentViewsModel {
     ) {
         if self.focused_terminal_states.remove(&window_id).is_some() {
             ctx.emit(ActiveAgentViewsEvent::WindowClosed);
-        }
-    }
-
-    /// Register an ambient session (open in a tab).
-    #[cfg_attr(target_family = "wasm", allow(dead_code))]
-    pub fn register_ambient_session(
-        &mut self,
-        terminal_view_id: EntityId,
-        task_id: AmbientAgentTaskId,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        self.ambient_sessions
-            .retain(|view_id, id| *view_id == terminal_view_id || *id != task_id);
-        let existing = self.ambient_sessions.insert(terminal_view_id, task_id);
-        if existing != Some(task_id) {
-            self.last_opened_times
-                .insert(ConversationOrTaskId::TaskId(task_id), Utc::now());
-            ctx.emit(ActiveAgentViewsEvent::AmbientSessionOpened { task_id });
-        }
-    }
-
-    /// Unregister an ambient session when the tab is closed.
-    #[cfg_attr(target_family = "wasm", allow(dead_code))]
-    pub fn unregister_ambient_session(
-        &mut self,
-        terminal_view_id: EntityId,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        if let Some(task_id) = self.ambient_sessions.remove(&terminal_view_id)
-            && !self.ambient_sessions.values().any(|id| *id == task_id)
-        {
-            self.last_opened_times
-                .remove(&ConversationOrTaskId::TaskId(task_id));
-            ctx.emit(ActiveAgentViewsEvent::AmbientSessionClosed { task_id });
         }
     }
 

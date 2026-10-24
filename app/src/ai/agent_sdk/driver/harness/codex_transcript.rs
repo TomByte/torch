@@ -10,7 +10,6 @@
 //!   uuid (`ThreadId`) to pass to `codex resume`, and the decoded envelope to rehydrate
 //!   onto disk.
 use std::fs;
-use std::io::Read;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
@@ -87,7 +86,6 @@ pub(crate) struct CodexResumeInfo {
 
 #[derive(Debug)]
 pub(crate) struct CodexLocalContinuation {
-    pub(crate) command: String,
     pub(crate) transcript_path: PathBuf,
 }
 
@@ -210,34 +208,9 @@ pub(crate) fn rehydrate_codex_transcript(
         );
     }
 
-    let session_id = envelope.session_id;
     let sessions_root = codex_sessions_root().context("Failed to resolve codex sessions root")?;
     let transcript_path =
         write_envelope(envelope, &sessions_root).context("Failed to rehydrate codex transcript")?;
 
-    Ok(CodexLocalContinuation {
-        command: format!("codex resume {session_id}"),
-        transcript_path,
-    })
-}
-
-/// Rehydrate a Codex transcript downloaded from a remote cloud run for local continuation.
-///
-/// Unlike [`rehydrate_codex_transcript`] (used by the cloud resume harness runner), this
-/// function does **not** mutate the envelope's `cwd` field or patch the `session_meta` payload
-/// — the remote session's working directory is preserved as-is in the transcript.
-pub(crate) fn rehydrate_codex_transcript_from_reader(
-    reader: impl Read,
-) -> Result<CodexLocalContinuation> {
-    let envelope: CodexTranscriptEnvelope =
-        serde_json::from_reader(reader).context("Failed to parse codex transcript envelope")?;
-    let session_id = envelope.session_id;
-    let sessions_root = codex_sessions_root().context("Failed to resolve codex sessions root")?;
-    // Write as-is: no cwd mutation, no session_meta patch.
-    let transcript_path = write_envelope(&envelope, &sessions_root)
-        .context("Failed to rehydrate codex transcript")?;
-    Ok(CodexLocalContinuation {
-        command: format!("codex resume {session_id}"),
-        transcript_path,
-    })
+    Ok(CodexLocalContinuation { transcript_path })
 }

@@ -45,15 +45,6 @@ impl SetupClientEventReporter {
         }
     }
 
-    /// Restricts setup to agent-scoped steps and disables run event reporting.
-    #[cfg_attr(all(target_family = "wasm", not(test)), expect(dead_code))]
-    pub(crate) fn standby(ai_client: Arc<dyn AIClient>, background: Arc<Background>) -> Self {
-        Self {
-            scope: SetupScope::Agent,
-            ..Self::noop(ai_client, background)
-        }
-    }
-
     fn start_step(&self, step: SetupStep) -> (&'static str, tracing::Span) {
         assert!(
             self.scope == SetupScope::Run || step.scope() == SetupScope::Agent,
@@ -229,7 +220,6 @@ pub(crate) enum SetupStep {
     CloudProviderSetup,
     McpServerStartup,
     AgentProfileConfiguration,
-    SharedSessionEstablishment,
     GlobalSkillResolution,
     GlobalSkillRepoClone,
     EnvironmentRepoClone,
@@ -295,8 +285,6 @@ impl SetupStep {
             // Provider credentials are time-boxed well below a standby's lifetime, so they
             // must be minted fresh for the run rather than pre-warmed.
             | Self::CloudProviderSetup
-            // Session ACLs name the requester, who is unknown before a claim.
-            | Self::SharedSessionEstablishment
             | Self::ConversationResumeLoading
             // Pre-warming is Oz-only, so these are unreachable from a standby.
             | Self::ThirdPartyHarnessPreparation
@@ -341,9 +329,6 @@ impl SetupStep {
             }
             Self::AgentProfileConfiguration => {
                 span_and_name!("setup_agent_profile_configuration")
-            }
-            Self::SharedSessionEstablishment => {
-                span_and_name!("setup_shared_session_establishment")
             }
             Self::GlobalSkillResolution => {
                 span_and_name!("setup_global_skill_resolution")

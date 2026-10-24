@@ -1,4 +1,3 @@
-mod cloud_mode_v2_view;
 mod data_source;
 mod mixer;
 mod search_item;
@@ -8,11 +7,8 @@ pub(super) mod view;
 use std::path::PathBuf;
 
 use ai::skills::SkillReference;
-pub use cloud_mode_v2_view::{CloudModeV2SlashCommandView, Section as CloudModeV2Section};
 pub use data_source::*;
 pub use mixer::{SlashCommandMixer, build_slash_command_mixer, slash_command_query};
-#[cfg(not(target_family = "wasm"))]
-use torch_cli::agent::Harness;
 use torch_core::features::FeatureFlag;
 use torch_core::send_telemetry_from_ctx;
 use torch_core::ui::appearance::Appearance;
@@ -26,17 +22,9 @@ pub use view::{CloseReason, InlineSlashCommandView, SlashCommandsEvent};
 
 use crate::TelemetryEvent;
 use crate::ai::agent::conversation::AIConversationId;
-#[cfg(not(target_family = "wasm"))]
-use crate::ai::agent_conversations_model::AgentConversationsModel;
-#[cfg(not(target_family = "wasm"))]
-use crate::ai::agent_management::telemetry::AgentManagementTelemetryEvent;
-#[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
-use crate::ai::ambient_agents::telemetry::HandoffEntryPoint;
 use crate::ai::blocklist::agent_view::{
     AgentViewEntryOrigin, DismissalStrategy, ENTER_OR_EXIT_CONFIRMATION_WINDOW, EphemeralMessage,
 };
-#[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
-use crate::ai::blocklist::handoff::PendingCloudLaunch;
 use crate::ai::blocklist::{
     BlocklistAIHistoryModel, InputTypeAutoDetectionSource, PendingAttachment, QueuedQuery,
     QueuedQueryId, QueuedQueryModel, QueuedQueryOrigin, SlashCommandRequest,
@@ -44,8 +32,6 @@ use crate::ai::blocklist::{
 use crate::ai::conversation_rename::rename_conversation;
 use crate::cloud_object::model::persistence::CloudModel;
 use crate::code_review::telemetry_event::CodeReviewPaneEntrypoint;
-#[cfg(not(target_family = "wasm"))]
-use crate::search::slash_command_menu::static_commands::commands;
 use crate::search::slash_command_menu::static_commands::commands::COMMAND_REGISTRY;
 use crate::search::slash_command_menu::static_commands::{Availability, SlashCommandKind};
 use crate::search::slash_command_menu::{SlashCommandId, StaticCommand};
@@ -61,11 +47,11 @@ use crate::terminal::input::slash_command_model::{
     SlashCommandEntryState, UpdatedSlashCommandModel,
 };
 use crate::terminal::input::{
-    CompletionsTrigger, Event, Input, InputAction, InputSuggestionsMode, UserQueryMenuAction,
+    CompletionsTrigger, Event, Input, InputSuggestionsMode, UserQueryMenuAction,
 };
 #[cfg(feature = "local_fs")]
 use crate::terminal::model::session::Session;
-use crate::terminal::view::{AIQueryRouting, TerminalAction, resolve_ai_query_routing};
+use crate::terminal::view::TerminalAction;
 use crate::ui_components::color_dot;
 use crate::view_components::DismissibleToast;
 use crate::workflows::command_parser::compute_workflow_display_data;
@@ -247,16 +233,7 @@ fn open_file_command_path(
 
 impl Input {
     fn is_slash_command_available(&self, command: &StaticCommand, ctx: &AppContext) -> bool {
-        let slash_command_data_source = if self.is_cloud_mode_input_v2_composing(ctx) {
-            let Some(data_source) = self.cloud_mode_composer_slash_command_data_source.as_ref()
-            else {
-                return false;
-            };
-            data_source
-        } else {
-            &self.slash_command_data_source
-        };
-        slash_command_data_source
+        self.slash_command_data_source
             .as_ref(ctx)
             .command_is_active(command, ctx)
     }
@@ -490,49 +467,6 @@ impl Input {
                 ctx.dispatch_typed_action(&TerminalAction::OpenAddRulePane);
             }
             SlashCommandKind::Agent | SlashCommandKind::New => {
-                // Without this, a fast `/agent` right after an ambient tombstone renders (before
-                // its async task fetch resolves) would fall through to `EnterAgentView` below and
-                // start a local conversation instead of the retained cloud one.
-                if self.block_submission_while_ambient_task_unresolved(
-                    self.ambient_agent_task_id(ctx),
-                    ctx,
-                ) {
-                    return true;
-                }
-
-                // REMOTE-2661: a retained setup-failure session has no local conversation to
-                // start into, so route it through the same authenticated follow-up path plain
-                // input already uses for this pane, rather than `EnterAgentView` below.
-                let retained_setup_failure_debug_task_id = {
-                    let model = self.model.lock();
-                    match resolve_ai_query_routing(
-                        self.terminal_view_id,
-                        self.ambient_agent_view_model(),
-                        &model,
-                        ctx,
-                    ) {
-                        AIQueryRouting::RetainedSetupFailureDebug { task_id } => Some(task_id),
-                        _ => None,
-                    }
-                };
-                if let Some(task_id) = retained_setup_failure_debug_task_id {
-                    let prompt = argument
-                        .map(|argument| argument.trim().to_owned())
-                        .filter(|prompt| !prompt.is_empty());
-                    let Some(prompt) = prompt else {
-                        show_error_toast(
-                            format!(
-                                "{} needs a message to debug this session, e.g. \"{} why did my setup fail\"",
-                                command.name, command.name
-                            ),
-                            ctx,
-                        );
-                        return true;
-                    };
-                    ctx.emit(Event::SubmitSetupFailureDebugFollowup { task_id, prompt });
-                    return true;
-                }
-
                 if !self
                     .ai_context_model
                     .as_ref(ctx)
@@ -585,37 +519,11 @@ impl Input {
                     origin: AgentViewEntryOrigin::SlashCommand { trigger },
                 });
             }
-            SlashCommandKind::CloudAgent => {
-                let prompt = argument.and_then(|argument| {
-                    let trimmed = argument.trim();
-                    if trimmed.is_empty() {
-                        None
-                    } else {
-                        Some(trimmed.to_owned())
-                    }
-                });
-
-                ctx.emit(Event::EnterCloudAgentView {
-                    initial_prompt: prompt,
-                });
-            }
             SlashCommandKind::CreateDockerSandbox => {
                 ctx.emit(Event::CreateDockerSandbox);
             }
             SlashCommandKind::Conversations => {
-                if self.is_cloud_mode_input_v2_composing(ctx) {
-                    self.suggestions_mode_model.update(ctx, |model, ctx| {
-                        model.set_mode(InputSuggestionsMode::Closed, ctx);
-                    });
-                    self.clear_buffer_and_reset_undo_stack(ctx);
-                    if let Some(view) = self.cloud_mode_v2_history_menu_view.clone() {
-                        view.update(ctx, |v, ctx| {
-                            v.arm_initial_buffer_sync(ctx);
-                        });
-                    }
-                    ctx.dispatch_typed_action_deferred(InputAction::OpenInlineHistoryMenu);
-                    return true;
-                } else if FeatureFlag::AgentView.is_enabled() {
+                if FeatureFlag::AgentView.is_enabled() {
                     self.open_conversation_menu(ctx);
                 } else {
                     ctx.dispatch_typed_action(&TerminalAction::OpenConversationsPalette);
@@ -924,66 +832,11 @@ impl Input {
                 if !FeatureFlag::ListSkills.is_enabled() {
                     return false;
                 }
-                if self.is_cloud_mode_input_v2_composing(ctx) {
-                    self.apply_v2_slash_section_filter(CloudModeV2Section::Skills, ctx);
-                    return true;
-                }
                 // Open the skill selector menu for invocation - skill command will be inserted into buffer
                 self.open_invoke_skill_selector(ctx);
             }
-            SlashCommandKind::Host => {
-                if !self.is_cloud_mode_input_v2_composing(ctx) {
-                    return false;
-                }
-                // Only open the host selector when a default host is configured.
-                if self
-                    .host_selector()
-                    .is_none_or(|h| !h.as_ref(ctx).has_default_host())
-                {
-                    return false;
-                }
-                self.suggestions_mode_model.update(ctx, |model, ctx| {
-                    model.set_mode(InputSuggestionsMode::Closed, ctx);
-                });
-                self.clear_buffer_and_reset_undo_stack(ctx);
-                self.open_v2_host_selector(ctx);
-                return true;
-            }
-            SlashCommandKind::Harness => {
-                if !self.is_cloud_mode_input_v2_composing(ctx) {
-                    // Defensive: the command is registered only when the V2 flag is on and its
-                    // availability requires CLOUD_MODE_V2_COMPOSER, so this branch should be unreachable.
-                    return false;
-                }
-                self.suggestions_mode_model.update(ctx, |model, ctx| {
-                    model.set_mode(InputSuggestionsMode::Closed, ctx);
-                });
-                self.clear_buffer_and_reset_undo_stack(ctx);
-                self.open_v2_harness_selector(ctx);
-                return true;
-            }
-            SlashCommandKind::Environment => {
-                if !self.is_cloud_mode_input_v2_composing(ctx) {
-                    return false;
-                }
-                self.suggestions_mode_model.update(ctx, |model, ctx| {
-                    model.set_mode(InputSuggestionsMode::Closed, ctx);
-                });
-                self.clear_buffer_and_reset_undo_stack(ctx);
-                self.open_v2_environment_selector(ctx);
-                return true;
-            }
             SlashCommandKind::Model => {
-                if self.is_cloud_mode_input_v2_composing(ctx) {
-                    self.suggestions_mode_model.update(ctx, |model, ctx| {
-                        model.set_mode(InputSuggestionsMode::Closed, ctx);
-                    });
-                    self.clear_buffer_and_reset_undo_stack(ctx);
-                    self.agent_input_footer.update(ctx, |footer, ctx| {
-                        footer.open_v2_model_selector(ctx);
-                    });
-                    return true;
-                } else if trigger.is_keybinding() {
+                if trigger.is_keybinding() {
                     // A keybinding may carry a pre-existing prompt in the buffer; open
                     // like the model chip so the prompt is parked for search and
                     // restored when a model is selected (or the selector is dismissed).
@@ -1009,10 +862,6 @@ impl Input {
                 self.open_profile_selector(ctx);
             }
             SlashCommandKind::Prompts => {
-                if self.is_cloud_mode_input_v2_composing(ctx) {
-                    self.apply_v2_slash_section_filter(CloudModeV2Section::Prompts, ctx);
-                    return true;
-                }
                 if FeatureFlag::AgentView.is_enabled() {
                     self.open_prompts_menu(ctx);
                 } else {
@@ -1021,23 +870,6 @@ impl Input {
             }
             SlashCommandKind::Rewind => {
                 self.open_rewind_menu(ctx);
-            }
-            SlashCommandKind::RemoteControl => {
-                if !FeatureFlag::CreatingSharedSessions.is_enabled()
-                    || !FeatureFlag::HOARemoteControl.is_enabled()
-                {
-                    return false;
-                }
-                if self
-                    .model
-                    .lock()
-                    .shared_session_status()
-                    .is_sharer_or_viewer()
-                {
-                    show_error_toast("Session is already being shared".to_owned(), ctx);
-                    return true;
-                }
-                ctx.emit(Event::StartRemoteControl);
             }
             SlashCommandKind::Cost => {
                 let history = BlocklistAIHistoryModel::handle(ctx);
@@ -1061,55 +893,6 @@ impl Input {
                     );
                 } else {
                     ctx.dispatch_typed_action(&TerminalAction::ToggleUsageFooter);
-                }
-            }
-            #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
-            SlashCommandKind::MoveToCloud => {
-                if !AISettings::as_ref(ctx).is_cloud_handoff_enabled(ctx) {
-                    return false;
-                }
-                if self.block_cloud_handoff_if_model_unsupported(ctx) {
-                    return true;
-                }
-                let prompt = argument
-                    .map(|argument| argument.trim())
-                    .filter(|argument| !argument.is_empty())
-                    .map(str::to_owned);
-                if let Some(prompt) = prompt {
-                    // `/handoff query` auto-submits, same as `& query`.
-                    let attachments = self.collect_cloud_launch_attachments(ctx);
-                    let launch = PendingCloudLaunch {
-                        prompt,
-                        attachments,
-                    };
-                    ctx.dispatch_typed_action_deferred(
-                        WorkspaceAction::OpenLocalToCloudHandoffPane {
-                            launch: Some(launch),
-                            environment_id: None,
-                            entry_point: HandoffEntryPoint::SlashCommand,
-                        },
-                    );
-                } else if self.source_conversation_has_content(ctx) {
-                    // Empty `/handoff` with a non-empty source conversation:
-                    // dispatch the immediate empty-prompt handoff (continue /
-                    // snapshot rehydration); the workspace synthesizes the
-                    // launch and collects attachments.
-                    ctx.dispatch_typed_action_deferred(
-                        WorkspaceAction::OpenLocalToCloudHandoffPane {
-                            launch: None,
-                            environment_id: None,
-                            entry_point: HandoffEntryPoint::SlashCommand,
-                        },
-                    );
-                } else {
-                    // Empty `/handoff` with no source content — surface a toast
-                    // so the user knows why nothing happened. The chip falls
-                    // back to `&` compose mode here; the slash-command flow
-                    // does not because it has no compose-draft state to seed.
-                    show_error_toast(
-                        "Nothing to hand off — start a conversation first.".to_owned(),
-                        ctx,
-                    );
                 }
             }
             SlashCommandKind::Fork => {
@@ -1145,54 +928,6 @@ impl Input {
             SlashCommandKind::ForkFrom => {
                 self.open_user_query_menu(UserQueryMenuAction::ForkFrom, ctx);
                 return true;
-            }
-            #[cfg(not(target_family = "wasm"))]
-            SlashCommandKind::ContinueLocally => {
-                let Some(conversation_id) = self
-                    .ai_context_model
-                    .as_ref(ctx)
-                    .selected_conversation_id(ctx)
-                else {
-                    show_error_toast(
-                        "/continue-locally requires an active conversation".to_owned(),
-                        ctx,
-                    );
-                    return true;
-                };
-
-                if !conversation_is_cloud_oz_for_slash_command(conversation_id, ctx) {
-                    show_error_toast(
-                        "/continue-locally is only available for cloud Oz conversations".to_owned(),
-                        ctx,
-                    );
-                    return true;
-                }
-
-                let destination =
-                    ForkedConversationDestination::for_fork_trigger(trigger.is_cmd_or_ctrl_enter());
-
-                send_telemetry_from_ctx!(
-                    AgentManagementTelemetryEvent::SlashCommandContinueLocally,
-                    ctx
-                );
-
-                // Move any pending attachments out of the source input so they travel with the
-                // initial prompt into the continued local pane and no longer linger on the
-                // original input. Only drain them when a non-empty prompt will actually be sent;
-                // the fork drops attachments when there is no initial prompt, which would
-                // silently discard them.
-                let initial_attachments =
-                    self.maybe_take_attachments_for_initial_prompt(argument, ctx);
-
-                ctx.dispatch_typed_action(&WorkspaceAction::ForkAIConversation {
-                    conversation_id,
-                    fork_from_exchange: None,
-                    summarize_after_fork: false,
-                    summarization_prompt: None,
-                    initial_prompt: argument.cloned(),
-                    initial_attachments,
-                    destination,
-                });
             }
             SlashCommandKind::ForkAndCompact => {
                 let Some(conversation_id) = self
@@ -1339,10 +1074,6 @@ impl Input {
                 );
                 return false;
             }
-            #[cfg(any(not(feature = "local_fs"), target_family = "wasm"))]
-            SlashCommandKind::MoveToCloud => return false,
-            #[cfg(target_family = "wasm")]
-            SlashCommandKind::ContinueLocally => return false,
         }
 
         // Leave the buffer alone when re-sending a queued prompt (the user may have typed
@@ -1388,17 +1119,9 @@ impl Input {
             self.suggestions_mode_model.as_ref(ctx).mode(),
             InputSuggestionsMode::SlashCommands
         ) {
-            if self.is_cloud_mode_input_v2_composing(ctx) {
-                if let Some(view) = self.cloud_mode_v2_slash_commands_view.clone() {
-                    view.update(ctx, |view, ctx| {
-                        view.accept_selected_item(true, ctx);
-                    });
-                }
-            } else {
-                self.inline_slash_commands_view.update(ctx, |view, ctx| {
-                    view.accept_selected_item(true, ctx);
-                });
-            }
+            self.inline_slash_commands_view.update(ctx, |view, ctx| {
+                view.accept_selected_item(true, ctx);
+            });
             return true;
         }
 
@@ -1420,11 +1143,6 @@ impl Input {
                     ctx,
                 )
             }
-            SlashCommandEntryState::SkillCommand(_)
-                if self.is_cloud_mode_input_v2_composing(ctx) =>
-            {
-                false
-            }
             SlashCommandEntryState::SkillCommand(detected_skill) => {
                 let reference = detected_skill.reference.clone();
                 let user_query = detected_skill.argument.clone();
@@ -1432,41 +1150,6 @@ impl Input {
             }
             SlashCommandEntryState::None | SlashCommandEntryState::Composing { .. } => false,
         }
-    }
-
-    fn apply_v2_slash_section_filter(
-        &mut self,
-        section: CloudModeV2Section,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        self.editor.update(ctx, |editor, ctx| {
-            editor.set_buffer_text("/", ctx);
-        });
-        if let Some(view) = self.cloud_mode_v2_slash_commands_view.clone() {
-            view.update(ctx, |v, ctx| {
-                v.set_section_filter(Some(section), ctx);
-            });
-        }
-    }
-
-    pub(super) fn maybe_clear_v2_slash_section_filter(
-        &mut self,
-        ctx: &mut ViewContext<Self>,
-    ) -> bool {
-        if !self.is_cloud_mode_input_v2_composing(ctx) {
-            return false;
-        }
-        let Some(view) = self.cloud_mode_v2_slash_commands_view.clone() else {
-            return false;
-        };
-        let has_filter = view.as_ref(ctx).has_section_filter();
-        if !has_filter {
-            return false;
-        }
-        view.update(ctx, |v, ctx| {
-            v.set_section_filter(None, ctx);
-        });
-        true
     }
 
     /// Executes a slash command on `enter` keypress.
@@ -1488,17 +1171,9 @@ impl Input {
             self.suggestions_mode_model.as_ref(ctx).mode(),
             InputSuggestionsMode::SlashCommands
         ) {
-            if self.is_cloud_mode_input_v2_composing(ctx) {
-                if let Some(view) = self.cloud_mode_v2_slash_commands_view.clone() {
-                    view.update(ctx, |view, ctx| {
-                        view.accept_selected_item(false, ctx);
-                    });
-                }
-            } else {
-                self.inline_slash_commands_view.update(ctx, |view, ctx| {
-                    view.accept_selected_item(false, ctx);
-                });
-            }
+            self.inline_slash_commands_view.update(ctx, |view, ctx| {
+                view.accept_selected_item(false, ctx);
+            });
             return true;
         }
 
@@ -1518,11 +1193,6 @@ impl Input {
                     None,
                     ctx,
                 )
-            }
-            SlashCommandEntryState::SkillCommand(_)
-                if self.is_cloud_mode_input_v2_composing(ctx) =>
-            {
-                false
             }
             SlashCommandEntryState::SkillCommand(detected_skill) => {
                 let reference = detected_skill.reference.clone();
@@ -1602,70 +1272,6 @@ pub fn slash_command_is_submitted_as_prompt(command: &StaticCommand) -> bool {
         command.kind,
         SlashCommandKind::Compact | SlashCommandKind::Plan | SlashCommandKind::Orchestrate
     )
-}
-
-/// Returns true when the conversation with `conversation_id` is associated with an Oz
-/// `AmbientAgentTask`. Callers deciding between `/fork` and `/continue-locally` should also
-/// check the same `CLOUD_AGENT` context that gates `/continue-locally`.
-#[cfg(not(target_family = "wasm"))]
-pub(crate) fn conversation_is_cloud_oz_for_slash_command(
-    conversation_id: AIConversationId,
-    ctx: &AppContext,
-) -> bool {
-    let history = BlocklistAIHistoryModel::as_ref(ctx);
-    let Some(conversation) = history.conversation(&conversation_id) else {
-        return false;
-    };
-    let Some(task_id) = conversation.task_id() else {
-        return false;
-    };
-
-    let Some(task) = AgentConversationsModel::as_ref(ctx).get_task_data(&task_id) else {
-        // Permissive: not yet fetched. Matches the data-source default so the command isn't
-        // wrongly blocked while the task fetch is in flight.
-        return true;
-    };
-
-    match task
-        .agent_config_snapshot
-        .as_ref()
-        .and_then(|s| s.harness.as_ref())
-    {
-        Some(config) => config.harness_type == Harness::Oz,
-        None => true,
-    }
-}
-
-/// Tooltip and slash command name for the fork button, returned as a unit so
-/// callers rendering the button and callers inserting the command always agree.
-#[cfg(not(target_family = "wasm"))]
-pub(crate) struct ForkButtonAction {
-    pub tooltip: &'static str,
-    pub command_name: &'static str,
-}
-
-/// Returns the tooltip and slash command for the fork button given an optional
-/// conversation ID. Uses `/continue-locally` for Oz conversations when `/fork`
-/// is unavailable in the current cloud-agent context, and `/fork` otherwise.
-#[cfg(not(target_family = "wasm"))]
-pub(crate) fn fork_button_action(
-    conversation_id: Option<AIConversationId>,
-    is_cloud_agent_context: bool,
-    ctx: &AppContext,
-) -> ForkButtonAction {
-    if is_cloud_agent_context
-        && conversation_id.is_some_and(|id| conversation_is_cloud_oz_for_slash_command(id, ctx))
-    {
-        ForkButtonAction {
-            tooltip: "Continue locally",
-            command_name: commands::CONTINUE_LOCALLY.name,
-        }
-    } else {
-        ForkButtonAction {
-            tooltip: "Fork conversation",
-            command_name: commands::FORK.name,
-        }
-    }
 }
 
 #[cfg(test)]

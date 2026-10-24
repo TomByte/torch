@@ -39,18 +39,6 @@ pub enum FeatureFlag {
     /// menu bar.
     ToggleBootstrapBlock,
 
-    /// A runtime flag to enable the creation of shared sessions.
-    ///
-    /// It is enabled if the logged in user is part of a paying team
-    /// or part of the allowlist (via [`ServerExperiment::SessionSharingExperiment`]).
-    ///
-    /// We also use [`ServerExperiment::SessionSharingControl`] as a
-    /// killswitch for abuse prevention.
-    CreatingSharedSessions,
-
-    /// Enables the joining / viewing of shared sessions (_not_ creation).
-    ViewingSharedSessions,
-
     /// Enabling context chips functionality for prompt
     ContextChips,
 
@@ -137,16 +125,9 @@ pub enum FeatureFlag {
     /// a shell other than the default shell.
     ShellSelector,
 
-    /// Enables writing to long-running commands in shared sessions.
-    SharedSessionWriteToLongRunningCommands,
-
     /// Lazily builds scenes at render time instead of eagerly when a view
     /// changes.
     LazySceneBuilding,
-
-    /// Enables support for ACLs in Session Sharing. Should be disabled if the
-    /// corresponding `use_acls` flag in the session sharing server is disabled.
-    SessionSharingAcls,
 
     /// Enables the full-screen "zen mode" setting, where we hide the tab bar if there's only one
     /// tab.
@@ -429,9 +410,6 @@ pub enum FeatureFlag {
     /// Enables asynchronous find in terminal, running search on a background thread.
     AsyncFind,
 
-    /// Enables using Agent Mode in shared sessions.
-    AgentSharedSessions,
-
     /// Enables auto-opening code review pane on first agent change and its setting UI.
     AutoOpenCodeReviewPane,
 
@@ -539,15 +517,6 @@ pub enum FeatureFlag {
     /// Enables the inline repo switcher menu for switching between indexed repos.
     InlineRepoMenu,
 
-    /// Enables cloud mode functionality for ambient agents.
-    CloudMode,
-
-    /// Enables starting cloud mode from a local session.
-    CloudModeFromLocalSession,
-
-    /// Enables host selection in cloud mode.
-    CloudModeHostSelector,
-
     /// Enables Torch Managed Secrets functionality.
     WarpManagedSecrets,
 
@@ -644,9 +613,6 @@ pub enum FeatureFlag {
 
     /// Enables image upload for ambient agents.
     AmbientAgentsImageUpload,
-
-    /// Enables image attachment support for cloud mode conversations.
-    CloudModeImageContext,
 
     /// Enables loading and returning bundled skills in the SkillManager.
     BundledSkills,
@@ -799,9 +765,6 @@ pub enum FeatureFlag {
     /// Enables commit, push, and create-PR actions in the code review panel.
     GitOperationsInCodeReview,
 
-    /// Gates the remote control chip and `/remote-control` slash command in the CLI agent footer.
-    HOARemoteControl,
-
     /// Trims trailing blank rows from CLI agent block output so unused vertical
     /// space is not rendered while the agent is running.
     TrimTrailingBlankLines,
@@ -811,23 +774,9 @@ pub enum FeatureFlag {
     /// for command execution.
     SshRemoteServer,
 
-    /// Redux of the setup/initial user query UI for cloud mode.
-    CloudModeSetupV2,
-
     /// Enables summary mode in vertical tabs, showing condensed tab summaries
     /// instead of individual pane rows.
     VerticalTabsSummaryMode,
-
-    CloudModeInputV2,
-
-    /// Enables continuing cloud mode conversations in the cloud after an execution ends.
-    HandoffCloudCloud,
-
-    /// Enables the local-to-cloud Oz handoff entry points (footer chip and
-    /// `/move-to-cloud` slash command) that fork the active local Oz
-    /// conversation into a fresh cloud agent run with the current workspace
-    /// snapshot attached. Requires `OzHandoff` to also be enabled.
-    HandoffLocalCloud,
 
     /// Enables creating API keys scoped to named agents in the API key
     /// management UI. When enabled the "Team" option in the key-type
@@ -888,9 +837,6 @@ pub enum FeatureFlag {
     /// Enables state-mutating recovery for abnormal terminal lifecycle sequences.
     TerminalLifecycleRecovery,
 
-    /// Recovers native cloud agent commands that terminate their persistent shell.
-    CloudAgentShellRespawn,
-
     /// Shows a warning in the agent view when the active conversation's
     /// provider-side prompt cache has expired.
     PromptCacheExpiryWarning,
@@ -935,15 +881,6 @@ pub enum FeatureFlag {
     /// Requires `OzHandoff` to also be enabled; a no-op for local runs and when
     /// `--no-snapshot` is set.
     PeriodicHandoffCheckpoints,
-
-    /// Observes Ctrl-C (`0x03`) written on the shared-session viewer input
-    /// path to a terminal with a working, rich-status-capable CLI agent
-    /// session (e.g. Claude Code). Arms a short grace window; if no further
-    /// plugin activity is seen, the session (and its ambient task) resolves
-    /// to `Cancelled`. Purely client-side status synthesis: the keystroke is
-    /// always forwarded unchanged and the harness process/sandbox are never
-    /// signaled or torn down.
-    CtrlCCancelsThirdPartyHarness,
 
     /// Uses fzf or atuin for history search instead of Torch's command search.
     ShellWidgetHandoff,
@@ -993,7 +930,6 @@ pub const LOCAL_FLAGS: &[FeatureFlag] = &[FeatureFlag::LocalClaudeCodexChildHarn
 /// time, these will move on to PREVIEW_FLAGS before being launched.
 pub const DOGFOOD_FLAGS: &[FeatureFlag] = &[
     FeatureFlag::ToggleBootstrapBlock,
-    FeatureFlag::CreatingSharedSessions,
     FeatureFlag::RemoveAutosuggestionDuringTabCompletions,
     FeatureFlag::ResizeFix,
     FeatureFlag::AgentModeWorkflows,
@@ -1039,7 +975,6 @@ pub const DOGFOOD_FLAGS: &[FeatureFlag] = &[
     FeatureFlag::MultiLevelOrchestration,
     FeatureFlag::McpJsonTreeView,
     FeatureFlag::BoxDrawingGlyphs,
-    FeatureFlag::CtrlCCancelsThirdPartyHarness,
     FeatureFlag::WarpingModelName,
     FeatureFlag::LrcActivitySignal,
     FeatureFlag::StoredScreenshots,
@@ -1090,11 +1025,7 @@ impl FeatureFlag {
                     | Self::AvatarInTabBar
                     | Self::CloudObjects
                     | Self::CloudEnvironments
-                    | Self::CloudMode
-                    | Self::CloudModeFromLocalSession
                     | Self::CloudConversations
-                    | Self::CreatingSharedSessions
-                    | Self::ViewingSharedSessions
                     | Self::WelcomeTips
                     | Self::Changelog
                     | Self::OzChangelogUpdates
@@ -1187,9 +1118,6 @@ impl FeatureFlag {
         // very least, the feature flag should be removed from the Preview changelog by removing it from PREVIEW_FLAGS.
         // ** ONLY Preview-exclusive features should be added to this list! **
         match self {
-            AgentSharedSessions => {
-                Some("Enables viewing agent conversations within shared sessions.")
-            }
             CodeReviewFind => Some("Enables the find bar in the code review pane."),
             BlocklistMarkdownImages => {
                 Some("Enables rendering markdown images inline in AI block list responses.")

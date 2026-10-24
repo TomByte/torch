@@ -6,7 +6,7 @@ use session_sharing_protocol::common::{AgentAttachment, ParticipantId};
 use torch_errors::report_error;
 use torchui::{ModelContext, SingletonEntity};
 use uuid::Uuid;
-use warp_multi_agent_api::response_event::{StreamFinished, StreamInit, stream_finished};
+use warp_multi_agent_api::response_event::StreamInit;
 use warp_multi_agent_api::{ResponseEvent, response_event};
 
 use super::response_stream::ResponseStreamId;
@@ -143,13 +143,6 @@ impl BlocklistAIController {
             log::warn!("No conversation for external harness response stream {stream_id:?}");
             return;
         };
-        let finished = ResponseEvent {
-            r#type: Some(response_event::Type::Finished(StreamFinished {
-                reason: Some(stream_finished::Reason::Done(stream_finished::Done {})),
-                ..Default::default()
-            })),
-        };
-        self.tee_response_event_to_viewers(&finished, conversation_id, ctx);
         let terminal_surface_id = self.terminal_surface_id;
         BlocklistAIHistoryModel::handle(ctx).update(ctx, |history, ctx| {
             history.mark_response_stream_cancelled(
@@ -289,7 +282,6 @@ impl BlocklistAIController {
             vec![],
             root_task_id,
             &self.active_session,
-            self.get_current_response_initiator(),
             conversation_id,
             self.terminal_surface_id,
             &scope,

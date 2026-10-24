@@ -445,14 +445,12 @@ background_computer_use = []
 agent_mode_debug = []
 agent_mode_primary_xml = []
 agent_mode_pre_plan_xml = []
-agent_shared_sessions = []
 ask_user_question = []
 async_find = []
 changelog = []
 clear_autosuggestion_on_escape = []
 codebase_index_speedbump = []
 context_line_review_comments = []
-creating_shared_sessions = []
 cross_repo_context = []
 codebase_index_persistence = ["full_source_code_embedding"]
 well_known_mcp_ids = []
@@ -463,10 +461,8 @@ default = [
     "local_only",
     "agent_mode",
     "osc_hyperlinks",
-    "viewing_shared_sessions",
     "render_continuous_block_selections_with_single_border",
     "shared_with_me",
-    "session_sharing_acls",
     "external_agent_mode_context",
     "shell_selector",
     "minimalist_ui",
@@ -539,7 +535,6 @@ default = [
     "summarize_conversation_command",
     "inline_code_review",
     "web_search_ui",
-    "agent_shared_sessions",
     "integration_command",
     "artifact_command",
     "conversation_api",
@@ -547,7 +542,6 @@ default = [
     "create_environment_slash_command",
     "code_review_find",
     "async_find",
-    "shared_session_long_running_commands",
     "mcp_grouped_server_context",
     "fork_from_command",
     "context_window_usage_v2",
@@ -569,9 +563,6 @@ default = [
     "ask_user_question",
     "bundled_skills",
     "ambient_agents_rtc",
-    "cloud_mode",
-    "cloud_mode_from_local_session",
-    "cloud_mode_image_context",
     "agent_mode_computer_use",
     "background_computer_use",
     "oz_platform_skills",
@@ -626,7 +617,6 @@ default = [
     "grouped_tabs",
     "pinned_tabs",
     "agent_harness",
-    "hoa_remote_control",
     "codex_notifications",
     "codex_plugin",
     "trim_trailing_blank_lines",
@@ -634,13 +624,9 @@ default = [
     "directory_tab_colors",
     "git_credential_refresh",
     "oz_handoff",
-    "handoff_local_cloud",
     "pending_user_query_indicator",
     "queue_slash_command",
     "queued_prompts_v2",
-    "cloud_mode_input_v2",
-    "cloud_mode_setup_v2",
-    "handoff_cloud_cloud",
     "remote_codebase_indexing",
     "solo_user_byok",
     "custom_model_routers",
@@ -658,11 +644,9 @@ default = [
     "well_known_mcp_ids",
     "factory_mcp",
     "ime_marked_text",
-    "ctrl_c_cancels_third_party_harness",
     "shell_widget_handoff",
     "native_shell_completions",
     "history_search_ranking_v2",
-    "cloud_agent_shell_respawn",
 ]
 # Enable this feature to automatically perform heap profiling.  NOTE: This will
 # substantially slow down program execution.
@@ -788,7 +772,6 @@ runtime_feature_flags = []
 selectable_prompt = []
 settings_file = []
 sequential_storage = []
-session_sharing_acls = []
 skip_login = ["torch_server_client/skip_login"]
 # This feature should only be enabled when building a self-contained binary with the bundle script.
 standalone = ["torch_assets/standalone", "torch_core/standalone"]
@@ -815,7 +798,6 @@ integration_tests = [
     "torch_server_client/integration_tests",
 ]
 traces = []
-viewing_shared_sessions = []
 workflow_aliases = []
 rect_selection = []
 alacritty_settings_import = []
@@ -823,7 +805,6 @@ shared_with_me = []
 ai_rules = []
 am_workflows = []
 shell_selector = []
-shared_session_long_running_commands = []
 blocklist_markdown_table_rendering = []
 blocklist_markdown_images = []
 minimalist_ui = []
@@ -921,9 +902,6 @@ team_api_keys = []
 named_agents = []
 classic_completions = []
 native_shell_completions = []
-cloud_mode = []
-cloud_mode_from_local_session = []
-cloud_mode_image_context = []
 force_classic_completions = []
 agent_view_conversation_list_view = ["agent_view"]
 inline_history_menu = ["agent_view"]
@@ -958,7 +936,6 @@ pinned_tabs = []
 warp_control_cli = []
 agent_harness = []
 oz_handoff = []
-handoff_local_cloud = []
 hoa_notifications = []
 open_code_notifications = []
 transfer_control_tool = []
@@ -969,21 +946,15 @@ gpt_configurable_context_window = []
 configurable_toolbar = []
 warpify_footer = []
 git_operations_in_code_review = []
-hoa_remote_control = []
 codex_notifications = []
 codex_plugin = []
-cloud_mode_setup_v2 = ["cloud_mode"]
-cloud_mode_input_v2 = ["cloud_mode"]
-handoff_cloud_cloud = ["cloud_mode_setup_v2"]
 git_credential_refresh = []
 factory_deferred_repositories = []
 prompt_cache_expiry_warning = []
 osc_hyperlinks = []
-ctrl_c_cancels_third_party_harness = []
 shell_widget_handoff = []
 history_search_ranking_v2 = []
 stored_screenshots = []
-cloud_agent_shell_respawn = []
 
 [package.metadata.bundle.bin.torch]
 category = "public.app-category.developer-tools"

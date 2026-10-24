@@ -12,7 +12,7 @@ use vec1::vec1;
 use super::*;
 use crate::terminal::event_listener::ChannelEventListener;
 use crate::terminal::model::ansi::{CompletionMetadata, Handler};
-use crate::terminal::model::block::BlockId;
+use crate::terminal::model::block::{BlockId, SerializedBlock};
 use crate::terminal::model::bootstrap::BootstrapStage;
 use crate::terminal::model::grid::Dimensions as _;
 use crate::terminal::model::image_map::StoredImageMetadata;
@@ -1035,9 +1035,6 @@ fn normal_lifecycle_pipeline_emits_completion_and_prompt_side_effects_once() {
     let mut terminal = TerminalModel::mock(None, Some(event_proxy));
     while event_rx.try_recv().is_ok() {}
 
-    let (ordered_tx, ordered_rx) = async_channel::unbounded();
-    terminal.set_ordered_terminal_events_for_shared_session_tx(ordered_tx);
-
     let completed_block_id = terminal.active_block_id().clone();
     let next_block_id = BlockId::new();
     let completion_metadata = CompletionMetadata {
@@ -1127,12 +1124,6 @@ fn normal_lifecycle_pipeline_emits_completion_and_prompt_side_effects_once() {
             .count(),
         1
     );
-
-    assert!(matches!(
-        ordered_rx.try_recv(),
-        Ok(OrderedTerminalEventType::CommandExecutionFinished { .. })
-    ));
-    assert!(ordered_rx.try_recv().is_err());
 }
 
 /// The shell ranks its own completions by relevance, so the order it emits them in is information
@@ -1273,8 +1264,6 @@ fn precmd_with_completion_metadata_recovers_missing_completion_with_exact_side_e
     let mut terminal = TerminalModel::mock(None, Some(event_proxy));
     while event_rx.try_recv().is_ok() {}
 
-    let (ordered_tx, ordered_rx) = async_channel::unbounded();
-    terminal.set_ordered_terminal_events_for_shared_session_tx(ordered_tx);
     let completed_block_id = terminal.active_block_id().clone();
     terminal.start_command_execution();
     for c in "missing-finish".chars() {
@@ -1336,11 +1325,6 @@ fn precmd_with_completion_metadata_recovers_missing_completion_with_exact_side_e
             .count();
         assert_eq!(count, 1, "Expected exactly one {expected} event.");
     }
-    assert!(matches!(
-        ordered_rx.try_recv(),
-        Ok(OrderedTerminalEventType::CommandExecutionFinished { .. })
-    ));
-    assert!(ordered_rx.try_recv().is_err());
 
     terminal.precmd_with_completion_metadata(PrecmdValue {
         completion_metadata,
@@ -1549,8 +1533,6 @@ fn recovery_advances_finished_active_block_without_republishing_completion() {
         .with_terminal_events_tx(event_tx)
         .build();
     let mut terminal = TerminalModel::mock(None, Some(event_proxy));
-    let (ordered_tx, ordered_rx) = async_channel::unbounded();
-    terminal.set_ordered_terminal_events_for_shared_session_tx(ordered_tx);
     let completed_block_id = terminal.active_block_id().clone();
     terminal
         .block_list_mut()
@@ -1606,7 +1588,6 @@ fn recovery_advances_finished_active_block_without_republishing_completion() {
             .count(),
         1
     );
-    assert!(ordered_rx.try_recv().is_err());
 }
 
 #[test]
@@ -1901,56 +1882,6 @@ fn terminal_exit_absorbs_later_lifecycle_inputs() {
     assert_eq!(terminal.active_block_id(), &active_block_id);
     assert_eq!(terminal.block_list().blocks().len(), block_count);
     assert_eq!(terminal.pending_session_id(), pending_session_id);
-}
-#[test]
-fn shell_recovery_finishes_interrupted_block_and_starts_fresh_input() {
-    let mut terminal = TerminalModel::mock(None, None);
-    terminal.simulate_long_running_block("exit 42", "");
-    let interrupted_block_id = terminal.active_block_id().clone();
-    let replacement_session_id = 456.into();
-
-    terminal.prepare_shell_recovery(ObservedExitStatus::Code(42));
-    terminal.register_session_id(replacement_session_id);
-    terminal.init_shell(InitShellValue {
-        session_id: replacement_session_id,
-        shell: "bash".to_owned(),
-        hostname: "cloud-agent".to_owned(),
-        ..Default::default()
-    });
-
-    let interrupted_block = terminal
-        .block_list()
-        .block_with_id(&interrupted_block_id)
-        .expect("interrupted block should remain in the block list");
-    assert!(interrupted_block.finished());
-    assert_eq!(interrupted_block.exit_code(), ExitCode::from(42));
-    assert_ne!(terminal.active_block_id(), &interrupted_block_id);
-    assert!(!terminal.is_read_only());
-}
-
-#[test]
-fn shell_recovery_without_exit_code_reports_failure() {
-    let mut terminal = TerminalModel::mock(None, None);
-    terminal.simulate_long_running_block("kill $$", "");
-    let interrupted_block_id = terminal.active_block_id().clone();
-    let replacement_session_id = 456.into();
-
-    terminal.prepare_shell_recovery(ObservedExitStatus::Signal(9));
-    terminal.register_session_id(replacement_session_id);
-    terminal.init_shell(InitShellValue {
-        session_id: replacement_session_id,
-        shell: "bash".to_owned(),
-        hostname: "cloud-agent".to_owned(),
-        ..Default::default()
-    });
-
-    let interrupted_block = terminal
-        .block_list()
-        .block_with_id(&interrupted_block_id)
-        .expect("interrupted block should remain addressable");
-    assert!(interrupted_block.finished());
-    assert_eq!(interrupted_block.exit_code(), ExitCode::from(137));
-    assert_ne!(terminal.active_block_id(), &interrupted_block_id);
 }
 #[test]
 fn test_alt_screen_selection_tracks_scroll() {

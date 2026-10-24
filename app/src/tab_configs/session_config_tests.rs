@@ -551,7 +551,6 @@ fn snapshot_round_trip_toml() {
 // ── snapshot pane_type derivation ──
 
 use crate::ai::agent::conversation::AIConversationId;
-use crate::app_state::AmbientAgentPaneSnapshot;
 
 fn make_agent_leaf(cwd: Option<&str>, is_focused: bool) -> PaneNodeSnapshot {
     PaneNodeSnapshot::Leaf(LeafSnapshot {
@@ -569,17 +568,6 @@ fn make_agent_leaf(cwd: Option<&str>, is_focused: bool) -> PaneNodeSnapshot {
             conversation_ids_to_restore: vec![],
             active_conversation_id: Some(AIConversationId::new()),
             cli_agent_session: None,
-        }),
-    })
-}
-
-fn make_cloud_leaf(is_focused: bool) -> PaneNodeSnapshot {
-    PaneNodeSnapshot::Leaf(LeafSnapshot {
-        is_focused,
-        custom_vertical_tabs_title: None,
-        contents: LeafContents::AmbientAgent(AmbientAgentPaneSnapshot {
-            uuid: vec![],
-            task_id: None,
         }),
     })
 }
@@ -758,7 +746,10 @@ fn snapshot_round_trip_3_deep_nesting() {
                 crate::app_state::PaneFlex(0.5),
                 make_agent_leaf(Some("/x"), false),
             ),
-            (crate::app_state::PaneFlex(0.5), make_cloud_leaf(true)),
+            (
+                crate::app_state::PaneFlex(0.5),
+                make_agent_leaf(Some("/z"), true),
+            ),
         ],
     });
     let snapshot = PaneNodeSnapshot::Branch(BranchSnapshot {
@@ -789,7 +780,7 @@ fn snapshot_round_trip_3_deep_nesting() {
         Some(vec!["p3".to_string(), "p4".to_string()])
     );
     assert_eq!(parsed.panes[2].pane_type, Some(TabConfigPaneType::Agent));
-    assert_eq!(parsed.panes[3].pane_type, Some(TabConfigPaneType::Cloud));
+    assert_eq!(parsed.panes[3].pane_type, Some(TabConfigPaneType::Agent));
     assert_eq!(parsed.panes[4].pane_type, Some(TabConfigPaneType::Terminal));
 }
 
