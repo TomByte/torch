@@ -2,13 +2,11 @@ use torch_core::ui::Icon;
 use torch_core::ui::theme::{Fill, WarpTheme};
 use torchui::Element;
 
-mod colors;
 pub mod conversation_usage_view;
 pub mod request_metadata_turn_view;
 pub mod rollup;
-pub mod usage_popover_view;
 
-pub fn icon_for_context_window_usage(context_window_usage: f32) -> Icon {
+fn icon_for_context_window_usage(context_window_usage: f32) -> Icon {
     // The circle's solid (white) marks represent the context *remaining*, not
     // the amount used: an empty conversation shows an all-white circle (100%
     // remaining) and counts down to an all-grey circle as the context window

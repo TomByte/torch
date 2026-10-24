@@ -5,9 +5,10 @@ use torchui::{AppContext, EntityId, ModelHandle, SingletonEntity};
 
 use super::super::conversation_selection::ConversationSelectionEvent;
 use super::super::input_mode_policy::{InputModePolicy, PolicyConfigUpdate};
-use super::super::input_model::{InputConfig, InputType, InputTypeAutoDetectionSource};
+use super::super::input_model::{InputType, InputTypeAutoDetectionSource};
 use super::super::{BlocklistAIContextModel, ConversationSelectionHandle};
 use super::AgentViewEntryOrigin;
+use crate::agent_status::InputConfig;
 use crate::settings::{AISettings, AISettingsChangedEvent};
 use crate::terminal::cli_agent_sessions::CLIAgentSessionsModel;
 

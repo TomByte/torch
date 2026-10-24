@@ -30,7 +30,7 @@ use torchui::{
 use uuid::Uuid;
 
 use super::inline_action_icons::{self, icon_size};
-use crate::ai::agent::conversation::ConversationStatus;
+use crate::agent_status::ConversationStatus;
 use crate::ai::agent::{
     AIAgentActionId, AIAgentActionResult, AIAgentActionResultType, AIAgentActionType,
     AIAgentCitation, AIAgentOutputMessageType, CallMCPToolResult, RequestCommandOutputResult,

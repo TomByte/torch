@@ -12,7 +12,8 @@ use torchui::r#async::SpawnedFutureHandle;
 use torchui::{Entity, EntityId, ModelContext, SingletonEntity};
 
 use super::{ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessActionInput};
-use crate::ai::agent::conversation::{AIConversationId, ConversationStatus};
+use crate::agent_status::ConversationStatus;
+use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent::{AIAgentActionResultType, AIAgentActionType, WaitForEventsResult};
 use crate::ai::blocklist::BlocklistAIHistoryModel;
 use crate::ai::blocklist::orchestration_event_streamer::OrchestrationEventStreamer;

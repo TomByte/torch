@@ -3,7 +3,8 @@ use std::collections::HashMap;
 use torch_errors::report_error;
 use torchui::{Entity, ModelContext, ModelHandle, SingletonEntity};
 
-use crate::ai::agent::conversation::{AIConversationId, ConversationStatus};
+use crate::agent_status::ConversationStatus;
+use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent::{LifecycleEventType, StartAgentExecutionMode};
 use crate::ai::blocklist::orchestration_event_streamer::OrchestrationEventStreamer;
 use crate::ai::blocklist::{BlocklistAIHistoryEvent, BlocklistAIHistoryModel};

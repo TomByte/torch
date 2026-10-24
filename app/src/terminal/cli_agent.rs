@@ -19,8 +19,7 @@ use torch_editor::content::markdown::MarkdownStyle;
 use torch_util::path::EscapeChar;
 use torchui::{AppContext, SingletonEntity};
 
-use crate::ai::agent::{AgentReviewCommentBatch, DiffSetHunk};
-use crate::ai::blocklist::CLAUDE_ORANGE;
+use crate::agent_status::{AgentReviewCommentBatch, DiffSetHunk};
 use crate::code::editor::line::EditorLineLocation;
 use crate::code_review::comments::AttachedReviewCommentTarget;
 use crate::ui_components::icons::Icon;
@@ -28,6 +27,15 @@ use crate::workspaces::user_workspaces::UserWorkspaces;
 
 /// UID for the Uber team.
 const UBER_TEAM_UID: &str = "BdVbYjy9LRZcZrYBemSfAF";
+
+/// Claude/Anthropic brand color (official brand orange #D97757).
+/// Reference: https://github.com/anthropics/skills/blob/main/skills/brand-guidelines/SKILL.md
+pub(crate) const CLAUDE_ORANGE: ColorU = ColorU {
+    r: 0xD9,
+    g: 0x77,
+    b: 0x57,
+    a: 0xFF,
+};
 
 /// Gemini brand blue color
 pub(crate) const GEMINI_BLUE: ColorU = ColorU {

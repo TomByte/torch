@@ -46,14 +46,12 @@ pub use self::api::{MaybeAIAgentOutputMessage, MessageToAIAgentOutputMessageErro
 pub use self::base_user_query::BaseUserQuery;
 use super::llms::LLMId;
 use crate::TelemetryEvent;
+use crate::agent_status::{AgentReviewCommentBatch, DiffSetHunk, ImageContext};
 use crate::ai::block_context::BlockContext;
 use crate::ai::blocklist::block::view_impl::output::are_all_text_sections_empty;
 use crate::ai::skills::SkillDescriptor;
 use crate::ai_assistant::execution_context::WarpAiExecutionContext;
 use crate::code::editor_management::CodeSource;
-use crate::code_review::comments::{
-    AttachedReviewComment as CodeReviewComment, ReviewCommentBatch,
-};
 use crate::search::slash_command_menu::static_commands::commands;
 use crate::server::server_api::{AIApiError, DeserializationError};
 use crate::terminal::model::block::BlockId;
@@ -2550,34 +2548,6 @@ where
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Eq, PartialEq)]
-pub struct ImageContext {
-    /// Base64-encoded image data.
-    pub data: String,
-
-    /// MIME type of the media content (e.g., "image/jpeg", "image/png")
-    pub mime_type: String,
-
-    pub file_name: String,
-
-    /// Whether this image was exported from Figma, detected via
-    /// the `Software: Figma` PNG metadata field.
-    #[serde(default)]
-    pub is_figma: bool,
-}
-
-impl std::fmt::Debug for ImageContext {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        // We log dispatching typed actions (with `ImageContext` as an argument) and we don't want
-        // to log any UGC in prod.
-        f.debug_struct("ImageContext")
-            .field("data", &"REDACTED_B64_IMAGE_DATA_UGC")
-            .field("mime_type", &self.mime_type)
-            .field("file_name", &"REDACTED_FILE_NAME_UGC")
-            .finish()
-    }
-}
-
 /// Source of a document content attachment.
 /// Used to identify user-attached plans to track in the UI.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -2827,15 +2797,6 @@ impl From<DiffBase> for diff_hunk_api::Base {
             }
         }
     }
-}
-
-/// A simplified diff hunk for use in DiffSet attachments
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct DiffSetHunk {
-    pub line_range: Range<LineCount>,
-    pub diff_content: String,
-    pub lines_added: u32,
-    pub lines_removed: u32,
 }
 
 impl DiffSetHunk {
@@ -3130,21 +3091,6 @@ pub struct ReceivedMessageInput {
     pub addresses: Vec<String>,
     pub subject: String,
     pub message_body: String,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct AgentReviewCommentBatch {
-    /// The review comments in this batch. Uses `code_review::comments::ReviewComment`
-    /// because it contains full target information needed for API conversion and UI rendering.
-    pub comments: Vec<CodeReviewComment>,
-    /// All diff hunks that have comments in this batch attached to them, grouped by file name.
-    pub diff_set: HashMap<String, Vec<DiffSetHunk>>,
-}
-
-impl AgentReviewCommentBatch {
-    pub fn review_comments(&self) -> ReviewCommentBatch {
-        ReviewCommentBatch::from_comments(self.comments.clone())
-    }
 }
 
 /// A simple struct that holds a URL to be used for the CloneRepository input.

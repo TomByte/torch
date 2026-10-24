@@ -26,10 +26,11 @@ use super::RequestInput;
 use super::controller::response_stream::ResponseStreamId;
 use super::persistence::{PersistedAIInput, PersistedAIInputType};
 use crate::GlobalResourceHandlesProvider;
+use crate::agent_status::ConversationStatus;
 use crate::ai::agent::api::ServerConversationToken;
 use crate::ai::agent::conversation::{
-    AIConversation, AIConversationId, ConversationDriver, ConversationStatus,
-    ServerAIConversationMetadata, TodoStatus, UpdateConversationError,
+    AIConversation, AIConversationId, ConversationDriver, ServerAIConversationMetadata, TodoStatus,
+    UpdateConversationError,
 };
 use crate::ai::agent::task::TaskId;
 use crate::ai::agent::task::helper::{MessageExt, ToolCallExt};

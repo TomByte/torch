@@ -38,9 +38,7 @@ use super::settings_page::{
     SettingsWidget, ToggleState, build_toggle_element, render_body_item_label,
 };
 use super::{SettingsAction, SettingsSection, ToggleSettingActionPair, flags};
-use crate::ai::blocklist::agent_view::agent_input_footer::editor::{
-    AgentToolbarEditorMode, AgentToolbarInlineEditor,
-};
+use crate::agent_status::footer::editor::AgentToolbarInlineEditor;
 use crate::appearance::Appearance;
 use crate::local_hooks::{SetupState, StatusAgent};
 use crate::menu::{MenuItem, MenuItemFields};
@@ -119,9 +117,8 @@ impl CLIAgentsPageView {
             .map(|_| Default::default())
             .collect();
 
-        let cli_agent_toolbar_inline_editor = ctx.add_typed_action_view(|ctx| {
-            AgentToolbarInlineEditor::new(AgentToolbarEditorMode::CLIAgent, ctx)
-        });
+        let cli_agent_toolbar_inline_editor =
+            ctx.add_typed_action_view(AgentToolbarInlineEditor::new);
 
         ctx.subscribe_to_model(&AISettings::handle(ctx), |me, _, event, ctx| {
             // Adding or removing a command changes the length of the command

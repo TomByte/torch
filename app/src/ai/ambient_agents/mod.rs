@@ -1,4 +1,5 @@
-use crate::ai::agent::conversation::{AIConversation, ConversationStatus};
+use crate::agent_status::ConversationStatus;
+use crate::ai::agent::conversation::AIConversation;
 use crate::ai::agent::{
     AIAgentOutputStatus, CancellationReason, FinishedAIAgentOutput, RenderableAIError,
 };

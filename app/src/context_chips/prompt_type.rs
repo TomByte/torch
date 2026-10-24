@@ -76,20 +76,6 @@ impl PromptType {
         self.resolve_chip_kinds(chip_kinds, ctx)
     }
 
-    pub fn agent_view_left_chips(&self, ctx: &AppContext) -> Vec<ChipResult> {
-        let chip_kinds = SessionSettings::as_ref(ctx)
-            .agent_footer_chip_selection
-            .left_chips();
-        self.resolve_chip_kinds(chip_kinds, ctx)
-    }
-
-    pub fn agent_view_right_chips(&self, ctx: &AppContext) -> Vec<ChipResult> {
-        let chip_kinds = SessionSettings::as_ref(ctx)
-            .agent_footer_chip_selection
-            .right_chips();
-        self.resolve_chip_kinds(chip_kinds, ctx)
-    }
-
     pub fn cli_agent_chips(&self, ctx: &AppContext) -> Vec<ChipResult> {
         let chip_kinds = SessionSettings::as_ref(ctx)
             .cli_agent_footer_chip_selection

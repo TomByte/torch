@@ -8,7 +8,7 @@ use torchui::elements::{
     ParentElement, ParentOffsetBounds, Radius, Stack,
 };
 
-use crate::ai::agent::conversation::{ConversationStatus, StatusColorStyle};
+use crate::agent_status::{ConversationStatus, StatusColorStyle};
 use crate::terminal::CLIAgent;
 use crate::themes::theme::Fill as ThemeFill;
 

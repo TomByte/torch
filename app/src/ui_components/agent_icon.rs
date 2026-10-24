@@ -11,7 +11,7 @@
 use torch_cli::agent::Harness;
 use torchui::{AppContext, SingletonEntity};
 
-use crate::ai::agent::conversation::ConversationStatus;
+use crate::agent_status::ConversationStatus;
 use crate::ai::agent_conversations_model::{
     AgentConversationEntry, AgentConversationsModel, AgentRunDisplayStatus,
 };

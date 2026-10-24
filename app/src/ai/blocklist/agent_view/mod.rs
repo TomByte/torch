@@ -1,4 +1,3 @@
-pub(crate) mod agent_input_footer;
 mod agent_message_bar;
 mod agent_view_block;
 mod controller;
@@ -16,7 +15,6 @@ mod zero_state_block;
 
 use std::sync::LazyLock;
 
-pub use agent_input_footer::*;
 pub use agent_message_bar::*;
 pub use agent_view_block::*;
 pub use controller::*;

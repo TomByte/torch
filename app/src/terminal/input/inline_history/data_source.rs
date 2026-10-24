@@ -11,7 +11,8 @@ use fuzzy_match::FuzzyMatchResult;
 use ordered_float::OrderedFloat;
 use torchui::{AppContext, Entity, EntityId, ModelHandle, SingletonEntity};
 
-use crate::ai::agent::conversation::{AIConversationId, ConversationStatus};
+use crate::agent_status::ConversationStatus;
+use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::blocklist::BlocklistAIHistoryModel;
 use crate::ai::blocklist::agent_view::AgentViewController;
 use crate::input_suggestions::{HistoryInputSuggestion, HistoryOrder};

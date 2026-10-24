@@ -19,7 +19,8 @@ use super::orchestration_events::{
     LifecycleEventDetailPayload, LifecycleEventDetailStage, OrchestrationEventService,
     PendingEvent, PendingEventDetail, build_lifecycle_event,
 };
-use crate::ai::agent::conversation::{AIAgentHarness, AIConversationId, ConversationStatus};
+use crate::agent_status::ConversationStatus;
+use crate::ai::agent::conversation::{AIAgentHarness, AIConversationId};
 use crate::ai::agent::{AIAgentExchangeId, AIAgentOutputMessageType, ReceivedMessageInput};
 use crate::ai::agent_conversations_model::AgentConversationsModel;
 use crate::ai::agent_events::{

@@ -7,9 +7,10 @@ use serde::{Deserialize, Serialize};
 use torchui::platform::FullscreenState;
 use torchui::{AppContext, SingletonEntity as _};
 
+use crate::agent_status::InputConfig;
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent_conversations_model::AgentManagementFilters;
-use crate::ai::blocklist::{InputConfig, SerializedBlockListItem};
+use crate::ai::blocklist::SerializedBlockListItem;
 use crate::code::editor_management::CodeSource;
 use crate::root_view::quake_mode_window_id;
 use crate::server::ids::{ServerId, SyncId};

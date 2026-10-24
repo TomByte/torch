@@ -17,7 +17,8 @@ use super::{
     CLISessionInputs, TerminalIconInputs, agent_conversation_entry_icon_variant,
     agent_icon_variant_for_run, agent_icon_variant_from_terminal_inputs,
 };
-use crate::ai::agent::conversation::{AIConversationId, ConversationStatus};
+use crate::agent_status::ConversationStatus;
+use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent_conversations_model::entry::{
     AgentConversationBackingData, AgentConversationCapabilities, AgentConversationDisplayData,
     AgentConversationIdentity, AgentConversationPrincipal,

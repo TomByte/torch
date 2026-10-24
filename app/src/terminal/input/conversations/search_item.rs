@@ -9,8 +9,8 @@ use torchui::prelude::{Align, CrossAxisAlignment, Flex, MainAxisAlignment, MainA
 use torchui::text_layout::ClipConfig;
 use torchui::{AppContext, Element, SingletonEntity};
 
+use crate::agent_status::render_status_element;
 use crate::ai::agent_conversations_model::AgentConversationEntry;
-use crate::ai::conversation_status_ui::render_status_element;
 use crate::appearance::Appearance;
 use crate::search::{ItemHighlightState, SearchItem};
 use crate::terminal::input::conversations::AcceptConversation;

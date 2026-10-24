@@ -36,9 +36,9 @@ use torchui::ui_components::text_input::TextInput;
 use torchui::{AppContext, EntityId, SingletonEntity, ViewHandle, WindowId};
 
 use super::{render_group_member_icon_collage, select_unique_pane_kinds};
-use crate::ai::agent::conversation::{ConversationStatus, StatusColorStyle};
-use crate::ai::agent_management::AgentNotificationsModel;
-use crate::ai::conversation_status_ui::render_status_element;
+use crate::agent_status::{
+    AgentNotificationsModel, ConversationStatus, StatusColorStyle, render_status_element,
+};
 use crate::appearance::Appearance;
 use crate::code::editor::{add_color, remove_color};
 use crate::code::icon_from_file_path;

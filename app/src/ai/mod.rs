@@ -29,7 +29,6 @@ pub(crate) mod conversation_details_panel;
 pub(crate) mod conversation_export;
 pub(crate) mod conversation_navigation;
 pub(crate) mod conversation_rename;
-pub(crate) mod conversation_status_ui;
 pub(crate) mod conversation_utils;
 pub mod credit_availability;
 pub(crate) mod custom_endpoints;

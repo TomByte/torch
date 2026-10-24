@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use torch_editor::render::model::LineCount;
 
-use crate::ai::agent::DiffSetHunk;
+use crate::agent_status::DiffSetHunk;
 use crate::code_review::diff_state::{DiffLineType, FileDiff};
 
 cfg_if::cfg_if! {

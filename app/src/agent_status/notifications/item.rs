@@ -3,8 +3,6 @@ use instant::Instant;
 use torchui::EntityId;
 use uuid::Uuid;
 
-use crate::ai::agent::conversation::AIConversationId;
-use crate::ai::artifacts::Artifact;
 use crate::terminal::CLIAgent;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -18,7 +16,7 @@ impl NotificationId {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NotificationCategory {
-    /// The agent has stopped (i.e. successfully completed or was cancelled)
+    /// The agent has stopped (i.e. successfully completed)
     Complete,
     /// The agent needs user action (i.e. blocked on some permission request or idle prompt)
     Request,
@@ -42,51 +40,22 @@ impl NotificationFilter {
     }
 }
 
-/// Identifies the agent that produced a notification, including whether the run was
-/// ambient (cloud) or local. The `is_ambient` flag drives the cloud-lobe rendering in
-/// [`render_agent_avatar`].
-#[derive(Debug, Clone, Copy)]
-#[allow(clippy::upper_case_acronyms)]
-pub enum NotificationSourceAgent {
-    Oz { is_ambient: bool },
-    CLI { agent: CLIAgent, is_ambient: bool },
-}
-
-impl NotificationSourceAgent {
-    pub fn is_ambient(&self) -> bool {
-        match self {
-            NotificationSourceAgent::Oz { is_ambient }
-            | NotificationSourceAgent::CLI { is_ambient, .. } => *is_ambient,
-        }
-    }
-}
-
-/// Identifies the conversation or session a notification belongs to.
-/// Used for de-duplication (replacing stale notifications on update)
-/// and cleanup (removing notifications when the source closes).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum NotificationOrigin {
-    Conversation(AIConversationId),
-    /// CLI sessions are keyed by terminal view because we only track one session per pane.
-    CLISession(EntityId),
-}
-
 #[derive(Debug, Clone)]
 pub struct NotificationItem {
     pub id: NotificationId,
-    pub origin: NotificationOrigin,
     pub title: String,
     pub message: String,
     pub category: NotificationCategory,
-    pub agent: NotificationSourceAgent,
+    pub agent: CLIAgent,
     /// Whether the user has already seen this notification
-    /// (either because they clicked into it or because it was emitted for a conversation
+    /// (either because they clicked into it or because it was emitted for a session
     /// that they've since navigated to).
     pub is_read: bool,
     pub created_at: Instant,
+    /// The pane running the session. A pane tracks one session at a time, so this also
+    /// identifies the session a newer notification replaces.
     pub terminal_view_id: EntityId,
-    pub artifacts: Vec<Artifact>,
-    /// The git branch associated with this notification's conversation/session.
+    /// The git branch associated with this notification's session.
     /// When present, the notification renders in "rich" layout with a branch header row.
     /// When absent, it falls back to the "simple" layout.
     pub branch: Option<String>,
@@ -107,16 +76,13 @@ impl NotificationItem {
         title: String,
         message: String,
         category: NotificationCategory,
-        agent: NotificationSourceAgent,
-        origin: NotificationOrigin,
+        agent: CLIAgent,
         is_read: bool,
         terminal_view_id: EntityId,
-        artifacts: Vec<Artifact>,
         branch: Option<String>,
     ) -> Self {
         Self {
             id: NotificationId::new(),
-            origin,
             title,
             message,
             category,
@@ -124,7 +90,6 @@ impl NotificationItem {
             is_read,
             created_at: Instant::now(),
             terminal_view_id,
-            artifacts,
             branch,
         }
     }
@@ -139,14 +104,15 @@ impl NotificationItems {
     /// Push a notification items into the mailbox list
     /// (deleting older notifications if we've exceeded the max list size).
     pub(crate) fn push(&mut self, item: NotificationItem) {
-        self.remove_by_origin(item.origin);
+        self.remove_by_terminal_view(item.terminal_view_id);
         self.items.insert(0, item);
         self.items.truncate(100);
     }
 
-    pub(crate) fn remove_by_origin(&mut self, key: NotificationOrigin) -> bool {
+    pub(crate) fn remove_by_terminal_view(&mut self, terminal_view_id: EntityId) -> bool {
         let before = self.items.len();
-        self.items.retain(|item| item.origin != key);
+        self.items
+            .retain(|item| item.terminal_view_id != terminal_view_id);
         self.items.len() != before
     }
 

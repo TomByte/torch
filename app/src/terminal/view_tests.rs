@@ -7,7 +7,8 @@ use torchui::notification::UserNotification;
 use torchui::{App, EntityIdSet, Presenter, WindowInvalidation};
 
 use super::*;
-use crate::ai::blocklist::{InputConfig, InputType};
+use crate::agent_status::InputConfig;
+use crate::ai::blocklist::InputType;
 use crate::editor::{AutosuggestionLocation, AutosuggestionType};
 use crate::features::FeatureFlag;
 use crate::pane_group::focus_state::PaneGroupFocusState;

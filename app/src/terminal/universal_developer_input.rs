@@ -30,13 +30,12 @@ use torchui::{
 };
 
 use crate::BlocklistAIHistoryModel;
+use crate::agent_status::InputConfig;
 use crate::ai::AIRequestUsageModel;
 use crate::ai::blocklist::block::cli_controller::CLISubagentController;
 use crate::ai::blocklist::prompt::PromptIconButtonTheme;
 use crate::ai::blocklist::prompt::prompt_alert::{PromptAlertEvent, PromptAlertView};
-use crate::ai::blocklist::{
-    BlocklistAIHistoryEvent, BlocklistAIInputModel, InputConfig, InputType,
-};
+use crate::ai::blocklist::{BlocklistAIHistoryEvent, BlocklistAIInputModel, InputType};
 use crate::ai::execution_profiles::profiles::AIExecutionProfilesModel;
 use crate::ai::llms::LLMPreferences;
 use crate::cloud_object::model::generic_string_model::StringModel;
@@ -640,7 +639,7 @@ impl UniversalDeveloperInputButtonBar {
                 }
             }
             ProfileModelSelectorEvent::ToggleInlineModelSelector => {
-                // UDI button bar doesn't need to handle this; it's only relevant in AgentInputFooter.
+                // UDI button bar doesn't need to handle this; it's only relevant in CLIAgentFooter.
             }
         }
     }

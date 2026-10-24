@@ -23,7 +23,7 @@ use torchui::{
     ViewHandle, WeakViewHandle,
 };
 
-use crate::ai::agent::AgentReviewCommentBatch;
+use crate::agent_status::AgentReviewCommentBatch;
 use crate::appearance::{Appearance, AppearanceEvent};
 use crate::code::buffer_location::LocalOrRemotePath;
 use crate::code_review::code_review_header::HEADER_BUTTON_PADDING;

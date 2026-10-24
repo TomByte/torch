@@ -1,3 +1,4 @@
+use input_classifier::InputType;
 use torch_core::execution_mode::{AppExecutionMode, ExecutionMode};
 use torchui::{App, EntityId};
 
@@ -8,7 +9,7 @@ use super::{
     BlockedSource, CLIAgentInputEntrypoint, CLIAgentInputState, CLIAgentSession,
     CLIAgentSessionContext, CLIAgentSessionStatus, CLIAgentSessionsModel,
 };
-use crate::ai::blocklist::{InputConfig, InputType};
+use crate::agent_status::InputConfig;
 use crate::terminal::CLIAgent;
 
 #[test]

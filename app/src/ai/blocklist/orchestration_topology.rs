@@ -7,7 +7,8 @@
 //! tree without duplicating the logic.
 use std::collections::HashSet;
 
-use crate::ai::agent::conversation::{AIConversation, AIConversationId, ConversationStatus};
+use crate::agent_status::ConversationStatus;
+use crate::ai::agent::conversation::{AIConversation, AIConversationId};
 use crate::ai::blocklist::BlocklistAIHistoryModel;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

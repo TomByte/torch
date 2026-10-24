@@ -137,6 +137,8 @@ use super::{
 };
 #[allow(unused_imports)]
 use crate::ASSETS;
+use crate::agent_status::InputConfig;
+use crate::agent_status::footer::{CLIAgentFooter, CLIAgentFooterEvent};
 use crate::ai::AIRequestUsageModel;
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent::{AIAgentContext, AIAgentExchangeId, CancellationReason, EntrypointType};
@@ -146,8 +148,7 @@ use crate::ai::agent_conversations_model::{
 use crate::ai::block_context::BlockContext;
 use crate::ai::blocklist::agent_view::shortcuts::AgentShortcutViewModel;
 use crate::ai::blocklist::agent_view::{
-    AgentInputFooter, AgentInputFooterEvent, AgentViewController, AgentViewEntryOrigin,
-    EphemeralMessageModel,
+    AgentViewController, AgentViewEntryOrigin, EphemeralMessageModel,
 };
 use crate::ai::blocklist::block::cli_controller::{CLISubagentController, CLISubagentEvent};
 use crate::ai::blocklist::block::status_bar::BlocklistAIStatusBar;
@@ -159,9 +160,9 @@ use crate::ai::blocklist::{
     BlocklistAIContextEvent, BlocklistAIContextModel, BlocklistAIController,
     BlocklistAIControllerEvent, BlocklistAIHistoryEvent, BlocklistAIHistoryModel,
     BlocklistAIInputEvent, BlocklistAIInputModel, DIFF_HUNK_ATTACHMENT_REGEX,
-    DRIVE_OBJECT_ATTACHMENT_REGEX, InputConfig, InputType, InputTypeAutoDetectionSource,
-    QueuedQuery, QueuedQueryEvent, QueuedQueryId, QueuedQueryModel, QueuedQueryOrigin,
-    SlashCommandRequest, ai_indicator_height, render_ai_agent_mode_icon, render_ai_follow_up_icon,
+    DRIVE_OBJECT_ATTACHMENT_REGEX, InputType, InputTypeAutoDetectionSource, QueuedQuery,
+    QueuedQueryEvent, QueuedQueryId, QueuedQueryModel, QueuedQueryOrigin, SlashCommandRequest,
+    ai_indicator_height, render_ai_agent_mode_icon, render_ai_follow_up_icon,
 };
 #[cfg(not(target_family = "wasm"))]
 use crate::ai::conversation_export::export_conversation_markdown;
@@ -1604,7 +1605,7 @@ pub struct Input {
 
     terminal_input_message_bar: ViewHandle<TerminalInputMessageBar>,
 
-    agent_input_footer: ViewHandle<AgentInputFooter>,
+    agent_input_footer: ViewHandle<CLIAgentFooter>,
     prompt_suggestions_view: ViewHandle<PromptSuggestionsView>,
 
     inline_slash_commands_view: ViewHandle<InlineSlashCommandView>,
@@ -2173,10 +2174,8 @@ impl Input {
             },
         );
         let agent_input_footer = ctx.add_typed_action_view(|ctx| {
-            AgentInputFooter::new(
-                menu_positioning_provider.clone(),
+            CLIAgentFooter::new(
                 terminal_view_id,
-                ai_input_model.clone(),
                 model.clone(),
                 current_prompt.clone(),
                 footer_display_chip_config.clone(),
@@ -2186,57 +2185,28 @@ impl Input {
 
         ctx.subscribe_to_view(&agent_input_footer, |me, _, event, ctx| {
             match event {
-                #[cfg(feature = "voice_input")]
-                AgentInputFooterEvent::ToggleVoiceInput(from) => {
-                    me.toggle_voice_input(from, ctx);
-                }
-                AgentInputFooterEvent::SelectFile => {
-                    me.select_image(ctx);
-                }
                 // These events are handled by UseAgentToolbar's subscription.
-                // The UseAgentToolbar shares this same AgentInputFooter instance,
+                // The UseAgentToolbar shares this same CLIAgentFooter instance,
                 // so its subscriber always fires alongside ours for every chip click.
-                AgentInputFooterEvent::WriteToPty(_)
-                | AgentInputFooterEvent::InsertIntoCLIPty(_)
-                | AgentInputFooterEvent::InsertIntoCLIRichInput(_)
-                | AgentInputFooterEvent::ToggleCodeReviewPane(_)
-                | AgentInputFooterEvent::ToggleFileExplorer(_)
-                | AgentInputFooterEvent::OpenRichInput
-                | AgentInputFooterEvent::HideRichInput => {}
-                AgentInputFooterEvent::ToggledChipMenu { open } => {
+                CLIAgentFooterEvent::WriteToPty(_)
+                | CLIAgentFooterEvent::InsertIntoCLIPty(_)
+                | CLIAgentFooterEvent::InsertIntoCLIRichInput(_)
+                | CLIAgentFooterEvent::ToggleFileExplorer(_)
+                | CLIAgentFooterEvent::OpenRichInput
+                | CLIAgentFooterEvent::HideRichInput => {}
+                CLIAgentFooterEvent::ToggledChipMenu { open } => {
                     me.handle_prompt_event(&PromptDisplayEvent::ToggleMenu { open: *open }, ctx);
                 }
-                AgentInputFooterEvent::TryExecuteChipCommand(cmd) => {
+                CLIAgentFooterEvent::TryExecuteChipCommand(cmd) => {
                     me.handle_prompt_event(
                         &PromptDisplayEvent::TryExecuteCommand(cmd.clone()),
                         ctx,
                     );
                 }
-                AgentInputFooterEvent::PromptAlert(prompt_alert_event) => {
-                    me.handle_prompt_alert(prompt_alert_event, ctx);
-                }
-                AgentInputFooterEvent::ModelSelectorOpened => {
-                    me.close_overlays(false, ctx);
-                }
-                AgentInputFooterEvent::ModelSelectorClosed => {
-                    me.focus_input_box(ctx);
-                }
-                AgentInputFooterEvent::ToggleInlineModelSelector { initial_tab } => {
-                    me.toggle_inline_model_selector_from_chip(*initial_tab, ctx);
-                }
-                AgentInputFooterEvent::OpenCodeReview => {
+                CLIAgentFooterEvent::OpenCodeReview => {
                     ctx.emit(Event::OpenCodeReviewPane);
                 }
-                AgentInputFooterEvent::OpenAIDocument {
-                    document_id,
-                    document_version,
-                } => {
-                    ctx.emit(Event::ToggleAIDocumentPane {
-                        document_id: *document_id,
-                        document_version: *document_version,
-                    });
-                }
-                AgentInputFooterEvent::ShowContextMenu { position } => {
+                CLIAgentFooterEvent::ShowContextMenu { position } => {
                     let position_id = format!("prompt_area_{}", me.view_id);
                     let offset = if let Some(prompt_rect) = ctx.element_position_by_id(&position_id)
                     {
@@ -2248,14 +2218,11 @@ impl Input {
                         position_offset_from_prompt: offset,
                     });
                 }
-                AgentInputFooterEvent::OpenEnvironmentManagementPane => {
-                    ctx.emit(Event::OpenEnvironmentManagementPane);
-                }
-                AgentInputFooterEvent::PluginInstalled(agent) => {
+                CLIAgentFooterEvent::PluginInstalled(agent) => {
                     ctx.emit(Event::RegisterPluginListener(*agent));
                 }
                 #[cfg(not(target_family = "wasm"))]
-                AgentInputFooterEvent::OpenPluginInstructionsPane(agent, kind) => {
+                CLIAgentFooterEvent::OpenPluginInstructionsPane(agent, kind) => {
                     ctx.emit(Event::OpenPluginInstructionsPane(*agent, *kind));
                 }
             }
@@ -3445,7 +3412,7 @@ impl Input {
             .is_some()
     }
 
-    pub fn agent_input_footer(&self) -> &ViewHandle<AgentInputFooter> {
+    pub fn agent_input_footer(&self) -> &ViewHandle<CLIAgentFooter> {
         &self.agent_input_footer
     }
 
@@ -4050,42 +4017,10 @@ impl Input {
         }
     }
 
-    fn toggle_inline_model_selector_from_chip(
-        &mut self,
-        initial_tab: InlineModelSelectorTab,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        if self
-            .suggestions_mode_model
-            .as_ref(ctx)
-            .is_inline_model_selector()
-        {
-            // Toggling closed via the chip: restore the parked prompt if we
-            // cleared it for search, otherwise just close.
-            if self
-                .inline_model_selector_view
-                .as_ref(ctx)
-                .prompt_parked_for_search()
-            {
-                self.suggestions_mode_model.update(ctx, |model, ctx| {
-                    model.close_and_restore_buffer(ctx);
-                });
-            } else {
-                self.suggestions_mode_model.update(ctx, |model, ctx| {
-                    model.set_mode(InputSuggestionsMode::Closed, ctx);
-                });
-            }
-            ctx.notify();
-            return;
-        }
-
-        self.open_model_selector_and_snapshot_prompt(initial_tab, ctx);
-    }
-
     /// Opens the inline model selector, parking any pre-existing prompt so the
     /// input can be used to search models. The parked prompt is restored when the
-    /// selector closes (on model selection or dismissal). Shared by the model
-    /// chip, the `/model` keybinding, and the OpenModelSelector action.
+    /// selector closes (on model selection or dismissal). Shared by the `/model`
+    /// keybinding and the OpenModelSelector action.
     fn open_model_selector_and_snapshot_prompt(
         &mut self,
         initial_tab: InlineModelSelectorTab,
@@ -4611,10 +4546,8 @@ impl Input {
         }
 
         // Don't open inline history menu if a chip menu or model selector is already open
-        let agent_footer = self.agent_input_footer.as_ref(ctx);
         if self.prompt_render_helper.has_open_chip_menu(ctx)
-            || agent_footer.has_open_chip_menu(ctx)
-            || agent_footer.is_model_selector_open(ctx)
+            || self.agent_input_footer.as_ref(ctx).has_open_chip_menu(ctx)
         {
             return;
         }
@@ -9603,9 +9536,6 @@ impl Input {
                     .update(ctx, |button_bar, ctx| {
                         button_bar.set_voice_is_listening(*is_listening, ctx);
                     });
-                self.agent_input_footer.update(ctx, |footer, ctx| {
-                    footer.set_voice_is_active(*is_listening || *is_transcribing, ctx);
-                });
 
                 if *is_listening || *is_transcribing {
                     // Show voice status as placeholder when the buffer is empty.
@@ -14022,7 +13952,7 @@ impl View for Input {
                 // Focus the PromptDisplay, which will in turn focus any open chip menu
                 ctx.focus(self.prompt_render_helper.prompt_view());
             } else if self.agent_input_footer.as_ref(ctx).has_open_chip_menu(ctx) {
-                // Focus the AgentInputFooter, which will in turn focus any open chip menu
+                // Focus the CLIAgentFooter, which will in turn focus any open chip menu
                 ctx.focus(&self.agent_input_footer);
             } else {
                 self.close_voltron(ctx);
@@ -14108,11 +14038,7 @@ impl View for Input {
                 .universal_developer_input_button_bar
                 .as_ref(app)
                 .is_profile_model_selector_open(app);
-        let is_agent_footer_model_selector_open = self
-            .agent_input_footer
-            .as_ref(app)
-            .is_model_selector_open(app);
-        if is_profile_model_selector_open || is_agent_footer_model_selector_open {
+        if is_profile_model_selector_open {
             ctx.set.insert("ProfileModelSelectorOpen");
         }
 
@@ -14367,18 +14293,6 @@ impl Input {}
 
 #[cfg(test)]
 impl Input {
-    pub fn agent_footer_chip_kinds(
-        &self,
-        app: &AppContext,
-    ) -> (
-        Vec<crate::context_chips::ContextChipKind>,
-        Vec<crate::context_chips::ContextChipKind>,
-    ) {
-        self.agent_input_footer
-            .as_ref(app)
-            .displayed_chip_kinds(app)
-    }
-
     pub fn cli_footer_chip_kinds(
         &self,
         app: &AppContext,

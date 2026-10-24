@@ -11,8 +11,8 @@ use torchui::scene::{CornerRadius, Radius};
 use torchui::text_layout::ClipConfig;
 use torchui::{AppContext, Element, SingletonEntity};
 
-use crate::ai::agent::conversation::{AIConversationId, ConversationStatus};
-use crate::ai::conversation_status_ui::{STATUS_ELEMENT_PADDING, render_status_element};
+use crate::agent_status::{ConversationStatus, STATUS_ELEMENT_PADDING, render_status_element};
+use crate::ai::agent::conversation::AIConversationId;
 use crate::appearance::Appearance;
 use crate::search::{ItemHighlightState, SearchItem};
 use crate::terminal::history::LinkedWorkflowData;

@@ -6,7 +6,8 @@ use parking_lot::FairMutex;
 use torchui::{AppContext, ViewHandle, WindowId};
 
 use super::terminal_manager::{TerminalManager, TerminalSurfaceInit, TerminalSurfaceResult};
-use crate::ai::blocklist::{InputConfig, SerializedBlockListItem};
+use crate::agent_status::InputConfig;
+use crate::ai::blocklist::SerializedBlockListItem;
 use crate::context_chips::current_prompt::CurrentPrompt;
 use crate::context_chips::prompt_type::PromptType;
 use crate::pane_group::TerminalViewResources;

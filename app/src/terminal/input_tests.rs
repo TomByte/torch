@@ -6146,7 +6146,7 @@ fn open_rich_input_for_terminal(terminal: &ViewHandle<TerminalView>, app: &mut A
             sessions.open_input(
                 view_id,
                 CLIAgentInputEntrypoint::CtrlG,
-                crate::ai::blocklist::InputConfig {
+                crate::agent_status::InputConfig {
                     input_type: crate::ai::blocklist::InputType::AI,
                     is_locked: true,
                 },

@@ -20,7 +20,8 @@ use super::parent_bridge::{
     prime_parent_bridge_staged_for_self_managed_wake,
 };
 use super::{ClaudeHarness, claude_command, prepare_claude_environment_config};
-use crate::ai::agent::conversation::{AIConversation, ConversationStatus};
+use crate::agent_status::ConversationStatus;
+use crate::ai::agent::conversation::AIConversation;
 use crate::ai::agent_events::{AgentMessageEventMetadata, MessageHydrator};
 use crate::ai::ambient_agents::{AmbientAgentTaskId, AmbientAgentTaskState};
 use crate::server::server_api::ServerApi;

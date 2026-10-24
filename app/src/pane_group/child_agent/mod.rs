@@ -8,8 +8,9 @@ use torch_cli::agent::Harness;
 use torch_errors::report_error;
 use torchui::{EntityId, SingletonEntity, ViewContext, ViewHandle};
 
+use crate::agent_status::ConversationStatus;
 use crate::ai::agent::RenderableAIError;
-use crate::ai::agent::conversation::{AIConversationId, ConversationStatus};
+use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::ambient_agents::AmbientAgentTaskId;
 use crate::ai::attachment_utils::attachments_download_dir;
 use crate::ai::blocklist::agent_view::AgentViewEntryOrigin;

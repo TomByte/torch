@@ -9,7 +9,8 @@ use warp_multi_agent_api as api;
 
 use super::llm_judge::{LLMJudge, LLMJudgeConfig};
 use crate::BlocklistAIHistoryModel;
-use crate::ai::agent::conversation::{AIConversation, AIConversationId, ConversationStatus};
+use crate::agent_status::ConversationStatus;
+use crate::ai::agent::conversation::{AIConversation, AIConversationId};
 use crate::ai::agent::todos::AIAgentTodoList;
 use crate::ai::agent::{
     AIAgentActionResultType, AIAgentActionType, AIAgentExchange, AIAgentInput,

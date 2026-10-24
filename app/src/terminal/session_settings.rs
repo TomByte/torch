@@ -7,11 +7,12 @@ use lazy_static::lazy_static;
 pub use new_session_shell::*;
 use serde::{Deserialize, Serialize};
 pub use startup_shell::*;
+use torch_core::features::FeatureFlag;
 use torch_core::settings::macros::define_settings_group;
 use torch_core::settings::{RespectUserSyncSetting, SupportedPlatforms, SyncToCloud};
 pub use working_directory_config::*;
 
-use crate::ai::blocklist::agent_view::toolbar_item::AgentToolbarItemKind;
+use crate::agent_status::footer::toolbar_item::AgentToolbarItemKind;
 use crate::context_chips::ContextChipKind;
 use crate::context_chips::prompt::PromptSelection;
 
@@ -200,11 +201,25 @@ pub enum AgentToolbarChipSelection {
 
 impl ToolbarChipSelection for AgentToolbarChipSelection {
     fn default_left_items() -> Vec<AgentToolbarItemKind> {
-        AgentToolbarItemKind::default_left()
+        let mut chips = vec![
+            ContextChipKind::Ssh,
+            ContextChipKind::WorkingDirectory,
+            ContextChipKind::ShellGitBranch,
+            ContextChipKind::GitDiffStats,
+        ];
+        if FeatureFlag::GithubPrPromptChip.is_enabled() {
+            chips.push(ContextChipKind::GithubPullRequest);
+        }
+        chips
+            .into_iter()
+            .map(AgentToolbarItemKind::ContextChip)
+            .collect()
     }
 
     fn default_right_items() -> Vec<AgentToolbarItemKind> {
-        AgentToolbarItemKind::default_right()
+        vec![AgentToolbarItemKind::ContextChip(
+            ContextChipKind::AgentPlanAndTodoList,
+        )]
     }
 
     fn left_items(&self) -> Vec<AgentToolbarItemKind> {
@@ -250,11 +265,11 @@ pub enum CLIAgentToolbarChipSelection {
 
 impl ToolbarChipSelection for CLIAgentToolbarChipSelection {
     fn default_left_items() -> Vec<AgentToolbarItemKind> {
-        AgentToolbarItemKind::cli_default_left()
+        AgentToolbarItemKind::default_left()
     }
 
     fn default_right_items() -> Vec<AgentToolbarItemKind> {
-        AgentToolbarItemKind::cli_default_right()
+        AgentToolbarItemKind::default_right()
     }
 
     fn left_items(&self) -> Vec<AgentToolbarItemKind> {

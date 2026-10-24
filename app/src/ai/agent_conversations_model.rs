@@ -31,9 +31,11 @@ use torchui::{
     WindowId, duration_with_jitter,
 };
 
+use crate::agent_status::ConversationStatus;
+use crate::agent_status::conversation_status::StatusElementStyle;
 use crate::ai::active_agent_views_model::ActiveAgentViewsModel;
 use crate::ai::agent::api::ServerConversationToken;
-use crate::ai::agent::conversation::{AIConversationId, ConversationStatus};
+use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::ambient_agents::{
     AgentSource, AmbientAgentLiveSessionState, AmbientAgentTask, AmbientAgentTaskId,
     AmbientAgentTaskState,
@@ -551,6 +553,12 @@ impl AgentRunDisplayStatus {
                 (Icon::StopFilled, internal_colors::neutral_5(theme))
             }
         }
+    }
+}
+
+impl StatusElementStyle for AgentRunDisplayStatus {
+    fn status_icon_and_color(&self, theme: &WarpTheme) -> (Icon, ColorU) {
+        AgentRunDisplayStatus::status_icon_and_color(self, theme)
     }
 }
 

@@ -13,10 +13,7 @@ use torch_core::execution_mode::AppExecutionMode;
 use torch_core::features::FeatureFlag;
 use torch_core::send_telemetry_from_ctx;
 use torch_core::ui::appearance::Appearance;
-use torch_core::ui::theme::WarpTheme;
-use torch_core::ui::theme::color::internal_colors;
 use torch_errors::report_error;
-use torchui::color::ColorU;
 use torchui::{AppContext, EntityId, ModelContext, SingletonEntity};
 use vec1::{Size0Error, Vec1};
 use warp_multi_agent_api::response_event::stream_finished;
@@ -39,6 +36,7 @@ use super::{
     RenderableAIError, RequestCost, ServerOutputId, Shared, StartRecordingResult,
     StopRecordingResult, SuggestedLoggingId, Suggestions,
 };
+use crate::agent_status::ConversationStatus;
 use crate::ai::agent::api::convert_conversation::{
     ConvertToExchanges, compute_time_to_first_token_ms_from_messages,
     proto_timestamp_to_local_datetime,
@@ -77,7 +75,6 @@ use crate::terminal::general_settings::GeneralSettings;
 use crate::terminal::model::block::{
     AgentInteractionMetadata, AgentViewVisibility, BlockId, SerializedAIMetadata, SerializedBlock,
 };
-use crate::ui_components::icons::Icon;
 use crate::workspaces::user_profiles::UserProfileWithUID;
 use crate::{BlocklistAIHistoryModel, GlobalResourceHandlesProvider};
 
@@ -4941,56 +4938,27 @@ impl From<AIConversationAutoexecuteMode> for PersistedAutoexecuteMode {
     }
 }
 
-#[derive(Clone, Copy)]
-pub enum StatusColorStyle {
-    /// Foreground-blend colors (`ansi_fg`) used by the regular status badge.
-    Standard,
-    /// Background-blend colors (`ansi_bg`) used by the cloud overlay badge.
-    Cloud,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum ConversationStatus {
-    /// Agent is running.
-    InProgress,
-
-    /// The last turn of the agent finished with success.
-    Success,
-
-    /// The last turn of the agent completed with error.
-    Error,
-
-    /// The last turn failed transiently and an automatic recovery (retry or resume)
-    /// is pending. Non-terminal: returns to `InProgress` when the recovery request
-    /// sends, or falls to `Error` if recovery is exhausted.
-    TransientError,
-
-    /// The last turn of the agent was cancelled by the user.
-    Cancelled,
-
-    /// The last turn of the agent resulted in an action whose execution is blocked by the user.
-    Blocked { blocked_action: String },
-
-    /// Agent yielded via wait_for_events and is listening for inbound
-    /// input. Quiescent but not terminal.
-    WaitingForEvents,
-}
-
-impl std::fmt::Display for ConversationStatus {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl ConversationStatus {
+    /// Returns true if the updating the conversation with this status should trigger some
+    /// notification to the user.
+    ///
+    /// Exhaustive match so a new `ConversationStatus` variant forces a
+    /// deliberate decision about whether it should fire a notification.
+    pub fn should_trigger_notification(&self) -> bool {
         match self {
-            ConversationStatus::InProgress => write!(f, "In progress"),
-            ConversationStatus::Success => write!(f, "Done"),
-            ConversationStatus::Error => write!(f, "Error"),
-            ConversationStatus::TransientError => write!(f, "Reconnecting"),
-            ConversationStatus::Cancelled => write!(f, "Cancelled"),
-            ConversationStatus::Blocked { .. } => write!(f, "Blocked"),
-            ConversationStatus::WaitingForEvents => write!(f, "Waiting"),
+            ConversationStatus::Success
+            | ConversationStatus::Blocked { .. }
+            | ConversationStatus::Error => true,
+            // Streaming hasn't reached a notable state; a recovering or
+            // yielded conversation is still active; user-cancellations are
+            // self-evident.
+            ConversationStatus::InProgress
+            | ConversationStatus::TransientError
+            | ConversationStatus::WaitingForEvents
+            | ConversationStatus::Cancelled => false,
         }
     }
-}
 
-impl ConversationStatus {
     pub fn render_icon(&self, appearance: &Appearance) -> torchui::elements::Icon {
         match self {
             ConversationStatus::InProgress => in_progress_icon(appearance),
@@ -5001,58 +4969,6 @@ impl ConversationStatus {
             ConversationStatus::TransientError => in_progress_icon(appearance),
             ConversationStatus::Cancelled => gray_stop_icon(appearance),
             ConversationStatus::WaitingForEvents => in_progress_icon(appearance),
-        }
-    }
-
-    pub fn status_icon_and_color(
-        &self,
-        theme: &WarpTheme,
-        color_style: StatusColorStyle,
-    ) -> (Icon, ColorU) {
-        match self {
-            ConversationStatus::InProgress => (
-                Icon::ClockLoader,
-                match color_style {
-                    StatusColorStyle::Standard => theme.ansi_fg_magenta(),
-                    StatusColorStyle::Cloud => theme.ansi_bg_magenta(),
-                },
-            ),
-            ConversationStatus::Success => (
-                Icon::Check,
-                match color_style {
-                    StatusColorStyle::Standard => theme.ansi_fg_green(),
-                    StatusColorStyle::Cloud => theme.ansi_bg_green(),
-                },
-            ),
-            ConversationStatus::Error => (
-                Icon::Triangle,
-                match color_style {
-                    StatusColorStyle::Standard => theme.ansi_fg_red(),
-                    StatusColorStyle::Cloud => theme.ansi_bg_red(),
-                },
-            ),
-            ConversationStatus::TransientError => (
-                Icon::ClockLoader,
-                match color_style {
-                    StatusColorStyle::Standard => theme.ansi_fg_yellow(),
-                    StatusColorStyle::Cloud => theme.ansi_bg_yellow(),
-                },
-            ),
-            ConversationStatus::Cancelled => (Icon::StopFilled, internal_colors::neutral_5(theme)),
-            ConversationStatus::Blocked { .. } => (
-                Icon::StopFilled,
-                match color_style {
-                    StatusColorStyle::Standard => theme.ansi_fg_yellow(),
-                    StatusColorStyle::Cloud => theme.ansi_bg_yellow(),
-                },
-            ),
-            ConversationStatus::WaitingForEvents => (
-                Icon::ClockLoader,
-                match color_style {
-                    StatusColorStyle::Standard => theme.ansi_fg_magenta(),
-                    StatusColorStyle::Cloud => theme.ansi_bg_magenta(),
-                },
-            ),
         }
     }
 

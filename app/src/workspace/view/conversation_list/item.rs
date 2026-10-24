@@ -15,11 +15,11 @@ use torchui::ui_components::components::{UiComponent, UiComponentStyles};
 use torchui::ui_components::text_input::TextInput;
 use torchui::{AppContext, SingletonEntity, ViewHandle};
 
+use crate::agent_status::STATUS_ELEMENT_PADDING;
 use crate::ai::active_agent_views_model::ActiveAgentViewsModel;
 use crate::ai::agent_conversations_model::{
     AgentConversationEntry, AgentConversationEntryId, AgentConversationProvenance,
 };
-use crate::ai::conversation_status_ui::STATUS_ELEMENT_PADDING;
 use crate::appearance::Appearance;
 use crate::editor::EditorView;
 use crate::menu::Menu;

@@ -32,7 +32,8 @@ use torchui::{
 use tracing::Instrument as _;
 use uuid::Uuid;
 
-use crate::ai::agent::conversation::{AIConversationId, ConversationStatus};
+use crate::agent_status::ConversationStatus;
+use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent::{
     AIAgentActionResultType, AIAgentExchange, AIAgentInput, AIAgentOutput, AIAgentOutputStatus,
     CancellationReason, FinishedAIAgentOutput, RenderableAIError, RequestFileEditsResult,

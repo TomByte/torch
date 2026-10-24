@@ -25,7 +25,7 @@ use super::{
     terminal_title_fallback_font, uses_outer_group_container, visible_pane_ids_for_detail_target,
     vtab_diff_stats_text,
 };
-use crate::ai::agent::conversation::ConversationStatus;
+use crate::agent_status::ConversationStatus;
 use crate::context_chips::display_chip::GitLineChanges;
 use crate::pane_group::{PaneId, TerminalPaneId};
 use crate::safe_triangle::SafeTriangle;

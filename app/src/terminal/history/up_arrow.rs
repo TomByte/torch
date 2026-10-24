@@ -4,8 +4,9 @@ use torch_core::features::FeatureFlag;
 use torchui::{AppContext, EntityId, SingletonEntity};
 
 use super::History;
+use crate::agent_status::InputConfig;
+use crate::ai::blocklist::BlocklistAIHistoryModel;
 use crate::ai::blocklist::history_model::AIQueryHistory;
-use crate::ai::blocklist::{BlocklistAIHistoryModel, InputConfig};
 use crate::input_suggestions::HistoryInputSuggestion;
 use crate::settings::AISettings;
 use crate::suggestions::ignored_suggestions_model::{IgnoredSuggestionsModel, SuggestionType};

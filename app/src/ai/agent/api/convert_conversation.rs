@@ -20,6 +20,7 @@ use torch_core::command::ExitCode;
 use warp_multi_agent_api as api;
 use warp_multi_agent_api::ask_user_question_result::answer_item::Answer as AskUserQuestionAnswer;
 
+use crate::agent_status::ImageContext;
 use crate::ai::agent::api::convert_from::{
     ConversionParams, ConvertAPIMessageToClientOutputMessage, MaybeAIAgentOutputMessage,
     convert_user_query_mode,
@@ -35,7 +36,7 @@ use crate::ai::agent::{
     BaseUserQuery, CallMCPToolResult, CancellationReason, CloneRepositoryURL,
     CreateDocumentsResult, DocumentContext, EditDocumentsResult, FileContext, FileGlobResult,
     FileGlobV2Match, FileGlobV2Result, FinishedAIAgentOutput, GrepFileMatch, GrepLineMatch,
-    GrepResult, ImageContext, InsertReviewCommentsResult, OutputModelInfo, PassiveCodeDiffEntry,
+    GrepResult, InsertReviewCommentsResult, OutputModelInfo, PassiveCodeDiffEntry,
     PassiveSuggestionResultType, PassiveSuggestionTrigger, ReadDocumentsResult,
     ReadFilesFailedFile, ReadFilesResult, ReadMCPResourceResult, ReadShellCommandOutputResult,
     RequestCommandOutputResult, RequestFileEditsResult, SearchCodebaseFailureReason,

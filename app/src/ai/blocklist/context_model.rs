@@ -16,13 +16,12 @@ use torchui::{
 use super::agent_view::{AgentViewEntryOrigin, EnterAgentViewError};
 use super::block::DirectoryContext;
 use super::{ConversationSelectionEvent, ConversationSelectionHandle};
+use crate::agent_status::{ConversationStatus, ImageContext};
 use crate::ai::agent::conversation::{
-    AIConversation, AIConversationAutoexecuteMode, AIConversationId, ConversationStatus,
+    AIConversation, AIConversationAutoexecuteMode, AIConversationId,
 };
 use crate::ai::agent::todos::AIAgentTodoList;
-use crate::ai::agent::{
-    AIAgentAttachment, AIAgentContext, AnyFileContent, FileContext, ImageContext,
-};
+use crate::ai::agent::{AIAgentAttachment, AIAgentContext, AnyFileContent, FileContext};
 use crate::ai::block_context::BlockContext;
 use crate::ai::document::ai_document_model::AIDocumentId;
 use crate::ai::llms::{LLMPreferences, LLMPreferencesEvent};

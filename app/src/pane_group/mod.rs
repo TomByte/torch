@@ -37,6 +37,7 @@ use tree::DEFAULT_FLEX_VALUE;
 use typed_path::TypedPath;
 use uuid::Uuid;
 
+use crate::agent_status::InputConfig;
 use crate::ai::active_agent_views_model::ActiveAgentViewsModel;
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::ai_document_view::AIDocumentView;
@@ -45,7 +46,7 @@ use crate::ai::blocklist::history_model::CloudConversationData;
 use crate::ai::blocklist::inline_action::code_diff_view::CodeDiffView;
 use crate::ai::blocklist::suggested_agent_mode_workflow_modal::SuggestedAgentModeWorkflowAndId;
 use crate::ai::blocklist::suggested_rule_modal::SuggestedRuleAndId;
-use crate::ai::blocklist::{BlocklistAIHistoryModel, InputConfig, SerializedBlockListItem};
+use crate::ai::blocklist::{BlocklistAIHistoryModel, SerializedBlockListItem};
 use crate::ai::document::ai_document_model::{AIDocumentId, AIDocumentModel, AIDocumentVersion};
 use crate::ai::execution_profiles::ExecutionProfileId;
 use crate::ai::execution_profiles::profiles::AIExecutionProfilesModel;
@@ -462,7 +463,6 @@ pub enum Event {
     // Tell the workspace to open the workflow for edit.
     OpenCloudWorkflowForEdit(SyncId),
     OpenPromptEditor,
-    OpenAgentToolbarEditor,
     OpenCLIAgentToolbarEditor,
     /// tell the workspace to open a file within Torch.
     OpenFileInWarp {

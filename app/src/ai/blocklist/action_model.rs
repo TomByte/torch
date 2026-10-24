@@ -52,9 +52,8 @@ use self::execute::{
 #[cfg(not(target_family = "wasm"))]
 use self::recording_finalize::{FinalizeReason, finalize_recording_for_conversation};
 use super::BlocklistAIHistoryModel;
-use crate::ai::agent::conversation::{
-    AIConversation, AIConversationId, ConversationStatus, RecordingSpanInfo,
-};
+use crate::agent_status::ConversationStatus;
+use crate::ai::agent::conversation::{AIConversation, AIConversationId, RecordingSpanInfo};
 use crate::ai::agent::{
     AIAgentAction, AIAgentActionId, AIAgentActionResult, AIAgentActionResultType,
     AIAgentActionType, AIAgentActionTypeDiscriminants, AIAgentExchange, AIAgentInput,

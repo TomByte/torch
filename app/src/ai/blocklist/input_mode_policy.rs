@@ -16,7 +16,8 @@ use std::rc::Rc;
 use torchui::AppContext;
 
 use super::conversation_selection::ConversationSelectionEvent;
-use super::input_model::{InputConfig, InputTypeAutoDetectionSource};
+use super::input_model::InputTypeAutoDetectionSource;
+use crate::agent_status::InputConfig;
 use crate::settings::AISettingsChangedEvent;
 
 /// A config write produced by an [`InputModePolicy`] decision. The fields

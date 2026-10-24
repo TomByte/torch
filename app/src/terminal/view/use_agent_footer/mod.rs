@@ -7,10 +7,8 @@
 use base64::Engine;
 use torchui::clipboard::{ClipboardContent, ImageData};
 
-use crate::ai::agent::ImageContext;
-use crate::ai::blocklist::agent_view::agent_input_footer::{
-    AgentInputFooter, AgentInputFooterEvent,
-};
+use crate::agent_status::ImageContext;
+use crate::agent_status::footer::{CLIAgentFooter, CLIAgentFooterEvent};
 use crate::terminal::cli_agent_sessions::{CLIAgentInputEntrypoint, CLIAgentSessionsModel};
 use crate::util::image::{MAX_IMAGE_SIZE_BYTES_FOR_CLI_AGENT, MIME_SNIFF_BYTES, infer_mime_type};
 mod warpify_footer;
@@ -44,10 +42,7 @@ use torchui::{
 use warpify_footer::{WarpifyFooterView, WarpifyFooterViewEvent};
 
 use super::{RichContentInsertionPosition, TerminalAction, TerminalView};
-use crate::ai::blocklist::block::cli_controller::CLISubagentEvent;
 use crate::cmd_or_ctrl_shift;
-use crate::code_review::diff_state::GitDeltaPreference;
-use crate::code_review::telemetry_event::CodeReviewPaneEntrypoint;
 use crate::server::telemetry::{CLISubagentControlState, FileTreeSource, TelemetryEvent};
 use crate::settings::{
     AISettings, AISettingsChangedEvent, CompiledCommandsForCodingAgentToolbar, InputModeSettings,
@@ -189,19 +184,6 @@ impl TerminalView {
                 me.maybe_show_use_agent_footer_in_blocklist(ctx);
             }
         });
-
-        ctx.subscribe_to_model(
-            &self.cli_subagent_controller,
-            |me, _, event, ctx| match event {
-                CLISubagentEvent::SpawnedSubagent { .. } => {
-                    me.hide_use_agent_footer_in_blocklist(ctx);
-                }
-                CLISubagentEvent::UpdatedControl { .. } => {
-                    me.maybe_show_use_agent_footer_in_blocklist(ctx);
-                }
-                _ => (),
-            },
-        );
     }
 
     fn handle_use_agent_footer_event(
@@ -228,15 +210,6 @@ impl TerminalView {
                 self.input.update(ctx, |input, ctx| {
                     input.insert_into_cli_agent_rich_input(text, ctx);
                 });
-            }
-            UseAgentToolbarEvent::ToggleCodeReviewPane(cli_agent) => {
-                self.toggle_code_review_pane(
-                    GitDeltaPreference::Always,
-                    CodeReviewPaneEntrypoint::CLIAgentView,
-                    Some(*cli_agent),
-                    true, // focus_new_pane
-                    ctx,
-                );
             }
             UseAgentToolbarEvent::ToggleFileExplorer(cli_agent) => {
                 let source = match cli_agent {
@@ -1084,7 +1057,7 @@ pub struct UseAgentToolbar {
     dont_show_again_button: ViewHandle<ActionButton>,
 
     // Shared agent input footer (renders CLI agent mode when a CLI session is active).
-    agent_input_footer: ViewHandle<AgentInputFooter>,
+    agent_input_footer: ViewHandle<CLIAgentFooter>,
 
     // Warpify footer UI (shown when a subshell/SSH command is detected).
     warpify_footer_view: ViewHandle<WarpifyFooterView>,
@@ -1101,7 +1074,7 @@ impl UseAgentToolbar {
         terminal_view_id: EntityId,
         terminal_model: Arc<FairMutex<TerminalModel>>,
         model_event_dispatcher: &ModelHandle<ModelEventDispatcher>,
-        agent_input_footer: ViewHandle<AgentInputFooter>,
+        agent_input_footer: ViewHandle<CLIAgentFooter>,
         ctx: &mut ViewContext<Self>,
     ) -> Self {
         let button_size = ButtonSize::XSmall;
@@ -1198,30 +1171,27 @@ impl UseAgentToolbar {
 
     fn handle_agent_input_footer_event(
         &mut self,
-        event: &AgentInputFooterEvent,
+        event: &CLIAgentFooterEvent,
         ctx: &mut ViewContext<Self>,
     ) {
         // Forward CLI-relevant events from the shared agent input footer.
         match event {
-            AgentInputFooterEvent::WriteToPty(text) => {
+            CLIAgentFooterEvent::WriteToPty(text) => {
                 ctx.emit(UseAgentToolbarEvent::WriteToPty(text.clone()));
             }
-            AgentInputFooterEvent::InsertIntoCLIPty(text) => {
+            CLIAgentFooterEvent::InsertIntoCLIPty(text) => {
                 ctx.emit(UseAgentToolbarEvent::InsertIntoCLIPty(text.clone()));
             }
-            AgentInputFooterEvent::InsertIntoCLIRichInput(text) => {
+            CLIAgentFooterEvent::InsertIntoCLIRichInput(text) => {
                 ctx.emit(UseAgentToolbarEvent::InsertIntoRichInput(text.clone()));
             }
-            AgentInputFooterEvent::ToggleCodeReviewPane(agent) => {
-                ctx.emit(UseAgentToolbarEvent::ToggleCodeReviewPane(*agent));
-            }
-            AgentInputFooterEvent::ToggleFileExplorer(agent) => {
+            CLIAgentFooterEvent::ToggleFileExplorer(agent) => {
                 ctx.emit(UseAgentToolbarEvent::ToggleFileExplorer(*agent));
             }
-            AgentInputFooterEvent::OpenRichInput => {
+            CLIAgentFooterEvent::OpenRichInput => {
                 ctx.emit(UseAgentToolbarEvent::OpenRichInput);
             }
-            AgentInputFooterEvent::HideRichInput => {
+            CLIAgentFooterEvent::HideRichInput => {
                 ctx.emit(UseAgentToolbarEvent::HideRichInput);
             }
             // Non-CLI events are handled by Input's subscription, not here.
@@ -1309,8 +1279,6 @@ pub enum UseAgentToolbarEvent {
     InsertIntoCLIPty(String),
     /// Insert text into CLI agent rich input.
     InsertIntoRichInput(String),
-    /// Toggle the code review pane (from CLI agent view).
-    ToggleCodeReviewPane(CLIAgent),
     /// Toggle the file explorer. `None` when no CLI agent session is attached
     /// to this pane.
     ToggleFileExplorer(Option<CLIAgent>),

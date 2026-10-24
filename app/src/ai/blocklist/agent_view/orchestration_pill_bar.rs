@@ -36,9 +36,8 @@ use torchui::{
     ViewHandle,
 };
 
-use crate::ai::agent::conversation::{
-    AIConversation, AIConversationId, ConversationStatus, StatusColorStyle,
-};
+use crate::agent_status::{ConversationStatus, StatusColorStyle};
+use crate::ai::agent::conversation::{AIConversation, AIConversationId};
 use crate::ai::artifacts::Artifact;
 use crate::ai::blocklist::agent_view::orchestration_conversation_links::{
     is_conversation_open_in_other_visible_view, pane_group_id_containing_terminal_view,

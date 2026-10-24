@@ -14,7 +14,7 @@ use torchui_extras::user_preferences;
 
 use super::{ActiveChipSurfaces, ChipUpdateStatus, CurrentPrompt, PromptContext};
 use crate::CLIAgentSessionsModel;
-use crate::ai::blocklist::agent_view::toolbar_item::AgentToolbarItemKind;
+use crate::agent_status::footer::toolbar_item::AgentToolbarItemKind;
 use crate::auth::AuthStateProvider;
 use crate::auth::auth_manager::AuthManager;
 #[cfg(feature = "local_fs")]

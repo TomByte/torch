@@ -24,7 +24,7 @@ use super::settings_page::{
     CONTENT_FONT_SIZE, LocalOnlyIconState, ToggleState, build_toggle_element,
     render_body_item_label,
 };
-use crate::ai::blocklist::agent_view::agent_input_footer::editor::AgentToolbarInlineEditor;
+use crate::agent_status::footer::editor::AgentToolbarInlineEditor;
 use crate::appearance::Appearance;
 use crate::editor::{EditorView, InteractionState};
 

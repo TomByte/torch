@@ -42,15 +42,6 @@ pub static ATTACH_AS_AGENT_MODE_CONTEXT_TEXT: LazyLock<&'static str> =
 /// Label we use for the the command palette action to create a new local Torch Agent pane.
 pub static NEW_AGENT_PANE_LABEL: LazyLock<&'static str> = LazyLock::new(|| "New Agent Pane");
 
-/// Claude/Anthropic brand color (official brand orange #D97757).
-/// Reference: https://github.com/anthropics/skills/blob/main/skills/brand-guidelines/SKILL.md
-pub const CLAUDE_ORANGE: ColorU = ColorU {
-    r: 0xD9,
-    g: 0x77,
-    b: 0x57,
-    a: 0xFF,
-};
-
 /// Returns the color to be used for various AI signifiers
 /// input with AI mode).
 pub fn ai_brand_color(theme: &WarpTheme) -> ColorU {

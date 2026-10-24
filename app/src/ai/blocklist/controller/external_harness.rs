@@ -11,7 +11,8 @@ use warp_multi_agent_api::{ResponseEvent, response_event};
 
 use super::response_stream::ResponseStreamId;
 use super::{BlocklistAIController, RequestInput};
-use crate::ai::agent::conversation::{AIConversationId, ConversationDriver, ConversationStatus};
+use crate::agent_status::ConversationStatus;
+use crate::ai::agent::conversation::{AIConversationId, ConversationDriver};
 use crate::ai::agent::{BaseUserQuery, CancellationReason};
 use crate::ai::blocklist::history_model::{BlocklistAIHistoryModel, UpdateHistoryError};
 use crate::ai::blocklist::{QueuedQuery, QueuedQueryId, QueuedQueryModel};

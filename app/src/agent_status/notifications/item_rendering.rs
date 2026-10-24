@@ -1,33 +1,18 @@
-use std::sync::Arc;
-
-use pathfinder_color::ColorU;
-use torch_core::ui::appearance::Appearance as CoreAppearance;
 use torch_core::ui::icons::Icon;
-use torch_core::ui::theme::color::internal_colors;
-use torch_core::ui::theme::{Fill, WarpTheme};
-use torchui::clipboard::ClipboardContent;
+use torch_core::ui::theme::WarpTheme;
 use torchui::elements::{
-    ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, DispatchEventResult,
-    Element, EventHandler, Flex, MainAxisAlignment, MainAxisSize, ParentElement, Radius, Rect,
-    Shrinkable,
+    ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, DispatchEventResult, Element,
+    EventHandler, Flex, MainAxisAlignment, MainAxisSize, ParentElement, Radius, Rect, Shrinkable,
 };
 use torchui::fonts::Weight;
 use torchui::ui_components::components::{UiComponent, UiComponentStyles};
-use torchui::{View, ViewContext, ViewHandle};
 
-use crate::ai::agent::conversation::ConversationStatus;
-use crate::ai::agent_management::notifications::item::NotificationSourceAgent;
-use crate::ai::agent_management::notifications::{NotificationCategory, NotificationItem};
-use crate::ai::agent_management::telemetry::{AgentManagementTelemetryEvent, ArtifactType};
-use crate::ai::artifacts::{
-    Artifact, ArtifactButtonsRow, ArtifactButtonsRowEvent, open_screenshot_lightbox,
-};
+use super::{NotificationCategory, NotificationItem};
+use crate::agent_status::ConversationStatus;
 use crate::appearance::Appearance;
-use crate::send_telemetry_from_ctx;
+use crate::terminal::CLIAgent;
 use crate::ui_components::icon_with_status::{IconWithStatusVariant, render_icon_with_status};
 use crate::util::time_format::format_elapsed_since;
-use crate::view_components::action_button::ActionButtonTheme;
-use crate::workspace::WorkspaceAction;
 
 const COLLAPSED_MAX_CHARS: usize = 100;
 const EXPANDED_MAX_CHARS: usize = 500;
@@ -54,33 +39,6 @@ pub(crate) enum NotificationRenderContext {
     Mailbox,
 }
 
-/// Button theme for artifact chips in notifications.
-/// Uses `outline` for the border so it's visible against `surface_2`.
-pub(crate) struct NotificationArtifactButtonTheme;
-
-impl ActionButtonTheme for NotificationArtifactButtonTheme {
-    fn background(&self, hovered: bool, appearance: &CoreAppearance) -> Option<Fill> {
-        if hovered {
-            Some(internal_colors::fg_overlay_2(appearance.theme()))
-        } else {
-            None
-        }
-    }
-
-    fn text_color(
-        &self,
-        _hovered: bool,
-        _background: Option<Fill>,
-        appearance: &CoreAppearance,
-    ) -> ColorU {
-        appearance.theme().foreground().into_solid()
-    }
-
-    fn border(&self, appearance: &CoreAppearance) -> Option<ColorU> {
-        Some(appearance.theme().outline().into_solid())
-    }
-}
-
 /// Callback invoked when the user clicks the expand/collapse affordance on a clamped message.
 pub(crate) type OnExpandClick = Box<dyn Fn(&mut torchui::EventContext)>;
 
@@ -88,7 +46,6 @@ pub(crate) type OnExpandClick = Box<dyn Fn(&mut torchui::EventContext)>;
 /// Dispatches to the rich layout (with branch row) or simple layout based on `item.branch`.
 pub(crate) fn render_notification_item_content(
     item: &NotificationItem,
-    artifact_buttons: Option<&ViewHandle<ArtifactButtonsRow>>,
     context: NotificationRenderContext,
     message_expanded: bool,
     on_expand_click: OnExpandClick,
@@ -100,7 +57,6 @@ pub(crate) fn render_notification_item_content(
     let text_column = if item.branch.is_some() {
         render_rich_text_column(
             item,
-            artifact_buttons,
             context,
             message_expanded,
             on_expand_click,
@@ -110,7 +66,6 @@ pub(crate) fn render_notification_item_content(
     } else {
         render_simple_text_column(
             item,
-            artifact_buttons,
             context,
             message_expanded,
             on_expand_click,
@@ -132,10 +87,9 @@ pub(crate) fn render_notification_item_content(
         .finish()
 }
 
-/// Rich layout: branch row + clamped title + clamped message + artifact buttons.
+/// Rich layout: branch row + clamped title + clamped message.
 fn render_rich_text_column(
     item: &NotificationItem,
-    artifact_buttons: Option<&ViewHandle<ArtifactButtonsRow>>,
     context: NotificationRenderContext,
     message_expanded: bool,
     on_expand_click: OnExpandClick,
@@ -176,14 +130,13 @@ fn render_rich_text_column(
         .with_child(title)
         .with_child(Container::new(message).with_margin_top(2.).finish());
 
-    append_trailing_content(&mut content, artifact_buttons, extra_content);
+    append_trailing_content(&mut content, extra_content);
     content.finish()
 }
 
-/// Simple layout: title (+ optional chevron) | timestamp row + message + artifact buttons.
+/// Simple layout: title (+ optional chevron) | timestamp row + message.
 fn render_simple_text_column(
     item: &NotificationItem,
-    artifact_buttons: Option<&ViewHandle<ArtifactButtonsRow>>,
     context: NotificationRenderContext,
     message_expanded: bool,
     on_expand_click: OnExpandClick,
@@ -222,23 +175,12 @@ fn render_simple_text_column(
         .with_child(title_row)
         .with_child(Container::new(message).with_margin_top(2.).finish());
 
-    append_trailing_content(&mut content, artifact_buttons, extra_content);
+    append_trailing_content(&mut content, extra_content);
     content.finish()
 }
 
-/// Appends artifact buttons and extra content to a text column.
-fn append_trailing_content(
-    content: &mut Flex,
-    artifact_buttons: Option<&ViewHandle<ArtifactButtonsRow>>,
-    extra_content: Option<Box<dyn Element>>,
-) {
-    if let Some(artifact_buttons) = artifact_buttons {
-        content.add_child(
-            Container::new(ChildView::new(artifact_buttons).finish())
-                .with_margin_top(8.)
-                .finish(),
-        );
-    }
+/// Appends extra content to a text column.
+fn append_trailing_content(content: &mut Flex, extra_content: Option<Box<dyn Element>>) {
     if let Some(extra) = extra_content {
         content.add_child(extra);
     }
@@ -400,21 +342,14 @@ fn render_message_text(message: &str, expanded: bool, appearance: &Appearance) -
 const NOTIFICATION_AVATAR_SIZE: f32 = 32.;
 
 fn render_agent_avatar(
-    agent: NotificationSourceAgent,
+    agent: CLIAgent,
     category: NotificationCategory,
     theme: &WarpTheme,
 ) -> Box<dyn Element> {
-    let status = notification_category_to_conversation_status(category);
-    let variant = match agent {
-        NotificationSourceAgent::Oz { is_ambient } => IconWithStatusVariant::OzAgent {
-            status: Some(status),
-            is_ambient,
-        },
-        NotificationSourceAgent::CLI { agent, is_ambient } => IconWithStatusVariant::CLIAgent {
-            agent,
-            status: Some(status),
-            is_ambient,
-        },
+    let variant = IconWithStatusVariant::CLIAgent {
+        agent,
+        status: Some(notification_category_to_conversation_status(category)),
+        is_ambient: false,
     };
     render_icon_with_status(
         variant,
@@ -434,69 +369,5 @@ fn notification_category_to_conversation_status(
             blocked_action: String::new(),
         },
         NotificationCategory::Error => ConversationStatus::Error,
-    }
-}
-
-/// Creates an `ArtifactButtonsRow` view with the notification-specific theme.
-/// The caller is responsible for subscribing to events on the returned view.
-pub(crate) fn create_notification_artifact_buttons_view(
-    artifacts: &[Artifact],
-    ctx: &mut ViewContext<impl View>,
-) -> Option<ViewHandle<ArtifactButtonsRow>> {
-    if artifacts.is_empty() {
-        return None;
-    }
-    let theme = Arc::new(NotificationArtifactButtonTheme);
-    Some(ctx.add_typed_action_view(|ctx| ArtifactButtonsRow::with_theme(artifacts, theme, ctx)))
-}
-
-/// Handles artifact button events from notification views (toasts and mailbox).
-pub(crate) fn handle_notification_artifact_buttons_event(
-    event: &ArtifactButtonsRowEvent,
-    ctx: &mut ViewContext<impl View>,
-) {
-    match event {
-        ArtifactButtonsRowEvent::OpenPlan { notebook_uid } => {
-            send_telemetry_from_ctx!(
-                AgentManagementTelemetryEvent::ArtifactClicked {
-                    artifact_type: ArtifactType::Plan
-                },
-                ctx
-            );
-            ctx.dispatch_typed_action(&WorkspaceAction::OpenNotebook {
-                id: (*notebook_uid).into(),
-            });
-        }
-        ArtifactButtonsRowEvent::CopyBranch { branch } => {
-            send_telemetry_from_ctx!(
-                AgentManagementTelemetryEvent::ArtifactClicked {
-                    artifact_type: ArtifactType::Branch
-                },
-                ctx
-            );
-            ctx.clipboard()
-                .write(ClipboardContent::plain_text(branch.clone()));
-        }
-        ArtifactButtonsRowEvent::OpenPullRequest { url } => {
-            send_telemetry_from_ctx!(
-                AgentManagementTelemetryEvent::ArtifactClicked {
-                    artifact_type: ArtifactType::PullRequest
-                },
-                ctx
-            );
-            ctx.open_url(url);
-        }
-        ArtifactButtonsRowEvent::ViewScreenshots { artifact_uids } => {
-            open_screenshot_lightbox(artifact_uids, ctx);
-        }
-        ArtifactButtonsRowEvent::DownloadFile { artifact_uid } => {
-            send_telemetry_from_ctx!(
-                AgentManagementTelemetryEvent::ArtifactClicked {
-                    artifact_type: ArtifactType::File
-                },
-                ctx
-            );
-            crate::ai::artifacts::download_file_artifact(artifact_uid, ctx);
-        }
     }
 }

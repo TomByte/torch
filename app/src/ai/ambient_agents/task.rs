@@ -15,7 +15,7 @@ use torchui::{SingletonEntity, View, ViewContext};
 use url::Url;
 
 use super::AmbientAgentTaskId;
-use crate::ai::agent::conversation::ConversationStatus;
+use crate::agent_status::ConversationStatus;
 use crate::ai::artifacts::{Artifact, deserialize_artifacts};
 use crate::server::server_api::ServerApiProvider;
 use crate::ui_components::icons::Icon;

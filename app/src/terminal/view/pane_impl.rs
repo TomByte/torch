@@ -15,9 +15,8 @@ use torchui::{
 };
 
 use super::{Event, PaneConfiguration, TerminalAction, TerminalViewState};
-use crate::ai::agent::conversation::{
-    AIConversation, ConversationStatus, ServerAIConversationMetadata,
-};
+use crate::agent_status::ConversationStatus;
+use crate::ai::agent::conversation::{AIConversation, ServerAIConversationMetadata};
 use crate::ai::blocklist::BlocklistAIHistoryModel;
 use crate::ai::blocklist::agent_view::orchestration_conversation_links::parent_conversation_navigation_card;
 use crate::ai::blocklist::orchestration_topology::orchestration_aware_conversation_status;

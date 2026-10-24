@@ -20,7 +20,6 @@ use crate::ai::agent::{
     AIAgentActionId, AIAgentExchangeId, AIAgentInput as FullAIAgentInput, AIIdentifiers,
     EntrypointType, PassiveSuggestionTrigger, ServerOutputId, SuggestedLoggingId,
 };
-use crate::ai::agent_management::notifications::NotificationSourceAgent;
 use crate::ai::ambient_agents::AmbientAgentTaskId;
 use crate::ai::blocklist::agent_view::AgentViewEntryOrigin;
 use crate::ai::blocklist::{
@@ -417,12 +416,9 @@ pub enum NotificationAgentVariant {
     CLIAgent(#[serde(serialize_with = "serialize_cli_agent_telemetry_name")] CLIAgent),
 }
 
-impl From<NotificationSourceAgent> for NotificationAgentVariant {
-    fn from(agent: NotificationSourceAgent) -> Self {
-        match agent {
-            NotificationSourceAgent::Oz { .. } => Self::Oz,
-            NotificationSourceAgent::CLI { agent, .. } => Self::CLIAgent(agent),
-        }
+impl From<CLIAgent> for NotificationAgentVariant {
+    fn from(agent: CLIAgent) -> Self {
+        Self::CLIAgent(agent)
     }
 }
 

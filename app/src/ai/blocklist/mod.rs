@@ -93,9 +93,7 @@ pub(crate) use history_model::{
     PRE_REWIND_PREFIX,
 };
 pub(crate) use input_model::BlocklistAIInputEvent;
-pub use input_model::{
-    BlocklistAIInputModel, InputConfig, InputType, InputTypeAutoDetectionSource,
-};
+pub use input_model::{BlocklistAIInputModel, InputType, InputTypeAutoDetectionSource};
 pub(crate) use passive_suggestions::{
     LegacyPassiveSuggestionsEvent, LegacyPassiveSuggestionsModel, MaaPassiveSuggestionsEvent,
     MaaPassiveSuggestionsModel, PassiveSuggestionsModels,
@@ -119,10 +117,9 @@ pub use queued_query::{QueuedQueryEvent, QueuedQueryModel};
 pub use suggestion_chip_view::*;
 pub use view_util::error_color;
 pub(crate) use view_util::{
-    ATTACH_AS_AGENT_MODE_CONTEXT_TEXT, CLAUDE_ORANGE, NEW_AGENT_PANE_LABEL, ai_brand_color,
-    ai_indicator_height, get_ai_block_overflow_menu_element_position_id,
-    get_attached_blocks_chip_element_position_id, render_ai_agent_mode_icon,
-    render_ai_follow_up_icon,
+    ATTACH_AS_AGENT_MODE_CONTEXT_TEXT, NEW_AGENT_PANE_LABEL, ai_brand_color, ai_indicator_height,
+    get_ai_block_overflow_menu_element_position_id, get_attached_blocks_chip_element_position_id,
+    render_ai_agent_mode_icon, render_ai_follow_up_icon,
 };
 
 pub use crate::ai::blocklist::block::{AIBlockResponseRating, TextLocation, secret_redaction};

@@ -39,7 +39,7 @@ use super::history_model::BlocklistAIHistoryModel;
 use super::orchestration_event_streamer::{
     OrchestrationEventStreamer, conversation_status_from_lifecycle_event_type,
 };
-use crate::ai::agent::conversation::ConversationStatus;
+use crate::agent_status::ConversationStatus;
 // Compiled out of unit-test builds so the state machine can be exercised
 // without installing the full model singleton graph.
 #[cfg(not(test))]

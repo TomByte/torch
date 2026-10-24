@@ -10,8 +10,7 @@ use torch_core::ui::theme::color::internal_colors;
 use torch_core::ui::theme::{Fill as WarpThemeFill, WarpTheme};
 
 use crate::ai::agent::conversation::AIAgentHarness;
-use crate::ai::blocklist::CLAUDE_ORANGE;
-use crate::terminal::cli_agent::{GEMINI_BLUE, OPENAI_COLOR, OPENCODE_COLOR};
+use crate::terminal::cli_agent::{CLAUDE_ORANGE, GEMINI_BLUE, OPENAI_COLOR, OPENCODE_COLOR};
 use crate::ui_components::icons::Icon;
 
 /// User-visible display name for a [`Harness`].
