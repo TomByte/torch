@@ -228,58 +228,6 @@ pub(super) fn add_input_suggestions_overlays(
                 ),
             );
         }
-        InputSuggestionsMode::StaticWorkflowEnumSuggestions { menu_position, .. } => {
-            let relative_position_id = menu_position.to_position_id(input.editor.id());
-            stack.add_positioned_overlay_child(
-                input.render_workflow_enum_suggestions_menu(appearance, menu_positioning),
-                OffsetPositioning::from_axes(
-                    PositioningAxis::relative_to_stack_child(
-                        &relative_position_id,
-                        PositionedElementOffsetBounds::WindowByPosition,
-                        OffsetType::Pixel(0.),
-                        AnchorPair::new(XAxisAnchor::Left, XAxisAnchor::Left),
-                    ),
-                    PositioningAxis::relative_to_stack_child(
-                        &relative_position_id,
-                        PositionedElementOffsetBounds::Unbounded,
-                        OffsetType::Pixel(0.),
-                        menu_positioning.completion_suggestions_y_anchor(),
-                    ),
-                ),
-            );
-        }
-        InputSuggestionsMode::DynamicWorkflowEnumSuggestions {
-            menu_position,
-            dynamic_enum_status,
-            command,
-            suggestions,
-            ..
-        } => {
-            let relative_position_id = menu_position.to_position_id(input.editor.id());
-            stack.add_positioned_overlay_child(
-                input.render_dynamic_workflow_enum_menu(
-                    appearance,
-                    menu_positioning,
-                    command.clone(),
-                    dynamic_enum_status.clone(),
-                    suggestions,
-                ),
-                OffsetPositioning::from_axes(
-                    PositioningAxis::relative_to_stack_child(
-                        &relative_position_id,
-                        PositionedElementOffsetBounds::WindowByPosition,
-                        OffsetType::Pixel(0.),
-                        AnchorPair::new(XAxisAnchor::Left, XAxisAnchor::Left),
-                    ),
-                    PositioningAxis::relative_to_stack_child(
-                        &relative_position_id,
-                        PositionedElementOffsetBounds::Unbounded,
-                        OffsetType::Pixel(0.),
-                        menu_positioning.completion_suggestions_y_anchor(),
-                    ),
-                ),
-            );
-        }
         // Inline history menu is rendered separately via inline_history_menu_view
         InputSuggestionsMode::InlineHistoryMenu => {}
         InputSuggestionsMode::Closed => {}

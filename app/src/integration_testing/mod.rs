@@ -6,7 +6,6 @@ pub mod assertions;
 pub mod block;
 pub mod block_filtering;
 pub mod clipboard;
-pub mod cloud_object;
 pub mod code_review;
 pub mod command_palette;
 pub mod command_search;
@@ -17,7 +16,6 @@ pub mod input;
 pub mod keybindings;
 pub mod launch_configs;
 pub mod navigation_palette;
-pub mod notebook;
 pub mod pane_group;
 pub mod persistence;
 #[cfg(target_os = "macos")]
@@ -33,8 +31,9 @@ pub mod themes;
 pub mod type_getters;
 pub mod view_getters;
 pub mod window;
-pub mod workflow;
 pub mod workspace;
+
+pub use crate::user_config::workflows_dir;
 
 pub fn view_of_type<T: View>(app: &App, window_id: WindowId, tab_index: usize) -> ViewHandle<T> {
     app.views_of_type(window_id)

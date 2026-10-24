@@ -1228,55 +1228,6 @@ impl ActionButtonTheme for PrimaryTheme {
     }
 }
 
-/// Variant of PrimaryTheme that "solidifies" horizontal gradient accents by
-/// using the right side color of the gradient. This is useful for adjoined
-/// menu buttons that should visually match the gradient's right edge.
-pub struct PrimaryRightBiasedTheme;
-
-impl ActionButtonTheme for PrimaryRightBiasedTheme {
-    fn background(&self, hovered: bool, appearance: &Appearance) -> Option<Fill> {
-        let accent = appearance.theme().accent();
-        match accent {
-            Fill::HorizontalGradient(_) => {
-                if hovered {
-                    let hover_fill = internal_colors::accent_overlay_4(appearance.theme());
-                    Some(Fill::Solid(hover_fill.into_solid_bias_right_color()))
-                } else {
-                    Some(Fill::Solid(accent.into_solid_bias_right_color()))
-                }
-            }
-            _ => {
-                if hovered {
-                    Some(internal_colors::accent_overlay_4(appearance.theme()))
-                } else {
-                    Some(accent)
-                }
-            }
-        }
-    }
-
-    fn text_color(
-        &self,
-        hovered: bool,
-        background: Option<Fill>,
-        appearance: &Appearance,
-    ) -> ColorU {
-        PrimaryTheme.text_color(hovered, background, appearance)
-    }
-
-    fn adjoined_side_border(&self, appearance: &Appearance) -> Option<ColorU> {
-        PrimaryTheme.adjoined_side_border(appearance)
-    }
-
-    fn keyboard_shortcut_border(
-        &self,
-        text_color: ColorU,
-        appearance: &Appearance,
-    ) -> Option<ColorU> {
-        PrimaryTheme.keyboard_shortcut_border(text_color, appearance)
-    }
-}
-
 impl ButtonSize {
     pub fn icon_size(&self, appearance: &Appearance, app: &AppContext) -> f32 {
         match self {

@@ -52,9 +52,6 @@ cfg-if.workspace = true
 channel_versions.workspace = true
 chrono.workspace = true
 clap.workspace = true
-cloud_object_client.workspace = true
-cloud_object_models.workspace = true
-cloud_objects.workspace = true
 command = { workspace = true }
 command-corrections.workspace = true
 crc.workspace = true
@@ -270,7 +267,6 @@ wgpu.workspace = true
 app-installation-detection.workspace = true
 async-io.workspace = true
 axum.workspace = true
-cloud_object_persistence.workspace = true
 comfy-table = "7.1.4"
 inquire = "0.9.1"
 diesel = { workspace = true, features = ["sqlite", "chrono"] }
@@ -383,7 +379,6 @@ jsonschema = { workspace = true, default-features = false }
 async-executor = "1.5.1"
 command = { workspace = true, features = ["test-util"] }
 ctor = "0.1.18"
-cloud_object_client = { workspace = true, features = ["test-util"] }
 http_client = { workspace = true, features = ["test-util"] }
 mockall.workspace = true
 mockito.workspace = true
@@ -437,14 +432,11 @@ default = [
     "agent_mode",
     "osc_hyperlinks",
     "render_continuous_block_selections_with_single_border",
-    "shared_with_me",
     "shell_selector",
     "minimalist_ui",
     "avatar_in_tab_bar",
     "full_screen_zen_mode",
-    "workflow_aliases",
     "ligatures",
-    "dynamic_workflow_enums",
     "rect_selection",
     "loginless_conversion",
     "ai_rules",
@@ -532,7 +524,6 @@ default = [
 # Enable this feature to automatically perform heap profiling.  NOTE: This will
 # substantially slow down program execution.
 dhat_heap_profiling = ["dep:dhat"]
-dynamic_workflow_enums = []
 editable_markdown_mermaid = []
 default_adeberry_theme = []
 drag_tabs_to_windows = []
@@ -556,7 +547,6 @@ agent_mode_evals = [
     "torchui/defer_scene_build",
     "full_source_code_embedding",
     "cross_repo_context",
-    "cloud_object_models/agent_mode_evals",
     "rust-embed/debug-embed",
     "torchui/log_named_telemetry_events",
     "torch_logging/agent_mode_evals",
@@ -632,7 +622,6 @@ standalone = ["torch_assets/standalone", "torch_core/standalone"]
 prompt_suggestions_via_maa = []
 tab_close_button_on_left = []
 test-util = [
-    "cloud_object_client/test-util",
     "torch_server_auth/test-util",
     "http_client/test-util",
     "torch_core/test-util",
@@ -649,10 +638,8 @@ integration_tests = [
     "torch_server_client/integration_tests",
 ]
 traces = []
-workflow_aliases = []
 rect_selection = []
 alacritty_settings_import = []
-shared_with_me = []
 ai_rules = []
 shell_selector = []
 blocklist_markdown_table_rendering = []

@@ -151,31 +151,6 @@ pub enum SupportedPlatforms {
     OR(Box<SupportedPlatforms>, Box<SupportedPlatforms>),
 }
 
-/// An enum representing the different ways a setting can be synced to the cloud.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SyncToCloud {
-    /// The setting is synced to the cloud as a single global value that applies to on all supported platforms.
-    Globally(RespectUserSyncSetting),
-
-    /// The setting is synced to the cloud as a value that is unique to each platform.
-    PerPlatform(RespectUserSyncSetting),
-
-    /// The setting is not synced to the cloud.
-    Never,
-}
-
-/// Whether for this setting we respect the user toggle for settings sync.
-/// There are some cases we want to sync settings regardless of the user setting,
-/// such as for the value of whether cloud syncing is enabled, whether telemetry is enabled, etc.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum RespectUserSyncSetting {
-    /// Only sync if the user has settings sync enabled
-    Yes,
-
-    /// Sync regardless of the user's setting
-    No,
-}
-
 /// The surface the settings system is running in.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SettingsMode {
@@ -239,9 +214,6 @@ impl SupportedPlatforms {
 /// An enum representing the reason for a change event.
 #[derive(Debug, Clone, Copy)]
 pub enum ChangeEventReason {
-    /// The change was initiated from a cloud sync
-    CloudSync,
-
     /// The change was initiated from a local setting change
     LocalChange,
 
@@ -315,43 +287,12 @@ pub trait Setting {
     /// Returns the platforms that this setting is supported on.
     fn supported_platforms() -> SupportedPlatforms;
 
-    /// Returns whether and how this setting is synced to the cloud via Torch Drive.
-    fn sync_to_cloud() -> SyncToCloud;
-
     /// Returns whether this setting is private (not shown in the user-visible settings file).
     ///
     /// Private settings are persisted to the platform-native store (e.g. UserDefaults on
     /// macOS) rather than the TOML settings file, ensuring they never appear in the
     /// user-editable file.
     fn is_private() -> bool;
-
-    /// Returns whether the current value of this setting should be synced.
-    /// Only applies if sync_to_cloud() returns a value other than SyncToCloud::Never.
-    /// Specific settings can implement this to filter which values should be synced.
-    fn current_value_is_syncable(&self) -> bool {
-        true
-    }
-
-    /// Returns whether the current value of this setting is syncable on the current platform,
-    /// given the user's settings sync preference.
-    fn is_setting_syncable_on_current_platform(&self, settings_sync_enabled: bool) -> bool {
-        if !self.current_value_is_syncable() {
-            return false;
-        }
-        match (Self::sync_to_cloud(), settings_sync_enabled) {
-            (SyncToCloud::Never, _) => false,
-            (SyncToCloud::Globally(RespectUserSyncSetting::No), _) => true,
-            (SyncToCloud::Globally(RespectUserSyncSetting::Yes), true) => true,
-            (SyncToCloud::Globally(RespectUserSyncSetting::Yes), false) => false,
-            (SyncToCloud::PerPlatform(RespectUserSyncSetting::No), _) => {
-                self.is_supported_on_current_platform()
-            }
-            (SyncToCloud::PerPlatform(RespectUserSyncSetting::Yes), true) => {
-                self.is_supported_on_current_platform()
-            }
-            (SyncToCloud::PerPlatform(RespectUserSyncSetting::Yes), false) => false,
-        }
-    }
 
     /// Returns the current value of the setting.  This may be different from
     /// the value persisted in storage.
@@ -380,14 +321,6 @@ pub trait Setting {
         new_value: Self::Value,
         explicitly_set: bool,
         ctx: &mut ModelContext<Self::Group>,
-    ) -> anyhow::Result<()>;
-
-    /// Sets the value of the setting persisting it to storage. The change event indicates
-    /// that the update was initiated from a cloud sync.
-    fn set_value_from_cloud_sync(
-        &mut self,
-        new_value: Self::Value,
-        ctx: &mut torchui_core::ModelContext<Self::Group>,
     ) -> anyhow::Result<()>;
 
     /// Sets the value of the setting persisting it to storage.

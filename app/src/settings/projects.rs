@@ -4,14 +4,13 @@ use std::path::{Path, PathBuf};
 use std::sync::{LazyLock, Mutex};
 
 use settings::macros::define_settings_group;
-use settings::{Setting as _, SupportedPlatforms, SyncToCloud};
+use settings::{Setting as _, SupportedPlatforms};
 use torchui::{Entity, ModelContext, SingletonEntity};
 
 define_settings_group!(ProjectsSettings, settings: [
     directories: ProjectDirectories {
         type: Vec<PathBuf>, default: Vec::new(),
         supported_platforms: SupportedPlatforms::DESKTOP,
-        sync_to_cloud: SyncToCloud::Never,
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "projects.directories",
@@ -20,7 +19,6 @@ define_settings_group!(ProjectsSettings, settings: [
     parent_directories: ProjectParentDirectories {
         type: Vec<PathBuf>, default: Vec::new(),
         supported_platforms: SupportedPlatforms::DESKTOP,
-        sync_to_cloud: SyncToCloud::Never,
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "projects.parent_directories",

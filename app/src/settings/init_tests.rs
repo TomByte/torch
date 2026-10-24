@@ -3,7 +3,7 @@ use settings::{PrivatePreferences, PublicPreferences, Setting, SettingsManager};
 use settings_value::SettingsValue;
 use torch_core::features::FeatureFlag;
 use torch_core::settings::macros::define_settings_group;
-use torch_core::settings::{SupportedPlatforms, SyncToCloud};
+use torch_core::settings::{SupportedPlatforms};
 use torch_core::user_preferences::GetUserPreferences as _;
 use torchui::SingletonEntity;
 use torchui_extras::user_preferences;
@@ -21,7 +21,6 @@ define_settings_group!(MigrationTestSettings, settings: [
         type: bool,
         default: false,
         supported_platforms: SupportedPlatforms::ALL,
-        sync_to_cloud: SyncToCloud::Never,
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "migration_test.public_setting",
@@ -30,7 +29,6 @@ define_settings_group!(MigrationTestSettings, settings: [
         type: String,
         default: String::new(),
         supported_platforms: SupportedPlatforms::ALL,
-        sync_to_cloud: SyncToCloud::Never,
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "migration_test.public_string_setting",
@@ -39,7 +37,6 @@ define_settings_group!(MigrationTestSettings, settings: [
         type: bool,
         default: false,
         supported_platforms: SupportedPlatforms::ALL,
-        sync_to_cloud: SyncToCloud::Never,
         surface: settings::SettingSurfaces::GUI,
         private: true,
     },
@@ -379,7 +376,7 @@ fn test_migration_with_multiple_setting_types() {
 mod notifications_migration {
     use settings::{PrivatePreferences, PublicPreferences, SettingsManager};
     use torch_core::settings::macros::define_settings_group;
-    use torch_core::settings::{SupportedPlatforms, SyncToCloud};
+    use torch_core::settings::SupportedPlatforms;
     use torchui_extras::user_preferences;
 
     use crate::terminal::session_settings::NotificationsSettings;
@@ -389,7 +386,6 @@ mod notifications_migration {
             type: NotificationsSettings,
             default: NotificationsSettings::default(),
             supported_platforms: SupportedPlatforms::ALL,
-            sync_to_cloud: SyncToCloud::Never,
             surface: settings::SettingSurfaces::GUI,
             private: false,
             toml_path: "migration_test.notifications",

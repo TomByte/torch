@@ -1,5 +1,5 @@
 use settings::macros::define_settings_group;
-use settings::{RespectUserSyncSetting, Setting, SupportedPlatforms, SyncToCloud};
+use settings::{Setting, SupportedPlatforms};
 
 use crate::terminal::block_list_viewport::InputMode;
 
@@ -10,7 +10,6 @@ define_settings_group!(InputModeSettings, settings: [
         // to set it to InputMode::Waterfall.
         default: InputMode::PinnedToBottom,
         supported_platforms: SupportedPlatforms::ALL,
-        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
         surface: settings::SettingSurfaces::GUI,
         private: false,
         storage_key: "InputMode",

@@ -433,30 +433,6 @@ impl InputSuggestions {
         ctx.notify();
     }
 
-    /// Given a list of matched items, set the items and ensure the first one is selected.
-    pub fn set_enum_variants(&mut self, variants: Vec<String>, ctx: &mut ViewContext<Self>) {
-        let items = variants
-            .iter()
-            .map(|text| Item {
-                text: text.clone(),
-                display: None,
-                details: None,
-                matches: None,
-                icon_type: None,
-                match_type: MatchType::Other,
-                is_history_item: false,
-            })
-            .collect();
-
-        self.set_items(items);
-
-        // Select the first item with side effects of notifying
-        // view context, to ensure the buffer gets populated
-        self.select_first_item(ctx);
-        self.cycle = true;
-        ctx.notify();
-    }
-
     /// Filters down the set of options to those that have the given prefix. If prefix is only
     /// whitespace, then the input suggestions are simply all the options.
     pub(crate) fn history_prefix_search<'a, I: IntoIterator<Item = HistoryInputSuggestion<'a>>>(

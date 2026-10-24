@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use settings::macros::define_settings_group;
-use settings::{RespectUserSyncSetting, SupportedPlatforms, SyncToCloud};
+use settings::{SupportedPlatforms};
 use torchui::{AppContext, SingletonEntity};
 
 use crate::tab_configs::TabConfig;
@@ -36,7 +36,6 @@ settings::macros::implement_setting_for_enum!(
     DefaultSessionMode,
     DefaultSessionSettings,
     SupportedPlatforms::ALL,
-    SyncToCloud::Globally(RespectUserSyncSetting::Yes),
     surface: settings::SettingSurfaces::GUI,
     private: false,
     toml_path: "general.default_session_mode",
@@ -52,7 +51,6 @@ define_settings_group!(DefaultSessionSettings, settings: [
         type: String,
         default: String::new(),
         supported_platforms: SupportedPlatforms::ALL,
-        sync_to_cloud: SyncToCloud::Never,
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "general.default_tab_config_path",

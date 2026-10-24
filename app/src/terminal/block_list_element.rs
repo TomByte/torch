@@ -2766,17 +2766,12 @@ impl Element for BlockListElement {
                                         && self.subshell_separator_height == 0.
                                         && !block.is_background()
                                     {
-                                        let command = if let SubshellSource::Command(cmd) = command
-                                        {
-                                            cmd.split_whitespace()
-                                                .next()
-                                                .map(|exec| {
-                                                    SubshellSource::Command(exec.to_owned())
-                                                })
-                                                .unwrap_or_else(|| command.clone())
-                                        } else {
-                                            command.clone()
-                                        };
+                                        let SubshellSource::Command(cmd) = command;
+                                        let command = cmd
+                                            .split_whitespace()
+                                            .next()
+                                            .map(|exec| SubshellSource::Command(exec.to_owned()))
+                                            .unwrap_or_else(|| command.clone());
 
                                         let mut flag_element = render_subshell_flag(
                                             command,

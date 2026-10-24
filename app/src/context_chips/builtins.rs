@@ -105,17 +105,12 @@ pub fn subshell(ctx: &GeneratorContext) -> Option<ChipValue> {
     let session = ctx.active_session?;
     let subshell_info = session.subshell_info().as_ref()?;
 
-    let session_type = if let Some(env_var_collection_name) = &subshell_info.env_var_collection_name
-    {
-        env_var_collection_name.clone()
-    } else {
-        subshell_info
-            .spawning_command
-            .split_whitespace()
-            .next()
-            .unwrap_or("subshell")
-            .to_string()
-    };
+    let session_type = subshell_info
+        .spawning_command
+        .split_whitespace()
+        .next()
+        .unwrap_or("subshell")
+        .to_string();
     Some(ChipValue::Text(session_type))
 }
 

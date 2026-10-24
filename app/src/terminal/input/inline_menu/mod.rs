@@ -51,9 +51,7 @@ impl InlineMenuType {
             InputSuggestionsMode::InlineHistoryMenu => Some(InlineMenuType::InlineHistoryMenu),
             InputSuggestionsMode::Closed
             | InputSuggestionsMode::HistoryUp { .. }
-            | InputSuggestionsMode::CompletionSuggestions { .. }
-            | InputSuggestionsMode::StaticWorkflowEnumSuggestions { .. }
-            | InputSuggestionsMode::DynamicWorkflowEnumSuggestions { .. } => None,
+            | InputSuggestionsMode::CompletionSuggestions { .. } => None,
         }
     }
 }

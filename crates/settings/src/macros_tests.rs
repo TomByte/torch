@@ -2,14 +2,13 @@ use anyhow::Result;
 use torchui_core::{AppContext, SingletonEntity};
 
 use crate::manager::SettingsManager;
-use crate::{Setting, SupportedPlatforms, SyncToCloud, *};
+use crate::{Setting, SupportedPlatforms, *};
 
 define_settings_group!(TestSettings, settings: [
     simple_setting: SimpleSetting {
         type: bool,
         default: false,
         supported_platforms: SupportedPlatforms::ALL,
-        sync_to_cloud: SyncToCloud::Never,
         surface: crate::SettingSurfaces::GUI,
         private: false,
         toml_path: "test.simple_setting",
@@ -18,7 +17,6 @@ define_settings_group!(TestSettings, settings: [
         type: bool,
         default: true,
         supported_platforms: SupportedPlatforms::ALL,
-        sync_to_cloud: SyncToCloud::Never,
         surface: crate::SettingSurfaces::GUI,
         private: true,
         storage_key: "KeyIsOverridden",
@@ -27,7 +25,6 @@ define_settings_group!(TestSettings, settings: [
         type: bool,
         default: false,
         supported_platforms: SupportedPlatforms::ALL,
-        sync_to_cloud: SyncToCloud::Never,
         surface: crate::SettingSurfaces::GUI,
         private: false,
         toml_path: "test_section.hierarchy_flag",
@@ -564,39 +561,6 @@ fn test_load_value_resets_explicitly_set_flag() {
                 *settings.simple_setting.value(),
                 SimpleSetting::default_value()
             );
-        });
-    });
-}
-
-#[test]
-fn test_explicit_value_tracking_cloud_sync() {
-    torchui_core::App::test((), |mut app| async move {
-        app.update(init_and_register_preferences);
-        app.add_singleton_model(|_| SettingsManager::default());
-
-        // Register our TestSettings settings group with the app.
-        TestSettings::register(&mut app);
-
-        // Initially not explicitly set
-        app.read(|ctx| {
-            let settings = TestSettings::as_ref(ctx);
-            assert!(!settings.simple_setting.is_value_explicitly_set());
-        });
-
-        // Set value from cloud sync
-        app.update(|ctx| {
-            TestSettings::handle(ctx).update(ctx, |test_settings, ctx| {
-                let _ = test_settings
-                    .simple_setting
-                    .set_value_from_cloud_sync(true, ctx);
-            });
-        });
-
-        // Should now be marked as explicitly set
-        app.read(|ctx| {
-            let settings = TestSettings::as_ref(ctx);
-            assert!(settings.simple_setting.is_value_explicitly_set());
-            assert!(*settings.simple_setting.value());
         });
     });
 }

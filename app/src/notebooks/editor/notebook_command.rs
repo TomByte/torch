@@ -610,7 +610,6 @@ impl NotebookCommand {
         let workflow = Workflow::new(String::new(), command).with_arguments(args_state.arguments);
         Some(NotebookWorkflow {
             workflow: UserInput::new(Arc::new(WorkflowType::Notebook(workflow))),
-            source: None,
         })
     }
 }

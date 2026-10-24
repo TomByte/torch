@@ -26,10 +26,6 @@ lazy_static! {
         primary_text: "workflows:",
         aliases: vec!["w:"]
     };
-    static ref NOTEBOOKS_FILTER_ATOM: FilterAtom = FilterAtom {
-        primary_text: "notebooks:",
-        aliases: vec!["n:"]
-    };
     static ref ACTIONS_FILTER_ATOM: FilterAtom = FilterAtom {
         primary_text: "actions:",
         aliases: vec![]
@@ -44,10 +40,6 @@ lazy_static! {
     };
     static ref LAUNCH_CONFIG_FILTER_ATOM: FilterAtom = FilterAtom {
         primary_text: "launch_configs:",
-        aliases: vec![]
-    };
-    static ref ENV_VARS_FILTER_ATOM: FilterAtom = FilterAtom {
-        primary_text: "env_vars:",
         aliases: vec![]
     };
     static ref FILES_FILTER_ATOM: FilterAtom = FilterAtom {
@@ -106,9 +98,6 @@ pub enum QueryFilter {
     /// Only include command workflows from WorkflowsDataSource.
     Workflows,
 
-    /// Only include results from NotebooksDataSource.
-    Notebooks,
-
     /// Filter results for command palette actions.
     Actions,
 
@@ -123,9 +112,6 @@ pub enum QueryFilter {
 
     /// Filter results for launch configurations.
     LaunchConfigurations,
-
-    /// Filter results for environment variables.
-    EnvironmentVariables,
 
     /// Filter results for files.
     Files,
@@ -146,13 +132,11 @@ impl QueryFilter {
         match self {
             QueryFilter::History => "Search history",
             QueryFilter::Workflows => "Search workflows",
-            QueryFilter::Notebooks => "Search notebooks",
             QueryFilter::Actions => "Search actions",
             QueryFilter::Sessions => "Search sessions",
             QueryFilter::Tabs => "Search tabs",
             QueryFilter::Agents => "Search agents, projects, or states like working or idle",
             QueryFilter::LaunchConfigurations => "Search launch configurations",
-            QueryFilter::EnvironmentVariables => "Search environment variables",
             QueryFilter::Files => "Search files",
             QueryFilter::Repos => "Search code repos",
         }
@@ -163,13 +147,11 @@ impl QueryFilter {
         match self {
             QueryFilter::History => &HISTORY_FILTER_ATOM,
             QueryFilter::Workflows => &WORKFLOWS_FILTER_ATOM,
-            QueryFilter::Notebooks => &NOTEBOOKS_FILTER_ATOM,
             QueryFilter::Actions => &ACTIONS_FILTER_ATOM,
             QueryFilter::Sessions => &SESSIONS_FILTER_ATOM,
             QueryFilter::Tabs => &NO_FILTER_ATOM,
             QueryFilter::Agents => &AGENTS_FILTER_ATOM,
             QueryFilter::LaunchConfigurations => &LAUNCH_CONFIG_FILTER_ATOM,
-            QueryFilter::EnvironmentVariables => &ENV_VARS_FILTER_ATOM,
             QueryFilter::Files => &FILES_FILTER_ATOM,
             QueryFilter::Repos => &REPOS_FILTER_ATOM,
         }
@@ -180,13 +162,11 @@ impl QueryFilter {
         match self {
             QueryFilter::History => "history",
             QueryFilter::Workflows => "workflows",
-            QueryFilter::Notebooks => "notebooks",
             QueryFilter::Actions => "actions",
             QueryFilter::Sessions => "sessions",
             QueryFilter::Tabs => "tabs",
             QueryFilter::Agents => "agents",
             QueryFilter::LaunchConfigurations => "launch configurations",
-            QueryFilter::EnvironmentVariables => "environment variables",
             QueryFilter::Files => "files",
             QueryFilter::Repos => "repos",
         }
@@ -197,13 +177,11 @@ impl QueryFilter {
         match self {
             QueryFilter::History => Some("bundled/svg/history.svg"),
             QueryFilter::Workflows => Some("bundled/svg/workflow.svg"),
-            QueryFilter::Notebooks => Some("bundled/svg/notebook.svg"),
             QueryFilter::Actions => None,
             QueryFilter::Sessions => Some("bundled/svg/terminal-input.svg"),
             QueryFilter::Tabs => Some("bundled/svg/terminal-input.svg"),
             QueryFilter::Agents => Some("bundled/svg/terminal-input.svg"),
             QueryFilter::LaunchConfigurations => Some("bundled/svg/navigation.svg"),
-            QueryFilter::EnvironmentVariables => Some("bundled/svg/env-var-collection.svg"),
             QueryFilter::Files => Some("bundled/svg/completion-file.svg"),
             QueryFilter::Repos => Some("bundled/svg/folder.svg"),
         }

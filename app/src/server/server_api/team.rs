@@ -67,7 +67,7 @@ use torch_graphql::queries::get_workspaces_metadata_for_user::{
 
 use super::ServerApi;
 use crate::auth::UserUid;
-use crate::cloud_object::CloudObjectEventEntrypoint;
+use torch_server_client::event_entrypoint::CloudObjectEventEntrypoint;
 use crate::server::graphql::{get_request_context, get_user_facing_error_message};
 use crate::server::ids::ServerId;
 use crate::workspaces::gql_convert::workspaces_metadata_response_from_gql;

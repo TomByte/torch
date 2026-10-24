@@ -148,9 +148,6 @@ use crate::autoupdate::{
 use crate::banner::BannerState;
 use crate::changelog_model::{ChangelogModel, ChangelogRequestType, Event as ChangelogEvent};
 use crate::channel::ChannelState;
-use crate::cloud_object::model::persistence::CloudModel;
-use crate::cloud_object::toast_message::CloudObjectToastMessage;
-use crate::cloud_object::{CloudObject, GenericStringObjectFormat, JsonObjectType, ObjectType};
 use crate::code::buffer_location::LocalOrRemotePath;
 use crate::code::editor::{add_color, remove_color};
 #[cfg(feature = "local_fs")]
@@ -164,13 +161,10 @@ use crate::code_review::telemetry_event::CodeReviewPaneEntrypoint;
 use crate::coding_panel_enablement_state::CodingPanelEnablementState;
 use crate::context_chips::ChipRuntimeCapabilities;
 use crate::default_terminal::DefaultTerminal;
-use crate::drive::CloudObjectTypeAndId;
 use crate::editor::{
     EditorView, Event as EditorEvent, PropagateAndNoOpNavigationKeys, SingleLineEditorOptions,
     TextOptions,
 };
-use crate::env_vars::CloudEnvVarCollection;
-use crate::env_vars::manager::{EnvVarCollectionManager, EnvVarCollectionSource};
 use crate::launch_configs::launch_config::WindowTemplate;
 use crate::launch_configs::save_modal::{LaunchConfigModalEvent, LaunchConfigSaveModal};
 use crate::menu::{
@@ -179,7 +173,6 @@ use crate::menu::{
 };
 use crate::modal::{Modal, ModalEvent, ModalViewState};
 use crate::network::{NetworkStatus, NetworkStatusEvent};
-use crate::notebooks::manager::{NotebookManager, NotebookSource};
 use crate::notification::NotificationContext;
 use crate::palette::PaletteMode;
 #[cfg(feature = "local_fs")]
@@ -212,14 +205,10 @@ use crate::search::command_search::searcher::{
 };
 use crate::search::command_search::view::{CommandSearchEvent, CommandSearchView};
 use crate::search::{self, QueryFilter};
-use crate::server::cloud_objects::update_manager::{
-    ObjectOperation, OperationSuccessType, UpdateManager, UpdateManagerEvent,
-};
-use crate::server::ids::{ObjectUid, SyncId};
 use crate::server::network_log_pane_manager::NetworkLogPaneManager;
 use crate::server::server_api::{ServerApi, ServerApiProvider, ServerTime};
 use crate::server::telemetry::{
-    AddTabWithShellSource, CloseTarget, EnvVarTelemetryMetadata, FileTreeSource,
+    AddTabWithShellSource, CloseTarget, FileTreeSource,
     LaunchConfigUiLocation, NotificationsTurnedOnSource, PaletteSource, TabRenameEvent,
 };
 use crate::session_management::{SessionNavigationData, SessionSource, TabNavigationData};
@@ -332,10 +321,7 @@ use crate::view_components::{DismissibleToast, DismissibleToastStack, ToastLink}
 #[cfg(target_family = "wasm")]
 use crate::wasm_nux_dialog::WasmNUXDialog;
 use crate::window_settings::{WindowSettings, WindowSettingsChangedEvent, ZoomLevel};
-use crate::workflows::manager::{WorkflowManager, WorkflowOpenSource};
-use crate::workflows::{
-    CloudWorkflow, WorkflowSelectionSource, WorkflowSource, WorkflowType, WorkflowViewMode,
-};
+use crate::workflows::{WorkflowSelectionSource, WorkflowSource, WorkflowType};
 use crate::workspace::action::CommandSearchOptions;
 #[cfg(target_os = "macos")]
 use crate::workspace::cli_install;
@@ -482,8 +468,6 @@ const KEYBINDINGS_TO_CACHE: [&str; 3] = [
     TOGGLE_COMMAND_PALETTE_KEYBINDING_NAME,
 ];
 
-const WORKFLOW_AND_ENV_VAR_SPLIT_RATIO: f32 = 0.56;
-const NOTEBOOK_SMART_SPLIT_RATIO: f32 = 0.42;
 
 #[cfg(target_family = "wasm")]
 const MOBILE_OVERLAY_PANEL_WIDTH_RATIO: f32 = 0.9;
@@ -2159,11 +2143,6 @@ impl Workspace {
 
         #[cfg(target_family = "wasm")]
         let open_in_warp_button = Self::build_open_in_warp_button(ctx);
-
-        let update_manager = UpdateManager::handle(ctx);
-        ctx.subscribe_to_model(&update_manager, |me, _handle, event, ctx| {
-            me.handle_update_manager_event(event, ctx);
-        });
 
         let cached_keybindings = KEYBINDINGS_TO_CACHE
             .iter()
@@ -5786,168 +5765,6 @@ impl Workspace {
             })
     }
 
-    /// Opens the Torch Drive object identified by `uid` in a new pane
-    /// if it has a pane representation.
-    fn open_warp_drive_object_in_new_pane(&mut self, uid: &ObjectUid, ctx: &mut ViewContext<Self>) {
-        let Some(object) = CloudModel::as_ref(ctx).get_by_uid(uid) else {
-            return;
-        };
-
-        let sync_id = object.sync_id();
-        match object.object_type() {
-            ObjectType::Notebook => {
-                self.open_notebook(&NotebookSource::Existing(sync_id), ctx, true);
-            }
-            ObjectType::Workflow => {
-                self.open_workflow_in_pane(
-                    &WorkflowOpenSource::Existing(sync_id),
-                    WorkflowViewMode::View,
-                    ctx,
-                );
-            }
-            ObjectType::GenericStringObject(GenericStringObjectFormat::Json(
-                JsonObjectType::EnvVarCollection,
-            )) => {
-                self.open_env_var_collection(
-                    &EnvVarCollectionSource::Existing(sync_id),
-                    false,
-                    ctx,
-                );
-            }
-            _ => {}
-        }
-    }
-
-    /// Open the notebook identified by `source`. If the notebook is already open in another pane,
-    /// that pane is focused. If the notebook is not open, the notebook will be opened in a new
-    /// pane if default_to_new_pane is true; otherwise, it'll be opened in a new tab.
-    pub fn open_notebook(
-        &mut self,
-        source: &NotebookSource,
-        ctx: &mut ViewContext<Self>,
-        default_to_new_pane: bool,
-    ) {
-        let notebook_manager = NotebookManager::handle(ctx);
-        let mut notebook_already_open = false;
-        if let Some((window_id, locator)) = notebook_manager.as_ref(ctx).find_pane(source) {
-            // If the notebook is already open in _this_ workspace, we can switch to it directly.
-            // Otherwise, dispatch an action to the appropriate window. We can't unconditionally
-            // dispatch an action, because that will cause a circular view update.
-            notebook_already_open = true;
-            if window_id == ctx.window_id() {
-                self.focus_pane(locator, ctx);
-            } else if let Some(root_view) = ctx.root_view_id(window_id) {
-                ctx.dispatch_action_for_view(
-                    window_id,
-                    root_view,
-                    "root_view:handle_pane_navigation_event",
-                    &locator,
-                );
-            }
-        } else if default_to_new_pane {
-            let window_id = ctx.window_id();
-            let pane = notebook_manager.update(ctx, |manager, ctx| {
-                manager.create_pane(source, window_id, ctx)
-            });
-            self.active_tab_pane_group().update(ctx, |pane_group, ctx| {
-                let smart_split_direction =
-                    pane_group.smart_split_direction(ctx, NOTEBOOK_SMART_SPLIT_RATIO);
-                pane_group.add_pane_with_direction(
-                    smart_split_direction,
-                    pane,
-                    true, /* focus_new_pane */
-                    ctx,
-                );
-            });
-        }
-
-        if let NotebookSource::Existing(notebook_id) = source
-            && !notebook_already_open
-            && !default_to_new_pane
-        {
-            self.add_tab_for_cloud_notebook(*notebook_id, ctx);
-        }
-    }
-
-    pub fn open_workflow_in_pane(
-        &mut self,
-        source: &WorkflowOpenSource,
-        mode: WorkflowViewMode,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        let workflow_manager = WorkflowManager::handle(ctx);
-
-        if let Some((window_id, locator)) = workflow_manager.as_ref(ctx).find_pane(source) {
-            if window_id == ctx.window_id() {
-                self.focus_pane(locator, ctx);
-            } else if let Some(root_view) = ctx.root_view_id(window_id) {
-                ctx.dispatch_action_for_view(
-                    window_id,
-                    root_view,
-                    "root_view:handle_pane_navigation_event",
-                    &locator,
-                );
-            }
-        } else {
-            let window_id = ctx.window_id();
-            let pane = workflow_manager.update(ctx, |manager, ctx| {
-                manager.create_pane(source, mode, window_id, ctx)
-            });
-            self.active_tab_pane_group().update(ctx, |pane_group, ctx| {
-                let smart_split_direction =
-                    pane_group.smart_split_direction(ctx, WORKFLOW_AND_ENV_VAR_SPLIT_RATIO);
-                pane_group.add_pane_with_direction(
-                    smart_split_direction,
-                    pane,
-                    true, /* focus_new_pane */
-                    ctx,
-                );
-            });
-        }
-    }
-
-    pub fn open_env_var_collection(
-        &mut self,
-        source: &EnvVarCollectionSource,
-        reload: bool,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        let env_var_collection_manager = EnvVarCollectionManager::handle(ctx);
-
-        if let Some((window_id, locator)) = env_var_collection_manager.as_ref(ctx).find_pane(source)
-        {
-            if reload {
-                env_var_collection_manager
-                    .update(ctx, |manager, ctx| manager.reload_collection(source, ctx));
-            }
-            if window_id == ctx.window_id() {
-                self.focus_pane(locator, ctx);
-            } else if let Some(root_view) = ctx.root_view_id(window_id) {
-                ctx.dispatch_action_for_view(
-                    window_id,
-                    root_view,
-                    "root_view:handle_pane_navigation_event",
-                    &locator,
-                );
-            }
-        } else {
-            let window_id = ctx.window_id();
-            let pane = env_var_collection_manager.update(ctx, |manager, ctx| {
-                manager.create_pane(source, window_id, ctx)
-            });
-            self.active_tab_pane_group().update(ctx, |pane_group, ctx| {
-                let smart_split_direction =
-                    pane_group.smart_split_direction(ctx, WORKFLOW_AND_ENV_VAR_SPLIT_RATIO);
-                pane_group.add_pane_with_direction(
-                    smart_split_direction,
-                    pane,
-                    true, /* focus_new_pane */
-                    ctx,
-                );
-            });
-        }
-    }
-
     fn open_settings_pane(
         &mut self,
         page: Option<SettingsSection>,
@@ -8318,48 +8135,6 @@ impl Workspace {
         }
     }
 
-    fn maybe_refresh_workflow_info_box_and_input(
-        &mut self,
-        workflow_id: &SyncId,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        let Some(terminal_view_handle) = self
-            .active_tab_pane_group()
-            .as_ref(ctx)
-            .active_session_view(ctx)
-        else {
-            return;
-        };
-        let terminal_input =
-            terminal_view_handle.read(ctx, |terminal_view, _| terminal_view.input().clone());
-
-        if self.is_input_box_visible(ctx) {
-            let open_workflow_id = terminal_input.update(ctx, |input, _| {
-                // We only care to refresh if workflow info box is visible
-                if input.is_workflows_info_box_open() {
-                    input.workflows_info_box_open_workflow_cloud_id()
-                } else {
-                    None
-                }
-            });
-
-            // Check if workflow displayed in info box matches the one that was just updated.
-            if open_workflow_id == Some(*workflow_id) {
-                // Fetch latest version of workflow and update info box with fresh contents
-                let cloud_model = CloudModel::as_ref(ctx);
-                if let Some(workflow) = cloud_model.get_workflow(workflow_id) {
-                    // Proc same behavior as DrivePanelEvent::RunWorkflow
-                    self.run_cloud_workflow_in_active_input(
-                        workflow.clone(),
-                        WorkflowSelectionSource::WarpDrive,
-                        TerminalSessionFallbackBehavior::default(),
-                        ctx,
-                    );
-                }
-            }
-        }
-    }
-
     fn handle_theme_creator_modal_event(
         &mut self,
         event: &ThemeCreatorModalEvent,
@@ -9530,18 +9305,6 @@ impl Workspace {
             }
             self.expand_tab_group(group_id, ctx);
         }
-    }
-
-    pub fn add_tab_for_cloud_notebook(&mut self, notebook_id: SyncId, ctx: &mut ViewContext<Self>) {
-        // TODO: We should validate that this notebook exists and fallback if it doesn't
-        let panes_layout = PanesLayout::Snapshot(Box::new(PaneNodeSnapshot::Leaf(LeafSnapshot {
-            is_focused: true,
-            custom_vertical_tabs_title: None,
-            contents: LeafContents::Notebook(NotebookPaneSnapshot::CloudNotebook {
-                notebook_id: Some(notebook_id),
-            }),
-        })));
-        self.add_tab_with_pane_layout(panes_layout, Arc::new(HashMap::new()), None, ctx);
     }
 
     /// Add a tab with a file notebook pane open.
@@ -10827,9 +10590,6 @@ impl Workspace {
                 // Clear the task status indicator as soon as the user runs a command.
                 self.handle_task_status_reset(pane_group.id(), ctx);
             }
-            pane_group::Event::OpenCloudWorkflowForEdit(workflow_id) => {
-                self.open_workflow_with_existing(*workflow_id, ctx)
-            }
             pane_group::Event::OpenPromptEditor => {
                 self.open_prompt_editor(PromptEditorOpenSource::InputContextMenu, ctx);
             }
@@ -10893,14 +10653,6 @@ impl Workspace {
                     ctx,
                 );
             }
-            pane_group::Event::InvokeEnvVarCollection {
-                env_var_collection,
-                in_subshell,
-            } => self.invoke_environment_variables(
-                env_var_collection.as_cloud_env_var_collection().clone(),
-                *in_subshell,
-                ctx,
-            ),
             pane_group::Event::MaximizePaneToggled => {
                 ctx.notify();
             }
@@ -11249,9 +11001,6 @@ impl Workspace {
                 ctx.notify();
             }
             pane_group::Event::ClearHoveredTabIndex => self.hovered_tab_index = None,
-            pane_group::Event::OpenWarpDriveObjectInPane(uid) => {
-                self.open_warp_drive_object_in_new_pane(uid, ctx);
-            }
             pane_group::Event::OpenPalette {
                 mode,
                 source,
@@ -11819,33 +11568,11 @@ impl Workspace {
         }
     }
 
-    /// Runs a cloud workflow in whichever input is currently active.
-    fn run_cloud_workflow_in_active_input(
-        &mut self,
-        workflow: CloudWorkflow,
-        workflow_selection_source: WorkflowSelectionSource,
-        fallback_behavior: TerminalSessionFallbackBehavior,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        let owner = workflow.clone().permissions.owner.into();
-        self.run_workflow_in_active_input(
-            &WorkflowType::Cloud(Box::new(workflow.clone())),
-            owner,
-            workflow_selection_source,
-            None,
-            fallback_behavior,
-            ctx,
-        );
-        ctx.focus_self();
-        ctx.notify();
-    }
-
     /// Focus and return the active terminal input. If there is no active terminal input (either
     /// because a command is running or because there are no terminal panes), this may create a new
     /// terminal pane according to the [`UnavailableTerminalBehavior`].
     fn focus_terminal_input(
         &mut self,
-        object_id: Option<CloudObjectTypeAndId>,
         fallback_behavior: TerminalSessionFallbackBehavior,
         ctx: &mut ViewContext<Self>,
     ) -> Option<ViewHandle<TerminalView>> {
@@ -11867,29 +11594,16 @@ impl Workspace {
                     .unwrap()
             });
 
-        let is_env_var_block = terminal_view_handle.read(ctx, |terminal_view, ctx| {
-            terminal_view.has_active_env_var_block(ctx)
-        });
-
         if self.is_input_box_visible(ctx) {
-            active_pane_group.update(ctx, |pane_group, ctx| pane_group.focus_active_session(ctx));
-            return Some(terminal_view_handle);
-        } else if is_env_var_block {
-            terminal_view_handle.update(ctx, |terminal_view, ctx| {
-                terminal_view.cancel_env_var_block(ctx);
-            });
             active_pane_group.update(ctx, |pane_group, ctx| pane_group.focus_active_session(ctx));
             return Some(terminal_view_handle);
         } else if fallback_behavior != TerminalSessionFallbackBehavior::OpenIfNeeded {
             // The active terminal exists but is busy, and the fallback behavior is
             // RequireExisting or OpenIfNone. In those cases, show a toast and no-op.
             self.toast_stack.update(ctx, |toast_stack, ctx| {
-                let mut toast = DismissibleToast::error(
+                let toast = DismissibleToast::error(
                     "A command in this session is still running.".to_string(),
                 );
-                if let Some(id) = object_id {
-                    toast = toast.with_object_id(id.uid());
-                }
                 toast_stack.add_ephemeral_toast(toast, ctx);
             });
             return None;
@@ -11953,7 +11667,7 @@ impl Workspace {
         ctx: &mut ViewContext<Self>,
     ) {
         if let Some(terminal_view_handle) =
-            self.focus_terminal_input(workflow.object_id(), fallback_behavior, ctx)
+            self.focus_terminal_input(fallback_behavior, ctx)
         {
             let terminal_input =
                 terminal_view_handle.read(ctx, |terminal_view, _| terminal_view.input().clone());
@@ -11992,32 +11706,6 @@ impl Workspace {
                 if should_submit {
                     input.input_enter(ctx);
                 }
-                ctx.notify();
-            });
-        }
-    }
-
-    fn invoke_environment_variables(
-        &mut self,
-        env_var_collection: CloudEnvVarCollection,
-        in_subshell: bool,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        if let Some(terminal_view_handle) = self.focus_terminal_input(
-            Some(env_var_collection.cloud_object_type_and_id()),
-            TerminalSessionFallbackBehavior::default(),
-            ctx,
-        ) {
-            send_telemetry_from_ctx!(
-                TelemetryEvent::EnvVarCollectionInvoked(EnvVarTelemetryMetadata {
-                    object_id: env_var_collection.id.into_server().map(Into::into),
-                    team_uid: env_var_collection.permissions.owner.into(),
-                    space: env_var_collection.space(ctx).into(),
-                }),
-                ctx
-            );
-            terminal_view_handle.update(ctx, |view, ctx| {
-                view.invoke_environment_variables(env_var_collection, in_subshell, ctx);
                 ctx.notify();
             });
         }
@@ -12125,152 +11813,6 @@ impl Workspace {
                 self.update_titlebar_height(ctx);
             }
             _ => {}
-        }
-    }
-
-    fn handle_update_manager_event(
-        &mut self,
-        event: &UpdateManagerEvent,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        let UpdateManagerEvent::ObjectOperationComplete { result } = event else {
-            return;
-        };
-
-        let cloud_model = CloudModel::as_ref(ctx);
-
-        let object_id = result
-            .server_id
-            .map(|server_id| server_id.uid())
-            .or_else(|| result.client_id.map(|client_id| client_id.to_string()));
-
-        if let Some(object_id) = object_id
-            && let Some(object) = cloud_model.get_by_uid(&object_id)
-        {
-            if !object.should_show_activity_toasts() {
-                // Early exit for objects that don't show toasts.
-                return;
-            }
-            if let Some(message) = CloudObjectToastMessage::toast_message(
-                object,
-                &result.operation,
-                &result.success_type,
-                ctx,
-            ) {
-                let workflow: Option<&CloudWorkflow> = object.into();
-                let cloned_workflow = workflow.cloned();
-                let env_var_collection: Option<&CloudEnvVarCollection> = object.into();
-                let cloned_env_var_collection = env_var_collection.cloned();
-
-                self.toast_stack
-                    .update(ctx, |view, ctx| match result.success_type {
-                        OperationSuccessType::Success => {
-                            let new_toast =
-                                DismissibleToast::success(message).with_object_id(object_id);
-                            view.add_ephemeral_toast(new_toast, ctx);
-                        }
-                        OperationSuccessType::Failure => {
-                            let new_toast =
-                                DismissibleToast::error(message).with_object_id(object_id);
-                            view.add_persistent_toast(new_toast, ctx);
-                        }
-                        OperationSuccessType::Rejection => {
-                            let new_toast = if let Some(workflow) = cloned_workflow {
-                                DismissibleToast::error(message)
-                                    .with_link(
-                                        ToastLink::new(
-                                            "Check out the latest version and try again."
-                                                .to_string(),
-                                        )
-                                        .with_onclick_action(
-                                            WorkspaceAction::HandleConflictingWorkflow(workflow.id),
-                                        ),
-                                    )
-                                    .with_object_id(object_id)
-                            } else if let Some(env_var_collection) = cloned_env_var_collection {
-                                DismissibleToast::error(message)
-                                    .with_link(
-                                        ToastLink::new(
-                                            "Check out the latest version and try again."
-                                                .to_string(),
-                                        )
-                                        .with_onclick_action(
-                                            WorkspaceAction::HandleConflictingEnvVarCollection(
-                                                env_var_collection.id,
-                                            ),
-                                        ),
-                                    )
-                                    .with_object_id(object_id)
-                            } else {
-                                return;
-                            };
-                            view.add_persistent_toast(new_toast, ctx);
-                        }
-                        OperationSuccessType::FeatureNotAvailable => {
-                            if cloned_workflow.is_some() {
-                                report_error!(
-                                    "Getting feature not available message for workflows"
-                                );
-                            }
-                        }
-                        OperationSuccessType::Denied(_) => {
-                            let new_toast =
-                                DismissibleToast::error(message).with_object_id(object_id);
-                            view.add_persistent_toast(new_toast, ctx);
-                        }
-                    });
-            }
-        }
-
-        // For confirmation toast of permadeletion
-        if let Some(n) = result.num_objects
-            && let Some(message) = CloudObjectToastMessage::toast_deletion_confirm_message(
-                n,
-                &result.operation,
-                &result.success_type,
-            )
-        {
-            self.toast_stack
-                    .update(ctx, |view, ctx| match result.success_type {
-                        OperationSuccessType::Success => {
-                            let new_toast = DismissibleToast::success(message);
-                            view.add_ephemeral_toast(new_toast, ctx);
-                        }
-                        OperationSuccessType::Failure => {
-                            let new_toast: DismissibleToast<WorkspaceAction> =
-                                DismissibleToast::error(message);
-                            view.add_ephemeral_toast(new_toast, ctx);
-                        }
-                        OperationSuccessType::Rejection => {
-                            let new_toast = DismissibleToast::error(message);
-                            view.add_ephemeral_toast(new_toast, ctx);
-                        }
-                        OperationSuccessType::FeatureNotAvailable => {
-                            report_error!(
-                                "Should not get deletion confirmation message when feature is not available",
-                                extra: { "operation" => ?result.operation }
-                            );
-                        }
-                        OperationSuccessType::Denied(_) => {
-                            let new_toast = DismissibleToast::error(message);
-                            view.add_ephemeral_toast(new_toast, ctx);
-                        },
-                    })
-        }
-
-        // If this was a successful update on a workflow - caused by this client - then we may need
-        // to update the contents of the workflow info box to represent the new synced state.
-        if result.success_type == OperationSuccessType::Success
-            && result.operation == ObjectOperation::Update
-        {
-            let cloud_model = CloudModel::as_ref(ctx);
-            let updated_object = cloud_model
-                .get_by_uid(&result.server_id.expect("Expect server id on success").uid());
-            if let Some(CloudObjectTypeAndId::Workflow(workflow_id)) =
-                updated_object.map(|o| o.cloud_object_type_and_id())
-            {
-                self.maybe_refresh_workflow_info_box_and_input(&workflow_id, ctx)
-            }
         }
     }
 
@@ -12850,12 +12392,6 @@ impl Workspace {
             });
         ctx.focus(&self.theme_deletion_modal);
         ctx.notify();
-    }
-
-    /// Opens the workflow from a given [`CloudWorkflow`]'s server ID.
-    fn open_workflow_with_existing(&mut self, workflow_id: SyncId, ctx: &mut ViewContext<Self>) {
-        let source = WorkflowOpenSource::Existing(workflow_id);
-        self.open_workflow_in_pane(&source, WorkflowViewMode::Edit, ctx)
     }
 
     fn render_tab_in_tab_bar(
@@ -17152,22 +16688,6 @@ impl TypedActionView for Workspace {
                 });
                 send_telemetry_from_ctx!(TelemetryEvent::DisableInputSync, ctx);
             }
-            HandleConflictingWorkflow(workflow_id) => {
-                self.toast_stack.update(ctx, |view, ctx| {
-                    view.dismiss_older_toasts(&workflow_id.uid(), ctx);
-                });
-                self.open_workflow_with_existing(*workflow_id, ctx);
-            }
-            HandleConflictingEnvVarCollection(env_var_collection_id) => {
-                self.toast_stack.update(ctx, |view, ctx| {
-                    view.dismiss_older_toasts(&env_var_collection_id.uid(), ctx);
-                });
-                self.open_env_var_collection(
-                    &EnvVarCollectionSource::Existing(*env_var_collection_id),
-                    true,
-                    ctx,
-                );
-            }
             OpenPromptEditor { open_source } => {
                 self.open_prompt_editor(*open_source, ctx);
             }
@@ -17286,7 +16806,6 @@ impl TypedActionView for Workspace {
             NewCodeFile => {
                 self.add_tab_for_new_code_file(ctx);
             }
-            OpenNotebook { id } => self.open_notebook(&NotebookSource::Existing(*id), ctx, true),
             RunWorkflow {
                 workflow,
                 workflow_source,

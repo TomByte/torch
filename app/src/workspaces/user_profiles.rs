@@ -1,9 +1,28 @@
 use std::collections::HashMap;
 
-pub use cloud_object_models::UserProfileWithUID;
 use torchui::{Entity, SingletonEntity};
 
 use crate::auth::UserUid;
+
+/// Public struct for storing all the UserProfile data that's fed in from either sqlite or the server.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct UserProfileWithUID {
+    pub firebase_uid: UserUid,
+    pub display_name: Option<String>,
+    pub email: String,
+    pub photo_url: String,
+}
+
+impl From<torch_graphql::user::PublicUserProfile> for UserProfileWithUID {
+    fn from(value: torch_graphql::user::PublicUserProfile) -> Self {
+        UserProfileWithUID {
+            firebase_uid: UserUid::new(&value.uid),
+            display_name: value.display_name,
+            email: value.email.unwrap_or_default(),
+            photo_url: value.photo_url.unwrap_or_default(),
+        }
+    }
+}
 
 pub enum UserProfilesEvent {}
 

@@ -55,10 +55,6 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::RectSelection,
         #[cfg(feature = "alacritty_settings_import")]
         FeatureFlag::AlacrittySettingsImport,
-        #[cfg(feature = "dynamic_workflow_enums")]
-        FeatureFlag::DynamicWorkflowEnums,
-        #[cfg(feature = "shared_with_me")]
-        FeatureFlag::SharedWithMe,
         #[cfg(feature = "ai_rules")]
         FeatureFlag::AIRules,
         #[cfg(feature = "shell_selector")]
@@ -71,8 +67,6 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::MinimalistUI,
         #[cfg(feature = "avatar_in_tab_bar")]
         FeatureFlag::AvatarInTabBar,
-        #[cfg(feature = "workflow_aliases")]
-        FeatureFlag::WorkflowAliases,
         #[cfg(feature = "ssh_drag_and_drop")]
         FeatureFlag::SshDragAndDrop,
         #[cfg(feature = "drag_tabs_to_windows")]

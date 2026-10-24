@@ -464,9 +464,6 @@ fn handle_terminal_view_event(
                 group.focus_pane(terminal_pane_id.into(), true, ctx);
                 ctx.emit(pane_group::Event::FocusPaneGroup);
             }
-            Event::OpenWarpDriveObjectInPane(uid) => {
-                ctx.emit(pane_group::Event::OpenWarpDriveObjectInPane(uid.clone()));
-            }
             #[cfg(feature = "local_fs")]
             Event::OpenFileWithTarget {
                 path,

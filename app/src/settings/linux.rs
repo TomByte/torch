@@ -1,5 +1,5 @@
 use settings::macros::define_settings_group;
-use settings::{SupportedPlatforms, SyncToCloud};
+use settings::{SupportedPlatforms};
 use torchui::platform::linux;
 
 define_settings_group!(LinuxAppConfiguration,
@@ -9,7 +9,6 @@ define_settings_group!(LinuxAppConfiguration,
             // Default to true on WSL and false on all other platforms.
             default: !linux::is_wsl(),
             supported_platforms: SupportedPlatforms::LINUX,
-            sync_to_cloud: SyncToCloud::Never,
             surface: settings::SettingSurfaces::GUI,
             private: false,
             toml_path: "system.force_x11",

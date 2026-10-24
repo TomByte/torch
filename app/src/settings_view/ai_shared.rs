@@ -7,13 +7,10 @@
 //! `Setting` parameter, and an anonymous argument-position parameter keeps
 //! those call sites working untouched.
 
-use std::cell::RefCell;
-use std::collections::HashMap;
 
-use settings::Setting;
 use torch_core::ui::theme::color::internal_colors;
 use torchui::elements::{
-    ChildView, Container, Element, Fill, Flex, MouseStateHandle, ParentElement,
+    ChildView, Container, Element, Fill, Flex, ParentElement,
 };
 use torchui::ui_components::components::{UiComponent, UiComponentStyles};
 use torchui::ui_components::switch::SwitchStateHandle;
@@ -21,7 +18,7 @@ use torchui::{Action, AppContext, SingletonEntity, View, ViewContext, ViewHandle
 
 use super::SettingsAction;
 use super::settings_page::{
-    CONTENT_FONT_SIZE, LocalOnlyIconState, ToggleState, build_toggle_element,
+    CONTENT_FONT_SIZE, ToggleState, build_toggle_element,
     render_body_item_label,
 };
 use crate::agent_status::footer::editor::AgentToolbarInlineEditor;
@@ -72,18 +69,17 @@ pub fn render_toolbar_layout_editor(
 }
 
 /// A settings row: label on the left, switch on the right.
-pub fn render_ai_setting_toggle<S: Setting>(
+pub fn render_ai_setting_toggle(
     label: impl Into<String>,
     action: impl Action + Clone,
     is_setting_enabled: bool,
     is_setting_toggleable: bool,
     switch_state: SwitchStateHandle,
-    tooltip_states: &RefCell<HashMap<String, MouseStateHandle>>,
     app: &AppContext,
 ) -> Box<dyn Element> {
     let appearance = Appearance::as_ref(app);
     build_toggle_element(
-        setting_label_element::<S>(label, is_setting_toggleable, tooltip_states, app),
+        setting_label_element(label, is_setting_toggleable, app),
         render_ai_feature_switch(
             switch_state,
             is_setting_enabled,
@@ -99,22 +95,15 @@ pub fn render_ai_setting_toggle<S: Setting>(
 /// `render_body_item_label` is generic over an action type only to type its
 /// optional click target. Settings labels never have one, so the parameter is
 /// pinned here instead of being threaded through every caller.
-fn setting_label_element<S: Setting>(
+fn setting_label_element(
     label: impl Into<String>,
     is_setting_toggleable: bool,
-    tooltip_states: &RefCell<HashMap<String, MouseStateHandle>>,
     app: &AppContext,
 ) -> Box<dyn Element> {
     render_body_item_label::<SettingsAction>(
         label.into(),
         Some(styles::header_font_color(is_setting_toggleable, app)),
         None,
-        LocalOnlyIconState::for_setting(
-            S::storage_key(),
-            S::sync_to_cloud(),
-            &mut tooltip_states.borrow_mut(),
-            app,
-        ),
         ToggleState::Enabled,
         Appearance::as_ref(app),
     )

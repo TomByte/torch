@@ -208,42 +208,7 @@ pub fn icon_button(
     )
 }
 
-pub fn accent_icon_button(
-    appearance: &Appearance,
-    icon: Icon,
-    active: bool,
-    mouse_state_handle: MouseStateHandle,
-) -> Button {
-    icon_button_internal(
-        appearance,
-        icon,
-        active,
-        mouse_state_handle,
-        ButtonMode::Accent,
-        None,
-    )
-}
-
 pub fn close_button(appearance: &Appearance, mouse_state_handle: MouseStateHandle) -> Button {
     icon_button(appearance, Icon::X, false, mouse_state_handle)
 }
 
-pub fn highlight(button: Button, appearance: &Appearance) -> Button {
-    button
-        .with_style(UiComponentStyles::default().set_font_color(
-            crate::ui_components::blended_colors::text_main(
-                appearance.theme(),
-                appearance.theme().background(),
-            ),
-        ))
-        .with_hovered_styles(
-            UiComponentStyles::default()
-                .set_background(appearance.theme().surface_3().into())
-                .set_font_color(appearance.theme().foreground().into()),
-        )
-        .with_clicked_styles(
-            UiComponentStyles::default()
-                .set_background(appearance.theme().background().into())
-                .set_font_color(appearance.theme().foreground().into()),
-        )
-}

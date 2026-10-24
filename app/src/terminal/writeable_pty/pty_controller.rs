@@ -491,9 +491,6 @@ impl<T: EventLoopSender> PtyController<T> {
             // Explicitly start the block now that the command is executed.
             let outcome = match source {
                 CommandExecutionSource::User => model.start_command_execution(),
-                CommandExecutionSource::EnvVarCollection { metadata } => {
-                    model.start_command_execution_from_env_var_collection(metadata)
-                }
             };
             if !outcome.is_accepted() {
                 return outcome;

@@ -16,9 +16,6 @@ pub enum FeatureFlag {
 
     RuntimeFeatureFlags,
 
-    /// Enables cloud object related features for an explicit allowlist of team testers.
-    CloudObjects,
-
     /// If `true`, fetch updated Torch channel versions from the Torch server endpoint instead of
     /// from GCP directly.
     FetchChannelVersionsFromWarpServer,
@@ -53,9 +50,6 @@ pub enum FeatureFlag {
     /// Used to gate an experiment we're doing on WarpDev ONLY
     /// to get a sense of PTY throughput over time.
     RecordPtyThroughput,
-
-    /// Whether to fetch generic string objects from the server.
-    FetchGenericStringObjects,
 
     /// Enables a setting on Intel Dual-GPU Macs to enable use of the integrated GPU over the
     /// discrete GPU.
@@ -106,14 +100,8 @@ pub enum FeatureFlag {
     /// Adds Alacritty as a supported terminal to import settings from.
     AlacrittySettingsImport,
 
-    /// Enable dynamic enum parameter types for workflow arguments
-    DynamicWorkflowEnums,
-
     /// Enables next action prediction within Torch, powered by AI.
     AgentPredict,
-
-    /// Enables receiving shared Torch Drive objects.
-    SharedWithMe,
 
     /// Enables AI rules for use with Agent Mode.
     AIRules,
@@ -139,9 +127,6 @@ pub enum FeatureFlag {
 
     /// Adds avatar to the tab bar.
     AvatarInTabBar,
-
-    /// Adds aliases for executing Torch Drive workflows.
-    WorkflowAliases,
 
     SshDragAndDrop,
     DragTabsToWindows,
@@ -594,7 +579,6 @@ impl FeatureFlag {
                     | Self::AgentViewPromptChip
                     | Self::AgentViewConversationListView
                     | Self::AvatarInTabBar
-                    | Self::CloudObjects
                     | Self::CloudConversations
                     | Self::WelcomeTips
                     | Self::Changelog

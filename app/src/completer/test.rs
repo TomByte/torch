@@ -16,7 +16,7 @@ use crate::terminal::model::session::{Session, SessionInfo};
 use crate::test_util::{Stub, VirtualFS};
 
 fn test_session_context(session: Session, cwd: TypedPathBuf, app: &App) -> SessionContext {
-    app.read(|ctx| SessionContext::new(session, CommandRegistry::default().into(), cwd, ctx))
+    app.read(|_| SessionContext::new(session, CommandRegistry::default().into(), cwd))
 }
 
 fn working_directory() -> TypedPathBuf {

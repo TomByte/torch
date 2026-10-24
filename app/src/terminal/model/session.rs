@@ -504,11 +504,7 @@ impl Sessions {
                 session.subshell_info().as_ref().map(|info| {
                     (
                         *id,
-                        if let Some(env_var_collection_name) = &info.env_var_collection_name {
-                            SubshellSource::EnvVarCollection(env_var_collection_name.clone())
-                        } else {
-                            SubshellSource::Command(info.spawning_command.clone())
-                        },
+                        SubshellSource::Command(info.spawning_command.clone()),
                     )
                 })
             })

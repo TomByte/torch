@@ -28,7 +28,7 @@ use torch_graphql::queries::get_ai_overages_for_workspace::{
 use super::ServerApi;
 use super::team::TeamClient;
 use crate::auth::UserUid;
-use crate::cloud_object::CloudObjectEventEntrypoint;
+use torch_server_client::event_entrypoint::CloudObjectEventEntrypoint;
 use crate::server::graphql::{get_request_context, get_user_facing_error_message};
 use crate::server::ids::ServerId;
 use crate::workspaces::user_workspaces::{

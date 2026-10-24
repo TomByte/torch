@@ -226,7 +226,6 @@ pub fn prompt_chip_logging_workflow(shell_family: ShellFamily) -> Option<Workflo
         author: Some("Torch".into()),
         author_url: None,
         shells: vec![],
-        environment_variables: None,
     })
 }
 

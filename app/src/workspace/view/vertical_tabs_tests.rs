@@ -67,7 +67,7 @@ fn summary_pane_kind_icons_pick_two_oldest_distinct_pane_kinds() {
         select_summary_pane_kind_icons([
             (EntityId::from_usize(30), SummaryPaneKind::Terminal),
             (EntityId::from_usize(20), code_summary_kind("main.rs")),
-            (EntityId::from_usize(40), SummaryPaneKind::Notebook,),
+            (EntityId::from_usize(40), SummaryPaneKind::File),
             (EntityId::from_usize(10), SummaryPaneKind::Terminal),
         ]),
         Some(SummaryPaneKindIcons::Pair {

@@ -478,7 +478,7 @@ fn snapshot_non_terminal_leaf_replaced_with_terminal() {
     let notebook_leaf = PaneNodeSnapshot::Leaf(LeafSnapshot {
         is_focused: false,
         custom_vertical_tabs_title: None,
-        contents: LeafContents::Notebook(NotebookPaneSnapshot::CloudNotebook { notebook_id: None }),
+        contents: LeafContents::Notebook(NotebookPaneSnapshot::LocalFileNotebook { path: None }),
     });
     let snapshot = PaneNodeSnapshot::Branch(BranchSnapshot {
         direction: crate::app_state::SplitDirection::Horizontal,

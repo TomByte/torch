@@ -9,7 +9,7 @@ use torchui::{AppContext, SingletonEntity as _};
 
 use crate::code::editor_management::CodeSource;
 use crate::root_view::quake_mode_window_id;
-use crate::server::ids::{ServerId, SyncId};
+use crate::server::ids::ServerId;
 use crate::settings_view::SettingsSection;
 use crate::tab::SelectedTabColor;
 use crate::terminal::ShellLaunchData;
@@ -126,8 +126,6 @@ pub enum LeafContents {
     Terminal(TerminalPaneSnapshot),
     Notebook(NotebookPaneSnapshot),
     Code(CodePaneSnapShot),
-    EnvVarCollection(EnvVarCollectionPaneSnapshot),
-    Workflow(WorkflowPaneSnapshot),
     Settings(SettingsPaneSnapshot),
     CodeReview(CodeReviewPaneSnapshot),
     /// The in-app network log pane. Not persisted across restarts because the
@@ -155,8 +153,6 @@ impl LeafContents {
             LeafContents::Terminal(_)
             | LeafContents::Notebook(_)
             | LeafContents::Code(_)
-            | LeafContents::EnvVarCollection(_)
-            | LeafContents::Workflow(_)
             | LeafContents::Settings(_)
             | LeafContents::CodeReview(_) => true,
         }
@@ -177,17 +173,6 @@ pub struct TerminalPaneSnapshot {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum NotebookPaneSnapshot {
-    CloudNotebook {
-        /// The ID of the notebook that was open in this pane. There are 3 possibilities:
-        /// 1. The pane contains a newly-created notebook that has not been edited yet. It might not
-        ///    have an ID yet (client or server), so this will be `None`.
-        /// 2. The pane contains a notebook that hasn't been synced to the server yet, so this will
-        ///    contain a client ID that should exist in SQLite.
-        /// 3. The pane contains a notebook that's known to the server, so this will contain the
-        ///    server ID.
-        notebook_id: Option<SyncId>,
-        // Settings for the notebook pane when it's opened (such as a folder to focus upon opening)
-    },
     LocalFileNotebook {
         /// The path to the local file that was open in this pane. This may be `None` if
         /// the pane contained an unreadable file.
@@ -207,23 +192,6 @@ pub enum CodePaneSnapShot {
         active_tab_index: usize,
         /// The full `CodeSource` for this pane, serialized as JSON in the DB.
         source: Option<CodeSource>,
-    },
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum WorkflowPaneSnapshot {
-    CloudWorkflow {
-        workflow_id: Option<SyncId>,
-        // Settings for the workflow pane when it's opened (such as a folder to focus upon opening)
-    },
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum EnvVarCollectionPaneSnapshot {
-    // CloudEnvVarCollection snapshots operate under the same heuristics
-    // as NotebookPaneSnapshot::CloudNotebook
-    CloudEnvVarCollection {
-        env_var_collection_id: Option<SyncId>,
     },
 }
 

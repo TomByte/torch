@@ -10,7 +10,7 @@ use torch_editor::content::text::{
     BlockHeaderSize, BlockType as ContentBlockType, BufferBlockStyle, CodeBlockType,
 };
 use torch_editor::render::model::{
-    BrokenLinkStyle, CheckBoxStyle, EmbeddedItem, HorizontalRuleStyle, InlineCodeStyle,
+    BrokenLinkStyle, CheckBoxStyle, HorizontalRuleStyle, InlineCodeStyle,
     ParagraphStyles, RichTextStyles, TableStyle,
 };
 use torch_util::user_input::UserInput;
@@ -19,16 +19,13 @@ use torchui::fonts::FamilyId;
 use torchui::ui_components::checkbox::HOVER_BACKGROUND_COLOR;
 
 use crate::appearance::Appearance;
-use crate::notebooks::editor::embedded_item::EmbeddedWorkflow;
 use crate::settings::{FontSettings, derived_notebook_font_size};
 use crate::themes::theme::Fill;
 use crate::ui_components::icons::Icon;
 use crate::util::color::{ContrastingColor, MinimumAllowedContrast};
-use crate::workflows::{CloudWorkflow, WorkflowSource, WorkflowType};
+use crate::workflows::WorkflowType;
 
 mod block_insertion_menu;
-mod embedded_item;
-mod embedding_model;
 mod find_bar;
 mod interaction_state_model;
 pub mod keys;
@@ -141,17 +138,6 @@ impl BlockType {
             BlockType::Code => "Code",
             BlockType::TaskList => "To-do list",
         }
-    }
-}
-
-/// The embedded item transformation for notebooks.
-pub(super) fn notebook_embedded_item_conversion(
-    mut mapping: serde_yaml::Mapping,
-) -> Option<Arc<dyn EmbeddedItem>> {
-    use serde_yaml::Value;
-    match mapping.remove(&Value::String("id".to_string())) {
-        Some(Value::String(hashed_id)) => Some(Arc::new(EmbeddedWorkflow::new(hashed_id))),
-        _ => None,
     }
 }
 
@@ -329,27 +315,15 @@ impl<'a> From<&'a BufferBlockStyle> for BlockType {
     }
 }
 
-/// Wrapper around the shared [`Workflow`] type with additional context for workflows contained
-/// within a notebook.
-///
-/// This may be a command block that's part of the notebook text, or an embedded Torch Drive workflow.
+/// Wrapper around the shared [`Workflow`] type for a command block that's part of the notebook
+/// text.
 #[derive(Debug, Clone, PartialEq)]
 pub struct NotebookWorkflow {
     /// Definition of the workflow itself.
     pub workflow: UserInput<Arc<WorkflowType>>,
-    /// The source of the workflow, for attribution. If `None`, the workflow should be attributed
-    /// to the parent notebook.
-    pub source: Option<WorkflowSource>,
 }
 
 impl NotebookWorkflow {
-    pub fn from_cloud_workflow(cloud_workflow: Box<CloudWorkflow>) -> Self {
-        Self {
-            source: Some(cloud_workflow.permissions.owner.into()),
-            workflow: UserInput::new(Arc::new(WorkflowType::Cloud(cloud_workflow))),
-        }
-    }
-
     /// Extract the [`WorkflowType`], assigning a name using the given callback if needed.
     pub fn named_workflow<F: FnOnce() -> Option<String>>(&self, name: F) -> Arc<WorkflowType> {
         match &**self.workflow {

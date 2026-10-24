@@ -1,8 +1,7 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use anyhow::Result;
-use torch_core::features::FeatureFlag;
 use torch_core::settings::ChangeEventReason;
 use torch_errors::report_error;
 use torchui::{
@@ -19,10 +18,9 @@ use super::workspace::{
     AdminEnablementSetting, EnterpriseSecretRegex, UgcCollectionEnablementSetting, Workspace,
     WorkspaceUid,
 };
-use crate::auth::{AuthStateProvider, UserUid};
+use torch_server_client::event_entrypoint::CloudObjectEventEntrypoint;
+use crate::auth::UserUid;
 use crate::channel::ChannelState;
-use crate::cloud_object::model::persistence::CloudModel;
-use crate::cloud_object::{CloudObjectEventEntrypoint, ObjectType, Owner, Space};
 use crate::server::experiments::ServerExperiment;
 use crate::server::ids::ServerId;
 use crate::server::server_api::team::TeamClient;
@@ -402,17 +400,6 @@ impl UserWorkspaces {
             .find(|t| t.uid == team_uid)
     }
 
-    /// The teams [`Self::owner_to_space`] recognizes. An owner naming a team outside this set
-    /// resolves to the shared space instead of that team's space, so a change here remaps
-    /// objects between spaces without any of them changing.
-    pub fn team_uids_across_all_workspaces(&self) -> HashSet<ServerId> {
-        self.workspaces
-            .iter()
-            .flat_map(|workspace| workspace.teams.iter())
-            .map(|team| team.uid)
-            .collect()
-    }
-
     pub fn workspace_from_uid(&self, workspace_uid: WorkspaceUid) -> Option<&Workspace> {
         self.workspaces.iter().find(|w| w.uid == workspace_uid)
     }
@@ -422,105 +409,6 @@ impl UserWorkspaces {
         workspace_uid: WorkspaceUid,
     ) -> Option<&mut Workspace> {
         self.workspaces.iter_mut().find(|w| w.uid == workspace_uid)
-    }
-
-    pub fn is_at_tier_limit_for_object_type(
-        team_uid: ServerId,
-        object_type: ObjectType,
-        ctx: &AppContext,
-    ) -> bool {
-        match object_type {
-            ObjectType::Notebook => {
-                !UserWorkspaces::has_capacity_for_shared_notebooks(team_uid, ctx, 1)
-            }
-            ObjectType::Workflow => {
-                !UserWorkspaces::has_capacity_for_shared_workflows(team_uid, ctx, 1)
-            }
-            ObjectType::Folder => false,
-            ObjectType::GenericStringObject(_) => false,
-        }
-    }
-
-    pub fn is_at_tier_limit_for_some_warp_drive_objects(
-        team_uid: ServerId,
-        ctx: &AppContext,
-    ) -> bool {
-        UserWorkspaces::is_at_tier_limit_for_object_type(team_uid, ObjectType::Notebook, ctx)
-            || UserWorkspaces::is_at_tier_limit_for_object_type(team_uid, ObjectType::Workflow, ctx)
-    }
-
-    // Checks if the team has capacity for another shared notebook for their current
-    // billing tier, given their current notebook count and delinquency status.
-    pub fn has_capacity_for_shared_notebooks(
-        team_uid: ServerId,
-        ctx: &AppContext,
-        new_shared_notebooks: usize,
-    ) -> bool {
-        let current_shared_notebooks = CloudModel::as_ref(ctx)
-            .active_notebooks_in_space(Space::Team { team_uid }, ctx)
-            .count();
-
-        let team = UserWorkspaces::as_ref(ctx).team_from_uid(team_uid);
-        if let Some(team) = team {
-            // If the team is past due or unpaid, then don't allow new notebooks.
-            if team.billing_metadata.is_delinquent_due_to_payment_issue() {
-                return false;
-            }
-
-            if let Some(policy) = team.billing_metadata.tier.shared_notebooks_policy {
-                // Allow new notebooks if policy is unlimited or if the number of notebooks
-                // is less than the limit.
-                policy.is_unlimited
-                    || current_shared_notebooks + new_shared_notebooks
-                        <= policy
-                            .limit
-                            .try_into()
-                            .expect("shared notebooks limit should be within max i64 range")
-            } else {
-                // If no policy is set, then allow it to go through by default (should still be enforced server-side)
-                true
-            }
-        } else {
-            // If the team is not found, then allow it to go through by default (should still be enforced server-side)
-            true
-        }
-    }
-
-    // Checks if the team has capacity for another shared workflow for their current
-    // billing tier, given their current workflow count and delinquency status.
-    pub fn has_capacity_for_shared_workflows(
-        team_uid: ServerId,
-        ctx: &AppContext,
-        new_shared_workflows: usize,
-    ) -> bool {
-        let current_shared_workflows = CloudModel::as_ref(ctx)
-            .active_workflows_in_space(Space::Team { team_uid }, ctx)
-            .count();
-
-        let team = UserWorkspaces::as_ref(ctx).team_from_uid(team_uid);
-        if let Some(team) = team {
-            // If the team is past due or unpaid, then don't allow new workflows.
-            if team.billing_metadata.is_delinquent_due_to_payment_issue() {
-                return false;
-            }
-
-            if let Some(policy) = team.billing_metadata.tier.shared_workflows_policy {
-                // Allow new workflows if policy is unlimited or if the number of workflows
-                // is less than the limit.
-                policy.is_unlimited
-                    || current_shared_workflows + new_shared_workflows
-                        <= policy
-                            .limit
-                            .try_into()
-                            .expect("shared workflows limit should be within max i64 range")
-            } else {
-                // If no policy is set, then allow it to go through by default (should still be enforced server-side)
-                true
-            }
-        } else {
-            // If the team is not found, then allow it to go through by default (should still be enforced server-side)
-            true
-        }
     }
 
     /// The user's single team in the current workspace.
@@ -586,21 +474,6 @@ impl UserWorkspaces {
         }
     }
 
-    // Returns a Vec of the user's active spaces, based on their
-    // team membership.
-    pub fn team_spaces(&self) -> Vec<Space> {
-        if let Some(workspace) = self.current_workspace() {
-            workspace
-                .teams
-                .iter()
-                .map(|team| Space::Team { team_uid: team.uid })
-                .collect()
-        } else {
-            // If the user has no workspace, they have no team spaces.
-            vec![]
-        }
-    }
-
     pub fn total_teammates_in_joinable_teams(&self) -> i64 {
         self.joinable_teams
             .iter()
@@ -610,76 +483,6 @@ impl UserWorkspaces {
 
     pub fn num_joinable_teams(&self) -> usize {
         self.joinable_teams.len()
-    }
-
-    pub fn spaces_for_window(&self, window_id: WindowId, ctx: &AppContext) -> Vec<Space> {
-        if AuthStateProvider::as_ref(ctx)
-            .get()
-            .is_user_web_anonymous_user()
-            .unwrap_or_default()
-        {
-            return vec![Space::Shared];
-        }
-        let mut spaces = vec![];
-        if let Some(team) = self.team_for_window(window_id) {
-            spaces.push(Space::Team { team_uid: team.uid });
-        }
-
-        if FeatureFlag::SharedWithMe.is_enabled()
-            && CloudModel::as_ref(ctx).has_directly_shared_objects(self, ctx)
-        {
-            spaces.push(Space::Shared);
-        }
-        spaces.push(Space::Personal);
-
-        spaces
-    }
-
-    // Returns the [`Owner`] for the user's personal drive. If the user is not authenticated, this
-    // returns `None`.
-    pub fn personal_drive(&self, ctx: &AppContext) -> Option<Owner> {
-        AuthStateProvider::as_ref(ctx)
-            .get()
-            .user_id()
-            .map(|user_uid| Owner::User { user_uid })
-    }
-
-    // Maps a [`Space`] into an [`Owner`], based on the user's team memberships. If the space
-    // does not directly identify an owner (it's the space for shared objects), returns `None`.
-    pub fn space_to_owner(&self, space: Space, ctx: &AppContext) -> Option<Owner> {
-        match space {
-            Space::Team { team_uid } => Some(Owner::Team { team_uid }),
-            Space::Personal => self.personal_drive(ctx),
-            Space::Shared => None,
-        }
-    }
-
-    // Maps an [`Owner`] into a [`Space`], based on the user's team memberships.
-    // This is always possible, as unknown owners imply the shared space.
-    pub fn owner_to_space(&self, owner: Owner, ctx: &AppContext) -> Space {
-        match owner {
-            Owner::User { user_uid } => {
-                if !FeatureFlag::SharedWithMe.is_enabled() {
-                    return Space::Personal;
-                }
-
-                let current_user = AuthStateProvider::as_ref(ctx).get().user_id();
-                if Some(user_uid) == current_user {
-                    Space::Personal
-                } else {
-                    Space::Shared
-                }
-            }
-            Owner::Team { team_uid } => {
-                if !FeatureFlag::SharedWithMe.is_enabled()
-                    || self.team_from_uid_across_all_workspaces(team_uid).is_some()
-                {
-                    Space::Team { team_uid }
-                } else {
-                    Space::Shared
-                }
-            }
-        }
     }
 
     pub fn has_teams(&self) -> bool {
@@ -761,7 +564,7 @@ impl UserWorkspaces {
             settings.set_enterprise_secret_redaction_settings(
                 self.is_enterprise_secret_redaction_enabled(),
                 self.get_enterprise_secret_redaction_regex_list(),
-                ChangeEventReason::CloudSync,
+                ChangeEventReason::LocalChange,
                 ctx,
             );
         });

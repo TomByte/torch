@@ -1,4 +1,3 @@
-pub mod cloud_objects;
 pub mod experiments;
 pub mod graphql;
 // Runner-only: the minter is constructed solely in the native, ambient-agent-run
@@ -9,6 +8,5 @@ pub mod network_log_pane_manager;
 pub mod network_log_view;
 pub mod retry_strategies;
 pub mod server_api;
-pub mod sync_queue;
 pub mod team_scope;
 pub mod telemetry;

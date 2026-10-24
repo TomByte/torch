@@ -9,15 +9,12 @@
 //! The [`PaneId`] must be created via a [`PaneView<BackingView>`]. The [`PaneId`] is consequently
 //! used to render a [`PaneView`] which internally renders the pane, including the [`BackingView`].
 pub(super) mod code_pane;
-pub(super) mod env_var_collection_pane;
 pub(super) mod file_pane;
 #[cfg(not(target_family = "wasm"))]
 pub(super) mod network_log_pane;
-pub(super) mod notebook_pane;
 pub(super) mod settings_pane;
 pub(super) mod terminal_pane;
 pub mod view;
-pub mod workflow_pane;
 
 use std::any::Any;
 use std::fmt::Display;
@@ -37,10 +34,8 @@ use super::{ActivationReason, LeafContents, PaneGroup, PaneGroupAction};
 #[cfg(feature = "local_fs")]
 use crate::code::buffer_location::LocalOrRemotePath;
 use crate::code::view::CodeView;
-use crate::env_vars::view::env_var_collection::EnvVarCollectionView;
 use crate::menu::MenuItem;
 use crate::notebooks::file::FileNotebookView;
-use crate::notebooks::notebook::NotebookView;
 use crate::pane_group::focus_state::PaneFocusHandle;
 use crate::server::network_log_view::NetworkLogView;
 use crate::settings::PaneSettings;
@@ -48,7 +43,6 @@ use crate::settings_view::SettingsView;
 use crate::terminal::TerminalView;
 use crate::terminal::available_shells::AvailableShell;
 use crate::view_components::action_button::ActionButton;
-use crate::workflows::workflow_view::WorkflowView;
 
 /// The opaque identifier for an arbitrary pane. Consumers
 /// should not be concerned with the internal IDs that are used;
@@ -109,11 +103,8 @@ impl Display for IPaneId {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub(crate) enum IPaneType {
     Terminal,
-    Notebook,
     File,
     Code,
-    EnvVarCollection,
-    Workflow,
     Settings,
     NetworkLog,
     /// A pane type only for tests.
@@ -125,11 +116,8 @@ impl Display for IPaneType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             IPaneType::Terminal => write!(f, "Terminal"),
-            IPaneType::Notebook => write!(f, "Notebook"),
             IPaneType::File => write!(f, "File"),
             IPaneType::Code => write!(f, "Code"),
-            IPaneType::EnvVarCollection => write!(f, "Environment Variable Collection"),
-            IPaneType::Workflow => write!(f, "Workflow"),
             IPaneType::Settings => write!(f, "Settings"),
             IPaneType::NetworkLog => write!(f, "Network Log"),
             #[cfg(test)]
@@ -163,23 +151,6 @@ impl PaneId {
         Self::new_from_ctx(IPaneType::File, ctx)
     }
 
-    /// Creates a [`PaneId`] from a [`ViewContext<PaneView<NotebookView>>`]
-    pub fn from_notebook_pane_ctx(ctx: &ViewContext<PaneView<NotebookView>>) -> Self {
-        Self::new_from_ctx(IPaneType::Notebook, ctx)
-    }
-
-    /// Creates a [`PaneId`] from a [`ViewContext<PaneView<EnvVarCollectionView>>`]
-    pub fn from_env_var_collection_pane_ctx(
-        ctx: &ViewContext<PaneView<EnvVarCollectionView>>,
-    ) -> Self {
-        Self::new_from_ctx(IPaneType::EnvVarCollection, ctx)
-    }
-
-    /// Creates a [`PaneId`] from a [`ViewContext<PaneView<WorkflowView>>`]
-    pub fn from_workflow_pane_ctx(ctx: &ViewContext<PaneView<WorkflowView>>) -> Self {
-        Self::new_from_ctx(IPaneType::Workflow, ctx)
-    }
-
     /// Creates a [`PaneId`] from a [`ViewContext<PaneView<TextView>>`]
     pub fn from_code_pane_ctx(ctx: &ViewContext<PaneView<CodeView>>) -> Self {
         Self::new_from_ctx(IPaneType::Code, ctx)
@@ -202,13 +173,6 @@ impl PaneId {
         Self::new(IPaneType::Terminal, terminal_pane_view)
     }
 
-    /// Creates a [`PaneId`] from a [`PaneView<NotebookView>`] entity ID.
-    pub fn from_notebook_pane_view(
-        notebook_pane_view: &ViewHandle<PaneView<NotebookView>>,
-    ) -> Self {
-        Self::new(IPaneType::Notebook, notebook_pane_view)
-    }
-
     /// Creates a [`PaneId`] from a [`PaneView<FileNotebookView>`] entity ID.
     pub fn from_file_pane_view(file_pane_view: &ViewHandle<PaneView<FileNotebookView>>) -> Self {
         Self::new(IPaneType::File, file_pane_view)
@@ -217,20 +181,6 @@ impl PaneId {
     /// Creates a [`PaneId`] from a [`PaneView<TextView>`] entity ID.
     pub fn from_code_pane_view(code_pane_view: &ViewHandle<PaneView<CodeView>>) -> Self {
         Self::new(IPaneType::Code, code_pane_view)
-    }
-
-    /// Creates a [`PaneId`] from a [`PaneView<EnvVarCollection>`] entity ID.
-    pub fn from_env_var_collection_view(
-        env_var_collection_view: &ViewHandle<PaneView<EnvVarCollectionView>>,
-    ) -> Self {
-        Self::new(IPaneType::EnvVarCollection, env_var_collection_view)
-    }
-
-    /// Creates a [`PaneId`] from a [`PaneView<WorkflowView>`] entity ID.
-    pub fn from_workflow_pane_view(
-        workflow_pane_view: &ViewHandle<PaneView<WorkflowView>>,
-    ) -> Self {
-        Self::new(IPaneType::Workflow, workflow_pane_view)
     }
 
     /// Creates a [`PaneId`] from a [`PaneView<SettingsView>`] entity ID.
@@ -277,10 +227,6 @@ impl PaneId {
         matches!(self.0.pane_type, IPaneType::Terminal)
     }
 
-    pub fn is_notebook_pane(&self) -> bool {
-        matches!(self.0.pane_type, IPaneType::Notebook)
-    }
-
     pub fn is_code_pane(&self) -> bool {
         matches!(self.0.pane_type, IPaneType::Code)
     }
@@ -295,20 +241,11 @@ impl PaneId {
             IPaneType::Terminal => {
                 ChildView::<PaneView<TerminalView>>::with_id(self.0.pane_view_id).finish()
             }
-            IPaneType::Notebook => {
-                ChildView::<PaneView<NotebookView>>::with_id(self.0.pane_view_id).finish()
-            }
             IPaneType::File => {
                 ChildView::<PaneView<FileNotebookView>>::with_id(self.0.pane_view_id).finish()
             }
             IPaneType::Code => {
                 ChildView::<PaneView<CodeView>>::with_id(self.0.pane_view_id).finish()
-            }
-            IPaneType::EnvVarCollection => {
-                ChildView::<PaneView<EnvVarCollectionView>>::with_id(self.0.pane_view_id).finish()
-            }
-            IPaneType::Workflow => {
-                ChildView::<PaneView<WorkflowView>>::with_id(self.0.pane_view_id).finish()
             }
             IPaneType::Settings => {
                 ChildView::<PaneView<SettingsView>>::with_id(self.0.pane_view_id).finish()

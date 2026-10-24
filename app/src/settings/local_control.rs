@@ -6,7 +6,7 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use settings::macros::define_settings_group;
-use settings::{SecureSetting, Setting, SupportedPlatforms, SyncToCloud};
+use settings::{SecureSetting, Setting, SupportedPlatforms};
 use torch_core::channel::{Channel, ChannelState};
 use torchui::{AppContext, ModelContext};
 use torchui_extras::secure_storage;
@@ -120,10 +120,6 @@ impl Setting for LocalControlModeSetting {
         SupportedPlatforms::DESKTOP
     }
 
-    fn sync_to_cloud() -> SyncToCloud {
-        SyncToCloud::Never
-    }
-
     fn is_private() -> bool {
         true
     }
@@ -152,14 +148,6 @@ impl Setting for LocalControlModeSetting {
             self.is_explicitly_set = explicitly_set;
             Self::emit_changed(ctx, settings::ChangeEventReason::LocalChange);
         }
-        Ok(())
-    }
-
-    fn set_value_from_cloud_sync(
-        &mut self,
-        _: Self::Value,
-        _: &mut ModelContext<Self::Group>,
-    ) -> Result<()> {
         Ok(())
     }
 

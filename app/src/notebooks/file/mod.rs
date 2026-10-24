@@ -402,7 +402,7 @@ impl FileNotebookView {
 
     #[cfg(feature = "local_fs")]
     fn open_telemetry_metadata(&self, ctx: &ViewContext<Self>) -> NotebookTelemetryMetadata {
-        NotebookTelemetryMetadata::new(None, None, NotebookLocation::LocalFile, None)
+        NotebookTelemetryMetadata::new(NotebookLocation::LocalFile)
             .with_markdown_table_count(
                 self.editor
                     .as_ref(ctx)
@@ -607,12 +607,7 @@ impl FileNotebookView {
         send_telemetry_from_ctx!(
             TelemetryEvent::NotebookAction(NotebookActionEvent {
                 action,
-                metadata: NotebookTelemetryMetadata::new(
-                    None,
-                    None,
-                    NotebookLocation::LocalFile,
-                    None
-                )
+                metadata: NotebookTelemetryMetadata::new(NotebookLocation::LocalFile)
             }),
             ctx
         );
@@ -811,28 +806,20 @@ impl FileNotebookView {
                         .as_ref()
                         .map(|location| format!("Command from {}", location.name))
                 });
-                let source = workflow.source.unwrap_or(WorkflowSource::Notebook {
-                    notebook_id: None,
-                    team_uid: None,
-                    location: NotebookLocation::LocalFile,
-                });
                 ctx.emit(FileNotebookEvent::RunWorkflow {
                     workflow: workflow_type,
-                    source,
+                    source: WorkflowSource::Notebook {
+                        location: NotebookLocation::LocalFile,
+                    },
                 });
             }
             EditorViewEvent::OpenedBlockInsertionMenu(source) => self.send_telemetry_action(
                 NotebookTelemetryAction::OpenBlockInsertionMenu { source: *source },
                 ctx,
             ),
-            EditorViewEvent::OpenedEmbeddedObjectSearch => {
-                self.send_telemetry_action(NotebookTelemetryAction::OpenEmbeddedObjectSearch, ctx)
-            }
             EditorViewEvent::OpenedFindBar => {
                 self.send_telemetry_action(NotebookTelemetryAction::OpenFindBar, ctx)
             }
-            EditorViewEvent::InsertedEmbeddedObject(info) => self
-                .send_telemetry_action(NotebookTelemetryAction::InsertEmbeddedObject(*info), ctx),
             EditorViewEvent::CopiedBlock { block, entrypoint } => self.send_telemetry_action(
                 NotebookTelemetryAction::CopyBlock {
                     block: *block,
@@ -849,7 +836,6 @@ impl FileNotebookView {
             ),
             EditorViewEvent::Navigate(_)
             | EditorViewEvent::Edited
-            | EditorViewEvent::EditWorkflow(_)
             | EditorViewEvent::CmdEnter
             | EditorViewEvent::EscapePressed
             | EditorViewEvent::TextSelectionChanged => (),

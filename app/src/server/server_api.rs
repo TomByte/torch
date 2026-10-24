@@ -2,7 +2,6 @@ pub mod auth;
 #[cfg(not(target_family = "wasm"))]
 pub(crate) mod download;
 pub mod managed_secrets;
-pub mod object;
 pub mod team;
 pub mod workspace;
 
@@ -17,7 +16,6 @@ use channel_versions::ChannelVersions;
 use chrono::{DateTime, FixedOffset};
 use instant::Instant;
 use managed_secrets::AppManagedSecretsClient;
-use object::ObjectClient;
 use parking_lot::Mutex;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
@@ -466,10 +464,6 @@ impl ServerApiProvider {
     }
 
     pub fn get_team_client(&self) -> Arc<dyn TeamClient> {
-        self.server_api.clone()
-    }
-
-    pub fn get_cloud_objects_client(&self) -> Arc<dyn ObjectClient> {
         self.server_api.clone()
     }
 

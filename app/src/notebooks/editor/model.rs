@@ -43,10 +43,8 @@ use vec1::{Vec1, vec1};
 
 use super::super::telemetry::SelectionMode as TelemetrySelectionMode;
 use super::NotebookWorkflow;
-use super::embedding_model::NotebookEmbed;
 use super::interaction_state_model::InteractionStateModel;
 use super::notebook_command::NotebookCommand;
-use crate::cloud_object::model::persistence::{CloudModel, CloudModelEvent};
 use crate::editor::InteractionState;
 use crate::notebooks::editor::interaction_state_model::InteractionStateModelEvent;
 use crate::notebooks::file::MarkdownDisplayMode;
@@ -183,10 +181,7 @@ impl NotebooksEditorModel {
         lazy_layout: bool,
         ctx: &mut ModelContext<Self>,
     ) -> Self {
-        let content = ctx.add_model(|_| {
-            Buffer::new(Box::new(notebook_tab_indentation))
-                .with_embedded_item_conversion(super::notebook_embedded_item_conversion)
-        });
+        let content = ctx.add_model(|_| Buffer::new(Box::new(notebook_tab_indentation)));
         ctx.subscribe_to_model(&content, |me, _, event, ctx| {
             me.handle_content_model_event(event, ctx);
         });
@@ -213,11 +208,6 @@ impl NotebooksEditorModel {
             &interaction_state,
             Self::handle_interaction_state_model_event,
         );
-
-        let cloud_model = CloudModel::handle(ctx);
-        ctx.subscribe_to_model(&cloud_model, |me, _, event, ctx| {
-            me.handle_cloud_model_event(event, ctx)
-        });
 
         let (resize_tx, resize_rx) = async_channel::unbounded();
         ctx.spawn_stream_local(
@@ -497,46 +487,11 @@ impl NotebooksEditorModel {
         }
     }
 
-    fn handle_cloud_model_event(&mut self, event: &CloudModelEvent, ctx: &mut ModelContext<Self>) {
-        // Ignore cloud events until bound to a real window, and when the window is closed.
-        let Some(window_id) = self.rte_window_id else {
-            return;
-        };
-        if !ctx.is_window_open(window_id) {
-            return;
-        }
-        match event {
-            CloudModelEvent::ObjectUpdated { type_and_id, .. }
-            | CloudModelEvent::ObjectTrashed { type_and_id, .. }
-            | CloudModelEvent::ObjectUntrashed { type_and_id, .. }
-            | CloudModelEvent::ObjectDeleted { type_and_id, .. }
-            | CloudModelEvent::ObjectMoved { type_and_id, .. } => {
-                if let Some(model) = self
-                    .child_models
-                    .model_handles::<NotebookEmbed>()
-                    .find(|model| model.as_ref(ctx).hashed_id() == type_and_id.sqlite_uid_hash())
-                {
-                    model.update(ctx, |model, ctx| {
-                        model.refresh_item_state(ctx);
-                    })
-                }
-            }
-            _ => (),
-        }
-    }
-
     /// Find the [`NotebookCommand`] model backing a laid-out block item.
     pub fn notebook_command_for_block(
         &self,
         offset: CharOffset,
     ) -> Option<ModelHandle<NotebookCommand>> {
-        self.child_models.model_at(offset)
-    }
-
-    pub fn notebook_embed_for_block(
-        &self,
-        offset: CharOffset,
-    ) -> Option<ModelHandle<NotebookEmbed>> {
         self.child_models.model_at(offset)
     }
 
@@ -1327,10 +1282,6 @@ impl NotebooksEditorModel {
         };
 
         // Re-apply cached highlighting for models when there is a theme update.
-        for model in self.child_models.model_handles::<NotebookEmbed>() {
-            model.update(ctx, |model, ctx| model.try_apply_cached_highlighting(ctx));
-        }
-
         for model in self.child_models.model_handles::<NotebookCommand>() {
             model.update(ctx, |model, ctx| model.try_apply_cached_highlighting(ctx));
         }
@@ -2195,7 +2146,6 @@ impl ChildModels {
         // - If a block were unstyled, its anchors may still be valid, but it won't be in the new
         //   outline, so the existing model handle will be dropped at the end of the method.
         let mut to_add = vec![];
-        let mut new_embedded_item = vec![];
         let mut reset_selection = vec![];
 
         for outline in content.as_ref(ctx).outline_blocks() {
@@ -2220,22 +2170,6 @@ impl ChildModels {
                         _ => to_add.push(outline),
                     }
                 }
-                BlockType::Item(BufferBlockItem::Embedded { item }) => {
-                    match existing_models.remove(&(outline.start, outline.end)) {
-                        Some(existing_model)
-                            if existing_model.as_any().is::<ModelHandle<NotebookEmbed>>() =>
-                        {
-                            log::trace!("Reusing existing EmbeddedItem model at {}", outline.start);
-
-                            if !existing_model.selectable(ctx) && existing_model.selected(ctx) {
-                                reset_selection.push((outline.start, existing_model));
-                            } else {
-                                self.models.insert(outline.start, existing_model);
-                            }
-                        }
-                        _ => new_embedded_item.push((item.hashed_id().to_string(), outline.start)),
-                    }
-                }
                 _ => (),
             }
         }
@@ -2244,7 +2178,7 @@ impl ChildModels {
         // mutable borrow of `content`, while the `outline_blocks` iterator already immutably
         // borrows it.
         self.models
-            .reserve(to_add.len() + new_embedded_item.len() + reset_selection.len());
+            .reserve(to_add.len() + reset_selection.len());
 
         for (model_start, model) in reset_selection {
             model.set_selected(false, ctx);
@@ -2274,20 +2208,6 @@ impl ChildModels {
             self.models.insert(outline.start, Box::new(new_model));
         }
 
-        for (hashed_id, start_offset) in new_embedded_item {
-            log::debug!("Adding EmbeddedItem model at {start_offset}");
-            let new_model: ModelHandle<_> = ctx.add_model(|ctx| {
-                NotebookEmbed::new(
-                    start_offset,
-                    hashed_id,
-                    content.clone(),
-                    selection_model.clone(),
-                    ctx,
-                )
-            });
-
-            self.models.insert(start_offset, Box::new(new_model));
-        }
     }
 }
 

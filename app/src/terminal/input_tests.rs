@@ -17,28 +17,25 @@ use torch_completer::completer::{
 };
 use torch_completer::meta::Span;
 use torch_util::user_input::UserInput;
+use torchui::keymap::Keystroke;
 use torchui::platform::WindowStyle;
 use torchui::text::SelectionType;
 use torchui::{App, UpdateView, WindowId};
 use unindent::Unindent;
 use watcher::HomeDirectoryWatcher;
-use workflows::workflow::{Argument, ArgumentType, Workflow};
+use workflows::workflow::{Argument, Workflow};
 
 use super::*;
 use crate::auth::AuthStateProvider;
 use crate::auth::auth_manager::AuthManager;
 use crate::changelog_model::ChangelogModel;
-use crate::cloud_object::model::persistence::CloudModel;
 use crate::context_chips::prompt::Prompt;
 use crate::editor::{DisplayPoint, EditorAction, Point, TextStyleOperation};
 use crate::input_suggestions::Item;
 use crate::network::NetworkStatus;
 use crate::persisted_workspace::PersistedWorkspace;
 use crate::search::files::model::FileSearchModel;
-use crate::server::cloud_objects::listener::Listener;
-use crate::server::cloud_objects::update_manager::UpdateManager;
 use crate::server::server_api::ServerApiProvider;
-use crate::server::sync_queue::SyncQueue;
 use crate::server::telemetry::context_provider::AppTelemetryContextProvider;
 use crate::settings::import::model::ImportedConfigModel;
 use crate::settings::{AliasExpansionSettings, AppEditorSettings, PrivacySettings};
@@ -235,14 +232,10 @@ pub fn initialize_app(app: &mut App) {
     app.add_singleton_model(|_| NetworkStatus::new());
     app.add_singleton_model(|_| SystemStats::new());
     app.add_singleton_model(|_| Prompt::mock());
-    app.add_singleton_model(SyncQueue::mock);
-    app.add_singleton_model(CloudModel::mock);
     app.add_singleton_model(ImportedConfigModel::new);
     app.add_singleton_model(UserWorkspaces::default_mock);
     app.add_singleton_model(TeamTesterStatus::mock);
     app.add_singleton_model(TeamUpdateManager::mock);
-    app.add_singleton_model(UpdateManager::mock);
-    app.add_singleton_model(Listener::mock);
     app.add_singleton_model(|_| Appearance::mock());
     app.add_singleton_model(PrivacySettings::mock);
     app.add_singleton_model(|_ctx| SyncedInputState::mock());
@@ -1664,7 +1657,6 @@ fn test_histignorespace_support_in_zsh() {
                 &ExecuteCommandEvent {
                     command: "cd".into(),
                     session_id,
-                    workflow_id: None,
                     workflow_command: None,
                     should_add_command_to_history: true,
                     source: CommandExecutionSource::User,
@@ -1679,7 +1671,6 @@ fn test_histignorespace_support_in_zsh() {
                 &ExecuteCommandEvent {
                     command: " ls".into(),
                     session_id,
-                    workflow_id: None,
                     workflow_command: None,
                     should_add_command_to_history: true,
                     source: CommandExecutionSource::User,
@@ -4084,9 +4075,9 @@ fn test_workflow_selected() {
             "{{p1}} {{parameter_2}} {{p3}} foo {{p1}} {{parameter_2}}",
         )
         .with_arguments(vec![
-            Argument::new("p1", ArgumentType::Text),
-            Argument::new("parameter_2", ArgumentType::Text),
-            Argument::new("p3", ArgumentType::Text),
+            Argument::new("p1"),
+            Argument::new("parameter_2"),
+            Argument::new("p3"),
         ]);
 
         input.update(&mut app, |input, ctx| {
@@ -4125,13 +4116,11 @@ fn test_workflow_selected_with_default_value() {
                 name: "p1".into(),
                 description: None,
                 default_value: Some("default_parameter_1".into()),
-                arg_type: Default::default(),
             },
             Argument {
                 name: "parameter_2".into(),
                 description: None,
                 default_value: Some("default_parameter_2".into()),
-                arg_type: Default::default(),
             },
         ]);
 
@@ -4167,7 +4156,7 @@ fn test_multiple_workflows_selected() {
         let input = terminal.read(&app, |terminal, _| terminal.input().clone());
 
         let workflow = Workflow::new("test", "p1 {{foo}} bar")
-            .with_arguments(vec![Argument::new("foo", ArgumentType::Text)]);
+            .with_arguments(vec![Argument::new("foo")]);
 
         input.update(&mut app, |input, ctx| {
             input.show_workflows_info_box_on_workflow_selection(
@@ -4248,9 +4237,8 @@ fn test_workflow_argument_tab_with_syntax_highlighting() {
                 name: "cwd".into(),
                 description: None,
                 default_value: Some("--cwd ./".into()),
-                arg_type: Default::default(),
             },
-            Argument::new("flags", ArgumentType::Text),
+            Argument::new("flags"),
         ]);
 
         input.update(&mut app, |input, ctx| {
@@ -4336,14 +4324,14 @@ fn test_workflow_view_does_not_panic() {
                 .with_description("This is a test workflow that prints Hello World!".into()),
             Workflow::new("Test Workflow with Args", "echo \"Hello {{person}}\"").with_arguments(
                 vec![
-                    Argument::new("person", ArgumentType::Text)
+                    Argument::new("person")
                         .with_description("The person you want to say hello to".to_string()),
                 ],
             ),
             Workflow::new("test", "echo \"Hello {{person}}\"")
                 .with_description("This is a test workflow that prints Hello {{person}}!".into())
                 .with_arguments(vec![
-                    Argument::new("person", ArgumentType::Text)
+                    Argument::new("person")
                         .with_description("The person you want to say hello to".to_string()),
                 ]),
         ];

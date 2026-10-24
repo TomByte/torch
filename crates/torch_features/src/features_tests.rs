@@ -34,7 +34,6 @@ fn torch_cannot_reenable_accounts_ai_or_cloud_with_runtime_overrides() {
         FeatureFlag::AgentMode,
         FeatureFlag::AgentPredict,
         FeatureFlag::AgentViewPromptChip,
-        FeatureFlag::CloudObjects,
         FeatureFlag::CloudConversations,
     ] {
         let _enabled = flag.override_enabled(true);

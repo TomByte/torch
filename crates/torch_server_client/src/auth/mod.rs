@@ -5,7 +5,6 @@ use std::sync::Arc;
 
 use anyhow::{Context as _, Result, anyhow};
 use async_trait::async_trait;
-use cloud_objects::ids::ServerId;
 use cynic::{MutationBuilder, QueryBuilder};
 use firebase::FirebaseError;
 use instant::Duration;
@@ -45,7 +44,7 @@ pub use user_uid::{TEST_USER_EMAIL, TEST_USER_UID, UserUid};
 
 use crate::base_client::{BaseClient, TEAM_UID_HEADER};
 use crate::graphql_helpers::{send_graphql_request, send_graphql_request_with_options};
-use crate::ids::ApiKeyUid;
+use crate::ids::{ApiKeyUid, ServerId};
 
 /// Header key used to associate unauthenticated requests with an experiment identity.
 pub const EXPERIMENT_ID_HEADER: &str = "X-Torch-Experiment-Id";

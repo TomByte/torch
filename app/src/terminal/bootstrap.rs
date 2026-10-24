@@ -1,4 +1,3 @@
-use itertools::Itertools;
 use torch_core::session_id::SessionId;
 use torch_terminal::bootstrap::SESSION_ID_PLACEHOLDER;
 pub use torch_terminal::bootstrap::{
@@ -11,7 +10,6 @@ use super::{
     model::session::{BootstrapSessionType, SessionInfo},
     warpify::settings::{PIPENV_SUBSHELL_COMMAND_REGEX, POETRY_SUBSHELL_COMMAND_REGEX},
 };
-use crate::env_vars::{EnvVar, EnvVarExt};
 use crate::terminal::session_settings::SessionSettings;
 use crate::terminal::shell::ShellType;
 
@@ -98,14 +96,13 @@ pub fn should_use_rc_file_bootstrap_method(
 /// `InitShell` hook based on the shell it is evaluated in.
 pub fn init_subshell_command(
     shell_type: Option<ShellType>,
-    vars: &[EnvVar],
     session_id: SessionId,
     ctx: &AppContext,
 ) -> String {
     match shell_type {
         Some(shell_type) => {
             let subshell_script =
-                init_subshell_script_for_shell(shell_type, &crate::ASSETS, vars, session_id, ctx);
+                init_subshell_script_for_shell(shell_type, &crate::ASSETS, session_id, ctx);
             format!(r#" [ -z $TORCH_BOOTSTRAPPED ] && eval '{subshell_script}'"#)
         }
         None => init_subshell_script_for_unknown_shell(&crate::ASSETS, session_id),
@@ -120,23 +117,13 @@ pub fn init_subshell_command(
 fn init_subshell_script_for_shell(
     shell_type: ShellType,
     assets: &dyn AssetProvider,
-    env_vars: &[EnvVar],
     session_id: SessionId,
     ctx: &AppContext,
 ) -> String {
     let honor_ps1 = *SessionSettings::as_ref(ctx).honor_ps1;
     let honor_ps1_env_var_value = if honor_ps1 { "1" } else { "0" };
 
-    // Prepend environment variable settings to the script
-    let env_setup_script = format!(
-        "export TORCH_HONOR_PS1={}; {}",
-        honor_ps1_env_var_value,
-        env_vars
-            .iter()
-            .map(|var| var.get_initialization_string(shell_type))
-            .collect_vec()
-            .join(" ")
-    );
+    let env_setup_script = format!("export TORCH_HONOR_PS1={honor_ps1_env_var_value};");
 
     // Load and escape the shell-specific init script
     let shell_init_script = match shell_type {

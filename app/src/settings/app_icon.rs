@@ -2,7 +2,7 @@ use enum_iterator::Sequence;
 use serde::{Deserialize, Serialize};
 use torch_core::channel::{Channel, ChannelState};
 use torch_core::settings::macros::define_settings_group;
-use torch_core::settings::{SupportedPlatforms, SyncToCloud};
+use torch_core::settings::{SupportedPlatforms};
 
 /// The app icon to use (mac-only).
 #[derive(
@@ -123,7 +123,6 @@ define_settings_group!(AppIconSettings, settings: [
         type: AppIcon,
         default: AppIcon::Default,
         supported_platforms: SupportedPlatforms::MAC,
-        sync_to_cloud: SyncToCloud::Never,
         surface: settings::SettingSurfaces::GUI,
         private: false,
         storage_key: "AppIcon",
@@ -134,7 +133,6 @@ define_settings_group!(AppIconSettings, settings: [
         type: bool,
         default: true,
         supported_platforms: SupportedPlatforms::MAC,
-        sync_to_cloud: SyncToCloud::Never,
         surface: settings::SettingSurfaces::GUI,
         private: false,
         storage_key: "ShowDockIcon",

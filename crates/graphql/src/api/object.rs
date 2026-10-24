@@ -1,10 +1,5 @@
-use crate::ai::AIConversation;
-use crate::folder::{Folder, FolderWithDescendants};
-use crate::generic_string_object::GenericStringObject;
-use crate::notebook::Notebook;
 use crate::scalars::Time;
 use crate::schema;
-use crate::workflow::Workflow;
 
 #[derive(cynic::QueryFragment, Debug, Clone)]
 pub struct ObjectMetadata {
@@ -31,36 +26,6 @@ pub enum ObjectType {
     Notebook,
     #[cynic(rename = "Workflow")]
     Workflow,
-    #[cynic(fallback)]
-    Unknown,
-}
-
-#[derive(cynic::QueryFragment, Debug)]
-pub struct ObjectUpdateSuccess {
-    pub last_editor_uid: cynic::Id,
-    pub revision_ts: Time,
-}
-
-#[allow(clippy::large_enum_variant)]
-#[derive(cynic::InlineFragments, Debug, Clone)]
-pub enum CloudObject {
-    AIConversation(AIConversation),
-    Folder(Folder),
-    GenericStringObject(GenericStringObject),
-    Notebook(Notebook),
-    Workflow(Workflow),
-    #[cynic(fallback)]
-    Unknown,
-}
-
-#[allow(clippy::large_enum_variant)]
-#[derive(cynic::InlineFragments, Debug, Clone)]
-pub enum CloudObjectWithDescendants {
-    AIConversation(AIConversation),
-    FolderWithDescendants(FolderWithDescendants),
-    GenericStringObject(GenericStringObject),
-    Notebook(Notebook),
-    Workflow(Workflow),
     #[cynic(fallback)]
     Unknown,
 }

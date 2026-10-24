@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow, bail};
+use anyhow::{Result, anyhow};
 use ordered_float::OrderedFloat;
 use torch_errors::report_error;
 use torch_graphql::billing::{
@@ -23,7 +23,6 @@ use torch_graphql::billing::{
     UsageVisibilityPolicy as GqlUsageVisibilityPolicy, WarpAiPolicy as GqlWarpAiPolicy,
 };
 use torch_graphql::queries::get_workspaces_metadata_for_user::User as GqlUser;
-use torch_graphql::subscriptions::get_warp_drive_updates::WarpDriveUpdate;
 use torch_graphql::user::{
     DiscoverableTeamData as GqlDiscoverableTeamData,
     DiscoverableWorkspaceData as GqlDiscoverableWorkspaceData,
@@ -58,9 +57,7 @@ use super::workspace::{
 };
 use crate::auth::UserUid;
 use crate::convert_to_server_experiment;
-use crate::server::cloud_objects::listener::ObjectUpdateMessage;
 use crate::server::experiments::ServerExperiment;
-use crate::server::graphql::schema::object_action_history_from_gql;
 use crate::server::ids::ServerId;
 use crate::workspaces::workspace::{
     AiOverages, BonusGrantsPurchased, ByoApiKeyPolicy, ByoEndpointPolicy, ChargeUnit,
@@ -1037,50 +1034,6 @@ pub fn workspaces_metadata_response_from_gql(
         joinable_teams,
         experiments,
         user_tier,
-    }
-}
-
-pub fn object_update_message_from_gql(value: WarpDriveUpdate) -> Result<ObjectUpdateMessage> {
-    match value {
-        WarpDriveUpdate::ObjectActionOccurred(message) => {
-            Ok(ObjectUpdateMessage::ObjectActionOccurred {
-                history: object_action_history_from_gql(message.history)?,
-            })
-        }
-        WarpDriveUpdate::ObjectContentUpdated(message) => {
-            let server_object = message.object.try_into()?;
-            let last_editor = message.last_editor.map(|e| e.into());
-            Ok(ObjectUpdateMessage::ObjectContentChanged {
-                server_object: Box::new(server_object),
-                last_editor,
-            })
-        }
-        WarpDriveUpdate::ObjectDeleted(message) => Ok(ObjectUpdateMessage::ObjectDeleted {
-            object_uid: ServerId::from_string_lossy(message.object_uid.inner()),
-        }),
-        WarpDriveUpdate::ObjectMetadataUpdated(message) => {
-            Ok(ObjectUpdateMessage::ObjectMetadataChanged {
-                metadata: message.metadata.try_into()?,
-            })
-        }
-        WarpDriveUpdate::ObjectPermissionsUpdated(message) => {
-            Ok(ObjectUpdateMessage::ObjectPermissionsChangedV2 {
-                object_uid: ServerId::from_string_lossy(message.object_uid.inner()),
-                user_profiles: message
-                    .user_profiles
-                    .into_iter()
-                    .flatten()
-                    .map(Into::into)
-                    .collect(),
-                permissions: message.permissions.try_into()?,
-            })
-        }
-        WarpDriveUpdate::TeamMembershipsChanged(_) => {
-            Ok(ObjectUpdateMessage::TeamMembershipsChanged)
-        }
-        WarpDriveUpdate::AmbientTaskUpdated(_) | WarpDriveUpdate::Unknown => {
-            bail!("Unexpected WarpDriveUpdate variant")
-        }
     }
 }
 

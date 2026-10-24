@@ -34,10 +34,6 @@ asset_cache = { path = "crates/asset_cache" }
 asset_macro = { path = "crates/asset_macro" }
 channel_versions = { path = "crates/channel_versions", default-features = false }
 command = { path = "crates/command" }
-cloud_objects = { path = "crates/cloud_objects" }
-cloud_object_client = { path = "crates/cloud_object_client" }
-cloud_object_persistence = { path = "crates/cloud_object_persistence" }
-cloud_object_models = { path = "crates/cloud_object_models" }
 field_mask = { path = "crates/field_mask" }
 firebase = { path = "crates/firebase" }
 fuzzy_match = { path = "crates/fuzzy_match" }

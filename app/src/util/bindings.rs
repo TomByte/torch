@@ -758,13 +758,10 @@ pub enum BindingGroup {
     Close,
     Navigation,
     WarpAi,
-    Workflow,
-    Notebooks,
     Folders,
     KeyboardShortcuts,
     AutoUpdate,
     Notifications,
-    EnvVarCollection,
     Terminal,
 }
 
@@ -775,14 +772,11 @@ impl BindingGroup {
             Self::Settings => "settings",
             Self::WarpAi => "warp_ai",
             Self::Navigation => "navigation",
-            Self::Workflow => "workflows",
-            Self::Notebooks => "notebooks",
             Self::Folders => "folders",
             Self::KeyboardShortcuts => "keyboard_shortcuts",
             Self::Close => "close",
             Self::AutoUpdate => "autoupdate",
             Self::Notifications => "notifications",
-            Self::EnvVarCollection => "env_var_collections",
             Self::Terminal => "terminal",
         }
     }

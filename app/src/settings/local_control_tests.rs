@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-use settings::{PrivatePreferences, PublicPreferences, Setting as _, SettingsManager, SyncToCloud};
+use settings::{PrivatePreferences, PublicPreferences, Setting as _, SettingsManager};
 use torch_core::channel::{Channel, ChannelState};
 use torchui::SingletonEntity as _;
 use torchui_extras::secure_storage::{self, AppContextExt as _};
@@ -182,60 +182,6 @@ fn mode_does_not_migrate_from_private_preferences() {
     });
 }
 #[test]
-fn mode_is_private_and_never_cloud_synced() {
-    assert_eq!(LocalControlModeSetting::sync_to_cloud(), SyncToCloud::Never);
+fn mode_is_private() {
     assert!(LocalControlModeSetting::is_private());
-}
-
-#[test]
-fn cloud_sync_cannot_disable_local_control() {
-    torchui::App::test((), |mut app| async move {
-        app.update(|ctx| {
-            ctx.add_singleton_model(|_| {
-                PublicPreferences::new(
-                    Box::<user_preferences::in_memory::InMemoryPreferences>::default(),
-                )
-            });
-            ctx.add_singleton_model(|_| {
-                PrivatePreferences::new(
-                    Box::<user_preferences::in_memory::InMemoryPreferences>::default(),
-                )
-            });
-            ctx.add_singleton_model(|_| SettingsManager::default());
-            ctx.add_singleton_model(|_| -> secure_storage::Model {
-                Box::<InMemorySecureStorage>::default()
-            });
-            LocalControlSettings::register(ctx);
-        });
-
-        app.update(|ctx| {
-            LocalControlSettings::handle(ctx).update(ctx, |settings, ctx| {
-                settings
-                    .local_control_mode
-                    .set_value(LocalControlMode::Enabled, ctx)
-            })
-        })
-        .expect("local control should enable");
-
-        app.update(|ctx| {
-            LocalControlSettings::handle(ctx).update(ctx, |settings, ctx| {
-                settings
-                    .local_control_mode
-                    .set_value_from_cloud_sync(LocalControlMode::Disabled, ctx)
-            })
-        })
-        .expect("cloud sync update should be ignored without error");
-
-        app.read(|ctx| {
-            let settings = LocalControlSettings::as_ref(ctx);
-            assert_eq!(settings.mode(), LocalControlMode::Enabled);
-            let stored = ctx
-                .secure_storage()
-                .read_value(LocalControlModeSetting::storage_key())
-                .expect("explicitly enabled mode should remain stored securely");
-            let mode = serde_json::from_str::<LocalControlMode>(&stored)
-                .expect("stored local-control mode should deserialize");
-            assert_eq!(mode, LocalControlMode::Enabled);
-        });
-    });
 }

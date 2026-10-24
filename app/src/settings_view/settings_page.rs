@@ -1,11 +1,9 @@
 use core::fmt::{self, Display};
 use std::borrow::Cow;
-use std::collections::HashMap;
 
 use itertools::Itertools as _;
 use pathfinder_geometry::vector::vec2f;
 use settings::Setting;
-use torch_core::settings::SyncToCloud;
 use torch_core::ui::theme::color::internal_colors;
 use torchui::elements::new_scrollable::{
     ClippedAxisConfiguration, DualAxisConfig, SingleAxisConfig,
@@ -33,7 +31,6 @@ use super::keybindings::KeybindingsView;
 use super::privacy_page::PrivacyPageView;
 use super::scripting_page::ScriptingSettingsPageView;
 use crate::appearance::Appearance;
-use crate::settings::CloudPreferencesSettings;
 use crate::themes::theme::Fill;
 use crate::ui_components::blended_colors;
 use crate::ui_components::icons::Icon;
@@ -162,9 +159,8 @@ pub enum SettingsPageEvent {
 pub fn render_sub_header(
     appearance: &Appearance,
     text_name: impl Into<Cow<'static, str>>,
-    local_only_icon_state: Option<LocalOnlyIconState>,
 ) -> Box<dyn Element> {
-    let mut sub_header = Flex::row()
+    Flex::row()
         .with_cross_axis_alignment(CrossAxisAlignment::Start)
         .with_child(
             Shrinkable::new(
@@ -174,23 +170,8 @@ pub fn render_sub_header(
                     .finish(),
             )
             .finish(),
-        );
-    if let Some(LocalOnlyIconState::Visible {
-        mouse_state,
-        custom_tooltip,
-    }) = local_only_icon_state
-    {
-        sub_header.add_child(
-            Container::new(render_local_only_icon(
-                appearance,
-                mouse_state,
-                custom_tooltip,
-            ))
-            .with_padding_top(3.)
-            .finish(),
-        );
-    }
-    sub_header.finish()
+        )
+        .finish()
 }
 
 /// Contains only the sub header
@@ -240,9 +221,9 @@ pub fn render_sub_header_with_description(
 pub fn render_sub_sub_header(
     appearance: &Appearance,
     text_name: impl Into<Cow<'static, str>>,
-    local_only_icon_state: Option<LocalOnlyIconState>,
 ) -> Box<dyn Element> {
-    let mut sub_sub_header = Flex::row().with_child(
+    Flex::row()
+        .with_child(
         Container::new(
             Align::new(
                 Text::new_inline(text_name, appearance.ui_font_family(), CONTENT_FONT_SIZE)
@@ -255,19 +236,8 @@ pub fn render_sub_sub_header(
         )
         .with_padding_bottom(4.)
         .finish(),
-    );
-    if let Some(LocalOnlyIconState::Visible {
-        mouse_state,
-        custom_tooltip,
-    }) = local_only_icon_state
-    {
-        sub_sub_header.add_child(render_local_only_icon(
-            appearance,
-            mouse_state.clone(),
-            custom_tooltip,
-        ));
-    }
-    sub_sub_header.finish()
+        )
+        .finish()
 }
 
 pub fn render_separator(appearance: &Appearance) -> Box<dyn Element> {
@@ -295,61 +265,6 @@ pub enum ToggleState {
 impl From<bool> for ToggleState {
     fn from(value: bool) -> Self {
         if value { Self::Enabled } else { Self::Disabled }
-    }
-}
-
-/// Whether to show an icon indicating a setting is not cloud-synced
-#[derive(Default, Clone)]
-pub enum LocalOnlyIconState {
-    #[default]
-    Hidden,
-    Visible {
-        mouse_state: MouseStateHandle,
-        custom_tooltip: Option<String>,
-    },
-}
-
-impl LocalOnlyIconState {
-    /// Creates a `LocalOnlyIconState` for a given setting.
-    ///
-    /// This function determines whether to show an icon indicating that a setting
-    /// is not cloud-synced based on the `SyncToCloud` value of the setting.
-    ///
-    /// # Arguments
-    ///
-    /// * `storage_key` - A string slice that holds the storage key for the setting.
-    /// * `sync_to_cloud` - The `SyncToCloud` value for the setting.
-    /// * `mouse_states` - A mutable reference to a `HashMap` storing `MouseStateHandle`s.
-    ///
-    /// # Returns
-    ///
-    /// Returns a `LocalOnlyIconState` enum variant:
-    /// - `LocalOnlyIconState::Visible` with a `MouseStateHandle` if the setting is never synced to cloud.
-    /// - `LocalOnlyIconState::Hidden` if the setting is synced to cloud.
-    pub fn for_setting(
-        storage_key: &str,
-        sync_to_cloud: SyncToCloud,
-        mouse_states: &mut HashMap<String, MouseStateHandle>,
-        app: &AppContext,
-    ) -> Self {
-        if !*CloudPreferencesSettings::as_ref(app).settings_sync_enabled {
-            // Only show the local-only icon if settings sync is enabled.
-            return Self::Hidden;
-        }
-
-        match sync_to_cloud {
-            SyncToCloud::Never => {
-                let mouse_state = mouse_states
-                    .entry(storage_key.to_string())
-                    .or_default()
-                    .clone();
-                Self::Visible {
-                    mouse_state,
-                    custom_tooltip: None,
-                }
-            }
-            _ => Self::Hidden,
-        }
     }
 }
 
@@ -408,28 +323,10 @@ pub fn render_info_icon<T: Clone + Action>(
         .finish()
 }
 
-pub fn render_local_only_icon(
-    appearance: &Appearance,
-    mouse_state: MouseStateHandle,
-    custom_tooltip: Option<String>,
-) -> Box<dyn Element> {
-    let info_button = appearance
-        .ui_builder()
-        .local_only_icon_with_tooltip(
-            13.,
-            custom_tooltip.unwrap_or("This setting is not synced to your other devices".to_owned()),
-            mouse_state.clone(),
-        )
-        .finish();
-
-    Container::new(info_button).with_margin_left(4.).finish()
-}
-
 pub fn render_body_item_label<T: Clone + Action>(
     label_text: String,
     label_color_override: Option<Fill>,
     additional_info: Option<AdditionalInfo<T>>,
-    local_only_icon_state: LocalOnlyIconState,
     toggle_state: ToggleState,
     appearance: &Appearance,
 ) -> Box<dyn Element> {
@@ -438,7 +335,6 @@ pub fn render_body_item_label<T: Clone + Action>(
         None,
         label_color_override,
         additional_info,
-        local_only_icon_state,
         toggle_state,
         appearance,
     )
@@ -449,7 +345,6 @@ pub fn render_body_item_label_internal<T: Clone + Action>(
     label_icon: Option<Icon>,
     label_color_override: Option<Fill>,
     additional_info: Option<AdditionalInfo<T>>,
-    local_only_icon_state: LocalOnlyIconState,
     toggle_state: ToggleState,
     appearance: &Appearance,
 ) -> Box<dyn Element> {
@@ -511,35 +406,10 @@ pub fn render_body_item_label_internal<T: Clone + Action>(
             .with_cross_axis_alignment(CrossAxisAlignment::Center)
             .with_child(label)
             .with_child(render_info_icon(appearance, additional_info));
-        if let LocalOnlyIconState::Visible {
-            mouse_state,
-            custom_tooltip,
-        } = local_only_icon_state
-        {
-            row.add_child(render_local_only_icon(
-                appearance,
-                mouse_state,
-                custom_tooltip,
-            ));
-        }
         if let Some(child) = secondary_text_child {
             row.add_child(child);
         }
         row.finish()
-    } else if let LocalOnlyIconState::Visible {
-        mouse_state,
-        custom_tooltip,
-    } = local_only_icon_state
-    {
-        Flex::row()
-            .with_cross_axis_alignment(CrossAxisAlignment::Center)
-            .with_child(label)
-            .with_child(render_local_only_icon(
-                appearance,
-                mouse_state,
-                custom_tooltip,
-            ))
-            .finish()
     } else {
         label
     }
@@ -567,7 +437,6 @@ pub fn render_page_title(text: &str, size: f32, appearance: &Appearance) -> Box<
 pub fn render_body_item<T: Clone + Action>(
     label_text: String,
     additional_info: Option<AdditionalInfo<T>>,
-    local_only_icon_state: LocalOnlyIconState,
     toggle_state: ToggleState,
     appearance: &Appearance,
     child_element: Box<dyn Element>,
@@ -578,7 +447,6 @@ pub fn render_body_item<T: Clone + Action>(
             label_text,
             None,
             additional_info,
-            local_only_icon_state,
             toggle_state,
             appearance,
         ),
@@ -649,7 +517,6 @@ pub fn build_toggle_element(
 pub fn render_dropdown_item_label(
     label_text: String,
     secondary_text: Option<String>,
-    local_only_icon_state: LocalOnlyIconState,
     color_override: Option<Fill>,
     appearance: &Appearance,
 ) -> Box<dyn Element> {
@@ -689,23 +556,7 @@ pub fn render_dropdown_item_label(
         label
     };
 
-    if let LocalOnlyIconState::Visible {
-        mouse_state,
-        custom_tooltip,
-    } = local_only_icon_state
-    {
-        Flex::row()
-            .with_cross_axis_alignment(CrossAxisAlignment::Start)
-            .with_child(Shrinkable::new(1.0, label).finish())
-            .with_child(render_local_only_icon(
-                appearance,
-                mouse_state,
-                custom_tooltip,
-            ))
-            .finish()
-    } else {
-        label
-    }
+    label
 }
 
 pub(crate) fn render_dropdown_item<T: DropdownItemAction>(
@@ -713,7 +564,6 @@ pub(crate) fn render_dropdown_item<T: DropdownItemAction>(
     label: &str,
     secondary_text: Option<&str>,
     dropdown_subtext: Option<Box<dyn Element>>,
-    local_only_icon_state: LocalOnlyIconState,
     color_override: Option<Fill>,
     handle: &ViewHandle<Dropdown<T>>,
 ) -> Box<dyn Element> {
@@ -722,7 +572,6 @@ pub(crate) fn render_dropdown_item<T: DropdownItemAction>(
     let dropdown_item_label = Align::new(render_dropdown_item_label(
         label.to_string(),
         secondary_text.map(|secondary_text| secondary_text.to_string()),
-        local_only_icon_state,
         color_override,
         appearance,
     ))
@@ -1452,7 +1301,7 @@ impl<V: torchui::View> PageType<V> {
                         let header = if let Some(subtitle) = category.subtitle {
                             render_sub_header_with_description(appearance, category.title, subtitle)
                         } else {
-                            render_sub_header(appearance, category.title, None)
+                            render_sub_header(appearance, category.title)
                         };
                         page.add_child(render_header_with_trailing_element(
                             header,

@@ -21,7 +21,6 @@ use super::{
 };
 use crate::auth::AuthStateProvider;
 use crate::auth::auth_manager::AuthManager;
-use crate::cloud_object::model::persistence::CloudModel;
 use crate::notebooks::context_menu::MenuSource;
 use crate::notebooks::editor::keys::NotebookKeybindings;
 use crate::notebooks::file::is_markdown_file;
@@ -52,7 +51,6 @@ fn init_app(app: &mut App) {
     app.add_singleton_model(FileSearchModel::new);
     app.add_singleton_model(FileModel::new);
     app.add_singleton_model(NotebookKeybindings::new);
-    app.add_singleton_model(CloudModel::mock);
     app.add_singleton_model(|_| ServerApiProvider::new_for_test());
     app.add_singleton_model(|_| AuthStateProvider::new_for_test());
     app.add_singleton_model(AppTelemetryContextProvider::new_context_provider);

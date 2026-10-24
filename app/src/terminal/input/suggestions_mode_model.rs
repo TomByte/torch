@@ -1,6 +1,6 @@
 use torchui::{Entity, ModelContext, ModelHandle};
 
-use super::{BufferState, DynamicEnumSuggestionStatus, InputSuggestionsMode};
+use super::{BufferState, InputSuggestionsMode};
 use crate::terminal::input::buffer_model::InputBufferModel;
 use crate::terminal::input::inline_menu::InlineMenuType;
 
@@ -72,23 +72,6 @@ impl InputSuggestionsModeModel {
         ctx.emit(InputSuggestionsModeEvent::ModeChanged { buffer_to_restore });
     }
 
-    pub fn set_dynamic_enum_status(
-        &mut self,
-        status: DynamicEnumSuggestionStatus,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        if let InputSuggestionsMode::DynamicWorkflowEnumSuggestions {
-            dynamic_enum_status,
-            ..
-        } = &mut self.mode
-        {
-            *dynamic_enum_status = status;
-            ctx.emit(InputSuggestionsModeEvent::ModeChanged {
-                buffer_to_restore: None,
-            });
-        }
-    }
-
     pub fn is_visible(&self) -> bool {
         self.mode.is_visible()
     }
@@ -105,20 +88,6 @@ impl InputSuggestionsModeModel {
         matches!(
             self.mode,
             InputSuggestionsMode::CompletionSuggestions { .. }
-        )
-    }
-
-    pub fn is_static_workflow_enum_suggestions(&self) -> bool {
-        matches!(
-            self.mode,
-            InputSuggestionsMode::StaticWorkflowEnumSuggestions { .. }
-        )
-    }
-
-    pub fn is_dynamic_workflow_enum_suggestions(&self) -> bool {
-        matches!(
-            self.mode,
-            InputSuggestionsMode::DynamicWorkflowEnumSuggestions { .. }
         )
     }
 

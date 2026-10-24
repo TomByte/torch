@@ -16,7 +16,6 @@ use super::model::block::BlockId;
 use super::model::lifecycle::LifecycleRecoveryRecord;
 use super::model::session::{SessionId, SessionInfo};
 use super::model::terminal_model::{BlockIndex, ExitReason};
-use crate::server::ids::SyncId;
 use crate::server::telemetry::ImageProtocol;
 use crate::terminal::ClipboardType;
 use crate::terminal::model::block::{BlockMetadata, SerializedBlock};
@@ -238,12 +237,6 @@ pub struct AfterBlockCompletedEvent {
     pub command_finished_to_precmd_delay: Option<Duration>,
     pub block_type: BlockType,
     pub num_secrets_obfuscated: usize,
-
-    /// If the completed block was a workflow, this is its id.
-    pub cloud_workflow_id: Option<SyncId>,
-
-    /// If the completed block had an env var object associated.
-    pub cloud_env_var_collection_id: Option<SyncId>,
 }
 
 #[derive(Clone, Debug)]

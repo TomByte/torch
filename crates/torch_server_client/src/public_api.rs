@@ -1,13 +1,13 @@
 use std::collections::BTreeMap;
 
 use anyhow::{Context as _, Result};
-use cloud_objects::ids::ServerId;
 use serde::de::DeserializeOwned;
 use torch_core::channel::ChannelState;
 use torch_errors::{ErrorExt, register_error};
 use torch_graphql::platform_error::{PlatformErrorInfo, PlatformErrorMessageFormat};
 
 use crate::base_client::{AmbientHeaderPolicy, BaseClient, TEAM_UID_HEADER};
+use crate::ids::ServerId;
 
 #[derive(serde::Deserialize)]
 pub struct PresignedDownloadResponse {

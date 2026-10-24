@@ -1,5 +1,4 @@
 use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
-use pathfinder_color::ColorU;
 use pathfinder_geometry::rect::RectF;
 use pathfinder_geometry::vector::Vector2F;
 use torch_core::ui::appearance::Appearance;
@@ -27,7 +26,6 @@ const SUBSHELL_FLAG_HORIZONTAL_PADDING: f32 = 8.;
 const SUBSHELL_FLAG_VERTICAL_PADDING: f32 = 1.;
 
 // TODO(liam): remove this once figuring out how to get theme color in layout()
-const TORCH_DRIVE_ENV_VAR_COLLECTION_ICON_COLOR: u32 = 0xC464FFFF;
 const ICON_MARGIN: f32 = 4.;
 const TERMINAL_ICON: &str = "bundled/svg/terminal.svg";
 pub const HORIZONTAL_TEXT_MARGIN: f32 = 20.;
@@ -205,10 +203,6 @@ pub fn render_never_warpify_ssh_link(
 
 fn get_subshell_flag_info(subshell_source: &SubshellSource, theme: &WarpTheme) -> (String, Fill) {
     match subshell_source {
-        SubshellSource::EnvVarCollection(environment_name) => (
-            environment_name.to_string(),
-            Fill::Solid(ColorU::from_u32(TORCH_DRIVE_ENV_VAR_COLLECTION_ICON_COLOR)),
-        ),
         SubshellSource::Command(command) => (command.to_string(), theme.subshell_background()),
     }
 }

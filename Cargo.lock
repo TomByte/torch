@@ -2557,97 +2557,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cloud_object_client"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-channel",
- "async-trait",
- "chrono",
- "cloud_object_models",
- "cloud_objects",
- "mockall",
- "serde",
- "serde_json",
- "torch_core",
- "torch_graphql",
- "uuid",
-]
-
-[[package]]
-name = "cloud_object_models"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "cfg-if",
- "chrono",
- "cloud_object_persistence",
- "cloud_objects",
- "diesel",
- "handlebars",
- "lazy_static",
- "log",
- "persistence",
- "regex",
- "schemars 1.0.4",
- "serde",
- "serde_json",
- "serde_regex",
- "session-sharing-protocol",
- "settings",
- "settings_value",
- "torch_cli",
- "torch_core",
- "torch_errors",
- "torch_graphql",
- "torch_util",
- "url",
- "uuid",
- "warp-workflows",
-]
-
-[[package]]
-name = "cloud_object_persistence"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bincode",
- "chrono",
- "cloud_objects",
- "diesel",
- "lazy_static",
- "log",
- "persistence",
- "serde",
- "session-sharing-protocol",
- "torch_core",
- "torch_graphql",
-]
-
-[[package]]
-name = "cloud_objects"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "cynic",
- "derivative",
- "itertools 0.14.0",
- "lasso",
- "pathfinder_geometry",
- "schemars 1.0.4",
- "serde",
- "session-sharing-protocol",
- "settings_value",
- "thiserror 2.0.17",
- "torch_core",
- "torch_graphql",
- "torch_server_auth",
- "torchui_core",
- "uuid",
-]
-
-[[package]]
 name = "cmac"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -12236,10 +12145,6 @@ dependencies = [
  "channel_versions",
  "chrono",
  "clap",
- "cloud_object_client",
- "cloud_object_models",
- "cloud_object_persistence",
- "cloud_objects",
  "cocoa 0.26.0",
  "comfy-table",
  "command",
@@ -12905,9 +12810,6 @@ dependencies = [
  "bytes",
  "cfg-if",
  "chrono",
- "cloud_object_client",
- "cloud_object_models",
- "cloud_objects",
  "command",
  "cynic",
  "derivative",

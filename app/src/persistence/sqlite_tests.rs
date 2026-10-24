@@ -3,12 +3,9 @@ use std::sync::Arc;
 
 use crate::persisted_workspace::WorkspaceMetadata;
 use chrono::Utc;
-use cloud_object_persistence::to_cloud_object_permissions;
 use diesel::connection::SimpleConnection;
 use pathfinder_geometry::rect::RectF;
 use pathfinder_geometry::vector::Vector2F;
-use torch_core::features::FeatureFlag;
-use torch_graphql::scalars::time::ServerTimestamp;
 
 use super::{
     app_database_file_path, database_file_path_for_current_scope, database_file_path_for_scope,
@@ -19,12 +16,8 @@ use crate::app_state::{
     AppState, CodePaneSnapShot, CodePaneTabSnapshot, LeafContents, LeafSnapshot, PaneNodeSnapshot,
     TabGroupSnapshot, TabSnapshot, TerminalPaneSnapshot, WindowSnapshot,
 };
-use crate::cloud_object::{CloudObjectPermissions, Owner};
 use crate::code::editor_management::CodeSource;
-use crate::notebooks::{CloudNotebook, CloudNotebookModel};
-use crate::persistence::model::ObjectPermissions;
 use crate::persistence::{BlockCompleted, ModelEvent, PersistedDataScope, PersistenceScope};
-use crate::server::ids::ClientId;
 use crate::tab::SelectedTabColor;
 use crate::terminal::ShellLaunchData;
 use crate::terminal::model::block::SerializedBlock;
@@ -128,7 +121,7 @@ fn sqlite_read_restores_app_state_and_codebase_metadata() {
     let metadata = test_codebase_metadata("/tmp/remote-repo");
     save_codebase_index_metadata(&mut conn, metadata.clone())
         .expect("codebase index metadata should save");
-    let restored = read_sqlite_data(&mut conn, None, PersistedDataScope::Full)
+    let restored = read_sqlite_data(&mut conn, PersistedDataScope::Full)
         .expect("persisted data should load");
     let restored_app_state = restored
         .app_state
@@ -182,17 +175,6 @@ fn sqlite_writer_reuses_codebase_index_metadata_events() {
 }
 #[test]
 fn test_deduplicate_snapshots() {
-    let local_notebook = CloudNotebook::new_local(
-        CloudNotebookModel {
-            title: "Hello".to_string(),
-            data: "World".to_string(),
-            ai_document_id: None,
-            conversation_id: None,
-        },
-        Owner::mock_current_user(),
-        None,
-        ClientId::new(),
-    );
     let completed_block_1 = BlockCompleted {
         pane_id: vec![1, 2, 3],
         block: Arc::new(SerializedBlock::default()),
@@ -220,26 +202,19 @@ fn test_deduplicate_snapshots() {
     };
 
     let original_events = vec![
-        ModelEvent::UpsertNotebook {
-            notebook: local_notebook.clone(),
-        },
+        ModelEvent::DeleteBlocks(vec![7, 8, 9]),
         ModelEvent::Snapshot(snapshot_1.clone()),
         ModelEvent::SaveBlock(completed_block_1.clone()),
         ModelEvent::Snapshot(snapshot_2.clone()),
         ModelEvent::SaveBlock(completed_block_2.clone()),
         ModelEvent::Snapshot(snapshot_3.clone()),
-        ModelEvent::UpsertNotebook {
-            notebook: local_notebook.clone(),
-        },
+        ModelEvent::DeleteBlocks(vec![7, 8, 9]),
     ];
 
     let filtered_events = deduplicate_events(original_events);
     assert_eq!(filtered_events.len(), 5);
 
-    assert!(matches!(
-        &filtered_events[0],
-        &ModelEvent::UpsertNotebook { .. }
-    ));
+    assert!(matches!(&filtered_events[0], &ModelEvent::DeleteBlocks(_)));
     // The first snapshot should have been filtered out.
     assert!(matches!(&filtered_events[1], &ModelEvent::SaveBlock(_)));
     // The second snapshot should have been filtered out.
@@ -249,10 +224,7 @@ fn test_deduplicate_snapshots() {
         ModelEvent::Snapshot(snapshot) => assert_eq!(snapshot, &snapshot_3),
         other => panic!("Expected ModelEvent::Snapshot, got {other:?}"),
     }
-    assert!(matches!(
-        &filtered_events[4],
-        &ModelEvent::UpsertNotebook { .. }
-    ));
+    assert!(matches!(&filtered_events[4], &ModelEvent::DeleteBlocks(_)));
 }
 
 #[test]
@@ -327,7 +299,7 @@ fn test_sqlite_round_trips_vertical_tabs_panel_open() {
 
     save_app_state(&mut conn, &app_state).expect("app state should save");
 
-    let restored = read_sqlite_data(&mut conn, None, PersistedDataScope::Full)
+    let restored = read_sqlite_data(&mut conn, PersistedDataScope::Full)
         .expect("app state should load")
         .app_state
         .expect("app state should be present for the full scope");
@@ -368,7 +340,7 @@ fn test_sqlite_round_trips_resumable_cli_agent_session() {
 
     save_app_state(&mut conn, &app_state).expect("app state should save");
 
-    let restored = read_sqlite_data(&mut conn, None, PersistedDataScope::Full)
+    let restored = read_sqlite_data(&mut conn, PersistedDataScope::Full)
         .expect("app state should load")
         .app_state
         .expect("app state should be present for the full scope");
@@ -404,7 +376,7 @@ fn test_sqlite_round_trips_vertical_tabs_panel_width() {
 
     save_app_state(&mut conn, &app_state).expect("app state should save");
 
-    let restored = read_sqlite_data(&mut conn, None, PersistedDataScope::Full)
+    let restored = read_sqlite_data(&mut conn, PersistedDataScope::Full)
         .expect("app state should load")
         .app_state
         .expect("app state should be present for the full scope");
@@ -472,7 +444,7 @@ fn test_sqlite_round_trips_custom_vertical_tabs_title() {
 
     save_app_state(&mut conn, &app_state).expect("app state should save");
 
-    let restored = read_sqlite_data(&mut conn, None, PersistedDataScope::Full)
+    let restored = read_sqlite_data(&mut conn, PersistedDataScope::Full)
         .expect("app state should load")
         .app_state
         .expect("app state should be present for the full scope");
@@ -549,7 +521,7 @@ fn test_sqlite_round_trips_code_pane_with_multiple_tabs() {
 
     save_app_state(&mut conn, &app_state).expect("app state should save");
 
-    let restored = read_sqlite_data(&mut conn, None, PersistedDataScope::Full)
+    let restored = read_sqlite_data(&mut conn, PersistedDataScope::Full)
         .expect("app state should load")
         .app_state
         .expect("app state should be present for the full scope");
@@ -664,7 +636,7 @@ fn test_sqlite_round_trips_tab_groups() {
 
     save_app_state(&mut conn, &app_state).expect("app state should save");
 
-    let restored = read_sqlite_data(&mut conn, None, PersistedDataScope::Full)
+    let restored = read_sqlite_data(&mut conn, PersistedDataScope::Full)
         .expect("app state should load")
         .app_state
         .expect("app state should be present for the full scope");
@@ -811,7 +783,7 @@ fn test_sqlite_round_trips_pinned_state() {
 
     save_app_state(&mut conn, &app_state).expect("app state should save");
 
-    let restored = read_sqlite_data(&mut conn, None, PersistedDataScope::Full)
+    let restored = read_sqlite_data(&mut conn, PersistedDataScope::Full)
         .expect("app state should load")
         .app_state
         .expect("app state should be present for the full scope");
@@ -876,43 +848,6 @@ fn test_path_encode_decode() {
     assert_encode_then_decode_preserves_original_path(PathBuf::from("/temp/ñoñàscii/temp.txt"));
     assert_encode_then_decode_preserves_original_path(PathBuf::from("/temp/hindi/हिन्दी"));
     assert_encode_then_decode_preserves_original_path(PathBuf::from("/temp/cjk/狗没有耐心"));
-}
-
-#[test]
-fn test_deserialize_corrupted_guests() {
-    let _ = FeatureFlag::SharedWithMe.override_enabled(true);
-    // Use a hardcoded timestamp to ensure this test works on systems with more-than-microsecond
-    // precision.
-    let permissions_ts_micros = 123456;
-    let permissions_ts =
-        ServerTimestamp::from_unix_timestamp_micros(permissions_ts_micros).unwrap();
-
-    let db_permissions = ObjectPermissions {
-        id: 42,
-        object_metadata_id: 10,
-        subject_type: "TEAM".to_string(),
-        subject_id: Some("7".to_string()),
-        subject_uid: "team_uid12345678912345".to_string(),
-        permissions_last_updated_at: Some(permissions_ts_micros),
-        // This is not a valid set of encoded object guests.
-        object_guests: Some(vec![1, 2, 3]),
-        anyone_with_link_access_level: None,
-        anyone_with_link_source: None,
-    };
-
-    // The overall permissions should successfully convert, minus the object guests.
-    let cloud_permissions = to_cloud_object_permissions(&db_permissions, None);
-    assert_eq!(
-        cloud_permissions,
-        Some(CloudObjectPermissions {
-            owner: Owner::Team {
-                team_uid: crate::server::ids::ServerId::from_string_lossy("team_uid12345678912345"),
-            },
-            permissions_last_updated_ts: Some(permissions_ts),
-            anyone_with_link: None,
-            guests: vec![],
-        })
-    );
 }
 
 // Regression: GH#10083. The macOS green-tile button could leave a 1px-wide
@@ -987,7 +922,7 @@ fn test_sqlite_drops_too_small_bounds_on_read() {
     )
     .expect("corrupting update should succeed");
 
-    let restored = read_sqlite_data(&mut conn, None, PersistedDataScope::Full)
+    let restored = read_sqlite_data(&mut conn, PersistedDataScope::Full)
         .expect("app state should load")
         .app_state
         .expect("app state should be present for the full scope");

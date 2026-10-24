@@ -15,21 +15,17 @@ use torchui::notification::{NotificationSendError, RequestPermissionsOutcome};
 use torchui::rendering::ThinStrokes;
 
 use crate::channel::Channel;
-use crate::cloud_object::model::generic_string_model::GenericStringObjectId;
-use crate::cloud_object::{GenericStringObjectFormat, Space};
 #[cfg(feature = "local_fs")]
 use crate::code::editor_management::CodeSource;
-use crate::drive::CloudObjectTypeAndId;
 use crate::features::FeatureFlag;
 use crate::launch_configs::save_modal::SaveState;
 use crate::notebooks::telemetry::NotebookTelemetryAction;
-use crate::notebooks::{NotebookId, NotebookLocation};
+use crate::notebooks::NotebookLocation;
 use crate::palette::PaletteMode;
 use crate::pane_group::PaneDragDropLocation;
 use crate::prompt::editor_modal::OpenSource as PromptEditorOpenSource;
 use crate::search::QueryFilter;
 use crate::search::command_search::searcher::CommandSearchItemAction;
-use crate::server::ids::ServerId;
 use crate::settings::import::config::ParsedTerminalSetting;
 use crate::settings::import::model::TerminalType;
 use crate::tab::TabTelemetryAction;
@@ -50,7 +46,7 @@ use crate::tips::WelcomeTipFeature;
 use crate::util::file::external_editor::settings::EditorLayout;
 #[cfg(feature = "local_fs")]
 use crate::util::openable_file_type::FileTarget;
-use crate::workflows::{WorkflowId, WorkflowSelectionSource, WorkflowSource};
+use crate::workflows::{WorkflowSelectionSource, WorkflowSource};
 use crate::workspace::TabMovement;
 use crate::workspace::tab_settings::{TabCloseButtonPosition, WorkspaceDecorationVisibility};
 
@@ -108,94 +104,16 @@ pub enum DownloadSource {
     Homebrew,
 }
 
-// For use when recording what type of cloud object a particular telemetry is for.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum TelemetryCloudObjectType {
-    Workflow,
-    Notebook,
-    Folder,
-    GenericStringObject(GenericStringObjectFormat),
-}
-
-impl From<&CloudObjectTypeAndId> for TelemetryCloudObjectType {
-    fn from(cloud_object_type_and_id: &CloudObjectTypeAndId) -> Self {
-        match cloud_object_type_and_id {
-            CloudObjectTypeAndId::Notebook(_) => Self::Notebook,
-            CloudObjectTypeAndId::Workflow(_) => Self::Workflow,
-            CloudObjectTypeAndId::Folder(_) => Self::Folder,
-            CloudObjectTypeAndId::GenericStringObject { object_type, .. } => {
-                Self::GenericStringObject(*object_type)
-            }
-        }
-    }
-}
-
-/// For use when recording how a user has access to a cloud object.
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub enum TelemetrySpace {
-    /// The object is owned by the current user.
-    Personal,
-    /// The object is owned by a team the user is on.
-    Team,
-    /// The object was shared with the user.
-    Shared,
-}
-
-impl From<Space> for TelemetrySpace {
-    fn from(space: Space) -> Self {
-        match space {
-            Space::Personal => Self::Personal,
-            Space::Team { .. } => Self::Team,
-            Space::Shared => Self::Shared,
-        }
-    }
-}
-
-/// Common metadata to include in all Torch Drive telemetry events that act on a specific object.
-/// Events that only apply to a single object type may use specific metadata like [`WorkflowTelemetryMetadata`],
-/// [`NotebookTelemetryMetadata`], or [`EnvVarTelemetryMetadata`] instead.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct CloudObjectTelemetryMetadata {
-    pub object_type: TelemetryCloudObjectType,
-    /// The server UID of the object. This only exists for objects that have been synced to the
-    /// server.
-    pub object_uid: Option<ServerId>,
-    /// The space through which the user has access to the object.
-    pub space: Option<TelemetrySpace>,
-    /// If the object is owned by a team, this is the owning team's UID. For shared objects, the
-    /// user might not be on the team.
-    pub team_uid: Option<ServerId>,
-}
-
 #[derive(Clone, Serialize, Deserialize)]
 pub struct WorkflowTelemetryMetadata {
     pub workflow_categories: Option<Vec<String>>,
     pub workflow_source: WorkflowSource,
-    pub workflow_space: Option<TelemetrySpace>,
     pub workflow_selection_source: WorkflowSelectionSource,
-    // This field is only populated for cloud workflows that have been synced to the server
-    pub workflow_id: Option<WorkflowId>,
-    // Any referenced workflow enums that have been synced to the cloud
-    pub enum_ids: Vec<GenericStringObjectId>,
 }
 
 /// Metadata to include in all notebook telemetry events.
-///
-/// There are 4 expected configurations:
-/// * Personal cloud notebooks: `notebook_id` is `Some`, `team_uid` is `None`, and location is `PersonalCloud`
-/// * Team cloud notebooks: `notebook_id` is `Some`, `team_uid` is `Some`, and location is `Team`
-/// * Local file-based notebooks: `notebook_id` and `team_uid` are `None`, and location is `LocalFile`
-/// * Remote file-based notebooks: `notebook_id` and `team_uid` are `None`, and location is `RemoteFile`
-///
-/// This representation allows for invalid combinations, but makes querying the data easier (for
-/// example, to find all notebook events for a given team).
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct NotebookTelemetryMetadata {
-    /// The notebook ID, only available for cloud notebooks that have been synced to the server.
-    pub notebook_id: Option<NotebookId>,
-    /// The team UID, only available for cloud notebooks in a shared team.
-    pub team_uid: Option<ServerId>,
-    pub space: Option<TelemetrySpace>,
     /// Where the notebook is canonically located.
     pub location: NotebookLocation,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -203,17 +121,9 @@ pub struct NotebookTelemetryMetadata {
 }
 
 impl NotebookTelemetryMetadata {
-    pub fn new(
-        notebook_id: impl Into<Option<NotebookId>>,
-        team_uid: impl Into<Option<ServerId>>,
-        location: impl Into<NotebookLocation>,
-        space: Option<TelemetrySpace>,
-    ) -> Self {
+    pub fn new(location: NotebookLocation) -> Self {
         Self {
-            notebook_id: notebook_id.into(),
-            team_uid: team_uid.into(),
-            location: location.into(),
-            space,
+            location,
             markdown_table_count: None,
         }
     }
@@ -230,15 +140,6 @@ pub struct NotebookActionEvent {
     pub action: NotebookTelemetryAction,
     #[serde(flatten)]
     pub metadata: NotebookTelemetryMetadata,
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct EnvVarTelemetryMetadata {
-    /// The object ID, only available for cloud env vars that have been synced to the server.
-    pub object_id: Option<GenericStringObjectId>,
-    /// The team UID, only available for cloud env vars in a shared team.
-    pub team_uid: Option<ServerId>,
-    pub space: TelemetrySpace,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -706,8 +607,6 @@ pub enum TelemetryEvent {
         ui_location: LaunchConfigUiLocation,
         open_in_active_window: bool,
     },
-    DeletedWorkflow,
-    DeletedNotebook,
     ToggleApprovalsModal,
     SetLineHeight {
         new_value: f32,
@@ -749,10 +648,6 @@ pub enum TelemetryEvent {
         remote_source_failures: usize,
     },
     OpenNotebook(NotebookTelemetryMetadata),
-    EditNotebook {
-        metadata: NotebookTelemetryMetadata,
-        meaningful_change: bool,
-    },
     NotebookAction(NotebookActionEvent),
     OpenedAltScreenFind,
     UserInitiatedClose {
@@ -919,9 +814,6 @@ pub enum TelemetryEvent {
     PaneDropped {
         drop_location: PaneDragDropLocation,
     },
-    ObjectLinkCopied {
-        link: String,
-    },
     FileTreeToggled {
         source: FileTreeSource,
         is_code_mode_v2: bool,
@@ -939,7 +831,6 @@ pub enum TelemetryEvent {
     /// User created a new file from the file tree
     FileTreeItemCreated,
 
-    SharedObjectLimitHitBannerViewPlansButtonClicked,
     ResourceUsageStats {
         cpu: CpuUsageStats,
         mem: MemoryUsageStats,
@@ -973,8 +864,6 @@ pub enum TelemetryEvent {
         /// The OS footprint, not RSS, at confirmation time.
         confirmation_footprint_bytes: u64,
     },
-    EnvVarCollectionInvoked(EnvVarTelemetryMetadata),
-    EnvVarWorkflowParameterization(EnvVarTelemetryMetadata),
 
     /// The user imported settings from another terminal.
     CompletedSettingsImport {
@@ -1000,24 +889,6 @@ pub enum TelemetryEvent {
     },
     ToggleLigatureRendering {
         enabled: bool,
-    },
-    WorkflowAliasAdded {
-        workflow_id: Option<WorkflowId>,
-        workflow_space: Option<TelemetrySpace>,
-    },
-    WorkflowAliasRemoved {
-        workflow_id: Option<WorkflowId>,
-        workflow_space: Option<TelemetrySpace>,
-    },
-    WorkflowAliasEnvVarsAttached {
-        workflow_id: Option<WorkflowId>,
-        workflow_space: Option<TelemetrySpace>,
-        env_vars_id: Option<GenericStringObjectId>,
-        env_vars_space: Option<TelemetrySpace>,
-    },
-    WorkflowAliasArgumentEdited {
-        workflow_id: Option<WorkflowId>,
-        workflow_space: Option<TelemetrySpace>,
     },
 
     #[cfg(feature = "local_fs")]
@@ -1374,7 +1245,6 @@ impl TelemetryEvent {
             TelemetryEvent::CursorDisplayType {
                 cursor: cursor_display_type,
             } => Some(json!({"cursor": cursor_display_type})),
-            TelemetryEvent::ObjectLinkCopied { link } => Some(json!({"link": link})),
             TelemetryEvent::FileTreeToggled {
                 source,
                 is_code_mode_v2,
@@ -1486,14 +1356,6 @@ impl TelemetryEvent {
                 "was_immediately_executed": was_immediately_executed
             })),
             TelemetryEvent::OpenNotebook(metadata) => Some(json!(metadata)),
-            TelemetryEvent::EditNotebook {
-                metadata,
-                meaningful_change,
-            } => Some(json!({
-                "notebook_id": metadata.notebook_id,
-                "team_uid": metadata.team_uid,
-                "meaningful_change": meaningful_change,
-            })),
             TelemetryEvent::NotebookAction(event) => Some(json!(event)),
             TelemetryEvent::UserInitiatedClose { initiated_on } => {
                 Some(json!({ "initiated_on": initiated_on }))
@@ -1689,8 +1551,6 @@ impl TelemetryEvent {
                 "triggering_footprint_bytes": triggering_footprint_bytes,
                 "confirmation_footprint_bytes": confirmation_footprint_bytes,
             })),
-            TelemetryEvent::EnvVarCollectionInvoked(metadata) => Some(json!(metadata)),
-            TelemetryEvent::EnvVarWorkflowParameterization(metadata) => Some(json!(metadata)),
             TelemetryEvent::CompletedSettingsImport {
                 terminal_type,
                 imported_settings,
@@ -1716,38 +1576,6 @@ impl TelemetryEvent {
             TelemetryEvent::ToggleLigatureRendering { enabled } => {
                 Some(json!({"enabled": enabled}))
             }
-            TelemetryEvent::WorkflowAliasAdded {
-                workflow_id,
-                workflow_space,
-            } => Some(json!({
-                "workflow_id": workflow_id,
-                "workflow_space": workflow_space,
-            })),
-            TelemetryEvent::WorkflowAliasRemoved {
-                workflow_id,
-                workflow_space,
-            } => Some(json!({
-                "workflow_id": workflow_id,
-                "workflow_space": workflow_space,
-            })),
-            TelemetryEvent::WorkflowAliasArgumentEdited {
-                workflow_id,
-                workflow_space,
-            } => Some(json!({
-                "workflow_id": workflow_id,
-                "workflow_space": workflow_space,
-            })),
-            TelemetryEvent::WorkflowAliasEnvVarsAttached {
-                workflow_id,
-                workflow_space,
-                env_vars_id,
-                env_vars_space,
-            } => Some(json!({
-                "workflow_id": workflow_id,
-                "workflow_space": workflow_space,
-                "env_vars_id": env_vars_id,
-                "env_vars_space": env_vars_space,
-            })),
             TelemetryEvent::AutoupdateRelaunchAttempt { new_version } => Some(json!({
                 "new_version": new_version,
             })),
@@ -1807,8 +1635,6 @@ impl TelemetryEvent {
             | TelemetryEvent::ShowInFileExplorer
             | TelemetryEvent::OpenLaunchConfigSaveModal
             | TelemetryEvent::OpenLaunchConfigFile
-            | TelemetryEvent::DeletedWorkflow
-            | TelemetryEvent::DeletedNotebook
             | TelemetryEvent::ToggleApprovalsModal
             | TelemetryEvent::ResourceCenterOpened
             | TelemetryEvent::ResourceCenterTipsCompleted
@@ -1844,7 +1670,6 @@ impl TelemetryEvent {
             | TelemetryEvent::UpdateBlockFilterQuery
             | TelemetryEvent::BlockFilterToolbeltButtonClicked
             | TelemetryEvent::PaneDragInitiated
-            | TelemetryEvent::SharedObjectLimitHitBannerViewPlansButtonClicked
             | TelemetryEvent::SettingsImportResetButtonClicked
             | TelemetryEvent::ITermMultipleHotkeys
             | TelemetryEvent::SettingsImportInitiated
@@ -2172,8 +1997,6 @@ impl TelemetryEvent {
             | TelemetryEvent::SaveLaunchConfig { .. }
             | TelemetryEvent::OpenLaunchConfigFile
             | TelemetryEvent::OpenLaunchConfig { .. }
-            | TelemetryEvent::DeletedWorkflow
-            | TelemetryEvent::DeletedNotebook
             | TelemetryEvent::ToggleApprovalsModal
             | TelemetryEvent::SetLineHeight { .. }
             | TelemetryEvent::ResourceCenterOpened
@@ -2187,7 +2010,6 @@ impl TelemetryEvent {
             | TelemetryEvent::CommandSearchExited { .. }
             | TelemetryEvent::CommandSearchResultAccepted { .. }
             | TelemetryEvent::OpenNotebook(_)
-            | TelemetryEvent::EditNotebook { .. }
             | TelemetryEvent::NotebookAction(_)
             | TelemetryEvent::OpenedAltScreenFind
             | TelemetryEvent::UserInitiatedClose { .. }
@@ -2255,15 +2077,11 @@ impl TelemetryEvent {
             | TelemetryEvent::ToggleSnackbarInActivePane { .. }
             | TelemetryEvent::PaneDragInitiated
             | TelemetryEvent::PaneDropped { .. }
-            | TelemetryEvent::ObjectLinkCopied { .. }
             | TelemetryEvent::FileTreeToggled { .. }
-            | TelemetryEvent::SharedObjectLimitHitBannerViewPlansButtonClicked
             | TelemetryEvent::ResourceUsageStats { .. }
             | TelemetryEvent::MemoryUsageStats { .. }
             | TelemetryEvent::MemoryUsageHigh { .. }
             | TelemetryEvent::TransientMemorySpike { .. }
-            | TelemetryEvent::EnvVarCollectionInvoked(_)
-            | TelemetryEvent::EnvVarWorkflowParameterization(_)
             | TelemetryEvent::CompletedSettingsImport { .. }
             | TelemetryEvent::SettingsImportConfigFocused(_)
             | TelemetryEvent::SettingsImportResetButtonClicked
@@ -2272,10 +2090,6 @@ impl TelemetryEvent {
             | TelemetryEvent::UpdateAltScreenPaddingMode { .. }
             | TelemetryEvent::AddTabWithShell { .. }
             | TelemetryEvent::ToggleLigatureRendering { .. }
-            | TelemetryEvent::WorkflowAliasAdded { .. }
-            | TelemetryEvent::WorkflowAliasRemoved { .. }
-            | TelemetryEvent::WorkflowAliasEnvVarsAttached { .. }
-            | TelemetryEvent::WorkflowAliasArgumentEdited { .. }
             | TelemetryEvent::ToggleSshWarpification { .. }
             | TelemetryEvent::SetSshExtensionInstallMode { .. }
             | TelemetryEvent::SshRemoteServerChoiceDoNotAskAgainToggled { .. }
@@ -2358,7 +2172,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
         // with a feature flag when appropriate.
         #[deny(clippy::wildcard_enum_match_arm)]
         match self {
-            Self::ObjectLinkCopied => EnablementState::Always,
             Self::FileTreeToggled => EnablementState::Flag(FeatureFlag::FileTree),
             Self::FileTreeItemAttachedAsContext => EnablementState::Flag(FeatureFlag::FileTree),
             Self::CodeSelectionAddedAsContext => EnablementState::Flag(FeatureFlag::HoaCodeReview),
@@ -2372,7 +2185,7 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::PreviewPanePromoted => EnablementState::Always,
             Self::ToggleFocusPaneOnHover { .. } => EnablementState::Always,
 
-            Self::OpenNotebook | Self::EditNotebook | Self::NotebookAction => {
+            Self::OpenNotebook | Self::NotebookAction => {
                 EnablementState::Always
             }
             Self::BlockCompleted => EnablementState::Always,
@@ -2460,8 +2273,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::SaveLaunchConfig => EnablementState::Always,
             Self::OpenLaunchConfigFile => EnablementState::Always,
             Self::OpenLaunchConfig => EnablementState::Always,
-            Self::DeletedWorkflow => EnablementState::Always,
-            Self::DeletedNotebook => EnablementState::Always,
             Self::ToggleApprovalsModal => EnablementState::Always,
             Self::SetLineHeight => EnablementState::Always,
             Self::ResourceCenterOpened => EnablementState::Always,
@@ -2543,16 +2354,12 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::PaneDragInitiated => EnablementState::Always,
             Self::PaneDropped => EnablementState::Always,
             Self::ToggleShowBlockDividers => EnablementState::Flag(FeatureFlag::MinimalistUI),
-            Self::SharedObjectLimitHitBannerViewPlansButtonClicked => EnablementState::Always,
             Self::ResourceUsageStats => EnablementState::Always,
             Self::MemoryUsageStats => EnablementState::ChannelSpecific {
                 channels: vec![Channel::Local, Channel::Dev],
             },
             Self::MemoryUsageHigh => EnablementState::Always,
             Self::TransientMemorySpike => EnablementState::Always,
-            Self::EnvVarCollectionInvoked | Self::EnvVarWorkflowParameterization => {
-                EnablementState::Always
-            }
             Self::BlockCompletedOnDogfoodOnly => EnablementState::ChannelSpecific {
                 channels: vec![Channel::Local, Channel::Dev],
             },
@@ -2567,12 +2374,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::UpdateAltScreenPaddingMode => EnablementState::Always,
             Self::AddTabWithShell => EnablementState::Flag(FeatureFlag::ShellSelector),
             Self::ToggleLigatureRendering => EnablementState::Flag(FeatureFlag::Ligatures),
-            Self::WorkflowAliasAdded
-            | Self::WorkflowAliasRemoved
-            | Self::WorkflowAliasArgumentEdited
-            | Self::WorkflowAliasEnvVarsAttached => {
-                EnablementState::Flag(FeatureFlag::WorkflowAliases)
-            }
             #[cfg(windows)]
             Self::WSLRegistryError
             | Self::AutoupdateUnableToCloseApplications
@@ -2638,7 +2439,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::BlockSelection => "Block Selection",
             Self::BootstrappingSlow => "Bootstrapping Slow",
             Self::BootstrappingSlowContents => "Bootstrap Slow Contents",
-            Self::ObjectLinkCopied => "Object Link Copied",
             Self::FileTreeToggled => "File Tree Toggled",
             Self::FileTreeItemAttachedAsContext => "FileTree.AttachedAsContext",
             Self::CodeSelectionAddedAsContext => "CodeView.SelectionAddedAsContext",
@@ -2737,7 +2537,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::CommandSearchExited => "Command Search Exited",
             Self::CommandSearchResultAccepted => "Command Search Result Accepted",
             Self::OpenNotebook => "Notebook Opened",
-            Self::EditNotebook => "Notebook Edited",
             Self::NotebookAction => "Notebook Action",
             Self::OpenedAltScreenFind => "Opened alt screen find bar",
             Self::UserInitiatedClose => "User Initiated Closing Something",
@@ -2815,22 +2614,13 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::ToggleSnackbarInActivePane => "Toggle Sticky Command Header in Active Pane",
             Self::PaneDragInitiated => "Pane Drag Inititiated",
             Self::PaneDropped => "Pane Drag Ended",
-            Self::DeletedWorkflow => "Deleted Workflow",
-            Self::DeletedNotebook => "Deleted Notebook",
             Self::ToggleApprovalsModal => "Toggle Approvals Modal",
-            Self::SharedObjectLimitHitBannerViewPlansButtonClicked => {
-                "Shared Object Limit Hit Banner View Plans Button Clicked"
-            }
             Self::ResourceUsageStats => "perf_metrics.resource_usage",
             Self::MemoryUsageStats => "perf_metrics.memory_usage",
             Self::MemoryUsageHigh => "perf_metrics.memory_usage_high",
             Self::TransientMemorySpike => "perf_metrics.transient_memory_spike",
             // Agent Mode Query Suggestions is the legacy name for Prompt Suggestions - we avoid renaming
             // the event to avoid breaking historical telemetry data.
-            Self::EnvVarCollectionInvoked => "Invoked Environment Variables",
-            Self::EnvVarWorkflowParameterization => {
-                "Parameterized Workflow With Environment Variables"
-            }
             Self::CompletedSettingsImport => "Completed Settings Import",
             Self::SettingsImportConfigFocused => "Focused Config in Settings Import",
             Self::SettingsImportResetButtonClicked => {
@@ -2841,10 +2631,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::UpdateAltScreenPaddingMode => "Updated Alt Screen Padding Mode",
             Self::AddTabWithShell => "Add Tab With Shell",
             Self::ToggleLigatureRendering => "Toggle Ligature Rendering",
-            Self::WorkflowAliasAdded => "Added Workflow Alias",
-            Self::WorkflowAliasRemoved => "Removed Workflow Alias",
-            Self::WorkflowAliasArgumentEdited => "Edited Workflow Alias Argument",
-            Self::WorkflowAliasEnvVarsAttached => "Attached Workflow Alias Environment Variables",
 
             Self::RemoteServerBinaryCheck => "RemoteServer.BinaryCheck",
             Self::RemoteServerInstallation => "RemoteServer.Installation",
@@ -3045,8 +2831,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
                 "Opened the launch config YAML file from modal once saved successfully"
             }
             Self::OpenLaunchConfig => "Opened launch config for a session",
-            Self::DeletedWorkflow => "Deleted workflow from Torch Drive team",
-            Self::DeletedNotebook => "Deleted notebook from Torch Drive team",
             Self::ToggleApprovalsModal => "Opened or closed teams modal",
             Self::SetLineHeight => "Set line height through Settings -> Appearance",
             Self::ResourceCenterOpened => "Opened Resource Center pane",
@@ -3059,7 +2843,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             }
             Self::CommandSearchResultAccepted => "Accepted command search result",
             Self::OpenNotebook => "Opened a notebook",
-            Self::EditNotebook => "Edited a notebook",
             Self::NotebookAction => {
                 "Took an action on a notebook: edit, delete, modified font size, etc."
             }
@@ -3221,9 +3004,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             }
             Self::PaneDragInitiated => "Initiated dragging a pane via the header",
             Self::PaneDropped => "Ended dragging a pane via the pane header",
-            Self::SharedObjectLimitHitBannerViewPlansButtonClicked => {
-                "Clicked the 'View Plans' button on the persistent drive banner"
-            }
             Self::ResourceUsageStats => "Periodic report on application resource usage statistics",
             Self::MemoryUsageStats => "Periodic report on application memory usage statistics",
             Self::MemoryUsageHigh => {
@@ -3233,11 +3013,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
                 "Application memory usage briefly crossed the excessive-usage threshold but \
                  dropped back under it before being reported as high"
             }
-            Self::EnvVarCollectionInvoked => "Invoked an environment variables object",
-            Self::EnvVarWorkflowParameterization => {
-                "Selected from environment variables dropdown to parameterize workflow"
-            }
-            Self::ObjectLinkCopied => "The web link to an object has been copied.",
             Self::FileTreeToggled => "Opened the file tree/project explorer",
             Self::GlobalSearchOpened => "Opened the global search view",
             Self::GlobalSearchQueryStarted => "Started a global search (torch_ripgrep) search",
@@ -3269,14 +3044,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             }
             Self::AddTabWithShell => "Added a tab with specific shell",
             Self::ToggleLigatureRendering => "Toggled ligature rendering",
-            Self::WorkflowAliasAdded => "Added an alias to a Torch Drive workflow",
-            Self::WorkflowAliasRemoved => "Removed an alias from a Torch Drive workflow",
-            Self::WorkflowAliasArgumentEdited => {
-                "Edited an argument in a Torch Drive workflow alias"
-            }
-            Self::WorkflowAliasEnvVarsAttached => {
-                "Added or removed environment variables for a Torch Drive workflow alias"
-            }
             #[cfg(windows)]
             Self::WSLRegistryError => {
                 "Encountered an error while fetching WSL distributions from the registry"

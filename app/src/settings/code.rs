@@ -1,12 +1,11 @@
 use settings::macros::define_settings_group;
-use settings::{RespectUserSyncSetting, SupportedPlatforms, SyncToCloud};
+use settings::{SupportedPlatforms};
 
 define_settings_group!(CodeSettings, settings: [
     code_as_default_editor: CodeAsDefaultEditor {
         type: bool,
         default: false,
         supported_platforms: SupportedPlatforms::ALL,
-        sync_to_cloud: SyncToCloud::Never,
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "code.editor.use_warp_as_default_editor",
@@ -17,7 +16,6 @@ define_settings_group!(CodeSettings, settings: [
         type: bool,
         default: false,
         supported_platforms: SupportedPlatforms::ALL,
-        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
         surface: settings::SettingSurfaces::GUI,
         private: true,
     },
@@ -26,7 +24,6 @@ define_settings_group!(CodeSettings, settings: [
         type: bool,
         default: true,
         supported_platforms: SupportedPlatforms::ALL,
-        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "code.editor.show_project_explorer",
@@ -37,7 +34,6 @@ define_settings_group!(CodeSettings, settings: [
         type: bool,
         default: true,
         supported_platforms: SupportedPlatforms::ALL,
-        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "code.editor.show_global_search",
@@ -48,7 +44,6 @@ define_settings_group!(CodeSettings, settings: [
         type: bool,
         default: true,
         supported_platforms: SupportedPlatforms::ALL,
-        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "code.editor.show_hidden_files",
@@ -59,7 +54,6 @@ define_settings_group!(CodeSettings, settings: [
         type: bool,
         default: true,
         supported_platforms: SupportedPlatforms::ALL,
-        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "code.editor.format_on_save",
@@ -72,7 +66,6 @@ define_settings_group!(CodeSettings, settings: [
         type: bool,
         default: false,
         supported_platforms: SupportedPlatforms::ALL,
-        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "code.editor.auto_save",

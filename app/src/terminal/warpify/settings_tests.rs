@@ -1,7 +1,7 @@
-use settings::{Setting, SyncToCloud};
+use settings::Setting;
 use torchui::{App, SingletonEntity};
 
-use super::{EnableSshWrapper, UseSshTmuxWrapper, WarpifySettings};
+use super::WarpifySettings;
 use crate::test_util::settings::initialize_settings_for_tests;
 
 #[test]
@@ -95,31 +95,10 @@ fn test_enable_ssh_wrapper_false_migrates_to_enable_ssh_warpification_false() {
     });
 }
 
-/// Regression test for #13228: the deprecated SSH-wrapper migration triggers must
-/// NOT be cloud-synced. They are read by one-time migrations in `register` that
-/// forward an opt-out to `enable_ssh_warpification`; if they synced, a stale cloud
-/// value would be restored on every launch and re-arm the migration, repeatedly
-/// clobbering the user's choice. Keeping them local means the migration's reset to
-/// the default persists and acts as the one-time, per-device marker.
-#[test]
-fn test_deprecated_ssh_wrapper_migration_triggers_are_not_synced() {
-    assert_eq!(
-        EnableSshWrapper::sync_to_cloud(),
-        SyncToCloud::Never,
-        "enable_legacy_ssh_wrapper must not sync — a stale synced value re-arms the \
-         migration and re-disables enable_ssh_warpification (#13228)"
-    );
-    assert_eq!(
-        UseSshTmuxWrapper::sync_to_cloud(),
-        SyncToCloud::Never,
-        "use_ssh_tmux_wrapper must not sync — same re-arm hazard for the tmux notice"
-    );
-}
-
 /// Post-#13228 behavior: the one-time legacy-wrapper migration honors a historical
-/// opt-out once, and a user who then re-enables Warpify SSH keeps it. Because the
-/// trigger is no longer synced, its reset-to-default persists and the migration does
-/// not fire again to clobber the user's choice.
+/// opt-out once, and a user who then re-enables Warpify SSH keeps it. The trigger's
+/// reset-to-default persists, so the migration does not fire again to clobber the
+/// user's choice.
 #[test]
 fn test_legacy_wrapper_migration_is_one_time_and_preserves_reenabled_warpification() {
     /// Mirrors the one-time migration body from `WarpifySettings::register`.

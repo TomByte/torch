@@ -9,8 +9,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use string_offset::{ByteOffset, CharCounter, CharOffset};
 
-use super::workflow::{ArgumentType, Workflow};
-use crate::server::ids::SyncId;
+use super::workflow::Workflow;
 
 lazy_static! {
     /// Regex for escaped arguments in workflow command.
@@ -40,8 +39,6 @@ struct WorkflowArgument<'a> {
     /// The index of the argument in the list of arguments.
     argument_index: WorkflowArgumentIndex,
     argument_name: &'a str,
-    /// The argument type of the argument, which includes IDs of objects it references.
-    argument_type: &'a ArgumentType,
     /// The text the workflow should replace the argument identifier with.
     replacement_text: &'a str,
     /// The byte indices of the argument in the workflow.
@@ -76,7 +73,6 @@ pub struct WorkflowDisplayData {
     /// the entry for "foo" would be [5-8, 13-16].
     pub argument_index_to_char_range_map: HashMap<WorkflowArgumentIndex, Vec<Range<CharOffset>>>,
 
-    pub argument_index_to_object_id_map: HashMap<WorkflowArgumentIndex, SyncId>,
 }
 
 #[derive(Clone)]
@@ -275,7 +271,6 @@ fn compute_workflow_display_data_internal(
     let mut replaced_ranges = vec![];
     let mut argument_index_to_highlight_index_map = HashMap::new();
     let mut argument_index_to_char_range_map = HashMap::new();
-    let mut argument_index_to_object_id_map = HashMap::new();
 
     // Compute the final command (with the argument identifiers replaced with the argument name)
     // and its corresponding text style ranges.
@@ -324,10 +319,6 @@ fn compute_workflow_display_data_internal(
             .push(
                 text_char_range.start..(text_char_range.start + replacement_text.chars().count()),
             );
-
-        if let ArgumentType::Enum { enum_id } = workflow_argument.argument_type {
-            argument_index_to_object_id_map.insert(workflow_argument.argument_index, *enum_id);
-        }
     }
 
     WorkflowDisplayData {
@@ -335,7 +326,6 @@ fn compute_workflow_display_data_internal(
         replaced_ranges,
         argument_index_to_highlight_index_map,
         argument_index_to_char_range_map,
-        argument_index_to_object_id_map,
     }
 }
 
@@ -416,7 +406,6 @@ fn parse_workflow_arguments(
                     WorkflowArgument {
                         argument_index: argument_index.into(),
                         argument_name: argument.name(),
-                        argument_type: &argument.arg_type,
                         replacement_text: argument
                             .default_value()
                             .as_deref()

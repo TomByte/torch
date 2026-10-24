@@ -12,8 +12,6 @@ use torchui::ui_components::components::UiComponent;
 use torchui::{AppContext, Element, SingletonEntity};
 
 use crate::appearance::Appearance;
-use crate::drive::DriveObjectType;
-use crate::drive::cloud_object_styling::warp_drive_icon_color;
 use crate::features::FeatureFlag;
 use crate::search::command_palette::mixer::CommandPaletteItemAction;
 use crate::search::command_palette::render_util::{
@@ -191,13 +189,10 @@ impl SearchItemIcon for BindingGroup {
             }
             Self::Close => Icon::X,
             Self::Navigation => Icon::Navigation,
-            Self::Workflow => Icon::Workflow,
-            Self::Notebooks => Icon::Notebook,
             Self::Folders => Icon::Folder,
             Self::KeyboardShortcuts => Icon::Keyboard,
             Self::AutoUpdate => Icon::AutoUpdate,
             Self::Notifications => Icon::Bell,
-            Self::EnvVarCollection => Icon::EnvVarCollection,
             Self::Terminal => Icon::Terminal,
         }
     }
@@ -207,25 +202,15 @@ impl SearchItemIcon for BindingGroup {
             Self::Settings
             | Self::Navigation
             | Self::Close
+            | Self::Folders
             | Self::KeyboardShortcuts
             | Self::AutoUpdate
-            | Self::Folders
             | Self::Terminal
             | Self::Notifications => appearance.theme().foreground().into_solid(),
             Self::WarpAi if !FeatureFlag::AgentMode.is_enabled() => {
                 ColorU::from_u32(colors::TORCH_AI)
             }
             Self::WarpAi => appearance.theme().foreground().into_solid(),
-            Self::Workflow => warp_drive_icon_color(appearance, DriveObjectType::Workflow),
-            Self::Notebooks => warp_drive_icon_color(
-                appearance,
-                DriveObjectType::Notebook {
-                    is_ai_document: false,
-                },
-            ),
-            Self::EnvVarCollection => {
-                warp_drive_icon_color(appearance, DriveObjectType::EnvVarCollection)
-            }
         }
     }
 }

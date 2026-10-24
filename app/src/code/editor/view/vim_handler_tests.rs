@@ -23,7 +23,6 @@ use unindent::Unindent;
 use vim::vim::{MotionType, VimMode};
 
 use crate::auth::AuthStateProvider;
-use crate::cloud_object::model::persistence::CloudModel;
 use crate::code::editor::find::view::CodeEditorFind;
 use crate::code::editor::view::{CodeEditorRenderOptions, CodeEditorView, CodeEditorViewAction};
 use crate::editor::{EditorAction, EditorView};
@@ -59,7 +58,6 @@ fn initialize_code_editor_app(app: &mut App) {
     app.add_singleton_model(|_| KeybindingChangedNotifier::mock());
 
     // Add mocks required by rich text editor (used in the CommentEditor)
-    app.add_singleton_model(CloudModel::mock);
     app.add_singleton_model(|_| ActiveSession::default());
     app.add_singleton_model(NotebookKeybindings::new);
 

@@ -3,10 +3,6 @@ use torch::integration_testing::terminal::util::ExpectedExitStatus;
 use torch::integration_testing::terminal::{
     execute_command_for_single_terminal_in_tab, wait_until_bootstrapped_single_pane_for_tab,
 };
-use torch::integration_testing::window::save_active_window_id;
-use torch::integration_testing::workflow::{
-    assert_workflow_id, create_a_personal_workflow, open_workflow,
-};
 use torch::integration_testing::{self, view_of_type};
 use torch::workflows::CategoriesView;
 use torchui_core::integration::TestStep;
@@ -14,22 +10,6 @@ use torchui_core::{ViewHandle, async_assert_eq};
 
 use super::{TEST_ONLY_ASSETS, new_builder};
 use crate::Builder;
-
-pub fn test_open_workflow_in_pane() -> Builder {
-    new_builder()
-        .with_step(wait_until_bootstrapped_single_pane_for_tab(0))
-        .with_step(
-            create_a_personal_workflow("workflow_2_key")
-                .add_assertion(save_active_window_id("first window")),
-        )
-        .with_step(
-            open_workflow("first window", "workflow_2_key")
-                .add_named_assertion_with_data_from_prior_step(
-                    "Verify workflow is open",
-                    assert_workflow_id(0, 0, "workflow_2_key"),
-                ),
-        )
-}
 
 /// Adds a workflow file, containing two workflows, to a `.warp/workflows`
 /// directory under a git repository and verifies that the workflows appear

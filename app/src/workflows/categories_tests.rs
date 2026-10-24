@@ -16,7 +16,7 @@ fn test_workflow_matches() {
         author: None,
         author_url: None,
         shells: vec![],
-        environment_variables: None,
+
     }));
 
     assert_eq!(

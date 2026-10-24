@@ -34,13 +34,6 @@ pub const OUT_OF_BAND_REQUEST_RETRY_STRATEGY: RetryOption = RetryOption::exponen
 )
 .with_jitter(0.5 /* max_jitter_percentage */);
 
-// For listeners, retry up to 5 times, waiting between 10-40 seconds between retries.
-pub const LISTENER_RETRY_STRATEGY: RetryOption = RetryOption::linear(
-    Duration::from_secs(25), /* interval */
-    5,                       /* max retry count */
-)
-.with_jitter(0.6 /* max_jitter_multiplier */);
-
 /// Generalized retry function that gives callers control over retry classification and backoff.
 ///
 /// The retry loop calls `attempt_fn` until:

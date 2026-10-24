@@ -1,5 +1,5 @@
 use settings::macros::define_settings_group;
-use settings::{RespectUserSyncSetting, Setting as _, SupportedPlatforms, SyncToCloud};
+use settings::{Setting as _, SupportedPlatforms};
 use torch_errors::report_if_error;
 use torchui::platform::WindowBackdrop;
 use torchui::{AppContext, SingletonEntity, WindowId};
@@ -9,7 +9,6 @@ define_settings_group!(WindowSettings, settings: [
         type: u8,
         default: 1,
         supported_platforms: SupportedPlatforms::MAC,
-        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
         surface: settings::SettingSurfaces::GUI,
         private: false,
         storage_key: "OverrideBlur",
@@ -20,7 +19,6 @@ define_settings_group!(WindowSettings, settings: [
         type: WindowBackdrop,
         default: WindowBackdrop::None,
         supported_platforms: SupportedPlatforms::WINDOWS,
-        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "appearance.window.backdrop",
@@ -30,7 +28,6 @@ define_settings_group!(WindowSettings, settings: [
         type: bool,
         default: false,
         supported_platforms: SupportedPlatforms::WINDOWS,
-        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
         surface: settings::SettingSurfaces::GUI,
         private: false,
         storage_key: "OverrideBlurTexture",
@@ -41,7 +38,6 @@ define_settings_group!(WindowSettings, settings: [
         type: u8,
         default: 100,
         supported_platforms: SupportedPlatforms::DESKTOP,
-        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
         surface: settings::SettingSurfaces::GUI,
         private: false,
         storage_key: "OverrideOpacity",
@@ -52,7 +48,6 @@ define_settings_group!(WindowSettings, settings: [
         type: bool,
         default: false,
         supported_platforms: SupportedPlatforms::DESKTOP,
-        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "appearance.window.open_windows_at_custom_size",
@@ -62,7 +57,6 @@ define_settings_group!(WindowSettings, settings: [
         type: u16,
         default: 80,
         supported_platforms: SupportedPlatforms::DESKTOP,
-        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "appearance.window.new_windows_num_columns",
@@ -72,7 +66,6 @@ define_settings_group!(WindowSettings, settings: [
         type: u16,
         default: 40,
         supported_platforms: SupportedPlatforms::DESKTOP,
-        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "appearance.window.new_windows_num_rows",
@@ -82,7 +75,6 @@ define_settings_group!(WindowSettings, settings: [
         type: bool,
         default: true,
         supported_platforms: SupportedPlatforms::DESKTOP,
-        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "appearance.window.left_panel_visibility_across_tabs",
@@ -92,7 +84,6 @@ define_settings_group!(WindowSettings, settings: [
         type: u16,
         default: 100,
         supported_platforms: SupportedPlatforms::ALL,
-        sync_to_cloud: SyncToCloud::Never,
         surface: settings::SettingSurfaces::GUI,
         private: false,
         toml_path: "appearance.window.zoom_level",
@@ -112,27 +103,6 @@ pub(crate) fn stage_legacy_background_backdrop(ctx: &mut AppContext) {
             false,
             ctx
         ));
-    });
-}
-
-pub(crate) fn migrate_legacy_background_backdrop(ctx: &mut AppContext) {
-    WindowSettings::handle(ctx).update(ctx, |settings, ctx| {
-        if settings.background_backdrop.is_value_explicitly_set() {
-            return;
-        }
-        if *settings.legacy_override_blur_texture {
-            report_if_error!(
-                settings
-                    .background_backdrop
-                    .set_value(WindowBackdrop::Acrylic, ctx)
-            );
-        } else {
-            report_if_error!(settings.background_backdrop.load_value(
-                WindowBackdrop::None,
-                false,
-                ctx
-            ));
-        }
     });
 }
 

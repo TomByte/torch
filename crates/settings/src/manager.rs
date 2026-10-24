@@ -3,21 +3,17 @@ use std::ops::Deref;
 
 use anyhow::{Result, anyhow};
 use torch_features::FeatureFlag;
-use torchui_core::{AppContext, Entity, ModelContext, SingletonEntity};
+use torchui_core::{AppContext, Entity, SingletonEntity};
 use torchui_extras::user_preferences::UserPreferences;
 
-use super::{PrivatePreferences, RespectUserSyncSetting, SupportedPlatforms, SyncToCloud};
+use super::{PrivatePreferences, SupportedPlatforms};
 
-type UpdateFn = Box<dyn FnMut(String, bool, &mut AppContext) -> Result<()>>;
-
-type ClearFn = Box<dyn FnMut(&mut AppContext) -> Result<()>>;
+type UpdateFn = Box<dyn FnMut(String, &mut AppContext) -> Result<()>>;
 
 /// Loads a value into memory without persisting. Parameters: (serialized_value, explicitly_set, ctx).
 type LoadFn = Box<dyn FnMut(String, bool, &mut AppContext) -> Result<()>>;
 
 type EqualsFn = Box<dyn Fn(&str, &str) -> Result<bool>>;
-
-type IsSyncableFn = Box<dyn Fn(&AppContext) -> bool>;
 
 /// Intermediate data collected for each setting during reload, before
 /// calling the mutable `load_fns`.
@@ -31,7 +27,6 @@ struct SettingReloadEntry {
 
 #[derive(Debug)]
 struct SettingsInfo {
-    sync_to_cloud: SyncToCloud,
     supported_platforms: SupportedPlatforms,
     serialized_default_value: String,
     /// The default value serialized using the `SettingsValue` trait
@@ -48,13 +43,7 @@ struct SettingsInfo {
     is_private: bool,
 }
 
-/// Provides an interface for listening for settings events based on
-/// storage key and also for updating settings based on storage key.
-///
-/// Practically speaking this struct is used for keeping local and
-/// cloud preferences in sync with each other without creating a direct
-/// dependency between the define_settings_group macros and the
-/// cloud preferences syncing machinery.
+/// Provides an interface for updating settings based on storage key.
 #[derive(Default)]
 pub struct SettingsManager {
     /// Settings info by storage key
@@ -62,9 +51,6 @@ pub struct SettingsManager {
 
     /// Functions for updating settings by storage key
     update_fns: HashMap<String, UpdateFn>,
-
-    /// Functions for clearing settings from local storage (which also effectively resets them to their default value)
-    clear_fns: HashMap<String, ClearFn>,
 
     /// Functions for loading a value into memory without persisting to storage.
     /// Used during hot-reload to avoid write-back loops with the file watcher.
@@ -77,29 +63,15 @@ pub struct SettingsManager {
     /// like HashSet serialize to ordered json arrays, but don't have
     /// a defined order.
     equals_fns: HashMap<String, EqualsFn>,
-
-    /// Functions for checking whether a setting is currently syncable
-    /// based on its value. Settings that want custom logic here should define
-    /// the current_value_is_syncable method.
-    is_syncable_fns: HashMap<String, IsSyncableFn>,
-}
-
-pub enum SettingsEvent {
-    LocalPreferencesUpdated {
-        storage_key: String,
-        sync_to_cloud: SyncToCloud,
-    },
 }
 
 impl SettingsManager {
     /// Registers a function that updates a setting with the given storage key
-    /// to have a new value. Also tracks whether that storage key is for a cloud-synced
-    /// setting and what platforms it's supported on.
+    /// to have a new value. Also tracks what platforms it's supported on.
     #[allow(clippy::too_many_arguments)]
     pub fn register_setting(
         &mut self,
         storage_key: &str,
-        sync_to_cloud: SyncToCloud,
         supported_platforms: SupportedPlatforms,
         serialized_default_value: String,
         file_serialized_default_value: String,
@@ -107,27 +79,20 @@ impl SettingsManager {
         toml_key: &'static str,
         max_table_depth: Option<u32>,
         is_private: bool,
-        update_fn: impl FnMut(String, bool, &mut AppContext) -> Result<()> + 'static,
-        clear_fn: impl FnMut(&mut AppContext) -> Result<()> + 'static,
+        update_fn: impl FnMut(String, &mut AppContext) -> Result<()> + 'static,
         load_fn: impl FnMut(String, bool, &mut AppContext) -> Result<()> + 'static,
         equals_fn: impl Fn(&str, &str) -> Result<bool> + 'static,
-        is_syncable_fn: impl Fn(&AppContext) -> bool + 'static,
     ) {
         self.update_fns
             .insert(storage_key.to_owned(), Box::new(update_fn));
-        self.clear_fns
-            .insert(storage_key.to_owned(), Box::new(clear_fn));
         self.load_fns
             .insert(storage_key.to_owned(), Box::new(load_fn));
         self.equals_fns
             .insert(storage_key.to_owned(), Box::new(equals_fn));
-        self.is_syncable_fns
-            .insert(storage_key.to_owned(), Box::new(is_syncable_fn));
         self.settings.insert(
             storage_key.to_owned(),
             SettingsInfo {
                 supported_platforms,
-                sync_to_cloud,
                 serialized_default_value,
                 file_serialized_default_value,
                 hierarchy,
@@ -136,19 +101,6 @@ impl SettingsManager {
                 is_private,
             },
         );
-    }
-
-    /// Clears all cloud synced settings from the user defaults. Does not affect their cloud state.
-    /// Typically called when a user logs out. Note that the caller is responsible for ensuring that
-    /// cloud preferences are enabled before calling this.
-    pub fn clear_cloud_settings_local_state(
-        &mut self,
-        ctx: &mut ModelContext<Self>,
-    ) -> Vec<anyhow::Error> {
-        self.clear_fns
-            .values_mut()
-            .filter_map(|clear_fn| clear_fn(ctx).err())
-            .collect::<Vec<anyhow::Error>>()
     }
 
     /// Returns all registered storage keys.
@@ -162,42 +114,6 @@ impl SettingsManager {
             .iter()
             .filter(|(_, info)| !info.is_private)
             .map(|(key, _)| key.as_str())
-    }
-
-    /// Returns whether the setting with the given storage key should be synced even if the
-    /// user has disabled syncing.
-    pub fn sync_regardless_of_users_syncing_setting(&self, storage_key: &str) -> bool {
-        self.settings
-            .get(storage_key)
-            .map(|info| {
-                matches!(
-                    info.sync_to_cloud,
-                    SyncToCloud::Globally(RespectUserSyncSetting::No)
-                        | SyncToCloud::PerPlatform(RespectUserSyncSetting::No)
-                )
-            })
-            .unwrap_or(false)
-    }
-
-    /// Returns whether the setting with the given storage key has a value that is currently
-    /// syncable to the cloud.
-    pub fn is_current_value_syncable(&self, storage_key: &str, app: &AppContext) -> Result<bool> {
-        self.is_syncable_fns
-            .get(storage_key)
-            .map(|cb| Ok(cb(app)))
-            .unwrap_or_else(|| {
-                Err(anyhow!(
-                    "no is_syncable fn registered for storage key {}",
-                    storage_key
-                ))
-            })
-    }
-
-    /// Returns the cloud_syncing_mode for the given storage key.
-    pub fn cloud_syncing_mode_for_storage_key(&self, storage_key: &str) -> Option<SyncToCloud> {
-        self.settings
-            .get(storage_key)
-            .map(|info| info.sync_to_cloud)
     }
 
     /// Returns the supported platforms for this storage key.
@@ -255,12 +171,11 @@ impl SettingsManager {
         &mut self,
         storage_key: &str,
         new_value: String,
-        from_cloud_sync: bool,
         ctx: &mut AppContext,
     ) -> Result<()> {
         self.update_fns
             .get_mut(storage_key)
-            .map(|update_fn| update_fn(new_value, from_cloud_sync, ctx))
+            .map(|update_fn| update_fn(new_value, ctx))
             .unwrap_or_else(|| {
                 Err(anyhow!(
                     "no update fn registered for storage key {}",
@@ -426,7 +341,7 @@ impl SettingsManager {
 }
 
 impl Entity for SettingsManager {
-    type Event = SettingsEvent;
+    type Event = ();
 }
 
 /// Mark SettingsManager as global application state.

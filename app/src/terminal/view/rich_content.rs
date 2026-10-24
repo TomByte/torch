@@ -1,7 +1,6 @@
 use torchui::prelude::ChildView;
 use torchui::{Element, EntityId, View, ViewContext, ViewHandle};
 
-use crate::env_vars::env_var_collection_block::EnvVarCollectionBlock;
 use crate::terminal::TerminalView;
 use crate::terminal::block_list_viewport::ScrollPositionUpdate;
 use crate::terminal::model::blocks::{RemovableBlocklistItem, RichContentItem};
@@ -93,9 +92,6 @@ impl RichContent {
 /// `RichContent` view-specific metadata required for rendering in the `BlocklistElement`.
 #[derive(Clone, Debug)]
 pub enum RichContentMetadata {
-    EnvVarCollectionBlock {
-        env_var_collection_block_handle: ViewHandle<EnvVarCollectionBlock>,
-    },
     SshRemoteServerChoiceBlock {
         handle: ViewHandle<SshRemoteServerChoiceView>,
     },

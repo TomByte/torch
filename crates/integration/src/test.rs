@@ -33,7 +33,6 @@ mod subshell;
 mod sync_inputs;
 mod typeahead;
 mod video_recording;
-mod websockets;
 mod workflows;
 mod workspace;
 
@@ -184,7 +183,6 @@ use torchui_core::{
 pub use typeahead::*;
 use version_compare::Cmp;
 pub use video_recording::*;
-pub use websockets::*;
 pub use workflows::*;
 pub use workspace::*;
 
@@ -221,7 +219,7 @@ pub fn test_add_workflows_to_warp_config() -> Builder {
         .with_setup(move |utils| {
             utils.set_env("TORCH_CONFIG_WATCHER_DELAY_MS", Some((10).to_string()));
 
-            std::fs::create_dir_all(integration_testing::workflow::workflows_dir())
+            std::fs::create_dir_all(integration_testing::workflows_dir())
                 .expect("Should be able to create workflows dir");
         })
         .with_step(wait_until_bootstrapped_single_pane_for_tab(0))
@@ -250,7 +248,7 @@ pub fn test_add_workflows_to_warp_config() -> Builder {
                     integration_testing::create_file_from_assets(
                         TEST_ONLY_ASSETS,
                         "test_workflow.yaml",
-                        &integration_testing::workflow::workflows_dir().join("test_workflow.yaml"),
+                        &integration_testing::workflows_dir().join("test_workflow.yaml"),
                     );
                 })
                 .add_named_assertion(
