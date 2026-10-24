@@ -13,7 +13,6 @@ use crate::uri::browser_url_handler::parse_current_url;
 pub enum WebIntent {
     SessionView(Url),
     ConversationView(Url),
-    DriveObject(Url),
     SettingsView(Url),
     Home(Url),
     CloudAgentHome(Url),
@@ -89,24 +88,6 @@ impl WebIntent {
 
                         return Ok(WebIntent::ConversationView(conversation_intent));
                     }
-                    // For drive objects, we expect the URL to be of the format: {scheme}/drive/{object-type}/{object-name}-{object-id}?focused_folder_id={focused_folder_id}
-                    // The focused_folder_id is optional, and if it is not provided, we will not include it in the intent url.
-                    "drive" => {
-                        if segments.len() != 3 {
-                            return Err(anyhow!("Attempting to parse invalid url: {}", url));
-                        }
-                        let id_and_name: Vec<&str> =
-                            segments[segments.len() - 1].split('-').collect();
-                        let id = id_and_name[id_and_name.len() - 1];
-                        let object_type = segments[segments.len() - 2];
-                        if let Ok(mut drive_intent) =
-                            Url::parse(format!("{url_scheme}://drive/{object_type}").as_str())
-                        {
-                            drive_intent.set_query(url.query());
-                            drive_intent.query_pairs_mut().append_pair("id", id);
-                            return Ok(WebIntent::DriveObject(drive_intent));
-                        }
-                    }
                     "settings" => {
                         // For the settings links, we expect the URL to be of the format: {scheme}/settings/{sub_section}?{query_str}
                         if segments.len() != 2 {
@@ -152,7 +133,6 @@ impl WebIntent {
         match self {
             WebIntent::SessionView(url) => url,
             WebIntent::ConversationView(url) => url,
-            WebIntent::DriveObject(url) => url,
             WebIntent::SettingsView(url) => url,
             WebIntent::Home(url) => url,
             WebIntent::CloudAgentHome(url) => url,
@@ -184,7 +164,6 @@ pub fn maybe_rewrite_web_url_to_intent(url: &Url) -> Option<Url> {
 pub fn open_url_on_desktop(url: &Url) {
     match WebIntent::try_from_url(url) {
         Ok(WebIntent::ConversationView(intent))
-        | Ok(WebIntent::DriveObject(intent))
         | Ok(WebIntent::SessionView(intent))
         | Ok(WebIntent::CloudAgentHome(intent))
         | Ok(WebIntent::Action(intent)) => {
@@ -203,7 +182,6 @@ fn set_context_flags_from_url(url: Url) {
     match WebIntent::try_from_url(&url) {
         Ok(WebIntent::SessionView(_)) => ContextFlag::set_shared_session_only(),
         Ok(WebIntent::ConversationView(_)) => ContextFlag::set_conversation_only(),
-        Ok(WebIntent::DriveObject(_)) => ContextFlag::set_warp_drive_link_only(),
         Ok(WebIntent::SettingsView(_)) => ContextFlag::set_settings_link_only(),
         Ok(WebIntent::Home(_)) => ContextFlag::set_warp_home_link_only(),
         Ok(WebIntent::CloudAgentHome(_)) => {}

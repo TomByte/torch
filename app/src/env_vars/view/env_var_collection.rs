@@ -25,8 +25,7 @@ use crate::channel::ChannelState;
 use crate::cloud_object::breadcrumbs::ContainingObject;
 use crate::cloud_object::model::persistence::{CloudModel, CloudModelEvent};
 use crate::cloud_object::{CloudObjectEventEntrypoint, Owner};
-use crate::drive::items::WarpDriveItemId;
-use crate::drive::sharing::{ContentEditability, ShareableObject};
+use crate::drive::sharing::ContentEditability;
 use crate::editor::EditorView;
 use crate::env_vars::active_env_var_collection_data::{
     ActiveEnvVarCollection, ActiveEnvVarCollectionData, ActiveEnvVarCollectionDataEvent,
@@ -307,7 +306,6 @@ pub struct EnvVarCollectionView {
 pub enum EnvVarCollectionEvent {
     Pane(PaneEvent),
     UpdatedEnvVarCollection(SyncId),
-    ViewInWarpDrive(WarpDriveItemId),
     Invoke(EnvVarCollectionType),
 }
 #[derive(Debug, Clone)]
@@ -326,7 +324,6 @@ pub enum EnvVarCollectionAction {
     CopyLink(String),
     Duplicate,
     Trash,
-    Export,
     // Secret button related actions
     SelectSecretManager(SecretManager),
     DisplayCommandDialog,
@@ -342,8 +339,6 @@ pub enum EnvVarCollectionAction {
     // Unsaved changes dialog actions
     ForceClose,
     CloseUnsavedChangesDialog,
-    // Breadcrumbs action
-    ViewInWarpDrive(WarpDriveItemId),
 }
 
 /// Defines the view for a collection of environment variables
@@ -662,13 +657,6 @@ impl EnvVarCollectionView {
         let title = collection.title.clone().unwrap_or_default();
 
         self.set_pane_title(if title.is_empty() { "Untitled" } else { &title }, ctx);
-        if let Some(server_id) = env_var_collection.id.into_server() {
-            self.pane_configuration.update(ctx, |pane_config, ctx| {
-                pane_config
-                    .set_shareable_object(Some(ShareableObject::WarpDriveObject(server_id)), ctx);
-            });
-        }
-
         let description = collection.description.clone().unwrap_or_default();
 
         self.title_editor.update(ctx, |editor, ctx| {
@@ -957,14 +945,8 @@ impl EnvVarCollectionView {
                 self.update_breadcrumbs(ctx);
                 ctx.notify()
             }
-            ActiveEnvVarCollectionDataEvent::CreatedOnServer(server_id) => {
+            ActiveEnvVarCollectionDataEvent::CreatedOnServer => {
                 self.update_breadcrumbs(ctx);
-                self.pane_configuration.update(ctx, |pane_config, ctx| {
-                    pane_config.set_shareable_object(
-                        Some(ShareableObject::WarpDriveObject(*server_id)),
-                        ctx,
-                    );
-                });
             }
             ActiveEnvVarCollectionDataEvent::TrashStatusChanged => {
                 self.pane_configuration.update(ctx, |pane_config, ctx| {
@@ -1094,10 +1076,6 @@ impl EnvVarCollectionView {
             .update(ctx, |pane_configuration, ctx| {
                 pane_configuration.set_title(title, ctx)
             });
-    }
-
-    fn view_in_warp_drive(&mut self, id: WarpDriveItemId, ctx: &mut ViewContext<Self>) {
-        ctx.emit(EnvVarCollectionEvent::ViewInWarpDrive(id));
     }
 
     // This is a public re-export of close since it's a trait method
@@ -1306,11 +1284,7 @@ impl View for EnvVarCollectionView {
                         Container::new(render_breadcrumbs(
                             self.breadcrumbs.clone(),
                             appearance,
-                            |ctx, _, breadcrumb| {
-                                ctx.dispatch_typed_action(EnvVarCollectionAction::ViewInWarpDrive(
-                                    breadcrumb.kind.into_item_id(),
-                                ));
-                            },
+                            |_, _, _| {},
                         ))
                         .with_horizontal_margin(CORE_HORIZONATAL_MARGIN)
                         .with_vertical_margin(CORE_VERTICAL_MARGIN / 2.)
@@ -1501,7 +1475,6 @@ impl TypedActionView for EnvVarCollectionView {
             }
             EnvVarCollectionAction::Duplicate => self.duplicate_env_var_collection(ctx),
             EnvVarCollectionAction::Trash => self.trash_env_var_collection(ctx),
-            EnvVarCollectionAction::Export => self.export_env_var_collection(ctx),
             EnvVarCollectionAction::SelectSecretManager(secret_manager) => {
                 self.fetch_secret(secret_manager.clone(), ctx)
             }
@@ -1537,7 +1510,6 @@ impl TypedActionView for EnvVarCollectionView {
                 self.update_open_modal_state(ctx);
                 ctx.notify();
             }
-            EnvVarCollectionAction::ViewInWarpDrive(id) => self.view_in_warp_drive(*id, ctx),
         }
     }
 }

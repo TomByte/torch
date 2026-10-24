@@ -68,7 +68,6 @@ pub enum SlashCommandKind {
     CreateNewProject,
     EditSkill,
     InvokeSkill,
-    AddPrompt,
     AddRule,
     Edit,
     RenameTab,

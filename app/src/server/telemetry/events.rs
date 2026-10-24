@@ -40,7 +40,7 @@ use crate::cloud_object::model::generic_string_model::GenericStringObjectId;
 use crate::cloud_object::{GenericStringObjectFormat, ObjectType, Space};
 #[cfg(feature = "local_fs")]
 use crate::code::editor_management::CodeSource;
-use crate::drive::{CloudObjectTypeAndId, DriveSortOrder};
+use crate::drive::CloudObjectTypeAndId;
 use crate::features::FeatureFlag;
 use crate::launch_configs::save_modal::SaveState;
 use crate::notebooks::telemetry::NotebookTelemetryAction;
@@ -356,14 +356,8 @@ pub enum SharingDialogSource {
     PaneHeader,
     /// The per-pane command palette entry (includes keybindings).
     CommandPalette,
-    /// The Torch Drive index context menu.
-    DriveIndex,
     /// The sharing dialog was auto-opened from shared session creation.
     StartedSessionShare,
-    /// The user intented into Torch with an email address to invite.
-    InviteeRequest,
-    /// The user jumped from an inherited ACL to its definition on a parent object.
-    InheritedPermission,
     /// The conversation list overflow menu.
     ConversationList,
     /// The AI block context menu.
@@ -404,7 +398,6 @@ pub enum PaletteSource {
     PrefixChange,
     Keybinding,
     CtrlTab { shift_pressed_initially: bool },
-    WarpDrive,
     QuitModal,
     LogOutModal,
     IntegrationTest,
@@ -485,21 +478,12 @@ pub enum PluginChipTelemetryAction {
     UpdateInstructions,
 }
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub enum WarpDriveSource {
-    Legacy,
-    LeftPanelToolbelt,
-    ForceOpened,
-}
-
 #[derive(Clone, Serialize, Deserialize)]
 pub enum CommandSearchResultType {
     History,
     Workflow,
     OpenWarpAI,
     TranslateUsingWarpAI,
-    EnvVarCollection,
-    ViewInWarpDrive,
     AIQuery,
     Project,
 }
@@ -510,7 +494,6 @@ impl From<&CommandSearchItemAction> for CommandSearchResultType {
         match action {
             AcceptHistory(_) | ExecuteHistory(_) => Self::History,
             AcceptWorkflow(_) => Self::Workflow,
-            AcceptEnvVarCollection(_) => Self::EnvVarCollection,
             OpenWarpAI => Self::OpenWarpAI,
             TranslateUsingWarpAI => Self::TranslateUsingWarpAI,
             AcceptAIQuery(_) | RunAIQuery(_) => Self::AIQuery,
@@ -565,14 +548,6 @@ pub enum WarpAIActionType {
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub enum SaveAsWorkflowModalSource {
-    Block,
-    Input,
-    WarpAIWorkflowCard,
-    WarpAIPanel,
-}
-
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum LaunchConfigUiLocation {
     CommandPalette,
     AppMenu,
@@ -621,9 +596,6 @@ pub enum KnowledgePaneEntrypoint {
 
     #[serde(rename = "settings")]
     Settings,
-
-    #[serde(rename = "warp_drive")]
-    WarpDrive,
 
     #[serde(rename = "ai_blocklist")]
     AIBlocklist,
@@ -1524,9 +1496,6 @@ pub enum TelemetryEvent {
     InputCommandSearch,
     InputAICommandSearch,
     InputAskWarpAI,
-    SaveAsWorkflowModal {
-        source: SaveAsWorkflowModalSource,
-    },
     ExperimentTriggered {
         experiment: &'static str,
         layer: &'static str,
@@ -1590,10 +1559,6 @@ pub enum TelemetryEvent {
     EnableVimKeybindingsFromBanner,
     DismissVimKeybindingsBanner,
     NeedsReauth,
-    WarpDriveOpened {
-        source: WarpDriveSource,
-        is_code_mode_v2: bool,
-    },
     // Toggled the legacy Torch AI side panel.
     ToggleWarpAI {
         opened: bool,
@@ -1610,9 +1575,6 @@ pub enum TelemetryEvent {
     AutoGenerateMetadataError {
         error_payload: Value,
     },
-    UpdateSortingChoice {
-        sorting_choice: DriveSortOrder,
-    },
     UndoClose {
         item_type: UndoCloseItemType,
     },
@@ -1622,8 +1584,6 @@ pub enum TelemetryEvent {
         /// The maximum PTY throughput in bytes/sec, aggregated over a 10 minute period.
         max_bytes_per_second: usize,
     },
-    DuplicateObject(TelemetryCloudObjectType),
-    ExportObject(TelemetryCloudObjectType),
     CommandFileRun,
     PageUpDownInEditorPressed {
         // Key pressed when nothing is in the editor (no-op)
@@ -1662,15 +1622,11 @@ pub enum TelemetryEvent {
     WebSessionOpenedOnDesktop {
         source: SharedSessionActionSource,
     },
-    WebCloudObjectOpenedOnDesktop {
-        object_metadata: CloudObjectTelemetryMetadata,
-    },
     UnsupportedShell {
         shell: String,
     },
     LogOut,
     SettingsImportInitiated,
-    CopyObjectToClipboard(TelemetryCloudObjectType),
     OpenAndWarpifyDockerSubshell {
         /// Some variant if we support this shell type, and None otherwise.
         shell_type: Option<ShellType>,
@@ -2891,7 +2847,6 @@ impl TelemetryEvent {
             }
             TelemetryEvent::OpenChangelogLink { url } => Some(json!({ "url": url })),
             TelemetryEvent::SaveLaunchConfig { state } => Some(json!({ "state": state })),
-            TelemetryEvent::SaveAsWorkflowModal { source } => Some(json!({ "source": source })),
             TelemetryEvent::SetLineHeight { new_value } => Some(json!({ "new_value": new_value })),
             TelemetryEvent::CommandSearchOpened { has_initial_query } => {
                 Some(json!({ "has_initial_query": has_initial_query }))
@@ -3083,9 +3038,6 @@ impl TelemetryEvent {
             TelemetryEvent::AutoGenerateMetadataError { error_payload } => {
                 Some(json!({ "error": error_payload }))
             }
-            TelemetryEvent::UpdateSortingChoice { sorting_choice } => {
-                Some(json!({ "sorting_choice": sorting_choice }))
-            }
             TelemetryEvent::UndoClose { item_type } => Some(json!({ "item_type": item_type })),
             TelemetryEvent::PromptEdited { prompt, entrypoint } => Some(json!({
                 "prompt": prompt,
@@ -3099,12 +3051,6 @@ impl TelemetryEvent {
             } => Some(json!({
                 "max_bytes_per_second": max_bytes_per_second,
             })),
-            TelemetryEvent::DuplicateObject(object_type) => {
-                Some(json!({ "object_type": object_type }))
-            }
-            TelemetryEvent::ExportObject(object_type) => {
-                Some(json!({ "object_type": object_type }))
-            }
             TelemetryEvent::GenerateBlockSharingLink {
                 share_type,
                 display_setting,
@@ -3128,9 +3074,6 @@ impl TelemetryEvent {
                 Some(json!({ "source": source, "reason": reason }))
             }
             TelemetryEvent::UnsupportedShell { shell } => Some(json!({ "shell": shell })),
-            TelemetryEvent::CopyObjectToClipboard(object_type) => {
-                Some(json!({ "object_type": object_type }))
-            }
             TelemetryEvent::OpenAndWarpifyDockerSubshell { shell_type } => {
                 Some(json!({ "shell_type": shell_type }))
             }
@@ -3175,9 +3118,6 @@ impl TelemetryEvent {
             TelemetryEvent::WebSessionOpenedOnDesktop { source } => {
                 Some(json!({ "source": source}))
             }
-            TelemetryEvent::WebCloudObjectOpenedOnDesktop { object_metadata } => Some(json!({
-                "object": object_metadata,
-            })),
             TelemetryEvent::ToggleSnackbarInActivePane { show_snackbar } => {
                 Some(json!({ "show_snackbar": show_snackbar }))
             }
@@ -4074,13 +4014,6 @@ impl TelemetryEvent {
             TelemetryEvent::RecentMenuItemSelected { kind } => Some(json!({
                 "kind": kind,
             })),
-            TelemetryEvent::WarpDriveOpened {
-                source,
-                is_code_mode_v2,
-            } => Some(json!({
-                "source": source,
-                "is_code_mode_v2": is_code_mode_v2,
-            })),
             TelemetryEvent::AgentTipShown { tip } => Some(json!({
                 "tip": tip,
             })),
@@ -4472,7 +4405,6 @@ impl TelemetryEvent {
             | TelemetryEvent::InputCommandSearch
             | TelemetryEvent::InputAICommandSearch
             | TelemetryEvent::InputAskWarpAI
-            | TelemetryEvent::SaveAsWorkflowModal { .. }
             | TelemetryEvent::ExperimentTriggered { .. }
             | TelemetryEvent::ToggleSyncAllPanesInAllTabs { .. }
             | TelemetryEvent::ToggleSyncAllPanesInTab { .. }
@@ -4500,7 +4432,6 @@ impl TelemetryEvent {
             | TelemetryEvent::EnableVimKeybindingsFromBanner
             | TelemetryEvent::DismissVimKeybindingsBanner
             | TelemetryEvent::NeedsReauth
-            | TelemetryEvent::WarpDriveOpened { .. }
             | TelemetryEvent::ToggleWarpAI { .. }
             | TelemetryEvent::ToggleSecretRedaction { .. }
             | TelemetryEvent::CustomSecretRegexAdded
@@ -4508,11 +4439,8 @@ impl TelemetryEvent {
             | TelemetryEvent::CopySecret
             | TelemetryEvent::AutoGenerateMetadataSuccess
             | TelemetryEvent::AutoGenerateMetadataError { .. }
-            | TelemetryEvent::UpdateSortingChoice { .. }
             | TelemetryEvent::UndoClose { .. }
             | TelemetryEvent::PtyThroughput { .. }
-            | TelemetryEvent::DuplicateObject(_)
-            | TelemetryEvent::ExportObject(_)
             | TelemetryEvent::CommandFileRun
             | TelemetryEvent::PageUpDownInEditorPressed { .. }
             | TelemetryEvent::StartedSharingCurrentSession { .. }
@@ -4524,10 +4452,8 @@ impl TelemetryEvent {
             | TelemetryEvent::JumpToSharedSessionParticipant { .. }
             | TelemetryEvent::CopiedSharedSessionLink { .. }
             | TelemetryEvent::WebSessionOpenedOnDesktop { .. }
-            | TelemetryEvent::WebCloudObjectOpenedOnDesktop { .. }
             | TelemetryEvent::UnsupportedShell { .. }
             | TelemetryEvent::LogOut
-            | TelemetryEvent::CopyObjectToClipboard(_)
             | TelemetryEvent::OpenAndWarpifyDockerSubshell { .. }
             | TelemetryEvent::UpdateBlockFilterQuery
             | TelemetryEvent::UpdateBlockFilterQueryContextLines { .. }
@@ -4937,7 +4863,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::InputCommandSearch => EnablementState::Always,
             Self::InputAICommandSearch => EnablementState::Always,
             Self::InputAskWarpAI => EnablementState::Always,
-            Self::SaveAsWorkflowModal => EnablementState::Always,
             Self::ExperimentTriggered => EnablementState::Always,
             Self::ToggleSyncAllPanesInAllTabs => EnablementState::Always,
             Self::ToggleSyncAllPanesInTab => EnablementState::Always,
@@ -4968,7 +4893,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::EnableVimKeybindingsFromBanner => EnablementState::Always,
             Self::DismissVimKeybindingsBanner => EnablementState::Always,
             Self::NeedsReauth => EnablementState::Always,
-            Self::WarpDriveOpened => EnablementState::Always,
             Self::ToggleWarpAI => EnablementState::Always,
             Self::ToggleSecretRedaction => EnablementState::Always,
             Self::CustomSecretRegexAdded => EnablementState::Always,
@@ -4976,16 +4900,12 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::CopySecret => EnablementState::Always,
             Self::AutoGenerateMetadataSuccess => EnablementState::Always,
             Self::AutoGenerateMetadataError => EnablementState::Always,
-            Self::UpdateSortingChoice => EnablementState::Always,
             Self::UndoClose => EnablementState::Always,
-            Self::DuplicateObject => EnablementState::Always,
-            Self::ExportObject => EnablementState::Always,
             Self::CommandFileRun => EnablementState::Always,
             Self::PageUpDownInEditorPressed => EnablementState::Always,
             Self::UnsupportedShell => EnablementState::Always,
             Self::LogOut => EnablementState::Always,
             Self::SettingsImportInitiated => EnablementState::Always,
-            Self::CopyObjectToClipboard => EnablementState::Always,
             Self::OpenAndWarpifyDockerSubshell => EnablementState::Always,
             Self::UpdateBlockFilterQuery => EnablementState::Always,
             Self::UpdateBlockFilterQueryContextLines => EnablementState::Always,
@@ -5002,7 +4922,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::JumpToSharedSessionParticipant => EnablementState::Always,
             Self::CopiedSharedSessionLink => EnablementState::Always,
             Self::WebSessionOpenedOnDesktop => EnablementState::Always,
-            Self::WebCloudObjectOpenedOnDesktop => EnablementState::Always,
             Self::ToggleShowBlockDividers => EnablementState::Flag(FeatureFlag::MinimalistUI),
             Self::SharedObjectLimitHitBannerViewPlansButtonClicked => EnablementState::Always,
             Self::ResourceUsageStats => EnablementState::Always,
@@ -5361,7 +5280,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::InputCommandSearch => "InputBoxCommandSearch",
             Self::InputAICommandSearch => "InputBoxAICommandSearch",
             Self::InputAskWarpAI => "InputBoxAskWarpAI",
-            Self::SaveAsWorkflowModal => "Opened Save As Workflow Modal",
             Self::ExperimentTriggered => "experiments.client.enroll_client",
             Self::ToggleSyncAllPanesInAllTabs => "Toggle Sync Inputs Across All Panes in All Tabs",
             Self::ToggleSyncAllPanesInTab => "Toggle Sync Inputs Across All Panes in Current Tab",
@@ -5389,7 +5307,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::DismissAliasExpansionBanner => "Dismiss Alias Expansion Banner",
             Self::EnableAliasExpansionFromBanner => "Enable Alias Expansion From Banner",
             Self::NeedsReauth => "Needs Reauth",
-            Self::WarpDriveOpened => "Torch Drive Opened",
             Self::ToggleWarpAI => "Toggle Torch AI",
             Self::ToggleSecretRedaction => "Toggle Secret Redaction",
             Self::CustomSecretRegexAdded => "Custom Secret Regex Added",
@@ -5397,13 +5314,10 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::CopySecret => "Copy Obfuscated Secret",
             Self::AutoGenerateMetadataSuccess => "Generate Metadata For Workflow Success",
             Self::AutoGenerateMetadataError => "Generate Metadata For Workflow Error",
-            Self::UpdateSortingChoice => "Updated Sorting Choice",
             Self::UndoClose => "Undo Close",
             Self::OpenPromptEditor => "Prompt Editor Opened",
             Self::PromptEdited => "Prompt Edited",
             Self::PtyThroughput => "PTY Throughput",
-            Self::DuplicateObject => "Duplicate Object",
-            Self::ExportObject => "Export Object",
             Self::CommandFileRun => "Command File Run",
             Self::PageUpDownInEditorPressed => "Page Up/Down In Editor Pressed",
             Self::StartedSharingCurrentSession => "Started Sharing Current Session",
@@ -5415,10 +5329,8 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::JumpToSharedSessionParticipant { .. } => "Jumped to Shared Session Participant",
             Self::CopiedSharedSessionLink { .. } => "Copied Shared Session Link",
             Self::WebSessionOpenedOnDesktop { .. } => "Web session opened on desktop",
-            Self::WebCloudObjectOpenedOnDesktop { .. } => "Torch Drive object opened on desktop",
             Self::UnsupportedShell => "Unsupported Shell",
             Self::SettingsImportInitiated => "Settings Import Initiated",
-            Self::CopyObjectToClipboard => "Copy Object To Clipboard",
             Self::OpenAndWarpifyDockerSubshell => "OpenAndWarpifyDockerSubshell",
             Self::UpdateBlockFilterQuery => "Update Block Filter Query",
             Self::ToggleBlockFilterQuery => "Toggle Block Filter Query",
@@ -5910,9 +5822,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
                 "Opened AI Command Search via the Input Editor's context menu (right clicking the buffer)"
             }
             Self::InputAskWarpAI => "Clicked \"Ask Torch AI\" from the Input Editor's context menu",
-            Self::SaveAsWorkflowModal => {
-                "Opened the modal to create a new workflow using a Block's context--command, etc."
-            }
             Self::ExperimentTriggered => "Client assigned to A/B test",
             Self::ToggleSyncAllPanesInAllTabs => {
                 "Enable the synchronization of the Input Editor's buffer to all the panes in all the tabs"
@@ -5993,7 +5902,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
                 "Dismissed the banner to enable Vim keybindings in the Input Editor"
             }
             Self::NeedsReauth => "User needs to re-authenticate",
-            Self::WarpDriveOpened => "Opened Torch Drive panel",
             Self::ToggleWarpAI => {
                 "Toggled Torch AI--an AI assistant to help you debug errors, look up forgotten commands and more"
             }
@@ -6009,11 +5917,8 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::AutoGenerateMetadataError => {
                 "Failed to generate metadata for a workflow using Torch AI"
             }
-            Self::UpdateSortingChoice => "Modified the sorting scheme for Torch Drive objects",
             Self::UndoClose => "Re-opened a closed tab or window (undo closing a tab or window)",
             Self::PtyThroughput => "A sample of the max PTY throughput in bytes/sec",
-            Self::DuplicateObject => "Cloned a Torch Drive object",
-            Self::ExportObject => "Exported a Torch Drive object",
             Self::CommandFileRun => {
                 "Opened a .cmd or unix executable file and ran it directly in Torch"
             }
@@ -6041,13 +5946,9 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::WebSessionOpenedOnDesktop => {
                 "Shared session viewed on the web was opened on the desktop"
             }
-            Self::WebCloudObjectOpenedOnDesktop => {
-                "Torch Drive object on the web was opened on the desktop"
-            }
             Self::UnsupportedShell => "Booted Torch with a shell that isn't supported",
             Self::LogOut => "Logged out of the Torch client",
             Self::SettingsImportInitiated => "Started the import settings flow for new users",
-            Self::CopyObjectToClipboard => "Copied an object to the user's keyboard",
             Self::OpenAndWarpifyDockerSubshell => {
                 "Warpifying a docker subshell from using the docker extension"
             }

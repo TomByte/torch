@@ -26,16 +26,12 @@ use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::ambient_agents::AmbientAgentTaskId;
 use crate::ai::blocklist::PendingAttachment;
 use crate::ai::document::ai_document_model::{AIDocumentId, AIDocumentVersion};
-use crate::drive::CloudObjectTypeAndId;
-use crate::drive::items::WarpDriveItemId;
 use crate::palette::PaletteMode;
 use crate::pane_group::PaneGroup;
 use crate::prompt::editor_modal::OpenSource as PromptEditorOpenSource;
 use crate::search;
 use crate::server::ids::SyncId;
-use crate::server::telemetry::{
-    AddTabWithShellSource, AgentModeEntrypoint, PaletteSource, SharingDialogSource,
-};
+use crate::server::telemetry::{AddTabWithShellSource, AgentModeEntrypoint, PaletteSource};
 use crate::settings_view::{SettingsAction as SettingsTabAction, SettingsSection};
 use crate::tab::{NewSessionMenuItem, SelectedTabColor};
 use crate::tab_configs::TabConfig;
@@ -352,7 +348,6 @@ pub enum WorkspaceAction {
     ToggleErrorUnderlining,
     ToggleSyntaxHighlighting,
     CheckForUpdate,
-    ExportAllWarpDriveObjects,
     SetA11yVerbosityLevel(AccessibilityVerbosity),
     ToggleNotifications,
     ToggleTabColor {
@@ -374,18 +369,6 @@ pub enum WorkspaceAction {
     ShowCommandSearch(CommandSearchOptions),
     TriggerExternalCtrlTFileSearch,
     TriggerExternalAltCDirectorySearch,
-    CreatePersonalNotebook,
-    ImportToPersonalDrive,
-    ImportToTeamDrive,
-    CreateTeamNotebook,
-    CreatePersonalWorkflow,
-    CreateTeamWorkflow,
-    CreatePersonalFolder,
-    CreateTeamFolder,
-    CreateTeamEnvVarCollection,
-    CreatePersonalEnvVarCollection,
-    CreatePersonalAIPrompt,
-    CreateTeamAIPrompt,
     ToggleMouseReporting,
     ToggleScrollReporting,
     ToggleFocusReporting,
@@ -413,9 +396,7 @@ pub enum WorkspaceAction {
     /// Torch Drive. This happens as explicit action from the user.
     ToggleLeftPanel,
     /// Toggles directly to the Torch Drive tab of the left panel in Code Mode V2
-    ToggleWarpDrive,
     /// Unconditionally opens Torch Drive.
-    OpenWarpDrive,
     /// Toggles the right panel. This happens as an explicit action from the user.
     ToggleRightPanel,
     /// Opens the code review panel (right panel) without toggling. If already open,
@@ -499,14 +480,6 @@ pub enum WorkspaceAction {
     FocusLeftPanel,
     /// Moves focus to the panel on the right
     FocusRightPanel,
-    /// An action to view a newly created/edited workflow in WD from the toast
-    ViewObjectInWarpDrive(WarpDriveItemId),
-    /// Open the object's sharing settings in WD.
-    OpenObjectSharingSettings {
-        object_id: CloudObjectTypeAndId,
-        source: SharingDialogSource,
-    },
-    UndoTrash(CloudObjectTypeAndId),
     /// Open a local path in the file explorer.
     OpenInExplorer {
         path: PathBuf,
@@ -987,7 +960,6 @@ impl WorkspaceAction {
             | CopyVersion(_)
             | DownloadNewVersion
             | ConfigureKeybindingSettings { .. }
-            | ExportAllWarpDriveObjects
             | ShowSettings
             | ShowSettingsPage(_)
             | ShowSettingsPageWithSearch { .. }
@@ -1039,18 +1011,6 @@ impl WorkspaceAction {
             | ToggleMouseReporting
             | ToggleScrollReporting
             | ToggleFocusReporting
-            | ImportToPersonalDrive
-            | ImportToTeamDrive
-            | CreatePersonalNotebook
-            | CreateTeamNotebook
-            | CreatePersonalWorkflow
-            | CreateTeamWorkflow
-            | CreatePersonalFolder
-            | CreateTeamFolder
-            | CreateTeamEnvVarCollection
-            | CreatePersonalEnvVarCollection
-            | CreatePersonalAIPrompt
-            | CreateTeamAIPrompt
             | OpenInExplorer { .. }
             | DragTab { .. }
             | CommitTabDrag { .. }
@@ -1059,8 +1019,6 @@ impl WorkspaceAction {
             | DragSidebarGroup { .. }
             | StartGroupDrag(_)
             | ToggleLeftPanel
-            | ToggleWarpDrive
-            | OpenWarpDrive
             | ClosePanel
             | ToggleRightPanel
             | OpenCodeReviewPanel(..)
@@ -1118,10 +1076,7 @@ impl WorkspaceAction {
             | RunCommand { .. }
             | InsertInInput { .. }
             | InsertForkSlashCommand
-            | UndoTrash(_)
             | OpenFilePath { .. }
-            | ViewObjectInWarpDrive(_)
-            | OpenObjectSharingSettings { .. }
             | TerminateApp
             | TabHoverWidthStart { .. }
             | TabHoverWidthEnd

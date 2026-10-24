@@ -486,9 +486,6 @@ impl Input {
 
         // Handle the slash command action based on its kind
         match command.kind {
-            SlashCommandKind::AddPrompt => {
-                ctx.dispatch_typed_action(&TerminalAction::OpenAddPromptPane);
-            }
             SlashCommandKind::AddRule => {
                 ctx.dispatch_typed_action(&TerminalAction::OpenAddRulePane);
             }

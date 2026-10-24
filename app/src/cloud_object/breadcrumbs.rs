@@ -3,7 +3,6 @@ use torchui::AppContext;
 use super::{CloudObject, Space};
 use crate::drive::CloudObjectTypeAndId;
 use crate::drive::folders::CloudFolder;
-use crate::drive::items::WarpDriveItemId;
 use crate::ui_components::breadcrumb::Breadcrumb;
 
 // Encapsulates an object that can contain other objects, and keeps
@@ -48,11 +47,4 @@ pub enum ContainingObjectKind {
     Object(CloudObjectTypeAndId),
 }
 
-impl ContainingObjectKind {
-    pub fn into_item_id(self) -> WarpDriveItemId {
-        match self {
-            ContainingObjectKind::Space(space) => WarpDriveItemId::Space(space),
-            ContainingObjectKind::Object(object) => WarpDriveItemId::Object(object),
-        }
-    }
-}
+impl ContainingObjectKind {}

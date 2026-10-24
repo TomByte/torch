@@ -15,7 +15,6 @@ use settings::Setting as _;
 use torch_core::channel::ChannelState;
 use torchui::{AppContext, ModelContext, SingletonEntity, ViewHandle, WindowId};
 
-use crate::drive::settings::WarpDriveSettings;
 use crate::features::FeatureFlag;
 use crate::local_control::LocalControlBridge;
 use crate::local_control::resolver::{reject_target_families, require_active_window_id_for_action};
@@ -134,7 +133,6 @@ pub(crate) enum SurfaceDestination {
     CommandSearch,
     ThemePicker,
     Keybindings,
-    WarpDrive,
     ResourceCenter,
     AiAssistant,
     CodeReview,
@@ -154,7 +152,6 @@ impl SurfaceDestination {
         Self::CommandSearch,
         Self::ThemePicker,
         Self::Keybindings,
-        Self::WarpDrive,
         Self::ResourceCenter,
         Self::AiAssistant,
         Self::CodeReview,
@@ -174,7 +171,6 @@ impl SurfaceDestination {
             Self::CommandSearch => "command_search",
             Self::ThemePicker => "theme_picker",
             Self::Keybindings => "keybindings",
-            Self::WarpDrive => "warp_drive",
             Self::ResourceCenter => "resource_center",
             Self::AiAssistant => "ai_assistant",
             Self::CodeReview => "code_review",
@@ -323,10 +319,6 @@ pub(crate) fn surface_unavailable_reason(
         | SurfaceDestination::ThemePicker
         | SurfaceDestination::Keybindings
         | SurfaceDestination::ResourceCenter => None,
-        SurfaceDestination::WarpDrive if !WarpDriveSettings::is_warp_drive_enabled(ctx) => {
-            Some("Torch Drive is disabled")
-        }
-        SurfaceDestination::WarpDrive => None,
         SurfaceDestination::AiAssistant if !AISettings::as_ref(ctx).is_any_ai_enabled(ctx) => {
             Some("AI features are disabled")
         }
@@ -364,8 +356,7 @@ pub(crate) fn surface_unavailable_reason(
             if surface_unavailable_reason(SurfaceDestination::ProjectExplorer, ctx).is_some()
                 && surface_unavailable_reason(SurfaceDestination::GlobalSearch, ctx).is_some()
                 && surface_unavailable_reason(SurfaceDestination::ConversationList, ctx)
-                    .is_some()
-                && surface_unavailable_reason(SurfaceDestination::WarpDrive, ctx).is_some() =>
+                    .is_some() =>
         {
             Some("the left panel has no available views")
         }

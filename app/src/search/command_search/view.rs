@@ -26,15 +26,11 @@ use torchui::{
 };
 
 use super::ai_queries::AIQueriesDataSource;
-use super::env_var_collections::EnvVarCollectionDataSource;
 use super::history::history_data_source_for_session;
 use super::warp_ai::WarpAIDataSource;
-use super::workflows::{WorkflowsDataSource, cloud_workflows_data_source};
 use super::zero_state::{CommandSearchZeroStateEvent, CommandSearchZeroStateView};
 use crate::ai_assistant::execution_context::WarpAiExecutionContext;
 use crate::appearance::Appearance;
-use crate::completer::SessionContext;
-use crate::drive::settings::WarpDriveSettings;
 use crate::search::QueryFilter;
 use crate::search::command_search::searcher::{CommandSearchItemAction, CommandSearchMixer};
 use crate::search::mixer::AddAsyncSourceOptions;
@@ -204,11 +200,9 @@ impl CommandSearchView {
     fn reset_command_search_mixer(
         &mut self,
         session_id: SessionId,
-        session_context: Option<SessionContext>,
         ai_execution_context: Option<WarpAiExecutionContext>,
         ctx: &mut ViewContext<Self>,
     ) {
-        let window_id = ctx.window_id();
         self.mixer.update(ctx, |mixer, ctx| {
             mixer.reset(ctx);
 
@@ -229,38 +223,6 @@ impl CommandSearchView {
                         run_when_unfiltered: false,
                     },
                     ctx,
-                );
-            }
-
-            if WarpDriveSettings::is_warp_drive_enabled(ctx) {
-                mixer.add_sync_source(
-                    WorkflowsDataSource::new(session_context.as_ref(), ctx),
-                    HashSet::from([QueryFilter::Workflows]),
-                );
-
-                let mut workflows_filters = HashSet::from([QueryFilter::Workflows]);
-                if AISettings::as_ref(ctx).is_any_ai_enabled(ctx) {
-                    workflows_filters.insert(QueryFilter::AgentModeWorkflows);
-                }
-
-                mixer.add_async_source(
-                    cloud_workflows_data_source(window_id),
-                    workflows_filters,
-                    AddAsyncSourceOptions {
-                        debounce_interval: Some(Duration::from_millis(50)),
-                        run_in_zero_state: true,
-                        run_when_unfiltered: true,
-                    },
-                    ctx,
-                );
-
-                // EnvVarCollectionDataSource stays synchronous because each match target is
-                // structurally short (title, variable name, description). The per-item fuzzy
-                // match cost is negligible, so offloading to an async task would add complexity
-                // without meaningful performance benefit.
-                mixer.add_sync_source(
-                    EnvVarCollectionDataSource::new(),
-                    HashSet::from([QueryFilter::EnvironmentVariables]),
                 );
             }
 
@@ -318,14 +280,13 @@ impl CommandSearchView {
     pub fn reset_state(
         &mut self,
         session_id: SessionId,
-        session_context: Option<SessionContext>,
         initial_query: String,
         query_filter: Option<QueryFilter>,
         menu_positioning: MenuPositioning,
         ai_execution_context: Option<WarpAiExecutionContext>,
         ctx: &mut ViewContext<Self>,
     ) {
-        self.reset_command_search_mixer(session_id, session_context, ai_execution_context, ctx);
+        self.reset_command_search_mixer(session_id, ai_execution_context, ctx);
         let ordering = match menu_positioning {
             MenuPositioning::AboveInputBox => SearchResultOrdering::BottomUp,
             MenuPositioning::BelowInputBox => SearchResultOrdering::TopDown,
@@ -461,11 +422,7 @@ impl CommandSearchView {
             let was_immediately_executed = match &result_action {
                 ExecuteHistory(_) | RunAIQuery(_) => true,
 
-                AcceptHistory(_)
-                | AcceptWorkflow(_)
-                | OpenWarpAI
-                | AcceptEnvVarCollection(_)
-                | TranslateUsingWarpAI
+                AcceptHistory(_) | AcceptWorkflow(_) | OpenWarpAI | TranslateUsingWarpAI
                 | AcceptAIQuery(_) => false,
             };
 

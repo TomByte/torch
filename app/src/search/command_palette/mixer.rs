@@ -6,11 +6,9 @@ use torchui::keymap::BindingId;
 use torchui::{EntityId, WindowId};
 
 use crate::ai::agent::conversation::AIConversationId;
-use crate::drive::CloudObjectTypeAndId;
 use crate::launch_configs::launch_config::LaunchConfig;
 use crate::search::command_palette::new_session::{NewSessionOption, NewSessionOptionId};
 use crate::search::mixer::SearchMixer;
-use crate::server::ids::SyncId;
 use crate::util::bindings::CommandBinding;
 use crate::workspace::PaneViewLocator;
 
@@ -26,18 +24,6 @@ pub enum CommandPaletteItemAction {
     /// A binding result was clicked.
     AcceptBinding {
         binding: Arc<CommandBinding>,
-    },
-    ExecuteWorkflow {
-        id: SyncId,
-    },
-    OpenNotebook {
-        id: SyncId,
-    },
-    ViewInWarpDrive {
-        id: CloudObjectTypeAndId,
-    },
-    InvokeEnvironmentVariables {
-        id: SyncId,
     },
     /// Navigate to the session identified by `pane_view`.
     NavigateToSession {
@@ -99,11 +85,6 @@ impl CommandPaletteItemAction {
             CommandPaletteItemAction::AcceptBinding { binding } => ItemSummary::Action {
                 binding_id: binding.id,
             },
-            CommandPaletteItemAction::OpenNotebook { id } => ItemSummary::Notebook { id: *id },
-            CommandPaletteItemAction::ExecuteWorkflow { id } => ItemSummary::Workflow { id: *id },
-            CommandPaletteItemAction::InvokeEnvironmentVariables { id } => {
-                ItemSummary::EnvVarCollection { id: *id }
-            }
             CommandPaletteItemAction::NavigateToSession {
                 pane_view_locator, ..
             } => ItemSummary::Session {
@@ -124,12 +105,6 @@ impl CommandPaletteItemAction {
             CommandPaletteItemAction::OpenLaunchConfiguration { .. } => {
                 ItemSummary::LaunchConfiguration
             }
-            CommandPaletteItemAction::ViewInWarpDrive { id } => match id {
-                CloudObjectTypeAndId::Notebook(_)
-                | CloudObjectTypeAndId::Folder(_)
-                | CloudObjectTypeAndId::GenericStringObject { .. } => ItemSummary::CloudObject,
-                CloudObjectTypeAndId::Workflow(id) => ItemSummary::Workflow { id: *id },
-            },
             CommandPaletteItemAction::OpenFile {
                 path,
                 project_directory,
@@ -175,15 +150,6 @@ pub enum ItemSummary {
     Action {
         binding_id: BindingId,
     },
-    Workflow {
-        id: SyncId,
-    },
-    EnvVarCollection {
-        id: SyncId,
-    },
-    Notebook {
-        id: SyncId,
-    },
     Session {
         pane_view_locator: PaneViewLocator,
     },
@@ -196,8 +162,6 @@ pub enum ItemSummary {
     /// Dummy enum variant for launch configurations until we support showing them in recent section
     /// of the zero state
     LaunchConfiguration,
-    /// Dummy enum variant for cloud objects that aren't supported yet in command palette
-    CloudObject,
     File {
         path: String,
         project_directory: String,

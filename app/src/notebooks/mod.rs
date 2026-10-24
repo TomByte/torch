@@ -16,14 +16,11 @@ pub use cloud_object_models::{CloudNotebook, CloudNotebookModel, NotebookId, Ser
 use serde::{Deserialize, Serialize};
 use torchui::AppContext;
 
-use crate::appearance::Appearance;
 use crate::cloud_object::{
     CloudModelType, CloudObjectEventEntrypoint, CloudObjectUpsertParams, CreateCloudObjectResult,
     CreateObjectRequest, GenericServerObject, ObjectType, Owner, Revision, UpdateCloudObjectResult,
 };
 use crate::drive::CloudObjectTypeAndId;
-use crate::drive::items::WarpDriveItem;
-use crate::drive::items::notebook::WarpDriveNotebook;
 use crate::persistence::ModelEvent;
 use crate::server::cloud_objects::update_manager::InitiatedBy;
 use crate::server::ids::{ServerId, SyncId};
@@ -148,25 +145,8 @@ impl CloudModelType for CloudNotebookModel {
             .await
     }
 
-    fn renders_in_warp_drive(&self) -> bool {
-        true
-    }
-
     fn can_export(&self) -> bool {
         true
-    }
-
-    fn to_warp_drive_item(
-        &self,
-        id: SyncId,
-        _appearance: &Appearance,
-        notebook: &CloudNotebook,
-    ) -> Option<Box<dyn WarpDriveItem>> {
-        Some(Box::new(WarpDriveNotebook::new(
-            self.cloud_object_type_and_id(id),
-            notebook.clone(),
-            notebook.model().ai_document_id.is_some(),
-        )))
     }
 }
 
@@ -198,27 +178,4 @@ pub fn init(app: &mut AppContext) {
     self::notebook::init(app);
     self::file::init(app);
     self::editor::view::init(app);
-}
-
-/// Translate a notebook's Markdown content into an external Markdown format.
-///
-/// This:
-/// * Normalizes code block languages
-/// * Includes extra context for embedded objects.
-#[cfg_attr(not(feature = "local_fs"), allow(dead_code))]
-pub fn export_notebook(data: &str, ctx: &AppContext) -> anyhow::Result<String> {
-    use torch_editor::content::buffer::Buffer;
-    use torch_editor::content::markdown::MarkdownStyle;
-
-    // Parse the Markdown directly rather than using [`Buffer::from_markdown`] so that we can
-    // report errors to the exporter.
-    let parsed = markdown_parser::parse_markdown(data)?;
-    Ok(Buffer::export_to_markdown(
-        parsed,
-        Some(editor::notebook_embedded_item_conversion),
-        MarkdownStyle::Export {
-            app_context: Some(ctx),
-            should_not_escape_markdown_punctuation: false,
-        },
-    ))
 }

@@ -31,9 +31,6 @@ use crate::ai::document::ai_document_model::{
 use crate::ai::document::orchestration_config_block::OrchestrationConfigBlockView;
 use crate::appearance::Appearance;
 use crate::channel::ChannelState;
-use crate::drive::CloudObjectTypeAndId;
-use crate::drive::items::WarpDriveItemId;
-use crate::drive::sharing::ShareableObject;
 use crate::editor::InteractionState;
 use crate::menu::{Menu, MenuItem, MenuItemFields};
 use crate::notebooks::editor::model::NotebooksEditorModel;
@@ -110,7 +107,6 @@ pub enum AIDocumentAction {
     SendUpdatedPlan,
     CopyLink(String),
     CopyPlanId,
-    ShowInWarpDrive,
     AttachToActiveSession,
 }
 
@@ -118,7 +114,6 @@ pub enum AIDocumentAction {
 pub enum AIDocumentEvent {
     Pane(PaneEvent),
     CloseRequested,
-    ViewInWarpDrive(WarpDriveItemId),
     #[cfg(feature = "local_fs")]
     OpenCodeInWarp {
         source: CodeSource,
@@ -605,13 +600,7 @@ impl AIDocumentView {
     }
 
     fn update_header_buttons(&mut self, ctx: &mut ViewContext<Self>) {
-        let server_id = AIDocumentModel::as_ref(ctx)
-            .get_current_document(&self.document_id)
-            .and_then(|doc| doc.sync_id)
-            .and_then(|sync_id| sync_id.into_server());
-
         self.pane_configuration.update(ctx, |pc, ctx| {
-            pc.set_shareable_object(server_id.map(ShareableObject::WarpDriveObject), ctx);
             pc.refresh_pane_header_overflow_menu_items(ctx);
         });
         ctx.notify();
@@ -1021,7 +1010,7 @@ impl AIDocumentView {
     fn export(&self, ctx: &mut ViewContext<Self>) {
         use torchui::platform::SaveFilePickerConfiguration;
 
-        use crate::drive::export::safe_filename;
+        use crate::util::file::safe_filename;
         let markdown = self.editor.as_ref(ctx).markdown_unescaped(ctx);
 
         // Get the document title from the model
@@ -1273,16 +1262,6 @@ impl TypedActionView for AIDocumentView {
                 // Update UI to reflect the new query
                 self.update_header_buttons(ctx);
             }
-            AIDocumentAction::ShowInWarpDrive => {
-                if let Some(document) =
-                    AIDocumentModel::as_ref(ctx).get_current_document(&self.document_id)
-                    && let Some(sync_id) = document.sync_id
-                {
-                    ctx.emit(AIDocumentEvent::ViewInWarpDrive(WarpDriveItemId::Object(
-                        CloudObjectTypeAndId::Notebook(sync_id),
-                    )));
-                }
-            }
             AIDocumentAction::AttachToActiveSession => {
                 ctx.emit(AIDocumentEvent::AttachPlanAsContext(self.document_id));
             }
@@ -1333,12 +1312,6 @@ impl BackingView for AIDocumentView {
                 MenuItemFields::new("Copy link")
                     .with_on_select_action(AIDocumentAction::CopyLink(link))
                     .with_icon(Icon::Link)
-                    .into_item(),
-            );
-            menu_items.push(
-                MenuItemFields::new("Show in Torch Drive")
-                    .with_on_select_action(AIDocumentAction::ShowInWarpDrive)
-                    .with_icon(Icon::WarpDrive)
                     .into_item(),
             );
         }

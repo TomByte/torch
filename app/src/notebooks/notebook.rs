@@ -50,11 +50,7 @@ use crate::cloud_object::grab_edit_access_modal::{GrabEditAccessModal, GrabEditA
 use crate::cloud_object::model::persistence::{CloudModel, CloudModelEvent, UpdateSource};
 use crate::cloud_object::model::view::{Editor, EditorState};
 use crate::cloud_object::{CloudObject, CloudObjectEventEntrypoint, ObjectType, Owner, Space};
-use crate::drive::drive_helpers::has_feature_gated_anonymous_user_reached_notebook_limit;
-use crate::drive::export::ExportManager;
-use crate::drive::items::WarpDriveItemId;
-use crate::drive::sharing::ShareableObject;
-use crate::drive::{CloudObjectTypeAndId, OpenWarpDriveObjectSettings};
+use crate::drive::CloudObjectTypeAndId;
 use crate::editor::{
     EditOrigin, EditorView, Event as EditorEvent, InteractionState, PropagateAndNoOpNavigationKeys,
     SingleLineEditorOptions, TextColors, TextOptions,
@@ -72,7 +68,7 @@ use crate::server::cloud_objects::update_manager::{FetchSingleObjectOption, Upda
 use crate::server::ids::{ClientId, ServerId, SyncId};
 use crate::server::telemetry::{
     CloudObjectTelemetryMetadata, NotebookActionEvent, NotebookTelemetryMetadata,
-    SharingDialogSource, TelemetryCloudObjectType, TelemetryEvent,
+    TelemetryCloudObjectType, TelemetryEvent,
 };
 use crate::settings::app_installation_detection::{
     UserAppInstallDetectionSettings, UserAppInstallStatus,
@@ -83,7 +79,7 @@ use crate::settings::{
 };
 use crate::terminal::safe_mode_settings::get_secret_obfuscation_mode;
 use crate::throttle::throttle;
-use crate::ui_components::icons::{self, Icon};
+use crate::ui_components::icons::{self};
 #[cfg(target_family = "wasm")]
 use crate::uri::web_intent_parser::open_url_on_desktop;
 use crate::util::bindings::{self, CustomAction};
@@ -244,17 +240,7 @@ pub enum NotebookEvent {
         source: WorkflowSource,
     },
     EditWorkflow(SyncId),
-    ViewInWarpDrive(WarpDriveItemId),
     Pane(PaneEvent),
-    MoveToSpace {
-        cloud_object_type_and_id: CloudObjectTypeAndId,
-        new_space: Space,
-    },
-    OpenDriveObjectShareDialog {
-        cloud_object_type_and_id: CloudObjectTypeAndId,
-        invitee_email: Option<String>,
-        source: SharingDialogSource,
-    },
     AttachPlanAsContext(AIDocumentId),
 }
 
@@ -274,12 +260,7 @@ pub enum NotebookAction {
     ResetFontSize,
     ConflictResolutionBannerRefreshClicked,
     FocusTerminalInput,
-    ViewInWarpDrive(WarpDriveItemId),
     ContextMenu(ContextMenuAction), // right click context menu
-    MoveToSpace {
-        cloud_object_type_and_id: CloudObjectTypeAndId,
-        new_space: Space,
-    },
     Duplicate,
     Trash,
     Untrash,
@@ -287,7 +268,6 @@ pub enum NotebookAction {
     CopyToClipboard,
     CopyLink(String),
     OpenLinkOnDesktop(Url),
-    Export,
     AttachPlanAsContext(AIDocumentId),
 }
 
@@ -577,17 +557,6 @@ impl NotebookView {
             }
             ActiveNotebookDataEvent::CreatedOnServer => {
                 ctx.emit(NotebookEvent::Pane(PaneEvent::AppStateChanged));
-                if let Some(id) = self
-                    .active_notebook_data
-                    .as_ref(ctx)
-                    .id()
-                    .and_then(SyncId::into_server)
-                {
-                    self.pane_configuration.update(ctx, |pane_config, ctx| {
-                        pane_config
-                            .set_shareable_object(Some(ShareableObject::WarpDriveObject(id)), ctx);
-                    })
-                }
             }
             ActiveNotebookDataEvent::TrashStatusChanged | ActiveNotebookDataEvent::MovedToSpace => {
                 self.pane_configuration.update(ctx, |pane_config, ctx| {
@@ -1191,22 +1160,6 @@ impl NotebookView {
         });
     }
 
-    fn view_in_warp_drive(&mut self, id: WarpDriveItemId, ctx: &mut ViewContext<Self>) {
-        ctx.emit(NotebookEvent::ViewInWarpDrive(id));
-    }
-
-    fn move_to_team_owner(
-        &mut self,
-        cloud_object_type_and_id: CloudObjectTypeAndId,
-        new_space: Space,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        ctx.emit(NotebookEvent::MoveToSpace {
-            cloud_object_type_and_id,
-            new_space,
-        });
-    }
-
     fn duplicate_object(&mut self, ctx: &mut ViewContext<Self>) {
         if let Some(notebook_id) = self.notebook_id(ctx) {
             UpdateManager::handle(ctx).update(ctx, |update_manager, ctx| {
@@ -1234,32 +1187,11 @@ impl NotebookView {
 
     fn untrash_notebook(&self, ctx: &mut ViewContext<Self>) {
         if let Some(notebook_id) = self.notebook_id(ctx) {
-            if has_feature_gated_anonymous_user_reached_notebook_limit(ctx) {
-                return;
-            }
-
             UpdateManager::handle(ctx).update(ctx, move |update_manager, ctx| {
                 update_manager.untrash_object(
                     CloudObjectTypeAndId::from_id_and_type(notebook_id, ObjectType::Notebook),
                     ctx,
                 );
-            });
-        }
-    }
-
-    /// Start exporting this notebook.
-    fn export(&self, ctx: &mut ViewContext<Self>) {
-        if let Some(notebook_id) = self.notebook_id(ctx) {
-            let window_id = ctx.window_id();
-            ExportManager::handle(ctx).update(ctx, |export_manager, ctx| {
-                export_manager.export(
-                    window_id,
-                    &[CloudObjectTypeAndId::from_id_and_type(
-                        notebook_id,
-                        ObjectType::Notebook,
-                    )],
-                    ctx,
-                )
             });
         }
     }
@@ -1337,20 +1269,6 @@ impl NotebookView {
         });
     }
 
-    fn online_only_operation_allowed(
-        &self,
-        cloud_object_type_and_id: CloudObjectTypeAndId,
-        app: &AppContext,
-    ) -> bool {
-        if let Some(object) = CloudModel::as_ref(app).get_by_uid(&cloud_object_type_and_id.uid()) {
-            return self.is_online(app)
-                && cloud_object_type_and_id.has_server_id()
-                && !object.metadata().has_pending_online_only_change();
-        }
-
-        false
-    }
-
     pub fn notebook_link(&self, ctx: &AppContext) -> Option<String> {
         let id = self.notebook_id(ctx)?;
 
@@ -1371,35 +1289,6 @@ impl NotebookView {
             || active_notebook_data.trash_status(ctx) != TrashStatus::Active
         {
             return menu_items;
-        }
-
-        // Add "Move to <team> space" to menu
-        let team_spaces = UserWorkspaces::as_ref(ctx).team_spaces();
-
-        if let (Some(space), Some(cloud_id)) =
-            (active_notebook_data.space(ctx), active_notebook_data.id())
-        {
-            let cloud_object_type =
-                CloudObjectTypeAndId::from_id_and_type(cloud_id, ObjectType::Notebook);
-            let can_move = self.online_only_operation_allowed(cloud_object_type, ctx);
-
-            if can_move {
-                match space {
-                    Space::Personal => {
-                        menu_items.extend(team_spaces.iter().map(|space| {
-                            MenuItemFields::new(format!("Move to {}", space.name(ctx)))
-                                .with_on_select_action(NotebookAction::MoveToSpace {
-                                    cloud_object_type_and_id: cloud_object_type,
-                                    new_space: *space,
-                                })
-                                .with_icon(Icon::Move)
-                                .into_item()
-                        }));
-                    }
-                    Space::Shared => {} // TODO: Revisit these menu items with sharing in mind
-                    Space::Team { .. } => {} // TODO: When we do team -> personal sharing
-                }
-            }
         }
 
         if let Some(ai_document_id) = self.active_notebook_data.as_ref(ctx).ai_document_id(ctx) {
@@ -1448,16 +1337,6 @@ impl NotebookView {
             );
         }
 
-        #[cfg(feature = "local_fs")]
-        {
-            menu_items.push(
-                MenuItemFields::new("Export")
-                    .with_on_select_action(NotebookAction::Export)
-                    .with_icon(icons::Icon::Download)
-                    .into_item(),
-            );
-        }
-
         // Add "Trash" to menu
         if self.is_online(ctx)
             && (!FeatureFlag::SharedWithMe.is_enabled() || access_level.can_trash())
@@ -1498,29 +1377,21 @@ impl NotebookView {
     pub fn wait_for_initial_load_then_load(
         &mut self,
         notebook_id: SyncId,
-        settings: &OpenWarpDriveObjectSettings,
         window_id: WindowId,
         ctx: &mut ViewContext<Self>,
     ) {
         let initial_load_complete = UpdateManager::as_ref(ctx).initial_load_complete();
         // TODO @ianhodge CLD-2002: it could be nice to have a loading screen here while we wait for the load
-        let settings = settings.clone();
         ctx.spawn(initial_load_complete, move |me, _, ctx| {
             let notebook = CloudModel::as_ref(ctx).get_notebook(&notebook_id).cloned();
-            let fetch_needed = notebook.is_none()
-                || settings
-                    .focused_folder_id
-                    .map(SyncId::ServerId)
-                    .map(|folder_id| CloudModel::as_ref(ctx).get_folder(&folder_id).is_none())
-                    .unwrap_or(false);
-            if fetch_needed {
+            if notebook.is_none() {
                 if let Some(server_id) = notebook_id.into_server() {
-                    me.fetch_and_load_notebook(server_id, &settings, window_id, ctx);
+                    me.fetch_and_load_notebook(server_id, window_id, ctx);
                 } else {
                     log::warn!("Tried to load notebook without server id {notebook_id:?}");
                 }
             } else if let Some(notebook) = notebook {
-                me.load(notebook, &settings, ctx);
+                me.load(notebook, ctx);
             } else {
                 ToastStack::handle(ctx).update(ctx, |toast_stack, ctx| {
                     toast_stack.add_ephemeral_toast_by_type(
@@ -1537,27 +1408,23 @@ impl NotebookView {
     fn fetch_and_load_notebook(
         &mut self,
         notebook_id: ServerId,
-        settings: &OpenWarpDriveObjectSettings,
         window_id: WindowId,
         ctx: &mut ViewContext<Self>,
     ) {
-        // If we have a parent folder we are trying to load as a part of this notebook, fetch that instead
-        let id_to_fetch = settings.focused_folder_id.unwrap_or(notebook_id);
         let fetch_cloud_object_rx =
             UpdateManager::handle(ctx).update(ctx, |update_manager, ctx| {
                 update_manager.fetch_single_cloud_object(
-                    &id_to_fetch,
+                    &notebook_id,
                     FetchSingleObjectOption::None,
                     ctx,
                 )
             });
-        let settings = settings.clone();
         ctx.spawn(fetch_cloud_object_rx, move |me, _, ctx| {
             if let Some(notebook) = CloudModel::as_ref(ctx)
                 .get_notebook(&SyncId::ServerId(notebook_id))
                 .cloned()
             {
-                me.load(notebook, &settings, ctx);
+                me.load(notebook, ctx);
             } else {
                 ToastStack::handle(ctx).update(ctx, |toast_stack, ctx| {
                     toast_stack.add_ephemeral_toast_by_type(
@@ -1581,21 +1448,10 @@ impl NotebookView {
     pub fn load(
         &mut self,
         notebook: CloudNotebook,
-        settings: &OpenWarpDriveObjectSettings,
         ctx: &mut ViewContext<Self>,
     ) -> SpawnedFutureHandle {
         self.set_title(&notebook.model().title, ctx);
         self.set_content(&notebook, ctx);
-
-        if let Some(server_id) = notebook.id.into_server() {
-            self.pane_configuration
-                .update(ctx, |pane_configuration, ctx| {
-                    pane_configuration.set_shareable_object(
-                        Some(ShareableObject::WarpDriveObject(server_id)),
-                        ctx,
-                    );
-                });
-        }
 
         self.active_notebook_data.update(ctx, |data, ctx| {
             data.open_existing(notebook.id, ctx);
@@ -1659,23 +1515,6 @@ impl NotebookView {
             }
         });
         self.update_breadcrumbs(ctx);
-        if let Some(invitee_email) = settings.invitee_email.clone() {
-            let object_id_to_share = settings
-                .focused_folder_id
-                .map(|id| CloudObjectTypeAndId::Folder(SyncId::ServerId(id)))
-                .unwrap_or(CloudObjectTypeAndId::Notebook(notebook.id));
-            ctx.emit(NotebookEvent::OpenDriveObjectShareDialog {
-                cloud_object_type_and_id: object_id_to_share,
-                invitee_email: Some(invitee_email),
-                source: SharingDialogSource::InviteeRequest,
-            });
-        } else if let Some(focused_folder_id) = settings.focused_folder_id.map(SyncId::ServerId) {
-            self.view_in_warp_drive(
-                WarpDriveItemId::Object(CloudObjectTypeAndId::Folder(focused_folder_id)),
-                ctx,
-            );
-        }
-
         ctx.notify();
         baton_future
     }
@@ -1844,11 +1683,7 @@ impl NotebookView {
         // Load the server's version of the notebook now that the cloud model has been updated.
         // This will also switch back to edit mode if there isn't an active editor.
         if let Some(notebook) = CloudModel::as_ref(ctx).get_notebook(&id) {
-            self.load(
-                notebook.clone(),
-                &OpenWarpDriveObjectSettings::default(),
-                ctx,
-            );
+            self.load(notebook.clone(), ctx);
         }
         ctx.notify();
     }
@@ -2285,7 +2120,6 @@ impl TypedActionView for NotebookView {
             NotebookAction::ResetFontSize => {
                 self.apply_font_size_to_setting(NotebookFontSize::default_value(), ctx)
             }
-            NotebookAction::ViewInWarpDrive(id) => self.view_in_warp_drive(*id, ctx),
             NotebookAction::FocusTerminalInput => {
                 ctx.emit(NotebookEvent::Pane(PaneEvent::FocusActiveSession))
             }
@@ -2317,25 +2151,14 @@ impl TypedActionView for NotebookView {
                     );
                 });
             }
-            NotebookAction::MoveToSpace {
-                cloud_object_type_and_id,
-                new_space,
-            } => self.move_to_team_owner(*cloud_object_type_and_id, *new_space, ctx),
             #[cfg(target_family = "wasm")]
             NotebookAction::OpenLinkOnDesktop(url) => {
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::WebCloudObjectOpenedOnDesktop {
-                        object_metadata: self.generic_telemetry_metadata(ctx)
-                    },
-                    ctx
-                );
                 open_url_on_desktop(url);
             }
             #[cfg(not(target_family = "wasm"))]
             NotebookAction::OpenLinkOnDesktop(_) => {
                 // No-op when not on wasm
             }
-            NotebookAction::Export => self.export(ctx),
             NotebookAction::AttachPlanAsContext(id) => {
                 ctx.emit(NotebookEvent::AttachPlanAsContext(*id))
             }

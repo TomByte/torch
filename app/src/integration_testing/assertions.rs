@@ -1,9 +1,9 @@
-use torchui::integration::TestStep;
+use torchui::integration::{AssertionCallback, TestStep};
 use torchui::{SingletonEntity, async_assert, async_assert_eq};
 
 use crate::cloud_object::model::persistence::CloudModel;
 use crate::cloud_object::{CloudObjectEventEntrypoint, CloudObjectLocation, Space};
-use crate::network::{NetworkStatus, NetworkStatusKind};
+use crate::integration_testing::view_getters::workspace_view;
 use crate::server::cloud_objects::listener::Listener;
 use crate::server::cloud_objects::update_manager::UpdateManager;
 use crate::server::ids::ClientId;
@@ -12,35 +12,6 @@ use crate::workflows::workflow::Workflow;
 use crate::workspaces::team::{Team, TeamVisibility};
 use crate::workspaces::user_workspaces::UserWorkspaces;
 use crate::workspaces::workspace::Workspace;
-
-fn set_and_assert_network_status(status: NetworkStatusKind) -> TestStep {
-    TestStep::new("Set and assert network status")
-        .with_action(move |app, _, _| {
-            NetworkStatus::handle(app).update(app, |network_status, ctx| {
-                if matches!(status, NetworkStatusKind::Online) {
-                    network_status.reachability_changed(true, ctx);
-                } else {
-                    network_status.reachability_changed(false, ctx);
-                }
-            });
-        })
-        .add_assertion(move |app, _| {
-            NetworkStatus::handle(app).read(app, |network_status, _| {
-                async_assert!(
-                    network_status.status() == status,
-                    "network status is correct"
-                )
-            })
-        })
-}
-
-pub fn go_offline() -> TestStep {
-    set_and_assert_network_status(NetworkStatusKind::Offline)
-}
-
-pub fn go_online() -> TestStep {
-    set_and_assert_network_status(NetworkStatusKind::Online)
-}
 
 pub fn join_a_workspace() -> TestStep {
     TestStep::new("Join a Torch Drive workspace")
@@ -174,4 +145,17 @@ pub fn assert_websocket_has_not_started() -> TestStep {
             })
         },
     )
+}
+
+pub fn assert_is_left_panel_open() -> AssertionCallback {
+    Box::new(move |app, window_id| {
+        let workspace = workspace_view(app, window_id);
+
+        workspace.read(app, |workspace, ctx| {
+            async_assert!(
+                workspace.is_left_panel_open(ctx),
+                "Expected left panel to be open, but it was closed"
+            )
+        })
+    })
 }

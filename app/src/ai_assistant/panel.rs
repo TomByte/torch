@@ -99,7 +99,6 @@ pub enum AIAssistantPanelEvent {
     ClosePanel,
     PasteInTerminalInput(Arc<String>),
     FocusTerminalInput,
-    OpenWorkflowModalWithCommand(String),
 }
 
 /// Which child view is currently focused. It must be exactly one of these.
@@ -557,11 +556,6 @@ impl AIAssistantPanelView {
             TranscriptEvent::ClickedCodeBlock | TranscriptEvent::FocusTranscript => {
                 self.focus_state = PanelFocusState::Transcript;
                 ctx.focus_self();
-            }
-            TranscriptEvent::OpenWorkflowModalWithCommand(command) => {
-                ctx.emit(AIAssistantPanelEvent::OpenWorkflowModalWithCommand(
-                    command.clone(),
-                ));
             }
         }
     }

@@ -3376,7 +3376,7 @@ impl SettingsWidget for ToolsPanelStateScopeWidget {
     type View = AppearanceSettingsPageView;
 
     fn search_terms(&self) -> &str {
-        "left tools panel open closed across tabs file tree project explorer global search torch drive conversation list"
+        "left tools panel open closed across tabs file tree project explorer global search conversation list"
     }
 
     fn render(

@@ -255,7 +255,6 @@ use crate::code::language_server_shutdown_manager::LanguageServerShutdownManager
 use crate::context_chips::prompt::Prompt;
 use crate::default_terminal::DefaultTerminal;
 use crate::drive::CloudObjectTypeAndId;
-use crate::drive::export::ExportManager;
 use crate::env_vars::manager::EnvVarCollectionManager;
 use crate::experiments::ImprovedPaletteSearch;
 pub use crate::global_resource_handles::{GlobalResourceHandles, GlobalResourceHandlesProvider};
@@ -1832,7 +1831,6 @@ pub(crate) fn initialize_app(
     tab_configs::params_modal::init(ctx);
     ai::blocklist::init(ctx);
     ai::blocklist::block::status_bar::init(ctx);
-    drive::index::init(ctx);
     drive::sharing::dialog::init(ctx);
     ai_assistant::panel::init(ctx);
     settings_view::update_environment_form::init(ctx);
@@ -2084,7 +2082,6 @@ pub(crate) fn initialize_app(
     // ByoLlmAuthBannerSessionState tracks dismissal of the BYO LLM auth banner (e.g., AWS Bedrock login).
     ctx.add_singleton_model(ByoLlmAuthBannerSessionState::new);
 
-    ctx.add_singleton_model(ExportManager::new);
     ctx.add_singleton_model(|ctx| NotebookManager::new(notebooks, ctx));
     ctx.add_singleton_model(|_| CodeManager::default());
     ctx.add_singleton_model(|_| OpenedFilesModel::new());

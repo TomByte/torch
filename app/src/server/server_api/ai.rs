@@ -176,11 +176,11 @@ use crate::ai_assistant::execution_context::WarpAiExecutionContext;
 use crate::ai_assistant::requests::GenerateDialogueResult;
 use crate::ai_assistant::utils::TranscriptPart;
 use crate::ai_assistant::{AIGeneratedCommand, GenerateCommandsFromNaturalLanguageError};
-use crate::drive::workflows::ai_assist::{GeneratedCommandMetadata, GeneratedCommandMetadataError};
 use crate::persistence::model::ConversationUsageMetadata;
 use crate::server::graphql::{get_request_context, get_user_facing_error_message};
 use crate::server::team_scope::RequestTeamScope;
 use crate::terminal::model::block::SerializedBlock;
+use crate::workflows::ai_assist::{GeneratedCommandMetadata, GeneratedCommandMetadataError};
 #[cfg(not(feature = "agent_mode_evals"))]
 use crate::{
     server::ids::ServerId,

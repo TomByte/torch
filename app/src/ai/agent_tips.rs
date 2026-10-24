@@ -72,7 +72,6 @@ pub trait AITip: Clone {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum AgentTipKind {
     CodebaseContext,
-    WarpDrive,
     General,
     Mcp,
     SlashCommands,
@@ -117,13 +116,6 @@ static DEFAULT_TIPS: LazyLock<Vec<AgentTip>> = LazyLock::new(|| {
                 query: None,
             }),
             kind: AgentTipKind::General,
-        },
-        AgentTip {
-            description: "Store reusable workflows, notebooks, and prompts in your".to_string(),
-            link: None,
-            binding_name: None,
-            action: Some(WorkspaceAction::OpenWarpDrive),
-            kind: AgentTipKind::WarpDrive,
         },
         AgentTip {
             description: "Enter a new prompt to redirect the agent while it's running.".to_string(),
@@ -215,13 +207,6 @@ static DEFAULT_TIPS: LazyLock<Vec<AgentTip>> = LazyLock::new(|| {
             binding_name: None,
             action: None,
             kind: AgentTipKind::General,
-        },
-        AgentTip {
-            description: "`/add-prompt` to create a reusable prompt for repeatable workflows.".to_string(),
-            link: None,
-            binding_name: None,
-            action: None,
-            kind: AgentTipKind::WarpDrive,
         },
         AgentTip {
             description: "`/add-rule` to create a global agent rule.".to_string(),
@@ -439,7 +424,6 @@ impl WorkspaceAction {
     pub fn display_text(&self) -> Option<String> {
         match self {
             WorkspaceAction::OpenPalette { .. } => Some("Open palette".to_string()),
-            WorkspaceAction::OpenWarpDrive => Some("Torch Drive.".to_string()),
             WorkspaceAction::ToggleRightPanel => Some("Show diff view".to_string()),
             _ => None,
         }

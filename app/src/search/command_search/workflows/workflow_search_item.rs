@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use ordered_float::OrderedFloat;
 use torchui::elements::{
     Border, Clipped, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Flex, Highlight,
@@ -14,40 +12,21 @@ use crate::search::command_search::searcher::{AcceptedWorkflow, CommandSearchIte
 use crate::search::item::SearchItem;
 use crate::search::result_renderer::ItemHighlightState;
 use crate::search::workflows::fuzzy_match::FuzzyMatchWorkflowResult;
-use crate::server::ids::SyncId;
 use crate::ui_components::icons::Icon;
 use crate::workflows::workflow::Workflow;
-use crate::workflows::{CloudWorkflowModel, WorkflowSource, WorkflowType};
-
-/// Holds workflow data for a `WorkflowSearchItem`, used to read workflow fields
-/// during rendering and to produce an `AcceptedWorkflow` payload on selection.
-///
-/// Cloud workflows use a shared `Arc` pointer into CloudModel so the snapshot
-/// avoids deep-cloning on every keystroke. Non-cloud workflows (local files,
-/// AI-generated) don't live in CloudModel, so they must carry owned data.
-#[derive(Clone, Debug)]
-pub enum WorkflowIdentity {
-    Cloud {
-        id: SyncId,
-        model: Arc<CloudWorkflowModel>,
-    },
-    Local(Box<WorkflowType>),
-}
+use crate::workflows::{WorkflowSource, WorkflowType};
 
 /// Struct designed to be the implementation of CommandSearchItem for workflows.
 #[derive(Clone, Debug)]
 pub struct WorkflowSearchItem {
-    pub identity: WorkflowIdentity,
+    pub workflow: Box<WorkflowType>,
     pub source: WorkflowSource,
     pub fuzzy_matched_workflow: FuzzyMatchWorkflowResult,
 }
 
 impl WorkflowSearchItem {
     fn workflow_data(&self) -> &Workflow {
-        match &self.identity {
-            WorkflowIdentity::Cloud { model, .. } => &model.data,
-            WorkflowIdentity::Local(workflow_type) => workflow_type.as_workflow(),
-        }
+        self.workflow.as_workflow()
     }
 
     fn render_name(&self, appearance: &Appearance) -> Box<dyn Element> {
@@ -237,17 +216,10 @@ impl SearchItem for WorkflowSearchItem {
     }
 
     fn accept_result(&self) -> CommandSearchItemAction {
-        let accepted = match &self.identity {
-            WorkflowIdentity::Cloud { id, .. } => AcceptedWorkflow::Cloud {
-                id: *id,
-                source: self.source,
-            },
-            WorkflowIdentity::Local(workflow_type) => AcceptedWorkflow::Local {
-                workflow: workflow_type.clone(),
-                source: self.source,
-            },
-        };
-        CommandSearchItemAction::AcceptWorkflow(accepted)
+        CommandSearchItemAction::AcceptWorkflow(AcceptedWorkflow {
+            workflow: self.workflow.clone(),
+            source: self.source,
+        })
     }
 
     fn execute_result(&self) -> CommandSearchItemAction {

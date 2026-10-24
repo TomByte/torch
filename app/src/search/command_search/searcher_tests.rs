@@ -22,7 +22,7 @@ use crate::search::command_search::history::{
     history_data_source, history_data_source_for_session,
 };
 use crate::search::command_search::searcher::CommandSearchMixer;
-use crate::search::command_search::workflows::{WorkflowIdentity, WorkflowSearchItem};
+use crate::search::command_search::workflows::WorkflowSearchItem;
 use crate::search::data_source::{Query, QueryResult};
 use crate::search::item::SearchItem;
 use crate::search::mixer::{
@@ -424,7 +424,7 @@ fn test_history_score_stays_comparable_to_other_sources_raw_skim_scale() {
             FuzzyMatchWorkflowResult::try_match("test", &weak_workflow, "")
                 .expect("the workflow's command should fuzzy-match \"test\"");
         let workflow_item = WorkflowSearchItem {
-            identity: WorkflowIdentity::Local(Box::new(WorkflowType::Local(weak_workflow))),
+            workflow: Box::new(WorkflowType::Local(weak_workflow)),
             source: WorkflowSource::Local,
             fuzzy_matched_workflow,
         };
@@ -439,7 +439,7 @@ fn test_history_score_stays_comparable_to_other_sources_raw_skim_scale() {
             FuzzyMatchWorkflowResult::try_match("test", &weak_saved_prompt, "")
                 .expect("the saved prompt's query should fuzzy-match \"test\"");
         let saved_prompt_item = WorkflowSearchItem {
-            identity: WorkflowIdentity::Local(Box::new(WorkflowType::Local(weak_saved_prompt))),
+            workflow: Box::new(WorkflowType::Local(weak_saved_prompt)),
             source: WorkflowSource::Local,
             fuzzy_matched_workflow: fuzzy_matched_saved_prompt,
         };

@@ -10,7 +10,6 @@ use torchui::platform::Cursor;
 use torchui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
 
 use crate::appearance::Appearance;
-use crate::drive::settings::{WarpDriveSettings, WarpDriveSettingsChangedEvent};
 use crate::search::{FilterChipRenderer, QueryFilter};
 use crate::settings::{AISettings, AISettingsChangedEvent};
 
@@ -48,12 +47,6 @@ impl CommandSearchZeroStateView {
     pub fn new(ctx: &mut ViewContext<Self>) -> Self {
         ctx.subscribe_to_model(&AISettings::handle(ctx), |_, _, event, ctx| {
             if let AISettingsChangedEvent::IsAnyAIEnabled { .. } = event {
-                ctx.notify();
-            }
-        });
-
-        ctx.subscribe_to_model(&WarpDriveSettings::handle(ctx), |_, _, event, ctx| {
-            if let WarpDriveSettingsChangedEvent::EnableWarpDrive { .. } = event {
                 ctx.notify();
             }
         });
@@ -287,11 +280,6 @@ fn valid_query_filters(app: &AppContext) -> Vec<QueryFilter> {
             filters.push(QueryFilter::AgentModeWorkflows);
         }
         filters.push(QueryFilter::PromptHistory);
-    }
-
-    if WarpDriveSettings::is_warp_drive_enabled(app) {
-        filters.push(QueryFilter::Workflows);
-        filters.push(QueryFilter::EnvironmentVariables);
     }
 
     filters

@@ -96,12 +96,7 @@ impl Workspace {
                 ctx.notify();
             }
             ConversationDetailsPanelEvent::OpenPlanNotebook { notebook_uid } => {
-                me.open_notebook(
-                    &NotebookSource::Existing((*notebook_uid).into()),
-                    &OpenWarpDriveObjectSettings::default(),
-                    ctx,
-                    true,
-                );
+                me.open_notebook(&NotebookSource::Existing((*notebook_uid).into()), ctx, true);
             }
         });
 

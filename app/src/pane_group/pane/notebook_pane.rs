@@ -11,9 +11,6 @@ use super::{
     ShareableLinkError,
 };
 use crate::app_state::{LeafContents, NotebookPaneSnapshot};
-use crate::cloud_object::Space;
-use crate::drive::items::WarpDriveItemId;
-use crate::drive::{CloudObjectTypeAndId, OpenWarpDriveObjectSettings};
 use crate::notebooks::link::{LinkEvent, NotebookLinks};
 use crate::notebooks::manager::{NotebookManager, NotebookSource};
 use crate::notebooks::notebook::{NotebookEvent, NotebookView};
@@ -43,7 +40,6 @@ impl NotebookPane {
     /// Restore a notebook pane given its cloud notebook ID.
     pub fn restore(
         notebook_id: Option<SyncId>,
-        settings: &OpenWarpDriveObjectSettings,
         ctx: &mut ViewContext<PaneGroup>,
     ) -> anyhow::Result<Self> {
         let window_id = ctx.window_id();
@@ -59,7 +55,7 @@ impl NotebookPane {
         };
 
         Ok(NotebookManager::handle(ctx).update(ctx, |manager, ctx| {
-            manager.create_pane(&source, settings, window_id, ctx)
+            manager.create_pane(&source, window_id, ctx)
         }))
     }
 
@@ -75,10 +71,7 @@ impl PaneContent for NotebookPane {
 
     fn snapshot(&self, app: &AppContext) -> LeafContents {
         let notebook_id = self.notebook_view(app).as_ref(app).notebook_id(app);
-        LeafContents::Notebook(NotebookPaneSnapshot::CloudNotebook {
-            notebook_id,
-            settings: OpenWarpDriveObjectSettings::default(),
-        })
+        LeafContents::Notebook(NotebookPaneSnapshot::CloudNotebook { notebook_id })
     }
 
     fn attach(
@@ -179,11 +172,6 @@ pub(super) fn subscribe_to_link_model(
                 session: session.clone(),
             })
         }
-        LinkEvent::OpenWarpDriveLink {
-            open_warp_drive_args,
-        } => ctx.emit(crate::pane_group::Event::OpenWarpDriveLink {
-            open_warp_drive_args: open_warp_drive_args.clone(),
-        }),
         LinkEvent::StartLocalSession { path } => {
             pane_group.add_session_in_directory(
                 Direction::Right,
@@ -226,21 +214,7 @@ fn handle_notebook_event(
         NotebookEvent::EditWorkflow(id) => {
             ctx.emit(crate::pane_group::Event::OpenCloudWorkflowForEdit(*id))
         }
-        NotebookEvent::ViewInWarpDrive(id) => view_in_warp_drive(*id, ctx),
-        NotebookEvent::MoveToSpace {
-            cloud_object_type_and_id,
-            new_space,
-        } => move_to_space(*cloud_object_type_and_id, *new_space, ctx),
         NotebookEvent::Pane(pane_event) => group.handle_pane_event(pane_id, pane_event, ctx),
-        NotebookEvent::OpenDriveObjectShareDialog {
-            cloud_object_type_and_id,
-            invitee_email,
-            source,
-        } => ctx.emit(crate::pane_group::Event::OpenDriveObjectShareDialog {
-            source: *source,
-            cloud_object_type_and_id: *cloud_object_type_and_id,
-            invitee_email: invitee_email.clone(),
-        }),
         NotebookEvent::AttachPlanAsContext(ai_document_id) => {
             ctx.emit(crate::pane_group::Event::AttachPlanAsContext {
                 ai_document_id: *ai_document_id,
@@ -263,20 +237,5 @@ fn run_notebook_workflow(
         workflow_source,
         workflow_selection_source: WorkflowSelectionSource::Notebook,
         argument_override: None,
-    });
-}
-
-fn view_in_warp_drive(id: WarpDriveItemId, ctx: &mut ViewContext<PaneGroup>) {
-    ctx.emit(crate::pane_group::Event::ViewInWarpDrive(id))
-}
-
-fn move_to_space(
-    cloud_object_type_and_id: CloudObjectTypeAndId,
-    space: Space,
-    ctx: &mut ViewContext<PaneGroup>,
-) {
-    ctx.emit(crate::pane_group::Event::MoveToSpace {
-        cloud_object_type_and_id,
-        space,
     });
 }

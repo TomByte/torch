@@ -196,7 +196,6 @@ integration_tests! {
     #[ignore]
     test_ask_warp_ai_keybinding_for_selected_block,
 
-    test_create_folder_from_command_palette,
 
     test_tab_behavior_setting,
 
@@ -253,8 +252,6 @@ integration_tests! {
     test_backspace_inside_raw_mermaid_block_edits_text_without_removing_block,
 
     test_open_workflow_in_pane,
-    test_create_personal_workflow_pane_from_command_palette,
-    test_create_team_workflow_pane_from_command_palette,
 
     // TODO(alokedesai): Fix this on the latest version of Bash.
     #[ignore]

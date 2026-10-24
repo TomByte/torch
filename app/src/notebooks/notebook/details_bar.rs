@@ -61,15 +61,7 @@ impl DetailsBar {
         header_row.add_child(
             Shrinkable::new(
                 2.,
-                render_breadcrumbs(
-                    self.breadcrumbs.iter().cloned(),
-                    appearance,
-                    |ctx, _, breadcrumb| {
-                        ctx.dispatch_typed_action(NotebookAction::ViewInWarpDrive(
-                            breadcrumb.kind.into_item_id(),
-                        ));
-                    },
-                ),
+                render_breadcrumbs(self.breadcrumbs.iter().cloned(), appearance, |_, _, _| {}),
             )
             .finish(),
         );
@@ -88,10 +80,7 @@ impl DetailsBar {
         } else {
             ContentEditability::Editable
         };
-        if matches!(
-            editability,
-            ContentEditability::RequiresLogin | ContentEditability::Editable
-        ) {
+        if matches!(editability, ContentEditability::Editable) {
             editing_state_row.add_child(self.render_mode_toggle(
                 notebook_data.mode,
                 editability,
@@ -111,7 +100,7 @@ impl DetailsBar {
         editability: ContentEditability,
         appearance: &Appearance,
     ) -> Box<dyn Element> {
-        let mut edit_button = match mode {
+        let edit_button = match mode {
             Mode::View => icon_button(
                 appearance,
                 Icon::Pencil,
@@ -125,16 +114,6 @@ impl DetailsBar {
                 self.edit_mode_button_mouse_state.clone(),
             ),
         };
-
-        if matches!(editability, ContentEditability::RequiresLogin) {
-            let ui_builder = appearance.ui_builder().clone();
-            edit_button = edit_button.with_tooltip(move || {
-                ui_builder
-                    .tool_tip("Sign in to edit".to_string())
-                    .build()
-                    .finish()
-            });
-        }
 
         Container::new(
             edit_button

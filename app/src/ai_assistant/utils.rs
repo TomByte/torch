@@ -388,13 +388,6 @@ pub fn code_block_position_id(code_block_index: CodeBlockIndex) -> String {
     format!("code_block_id_{}", code_block_index.as_id_str(),)
 }
 
-pub fn save_as_workflow_position_id(code_block_index: CodeBlockIndex) -> String {
-    format!(
-        "{}_save_as_workflow",
-        code_block_position_id(code_block_index)
-    )
-}
-
 pub fn markdown_segments_from_text(
     transcript_part_index: usize,
     transcript_part_type: TranscriptPartSubType,

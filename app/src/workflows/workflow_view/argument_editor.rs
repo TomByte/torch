@@ -10,7 +10,6 @@ use torchui::elements::{
     MainAxisSize, ParentElement, Shrinkable,
 };
 use torchui::text_layout::TextStyle;
-use torchui::ui_components::button::ButtonVariant;
 use torchui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use torchui::{AppContext, Element, SingletonEntity as _, ViewContext, ViewHandle};
 
@@ -20,10 +19,6 @@ use super::{
     VERTICAL_TEXT_INPUT_PADDING, WORKFLOW_PARAMETER_HIGHLIGHT_COLOR, WorkflowAction, WorkflowView,
     WorkflowViewEvent,
 };
-use crate::drive::workflows::workflow_arg_selector::{
-    WorkflowArgSelector, WorkflowArgSelectorStyles,
-};
-use crate::drive::workflows::workflow_arg_type_helpers::{self, ArgumentTypeEditor};
 use crate::editor::{
     EditOrigin, EditorView, Event as EditorEvent, InteractionState,
     PlainTextEditorViewAction as EditorAction,
@@ -32,7 +27,8 @@ use crate::pane_group::PaneEvent;
 use crate::ui_components::buttons::icon_button;
 use crate::ui_components::icons::Icon;
 use crate::workflows::workflow::Workflow;
-use crate::workspace::WorkspaceAction;
+use crate::workflows::workflow_arg_selector::{WorkflowArgSelector, WorkflowArgSelectorStyles};
+use crate::workflows::workflow_arg_type_helpers::{self, ArgumentTypeEditor};
 
 const ARGUMENT_INPUT_HEIGHT: f32 = 30.;
 const ARGUMENT_LABEL_TEXT: &str = "Arguments";
@@ -547,8 +543,9 @@ impl WorkflowView {
                 ArgumentEditorMode::WorkflowDefinition | ArgumentEditorMode::Alias
             )
             && !self.is_for_agent_mode
+            && self.env_vars_selector.as_ref(app).has_env_vars(app)
         {
-            arguments_section.add_child(self.render_env_vars_selector(appearance, app));
+            arguments_section.add_child(self.render_env_vars_selector(appearance));
         }
 
         Some(arguments_section.finish())
@@ -804,29 +801,9 @@ impl WorkflowView {
         arguments.finish()
     }
 
-    fn render_env_vars_selector(
-        &self,
-        appearance: &Appearance,
-        app: &AppContext,
-    ) -> Box<dyn Element> {
-        let action_element = if self.env_vars_selector.as_ref(app).has_env_vars(app) {
-            Shrinkable::new(1., ChildView::new(&self.env_vars_selector).finish()).finish()
-        } else {
-            appearance
-                .ui_builder()
-                .button(
-                    ButtonVariant::Secondary,
-                    self.ui_state_handles
-                        .add_environment_variables_mouse_state
-                        .clone(),
-                )
-                .with_centered_text_label("Add environment variables".to_string())
-                .build()
-                .on_click(|ctx, _, _| {
-                    ctx.dispatch_typed_action(WorkspaceAction::CreatePersonalEnvVarCollection);
-                })
-                .finish()
-        };
+    fn render_env_vars_selector(&self, appearance: &Appearance) -> Box<dyn Element> {
+        let action_element =
+            Shrinkable::new(1., ChildView::new(&self.env_vars_selector).finish()).finish();
 
         Flex::row()
             .with_children([

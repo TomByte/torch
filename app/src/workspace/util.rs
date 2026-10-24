@@ -86,14 +86,11 @@ pub struct WorkspaceState {
     pub is_launch_config_save_modal_open: bool,
     pub is_resource_center_open: bool,
     pub is_command_search_open: bool,
-    pub is_warp_drive_open: bool,
     pub is_ai_assistant_panel_open: bool,
     pub is_agent_management_popup_open: bool,
-    pub is_workflow_modal_open: bool,
     pub is_prompt_editor_open: bool,
     pub is_agent_toolbar_editor_open: bool,
     pub is_header_toolbar_editor_open: bool,
-    pub is_import_modal_open: bool,
     pub is_close_session_confirmation_dialog_open: bool,
     pub is_rewind_confirmation_dialog_open: bool,
     pub is_delete_conversation_confirmation_dialog_open: bool,
@@ -118,11 +115,7 @@ pub struct WorkspaceState {
 
 impl WorkspaceState {
     pub fn is_any_non_terminal_view_open(&self, app: &AppContext) -> bool {
-        self.is_any_modal_open(app)
-            || self.is_theme_chooser_open
-            || self.is_ai_assistant_panel_open
-            || self.is_workflow_modal_open
-            || self.is_warp_drive_open
+        self.is_any_modal_open(app) || self.is_theme_chooser_open || self.is_ai_assistant_panel_open
     }
 
     pub fn is_any_non_palette_modal_open(&self, app: &AppContext) -> bool {
@@ -138,7 +131,6 @@ impl WorkspaceState {
             || self.is_agent_toolbar_editor_open
             || self.is_header_toolbar_editor_open
             || self.is_agent_management_popup_open
-            || self.is_import_modal_open
             || self.is_suggested_rule_modal_open
             || self.is_suggested_agent_mode_workflow_modal_open
             || self.is_codex_modal_open
@@ -168,11 +160,9 @@ impl WorkspaceState {
         self.tab_group_being_renamed = None;
         self.is_launch_config_save_modal_open = false;
         self.is_command_search_open = false;
-        self.is_workflow_modal_open = false;
         self.is_prompt_editor_open = false;
         self.is_agent_toolbar_editor_open = false;
         self.is_header_toolbar_editor_open = false;
-        self.is_import_modal_open = false;
         self.is_suggested_rule_modal_open = false;
         self.is_suggested_agent_mode_workflow_modal_open = false;
         self.is_codex_modal_open = false;
@@ -192,7 +182,6 @@ impl WorkspaceState {
     }
 
     pub fn close_all_left_panels(&mut self) {
-        self.is_warp_drive_open = false;
         self.is_theme_chooser_open = false;
     }
 

@@ -1,23 +1,18 @@
 //! Support for displaying inherited ACLs.
 
 use torch_core::ui::appearance::Appearance;
-use torchui::elements::{CrossAxisAlignment, Flex, MouseStateHandle, ParentElement as _};
 use torchui::ui_components::components::UiComponent as _;
 use torchui::{AppContext, Element, SingletonEntity as _};
 
 use super::style;
 use crate::cloud_object::ServerObjectContainer;
 use crate::cloud_object::model::persistence::CloudModel;
-use crate::drive::CloudObjectTypeAndId;
 use crate::server::ids::SyncId;
-use crate::server::telemetry::SharingDialogSource;
-use crate::workspace::WorkspaceAction;
 
 /// UI state for inherited permissions.
 pub struct InheritanceState {
     // The server API allows inheriting ACLs from drives as well, but we currently don't use this.
     source_folder: SyncId,
-    link_handle: MouseStateHandle,
 }
 
 impl InheritanceState {
@@ -35,10 +30,7 @@ impl InheritanceState {
             return None;
         }
 
-        Some(InheritanceState {
-            source_folder,
-            link_handle: Default::default(),
-        })
+        Some(InheritanceState { source_folder })
     }
 
     pub fn details(&self, appearance: &Appearance, app: &AppContext) -> InheritanceDetails {
@@ -46,51 +38,20 @@ impl InheritanceState {
             .get_folder(&self.source_folder)
             .map(|folder| &folder.model().name);
 
-        match folder_name {
-            Some(folder_name) => {
-                let prefix = style::detail_text("Inherited from ", appearance)
-                    .build()
-                    .finish();
-                let source_folder = self.source_folder;
-                let folder_link = appearance
-                    .ui_builder()
-                    .link(
-                        folder_name.to_owned(),
-                        None,
-                        Some(Box::new(move |ctx| {
-                            ctx.dispatch_typed_action(WorkspaceAction::OpenObjectSharingSettings {
-                                object_id: CloudObjectTypeAndId::Folder(source_folder),
-                                source: SharingDialogSource::InheritedPermission,
-                            });
-                        })),
-                        self.link_handle.clone(),
-                    )
-                    .soft_wrap(false)
-                    .build()
-                    .finish();
-
-                InheritanceDetails {
-                    source_label: Flex::row()
-                        .with_children([prefix, folder_link])
-                        .with_cross_axis_alignment(CrossAxisAlignment::Center)
-                        .finish(),
-                    tooltip_text: "Edit inherited permissions on the parent folder",
-                }
-            }
-            None => InheritanceDetails {
-                source_label: style::detail_text("Inherited permission", appearance)
-                    .build()
-                    .finish(),
-                tooltip_text: "Cannot edit inherited permissions",
-            },
+        let label = match folder_name {
+            Some(folder_name) => format!("Inherited from {folder_name}"),
+            None => "Inherited permission".to_owned(),
+        };
+        InheritanceDetails {
+            source_label: style::detail_text(label, appearance).build().finish(),
+            tooltip_text: "Cannot edit inherited permissions",
         }
     }
 }
 
 /// Information to display about inherited permissions.
 pub struct InheritanceDetails {
-    /// A label element describing where an ACL was inherited from, with a link to edit those
-    /// permissions directly.
+    /// A label element describing where an ACL was inherited from.
     pub source_label: Box<dyn Element>,
     /// A tooltip to show on disabled permission-editing controls.
     pub tooltip_text: &'static str,

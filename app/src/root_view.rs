@@ -33,19 +33,14 @@ use crate::app_state::{AppState, PaneUuid, WindowSnapshot};
 use crate::appearance::Appearance;
 use crate::autoupdate::{AutoupdateState, AutoupdateStateEvent, RequestType, UpdateReady};
 use crate::changelog_model::ChangelogRequestType;
-use crate::cloud_object::model::persistence::CloudModel;
-use crate::cloud_object::{GenericStringObjectFormat, JsonObjectType, ObjectType};
-use crate::drive::items::WarpDriveItemId;
-use crate::drive::{CloudObjectTypeAndId, OpenWarpDriveObjectArgs, OpenWarpDriveObjectSettings};
 use crate::features::FeatureFlag;
 use crate::interval_timer::IntervalTimer;
 use crate::launch_configs::launch_config;
 use crate::linear::LinearIssueWork;
-use crate::notebooks::manager::NotebookSource;
 use crate::pane_group::{NewTerminalOptions, PanesLayout};
 use crate::persistence::ModelEvent;
 use crate::server::cloud_objects::update_manager::UpdateManager;
-use crate::server::ids::{ServerId, SyncId};
+use crate::server::ids::ServerId;
 use crate::server::server_api::{ServerApi, ServerApiProvider, ServerTime};
 use crate::server::telemetry::{LaunchConfigUiLocation, TelemetryEvent};
 use crate::settings::QuakeModeSettings;
@@ -58,7 +53,6 @@ use crate::terminal::view::{TerminalAction, cell_size_and_padding};
 use crate::themes::theme::AnsiColorIdentifier;
 use crate::uri::OpenSettingsArgs;
 use crate::util::bindings::{self, is_binding_pty_compliant};
-use crate::view_components::DismissibleToast;
 use crate::window_settings::WindowSettings;
 use crate::workspace::{PaneViewLocator, Workspace, WorkspaceAction, WorkspaceRegistry};
 use crate::workspaces::user_workspaces::UserWorkspaces;
@@ -296,15 +290,6 @@ pub fn init(app: &mut AppContext) {
         "root_view:create_environment_in_existing_window_and_run",
         RootView::create_environment_in_existing_window_and_run,
     );
-    app.add_global_action(
-        "root_view:open_drive_object_new_window",
-        open_warp_drive_object,
-    );
-    app.add_action(
-        "root_view:open_drive_object_existing_window",
-        RootView::open_warp_drive_object_in_existing_window,
-    );
-
     app.add_global_action(
         "root_view:open_settings_page_in_new_window",
         open_settings_page_in_new_window,
@@ -923,57 +908,6 @@ fn open_linear_issue_work_in_new_window(args: &LinearIssueWork, ctx: &mut AppCon
     });
 }
 
-fn open_warp_drive_object(arg: &OpenWarpDriveObjectArgs, ctx: &mut AppContext) {
-    match arg.object_type {
-        ObjectType::Notebook => open_new_workspace_with_notebook_open(
-            SyncId::ServerId(arg.server_id),
-            arg.settings.clone(),
-            ctx,
-        ),
-        ObjectType::Workflow => open_new_workspace_with_workflow_open(
-            SyncId::ServerId(arg.server_id),
-            arg.settings.clone(),
-            ctx,
-        ),
-        _ => log::info!("Open object type {:?} not yet supported", arg.object_type),
-    }
-}
-
-fn display_object_missing_error_in_window(window_id: WindowId, ctx: &mut AppContext) {
-    crate::workspace::ToastStack::handle(ctx).update(ctx, |toast_stack, ctx| {
-        let toast = DismissibleToast::error(String::from("Resource not found or access denied"));
-        toast_stack.add_ephemeral_toast(toast, window_id, ctx);
-    });
-}
-
-fn open_new_workspace_with_notebook_open(
-    notebook_id: SyncId,
-    settings: OpenWarpDriveObjectSettings,
-    ctx: &mut AppContext,
-) {
-    open_new_with_workspace_source(
-        NewWorkspaceSource::NotebookById {
-            id: notebook_id,
-            settings,
-        },
-        ctx,
-    );
-}
-
-fn open_new_workspace_with_workflow_open(
-    workflow_id: SyncId,
-    settings: OpenWarpDriveObjectSettings,
-    ctx: &mut AppContext,
-) {
-    open_new_with_workspace_source(
-        NewWorkspaceSource::WorkflowById {
-            id: workflow_id,
-            settings,
-        },
-        ctx,
-    );
-}
-
 /// Opens a new window with a file-based notebook open.
 fn open_new_with_file_notebook(arg: &PathBuf, ctx: &mut AppContext) {
     open_new_with_workspace_source(
@@ -1369,14 +1303,6 @@ pub enum NewWorkspaceSource {
     NotebookFromFilePath {
         file_path: Option<PathBuf>,
     },
-    NotebookById {
-        id: SyncId,
-        settings: OpenWarpDriveObjectSettings,
-    },
-    WorkflowById {
-        id: SyncId,
-        settings: OpenWarpDriveObjectSettings,
-    },
     AgentSession {
         options: Box<NewTerminalOptions>,
         initial_query: Option<String>,
@@ -1447,8 +1373,6 @@ impl NewWorkspaceSource {
             | Self::SharedSessionAsViewer { .. }
             | Self::FromCloudConversationId { .. }
             | Self::NotebookFromFilePath { .. }
-            | Self::NotebookById { .. }
-            | Self::WorkflowById { .. }
             | Self::AgentSession { .. }
             | Self::AmbientAgent => None,
             Self::Restored {
@@ -1680,96 +1604,6 @@ impl RootView {
             ctx.windows().show_window_and_focus_app(window_id);
             ctx.notify();
         });
-        true
-    }
-
-    pub fn open_warp_drive_object_in_existing_window(
-        &mut self,
-        arg: &OpenWarpDriveObjectArgs,
-        ctx: &mut ViewContext<Self>,
-    ) -> bool {
-        let handle = &self.workspace;
-        let cloud_model = CloudModel::as_ref(ctx);
-
-        match arg.object_type {
-            ObjectType::Notebook => {
-                handle.update(ctx, |workspace, ctx| {
-                    let initialized_section_states =
-                        workspace.has_warp_drive_initialized_sections(ctx);
-                    let notebook_id = SyncId::ServerId(arg.server_id);
-                    let settings = arg.settings.clone();
-                    let _ = ctx.spawn(initialized_section_states, move |workspace, _, ctx| {
-                        workspace.open_notebook(
-                            &NotebookSource::Existing(notebook_id),
-                            &settings,
-                            ctx,
-                            false,
-                        );
-                    });
-                });
-            }
-            ObjectType::Workflow => {
-                handle.update(ctx, |workspace, ctx| {
-                    let initialized_section_states =
-                        workspace.has_warp_drive_initialized_sections(ctx);
-                    let workflow_id = SyncId::ServerId(arg.server_id);
-                    let settings = arg.settings.clone();
-                    let _ = ctx.spawn(initialized_section_states, move |workspace, _, ctx| {
-                        workspace.open_workflow_from_intent(workflow_id, &settings, ctx);
-                    });
-                });
-            }
-            ObjectType::GenericStringObject(GenericStringObjectFormat::Json(
-                JsonObjectType::EnvVarCollection,
-            )) => {
-                if cloud_model.get_by_uid(&arg.server_id.uid()).is_none() {
-                    display_object_missing_error_in_window(ctx.window_id(), ctx);
-                    return false;
-                }
-
-                let item_id =
-                    WarpDriveItemId::Object(CloudObjectTypeAndId::from_generic_string_object(
-                        GenericStringObjectFormat::Json(JsonObjectType::EnvVarCollection),
-                        SyncId::ServerId(arg.server_id),
-                    ));
-
-                handle.update(ctx, |workspace, ctx| {
-                    let initialized_section_states =
-                        workspace.has_warp_drive_initialized_sections(ctx);
-                    let _ = ctx.spawn(initialized_section_states, move |workspace, _, ctx| {
-                        workspace.view_in_and_focus_warp_drive(item_id, ctx);
-                    });
-                });
-            }
-            ObjectType::Folder => {
-                if cloud_model.get_by_uid(&arg.server_id.uid()).is_none() {
-                    display_object_missing_error_in_window(ctx.window_id(), ctx);
-                    return false;
-                }
-
-                let item_id = WarpDriveItemId::Object(CloudObjectTypeAndId::Folder(
-                    SyncId::ServerId(arg.server_id),
-                ));
-                handle.update(ctx, |workspace, ctx| {
-                    let initialized_section_states =
-                        workspace.has_warp_drive_initialized_sections(ctx);
-                    let _ = ctx.spawn(initialized_section_states, move |workspace, _, ctx| {
-                        workspace.view_in_and_focus_warp_drive(item_id, ctx);
-                    });
-                });
-            }
-            _ => {
-                log::info!(
-                    "Object type {:?} not support yet for opening via link",
-                    arg.object_type
-                )
-            }
-        }
-
-        let window_id = ctx.window_id();
-        ctx.windows().show_window_and_focus_app(window_id);
-        ctx.notify();
-
         true
     }
 

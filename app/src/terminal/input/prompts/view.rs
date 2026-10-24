@@ -33,7 +33,7 @@ impl InlinePromptsMenuView {
         ctx: &mut ViewContext<Self>,
     ) -> Self {
         let window_id = ctx.window_id();
-        let data_source = ctx.add_model(|ctx| PromptsMenuDataSource::new(window_id, ctx));
+        let data_source = ctx.add_model(|_| PromptsMenuDataSource::new(window_id));
 
         let mixer = ctx.add_model(|ctx| {
             let mut mixer = SearchMixer::<AcceptPrompt>::new();

@@ -405,10 +405,6 @@ pub enum SurfaceCommand {
     #[command(subcommand)]
     Keybindings(SurfaceOpenCommand),
 
-    /// Open or toggle Torch Drive.
-    #[command(subcommand)]
-    WarpDrive(SurfaceOpenToggleCommand),
-
     /// Toggle the resource center.
     #[command(subcommand)]
     ResourceCenter(SurfaceToggleCommand),

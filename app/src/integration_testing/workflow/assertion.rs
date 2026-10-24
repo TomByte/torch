@@ -1,5 +1,5 @@
 use torchui::integration::{AssertionCallback, AssertionWithDataCallback};
-use torchui::{App, ViewHandle, async_assert, async_assert_eq};
+use torchui::{App, async_assert_eq};
 
 use crate::integration_testing::cloud_object::assert_metadata_revision;
 use crate::integration_testing::view_getters::workflow_view;
@@ -36,46 +36,6 @@ pub fn assert_workflow_id(
     })
 }
 
-pub fn assert_no_workflow_pane_open() -> AssertionCallback {
-    Box::new(move |app, _| {
-        let count = get_all_open_workflows(app).len();
-        async_assert!(count == 0, "Expected no workflow panes to be open")
-    })
-}
-
-pub fn assert_no_team_workflow_pane_open() -> AssertionCallback {
-    Box::new(move |app, _| {
-        let count = get_all_open_workflows(app)
-            .iter()
-            .filter(|view| view.read(app, |v, _| v.is_team_workflow()))
-            .count();
-        async_assert!(count == 0, "Expected no workflow panes to be open")
-    })
-}
-
-pub fn assert_open_workflow_pane_count_equals(num: usize) -> AssertionCallback {
-    Box::new(move |app, _| {
-        let count = get_all_open_workflows(app).len();
-        async_assert!(
-            count == num,
-            "Expected number of open workflow panes to be: {num}. Found {count} instead"
-        )
-    })
-}
-
-pub fn assert_open_team_workflow_pane_count_equals(num: usize) -> AssertionCallback {
-    Box::new(move |app, _| {
-        let count = get_all_open_workflows(app)
-            .iter()
-            .filter(|view| view.read(app, |v, _| v.is_team_workflow()))
-            .count();
-        async_assert!(
-            count == num,
-            "Expected number of open workflow panes to be: {num}. Found {count} instead"
-        )
-    })
-}
-
 /// Find number of workflows that are open by id
 pub fn open_workflow_count(app: &App, id: SyncId) -> usize {
     app.window_ids()
@@ -84,12 +44,4 @@ pub fn open_workflow_count(app: &App, id: SyncId) -> usize {
         .flatten()
         .filter(move |view| view.read(app, |view, _ctx| view.workflow_id()) == id)
         .count()
-}
-
-fn get_all_open_workflows(app: &mut App) -> Vec<ViewHandle<WorkflowView>> {
-    app.window_ids()
-        .into_iter()
-        .flat_map(|window_id| app.views_of_type::<WorkflowView>(window_id))
-        .flatten()
-        .collect()
 }

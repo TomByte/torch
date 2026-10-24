@@ -10,7 +10,7 @@ use crate::env_vars::CloudEnvVarCollection;
 use crate::server::cloud_objects::update_manager::{
     ObjectOperation, OperationSuccessType, UpdateManagerEvent,
 };
-use crate::server::ids::{ClientId, ServerId, SyncId};
+use crate::server::ids::{ClientId, SyncId};
 use crate::{AppContext, CloudModel, UpdateManager};
 
 #[derive(Default, Clone)]
@@ -97,7 +97,7 @@ impl ActiveEnvVarCollectionData {
                             );
                         self.revision_ts
                             .clone_from(&env_var_collection.metadata.revision);
-                        ctx.emit(ActiveEnvVarCollectionDataEvent::CreatedOnServer(server_id));
+                        ctx.emit(ActiveEnvVarCollectionDataEvent::CreatedOnServer);
                         ctx.notify();
                     }
                 }
@@ -294,7 +294,7 @@ pub enum ActiveEnvVarCollectionDataEvent {
     /// The EVC's breadcrumbs were updated.
     BreadcrumbsChanged,
     /// The EVC was synced to the server for the first time.
-    CreatedOnServer(ServerId),
+    CreatedOnServer,
     /// The EVC was trashed or untrashed
     /// (used for refreshing the pane overflow items)
     TrashStatusChanged,

@@ -55,20 +55,6 @@ pub(super) fn run_surface_command(
         SurfaceCommand::Keybindings(command) => {
             run_surface_open_command(command, ActionKind::SurfaceKeybindingsOpen, output_format)
         }
-        SurfaceCommand::WarpDrive(command) => match command {
-            SurfaceOpenToggleCommand::Open(args) => run_action_with_params(
-                args,
-                ActionKind::SurfaceWarpDriveOpen,
-                EmptyParams {},
-                output_format,
-            ),
-            SurfaceOpenToggleCommand::Toggle(args) => run_action_with_params(
-                args,
-                ActionKind::SurfaceWarpDriveToggle,
-                EmptyParams {},
-                output_format,
-            ),
-        },
         SurfaceCommand::ResourceCenter(command) => run_surface_toggle_command(
             command,
             ActionKind::SurfaceResourceCenterToggle,

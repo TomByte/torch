@@ -1,20 +1,17 @@
 use std::any::Any;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::fmt::Debug;
 use std::sync::Arc;
 
 use anyhow::Result;
 use async_trait::async_trait;
-use chrono::{Duration, Utc};
 use derivative::Derivative;
 use lazy_static::lazy_static;
 use regex::Regex;
 use torch_core::channel::Channel;
 use torch_core::features::FeatureFlag;
 use torch_graphql::queries::get_updated_cloud_objects::UpdatedObjectInput;
-use torch_graphql::scalars::time::ServerTimestamp;
 use torchui::{AppContext, SingletonEntity};
-use url::Url;
 
 use self::breadcrumbs::ContainingObject;
 use self::model::actions::ObjectActions;
@@ -22,11 +19,9 @@ use self::model::generic_string_model::{
     GenericStringModel, GenericStringObjectId, Serializer, StringModel,
 };
 use self::model::persistence::CloudModel;
-use crate::appearance::Appearance;
 use crate::auth::UserUid;
 use crate::channel::ChannelState;
-use crate::drive::items::WarpDriveItem;
-use crate::drive::{CloudObjectTypeAndId, OpenWarpDriveObjectArgs, OpenWarpDriveObjectSettings};
+use crate::drive::CloudObjectTypeAndId;
 use crate::persistence::ModelEvent;
 use crate::server::cloud_objects::update_manager::InitiatedBy;
 use crate::server::ids::{HashableId, HashedSqliteId, ObjectUid, ServerId, SyncId, ToServerId};
@@ -151,17 +146,10 @@ pub trait CloudObject: Debug {
     /// in the sync queue item.
     fn update_object_queue_item(&self, revision_ts: Option<Revision>) -> QueueItem;
 
-    /// Returns whether this model type should render as a warp drive item.
-    fn renders_in_warp_drive(&self) -> bool;
-
     /// Returns whether this model type should show update toasts in the UI.
     fn should_show_activity_toasts(&self) -> bool {
         true
     }
-
-    /// Creates a new Torch Drive item for this object.  Returns None if this
-    /// object is not rendered in Torch Drive.
-    fn to_warp_drive_item(&self, appearance: &Appearance) -> Option<Box<dyn WarpDriveItem>>;
 
     /// Returns the web link of this object. Will return none if we do not support web links
     /// for this particular object (i.e. if it's not yet sync'd to the server, or if we don't
@@ -436,9 +424,6 @@ pub trait CloudModelType: Debug + Clone + Send + Sync {
     /// Returns the ObjectType for this model.
     fn object_type(&self) -> ObjectType;
 
-    /// Returns whether this model type should render as a warp drive item.
-    fn renders_in_warp_drive(&self) -> bool;
-
     /// Returns whether this model type should show update toasts in the UI.
     fn should_show_activity_toasts(&self) -> bool {
         true
@@ -449,15 +434,6 @@ pub trait CloudModelType: Debug + Clone + Send + Sync {
     fn warn_if_unsaved_at_quit(&self) -> bool {
         true
     }
-
-    /// Creates a new warp drive item for this model type. Returns None
-    /// if this object does not render in Torch Drive.
-    fn to_warp_drive_item(
-        &self,
-        id: SyncId,
-        appearance: &Appearance,
-        object: &Self::CloudObjectType,
-    ) -> Option<Box<dyn WarpDriveItem>>;
 
     /// Returns the display name for this model (e.g. to show in the Torch Drive index)
     fn display_name(&self) -> String;
@@ -774,14 +750,6 @@ where
         self.model().update_object_queue_item(revision_ts, self)
     }
 
-    fn renders_in_warp_drive(&self) -> bool {
-        self.model().renders_in_warp_drive()
-    }
-
-    fn to_warp_drive_item(&self, appearance: &Appearance) -> Option<Box<dyn WarpDriveItem>> {
-        self.model().to_warp_drive_item(self.id, appearance, self)
-    }
-
     fn can_export(&self) -> bool {
         self.model().can_export()
     }
@@ -797,47 +765,6 @@ where
     fn clone_box(&self) -> Box<dyn CloudObject> {
         Box::new(self.clone())
     }
-}
-
-/// Extracts the server id and object type from a (caller validated) Drive link.
-/// Intended use is deriving metadata from links such that Torch objects
-/// can be opened natively in Torch with no web interaction.
-pub fn extract_server_id_and_object_type_from_warp_drive_link(
-    url: &Url,
-) -> Option<OpenWarpDriveObjectArgs> {
-    let server_id = url
-        .path_segments()
-        .and_then(|mut segments| segments.next_back())
-        .and_then(|last_segment| last_segment.split('-').next_back())
-        .map(|id| id.to_string());
-
-    let object_type = url.path_segments().and_then(|mut segments| segments.nth(1));
-
-    // Parse the object portion of the path segment (.../drive/{object})
-    // into an object type
-    let object_type = match object_type {
-        Some("notebook") => ObjectType::Notebook,
-        Some("workflow") => ObjectType::Workflow,
-        _ => return None,
-    };
-    let query_string: HashMap<_, _> = url.query_pairs().collect();
-    let focused_folder_id: Option<ServerId> = query_string
-        .get("focused_folder_id")
-        .and_then(|s| s.to_string().try_into().ok());
-
-    let invitee_email: Option<String> = query_string.get("invitee_email").map(|s| s.to_string());
-
-    Some(OpenWarpDriveObjectArgs {
-        object_type,
-        server_id: match server_id {
-            Some(server_id) => server_id.try_into().ok()?,
-            _ => return None,
-        },
-        settings: OpenWarpDriveObjectSettings {
-            focused_folder_id,
-            invitee_email,
-        },
-    })
 }
 
 impl<'a, K, M> From<&'a dyn CloudObject> for Option<&'a GenericCloudObject<K, M>>
@@ -893,10 +820,6 @@ pub trait CloudObjectMetadataExt {
     /// Returns a semantic summary of the last edit to the object. For example, "Alice edited 4 weeks ago".
     /// Returns None if the revision and last_editor are None.
     fn semantic_editing_history(&self, app: &AppContext) -> Option<String>;
-
-    /// Returns semantic summary of countdown of days until permadeletion.
-    /// Ex: "27 days until permanent deletion"
-    fn semantic_permadeletion_countdown(&self, app: &AppContext) -> Option<String>;
 }
 
 impl CloudObjectMetadataExt for CloudObjectMetadata {
@@ -924,48 +847,6 @@ impl CloudObjectMetadataExt for CloudObjectMetadata {
 
         Some(full_string)
     }
-
-    fn semantic_permadeletion_countdown(&self, app: &AppContext) -> Option<String> {
-        // 2 cases:
-        // 1) Either the object is a root level object.
-        // 2) Or the object is inside folder(s), call recursive function to get trashed_ts of top level folder.
-        if let Some(trashed_ts) = self
-            .trashed_ts
-            .or_else(|| get_top_folder_trashed_ts(self.folder_id, app))
-        {
-            let deletion_time = trashed_ts.utc() + Duration::days(31);
-            let current_time = Utc::now();
-            let days_left = deletion_time.signed_duration_since(current_time).num_days();
-
-            let full_string = match days_left {
-                0 | 1 => "1 day until permanent deletion".to_string(),
-                _ => format!("{days_left} days until permanent deletion"),
-            };
-            Some(full_string)
-        } else {
-            None
-        }
-    }
-}
-
-/// Helper function to retrieve trashed_ts of top level folder given a folder_id of an object.
-fn get_top_folder_trashed_ts(
-    folder_id: Option<SyncId>,
-    app: &AppContext,
-) -> Option<ServerTimestamp> {
-    let mut folder_id = folder_id;
-    let cloud_model = CloudModel::as_ref(app);
-    while let Some(current_folder_id) = folder_id {
-        // If the parent folder isn't in CloudModel, short-circuit so we don't loop forever.
-        let folder = cloud_model.get_folder_by_uid(&current_folder_id.uid())?;
-
-        if let Some(_parent_folder_id) = folder.metadata.folder_id {
-            folder_id = folder.metadata.folder_id
-        } else {
-            return folder.metadata.trashed_ts;
-        }
-    }
-    None
 }
 
 pub use cloud_object_client::{

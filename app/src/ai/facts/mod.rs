@@ -1,15 +1,10 @@
 pub use cloud_object_models::{AIFact, AIMemory, CloudAIFact, CloudAIFactModel};
-use torch_core::ui::appearance::Appearance;
 
 use crate::cloud_object::model::generic_string_model::StringModel;
 use crate::cloud_object::model::json_model::JsonModel;
 use crate::cloud_object::{
     GenericStringObjectFormat, GenericStringObjectUniqueKey, JsonObjectType, Revision,
 };
-use crate::drive::CloudObjectTypeAndId;
-use crate::drive::items::WarpDriveItem;
-use crate::drive::items::ai_fact::WarpDriveAIFact;
-use crate::server::ids::SyncId;
 use crate::server::sync_queue::QueueItem;
 
 pub mod manager;
@@ -60,25 +55,6 @@ impl StringModel for AIFact {
 
     fn uniqueness_key(&self) -> Option<GenericStringObjectUniqueKey> {
         None
-    }
-
-    fn renders_in_warp_drive(&self) -> bool {
-        false
-    }
-
-    fn to_warp_drive_item(
-        &self,
-        id: SyncId,
-        _appearance: &Appearance,
-        ai_fact: &CloudAIFact,
-    ) -> Option<Box<dyn WarpDriveItem>> {
-        Some(Box::new(WarpDriveAIFact::new(
-            CloudObjectTypeAndId::GenericStringObject {
-                object_type: GenericStringObjectFormat::Json(JsonObjectType::AIFact),
-                id,
-            },
-            ai_fact.clone(),
-        )))
     }
 }
 

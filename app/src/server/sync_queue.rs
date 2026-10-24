@@ -390,10 +390,6 @@ impl SyncQueue {
         sync_queue
     }
 
-    pub fn is_dequeueing(&self) -> bool {
-        self.should_dequeue
-    }
-
     pub fn stop_dequeueing(&mut self) {
         self.should_dequeue = false
     }

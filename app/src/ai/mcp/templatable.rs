@@ -2,7 +2,6 @@ pub use cloud_object_models::{
     CloudTemplatableMCPServer, CloudTemplatableMCPServerModel, GalleryData, JsonTemplate,
     TemplatableMCPServer, TemplateVariable,
 };
-use torch_core::ui::appearance::Appearance;
 
 use crate::cloud_object::model::generic_string_model::StringModel;
 use crate::cloud_object::model::json_model::JsonModel;
@@ -10,8 +9,6 @@ use crate::cloud_object::{
     CloudObjectUuid, GenericStringObjectFormat, GenericStringObjectUniqueKey, JsonObjectType,
     Revision, UniquePer,
 };
-use crate::drive::items::WarpDriveItem;
-use crate::server::ids::SyncId;
 use crate::server::sync_queue::QueueItem;
 
 const UNIQUENESS_KEY_PREFIX: &str = "templatable_mcp_server";
@@ -66,19 +63,6 @@ impl StringModel for TemplatableMCPServer {
             key: format!("{UNIQUENESS_KEY_PREFIX}_{}", self.uuid),
             unique_per: UniquePer::User,
         })
-    }
-
-    fn renders_in_warp_drive(&self) -> bool {
-        false
-    }
-
-    fn to_warp_drive_item(
-        &self,
-        _id: SyncId,
-        _appearance: &Appearance,
-        _templatable_mcp_server: &CloudTemplatableMCPServer,
-    ) -> Option<Box<dyn WarpDriveItem>> {
-        None
     }
 }
 

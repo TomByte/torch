@@ -10,7 +10,6 @@ pub const SUBTEXT_FONT_SIZE: f32 = 12.;
 pub const ICON_SIZE: f32 = 16.;
 
 pub const ICON_MARGIN: f32 = 8.;
-pub const ROW_ICON_MARGIN: f32 = 4.;
 
 pub const RULE_VERTICAL_PADDING: f32 = 12.;
 pub const ROW_HORIZONTAL_PADDING: f32 = 12.;

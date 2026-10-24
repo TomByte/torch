@@ -4,18 +4,15 @@ use torch_core::ui::icons::Icon;
 use torchui::elements::{ConstrainedBox, Container, Highlight, Text};
 use torchui::fonts::{Properties, Weight};
 use torchui::text_layout::ClipConfig;
-use torchui::{
-    AppContext, Element, Entity, ModelContext, ModelHandle, SingletonEntity as _, WindowId,
-};
+use torchui::{AppContext, Element, Entity, SingletonEntity as _, WindowId};
 
 use crate::appearance::Appearance;
 use crate::cloud_object::CloudObject;
 use crate::cloud_object::model::persistence::CloudModel;
-use crate::search::command_palette::warp_drive;
-use crate::search::data_source::{DataSourceSearchError, Query, QueryResult};
+use crate::search::data_source::{Query, QueryResult};
 use crate::search::mixer::DataSourceRunErrorWrapper;
 use crate::search::result_renderer::ItemHighlightState;
-use crate::search::{SearchItem, SyncDataSource};
+use crate::search::{FuzzyMatchWorkflowResult, SearchItem, SyncDataSource};
 use crate::server::ids::SyncId;
 use crate::terminal::input::inline_menu::{
     InlineMenuAction, InlineMenuMessageArgs, InlineMenuType, default_navigation_message_items,
@@ -39,26 +36,14 @@ impl InlineMenuAction for AcceptPrompt {
 }
 
 pub struct PromptsMenuDataSource {
-    warp_drive_data_source: ModelHandle<warp_drive::DataSource>,
     window_id: WindowId,
 }
 
 impl PromptsMenuDataSource {
-    pub fn new(window_id: WindowId, ctx: &mut ModelContext<Self>) -> Self {
-        // Ideally this would be a full-text searching but full text searching is slow, and
-        // currently its implementation is not well-setup for async use.
-        //
-        // TODO(zachbai): Revert to full-text search and make this an `AsyncDataSource`.
-        let warp_drive_data_source =
-            ctx.add_model(|ctx| warp_drive::DataSource::new_fuzzy(window_id, ctx));
-        Self {
-            warp_drive_data_source,
-            window_id,
-        }
+    pub fn new(window_id: WindowId) -> Self {
+        Self { window_id }
     }
 
-    /// The short-query paths read the cloud model directly instead of going through
-    /// `warp_drive_data_source`, so they restrict it to the window's spaces themselves.
     fn prompts_in_window<'a>(
         &self,
         app: &'a AppContext,
@@ -107,33 +92,26 @@ impl SyncDataSource for PromptsMenuDataSource {
                 .collect());
         }
 
-        self.warp_drive_data_source
-            .as_ref(app)
-            .search_workflows(query, true, false, app)
-            .map(|results| {
-                results
-                    .into_iter()
-                    .filter_map(|result| {
-                        let score = result.score();
-                        // Avoid spamming results with extremely weak matches.
-                        (score > OrderedFloat(25.0)).then(|| {
-                            let workflow = result.cloud_workflow;
-                            if workflow.model().data.is_command_workflow() {
-                                return None;
-                            }
-
-                            Some(QueryResult::from(
-                                PromptSearchItem::from_workflow(&workflow)
-                                    .with_name_match_result(result.match_result.name_match_result)
-                                    .with_score(score),
-                            ))
-                        })?
-                    })
-                    .collect()
+        let lowercase_query = query_text.to_lowercase();
+        Ok(self
+            .prompts_in_window(app)
+            .filter_map(|workflow| {
+                let match_result = FuzzyMatchWorkflowResult::try_match(
+                    &lowercase_query,
+                    &workflow.model().data,
+                    &workflow.breadcrumbs(app),
+                )?;
+                let score = match_result.score();
+                // Avoid spamming results with extremely weak matches.
+                (score > OrderedFloat(25.0)).then(|| {
+                    QueryResult::from(
+                        PromptSearchItem::from_workflow(workflow)
+                            .with_name_match_result(match_result.name_match_result)
+                            .with_score(score),
+                    )
+                })
             })
-            .map_err(|e| {
-                Box::new(DataSourceSearchError::new(e.to_string())) as DataSourceRunErrorWrapper
-            })
+            .collect())
     }
 }
 
