@@ -8,7 +8,7 @@ use std::rc::Rc;
 use chrono::{Duration, Local};
 use pathfinder_color::ColorU;
 use torch_core::ui::theme::Fill;
-use torch_core::ui::theme::color::internal_colors::{neutral_1, neutral_2, text_sub};
+use torch_core::ui::theme::color::internal_colors::{neutral_1, neutral_2};
 use torch_editor::content::buffer::InitialBufferState;
 use torch_editor::render::element::VerticalExpansionBehavior;
 use torchui::elements::new_scrollable::ScrollableAppearance;
@@ -158,7 +158,6 @@ fn render_comment_file_path_header(
 fn render_comment_text_section(
     comment_editor: &ViewHandle<RichTextEditorView>,
     last_updated_duration: Duration,
-    is_imported_from_github: bool,
     metadata_trailing_element: Option<Box<dyn Element>>,
     appearance: &Appearance,
 ) -> Box<dyn Element> {
@@ -168,18 +167,6 @@ fn render_comment_text_section(
     let mut left_section = Flex::row()
         .with_cross_axis_alignment(CrossAxisAlignment::Center)
         .with_spacing(8.);
-
-    if is_imported_from_github {
-        left_section.add_child(
-            Text::new(
-                "From GitHub".to_string(),
-                appearance.ui_font_family(),
-                appearance.ui_font_size(),
-            )
-            .with_color(text_sub(theme, background))
-            .finish(),
-        );
-    }
 
     left_section.add_child(
         Text::new(
@@ -419,7 +406,6 @@ impl CommentViewCard {
         card.add_child(render_comment_text_section(
             &self.comment_editor,
             self.last_updated_duration,
-            self.source.origin.is_imported_from_github(),
             metadata_trailing_element,
             appearance,
         ));

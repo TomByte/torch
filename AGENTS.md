@@ -61,7 +61,6 @@ This is a Rust-based terminal emulator with a custom UI framework called **Torch
 
 **Main app** (`app/`):
 - Terminal emulation and shell management (`terminal/`)
-- AI integration including Agent Mode (`ai/`)
 - Cloud synchronization and Drive features (`drive/`)
 - Authentication and user management (`auth/`)
 - Settings and preferences (`settings/`)
@@ -79,8 +78,7 @@ This is a Rust-based terminal emulator with a custom UI framework called **Torch
 1. **Entity-Handle System**: Views reference other views via handles, not direct ownership
 2. **Modular Structure**: Workspace contains multiple workspace configurations, each with terminals, notebooks, etc.
 3. **Cross-Platform**: Native implementations for macOS, Windows, Linux, plus WASM target
-4. **AI Integration**: Built-in AI assistant with context awareness and codebase indexing
-5. **Cloud Sync** (inherited from Warp, disabled in Torch): Warp Drive object synchronization
+4. **Cloud Sync** (inherited from Warp, disabled in Torch): Warp Drive object synchronization
 
 ### Development Guidelines
 

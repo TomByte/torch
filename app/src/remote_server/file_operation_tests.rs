@@ -3,7 +3,6 @@ use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 
-use ai::project_context::model::ProjectContextModel;
 use lsp::LspManagerModel;
 use prost::Message;
 use remote_server::manager::RemoteServerManager;
@@ -26,7 +25,6 @@ fn add_server(
 ) {
     initialize_app_for_terminal_view(app);
     app.add_singleton_model(FileModel::new);
-    app.add_singleton_model(|_| ProjectContextModel::default());
     app.add_singleton_model(|_| LspManagerModel::new());
     app.add_singleton_model(RemoteServerManager::new);
     app.add_singleton_model(GlobalBufferModel::new);

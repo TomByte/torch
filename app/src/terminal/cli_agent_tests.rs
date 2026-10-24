@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use ai::skills::SkillProvider;
 use chrono::Local;
 use smol_str::SmolStr;
 use torch_editor::render::model::LineCount;
@@ -15,7 +14,7 @@ use crate::agent_status::{AgentReviewCommentBatch, DiffSetHunk};
 use crate::code::buffer_location::LocalOrRemotePath;
 use crate::code::editor::line::EditorLineLocation;
 use crate::code_review::comments::{
-    AttachedReviewComment, AttachedReviewCommentTarget, CommentOrigin, LineDiffContent,
+    AttachedReviewComment, AttachedReviewCommentTarget, LineDiffContent,
 };
 use crate::ui_components::icons::Icon;
 
@@ -42,7 +41,6 @@ fn make_comment(
         target,
         last_update_time: Local::now(),
         outdated,
-        origin: CommentOrigin::Native,
     }
 }
 
@@ -309,14 +307,6 @@ fn test_muse_public_configuration() {
     assert!(CLIAgent::Muse.supports_bash_mode());
     assert_eq!(CLIAgent::Muse.skill_command_prefix(), "/");
     assert_eq!(CLIAgent::Muse.icon(), Some(Icon::MuseLogo));
-    assert_eq!(
-        CLIAgent::Muse.supported_skill_providers(),
-        &[
-            SkillProvider::Agents,
-            SkillProvider::Claude,
-            SkillProvider::Codex,
-        ]
-    );
 }
 
 #[test]

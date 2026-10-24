@@ -1049,24 +1049,6 @@ impl WorkingDirectoriesModel {
     }
 
     pub fn remove_pane_group(&mut self, _pane_group_id: EntityId, _ctx: &mut ModelContext<Self>) {}
-
-    pub(crate) fn insert_code_review_comments(
-        &mut self,
-        _pane_group_id: EntityId,
-        _repo_path: &LocalOrRemotePath,
-        _comments: &Vec<PendingImportedReviewComment>,
-        _diff_mode: &DiffMode,
-        _ctx: &mut ModelContext<Self>,
-    ) {
-    }
-
-    pub(crate) fn upsert_flattened_code_review_comments(
-        &mut self,
-        _repo_path: &LocalOrRemotePath,
-        _comments: Vec<AttachedReviewComment>,
-        _ctx: &mut ModelContext<Self>,
-    ) {
-    }
 }
 
 impl Entity for WorkingDirectoriesModel {

@@ -1,20 +1,20 @@
 //! These types are named after the database tables, and are used to represent specific queries.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Serialize};
 use warp_multi_agent_api::response_event::stream_finished;
 use warp_multi_agent_api::{self as api};
 
 use super::schema::{
-    active_mcp_servers, agent_conversations, agent_tasks, ai_document_panes, ai_memory_panes, app,
+    app,
     blocks, cloud_objects_refreshes, code_pane_tabs, code_panes, code_review_panes, commands,
     current_user_information, env_var_collection_panes, folders, generic_string_objects,
-    ignored_suggestions, mcp_environment_variables, mcp_server_installations, mcp_server_panes,
+    ignored_suggestions,
     notebook_panes, notebooks, object_actions, object_metadata, object_permissions, pane_branches,
-    pane_leaves, pane_nodes, panels, project_rules, projects, server_experiments, settings_panes,
+    pane_leaves, pane_nodes, panels, projects, server_experiments, settings_panes,
     tab_groups, tabs, team_members, team_settings, teams, terminal_panes, user_profiles, windows,
     workflow_panes, workflows, workspace_language_server, workspace_metadata, workspace_teams,
     workspaces,
@@ -174,21 +174,6 @@ pub struct TeamSetting {
 pub struct NewTeamSettings {
     pub team_id: i32,
     pub settings_json: String,
-}
-
-#[derive(Clone, Identifiable, Insertable, Queryable, AsChangeset)]
-#[diesel(table_name = project_rules)]
-pub struct ProjectRules {
-    pub id: i32,
-    pub path: String,
-    pub project_root: String,
-}
-
-#[derive(Clone, Debug, Insertable, AsChangeset)]
-#[diesel(table_name = project_rules)]
-pub struct NewProjectRules {
-    pub path: String,
-    pub project_root: String,
 }
 
 #[derive(Clone, Identifiable, Queryable, AsChangeset)]
@@ -506,16 +491,6 @@ pub struct SettingsPane {
     pub current_page: String,
 }
 
-/// Maps to the `ai_memory_panes` table
-/// (where table name is historical and not worth a migration to change).
-#[derive(Identifiable, Queryable, Selectable)]
-#[diesel(table_name = ai_memory_panes)]
-#[diesel(primary_key(id))]
-pub struct AIFactPane {
-    pub id: i32,
-    pub kind: String,
-}
-
 /// Subset of the [`terminal_panes`] table needed to retrieve per-session block lists.
 ///
 /// The true primary key of the table is [`terminal_panes::id`]. However, Diesel's associations API
@@ -672,18 +647,6 @@ pub struct NewSettingsPane {
 }
 
 #[derive(Insertable)]
-#[diesel(table_name = ai_memory_panes)]
-pub struct NewAIFactPane {
-    pub id: i32,
-}
-
-#[derive(Insertable)]
-#[diesel(table_name = mcp_server_panes)]
-pub struct NewMCPServerPane {
-    pub id: i32,
-}
-
-#[derive(Insertable)]
 #[diesel(table_name = pane_branches)]
 pub struct NewPaneBranch {
     pub pane_node_id: i32,
@@ -819,13 +782,6 @@ pub struct NewCloudObjectsRefresh {
     pub time_of_next_refresh: NaiveDateTime,
 }
 
-#[derive(Identifiable, Queryable)]
-#[diesel(table_name = cloud_objects_refreshes)]
-pub struct CloudObjectsRefresh {
-    pub id: i32,
-    pub time_of_next_refresh: NaiveDateTime,
-}
-
 #[derive(Insertable)]
 #[diesel(table_name = object_actions)]
 pub struct NewPersistedObjectAction {
@@ -872,349 +828,8 @@ pub struct CurrentUserInformation {
     pub email: String,
 }
 
-#[derive(Debug, Insertable, Queryable, AsChangeset)]
-#[diesel(table_name = mcp_environment_variables)]
-pub struct MCPEnvironmentVariables {
-    pub mcp_server_uuid: Vec<u8>,
-    pub environment_variables: String,
-}
-
-#[derive(Debug, Insertable, Queryable)]
-#[diesel(table_name = active_mcp_servers)]
-pub struct ActiveMCPServer {
-    pub id: i32,
-    pub mcp_server_uuid: String,
-}
-
-#[derive(Debug, Insertable)]
-#[diesel(table_name = active_mcp_servers)]
-pub struct NewActiveMCPServer {
-    pub mcp_server_uuid: String,
-}
-
-// Queryable structs for reading from the database
-#[derive(Debug, PartialEq, Default, Queryable, Selectable, Clone)]
-#[diesel(table_name = agent_conversations)]
-#[diesel(primary_key(id))]
-pub struct AgentConversationRecord {
-    pub id: i32,
-    pub conversation_id: String,
-    pub conversation_data: String,
-    pub last_modified_at: NaiveDateTime,
-    /// Serialized [`AgentConversationSummary`], computed from the task
-    /// snapshot at write time so startup can list conversations without
-    /// loading or decoding `agent_tasks`. `None` on rows written before the
-    /// column existed; readers fall back to deriving from tasks (and
-    /// backfill the column).
-    pub summary: Option<String>,
-}
-
-#[derive(Debug, PartialEq, Queryable, Selectable)]
-#[diesel(table_name = agent_tasks)]
-#[diesel(primary_key(id))]
-pub struct AgentTaskRecord {
-    pub id: i32,
-    pub conversation_id: String,
-    pub task_id: String,
-    pub task: Vec<u8>,
-    pub last_modified_at: NaiveDateTime,
-}
-
-#[derive(Debug, PartialEq, Queryable, Selectable, Clone)]
-#[diesel(table_name = ai_document_panes)]
-#[diesel(primary_key(id))]
-pub struct AIDocumentPane {
-    pub id: i32,
-    pub kind: String,
-    pub document_id: String,
-    pub version: i32,
-    pub content: Option<String>,
-    pub title: Option<String>,
-}
-
-#[derive(Debug, Insertable)]
-#[diesel(table_name = ai_document_panes)]
-pub struct NewAIDocumentPane {
-    pub id: i32,
-    pub document_id: String,
-    pub version: i32,
-    pub content: Option<String>,
-    pub title: Option<String>,
-}
-
-#[derive(Debug, PartialEq, Default, Clone)]
-pub struct AgentConversation {
-    pub conversation: AgentConversationRecord,
-    pub tasks: Vec<api::Task>,
-}
-
-impl AgentConversation {
-    /// Returns `true` if the conversation is restorable.
-    ///
-    /// See [`tasks_are_restorable`] for the exact rules.
-    pub fn is_restorable(&self) -> bool {
-        tasks_are_restorable(self.tasks.iter())
-    }
-}
-
-/// Returns `true` if a conversation with the given task snapshot is
-/// restorable.
-///
-/// A conversation is restorable if:
-/// - It contains a single task or fewer, OR
-/// - It has exactly one parentless (root) task, OR
-/// - It has multiple parentless tasks but exactly one of them has
-///   non-empty `messages`. This permits restoring conversations whose
-///   persisted state was corrupted by the pre-QUALITY-774 optimistic-root
-///   writer bug, where a stub root row co-existed with the real server
-///   root row. `AIConversation::new_restored` deterministically picks
-///   the real root in that shape via its restore-side dedupe.
-///
-/// Non-root tasks need not be validated here: any task that does not
-/// match the parentless predicate has, by construction, a non-empty
-/// `parent_task_id`.
-pub fn tasks_are_restorable<'a>(tasks: impl IntoIterator<Item = &'a api::Task>) -> bool {
-    let tasks: Vec<&api::Task> = tasks.into_iter().collect();
-    if tasks.len() <= 1 {
-        return true;
-    }
-
-    // Find parentless (root) tasks - tasks with no dependencies or with an
-    // empty parent_task_id.
-    let root_tasks: Vec<_> = tasks
-        .iter()
-        .filter(|task| {
-            task.dependencies
-                .as_ref()
-                .map(|deps| deps.parent_task_id.is_empty())
-                .unwrap_or(true)
-        })
-        .collect();
-
-    match root_tasks.len() {
-        // Malformed: no parentless task means no root to anchor restore on.
-        0 => false,
-        // Single root: the normal happy path.
-        1 => true,
-        // Multi-root: only permit the specific [stub + real] shape
-        // produced by the pre-QUALITY-774 optimistic-root writer bug,
-        // where exactly one parentless row carries the real conversation
-        // content. The restore-side dedupe in
-        // `AIConversation::new_restored` will pick that real root.
-        _ => root_tasks.iter().filter(|t| !t.messages.is_empty()).count() == 1,
-    }
-}
-
-/// Returns the working directory of the first message in the task that
-/// carries directory context, if any.
-pub fn api_task_initial_working_directory(task: &api::Task) -> Option<String> {
-    task.messages
-        .iter()
-        .find_map(|message| {
-            message.message.as_ref().and_then(|content| {
-                let context = match content {
-                    api::message::Message::UserQuery(user_query) => user_query.context.as_ref(),
-                    api::message::Message::ToolCallResult(tool_call_result) => {
-                        tool_call_result.context.as_ref()
-                    }
-                    api::message::Message::SystemQuery(system_query) => {
-                        system_query.context.as_ref()
-                    }
-                    _ => None,
-                };
-
-                context
-                    .and_then(|ctx| ctx.directory.as_ref())
-                    .map(|dir| dir.pwd.clone())
-            })
-        })
-        .filter(|pwd| !pwd.is_empty())
-}
-
-/// Task-derived conversation metadata, serialized into the `summary` column
-/// of `agent_conversations` at write time.
-///
-/// This lets startup build the conversation history list from
-/// `agent_conversations` rows alone, without loading or protobuf-decoding the
-/// (potentially very large) `agent_tasks` blobs.
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-pub struct AgentConversationSummary {
-    /// The conversation's initial user query (or passive diff summary).
-    /// Empty when the conversation has no root task with a user query.
-    #[serde(default)]
-    pub initial_query: String,
-    /// Display title: the root task description, falling back to
-    /// `initial_query`.
-    #[serde(default)]
-    pub title: String,
-    /// The working directory of the first message carrying directory context.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub initial_working_directory: Option<String>,
-    /// Mirror of [`tasks_are_restorable`] over the persisted task snapshot.
-    pub is_restorable: bool,
-    /// True when the conversation only contains passive `AutoCodeDiff` system
-    /// queries and no user queries; such conversations are hidden from the
-    /// history list.
-    #[serde(default, skip_serializing_if = "is_false")]
-    pub is_unlisted_auto_code_diff: bool,
-}
-
-impl AgentConversationSummary {
-    /// Derives the summary from a conversation's full task snapshot.
-    pub fn from_tasks<'a>(tasks: impl IntoIterator<Item = &'a api::Task>) -> Self {
-        let tasks: Vec<&api::Task> = tasks.into_iter().collect();
-
-        let mut has_user_query = false;
-        let mut has_auto_code_diff = false;
-        for task in &tasks {
-            for message in &task.messages {
-                match &message.message {
-                    Some(api::message::Message::UserQuery(_)) => {
-                        has_user_query = true;
-                    }
-                    Some(api::message::Message::SystemQuery(sys)) => {
-                        if let Some(api::message::system_query::Type::AutoCodeDiff(_)) = &sys.r#type
-                        {
-                            has_auto_code_diff = true;
-                        }
-                    }
-                    _ => {}
-                }
-            }
-        }
-
-        let root_task = tasks.iter().find(|task| task.dependencies.is_none());
-
-        // The first user query in the root task (or, for a passive code
-        // diff, the summary of the diff).
-        let initial_query = root_task
-            .map(|task| {
-                task.messages
-                    .iter()
-                    .find_map(|msg| match &msg.message {
-                        Some(api::message::Message::UserQuery(user_query)) => {
-                            Some(user_query.query.clone())
-                        }
-                        Some(api::message::Message::ToolCall(tool_call)) => {
-                            match tool_call.tool.as_ref()? {
-                                api::message::tool_call::Tool::ApplyFileDiffs(diff_suggestion) => {
-                                    Some(diff_suggestion.summary.clone())
-                                }
-                                _ => None,
-                            }
-                        }
-                        _ => None,
-                    })
-                    .unwrap_or_default()
-            })
-            .unwrap_or_default();
-
-        // The title is the root task description, falling back to
-        // `initial_query` when the description is empty.
-        let title = root_task
-            .map(|task| task.description.clone())
-            .filter(|desc| !desc.is_empty())
-            .unwrap_or_else(|| initial_query.clone());
-
-        let initial_working_directory = tasks
-            .iter()
-            .find_map(|task| api_task_initial_working_directory(task));
-
-        Self {
-            initial_query,
-            title,
-            initial_working_directory,
-            is_restorable: tasks_are_restorable(tasks.iter().copied()),
-            is_unlisted_auto_code_diff: has_auto_code_diff && !has_user_query,
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Clone, Copy, PartialEq, Eq, Default)]
-pub enum PersistedAutoexecuteMode {
-    #[default]
-    RespectUserSettings,
-    RunToCompletion,
-}
-
-impl<'de> Deserialize<'de> for PersistedAutoexecuteMode {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let value = String::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "RespectUserSettings" => Self::RespectUserSettings,
-            "RunToCompletion" => Self::RunToCompletion,
-            _ => Self::default(),
-        })
-    }
-}
-fn is_false(value: &bool) -> bool {
-    !*value
-}
-
-// Serializes to `conversation_data` column in `agent_conversations`.
-#[derive(Debug, Serialize, Deserialize, Clone, Default)]
-pub struct AgentConversationData {
-    pub server_conversation_token: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub conversation_usage_metadata: Option<ConversationUsageMetadata>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub reverted_action_ids: Option<HashSet<AIAgentActionId>>,
-    /// The server conversation ID of the source conversation if this conversation was forked.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub forked_from_server_conversation_token: Option<String>,
-    /// Legacy marker that previously recorded whether the root task was still
-    /// optimistic when this conversation was persisted. Retained on the struct
-    /// for backward-compatible deserialization of rows written by older builds;
-    /// new writes always emit `None` and restore code ignores the value.
-    ///
-    // TODO: Remove this field once no live local DBs still contain
-    // `Some(true)` rows that legacy code paths might trip over.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub root_task_is_optimistic: Option<bool>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub autoexecute_override: Option<PersistedAutoexecuteMode>,
-    /// Whether the user chose Torch-funded inference for this conversation after a ChatGPT
-    /// token-sharing failure. Sent as `skip_chatgpt_subscription` on every request.
-    #[serde(default, skip_serializing_if = "is_false")]
-    pub use_warp_credits_instead_of_chatgpt: bool,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct AIAgentActionId(pub String);
-
-impl From<AIAgentActionId> for ai_types::AIAgentActionId {
-    fn from(value: AIAgentActionId) -> Self {
-        Self::from(value.0)
-    }
-}
-
-impl From<ai_types::AIAgentActionId> for AIAgentActionId {
-    fn from(value: ai_types::AIAgentActionId) -> Self {
-        AIAgentActionId(String::from(value))
-    }
-}
 
 pub type TokenUsageCategory = String;
-
-pub const PRIMARY_AGENT_CATEGORY: &str = "primary_agent";
-pub const FULL_TERMINAL_USE_CATEGORY: &str = "full_terminal_use";
-
-pub fn token_usage_category_display_name(category: &str) -> String {
-    category
-        .split('_')
-        .map(|word| {
-            let mut chars = word.chars();
-            match chars.next() {
-                Some(first) => first.to_uppercase().chain(chars).collect(),
-                None => String::new(),
-            }
-        })
-        .collect::<Vec<_>>()
-        .join(" ")
-}
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct ModelTokenUsage {
@@ -1789,19 +1404,6 @@ impl ConversationUsageMetadata {
 pub struct NewIgnoredSuggestion {
     pub suggestion: String,
     pub suggestion_type: String,
-}
-
-#[derive(Insertable, AsChangeset)]
-#[diesel(table_name = mcp_server_installations)]
-#[diesel(treat_none_as_null = true)]
-#[diesel(primary_key(id))]
-pub struct NewMCPServerInstallation {
-    pub id: String,
-    pub templatable_mcp_server: String,
-    pub template_version_ts: NaiveDateTime,
-    pub variable_values: String,
-    pub restore_running: bool,
-    pub last_modified_at: NaiveDateTime,
 }
 
 #[cfg(test)]

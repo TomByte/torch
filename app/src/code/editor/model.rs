@@ -7,7 +7,7 @@ use std::path::Path;
 use std::sync::Arc;
 use std::{cmp, mem};
 
-use ai::diff_validation::DiffDelta;
+use crate::code::diff_types::DiffDelta;
 use itertools::Itertools;
 use languages::{Language, language_by_filename, language_by_local_filename, language_by_name};
 use num_traits::SaturatingSub;
@@ -68,7 +68,7 @@ use super::diff::{
 use super::line::EditorLineLocation;
 use crate::appearance::Appearance;
 use crate::code::editor::line_iterator::LineIterator;
-use crate::code_review::comments::{CommentId, CommentOrigin, LineDiffContent};
+use crate::code_review::comments::{CommentId, LineDiffContent};
 use crate::editor::InteractionState;
 use crate::notebooks::editor::model::word_unit;
 use crate::themes::theme::AnsiColorIdentifier;
@@ -4031,7 +4031,6 @@ impl CodeEditorModel {
         id: &CommentId,
         line: &EditorLineLocation,
         comment_text: &str,
-        origin: &CommentOrigin,
         ctx: &mut ModelContext<Self>,
     ) {
         self.comments.update(ctx, |comments, ctx| {
@@ -4040,7 +4039,6 @@ impl CodeEditorModel {
                 id: *id,
                 line: line.to_owned(),
                 comment_text: comment_text.to_owned(),
-                origin: origin.to_owned(),
             });
         });
     }

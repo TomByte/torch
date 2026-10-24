@@ -1,16 +1,13 @@
 use std::cell::RefCell;
 
-use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::Vector2F;
 use torch_core::ui::appearance::Appearance;
-use torch_core::ui::theme::Fill;
 use torch_editor::render::element::VerticalExpansionBehavior;
 use torchui::elements::{
     Border, ChildView, Clipped, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Flex,
-    MainAxisAlignment, MainAxisSize, ParentElement, Radius, Shrinkable, Text,
+    MainAxisAlignment, MainAxisSize, ParentElement, Radius, Shrinkable,
 };
 use torchui::keymap::Keystroke;
-use torchui::text_layout::ClipConfig;
 use torchui::units::Pixels;
 use torchui::{
     AppContext, Element, Entity, FocusContext, ModelHandle, SingletonEntity, TypedActionView, View,
@@ -19,7 +16,7 @@ use torchui::{
 
 use crate::code::editor::comments::{EditorCommentsModel, PendingCommentEvent};
 use crate::code::editor::line::EditorLineLocation;
-use crate::code_review::comments::{CommentId, CommentOrigin};
+use crate::code_review::comments::CommentId;
 use crate::editor::InteractionState;
 use crate::notebooks::editor::model::NotebooksEditorModel;
 use crate::notebooks::editor::rich_text_styles;
@@ -27,7 +24,6 @@ use crate::notebooks::editor::view::{EditorViewEvent, RichTextEditorConfig, Rich
 use crate::notebooks::link::{NotebookLinks, SessionSource};
 use crate::settings::FontSettings;
 use crate::ui_components::blended_colors;
-use crate::ui_components::icons::Icon;
 use crate::view_components::action_button::{
     ActionButton, ButtonSize, DangerNakedTheme, KeystrokeSource, NakedTheme, PrimaryTheme,
 };
@@ -68,7 +64,6 @@ pub struct CommentEditor {
     show_remove_button: bool,
     save_button_disabled: bool,
     laid_out_size: RefCell<Option<Vector2F>>,
-    is_imported_comment: bool,
 }
 
 impl CommentEditor {
@@ -98,7 +93,6 @@ impl CommentEditor {
             show_remove_button: false,
             save_button_disabled: true,
             laid_out_size: RefCell::new(None),
-            is_imported_comment: false,
         };
         me.update_save_button_state(ctx);
         me
@@ -135,7 +129,6 @@ impl CommentEditor {
             show_remove_button,
             save_button_disabled: true,
             laid_out_size: RefCell::new(None),
-            is_imported_comment: false,
         };
         me.update_save_button_state(ctx);
         me
@@ -222,9 +215,8 @@ impl CommentEditor {
                 id,
                 line,
                 comment_text,
-                origin,
             } => {
-                self.reopen_saved_comment(id, Some(line.clone()), comment_text, origin, ctx);
+                self.reopen_saved_comment(id, Some(line.clone()), comment_text, ctx);
             }
         }
     }
@@ -264,7 +256,6 @@ impl CommentEditor {
         id: &CommentId,
         line: Option<EditorLineLocation>,
         comment_text: &str,
-        origin: &CommentOrigin,
         ctx: &mut ViewContext<Self>,
     ) {
         self.editor.update(ctx, |editor, ctx| {
@@ -276,7 +267,6 @@ impl CommentEditor {
         self.comment_id = Some(*id);
         self.line = line;
         self.show_remove_button = true;
-        self.is_imported_comment = origin.is_imported_from_github();
 
         self.save_button.update(ctx, |button, ctx| {
             button.set_label("Update", ctx);
@@ -295,7 +285,6 @@ impl CommentEditor {
         self.comment_id = None;
         self.line = None;
         self.show_remove_button = false;
-        self.is_imported_comment = false;
 
         self.save_button.update(ctx, |button, ctx| {
             button.set_label("Comment", ctx);
@@ -322,40 +311,6 @@ impl CommentEditor {
         ctx.emit(CommentEditorEvent::CloseEditor);
     }
 
-    fn render_github_import_indicator(
-        &self,
-        appearance: &Appearance,
-        background: ColorU,
-    ) -> Box<dyn Element> {
-        let theme = appearance.theme();
-        let sub_text_color = theme.sub_text_color(Fill::Solid(background)).into_solid();
-        let icon = Icon::Github
-            .to_warpui_icon(Fill::Solid(sub_text_color))
-            .finish();
-
-        let label = Text::new(
-            "Comment imported from GitHub".to_string(),
-            appearance.ui_font_family(),
-            appearance.ui_font_size(),
-        )
-        .soft_wrap(false)
-        .with_clip(ClipConfig::end())
-        .with_color(sub_text_color)
-        .finish();
-
-        Flex::row()
-            .with_cross_axis_alignment(CrossAxisAlignment::Center)
-            .with_spacing(4.)
-            .with_child(
-                ConstrainedBox::new(icon)
-                    .with_width(14.)
-                    .with_height(14.)
-                    .finish(),
-            )
-            .with_child(Shrinkable::new(1., label).finish())
-            .finish()
-    }
-
     fn render_action_buttons(&self) -> Box<dyn Element> {
         let mut action_buttons = vec![ChildView::new(&self.close_button).finish()];
         if self.show_remove_button {
@@ -370,29 +325,13 @@ impl CommentEditor {
             .finish()
     }
 
-    fn render_footer_row(&self, appearance: &Appearance, background: ColorU) -> Box<dyn Element> {
-        let action_buttons = self.render_action_buttons();
-        let footer_row = Flex::row()
+    fn render_footer_row(&self) -> Box<dyn Element> {
+        Flex::row()
             .with_main_axis_size(MainAxisSize::Max)
-            .with_cross_axis_alignment(CrossAxisAlignment::Center);
-        if self.is_imported_comment {
-            footer_row
-                .with_main_axis_alignment(MainAxisAlignment::SpaceBetween)
-                .with_child(
-                    Shrinkable::new(
-                        1.,
-                        self.render_github_import_indicator(appearance, background),
-                    )
-                    .finish(),
-                )
-                .with_child(action_buttons)
-                .finish()
-        } else {
-            footer_row
-                .with_main_axis_alignment(MainAxisAlignment::End)
-                .with_child(action_buttons)
-                .finish()
-        }
+            .with_cross_axis_alignment(CrossAxisAlignment::Center)
+            .with_main_axis_alignment(MainAxisAlignment::End)
+            .with_child(self.render_action_buttons())
+            .finish()
     }
 }
 
@@ -407,7 +346,7 @@ impl View for CommentEditor {
         let background = blended_colors::neutral_2(theme);
         let border_color = blended_colors::neutral_4(theme);
 
-        let footer_row = self.render_footer_row(appearance, background);
+        let footer_row = self.render_footer_row();
 
         Container::new(
             ConstrainedBox::new(

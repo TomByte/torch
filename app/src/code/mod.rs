@@ -17,6 +17,7 @@ pub mod local_code_editor;
 #[cfg(not(target_family = "wasm"))]
 pub use local_code_editor::ShowFindReferencesCard;
 pub mod buffer_location;
+pub mod diff_types;
 pub mod editor;
 pub mod editor_management;
 pub mod global_buffer_model;

@@ -282,7 +282,6 @@ fn client_event_kind(event: &ClientEvent) -> &'static str {
         ClientEvent::DiffStateSnapshotReceived { .. } => "diff_state_snapshot",
         ClientEvent::DiffStateMetadataUpdateReceived { .. } => "diff_state_metadata_update",
         ClientEvent::DiffStateFileDeltaReceived { .. } => "diff_state_file_delta",
-        ClientEvent::RemoteAgentContextSnapshotReceived { .. } => "remote_agent_context_snapshot",
         ClientEvent::GitStatusPushReceived { .. } => "git_status_push",
         ClientEvent::GitHubPrInfoPushReceived { .. } => "github_pr_info_push",
         ClientEvent::GitHubRepositoryInfoPushReceived { .. } => "github_repository_info_push",
@@ -465,11 +464,6 @@ pub enum RemoteServerManagerEvent {
     /// The last session for this host was disconnected or deregistered.
     /// Downstream features should tear down per-host models.
     HostDisconnected { host_id: HostId },
-    /// A newer full Agent Mode context snapshot published by the daemon host.
-    RemoteAgentContextSnapshot {
-        host_id: HostId,
-        snapshot: crate::proto::RemoteAgentContextSnapshot,
-    },
 
     // --- Repo metadata events (forwarded from ClientEvent push channel) ---
     /// Response to a `navigate_to_directory` request.
@@ -696,7 +690,6 @@ impl RemoteServerManagerEvent {
             | RemoteServerManagerEvent::GetBranchesResponse { session_id, .. } => Some(*session_id),
             RemoteServerManagerEvent::HostConnected { .. }
             | RemoteServerManagerEvent::HostDisconnected { .. }
-            | RemoteServerManagerEvent::RemoteAgentContextSnapshot { .. }
             | RemoteServerManagerEvent::RepoMetadataSnapshot { .. }
             | RemoteServerManagerEvent::RepoMetadataUpdated { .. }
             | RemoteServerManagerEvent::RepoMetadataDirectoryLoaded { .. }
@@ -1330,7 +1323,6 @@ pub struct RemoteServerManager {
     /// disconnect.
     pending_host_requests: HashMap<crate::protocol::RequestId, PendingHostRequest>,
     /// Highest Agent Mode context snapshot revision accepted for each connected host.
-    remote_agent_context_snapshot_revisions: HashMap<HostId, u64>,
     /// Background executor used to schedule host-scoped request timeouts.
     /// Only used off-wasm (timers and detached tasks aren't available on
     /// wasm), so the field is allowed to be dead there.
@@ -1357,7 +1349,6 @@ impl RemoteServerManager {
             session_platforms: HashMap::new(),
             codebase_index_limits: None,
             pending_host_requests: HashMap::new(),
-            remote_agent_context_snapshot_revisions: HashMap::new(),
             executor: ctx.background_executor().clone(),
         }
     }
@@ -3539,16 +3530,6 @@ impl RemoteServerManager {
                     delta,
                 });
             }
-            ClientEvent::RemoteAgentContextSnapshotReceived { snapshot } => {
-                if !self.accept_remote_agent_context_snapshot_revision(&host_id, snapshot.revision)
-                {
-                    return;
-                }
-                ctx.emit(RemoteServerManagerEvent::RemoteAgentContextSnapshot {
-                    host_id,
-                    snapshot,
-                });
-            }
             ClientEvent::GitStatusPushReceived {
                 repo_path,
                 metadata,
@@ -3580,24 +3561,6 @@ impl RemoteServerManager {
                 // Handled by the drain loop's completion callback.
             }
         }
-    }
-
-    #[cfg(not(target_family = "wasm"))]
-    fn accept_remote_agent_context_snapshot_revision(
-        &mut self,
-        host_id: &HostId,
-        revision: u64,
-    ) -> bool {
-        if self
-            .remote_agent_context_snapshot_revisions
-            .get(host_id)
-            .is_some_and(|current| *current >= revision)
-        {
-            return false;
-        }
-        self.remote_agent_context_snapshot_revisions
-            .insert(host_id.clone(), revision);
-        true
     }
 
     /// Transitions a session from `Initializing` to `Connected`. Stores the
@@ -4093,7 +4056,6 @@ impl RemoteServerManager {
     /// fails any pending host-scoped requests that targeted this host.
     fn handle_host_disconnected(&mut self, host_id: &HostId, ctx: &mut ModelContext<Self>) {
         if !self.host_to_sessions.contains_key(host_id) {
-            self.remote_agent_context_snapshot_revisions.remove(host_id);
             ctx.emit(RemoteServerManagerEvent::HostDisconnected {
                 host_id: host_id.clone(),
             });

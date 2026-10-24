@@ -21,8 +21,7 @@ use std::sync::mpsc::SyncSender;
 use std::sync::{Arc, OnceLock};
 use std::thread::JoinHandle;
 
-use ai::project_context::model::ProjectRulePath;
-use ai::workspace::WorkspaceMetadata as CodeWorkspaceMetadata;
+use crate::persisted_workspace::WorkspaceMetadata as CodeWorkspaceMetadata;
 use chrono::{DateTime, Local, Utc};
 use instant::Instant;
 use lsp::supported_servers::LSPServerType;
@@ -388,12 +387,6 @@ pub enum ModelEvent {
     },
     DeleteProject {
         path: String,
-    },
-    UpsertProjectRules {
-        project_rule_paths: Vec<ProjectRulePath>,
-    },
-    DeleteProjectRules {
-        path: Vec<PathBuf>,
     },
     AddIgnoredSuggestion {
         suggestion: String,

@@ -1,6 +1,5 @@
 use std::path::PathBuf;
 
-use ai::LLMId;
 use cloud_objects::cloud_object::{
     GenericCloudObject, GenericServerObject, GenericStringModel, JsonObjectType,
 };
@@ -377,10 +376,10 @@ pub struct AIExecutionProfile {
 
     pub computer_use: ComputerUsePermission,
 
-    pub base_model: Option<LLMId>,
-    pub coding_model: Option<LLMId>,
-    pub cli_agent_model: Option<LLMId>,
-    pub computer_use_model: Option<LLMId>,
+    pub base_model: Option<String>,
+    pub coding_model: Option<String>,
+    pub cli_agent_model: Option<String>,
+    pub computer_use_model: Option<String>,
 
     pub context_window_limit: Option<u32>,
 

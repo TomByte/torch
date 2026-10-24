@@ -89,6 +89,7 @@ message Notification {
 // request/response pairs.
 message ServerMessage {
   string request_id = 1;
+  reserved 33;
   oneof message {
     InitializeResponse initialize_response = 2;
     ErrorResponse error = 3;
@@ -123,7 +124,6 @@ message ServerMessage {
     GitHubPrInfoPush github_pr_info_push = 35;
     GitHubRepositoryInfoPush github_repository_info_push = 36;
     RipgrepSearchResponse ripgrep_search_response = 37;
-    RemoteAgentContextSnapshot remote_agent_context_snapshot = 33;
     RenameFileResponse rename_file_response = 38;
   }
 }
@@ -244,47 +244,6 @@ enum ErrorCode {
 message ErrorResponse {
   ErrorCode code = 1;
   string message = 2;
-}
-
-// ── Remote Agent Mode context ─────────────────────────────────────
-
-// Metadata specific to a skill bundled with Warp.
-message BundledSkillMetadata {
-  // Directory-based skill ID, unique within the bundled catalog.
-  string id = 1;
-  // When set, the skill is only active while the named MCP integration
-  // is running on the client (e.g. "figma"). Evaluated client-side.
-  optional string requires_mcp = 2;
-}
-
-// Marker metadata for a file-based skill from the daemon host's home directory.
-message HomeSkillMetadata {}
-
-// One already-read remote skill published by the daemon.
-message RemoteSkillProto {
-  // Absolute path to the file on this host.
-  string path = 1;
-  string content = 2;
-  oneof source {
-    BundledSkillMetadata bundled = 3;
-    HomeSkillMetadata home = 4;
-  }
-}
-
-// One already-read remote context file published by the daemon.
-message RemoteContextFileProto {
-  // Absolute path to the file on this host.
-  string path = 1;
-  string content = 2;
-}
-
-// Revisioned full replacement of the daemon host's Agent Mode context. Source
-// discovery and reading happen daemon-side before this snapshot is published.
-message RemoteAgentContextSnapshot {
-  uint64 revision = 1;
-  string home_dir = 2;
-  repeated RemoteSkillProto skills = 3;
-  repeated RemoteContextFileProto global_rules = 4;
 }
 
 // ── Shared repo metadata sub-messages ─────────────────────────────

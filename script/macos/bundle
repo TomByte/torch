@@ -620,7 +620,7 @@ if [[ "$ARTIFACT" == "app" ]]; then
       export SETTINGS_SCHEMA_EXECUTABLE="$BUNDLE_DIR/$TORCH_APP_NAME.app/Contents/MacOS/$TORCH_BIN"
     fi
   fi
-  "$WORKSPACE_ROOT_DIR/script/prepare_bundled_resources" "$BUNDLED_RESOURCES_DIR" "$RELEASE_CHANNEL"
+  "$WORKSPACE_ROOT_DIR/script/prepare_bundled_resources" "$BUNDLED_RESOURCES_DIR"
 
   "$WORKSPACE_ROOT_DIR/script/compile_icon" "$RELEASE_CHANNEL" "$BUNDLE_DIR/$TORCH_APP_NAME.app"
 
@@ -718,7 +718,7 @@ elif [[ "$ARTIFACT" == "cli" || "$ARTIFACT" == "warpctrl" ]]; then
       export SETTINGS_SCHEMA_EXECUTABLE="$OUT_DIR/$TORCH_BIN"
     fi
   fi
-  "$WORKSPACE_ROOT_DIR/script/prepare_bundled_resources" "$BUNDLED_RESOURCES_DIR" "$RELEASE_CHANNEL"
+  "$WORKSPACE_ROOT_DIR/script/prepare_bundled_resources" "$BUNDLED_RESOURCES_DIR"
 
 
   # Set the primary binary path to output.

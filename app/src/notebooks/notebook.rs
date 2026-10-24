@@ -792,7 +792,7 @@ impl NotebookView {
                             CloudNotebookModel {
                                 title: notebook.model().title.clone(),
                                 data: content.to_string(),
-                                ai_document_id: notebook.model().ai_document_id,
+                                ai_document_id: notebook.model().ai_document_id.clone(),
                                 conversation_id: notebook.model().conversation_id.clone(),
                             },
                             CloudObjectEventEntrypoint::Unknown,
@@ -1569,7 +1569,7 @@ impl NotebookView {
                             CloudNotebookModel {
                                 title: title.to_string(),
                                 data: notebook.model().data.to_owned(),
-                                ai_document_id: notebook.model().ai_document_id,
+                                ai_document_id: notebook.model().ai_document_id.clone(),
                                 conversation_id: notebook.model().conversation_id.clone(),
                             },
                             CloudObjectEventEntrypoint::Unknown,

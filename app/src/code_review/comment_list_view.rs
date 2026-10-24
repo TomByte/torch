@@ -42,7 +42,7 @@ use crate::code::editor::view::{CodeEditorEvent, CodeEditorView};
 use crate::code_review::code_review_view::CodeReviewView;
 use crate::code_review::comment_rendering::CommentViewCard;
 use crate::code_review::comments::{
-    AttachedReviewComment, AttachedReviewCommentTarget, CommentId, CommentOrigin,
+    AttachedReviewComment, AttachedReviewCommentTarget, CommentId,
     ReviewCommentBatch, ReviewCommentBatchEvent,
 };
 use crate::code_review::telemetry_event::CodeReviewTelemetryEvent;
@@ -101,7 +101,6 @@ pub enum CommentListAction {
     ShowOverflow { comment_id: CommentId },
     DeleteComment,
     DismissOverflowMenu,
-    ViewInGitHub { url: String },
 }
 
 #[derive(Clone, Debug)]
@@ -1004,7 +1003,6 @@ impl CommentListView {
     fn menu_items_for_comment(
         is_file_level: bool,
         is_outdated: bool,
-        html_url: Option<&str>,
         appearance: &Appearance,
     ) -> Vec<MenuItem<CommentListAction>> {
         let mut items = vec![
@@ -1026,17 +1024,6 @@ impl CommentListView {
             edit_item = edit_item.with_disabled(true).with_tooltip(tooltip_text);
         }
         items.push(edit_item.into_item());
-
-        if let Some(url) = html_url {
-            items.push(
-                MenuItemFields::new("View in GitHub")
-                    .with_icon(Icon::Github)
-                    .with_on_select_action(CommentListAction::ViewInGitHub {
-                        url: url.to_string(),
-                    })
-                    .into_item(),
-            );
-        }
 
         items.push(
             MenuItemFields::new("Remove")
@@ -1157,24 +1144,17 @@ impl TypedActionView for CommentListView {
 
                     // File-level comments cannot be edited (no line to jump to).
                     // Outdated comments cannot be edited.
-                    let (is_file_level, is_outdated, html_url) = self
+                    let (is_file_level, is_outdated) = self
                         .comments_by_id
                         .get(comment_id)
                         .map(|state| {
                             let source = state.card.source();
-                            let html_url = match &source.origin {
-                                CommentOrigin::ImportedFromGitHub(details) => {
-                                    details.html_url.clone()
-                                }
-                                CommentOrigin::Native => None,
-                            };
                             (
                                 matches!(source.target, AttachedReviewCommentTarget::File { .. }),
                                 source.outdated,
-                                html_url,
                             )
                         })
-                        .unwrap_or((true, true, None));
+                        .unwrap_or((true, true));
 
                     self.overflow_menu.update(ctx, |menu, ctx| {
                         let appearance = Appearance::handle(ctx).as_ref(ctx);
@@ -1182,7 +1162,6 @@ impl TypedActionView for CommentListView {
                             Self::menu_items_for_comment(
                                 is_file_level,
                                 is_outdated,
-                                html_url.as_deref(),
                                 appearance,
                             ),
                             ctx,
@@ -1214,10 +1193,6 @@ impl TypedActionView for CommentListView {
                     ctx.emit(CommentListEvent::EditComment(id));
                 }
                 ctx.notify();
-            }
-            CommentListAction::ViewInGitHub { url } => {
-                ctx.open_url(url);
-                self.close_overflow_menu(ctx);
             }
             CommentListAction::JumpToCommentLocation(comment_id) => {
                 send_telemetry_from_ctx!(

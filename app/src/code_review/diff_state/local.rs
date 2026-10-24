@@ -521,14 +521,6 @@ impl LocalDiffStateModel {
         }
     }
 
-    /// Like [`Self::set_diff_mode`], but also arranges for the next diff load
-    /// to fetch the base branch from origin if it is not available locally.
-    /// This is intended for the `insert_code_review_comments` flow where the
-    /// requested base branch may never have been checked out.
-    pub fn set_diff_mode_and_fetch_base(&mut self, mode: DiffMode, ctx: &mut ModelContext<Self>) {
-        self.set_diff_mode(mode, true, true, ctx);
-    }
-
     /// Loads the actual diffs for the current repo.
     /// See [`DiffStateModel::refresh_diff_metadata_for_current_repo`] for a version that only refreshes diff _metadata.
     #[cfg(feature = "local_fs")]

@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use ai::diff_validation::DiffDelta;
+use crate::code::diff_types::DiffDelta;
 use torch_util::path::LineAndColumnArg;
 use torchui::elements::{DraggableState, Empty, MouseStateHandle};
 use torchui::{

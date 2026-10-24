@@ -120,7 +120,7 @@ if [ "${GENERATE_SCHEMA:-false}" != "true" ]; then
 else
   export SETTINGS_SCHEMA_EXECUTABLE="$TORCH_APP_PATH/Contents/MacOS/$TORCH_BIN_NAME"
 fi
-NO_LICENSES=1 "${REPO_ROOT}/script/prepare_bundled_resources" "$TORCH_APP_PATH/Contents/Resources" "$TORCH_CHANNEL"
+NO_LICENSES=1 "${REPO_ROOT}/script/prepare_bundled_resources" "$TORCH_APP_PATH/Contents/Resources"
 
 "${REPO_ROOT}/script/compile_icon" "$TORCH_CHANNEL" "$TORCH_APP_PATH"
 

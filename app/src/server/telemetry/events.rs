@@ -424,73 +424,6 @@ pub enum ToggleBlockFilterSource {
     ContextMenu,
 }
 
-#[derive(Clone, Debug, Copy, Serialize, Deserialize)]
-pub enum KnowledgePaneEntrypoint {
-    /// Triggered by either the command palette or the mac menus
-    #[serde(rename = "global")]
-    Global,
-
-    #[serde(rename = "settings")]
-    Settings,
-
-    #[serde(rename = "ai_blocklist")]
-    AIBlocklist,
-
-    #[serde(rename = "slash_command")]
-    SlashCommand,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum AgentModeEntrypointSelectionType {
-    /// User entered Agent Mode by taking action on a blocklist text selection.
-    Text,
-
-    /// User entered Agent Mode by taking action on a block selection.
-    Block,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum AgentModeEntrypoint {
-    /// The stars icon button in the tab bar.
-    #[serde(rename = "tab_bar")]
-    TabBar,
-
-    /// This corresponds to _both_ triggering from the command palette and via keybinding.
-    ///
-    /// Unfortunately due to the way the command palette automatically surfaces any editable
-    /// keybinding as an action, we don't have enough information to discern if the binding was
-    /// triggered by the palette or keyboard.
-    #[serde(rename = "new_pane_binding")]
-    NewPaneBinding,
-
-    /// The stars button in the hoverable block "toolbelt".
-    #[serde(rename = "block_toolbelt")]
-    BlockToolbelt,
-
-    /// The "Ask Agent Mode" option from AI command search.
-    #[serde(rename = "ai_command_search")]
-    AICommandSearch,
-
-    /// Context menu item(s) that attach a blocklist selection as context to an Agent Mode query.
-    #[serde(rename = "context_menu")]
-    ContextMenu {
-        selection_type: AgentModeEntrypointSelectionType,
-    },
-
-    /// The Agent Mode chip in the prompt.
-    #[serde(rename = "prompt_chip")]
-    PromptChip,
-
-    /// The Agent Management popup, where you can see all the most recent tasks for each terminal
-    /// pane across all windows/tabs/panes.
-    #[serde(rename = "agent_management_popup")]
-    AgentManagementPopup,
-
-    /// User manually switched between terminal and AI input modes in UDI interface
-    #[serde(rename = "udi_terminal_input_switcher")]
-    UDITerminalInputSwitcher,
-}
-
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CpuUsageStats {
     /// The number of logical CPUs on the system.
@@ -1087,9 +1020,6 @@ pub enum TelemetryEvent {
         workflow_space: Option<TelemetrySpace>,
     },
 
-    KnowledgePaneOpened {
-        entrypoint: KnowledgePaneEntrypoint,
-    },
     #[cfg(feature = "local_fs")]
     CodePaneOpened {
         source: CodeSource,
@@ -1590,9 +1520,6 @@ impl TelemetryEvent {
             TelemetryEvent::InitialWorkingDirectoryConfigurationChanged {
                 advanced_mode_enabled,
             } => Some(json!({ "advanced_mode_enabled": advanced_mode_enabled })),
-            TelemetryEvent::KnowledgePaneOpened { entrypoint } => {
-                Some(json!({ "entrypoint": entrypoint }))
-            }
             #[cfg(feature = "local_fs")]
             TelemetryEvent::CodePaneOpened {
                 source,
@@ -2349,7 +2276,6 @@ impl TelemetryEvent {
             | TelemetryEvent::WorkflowAliasRemoved { .. }
             | TelemetryEvent::WorkflowAliasEnvVarsAttached { .. }
             | TelemetryEvent::WorkflowAliasArgumentEdited { .. }
-            | TelemetryEvent::KnowledgePaneOpened { .. }
             | TelemetryEvent::ToggleSshWarpification { .. }
             | TelemetryEvent::SetSshExtensionInstallMode { .. }
             | TelemetryEvent::SshRemoteServerChoiceDoNotAskAgainToggled { .. }
@@ -2438,7 +2364,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::CodeSelectionAddedAsContext => EnablementState::Flag(FeatureFlag::HoaCodeReview),
             Self::FileTreeItemCreated => EnablementState::Flag(FeatureFlag::FileTree),
             Self::PtyThroughput => EnablementState::Flag(FeatureFlag::RecordPtyThroughput),
-            Self::KnowledgePaneOpened { .. } => EnablementState::Flag(FeatureFlag::AIRules),
             #[cfg(feature = "local_fs")]
             Self::CodePaneOpened { .. } => EnablementState::Always,
             #[cfg(feature = "local_fs")]
@@ -2718,7 +2643,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::FileTreeItemAttachedAsContext => "FileTree.AttachedAsContext",
             Self::CodeSelectionAddedAsContext => "CodeView.SelectionAddedAsContext",
             Self::FileTreeItemCreated => "FileTree.ItemCreated",
-            Self::KnowledgePaneOpened { .. } => "Knowledge Pane Opened",
             #[cfg(feature = "local_fs")]
             Self::CodePaneOpened { .. } => "Code Pane Opened",
             #[cfg(feature = "local_fs")]
@@ -2979,7 +2903,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
                 "Torch created a background-output Block (whenever a processes has been backgrounded and yields some output)"
             }
             Self::SessionCreation => "Created a tab",
-            Self::KnowledgePaneOpened { .. } => "Knowledge Pane Opened",
             #[cfg(feature = "local_fs")]
             Self::CodePaneOpened { .. } => "Opened the code editor pane from various sources",
             #[cfg(feature = "local_fs")]

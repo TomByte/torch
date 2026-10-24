@@ -115,9 +115,6 @@ pub enum FeatureFlag {
     /// Enables receiving shared Torch Drive objects.
     SharedWithMe,
 
-    /// Enables workflows for use with Agent Mode.
-    AgentModeWorkflows,
-
     /// Enables AI rules for use with Agent Mode.
     AIRules,
 
@@ -149,12 +146,6 @@ pub enum FeatureFlag {
     SshDragAndDrop,
     DragTabsToWindows,
 
-    /// Enables the overflow menu on AI blocks.
-    AIBlockOverflowMenu,
-
-    /// Enables cycling through the next command suggestions with down arrow.
-    CycleNextCommandSuggestion,
-
     /// Enables multi-workspace selection.
     MultiWorkspace,
 
@@ -166,9 +157,6 @@ pub enum FeatureFlag {
     OscHyperlinks,
 
     ImeMarkedText,
-
-    /// Enables partial next command suggestions with a prefix.
-    PartialNextCommandSuggestions,
 
     /// Enables iTerm image rendering
     ITermImages,
@@ -191,31 +179,8 @@ pub enum FeatureFlag {
     /// Enables Kitty image rendering
     KittyImages,
 
-    /// Enables support for Torch Packs.
-    WarpPacks,
-
-    /// Enables the revised AI analytics policy banner.
-    ///
-    /// This does not gate actual collection of data under the new policy.
-    GlobalAIAnalyticsBanner,
-
-    /// Enables actual collection of AI analytics data per the revised AI analytics policy.
-    GlobalAIAnalyticsCollection,
-
-    /// Enables auto-generated AI memories.
-    AIMemories,
-
-    /// Enables the XML output system prompt for the primary (terminal) agent in Agent Mode.
-    AgentModePrimaryXML,
-
-    /// Enables the XML output system prompt for the pre-plan agent in Agent Mode.
-    AgentModePrePlanXML,
-
     /// Enables suggested rules.
     SuggestedRules,
-
-    /// Enables suggested workflows for Agent Mode.
-    SuggestedAgentModeWorkflows,
 
     /// Enables prediction of Agent Mode queries.
     PredictAMQueries,
@@ -223,17 +188,8 @@ pub enum FeatureFlag {
     /// Enables full source code embedding of repos when using codebase context.
     FullSourceCodeEmbedding,
 
-    /// Enables codebase indexing inside remote server daemon processes.
-    RemoteCodebaseIndexing,
-
     /// If enabled, command palette searches will use Tantivy search instead of the default fuzzy search.
     UseTantivySearch,
-
-    /// Allows AI to call the grep tool.
-    GrepTool,
-
-    /// MCP server v0 functionality.
-    McpServer,
 
     /// Enables image as context for AM.
     ImageAsContext,
@@ -241,40 +197,11 @@ pub enum FeatureFlag {
     /// UNIX shells running "natively" on Windows via MSYS2.
     MSYS2Shells,
 
-    /// Allows AI to call the file retrieval tools.
-    FileRetrievalTools,
-
-    /// Reload files in an AI conversation to prevent stale files.
-    ReloadStaleConversationFiles,
-
-    /// Auto generate the title when creating a shared block.
-    SharedBlockTitleGeneration,
-
-    /// Retry truncated file edit responses from the coding agent.
-    RetryTruncatedCodeResponses,
-
-    /// Enables reading images with the `read_files` tool.
-    ReadImageFiles,
-
-    UsageBasedPricing,
-
     /// Enables cross-repo codebase context.
     CrossRepoContext,
 
     /// Persist codebase indices to disk.
     CodebaseIndexPersistence,
-
-    /// Enables the AI context menu, or at-menu.
-    AIContextMenuEnabled,
-
-    /// Enables the AI context menu outside of AI input mode.
-    AtMenuOutsideOfAIMode,
-
-    /// Enables the resume button for cancelled AI conversations.
-    AIResumeButton,
-
-    /// Enables the agent to decide whether to execute a command.
-    AgentDecidesCommandExecution,
 
     /// Show speed bump when enabling codebase indexing.
     CodebaseIndexSpeedbump,
@@ -282,52 +209,14 @@ pub enum FeatureFlag {
     /// Enables inline review comments on specific lines of code.
     ContextLineReviewComments,
 
-    /// Enables the fast-forward autoexecute button
-    FastForwardAutoexecuteButton,
-
-    /// Remembers the per-conversation fast-forward state across local session restoration.
-    RememberFastForwardState,
-
     /// Enables the find/replace in code editor
     CodeFindReplace,
 
     /// Enables file search functionality in command palette
     CommandPaletteFileSearch,
 
-    /// Enables the AI context menu nesting and commands
-    AIContextMenuCommands,
-
-    /// Enables sending stderr warnings in FileGlobV2 results.
-    FileGlobV2Warnings,
-
-    /// Enables code symbols in AI context menu
-    AIContextMenuCode,
-
-    /// Enables Torch Drive objects (like workflows) as context in AI context menu
-    DriveObjectsAsContext,
-
-    /// Expands code diff edits to replace the current pane instead of opening in a new tab.
-    ExpandEditToPane,
-    /// Enables fallback model load output messaging in the warping indicator.
-    FallbackModelLoadOutputMessaging,
-
-    /// Names the model doing the work in the warping indicator (e.g. "Warping with
-    /// Claude Sonnet 4.5.") once the server reports which model a response is
-    /// running on, rather than only naming it when the model is a fallback.
-    WarpingModelName,
-
     /// Enables close button on left side of tabs
     TabCloseButtonOnLeft,
-
-    /// Enables AI agent profile settings UI and functionality.
-    ///
-    /// TODO: When cleaning up this flag, also remove the `show_model_selectors_in_prompt`
-    /// setting in [`SessionSettings`] (defined in `app/src/terminal/session_settings.rs`),
-    /// as model selectors are always shown when this flag is enabled.
-    ProfilesDesignRevamp,
-
-    /// Enables new Search Codebase UI
-    SearchCodebaseUI,
 
     /// Enables us to render linked code blocks
     LinkedCodeBlocks,
@@ -335,23 +224,8 @@ pub enum FeatureFlag {
     /// Enables the tabbed file viewer
     TabbedEditorView,
 
-    /// Enables multiple agent profiles in settings for managing different AI agent configurations.
-    MultiProfile,
-
-    /// Enables displaying imported PR review comments in the blocklist.
-    PRCommentsV2,
-
-    /// Gates the bundled skill-based implementation of PR comment fetching.
-    PRCommentsSkill,
-
     /// Enables Projects and Project management
     Projects,
-
-    /// Enables selection-as-context functionality in the code editor.
-    SelectionAsContext,
-
-    /// A context chip that shows when the PWD is inside of a git repository.
-    CodeModeChip,
 
     /// Enables the prompt chip that displays the GitHub PR for the current branch.
     GithubPrPromptChip,
@@ -383,12 +257,6 @@ pub enum FeatureFlag {
     /// Enables the one-time modal on app startup for existing users for the Code launch.
     CodeLaunchModal,
 
-    /// Enables API key management UI in settings
-    APIKeyManagement,
-
-    /// Enables OAuth support for MCP.
-    McpOauth,
-
     /// Enables attaching diff sets (multiple hunks from multiple files) as context in Agent Mode.
     DiffSetAsContext,
 
@@ -401,9 +269,6 @@ pub enum FeatureFlag {
     /// Enables UI zoom support (scaling the entire UI by a given percentage).
     UIZoom,
 
-    /// Shows a confirmation dialog when cancelling an active summarization via Ctrl-C or stop.
-    SummarizationCancellationConfirmation,
-
     /// Enables find/search in code review pane
     CodeReviewFind,
 
@@ -413,48 +278,12 @@ pub enum FeatureFlag {
     /// Enables auto-opening code review pane on first agent change and its setting UI.
     AutoOpenCodeReviewPane,
 
-    /// Enables the ambient agents command-line interface.
-    AmbientAgentsCommandLine,
-
     /// Feature flags for the Build Plan Auto Reload experiment.
     BuildPlanAutoReloadBannerToggle,
     BuildPlanAutoReloadPostPurchaseModal,
 
     /// Enables inline code review functionality
     InlineCodeReview,
-
-    /// Enables cloud environments management via CLI.
-    CloudEnvironments,
-
-    /// Enables the /create-environment slash command for setting up Torch Environments
-    CreateEnvironmentSlashCommand,
-
-    /// Enables the local docker sandbox entrypoints in the client.
-    LocalDockerSandbox,
-
-    /// Enables the /compact slash command.
-    SummarizationConversationCommand,
-
-    /// Enables the provider command for linking third-party services.
-    ProviderCommand,
-
-    /// Enables the integration command for managing agent integrations.
-    IntegrationCommand,
-
-    /// Enables the artifact command for uploading and downloading CLI artifacts.
-    ArtifactCommand,
-
-    /// Groups MCP tools and resources by their originating server when sending context to the AI backend.
-    MCPGroupedServerContext,
-
-    /// Enables the web search UI (when the model executes a web search).
-    WebSearchUI,
-
-    /// Enables the web fetch UI (when the model fetches content from URLs).
-    WebFetchUI,
-
-    /// Displays debugging IDs for MCP servers, installations, and gallery items.
-    McpDebuggingIds,
 
     /// Enables rendering of images in markdown files and AI responses.
     MarkdownImages,
@@ -475,15 +304,8 @@ pub enum FeatureFlag {
     /// Enables rendering markdown images inline in AI block list responses.
     BlocklistMarkdownImages,
 
-    /// Enables the /fork-from slash command.
-    ForkFromCommand,
-
     /// Enables v2 of the context window usage UI.
     ContextWindowUsageV2,
-
-    /// Enables the expandable per-segment context window usage breakdown in
-    /// the conversation usage card.
-    ContextWindowUsageBreakdown,
 
     /// Enables global search
     GlobalSearch,
@@ -491,46 +313,13 @@ pub enum FeatureFlag {
     /// Enables embedded code review comments.
     EmbeddedCodeReviewComments,
 
-    /// Enables the revert to checkpoints feature.
-    RevertToCheckpoints,
-
-    /// Enables the /rewind slash command.
-    RewindSlashCommand,
-
-    /// Agent Management View.
-    AgentManagementView,
-
-    /// Agent Management Details View - enables new details panel on card click.
-    AgentManagementDetailsView,
-
-    /// Enables scheduled ambient agents.
-    ScheduledAmbientAgents,
-
     AgentView,
-
-    /// Enables block context functionality in Agent View.
-    AgentViewBlockContext,
 
     /// Enables the inline history menu for quickly accessing previous commands and conversations.
     InlineHistoryMenu,
 
-    /// Enables the inline repo switcher menu for switching between indexed repos.
-    InlineRepoMenu,
-
     /// Enables Torch Managed Secrets functionality.
     WarpManagedSecrets,
-
-    /// Enables support for AM file diffs backed by the V4A patch format.
-    V4AFileDiffs,
-
-    /// Enables loading conversations in the Agent Management View.
-    InteractiveConversationManagementView,
-
-    /// Enables agent tips displayed below the warping indicator in Agent Mode.
-    AgentTips,
-
-    /// Allows agent mode to use computer use tools.
-    AgentModeComputerUse,
 
     /// Enables computer use functionality in local clients.
     LocalComputerUse,
@@ -547,9 +336,6 @@ pub enum FeatureFlag {
     /// macOS/Linux ffmpeg paths, so it rolls out and can be killed independently of them.
     WindowsVideoRecording,
 
-    /// Enables team API key creation in the API key management UI.
-    TeamApiKeys,
-
     /// Enables cloud conversation loading via the CLI --conversation flag.
     CloudConversations,
 
@@ -564,15 +350,8 @@ pub enum FeatureFlag {
     /// Enables configuring header toolbar item order, side placement, and visibility.
     ConfigurableToolbar,
 
-    /// Enables real-time communication updates for ambient agent tasks.
-    AmbientAgentsRTC,
-
     // Enables a side panel conversation list view for AgentView mode.
     AgentViewConversationListView,
-
-    /// When enabled, the server will use message replacement + retroactive subtasks for
-    /// summarization.
-    SummarizationViaMessageReplacement,
 
     /// Enables pluggable notifications via OSC 9 and OSC 777 escape sequences.
     /// External programs can trigger system and in-app notifications.
@@ -583,68 +362,17 @@ pub enum FeatureFlag {
     /// This is intended for developer testing and should have no effect in release builds.
     SimulateGithubUnauthed,
 
-    /// When enabled, profile selection is displayed in an inline view above the Agent input (e.g. via /profile).
-    InlineProfileSelector,
-
-    /// Enables sending the server a list of Skills that the client has access to.
-    ///
-    /// If disabled, the server will send None as the SkillsContext.
-    ListSkills,
-
     /// When enabled, we expose LSP as a tool to the agent
     LSPAsATool,
-
-    /// Enables conversation artifacts.
-    ConversationArtifacts,
 
     /// Enables auto-syncing ambient plans to Torch Drive.
     SyncAmbientPlans,
 
-    /// Enables platform skills support (--skill flag) for agent runs.
-    ///
-    /// Skills are loaded from `.agents/skills/`, `.warp/skills/`, `.claude/skills/`, and `.codex/skills/`
-    /// directories to provide base prompts for agent runs.
-    OzPlatformSkills,
-    /// Enables Oz identity federation commands.
-    OzIdentityFederation,
-
     /// Gates populating/reading oz updates from channel versions in the changelog model.
     OzChangelogUpdates,
 
-    /// Enables image upload for ambient agents.
-    AmbientAgentsImageUpload,
-
-    /// Enables loading and returning bundled skills in the SkillManager.
-    BundledSkills,
-
-    /// Enables the Oz launch modal for introducing cloud agent features.
-    OzLaunchModal,
-
-    /// Enables the OpenWarp launch modal announcing Torch going open-source.
-    /// When enabled, the HOA onboarding flow is suppressed.
-    OpenWarpLaunchModal,
-
-    /// Enables the orchestration launch modal announcing multi-agent orchestration features.
-    OrchestrationLaunchModal,
-
-    /// Enables the launch modal announcing the Torch Agent CLI.
-    AgentCliLaunchModal,
-
     /// Updated tab styling (background colors, border, close button positioning, margins).
     NewTabStyling,
-
-    /// Enables file-based MCP server support via .mcp.json files in repo roots.
-    FileBasedMcp,
-
-    /// Enables passing user query arguments to skill invocations ($ARGUMENTS, $N).
-    SkillArguments,
-
-    /// When enabled, a conversation is only considered "active" once a new query has been
-    /// sent since opening (rather than the moment its agent view is expanded).
-    ActiveConversationRequiresInteraction,
-
-    /// Enables attaching conversations as context in Agent Mode via the @ menu.
-    ConversationsAsContext,
 
     /// Enables the rich input editor for CLI agents (e.g., Claude Code).
     /// Ctrl-G intercepts the keystroke and opens Torch's input editor instead of $EDITOR.
@@ -661,26 +389,9 @@ pub enum FeatureFlag {
     /// flows while the default behavior temporarily keeps them disabled.
     LocalClaudeCodexChildHarnesses,
 
-    /// Gates the client-side multi-level orchestration surfaces: child
-    /// conversations auto-executing their own `run_agents` calls and the
-    /// confirmation-card disclosure that launched agents may start
-    /// children of their own. When disabled, a child's `run_agents` call
-    /// fails gracefully instead of presenting a card in a hidden pane.
-    MultiLevelOrchestration,
-
     /// Shows a pending user query indicator during summarization when a follow-up
     /// prompt is queued via `/fork-and-compact` or `/compact-and`.
     PendingUserQueryIndicator,
-
-    /// Gates the `/queue` slash command, which lets users queue a follow-up prompt
-    /// while the agent is mid-response.
-    QueueSlashCommand,
-    /// Extends queued prompts to Cloud Mode setup and follow-up draining.
-    QueuedPromptsV2,
-
-    /// Enables an agent tool for the CLI subagent to explicitly transfer command control to the
-    /// user.
-    TransferControlTool,
 
     /// Enables Kitty keyboard protocol support (CSI u encoding, progressive enhancement).
     KittyKeyboardProtocol,
@@ -691,9 +402,6 @@ pub enum FeatureFlag {
 
     /// Enables header rows on all inline menus (label, tabs, resize handle).
     InlineMenuHeaders,
-    /// Clears the current prompt when opening the inline model selector from the
-    /// model chip, then restores that prompt when the selector closes.
-    RestorePromptOnInlineModelSelectorSearch,
 
     /// Enables associating a tab color with a directory so tabs automatically
     /// adopt the configured color when their working directory matches.
@@ -710,39 +418,12 @@ pub enum FeatureFlag {
     /// CLIs (e.g. `claude`) to execute prompts instead of Torch's agent harness.
     AgentHarness,
 
-    /// Enables the `--harness-transport acp` flag for `oz agent run`, which drives a third-party
-    /// harness over the Agent Client Protocol instead of as an interactive CLI in the terminal
-    /// session.
-    AcpHarness,
-
-    /// Enables workspace- and block-snapshot handoff between cloud agent runs
-    /// and the local Torch client.
-    /// When enabled:
-    /// - The `AgentDriver` uploads a workspace snapshot (repo diffs + files) at the end of every
-    ///   cloud agent run, regardless of harness.
-    /// - Subsequent executions download the prior execution's handoff snapshot attachments.
-    /// - Third-party harness conversations hydrate their terminal output inline by fetching a
-    ///   block snapshot from the server.
-    OzHandoff,
-
     /// Enables the upgraded CLI agent session tracking and notifications infrastructure.
     HOANotifications,
-
-    /// Enables the install/update chip for the OpenCode Torch plugin.
-    /// Requires HOANotifications to also be enabled.
-    OpenCodeNotifications,
-
-    /// Enables the install/update chip for the Codex Torch notification plugin.
-    /// Requires HOANotifications to also be enabled.
-    CodexNotifications,
 
     /// Enables the Codex Torch plugin marketplace integration.
     /// When disabled, Codex uses native OSC9 notifications.
     CodexPlugin,
-
-    /// Enables the install/update chip for the Gemini CLI Torch extension.
-    /// Requires HOANotifications to also be enabled.
-    GeminiNotifications,
 
     /// Enables tab configs — user-definable TOML templates for launching custom tab layouts.
     TabConfigs,
@@ -750,17 +431,11 @@ pub enum FeatureFlag {
     /// Enables Torch local control through the standalone warpctrl CLI.
     WarpControlCli,
 
-    /// Enables the ask_user_question tool allowing the agent to ask clarifying questions.
-    AskUserQuestion,
-
     /// When enabled, solo users (not on a team) can use BYO API keys.
     SoloUserByok,
 
     /// Replaces the in-block warpification banner with a warpify footer.
     WarpifyFooter,
-
-    /// Enables conversation retrieval via the CLI (oz run conversation get, oz run get --conversation).
-    ConversationApi,
 
     /// Enables commit, push, and create-PR actions in the code review panel.
     GitOperationsInCodeReview,
@@ -777,28 +452,12 @@ pub enum FeatureFlag {
     /// Enables summary mode in vertical tabs, showing condensed tab summaries
     /// instead of individual pane rows.
     VerticalTabsSummaryMode,
-
-    /// Enables creating API keys scoped to named agents in the API key
-    /// management UI. When enabled the "Team" option in the key-type
-    /// selector is replaced with "Agent" and users can pick which agent
-    /// identity the key authenticates as.
-    NamedAgents,
-    /// Loads server-owned execution settings for paired cloud agent launches.
-    CloudAgentExecutionConfig,
     /// Enables on-demand Factory repository checkouts and their credential scope.
     FactoryDeferredRepositories,
     /// Gates the driver behavior that writes GitHub credentials to disk
     /// (`~/.git-credentials`, `~/.config/gh/hosts.yaml`) and runs the
     /// background refresh loop that keeps them fresh during a task run.
     GitCredentialRefresh,
-
-    /// Gates the v2 billing and usage page redesign.
-    BillingAndUsagePageV2,
-    /// Enables configurable expanded context windows for eligible GPT models.
-    GPTConfigurableContextWindow,
-
-    /// Replaces the raw harness CLI command with a styled header showing CLI name + status icon.
-    HarnessSessionHeader,
 
     /// Enables the code review view for remote sessions.
     RemoteCodeReview,
@@ -811,76 +470,13 @@ pub enum FeatureFlag {
     /// are protected from reordering.
     PinnedTabs,
 
-    /// Gates the SuperGrok feature, which lets users
-    /// connect a Grok subscription instead of pasting an API key.
-    SuperGrok,
-
-    /// Gates connecting a ChatGPT subscription via Sign in with ChatGPT.
-    /// Account linking is server-side (iss+client_id+sub), not local tokens.
-    ChatGPTSubscription,
-
-    /// Gates Gemini Enterprise (GEAP) BYOLLM, which lets users
-    /// route eliglible models to GEAP instead of Torch-managed inference.
-    GeminiEnterprise,
-
-    /// Gates NLD input classification matching the buffer against agent
-    /// prompt history (in addition to shell command history). Still in
-    /// development; currently disabled on all channels as a mitigation for
-    /// misclassification bug reports (see PR #12586). Re-enable via
-    /// `DOGFOOD_FLAGS` once the underlying issues are resolved.
-    NldPromptHistoryMatch,
-
-    /// Gates the custom model router feature, which allows users to define
-    /// their own model routers.
-    CustomModelRouters,
-
     /// Enables state-mutating recovery for abnormal terminal lifecycle sequences.
     TerminalLifecycleRecovery,
-
-    /// Shows a warning in the agent view when the active conversation's
-    /// provider-side prompt cache has expired.
-    PromptCacheExpiryWarning,
-
-    /// Enables the `--runner` flag on `run-cloud`, which overrides an agent's
-    /// compute (docker image, instance shape, setup commands) by runner ID.
-    CloudRunners,
-
-    /// Renders MCP tool-call request and response JSON as an interactive
-    /// collapsible tree with typed colors and per-row Copy JSON, instead of
-    /// a flat pretty-printed blob.
-    McpJsonTreeView,
 
     /// Renders supported solid box-drawing characters (`U+2500..=U+257F`)
     /// procedurally as cell-filling rectangles instead of from the font,
     /// eliminating seams between adjacent box-drawing cells in the terminal.
     BoxDrawingGlyphs,
-
-    /// Enables cloud agent runner selection: the `oz runner` CRUD commands
-    /// for managing runners via the CLI, and the Runner dropdown in the
-    /// orchestration (`run_agents`) confirmation card and plan-card config
-    /// block for choosing a runner when starting remote child agents.
-    CloudAgentRunners,
-
-    /// Accepts well-known non-UUID managed MCP ids (e.g. `"linear"`) as
-    /// `warp_id` values in MCP configs and as bare identifiers in CLI
-    /// `--mcp` arguments, resolved server-side at run setup.
-    WellKnownMcpIds,
-
-    /// Automatically attaches the Torch-hosted Factory MCP server
-    /// (`/api/v1/mcp/factory`) to agents as a built-in MCP server,
-    /// authenticated with the logged-in user's session token. No manual MCP
-    /// setup or API key required.
-    FactoryMcp,
-
-    /// Attaches the Torch-hosted preview URLs MCP server (`/api/v1/mcp/preview-urls`)
-    /// to agent runs, so a cloud run can expose a sandbox port as a preview URL.
-    PreviewUrlsMcp,
-
-    /// Enables periodic workspace-handoff checkpoints during a cloud agent run,
-    /// rather than only uploading a workspace snapshot once at end-of-run.
-    /// Requires `OzHandoff` to also be enabled; a no-op for local runs and when
-    /// `--no-snapshot` is set.
-    PeriodicHandoffCheckpoints,
 
     /// Uses fzf or atuin for history search instead of Torch's command search.
     ShellWidgetHandoff,
@@ -895,11 +491,6 @@ pub enum FeatureFlag {
     /// fuzzy-match score against the whole query as a single pattern. Disabling this is a full
     /// return to the pre-APP-5650 history search behavior, not an approximation of it.
     HistorySearchRankingV2,
-
-    /// Advertises client support for server-issued task-message updates that
-    /// replace inline computer-use screenshot bytes with references to
-    /// Torch-managed object storage.
-    StoredScreenshots,
 
     /// Lets cloud agent environment checkouts build repositories from bare git
     /// mirrors kept in the persistent build cache instead of cloning each one
@@ -932,26 +523,20 @@ pub const DOGFOOD_FLAGS: &[FeatureFlag] = &[
     FeatureFlag::ToggleBootstrapBlock,
     FeatureFlag::RemoveAutosuggestionDuringTabCompletions,
     FeatureFlag::ResizeFix,
-    FeatureFlag::AgentModeWorkflows,
     FeatureFlag::AgentModeAnalytics,
     FeatureFlag::LazySceneBuilding,
     FeatureFlag::SshDragAndDrop,
     FeatureFlag::MultiWorkspace,
     FeatureFlag::ImeMarkedText,
     FeatureFlag::MSYS2Shells,
-    FeatureFlag::RetryTruncatedCodeResponses,
     FeatureFlag::ContextLineReviewComments,
     FeatureFlag::RunGeneratorsWithCmdExe,
     FeatureFlag::Projects,
-    FeatureFlag::ProviderCommand,
     FeatureFlag::MarkdownImages,
     FeatureFlag::FileAndDiffSetComments,
-    FeatureFlag::FileGlobV2Warnings,
-    FeatureFlag::SummarizationViaMessageReplacement,
     FeatureFlag::LocalComputerUse,
     FeatureFlag::VideoRecording,
     FeatureFlag::WindowsVideoRecording,
-    FeatureFlag::OzLaunchModal,
     // These are enabled via 100% experiment on prod warp-server,
     // but we need to enable here for dogfood builds.
     FeatureFlag::CrossRepoContext,
@@ -961,27 +546,15 @@ pub const DOGFOOD_FLAGS: &[FeatureFlag] = &[
     // End manually enabled Code features.
     FeatureFlag::EditableMarkdownMermaid,
     FeatureFlag::CodeReviewScrollPreservation,
-    FeatureFlag::RememberFastForwardState,
-    FeatureFlag::GeminiNotifications,
-    FeatureFlag::LocalDockerSandbox,
     #[cfg(not(windows))]
     FeatureFlag::SshRemoteServer,
-    FeatureFlag::RemoteCodebaseIndexing,
-    FeatureFlag::GPTConfigurableContextWindow,
     FeatureFlag::WarpControlCli,
     FeatureFlag::TerminalLifecycleRecovery,
-    FeatureFlag::PromptCacheExpiryWarning,
     FeatureFlag::JupyterNotebookRendering,
-    FeatureFlag::MultiLevelOrchestration,
-    FeatureFlag::McpJsonTreeView,
     FeatureFlag::BoxDrawingGlyphs,
-    FeatureFlag::WarpingModelName,
     FeatureFlag::LrcActivitySignal,
-    FeatureFlag::StoredScreenshots,
-    FeatureFlag::PreviewUrlsMcp,
     FeatureFlag::GitMirrorCache,
     FeatureFlag::FactoryDeferredRepositories,
-    FeatureFlag::AcpHarness,
 ];
 
 /// Features enabled for feature preview build users (e.g.: Friends of Torch).
@@ -994,7 +567,6 @@ pub const PREVIEW_FLAGS: &[FeatureFlag] = &[];
 pub const RELEASE_FLAGS: &[FeatureFlag] = &[
     FeatureFlag::Autoupdate,
     FeatureFlag::Changelog,
-    FeatureFlag::PeriodicHandoffCheckpoints,
     FeatureFlag::VideoRecording,
     FeatureFlag::WindowsVideoRecording,
     FeatureFlag::ImeMarkedText,
@@ -1021,22 +593,13 @@ impl FeatureFlag {
                     | Self::AgentView
                     | Self::AgentViewPromptChip
                     | Self::AgentViewConversationListView
-                    | Self::AgentManagementView
                     | Self::AvatarInTabBar
                     | Self::CloudObjects
-                    | Self::CloudEnvironments
                     | Self::CloudConversations
                     | Self::WelcomeTips
                     | Self::Changelog
                     | Self::OzChangelogUpdates
-                    | Self::GlobalAIAnalyticsBanner
-                    | Self::GlobalAIAnalyticsCollection
-                    | Self::AgentCliLaunchModal
-                    | Self::AtMenuOutsideOfAIMode
-                    | Self::AIContextMenuEnabled
-                    | Self::AmbientAgentsCommandLine
                     | Self::HOANotifications
-                    | Self::OpenWarpLaunchModal
                     | Self::CodeFindReplace
                     | Self::CommandPaletteFileSearch
                     | Self::TabbedEditorView
@@ -1052,9 +615,6 @@ impl FeatureFlag {
                     | Self::GitOperationsInCodeReview
                     | Self::RemoteCodeReview
                     | Self::JupyterNotebookRendering
-                    | Self::OzLaunchModal
-                    | Self::OrchestrationLaunchModal
-                    | Self::ChatGPTSubscription
             ) {
                 return false;
             }
@@ -1122,12 +682,6 @@ impl FeatureFlag {
             BlocklistMarkdownImages => {
                 Some("Enables rendering markdown images inline in AI block list responses.")
             }
-            CloudEnvironments => {
-                Some("Enables creating and managing Torch Environments via the CLI.")
-            }
-            CreateEnvironmentSlashCommand => Some(
-                "Enables the /create environment slash command for setting up Torch Environments with custom configurations.",
-            ),
             GlobalSearch => Some("Enables global search in the left panel"),
             BlocklistMarkdownTableRendering => {
                 Some("Enables rendering markdown tables inline in AI block list responses.")

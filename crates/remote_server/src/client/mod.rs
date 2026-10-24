@@ -17,7 +17,7 @@ use crate::proto::{
     Abort, Authenticate, BufferEdit, ClientMessage, CloseBuffer, CodebaseIndexLimits, DiffMode,
     DiffStateFileDelta, DiffStateMetadataUpdate, DiffStateSnapshot, ErrorCode, GitStatusMetadata,
     Initialize, InitializeResponse, LoadRepoMetadataDirectoryResponse,
-    NavigatedToDirectoryResponse, PrInfo, RemoteAgentContextSnapshot, RepositoryInfo,
+    NavigatedToDirectoryResponse, PrInfo, RepositoryInfo,
     RunCommandRequest, RunCommandResponse, ServerMessage, SessionBootstrapped, TextEdit,
     UnsubscribeDiffState, UpdateGitHubPrInfo, UpdateGitHubRepoInfo, UpdateGitStatus, notification,
     server_message, session_scoped_request,
@@ -127,10 +127,6 @@ pub enum ClientEvent {
         repo_path: StandardizedPath,
         mode: DiffMode,
         delta: DiffStateFileDelta,
-    },
-    /// The daemon pushed a revisioned full replacement of its Agent Mode context.
-    RemoteAgentContextSnapshotReceived {
-        snapshot: RemoteAgentContextSnapshot,
     },
     /// An aggregate git status push (branch + diff stats) was pushed by the
     /// server for the tab / prompt chips.
@@ -707,9 +703,6 @@ impl RemoteServerClient {
                     mode,
                     delta,
                 })
-            }
-            server_message::Message::RemoteAgentContextSnapshot(snapshot) => {
-                Some(ClientEvent::RemoteAgentContextSnapshotReceived { snapshot })
             }
             server_message::Message::GitStatusPush(push) => {
                 let Some(repo_path) = StandardizedPath::try_new(&push.repo_path).ok() else {

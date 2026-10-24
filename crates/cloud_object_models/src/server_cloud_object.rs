@@ -184,16 +184,12 @@ impl TryFromGql for ServerNotebook {
 
     fn try_from_gql(value: Self::GqlType) -> Result<Self> {
         let uid = ServerId::from_string_lossy(value.metadata.uid.inner());
-        let ai_document_id = value
-            .ai_document_id
-            .map(|id| ai::document::AIDocumentId::try_from(&id[..]))
-            .transpose()?;
         Ok(Self::new(
             SyncId::ServerId(uid),
             CloudNotebookModel {
                 title: value.title,
                 data: value.data,
-                ai_document_id,
+                ai_document_id: value.ai_document_id,
                 conversation_id: None,
             },
             value.metadata.try_into()?,

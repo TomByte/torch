@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use ai::diff_validation::DiffDelta;
+use crate::code::diff_types::DiffDelta;
 use rangemap::RangeSet;
 use torch_editor::content::text::LineCount;
 use torch_editor::render::model::LineCount as RenderLineCount;

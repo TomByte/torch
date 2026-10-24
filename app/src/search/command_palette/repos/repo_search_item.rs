@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use ai::workspace::WorkspaceMetadata;
+use crate::persisted_workspace::WorkspaceMetadata;
 use fuzzy_match::FuzzyMatchResult;
 use ordered_float::OrderedFloat;
 use torch_core::ui::theme::Fill;

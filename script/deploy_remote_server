@@ -148,8 +148,7 @@ echo "==> Build complete ($BINARY_SIZE)"
 # the global, version-independent location the daemon reads.
 rm -rf "$LOCAL_RESOURCES_DIR"
 SKIP_SETTINGS_SCHEMA=1 "$WORKSPACE_ROOT/script/prepare_bundled_resources" \
-  "$LOCAL_RESOURCES_DIR" \
-  local
+  "$LOCAL_RESOURCES_DIR"
 
 # Resolve $HOME on the remote so our upload lands in the same directory the
 # Torch client checks. The client runs `test -x ~/.warp-local/...` and lets

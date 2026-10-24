@@ -115,7 +115,7 @@ impl CloudModelType for CloudNotebookModel {
     fn serialized(&self) -> SerializedModel {
         let serialized = SerializedNotebook {
             data: self.data.clone(),
-            ai_document_id: self.ai_document_id.as_ref().map(|id| id.to_string()),
+            ai_document_id: self.ai_document_id.clone(),
             conversation_id: self.conversation_id.clone(),
         };
         let json = serde_json::to_string(&serialized).expect("Failed to serialize notebook");

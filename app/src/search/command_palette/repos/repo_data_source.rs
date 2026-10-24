@@ -1,4 +1,4 @@
-use ai::workspace::WorkspaceMetadata;
+use crate::persisted_workspace::WorkspaceMetadata;
 use fuzzy_match::{FuzzyMatchResult, match_indices_case_insensitive};
 use itertools::Itertools;
 use torchui::{AppContext, Entity, SingletonEntity};

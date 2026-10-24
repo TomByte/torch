@@ -2,9 +2,8 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::SyncSender;
 
-use ::ai::workspace::WorkspaceMetadata;
 use anyhow::Context;
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use itertools::Itertools;
 use lsp::LanguageId;
 #[cfg(feature = "local_fs")]
@@ -109,6 +108,67 @@ impl LspRepoStatus {
             LSPInstallationStatus::NotInstalled => Self::DisabledAndNotInstalled { server_type },
             LSPInstallationStatus::Checking => Self::CheckingForInstallation,
             LSPInstallationStatus::Installing => Self::Installing { server_type },
+        }
+    }
+}
+
+/// Public-facing metadata persisted in SQLite
+#[derive(Debug, Default, Clone)]
+pub struct WorkspaceMetadata {
+    pub path: PathBuf,
+    pub navigated_ts: Option<DateTime<Utc>>,
+    pub modified_ts: Option<DateTime<Utc>>,
+    pub queried_ts: Option<DateTime<Utc>>,
+}
+
+impl WorkspaceMetadata {
+    /// Surface most recently navigated first
+    pub fn most_recently_navigated(a: &Self, b: &Self) -> std::cmp::Ordering {
+        match (a.navigated_ts, b.navigated_ts) {
+            (Some(a_ts), Some(b_ts)) => b_ts.cmp(&a_ts),
+            (Some(_), None) => std::cmp::Ordering::Less,
+            (None, Some(_)) => std::cmp::Ordering::Greater,
+            (None, None) => a.path.cmp(&b.path),
+        }
+    }
+
+    /// Surface most recently touched first
+    pub fn most_recently_touched(a: &Self, b: &Self) -> std::cmp::Ordering {
+        match (a.last_touched(), b.last_touched()) {
+            (Some(a_ts), Some(b_ts)) => b_ts.cmp(&a_ts),
+            (Some(_), None) => std::cmp::Ordering::Less,
+            (None, Some(_)) => std::cmp::Ordering::Greater,
+            (None, None) => a.path.cmp(&b.path),
+        }
+    }
+
+    /// The most recent time this workspace was navigated to, queried or modified.
+    fn last_touched(&self) -> Option<DateTime<Utc>> {
+        [self.navigated_ts, self.modified_ts, self.queried_ts]
+            .into_iter()
+            .flatten()
+            .max()
+    }
+}
+
+impl From<WorkspaceMetadata> for persistence::model::NewWorkspaceMetadata {
+    fn from(value: WorkspaceMetadata) -> Self {
+        Self {
+            repo_path: value.path.to_string_lossy().into_owned(),
+            navigated_ts: value.navigated_ts.map(|utc_dt| utc_dt.naive_utc()),
+            modified_ts: value.modified_ts.map(|utc_dt| utc_dt.naive_utc()),
+            queried_ts: value.queried_ts.map(|utc_dt| utc_dt.naive_utc()),
+        }
+    }
+}
+
+impl From<persistence::model::WorkspaceMetadata> for WorkspaceMetadata {
+    fn from(value: persistence::model::WorkspaceMetadata) -> Self {
+        Self {
+            path: PathBuf::from(value.repo_path),
+            navigated_ts: value.navigated_ts.map(|naive_ts| naive_ts.and_utc()),
+            modified_ts: value.modified_ts.map(|naive_ts| naive_ts.and_utc()),
+            queried_ts: value.queried_ts.map(|naive_ts| naive_ts.and_utc()),
         }
     }
 }

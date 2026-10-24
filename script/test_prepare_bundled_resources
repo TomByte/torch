@@ -19,7 +19,7 @@ chmod +x "$FAKE_EXECUTABLE"
 EXECUTABLE_DESTINATION="$TEMP_DIR/from-executable"
 NO_LICENSES=1 \
   SETTINGS_SCHEMA_EXECUTABLE="$FAKE_EXECUTABLE" \
-  "$WORKSPACE_ROOT/script/prepare_bundled_resources" "$EXECUTABLE_DESTINATION" dev
+  "$WORKSPACE_ROOT/script/prepare_bundled_resources" "$EXECUTABLE_DESTINATION"
 grep -qx '{"source":"executable"}' "$EXECUTABLE_DESTINATION/settings_schema.json"
 
 SOURCE_SCHEMA="$TEMP_DIR/source-schema.json"
@@ -27,10 +27,10 @@ printf '{"source":"file"}' > "$SOURCE_SCHEMA"
 SOURCE_DESTINATION="$TEMP_DIR/from-source"
 NO_LICENSES=1 \
   SETTINGS_SCHEMA_SOURCE="$SOURCE_SCHEMA" \
-  "$WORKSPACE_ROOT/script/prepare_bundled_resources" "$SOURCE_DESTINATION" dev
+  "$WORKSPACE_ROOT/script/prepare_bundled_resources" "$SOURCE_DESTINATION"
 cmp "$SOURCE_SCHEMA" "$SOURCE_DESTINATION/settings_schema.json"
 
-if NO_LICENSES=1 "$WORKSPACE_ROOT/script/prepare_bundled_resources" "$TEMP_DIR/missing-input" dev; then
+if NO_LICENSES=1 "$WORKSPACE_ROOT/script/prepare_bundled_resources" "$TEMP_DIR/missing-input"; then
   echo "Expected resource preparation without a schema input to fail." >&2
   exit 1
 fi
@@ -38,7 +38,7 @@ fi
 if NO_LICENSES=1 \
   SETTINGS_SCHEMA_EXECUTABLE="$FAKE_EXECUTABLE" \
   SETTINGS_SCHEMA_SOURCE="$SOURCE_SCHEMA" \
-  "$WORKSPACE_ROOT/script/prepare_bundled_resources" "$TEMP_DIR/conflicting-inputs" dev; then
+  "$WORKSPACE_ROOT/script/prepare_bundled_resources" "$TEMP_DIR/conflicting-inputs"; then
   echo "Expected conflicting schema inputs to fail." >&2
   exit 1
 fi
@@ -47,7 +47,7 @@ fi
 SKIPPED_DESTINATION="$TEMP_DIR/skipped-schema"
 NO_LICENSES=1 \
   SKIP_SETTINGS_SCHEMA=1 \
-  "$WORKSPACE_ROOT/script/prepare_bundled_resources" "$SKIPPED_DESTINATION" dev
+  "$WORKSPACE_ROOT/script/prepare_bundled_resources" "$SKIPPED_DESTINATION"
 if [ -e "$SKIPPED_DESTINATION/settings_schema.json" ]; then
   echo "Expected no settings schema to be written when SKIP_SETTINGS_SCHEMA=1." >&2
   exit 1

@@ -10,7 +10,6 @@ use std::{
     time::Duration,
 };
 
-use ai::diff_validation::DiffType;
 use futures::stream::AbortHandle;
 use lsp::types::FileLocation;
 use lsp::{
@@ -254,9 +253,7 @@ pub(super) const HOVER_TOOLTIP_MAX_HEIGHT: f32 = 100.;
 pub struct LocalCodeEditorView {
     pub(super) editor: ViewHandle<CodeEditorView>,
     metadata: Option<LoadedFileMetadata>,
-    enable_diff_nav_by_default: bool,
     is_new_file: bool,
-    diff_type: Option<DiffType>,
     selection_as_context_tooltip: Option<SelectionAsContextTooltip>,
     /// A marker for when the backing file has first been loaded. This is used to prevent applying
     /// a diff before it can be properly calculated.
@@ -303,8 +300,6 @@ pub struct LocalCodeEditorView {
 impl LocalCodeEditorView {
     pub fn new(
         editor: ViewHandle<CodeEditorView>,
-        diff_type: Option<DiffType>,
-        enable_diff_nav_by_default: bool,
         ctx: &mut ViewContext<Self>,
     ) -> Self {
         let context_menu = ctx.add_typed_action_view(|_| {
@@ -332,11 +327,7 @@ impl LocalCodeEditorView {
                     // Queue a debounced auto-save while the user types. The
                     // debounced path saves without running the LSP formatter,
                     // matching VS Code's `files.autoSave: afterDelay` behavior.
-                    // A `Some` `diff_type` means this editor is showing a
-                    // pending accept/reject diff (e.g. an agent "edit-file"
-                    // proposal), which must never auto-save. Editable
-                    // code-review diffs use `diff_type = None` and stay eligible.
-                    if me.diff_type.is_none() && *CodeSettings::as_ref(ctx).auto_save {
+                    if *CodeSettings::as_ref(ctx).auto_save {
                         let _ = me.auto_save_debounce_tx.try_send(());
                     }
                 }
@@ -465,8 +456,6 @@ impl LocalCodeEditorView {
             _ => {}
         });
 
-        let is_new_file = matches!(diff_type, Some(DiffType::Create { .. }));
-
         // Set up debounce for hover requests
         let (hover_debounce_tx, hover_debounce_rx) = async_channel::unbounded();
         ctx.spawn_stream_local(
@@ -492,10 +481,8 @@ impl LocalCodeEditorView {
 
         Self {
             editor,
-            diff_type,
-            is_new_file,
+            is_new_file: false,
             metadata: None,
-            enable_diff_nav_by_default,
             file_loaded: Condition::new(),
             selection_as_context_tooltip: None,
             was_edited: false,
@@ -1115,39 +1102,14 @@ impl LocalCodeEditorView {
     fn perform_save(&mut self, file_id: FileId, ctx: &mut ViewContext<Self>) {
         self.base_content_version = Some(self.editor.as_ref(ctx).version(ctx));
 
-        let result = match self.diff() {
-            Some(DiffType::Update {
-                rename: Some(new_path),
-                ..
-            }) => self.editor.update(ctx, |editor, ctx| {
-                let content = editor.text(ctx);
-                let buffer_version = editor.version(ctx);
+        let result = self.editor.update(ctx, |editor, ctx| {
+            let content = editor.text(ctx);
+            let buffer_version = editor.version(ctx);
 
-                GlobalBufferModel::handle(ctx).update(ctx, move |model, ctx| {
-                    model.rename_and_save(
-                        file_id,
-                        new_path.clone(),
-                        content.into_string(),
-                        buffer_version,
-                        ctx,
-                    )
-                })
-            }),
-            Some(DiffType::Delete { .. }) => self.editor.update(ctx, |editor, ctx| {
-                let buffer_version = editor.version(ctx);
-                GlobalBufferModel::handle(ctx).update(ctx, move |model, ctx| {
-                    model.delete(file_id, buffer_version, ctx)
-                })
-            }),
-            _ => self.editor.update(ctx, |editor, ctx| {
-                let content = editor.text(ctx);
-                let buffer_version = editor.version(ctx);
-
-                GlobalBufferModel::handle(ctx).update(ctx, move |model, ctx| {
-                    model.save(file_id, content.into_string(), buffer_version, ctx)
-                })
-            }),
-        };
+            GlobalBufferModel::handle(ctx).update(ctx, move |model, ctx| {
+                model.save(file_id, content.into_string(), buffer_version, ctx)
+            })
+        });
 
         if let Err(err) = result {
             // A synchronous save failure means no async `FileSaved` will arrive,
@@ -1168,13 +1130,6 @@ impl LocalCodeEditorView {
     /// disconnected remotes are intentionally skipped.
     fn auto_save_after_delay(&mut self, ctx: &mut ViewContext<Self>) {
         if !*CodeSettings::as_ref(ctx).auto_save {
-            return;
-        }
-
-        // Never auto-save a pending accept/reject diff (e.g. an agent
-        // "edit-file" proposal). Editable code-review diffs use `diff_type =
-        // None` and remain eligible.
-        if self.diff_type.is_some() {
             return;
         }
 
@@ -1201,13 +1156,7 @@ impl LocalCodeEditorView {
     /// files) and `RemoteDisconnected` are expected no-ops; real save failures
     /// still surface via `FailedToSave` events.
     fn auto_save_on_focus_change(&mut self, ctx: &mut ViewContext<Self>) {
-        // Never auto-save a pending accept/reject diff (see
-        // `auto_save_after_delay`); editable code-review diffs use `diff_type =
-        // None` and remain eligible.
-        if !*CodeSettings::as_ref(ctx).auto_save
-            || self.diff_type.is_some()
-            || !self.has_unsaved_changes(ctx)
-        {
+        if !*CodeSettings::as_ref(ctx).auto_save || !self.has_unsaved_changes(ctx) {
             return;
         }
 
@@ -1288,7 +1237,6 @@ impl LocalCodeEditorView {
     pub fn new_with_global_buffer<T>(
         location: BufferFileLocation,
         editor_constructor: T,
-        enable_diff_nav_by_default: bool,
         ctx: &mut ViewContext<Self>,
     ) -> Self
     where
@@ -1318,7 +1266,7 @@ impl LocalCodeEditorView {
             }
         }
 
-        let mut local_editor = Self::new(editor, None, enable_diff_nav_by_default, ctx);
+        let mut local_editor = Self::new(editor, ctx);
 
         local_editor.metadata = Some(LoadedFileMetadata {
             id: file_id,
@@ -1346,7 +1294,6 @@ impl LocalCodeEditorView {
     }
 
     fn on_file_loaded(&mut self, ctx: &mut ViewContext<Self>) {
-        self.apply_diffs_if_any(ctx);
         self.file_loaded.set();
 
         // Apply any pending scroll position that was set before the file finished loading.
@@ -1806,35 +1753,6 @@ impl LocalCodeEditorView {
         });
     }
 
-    /// If there is a pending diff available, apply it on the buffer. This should only be called _after_ the buffer
-    /// has been loaded.
-    fn apply_diffs_if_any(&mut self, ctx: &mut ViewContext<Self>) -> Option<usize> {
-        let diff = self.diff_type.clone()?;
-        let deltas = match diff {
-            DiffType::Create { delta } => vec![delta],
-            DiffType::Update { mut deltas, .. } => {
-                deltas.sort_by_key(|delta| delta.replacement_line_range.start);
-                deltas
-            }
-            DiffType::Delete { delta } => vec![delta],
-        };
-
-        // Early return if the pending diff itself is empty.
-        let first_line_start = deltas
-            .first()
-            .map(|diff| diff.replacement_line_range.start)?;
-
-        self.editor.update(ctx, |editor, ctx| {
-            editor.apply_diffs(deltas, ctx);
-
-            if self.enable_diff_nav_by_default {
-                editor.toggle_diff_nav(None, ctx);
-            }
-        });
-
-        Some(first_line_start)
-    }
-
     pub fn file_id(&self) -> Option<FileId> {
         self.metadata.as_ref().map(|m| m.id)
     }
@@ -1956,10 +1874,6 @@ impl LocalCodeEditorView {
         self.editor.update(ctx, |editor, ctx| {
             editor.clear_selection(ctx);
         });
-    }
-
-    pub fn diff(&self) -> Option<&DiffType> {
-        self.diff_type.as_ref()
     }
 
     /// Handles context menu events (like menu closing)

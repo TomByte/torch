@@ -7,7 +7,7 @@ use torchui::App;
 use crate::code::buffer_location::LocalOrRemotePath;
 use crate::code::editor::line::EditorLineLocation;
 use crate::code_review::comments::{
-    AttachedReviewComment, AttachedReviewCommentTarget, CommentOrigin, LineDiffContent,
+    AttachedReviewComment, AttachedReviewCommentTarget, LineDiffContent,
     ReviewCommentBatch,
 };
 
@@ -29,7 +29,6 @@ fn line_comment(file_path: &str, line_number: usize, content: &str) -> AttachedR
         },
         last_update_time: Local::now(),
         outdated: false,
-        origin: CommentOrigin::Native,
     }
 }
 
@@ -133,7 +132,6 @@ fn editor_comments_for_file_includes_only_line_comments() {
             target: AttachedReviewCommentTarget::General,
             last_update_time: Local::now(),
             outdated: false,
-            origin: CommentOrigin::Native,
         };
 
         model.update(&mut app, |batch, ctx| {
