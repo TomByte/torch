@@ -406,39 +406,11 @@ fn summary_roundtrips_through_json() {
 }
 
 #[test]
-fn agent_conversation_data_roundtrips_last_event_sequence() {
-    let data = AgentConversationData {
-        orchestration_harness_type: Some("claude".to_string()),
-        last_event_sequence: Some(42),
-        ..Default::default()
-    };
-    let json = serde_json::to_string(&data).expect("serialize");
-    let roundtripped: AgentConversationData = serde_json::from_str(&json).expect("deserialize");
-    assert_eq!(roundtripped.last_event_sequence, Some(42));
-    assert_eq!(
-        roundtripped.orchestration_harness_type.as_deref(),
-        Some("claude")
-    );
-}
-
-#[test]
-fn agent_conversation_data_accepts_legacy_orchestration_avatar_id() {
-    let legacy_json = r#"{"orchestration_avatar_id":"orbit"}"#;
+fn agent_conversation_data_ignores_legacy_orchestration_fields() {
+    let legacy_json = r#"{"server_conversation_token":"token","parent_agent_id":"parent","agent_name":"Agent 1","orchestration_avatar_id":"orbit","parent_conversation_id":"id","is_remote_child":true,"run_id":"run","last_event_sequence":42,"pinned":true,"artifacts_json":"[]"}"#;
     let data: AgentConversationData =
         serde_json::from_str(legacy_json).expect("legacy rows must deserialize");
-
-    assert_eq!(data.orchestration_harness_type.as_deref(), Some("orbit"));
-}
-
-#[test]
-fn agent_conversation_data_roundtrips_remote_child_marker() {
-    let data = AgentConversationData {
-        is_remote_child: true,
-        ..Default::default()
-    };
-    let json = serde_json::to_string(&data).expect("serialize");
-    let roundtripped: AgentConversationData = serde_json::from_str(&json).expect("deserialize");
-    assert!(roundtripped.is_remote_child);
+    assert_eq!(data.server_conversation_token.as_deref(), Some("token"));
 }
 
 #[test]
@@ -450,28 +422,6 @@ fn agent_conversation_data_roundtrips_optimistic_root_marker() {
     let json = serde_json::to_string(&data).expect("serialize");
     let roundtripped: AgentConversationData = serde_json::from_str(&json).expect("deserialize");
     assert_eq!(roundtripped.root_task_is_optimistic, Some(true));
-}
-
-#[test]
-fn agent_conversation_data_deserializes_legacy_payload_without_last_event_sequence() {
-    // Legacy rows persisted before this feature landed omit the field
-    // entirely. `#[serde(default)]` must accept them as `None`.
-    let legacy_json = r#"{"server_conversation_token":null}"#;
-    let data: AgentConversationData =
-        serde_json::from_str(legacy_json).expect("legacy rows must deserialize");
-    assert_eq!(data.last_event_sequence, None);
-    assert_eq!(data.orchestration_harness_type, None);
-    assert!(!data.is_remote_child);
-}
-
-#[test]
-fn agent_conversation_data_skips_serializing_none_last_event_sequence() {
-    let data = AgentConversationData::default();
-    let json = serde_json::to_string(&data).expect("serialize");
-    assert!(
-        !json.contains("last_event_sequence"),
-        "None should be skipped in serialized output: {json}"
-    );
 }
 
 #[test]
@@ -488,35 +438,6 @@ fn agent_conversation_data_roundtrips_use_warp_credits_instead_of_chatgpt() {
     let legacy: AgentConversationData =
         serde_json::from_str(legacy_json).expect("legacy rows must deserialize");
     assert!(!legacy.use_warp_credits_instead_of_chatgpt);
-}
-
-#[test]
-fn agent_conversation_data_roundtrips_pinned() {
-    let data = AgentConversationData {
-        pinned: true,
-        ..Default::default()
-    };
-    let json = serde_json::to_string(&data).expect("serialize");
-    let roundtripped: AgentConversationData = serde_json::from_str(&json).expect("deserialize");
-    assert!(roundtripped.pinned);
-}
-
-#[test]
-fn agent_conversation_data_skips_serializing_unpinned() {
-    let data = AgentConversationData::default();
-    let json = serde_json::to_string(&data).expect("serialize");
-    assert!(
-        !json.contains("pinned"),
-        "Unpinned default should be skipped: {json}"
-    );
-}
-
-#[test]
-fn agent_conversation_data_legacy_rows_default_to_unpinned() {
-    let legacy_json = r#"{"server_conversation_token":null}"#;
-    let data: AgentConversationData =
-        serde_json::from_str(legacy_json).expect("legacy rows must deserialize");
-    assert!(!data.pinned);
 }
 
 #[allow(deprecated)]

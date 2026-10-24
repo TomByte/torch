@@ -316,7 +316,6 @@ fn test_terminal_window_snapshot(vertical_tabs_panel_open: bool) -> WindowSnapsh
         vertical_tabs_panel_width: None,
         left_panel_width: None,
         right_panel_width: None,
-        agent_management_filters: None,
         tab_groups: vec![],
     }
 }
@@ -484,7 +483,6 @@ fn test_sqlite_round_trips_custom_vertical_tabs_title() {
             vertical_tabs_panel_width: None,
             left_panel_width: None,
             right_panel_width: None,
-            agent_management_filters: None,
             tab_groups: vec![],
         }],
         active_window_index: Some(0),
@@ -564,7 +562,6 @@ fn test_sqlite_round_trips_code_pane_with_multiple_tabs() {
             vertical_tabs_panel_width: None,
             left_panel_width: None,
             right_panel_width: None,
-            agent_management_filters: None,
             tab_groups: vec![],
         }],
         active_window_index: Some(0),
@@ -686,7 +683,6 @@ fn test_sqlite_round_trips_tab_groups() {
             vertical_tabs_panel_width: None,
             left_panel_width: None,
             right_panel_width: None,
-            agent_management_filters: None,
             tab_groups: vec![TabGroupSnapshot {
                 id: group_id,
                 name: Some("Backend".to_string()),
@@ -842,7 +838,6 @@ fn test_sqlite_round_trips_pinned_state() {
             vertical_tabs_panel_width: None,
             left_panel_width: None,
             right_panel_width: None,
-            agent_management_filters: None,
             tab_groups: vec![
                 TabGroupSnapshot {
                     id: pinned_group_id,

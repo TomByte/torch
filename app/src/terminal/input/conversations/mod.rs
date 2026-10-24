@@ -10,7 +10,7 @@ use torchui::SingletonEntity;
 use torchui::keymap::Keystroke;
 pub use view::{InlineConversationMenuEvent, InlineConversationMenuView};
 
-use crate::ai::agent_conversations_model::AgentConversationEntryId;
+use crate::ai::agent::conversation::AIConversationId;
 use crate::terminal::input::inline_menu::{
     InlineMenuAction, InlineMenuMessageArgs, InlineMenuRowAction, InlineMenuType,
     default_navigation_message_items,
@@ -29,7 +29,7 @@ pub enum InlineConversationMenuTab {
 /// Action emitted when enter is hit on a conversation the inline conversation menu.
 #[derive(Clone, Debug)]
 pub struct AcceptConversation {
-    pub item_id: AgentConversationEntryId,
+    pub item_id: AIConversationId,
     pub is_open_elsewhere: bool,
 }
 

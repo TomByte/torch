@@ -251,8 +251,7 @@ impl TryFrom<PaneNodeSnapshot> for PaneTemplateType {
                 | LeafContents::CustomRouterEditor
                 | LeafContents::ExecutionProfileEditor
                 | LeafContents::NetworkLog
-                | LeafContents::AIDocument(_)
-                | LeafContents::EnvironmentManagement(_) => {
+                | LeafContents::AIDocument(_) => {
                     // TODO: Handle AIDocument in launch config
                     Err(())
                 }

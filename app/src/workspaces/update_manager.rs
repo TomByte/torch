@@ -1,7 +1,5 @@
 use std::sync::Arc;
 use std::sync::mpsc::SyncSender;
-#[cfg(not(target_family = "wasm"))]
-use std::time::Duration;
 
 use anyhow::{Context, Result};
 use futures::channel::oneshot::{self, Receiver};
@@ -26,13 +24,6 @@ use crate::server::retry_strategies::{
 };
 use crate::server::server_api::ServerApiProvider;
 use crate::server::server_api::team::TeamClient;
-
-#[derive(Clone, Copy)]
-pub(crate) enum WorkspaceMetadataRetryPolicy {
-    OutOfBand,
-    #[cfg(not(target_family = "wasm"))]
-    TimeBudget(Duration),
-}
 
 /// TeamUpdateManager is a singleton model responsible for communicating with the server and local
 /// database regarding teams' metadata.
@@ -161,8 +152,7 @@ impl TeamUpdateManager {
         }
 
         let (tx, rx) = oneshot::channel::<Result<()>>();
-        let refresh = self
-            .refresh_workspace_metadata_with_retry(WorkspaceMetadataRetryPolicy::OutOfBand, ctx);
+        let refresh = self.refresh_workspace_metadata_with_retry(ctx);
         ctx.spawn(refresh, move |_, result, _| {
             let _ = tx.send(result);
         });
@@ -171,7 +161,6 @@ impl TeamUpdateManager {
 
     pub(crate) fn refresh_workspace_metadata_with_retry(
         &mut self,
-        retry_policy: WorkspaceMetadataRetryPolicy,
         ctx: &mut ModelContext<Self>,
     ) -> impl Spawnable<Output = Result<()>> + use<> {
         let team_client = AuthStateProvider::as_ref(ctx)
@@ -188,43 +177,20 @@ impl TeamUpdateManager {
             let refresh = with_retry(
                 "Workspace metadata",
                 || team_client.workspaces_metadata(),
-                // The workload token may be rejected until the execution claim is committed.
                 |_| true,
                 |delay| async move {
-                    match retry_policy {
-                        WorkspaceMetadataRetryPolicy::OutOfBand => {
-                            Timer::after(delay).await;
-                        }
-                        #[cfg(not(target_family = "wasm"))]
-                        WorkspaceMetadataRetryPolicy::TimeBudget(_) => {
-                            tokio::time::sleep(delay).await
-                        }
-                    }
+                    Timer::after(delay).await;
                 },
-                |_| match retry_policy {
-                    WorkspaceMetadataRetryPolicy::OutOfBand => {
-                        if retry_option.remaining_retries() == 0 {
-                            return None;
-                        }
-                        let delay = retry_option.duration();
-                        retry_option.advance();
-                        Some(delay)
+                |_| {
+                    if retry_option.remaining_retries() == 0 {
+                        return None;
                     }
-                    #[cfg(not(target_family = "wasm"))]
-                    WorkspaceMetadataRetryPolicy::TimeBudget(_) => {
-                        Some(duration_with_jitter(Duration::from_secs(1), 0.5))
-                    }
+                    let delay = retry_option.duration();
+                    retry_option.advance();
+                    Some(delay)
                 },
             );
-            let response = match retry_policy {
-                WorkspaceMetadataRetryPolicy::OutOfBand => refresh.await,
-                #[cfg(not(target_family = "wasm"))]
-                WorkspaceMetadataRetryPolicy::TimeBudget(timeout) => {
-                    tokio::time::timeout(timeout, refresh)
-                        .await
-                        .map_err(|_| anyhow::anyhow!("Timed out refreshing team metadata"))?
-                }
-            };
+            let response = refresh.await;
 
             foreground
                 .spawn(move |manager, ctx| {

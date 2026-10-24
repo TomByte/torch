@@ -31,14 +31,13 @@ use torchui::notification::NotificationSendError;
 use torchui::windowing::WindowManager;
 use torchui::{
     AppContext, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
-    ViewHandle, WeakViewHandle, WindowId,
+    ViewHandle, WindowId,
 };
 use tree::DEFAULT_FLEX_VALUE;
 use typed_path::TypedPath;
 use uuid::Uuid;
 
 use crate::agent_status::InputConfig;
-use crate::ai::active_agent_views_model::ActiveAgentViewsModel;
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::ai_document_view::AIDocumentView;
 use crate::ai::blocklist::agent_view::AgentViewEntryOrigin;
@@ -125,13 +124,10 @@ use crate::util::openable_file_type::FileTarget;
 use crate::view_components::ToastFlavor;
 use crate::workflows::{WorkflowSelectionSource, WorkflowSource, WorkflowType};
 use crate::workspace::tab_group::TabGroupId;
-use crate::workspace::{
-    self, CommandSearchOptions, PaneViewLocator, TabBarLocation, WorkspaceAction,
-};
+use crate::workspace::{self, CommandSearchOptions, PaneViewLocator, TabBarLocation};
 use crate::workspaces::user_workspaces::{ResolvedTeamScope, UserWorkspaces};
 use crate::{cmd_or_ctrl_shift, send_telemetry_from_ctx};
 
-mod child_agent;
 pub mod focus_state;
 pub mod pane;
 pub mod tree;
@@ -148,7 +144,6 @@ pub use pane::code_diff_pane::CodeDiffPane;
 pub use pane::code_pane::CodePane;
 pub use pane::custom_router_editor_pane::CustomRouterEditorPane;
 pub use pane::env_var_collection_pane::EnvVarCollectionPane;
-pub use pane::environment_management_pane::EnvironmentManagementPane;
 pub use pane::execution_profile_editor_pane::ExecutionProfileEditorPane;
 pub use pane::file_pane::FilePane;
 pub use pane::network_log_pane::NetworkLogPane;
@@ -539,12 +534,6 @@ pub enum Event {
     /// Clears the hovered tab index so it no longer appears as highlighted drop target
     ClearHoveredTabIndex,
     OpenWarpDriveObjectInPane(ObjectUid),
-    /// Tell the workspace to open the given child agent conversation in a
-    /// fresh tab. Bubbled up by `TerminalView::Event::OpenChildAgentInNewTab`
-    /// from the orchestration pill bar's 3-dot menu.
-    OpenChildAgentInNewTab {
-        conversation_id: AIConversationId,
-    },
     OpenSuggestedAgentModeWorkflowModal {
         workflow_and_id: SuggestedAgentModeWorkflowAndId,
     },
@@ -594,7 +583,6 @@ pub enum Event {
     InvalidatedActiveConversation,
     OpenConversationHistory,
     OpenAddRulePane,
-    OpenEnvironmentManagementPane,
     OpenFilesPalette {
         source: PaletteSource,
     },
@@ -792,11 +780,6 @@ pub struct PaneGroup {
     /// If there is an open summarization cancel dialog, the terminal pane ID where summarization is active.
     terminal_with_open_summarization_dialog: Option<TerminalPaneId>,
 
-    /// Pane with an open environment setup mode selector modal (rendered at tab level).
-    pane_with_open_environment_setup_mode_selector: Option<PaneId>,
-    /// Pane with an open agent-assisted environment modal (rendered at tab level).
-    pane_with_open_agent_assisted_environment_modal: Option<PaneId>,
-
     /// If the left panel is open for this pane group
     pub left_panel_open: bool,
     /// If the right panel is open for this pane group
@@ -804,26 +787,8 @@ pub struct PaneGroup {
     /// If the right panel is maximized
     pub is_right_panel_maximized: bool,
 
-    /// Maps child agent conversation IDs to their hidden pane IDs, so they can
-    /// be revealed from the parent's status card.
-    child_agent_panes: HashMap<AIConversationId, PaneId>,
-
-    /// Set when this pane group hosts a split-off child agent pane that
-    /// should be re-adopted by its source group on tab close.
-    child_agent_origin: Option<ChildAgentOrigin>,
-
     /// Tab-level custom title set via the rename-tab flow.
     custom_title: Option<String>,
-}
-
-/// Origin metadata for a split-off child agent tab; used to re-adopt the
-/// pane back to its source on tab close.
-#[derive(Clone)]
-pub struct ChildAgentOrigin {
-    /// Source pane group; weak so we don't keep the source tab alive.
-    pub source_pane_group: WeakViewHandle<PaneGroup>,
-    /// The child agent conversation hosted in this tab's lone pane.
-    pub conversation_id: AIConversationId,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -1743,13 +1708,6 @@ impl PaneGroup {
                     "Network log pane should not have been persisted, as it cannot be restored"
                 ))
             }
-            LeafContents::EnvironmentManagement(_) => {
-                // Environment management panes are not restored from persistence.
-                // They are opened on-demand via workspace actions.
-                Err(anyhow::anyhow!(
-                    "Environment management panes are not restored"
-                ))
-            }
         };
 
         if let (Ok((pane_data, _)), Some(title)) = (&result, custom_vertical_tabs_title.as_deref())
@@ -2442,13 +2400,9 @@ impl PaneGroup {
             user_default_shell_changed_banner,
             active_file_model,
             terminal_with_open_summarization_dialog: None,
-            pane_with_open_environment_setup_mode_selector: None,
-            pane_with_open_agent_assisted_environment_modal: None,
             right_panel_open: false,
             left_panel_open: false,
             is_right_panel_maximized: false,
-            child_agent_panes: HashMap::new(),
-            child_agent_origin: None,
             custom_title: None,
         };
 
@@ -2460,46 +2414,6 @@ impl PaneGroup {
         ctx.notify();
 
         pane_group
-    }
-
-    /// Returns the conversation's owner, excluding panes detached for undo-close.
-    fn terminal_view_id_for_owned_conversation(
-        &self,
-        conversation_id: AIConversationId,
-        ctx: &AppContext,
-    ) -> Option<EntityId> {
-        BlocklistAIHistoryModel::as_ref(ctx)
-            .terminal_surface_id_for_conversation(&conversation_id)
-            .filter(|terminal_view_id| {
-                // Undo-close retains views and their conversations after their panes detach.
-                self.find_pane_id_for_terminal_view(*terminal_view_id, ctx)
-                    .is_some_and(|pane_id| !self.is_pane_hidden_for_close(pane_id))
-                    || ActiveAgentViewsModel::as_ref(ctx)
-                        .is_terminal_view_attached(*terminal_view_id, ctx)
-            })
-    }
-
-    fn pane_id_for_owned_conversation(
-        &self,
-        conversation_id: AIConversationId,
-        ctx: &AppContext,
-    ) -> Option<PaneId> {
-        self.terminal_view_id_for_owned_conversation(conversation_id, ctx)
-            .and_then(|terminal_view_id| self.find_pane_id_for_terminal_view(terminal_view_id, ctx))
-    }
-    fn is_conversation_owned_outside_pane(
-        &self,
-        conversation_id: AIConversationId,
-        pane_id: PaneId,
-        ctx: &AppContext,
-    ) -> bool {
-        self.terminal_view_id_for_owned_conversation(conversation_id, ctx)
-            .is_some_and(|terminal_view_id| {
-                match self.find_pane_id_for_terminal_view(terminal_view_id, ctx) {
-                    Some(owner_pane_id) => owner_pane_id != pane_id,
-                    None => true,
-                }
-            })
     }
 
     /// Initial layout for a [`PaneGroup`] with a single terminal pane.
@@ -2749,51 +2663,6 @@ impl PaneGroup {
         );
         ctx.emit(Event::AppStateChanged);
         new_pane_id
-    }
-
-    /// Creates a terminal pane that lives off-tree as a child agent pane.
-    /// Unlike `insert_terminal_pane`, the new pane is never inserted into the
-    /// layout tree at creation time — it lives only in `pane_contents` and
-    /// `child_agent_panes`. The orchestration pill bar later inserts it into
-    /// the tree on demand via `replace_pane` (in-place swap) or `panes.split`
-    /// ("Open in new pane").
-    fn insert_terminal_pane_hidden_for_child_agent(
-        &mut self,
-        base_pane_id: PaneId,
-        env_vars: HashMap<OsString, OsString>,
-        ctx: &mut ViewContext<Self>,
-    ) -> TerminalPaneId {
-        let base_session_id = base_pane_id
-            .as_terminal_pane_id()
-            .or(self.active_session_id(ctx));
-        let startup_directory = self.startup_path_for_new_session(base_session_id, ctx);
-        let (pane_data, _view) =
-            self.create_terminal_pane_data(startup_directory, env_vars, None, None, ctx);
-        let new_pane_id = pane_data.terminal_pane_id();
-        self.attach_child_pane_off_tree(Box::new(pane_data), ctx);
-        new_pane_id
-    }
-
-    /// Inserts `pane` into `pane_contents` and attaches it (so subscriptions,
-    /// focus handle, etc. are wired up) without adding it to the layout tree.
-    /// Used for child agent panes which only enter the tree later via the
-    /// pill bar's swap or split-off paths.
-    fn attach_child_pane_off_tree(
-        &mut self,
-        pane: Box<dyn AnyPaneContent>,
-        ctx: &mut ViewContext<Self>,
-    ) -> Option<PaneId> {
-        let pane_id = pane.as_pane().id();
-        self.pane_contents.insert(pane_id, pane);
-        let pane = self
-            .pane_contents
-            .get(&pane_id)
-            .expect("Just inserted pane");
-        if !self.try_attach_pane(pane.as_ref(), ctx) {
-            self.pane_contents.remove(&pane_id);
-            return None;
-        }
-        Some(pane_id)
     }
 
     /// Get the [`PaneView<TerminalView>`] for the pane at `pane_index`, if that pane is:
@@ -3054,13 +2923,6 @@ impl PaneGroup {
     /// Emits an event for the workspace to show a confirmation dialog if necessary, or closes immediately if not.
     /// If a dialog is opened, the workspace may call back into pane group to close the pane after the user confirms.
     pub fn close_pane_with_confirmation(&mut self, pane_id: PaneId, ctx: &mut ViewContext<Self>) {
-        // Child agent panes are just hidden when closed, so skip the
-        // "process running" warning—it doesn't apply.
-        if self.is_child_agent_pane(pane_id) {
-            self.close_pane(pane_id, ctx);
-            return;
-        }
-
         let summary = UnsavedStateSummary::for_pane(self, pane_id, ctx);
         if summary.save_unsaved_code_and_should_warn(ctx)
             && ChannelState::channel() != Channel::Integration
@@ -3101,17 +2963,8 @@ impl PaneGroup {
     /// Definitively close the pane. This does not go through the undo close check where we might hide the pane instead of
     /// discarding it.
     fn discard_pane(&mut self, pane_id: PaneId, ctx: &mut ViewContext<Self>) {
-        // Skip ownership transfer for child agent panes (their view
-        // canonically owns the conversation).
-        if !self.is_child_agent_pane(pane_id) {
-            self.transfer_child_agent_conversations_to_parents_on_close(pane_id, ctx);
-        }
-
         if let Some(terminal_view) = self.terminal_view_from_pane_id(pane_id, ctx) {
             let terminal_view_id = terminal_view.id();
-
-            // Discard any child agent panes parented by this terminal view.
-            self.remove_child_agent_panes(terminal_view_id, ctx);
 
             // Preserve conversations from terminal views before cleaning up the pane
             BlocklistAIHistoryModel::handle(ctx).update(ctx, |history_model, _| {
@@ -3120,46 +2973,6 @@ impl PaneGroup {
         }
 
         self.cleanup_closed_pane(pane_id, ctx);
-    }
-
-    /// Best-effort: re-bind each live child agent conversation on the
-    /// closing view to the pane that owns its parent. Defensive plumbing
-    /// for paths where the parent's view actually contains the child;
-    /// no-ops otherwise.
-    fn transfer_child_agent_conversations_to_parents_on_close(
-        &mut self,
-        pane_id: PaneId,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        let Some(terminal_view) = self.terminal_view_from_pane_id(pane_id, ctx) else {
-            return;
-        };
-        let closing_view_id = terminal_view.id();
-
-        let history_handle = BlocklistAIHistoryModel::handle(ctx);
-        let transfers: Vec<(AIConversationId, EntityId)> = history_handle
-            .as_ref(ctx)
-            .all_live_conversations_for_terminal_surface(closing_view_id)
-            .filter_map(|conversation| {
-                let parent_id = conversation.parent_conversation_id()?;
-                let parent_owner = history_handle
-                    .as_ref(ctx)
-                    .terminal_surface_id_for_conversation(&parent_id)?;
-                if parent_owner == closing_view_id {
-                    return None;
-                }
-                Some((conversation.id(), parent_owner))
-            })
-            .collect();
-
-        if transfers.is_empty() {
-            return;
-        }
-        history_handle.update(ctx, |history_model, ctx| {
-            for (child_id, parent_owner) in transfers {
-                history_model.set_active_conversation_id(child_id, parent_owner, ctx);
-            }
-        });
     }
 
     /// If this pane was the active session and or focused pane, focuses the previous session and pane.
@@ -3199,169 +3012,10 @@ impl PaneGroup {
         self.remove_from_pane_history(pane_id_to_remove);
     }
 
-    /// Returns true if the given pane is a child agent pane tracked in `child_agent_panes`.
-    fn is_child_agent_pane(&self, pane_id: PaneId) -> bool {
-        self.child_agent_panes.values().any(|&id| id == pane_id)
-    }
-
-    /// Collects the child agent pane IDs whose conversations are parented by
-    /// a conversation on the given terminal view.
-    fn child_pane_ids_for_parent(
-        &self,
-        parent_terminal_view_id: EntityId,
-        ctx: &AppContext,
-    ) -> Vec<(AIConversationId, PaneId)> {
-        let history_model = BlocklistAIHistoryModel::as_ref(ctx);
-        self.child_agent_panes
-            .iter()
-            .filter(|(conv_id, _)| {
-                history_model
-                    .conversation(conv_id)
-                    .and_then(|c| c.parent_conversation_id())
-                    .and_then(|parent_id| {
-                        history_model.terminal_surface_id_for_conversation(&parent_id)
-                    })
-                    .is_some_and(|tv_id| tv_id == parent_terminal_view_id)
-            })
-            .map(|(conv_id, pane_id)| (*conv_id, *pane_id))
-            .collect()
-    }
-
-    /// Removes and discards all child agent panes whose parent conversation
-    /// lives on the given terminal view.  Used by both `close_pane` and
-    /// `discard_pane` to ensure children are cleaned up regardless of which
-    /// path removes the parent.
-    fn remove_child_agent_panes(
-        &mut self,
-        parent_terminal_view_id: EntityId,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        let children = self.child_pane_ids_for_parent(parent_terminal_view_id, ctx);
-        for (conv_id, child_pane_id) in children {
-            self.child_agent_panes.remove(&conv_id);
-            self.panes.remove_hidden_pane(child_pane_id);
-            self.discard_pane(child_pane_id, ctx);
-        }
-    }
-
-    /// Permanently discards the pane backing a child agent conversation.
-    pub fn discard_child_agent_pane_for_conversation(
-        &mut self,
-        conversation_id: AIConversationId,
-        ctx: &mut ViewContext<Self>,
-    ) -> bool {
-        let tracked_child_pane = self.child_agent_panes.remove(&conversation_id);
-        let split_off_child_pane = self.child_agent_origin.as_ref().and_then(|origin| {
-            (origin.conversation_id == conversation_id)
-                .then(|| self.pane_id_for_conversation_owner(conversation_id, ctx))
-                .flatten()
-        });
-        let owner_child_pane = tracked_child_pane
-            .or(split_off_child_pane)
-            .or_else(|| self.pane_id_for_conversation_owner(conversation_id, ctx));
-        let Some(child_pane_id) = owner_child_pane else {
-            return false;
-        };
-        if self
-            .child_agent_origin
-            .as_ref()
-            .is_some_and(|origin| origin.conversation_id == conversation_id)
-        {
-            // Killed split-off tabs should not be re-adopted.
-            self.child_agent_origin = None;
-        }
-
-        let was_focused = self.focus_state.as_ref(ctx).is_pane_focused(child_pane_id);
-
-        if let Some(terminal_view) = self.terminal_view_from_pane_id(child_pane_id, ctx) {
-            terminal_view.update(ctx, |view, ctx| {
-                view.clear_orchestration_split_off(ctx);
-                view.shutdown_pty(ctx);
-            });
-        }
-
-        if let Some(original_pane_id) = self.panes.original_pane_for_replacement(child_pane_id) {
-            self.panes.revert_temporary_replacement(child_pane_id);
-            if was_focused {
-                self.focus_pane(original_pane_id, true, ctx);
-            }
-        } else {
-            // Drop any hidden entry that could restore the killed pane.
-            self.panes.remove_hidden_pane(child_pane_id);
-        }
-
-        let is_in_tree = self.panes.is_pane_in_tree(child_pane_id);
-        if is_in_tree && self.panes.visible_pane_count() <= 1 {
-            // A lone split-off child closes by removing its tab.
-            ctx.emit(Event::Exited {
-                add_to_undo_stack: false,
-            });
-            return true;
-        }
-
-        if is_in_tree {
-            self.focus_next_terminal_pane_and_activate_session(
-                child_pane_id,
-                PaneRemovalReason::Close,
-                ctx,
-            );
-        }
-
-        let discarded = self.cleanup_closed_pane(child_pane_id, ctx);
-        self.handle_pane_count_change(ctx);
-        discarded
-    }
-
     pub fn close_pane(&mut self, pane_id: PaneId, ctx: &mut ViewContext<Self>) {
         // Don't close a pane that doesn't exist
         if !self.pane_contents.contains_key(&pane_id) {
             return;
-        }
-
-        // Child agent panes return to off-tree state instead of being
-        // destroyed; future pill clicks re-host the same view. The view
-        // keeps ownership of its conversation, so we skip the
-        // transfer-on-close step below.
-        if self.is_child_agent_pane(pane_id) {
-            // Revert the swap if the child is currently swapped in.
-            if self.panes.original_pane_for_replacement(pane_id).is_some() {
-                self.panes.revert_temporary_replacement(pane_id);
-            }
-            // Or remove the child from the tree if it was split off.
-            else if self.panes.is_pane_in_tree(pane_id) && !self.panes.remove(pane_id) {
-                report_error!("close_pane: failed to remove split-off child pane from tree");
-            }
-            // Drop any leftover swap entry recording this child as the
-            // original side. Otherwise a later revert of the surviving
-            // sibling could resurrect the just-closed pane.
-            self.panes.remove_hidden_pane(pane_id);
-
-            // Clear the split-off marker so the next reveal renders pills
-            // rather than breadcrumbs.
-            if let Some(terminal_view) = self.terminal_view_from_pane_id(pane_id, ctx) {
-                terminal_view.update(ctx, |view, ctx| {
-                    view.clear_orchestration_split_off(ctx);
-                });
-            }
-            self.focus_next_terminal_pane_and_activate_session(
-                pane_id,
-                PaneRemovalReason::Close,
-                ctx,
-            );
-            self.handle_pane_count_change(ctx);
-            ctx.emit(Event::TerminalViewStateChanged);
-            ctx.emit(Event::AppStateChanged);
-            return;
-        }
-
-        // Best-effort: re-bind any child conversations on this view back
-        // to the pane that owns their parent so the pill bar keeps
-        // working after this pane closes.
-        self.transfer_child_agent_conversations_to_parents_on_close(pane_id, ctx);
-
-        // If this is a parent with child agents, discard the children first.
-        if let Some(terminal_view) = self.terminal_view_from_pane_id(pane_id, ctx) {
-            self.remove_child_agent_panes(terminal_view.id(), ctx);
         }
 
         if FeatureFlag::UndoClosedPanes.is_enabled() {
@@ -3393,13 +3047,6 @@ impl PaneGroup {
                 self.hide_closed_pane(pane_id, ctx);
             }
 
-            if self.pane_with_open_environment_setup_mode_selector == Some(pane_id) {
-                self.pane_with_open_environment_setup_mode_selector = None;
-            }
-            if self.pane_with_open_agent_assisted_environment_modal == Some(pane_id) {
-                self.pane_with_open_agent_assisted_environment_modal = None;
-            }
-
             self.focus_next_terminal_pane_and_activate_session(
                 pane_id,
                 PaneRemovalReason::Close,
@@ -3419,13 +3066,6 @@ impl PaneGroup {
             }
 
             self.clean_up_pane(pane_id, ctx);
-
-            if self.pane_with_open_environment_setup_mode_selector == Some(pane_id) {
-                self.pane_with_open_environment_setup_mode_selector = None;
-            }
-            if self.pane_with_open_agent_assisted_environment_modal == Some(pane_id) {
-                self.pane_with_open_agent_assisted_environment_modal = None;
-            }
 
             self.focus_next_terminal_pane_and_activate_session(
                 pane_id,
@@ -3454,15 +3094,6 @@ impl PaneGroup {
         pane_to_focus: PaneId,
         ctx: &mut ViewContext<Self>,
     ) {
-        // Child agent panes go through the normal close path so the
-        // underlying view is preserved (the temp-replacement close path
-        // would destroy it).
-        if self.is_child_agent_pane(pane_id) {
-            self.close_pane(pane_id, ctx);
-            ctx.emit(Event::FocusPane { pane_to_focus });
-            return;
-        }
-
         // Check if this is a temporary replacement that should be reverted
         if self.panes.is_temporary_replacement(pane_id) {
             // Remove the replacement pane and focus the original pane
@@ -3480,22 +3111,6 @@ impl PaneGroup {
         }
     }
 
-    /// Revert a temporary-replacement swap and clear the orchestration
-    /// split-off marker on the replacement's view, so a later reveal
-    /// renders pills rather than breadcrumbs.
-    fn revert_swap_clearing_split_off(
-        &mut self,
-        replacement_id: PaneId,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        if let Some(terminal_view) = self.terminal_view_from_pane_id(replacement_id, ctx) {
-            terminal_view.update(ctx, |view, ctx| {
-                view.clear_orchestration_split_off(ctx);
-            });
-        }
-        self.panes.revert_temporary_replacement(replacement_id);
-    }
-
     /// Reveal `pane_id` if it's currently the original of an active swap,
     /// then focus it. Used by cross-tab navigation paths that may resolve
     /// to a swapped-out pane; without the reveal, focus would land on an
@@ -3503,7 +3118,7 @@ impl PaneGroup {
     /// neither in the tree nor swap-hidden.
     pub fn reveal_and_focus_pane(&mut self, pane_id: PaneId, ctx: &mut ViewContext<Self>) {
         if let Some(replacement_id) = self.panes.replacement_pane_for_original(pane_id) {
-            self.revert_swap_clearing_split_off(replacement_id, ctx);
+            self.panes.revert_temporary_replacement(replacement_id);
             self.handle_pane_count_change(ctx);
             // The visible content of this slot changed; refresh agent-view
             // back-button labels on both sides.
@@ -3560,7 +3175,6 @@ impl PaneGroup {
                 self.clean_up_pane(original_pane_id, ctx);
                 self.pane_contents.remove(&original_pane_id);
             }
-            self.restore_child_agents_for_terminal_pane_if_needed(replacement_pane_id, ctx);
 
             // Focus the replacement pane to ensure proper user interaction
             self.focus_pane_by_id(replacement_pane_id, ctx);
@@ -3967,7 +3581,6 @@ impl PaneGroup {
                 self.cleanup_closed_pane(pane_id, ctx);
                 return false;
             }
-            self.restore_child_agents_for_terminal_pane_if_needed(pane_id, ctx);
 
             self.focus_pane_and_record_in_history(pane_id, ctx);
 
@@ -4644,7 +4257,6 @@ impl PaneGroup {
                 ConversationRestorationInNewPaneType::Historical {
                     conversation: *conversation,
                     should_use_live_appearance: true,
-                    ambient_agent_task_id: None,
                 }
             }
             CloudConversationData::CLIAgent(cli_conversation) => {
@@ -4771,8 +4383,6 @@ impl PaneGroup {
     }
 
     /// Creates a new terminal session and wraps it in a `TerminalPane`.
-    /// This is the shared session-creation boilerplate used by both
-    /// `add_session_in_directory` and `insert_terminal_pane_hidden_for_child_agent`.
     #[allow(clippy::too_many_arguments)]
     fn create_terminal_pane_data(
         &self,
@@ -4943,7 +4553,6 @@ impl PaneGroup {
             self.pane_contents.remove(&pane_id);
             return None;
         }
-        self.restore_child_agents_for_terminal_pane_if_needed(pane_id, ctx);
 
         if options.focus_new_pane {
             self.focus_pane_and_record_in_history(pane_id, ctx);
@@ -5232,450 +4841,6 @@ impl PaneGroup {
             .map(|session| session.terminal_view(ctx))
     }
 
-    /// Resolve the pane id that owns a given conversation's `TerminalView`,
-    /// without applying any visibility filtering. Used by the pill-bar swap
-    /// path to find the orchestrator pane (or any non-child conversation's
-    /// owner) regardless of whether it's currently visible. Walks the pane
-    /// contents and returns the first terminal pane whose terminal view id
-    /// matches the history model's owner for `conversation_id`.
-    fn pane_id_for_conversation_owner(
-        &self,
-        conversation_id: AIConversationId,
-        ctx: &AppContext,
-    ) -> Option<PaneId> {
-        let owner_view_id = BlocklistAIHistoryModel::as_ref(ctx)
-            .terminal_surface_id_for_conversation(&conversation_id)?;
-        for pane_id in self.pane_contents.keys() {
-            if let Some(terminal_view) = self.terminal_view_from_pane_id(*pane_id, ctx)
-                && terminal_view.id() == owner_view_id
-            {
-                return Some(*pane_id);
-            }
-        }
-        None
-    }
-
-    /// Make the pane that owns `conversation_id` the visible one in the
-    /// focused pane's slot via temporary replacement. The previous occupant
-    /// is restored on revert (back-button, ESC, pill-click, close, split-off).
-    pub fn swap_active_pane_to_conversation(
-        &mut self,
-        focused_pane_id: PaneId,
-        conversation_id: AIConversationId,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        let from_child_panes = self.child_agent_panes.get(&conversation_id).copied();
-        let from_visible_pane = self
-            .find_visible_terminal_pane_for_conversation(conversation_id, ctx)
-            .map(PaneId::from);
-        let from_owner_lookup = self.pane_id_for_conversation_owner(conversation_id, ctx);
-        let target_pane_id = from_child_panes.or(from_visible_pane).or(from_owner_lookup);
-        let Some(target_pane_id) = target_pane_id else {
-            // No owning pane in this group (e.g. the conversation lives
-            // in another tab). Fall back to workspace-level navigation.
-            if let Some(owner_view_id) = BlocklistAIHistoryModel::as_ref(ctx)
-                .terminal_surface_id_for_conversation(&conversation_id)
-            {
-                // Workspace navigation reads this pane group, so it must wait until we return.
-                ctx.dispatch_typed_action_deferred(WorkspaceAction::FocusTerminalViewInWorkspace {
-                    terminal_view_id: owner_view_id,
-                });
-                return;
-            }
-            self.log_swap_resolution_failure(focused_pane_id, conversation_id, ctx);
-            return;
-        };
-
-        // No-op when the active pill is clicked.
-        if target_pane_id == focused_pane_id {
-            return;
-        }
-
-        // If the target is currently swapped out (some other pane sits in
-        // its slot), revert that swap and just focus the target. Skipping
-        // this would put the target in two tree positions and corrupt the
-        // layout on a later revert.
-        if let Some(replacement_id) = self.panes.replacement_pane_for_original(target_pane_id) {
-            self.revert_swap_clearing_split_off(replacement_id, ctx);
-            self.handle_pane_count_change(ctx);
-            self.focus_pane_preserving_maximized_state(target_pane_id, true, ctx);
-            for pane_id in [replacement_id, target_pane_id] {
-                if let Some(terminal_view) = self.terminal_view_from_pane_id(pane_id, ctx) {
-                    terminal_view.update(ctx, |view, ctx| {
-                        view.update_agent_view_back_button_state(ctx);
-                    });
-                }
-            }
-            ctx.emit(Event::TerminalViewStateChanged);
-            ctx.emit(Event::AppStateChanged);
-            return;
-        }
-
-        // If a swap is already active in this slot, revert it first; the
-        // anchor for the new operation becomes the original pane.
-        let anchor =
-            if let Some(original) = self.panes.original_pane_for_replacement(focused_pane_id) {
-                self.revert_swap_clearing_split_off(focused_pane_id, ctx);
-                original
-            } else {
-                focused_pane_id
-            };
-
-        // If revert landed us on the target, just focus and return.
-        if anchor == target_pane_id {
-            self.handle_pane_count_change(ctx);
-            self.focus_pane_preserving_maximized_state(anchor, true, ctx);
-            if let Some(terminal_view) = self.terminal_view_from_pane_id(anchor, ctx) {
-                terminal_view.update(ctx, |view, ctx| {
-                    view.update_agent_view_back_button_state(ctx);
-                });
-            }
-            ctx.emit(Event::TerminalViewStateChanged);
-            ctx.emit(Event::AppStateChanged);
-            return;
-        }
-
-        // If the target is already a visible sibling, just focus it.
-        if self.panes.is_pane_in_tree(target_pane_id) && !self.panes.is_pane_hidden(&target_pane_id)
-        {
-            self.handle_pane_count_change(ctx);
-            self.focus_pane_preserving_maximized_state(target_pane_id, true, ctx);
-            if let Some(terminal_view) = self.terminal_view_from_pane_id(target_pane_id, ctx) {
-                terminal_view.update(ctx, |view, ctx| {
-                    view.update_agent_view_back_button_state(ctx);
-                });
-            }
-            ctx.emit(Event::TerminalViewStateChanged);
-            ctx.emit(Event::AppStateChanged);
-            return;
-        }
-
-        // Substitute the target into the anchor's slot via temporary
-        // replacement; revert restores the anchor.
-        let success = self.panes.replace_pane(anchor, target_pane_id, true);
-        if !success {
-            log::warn!(
-                "swap_active_pane_to_conversation: replace_pane failed for anchor={anchor:?} target={target_pane_id:?}"
-            );
-            return;
-        }
-        self.handle_pane_count_change(ctx);
-        self.focus_pane_preserving_maximized_state(target_pane_id, true, ctx);
-        // Refresh the back-button label on both swapped panes; otherwise
-        // a stale label would persist until the next agent-view entry.
-        for pane_id in [anchor, target_pane_id] {
-            if let Some(terminal_view) = self.terminal_view_from_pane_id(pane_id, ctx) {
-                terminal_view.update(ctx, |view, ctx| {
-                    view.update_agent_view_back_button_state(ctx);
-                });
-            }
-        }
-
-        ctx.emit(Event::TerminalViewStateChanged);
-        ctx.emit(Event::AppStateChanged);
-    }
-
-    /// Reveal the child agent pane for `conversation_id` as a visible
-    /// sibling of its orchestrator ("Open in new pane"). Reuses the
-    /// existing view to avoid cancelling in-flight commands. Reverts any
-    /// swap on the target's orchestrator first; swaps belonging to other
-    /// orchestrators in the same group are left alone.
-    pub fn unhide_child_agent_pane_for_split_off(
-        &mut self,
-        conversation_id: AIConversationId,
-        ctx: &mut ViewContext<Self>,
-    ) -> Option<PaneId> {
-        let child_pane_id = self.child_agent_panes.get(&conversation_id).copied()?;
-
-        // If the child was previously split off and then swapped over,
-        // it's recorded as the original of an active swap. Revert that
-        // swap first — the child returns to its old slot — so we don't
-        // splice it into the tree a second time.
-        if let Some(replacement_pane_id) = self.panes.replacement_pane_for_original(child_pane_id) {
-            self.revert_swap_clearing_split_off(replacement_pane_id, ctx);
-            self.handle_pane_count_change(ctx);
-        }
-
-        // If the child is already a visible sibling, just focus it.
-        if self.panes.is_pane_in_tree(child_pane_id)
-            && !self.panes.is_pane_hidden(&child_pane_id)
-            && self
-                .panes
-                .original_pane_for_replacement(child_pane_id)
-                .is_none()
-        {
-            self.focus_pane(child_pane_id, true, ctx);
-            return Some(child_pane_id);
-        }
-
-        // Resolve the target child's orchestrator. Used to scope swap
-        // reverts so we don't disturb swaps owned by other orchestrators.
-        let parent_pane_id = BlocklistAIHistoryModel::as_ref(ctx)
-            .conversation(&conversation_id)
-            .and_then(|c| c.parent_conversation_id())
-            .and_then(|parent_conv_id| self.pane_id_for_conversation_owner(parent_conv_id, ctx));
-
-        // If the orchestrator is swapped out, revert it so it returns to
-        // its slot before we split next to it.
-        let split_base = if let Some(parent_pane_id) = parent_pane_id {
-            if let Some(replacement_pane_id) =
-                self.panes.replacement_pane_for_original(parent_pane_id)
-            {
-                self.revert_swap_clearing_split_off(replacement_pane_id, ctx);
-            }
-            parent_pane_id
-        } else {
-            self.focused_pane_id(ctx)
-        };
-        let split_ok = self
-            .panes
-            .split(split_base, child_pane_id, Direction::Right);
-        if !split_ok {
-            self.panes.split_root(child_pane_id, Direction::Right);
-        }
-
-        if let Some(child_terminal_view) = self.terminal_view_from_pane_id(child_pane_id, ctx) {
-            child_terminal_view.update(ctx, |view, ctx| {
-                view.mark_as_orchestration_split_off(ctx);
-            });
-        }
-
-        // Refresh the back-button label on the orchestrator pane.
-        if let Some(terminal_view) = self.terminal_view_from_pane_id(split_base, ctx) {
-            terminal_view.update(ctx, |view, ctx| {
-                view.update_agent_view_back_button_state(ctx);
-            });
-        }
-
-        self.handle_pane_count_change(ctx);
-        self.focus_pane(child_pane_id, true, ctx);
-        ctx.emit(Event::TerminalViewStateChanged);
-        ctx.emit(Event::AppStateChanged);
-        Some(child_pane_id)
-    }
-
-    /// Detach the child agent pane for `conversation_id` so it can be
-    /// re-parented into a new tab ("Open in new tab"). Reuses the
-    /// existing view to avoid cancelling in-flight commands.
-    pub fn take_child_agent_pane_for_split_off(
-        &mut self,
-        conversation_id: AIConversationId,
-        ctx: &mut ViewContext<Self>,
-    ) -> Option<Box<dyn AnyPaneContent>> {
-        let child_pane_id = self.child_agent_panes.remove(&conversation_id)?;
-
-        // Capture focus before mutating the tree so we can shift focus
-        // correctly afterwards regardless of how the child leaves it.
-        let was_focused = self.focus_state.as_ref(ctx).is_pane_focused(child_pane_id);
-
-        // Revert the swap if the child is currently swapped in.
-        if self
-            .panes
-            .original_pane_for_replacement(child_pane_id)
-            .is_some()
-        {
-            self.panes.revert_temporary_replacement(child_pane_id);
-        }
-
-        // Remove the child from the tree if it was a real sibling.
-        if self.panes.is_pane_in_tree(child_pane_id) && !self.panes.remove(child_pane_id) {
-            report_error!("take_child_agent_pane_for_split_off: failed to remove pane from tree");
-        }
-
-        // Drop any leftover swap entry naming this child as the original
-        // side. Otherwise a later revert of a surviving sibling would
-        // splice the now-detached child back into this group's tree.
-        self.panes.remove_hidden_pane(child_pane_id);
-
-        // Shift focus and active session away from the departing child.
-        self.focus_next_terminal_pane_and_activate_session(
-            child_pane_id,
-            PaneRemovalReason::Move,
-            ctx,
-        );
-        let in_split_pane = self.panes.visible_pane_count() > 1;
-        self.focus_state.update(ctx, |focus_state, ctx| {
-            focus_state.set_in_split_pane(in_split_pane, ctx);
-            if was_focused {
-                focus_state.set_focused_pane_maximized(false, ctx);
-            }
-        });
-
-        if let Some(child_terminal_view) = self.terminal_view_from_pane_id(child_pane_id, ctx) {
-            child_terminal_view.update(ctx, |view, ctx| {
-                view.mark_as_orchestration_split_off(ctx);
-            });
-        }
-
-        // Detach so the destination group can re-attach cleanly.
-        if let Some(pane_data) = self.pane_contents.get(&child_pane_id) {
-            let pane = pane_data.as_pane();
-            pane.detach(self, DetachType::Moved, ctx);
-        }
-
-        let pane_content = self.pane_contents.remove(&child_pane_id);
-        ctx.notify();
-        ctx.emit(Event::TerminalViewStateChanged);
-        ctx.emit(Event::AppStateChanged);
-        pane_content
-    }
-
-    /// Stamp this pane group as the destination of a split-off child
-    /// agent pane, so closing the tab re-adopts the live view back to
-    /// the source group.
-    pub fn set_child_agent_origin(&mut self, origin: ChildAgentOrigin) {
-        self.child_agent_origin = Some(origin);
-    }
-
-    /// Returns the origin metadata if this group is hosting a split-off
-    /// child agent tab.
-    pub fn child_agent_origin(&self) -> Option<&ChildAgentOrigin> {
-        self.child_agent_origin.as_ref()
-    }
-
-    /// Re-adopt a previously detached child agent pane back into this
-    /// group as off-tree, and clear its split-off marker so the next
-    /// reveal renders pills instead of breadcrumbs.
-    pub fn re_adopt_child_agent_pane(
-        &mut self,
-        pane_content: Box<dyn AnyPaneContent>,
-        conversation_id: AIConversationId,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        let pane_id = pane_content.as_pane().id();
-
-        if let Some(returned_pane_id) = self.attach_child_pane_off_tree(pane_content, ctx) {
-            debug_assert_eq!(returned_pane_id, pane_id);
-            self.child_agent_panes.insert(conversation_id, pane_id);
-        } else {
-            report_error!(
-                "re_adopt_child_agent_pane: failed to attach pane",
-                extra: { "pane_id" => ?pane_id }
-            );
-            return;
-        }
-
-        // Clear the split-off marker so the next reveal via the
-        // orchestration pill bar renders the full pill bar rather than
-        // the parent → child breadcrumb. The pane is once again an
-        // off-tree child agent of the orchestrator, not a top-level
-        // split-off.
-        if let Some(terminal_view) = self.terminal_view_from_pane_id(pane_id, ctx) {
-            terminal_view.update(ctx, |view, ctx| {
-                view.clear_orchestration_split_off(ctx);
-            });
-        }
-
-        ctx.notify();
-        ctx.emit(Event::TerminalViewStateChanged);
-        ctx.emit(Event::AppStateChanged);
-    }
-
-    /// Diagnostic logging for [`swap_active_pane_to_conversation`] when none of
-    /// the three resolvers (`child_agent_panes`, visible-pane lookup, history
-    /// model owner lookup) finds a pane in this group for the target
-    /// conversation. Dumps enough state to identify which step is wrong.
-    fn log_swap_resolution_failure(
-        &self,
-        focused_pane_id: PaneId,
-        conversation_id: AIConversationId,
-        ctx: &AppContext,
-    ) {
-        let history_model = BlocklistAIHistoryModel::as_ref(ctx);
-        let history_owner_view_id =
-            history_model.terminal_surface_id_for_conversation(&conversation_id);
-        let conversation_in_memory = history_model.conversation(&conversation_id).is_some();
-        let parent_id = history_model
-            .conversation(&conversation_id)
-            .and_then(|c| c.parent_conversation_id());
-        let is_remote_child = history_model
-            .conversation(&conversation_id)
-            .map(|c| c.is_remote_child())
-            .unwrap_or(false);
-
-        let focused_view_id = self
-            .terminal_view_from_pane_id(focused_pane_id, ctx)
-            .map(|v| v.id());
-
-        let child_pane_keys: Vec<AIConversationId> =
-            self.child_agent_panes.keys().copied().collect();
-        let has_child_entry = self.child_agent_panes.contains_key(&conversation_id);
-
-        // Per-pane summary: pane_id, terminal_view_id, hidden state,
-        // agent_view active conversation id.
-        let mut pane_summaries: Vec<String> = Vec::new();
-        for pane_id in self.pane_contents.keys().copied() {
-            let Some(terminal_view) = self.terminal_view_from_pane_id(pane_id, ctx) else {
-                pane_summaries.push(format!("{pane_id:?}=non_terminal"));
-                continue;
-            };
-            let view_id = terminal_view.id();
-            let active_conv = terminal_view
-                .as_ref(ctx)
-                .agent_view_controller()
-                .as_ref(ctx)
-                .agent_view_state()
-                .active_conversation_id();
-            let hidden_for_close = self.is_pane_hidden_for_close(pane_id);
-            let hidden_for_child_agent = self.panes.is_pane_hidden_for_child_agent(pane_id);
-            let in_tree = self.panes.is_pane_in_tree(pane_id);
-            let is_temp_replacement = self.panes.original_pane_for_replacement(pane_id).is_some();
-            let is_hidden_any = self.panes.is_pane_hidden(&pane_id);
-            pane_summaries.push(format!(
-                "{pane_id:?}{{view={view_id:?},active={active_conv:?},in_tree={in_tree},hidden={is_hidden_any},close={hidden_for_close},child_agent={hidden_for_child_agent},temp_replacement={is_temp_replacement}}}"
-            ));
-        }
-
-        log::warn!(
-            "swap_active_pane_to_conversation: no pane found for conversation {conversation_id:?} \
-             [focused_pane={focused_pane_id:?}, focused_view={focused_view_id:?}, \
-             history_owner_view={history_owner_view_id:?}, in_memory={conversation_in_memory}, \
-             parent={parent_id:?}, remote_child={is_remote_child}, \
-             child_agent_panes_has_entry={has_child_entry}, \
-             child_agent_panes_keys={child_pane_keys:?}, panes=[{}]]",
-            pane_summaries.join(", ")
-        );
-    }
-
-    /// Walk the visible terminal panes in this group looking for one whose
-    /// terminal view has the given AI conversation as its active agent-view
-    /// conversation. Used by the orchestration pill bar to focus an
-    /// already-visible pane (e.g. "Open in new pane" was already used and the
-    /// user is now clicking the pinned pill in the orchestrator's view).
-    ///
-    /// "Visible" here strictly means "present as a leaf in the layout tree
-    /// AND not hidden". Iterating over `terminal_pane_ids()` (which reads
-    /// from `pane_contents`) would erroneously include off-tree child
-    /// agent panes, since under the orchestration model those panes
-    /// remain in `pane_contents` even when they are not in the tree.
-    pub(crate) fn find_visible_terminal_pane_for_conversation(
-        &self,
-        conversation_id: AIConversationId,
-        ctx: &AppContext,
-    ) -> Option<TerminalPaneId> {
-        for pane_id in self.panes.visible_pane_ids() {
-            if FeatureFlag::UndoClosedPanes.is_enabled() && self.is_pane_hidden_for_close(pane_id) {
-                continue;
-            }
-            let Some(terminal_pane_id) = pane_id.as_terminal_pane_id() else {
-                continue;
-            };
-            let Some(terminal_view) = self.terminal_view_from_pane_id(pane_id, ctx) else {
-                continue;
-            };
-            let active_id = terminal_view
-                .as_ref(ctx)
-                .agent_view_controller()
-                .as_ref(ctx)
-                .agent_view_state()
-                .active_conversation_id();
-            if active_id == Some(conversation_id) {
-                return Some(terminal_pane_id);
-            }
-        }
-        None
-    }
-
     /// Given a pane ID, retrieve its backing code view, if the pane is a code pane.
     pub fn code_view_from_pane_id(
         &self,
@@ -5755,21 +4920,6 @@ impl PaneGroup {
         true
     }
 
-    fn focus_pane_preserving_maximized_state(
-        &mut self,
-        id: PaneId,
-        focus_pane_contents: bool,
-        ctx: &mut ViewContext<Self>,
-    ) -> bool {
-        let was_maximized = self.is_focused_pane_maximized(ctx);
-        let focused = self.focus_pane(id, focus_pane_contents, ctx);
-        if focused && was_maximized {
-            self.focus_state.update(ctx, |focus_state, ctx| {
-                focus_state.set_focused_pane_maximized(true, ctx);
-            });
-        }
-        focused
-    }
     fn focus_pane_and_record_in_history(
         &mut self,
         id: PaneId,
@@ -5837,31 +4987,12 @@ impl PaneGroup {
 
     /// Reattach all panes to this group. This is called when a closed tab is restored.
     pub fn reattach_panes(&mut self, ctx: &mut ViewContext<Self>) {
-        self.remove_transferred_child_agent_panes(ctx);
         let pane_ids = self.pane_contents.keys().copied().collect_vec();
         for pane_id in pane_ids {
             let Some(pane) = self.pane_contents.get(&pane_id) else {
                 continue;
             };
             self.attach_pane(pane.as_ref(), ctx);
-            self.restore_child_agents_for_terminal_pane_if_needed(pane_id, ctx);
-        }
-    }
-
-    fn remove_transferred_child_agent_panes(&mut self, ctx: &mut ViewContext<Self>) {
-        let transferred_children = self
-            .child_agent_panes
-            .iter()
-            .filter_map(|(conversation_id, pane_id)| {
-                let owner = BlocklistAIHistoryModel::as_ref(ctx)
-                    .terminal_surface_id_for_conversation(conversation_id)?;
-                let terminal_view = self.terminal_view_from_pane_id(*pane_id, ctx)?;
-                (owner != terminal_view.id()).then_some(*conversation_id)
-            })
-            .collect_vec();
-
-        for conversation_id in transferred_children {
-            self.discard_child_agent_pane_for_conversation(conversation_id, ctx);
         }
     }
 
@@ -6293,43 +5424,6 @@ impl View for PaneGroup {
             })
         {
             stack.add_child(ChildView::new(&dialog_handle).finish());
-        }
-
-        // Render environment setup mode selector at tab level when open.
-        if let Some(pane_id) = self.pane_with_open_environment_setup_mode_selector {
-            let selector_handle = self
-                .terminal_view_from_pane_id(pane_id, app)
-                .and_then(|tv| {
-                    tv.as_ref(app)
-                        .environment_setup_mode_selector_handle()
-                        .cloned()
-                })
-                .or_else(|| {
-                    self.downcast_pane_by_id::<EnvironmentManagementPane>(pane_id)
-                        .and_then(|emp| {
-                            emp.environments_page_view(app)
-                                .as_ref(app)
-                                .environment_setup_mode_selector_handle()
-                                .cloned()
-                        })
-                });
-            if let Some(handle) = selector_handle {
-                stack.add_child(ChildView::new(&handle).finish());
-            }
-        }
-
-        // Render agent-assisted environment modal at tab level when open.
-        if let Some(pane_id) = self.pane_with_open_agent_assisted_environment_modal
-            && let Some(handle) = self
-                .downcast_pane_by_id::<EnvironmentManagementPane>(pane_id)
-                .and_then(|emp| {
-                    emp.environments_page_view(app)
-                        .as_ref(app)
-                        .agent_assisted_environment_modal_handle(app)
-                        .cloned()
-                })
-        {
-            stack.add_child(ChildView::new(&handle).finish());
         }
 
         stack.finish()

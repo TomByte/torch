@@ -1,29 +1,25 @@
 use fuzzy_match::match_indices_case_insensitive;
-use torchui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity, WindowId};
+use torchui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity};
 
+use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent_conversations_model::{
-    AgentConversationEntry, AgentConversationEntryId, AgentConversationsModel,
-    AgentConversationsModelEvent, AgentManagementFilters, ArtifactFilter, ConversationUpdateKind,
-    CreatedOnFilter, CreatorFilter, OwnerFilter, SourceFilter, StatusFilter,
-};
-use crate::workspaces::user_workspaces::{
-    TeamContextResolver, UserWorkspaces, UserWorkspacesEvent,
+    AgentConversationEntry, AgentConversationsModel, AgentConversationsModelEvent,
+    ConversationUpdateKind,
 };
 
 pub struct ConversationListViewModelEvent;
 
 #[derive(Clone, Debug)]
 pub struct ConversationEntry {
-    pub id: AgentConversationEntryId,
+    pub id: AIConversationId,
     pub highlight_indices: Vec<usize>,
 }
 
 pub struct ConversationListViewModel {
     conversations_model: ModelHandle<AgentConversationsModel>,
-    cached_entry_ids: Vec<AgentConversationEntryId>,
+    cached_entry_ids: Vec<AIConversationId>,
     filtered_items: Vec<ConversationEntry>,
     search_query: String,
-    team_context_resolver: TeamContextResolver,
 }
 
 impl Entity for ConversationListViewModel {
@@ -31,47 +27,25 @@ impl Entity for ConversationListViewModel {
 }
 
 impl ConversationListViewModel {
-    pub fn new(
-        window_id: WindowId,
-        team_context_resolver: TeamContextResolver,
-        ctx: &mut ModelContext<Self>,
-    ) -> Self {
+    pub fn new(ctx: &mut ModelContext<Self>) -> Self {
         let conversations_model = AgentConversationsModel::handle(ctx);
 
         ctx.subscribe_to_model(&conversations_model, |me, _, event, ctx| {
             match event {
                 // These events change the set of items in the list, so we need
                 // to rebuild the cached ID list.
-                AgentConversationsModelEvent::ConversationsLoaded
-                | AgentConversationsModelEvent::NewTasksReceived
-                | AgentConversationsModelEvent::TasksUpdated => {
+                AgentConversationsModelEvent::ConversationsLoaded => {
                     me.refresh_cached_items(ctx);
                 }
                 // Status changes don't affect the set of IDs (status is read
                 // at render time via get_item_by_id); just signal a re-render.
                 AgentConversationsModelEvent::ConversationUpdated { kind } => {
-                    if matches!(
-                        kind,
-                        ConversationUpdateKind::MetadataChanged
-                            | ConversationUpdateKind::TitleChanged
-                    ) {
+                    if matches!(kind, ConversationUpdateKind::TitleChanged) {
                         me.refresh_cached_items(ctx);
                     } else {
                         ctx.emit(ConversationListViewModelEvent);
                     }
                 }
-                // Artifact updates don't affect the conversation list
-                AgentConversationsModelEvent::ConversationArtifactsUpdated { .. } => {}
-            }
-        });
-        ctx.subscribe_to_model(&UserWorkspaces::handle(ctx), move |me, _, event, ctx| {
-            if matches!(
-                event,
-                UserWorkspacesEvent::WindowTeamChanged {
-                    window_id: changed_window_id
-                } if *changed_window_id == window_id
-            ) {
-                me.refresh_cached_items(ctx);
             }
         });
 
@@ -80,37 +54,22 @@ impl ConversationListViewModel {
             cached_entry_ids: Vec::new(),
             filtered_items: Vec::new(),
             search_query: String::new(),
-            team_context_resolver,
         };
         model.refresh_cached_items(ctx);
         model
     }
 
-    /// Rebuilds the cached list of IDs from the current task/conversation set.
+    /// Rebuilds the cached list of IDs from the current conversation set.
     ///
-    /// The cache stores only `AgentConversationEntryId`s; per-item fields like
+    /// The cache stores only conversation IDs; per-item fields like
     /// status, title, and last-updated are read fresh at render time via
     /// `get_item_by_id`. Callers should therefore avoid invoking this on
     /// events that only mutate per-item state (e.g. `ConversationUpdated`);
     /// emitting `ConversationListViewModelEvent` is sufficient there.
     fn refresh_cached_items(&mut self, ctx: &mut ModelContext<Self>) {
         let model = self.conversations_model.as_ref(ctx);
-        let scope = (self.team_context_resolver)(ctx);
         self.cached_entry_ids = model
-            .get_entries(
-                &AgentManagementFilters {
-                    owners: OwnerFilter::PersonalOnly,
-                    status: StatusFilter::All,
-                    source: SourceFilter::All,
-                    created_on: CreatedOnFilter::All,
-                    creator: CreatorFilter::All,
-                    artifact: ArtifactFilter::All,
-                    environment: Default::default(),
-                    harness: Default::default(),
-                },
-                &scope,
-                ctx,
-            )
+            .get_entries(ctx)
             .into_iter()
             .filter(|entry| entry.capabilities.can_open)
             .map(|entry| entry.id)
@@ -182,14 +141,14 @@ impl ConversationListViewModel {
     /// Look up a normalized conversation entry by ID.
     pub fn get_item_by_id(
         &self,
-        id: &AgentConversationEntryId,
+        id: &AIConversationId,
         ctx: &AppContext,
     ) -> Option<AgentConversationEntry> {
         let model = self.conversations_model.as_ref(ctx);
         model.get_entry_by_id(id, ctx)
     }
 
-    pub fn current_ids(&self) -> impl Iterator<Item = &AgentConversationEntryId> {
+    pub fn current_ids(&self) -> impl Iterator<Item = &AIConversationId> {
         self.filtered_items.iter().map(|item| &item.id)
     }
 }

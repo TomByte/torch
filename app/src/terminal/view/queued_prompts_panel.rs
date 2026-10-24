@@ -330,12 +330,11 @@ impl QueuedPromptsPanelView {
         };
         let queue_model = QueuedQueryModel::as_ref(ctx);
         self.enter_sends_queued_prompt(ctx)
-            && !queue_model.is_dispatch_blocked(conv_id)
             && queue_model.editing_row(conv_id).is_none()
             && queue_model
                 .queue(conv_id)
                 .first()
-                .is_some_and(|row| !row.is_locked() && row.is_ready())
+                .is_some_and(|row| !row.is_locked())
     }
 
     /// Returns whether the reusable inline edit editor is currently holding focus for an active
@@ -404,20 +403,19 @@ impl QueuedPromptsPanelView {
             return;
         };
 
-        let rows: Vec<(QueuedQueryId, QueuedQueryOrigin, bool)> = QueuedQueryModel::as_ref(ctx)
+        let rows: Vec<(QueuedQueryId, QueuedQueryOrigin)> = QueuedQueryModel::as_ref(ctx)
             .queue(conv_id)
             .iter()
-            .map(|query| (query.id(), query.origin(), query.is_ready()))
+            .map(|query| (query.id(), query.origin()))
             .collect();
-        let cloud_setup_in_progress = QueuedQueryModel::as_ref(ctx).is_dispatch_blocked(conv_id)
-            || rows
-                .first()
-                .is_some_and(|(_, origin, _)| *origin == QueuedQueryOrigin::InitialCloudMode);
+        let cloud_setup_in_progress = rows
+            .first()
+            .is_some_and(|(_, origin)| *origin == QueuedQueryOrigin::InitialCloudMode);
         let lrc_subagent_in_progress = self
             .cli_subagent_controller
             .as_ref(ctx)
             .is_agent_in_control();
-        for (query_id, origin, ready) in &rows {
+        for (query_id, origin) in &rows {
             let Some(send_now_button) = self
                 .row_states
                 .get(query_id)
@@ -428,18 +426,14 @@ impl QueuedPromptsPanelView {
             let disabled_for_pending_lrc = *origin == QueuedQueryOrigin::PendingLrcAutoQueue;
             let disabled_for_cloud_setup =
                 *origin == QueuedQueryOrigin::InitialCloudMode || cloud_setup_in_progress;
-            let disabled = disabled_for_pending_lrc
-                || disabled_for_cloud_setup
-                || !self.can_send_prompt
-                || !ready;
+            let disabled =
+                disabled_for_pending_lrc || disabled_for_cloud_setup || !self.can_send_prompt;
             let tooltip = if disabled_for_pending_lrc {
                 SEND_NOW_PENDING_LRC_TOOLTIP
             } else if disabled_for_cloud_setup {
                 SEND_NOW_DURING_CLOUD_SETUP_TOOLTIP
             } else if !self.can_send_prompt {
                 SEND_NOW_AS_READ_ONLY_VIEWER_TOOLTIP
-            } else if !ready {
-                "Downloading attachments"
             } else if lrc_subagent_in_progress {
                 SEND_NOW_TO_FULL_TERMINAL_USE_AGENT_TOOLTIP
             } else {
@@ -508,7 +502,6 @@ impl QueuedPromptsPanelView {
                 conversation_id, ..
             }
             | QueuedQueryEvent::RowUnlocked { conversation_id }
-            | QueuedQueryEvent::DispatchStateChanged { conversation_id }
             | QueuedQueryEvent::Reordered { conversation_id }
             | QueuedQueryEvent::EditEntered {
                 conversation_id, ..
@@ -597,8 +590,7 @@ impl QueuedPromptsPanelView {
                 // A new row queued while the locked initial row is present must start disabled.
                 self.update_send_now_availability(ctx);
             }
-            QueuedQueryEvent::RowUnlocked { .. }
-            | QueuedQueryEvent::DispatchStateChanged { .. } => {
+            QueuedQueryEvent::RowUnlocked { .. } => {
                 self.update_send_now_availability(ctx);
             }
             QueuedQueryEvent::Reordered { .. }

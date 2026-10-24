@@ -31,16 +31,6 @@ pub enum BundledSkillActivation {
     RequiresFile(PathBuf),
 }
 
-pub(crate) const FACTORY_DEFERRED_REPOSITORIES_SKILL: &str = "factory-deferred-repositories";
-
-pub(crate) fn factory_deferred_repositories_skill_path() -> Option<PathBuf> {
-    torch_core::paths::bundled_resources_dir().map(|root| {
-        root.join("bundled")
-            .join("skills")
-            .join(FACTORY_DEFERRED_REPOSITORIES_SKILL)
-    })
-}
-
 impl BundledSkillActivation {
     pub fn is_enabled(&self, ctx: &AppContext) -> bool {
         match self {
@@ -98,17 +88,6 @@ impl BundledSkills {
         ctx: &AppContext,
     ) -> Option<&ParsedSkill> {
         self.for_path_origin(path_origin)?.active_skill(id, ctx)
-    }
-
-    /// Installs the catalog for a connected remote host, replacing any
-    /// previous catalog from an earlier connection.
-    pub fn insert_remote(&mut self, host_id: HostId, bundled_skill: BundledSkill) {
-        self.remote_by_host.insert(host_id, bundled_skill);
-    }
-
-    /// Removes all catalog state for a disconnected remote host.
-    pub fn remove_remote(&mut self, host_id: &HostId) {
-        self.remote_by_host.remove(host_id);
     }
 
     /// Returns the catalog for a connected remote host.
@@ -263,36 +242,6 @@ impl BundledSkill {
             .map(|definition| &definition.skill)
     }
 
-    /// Builds a catalog from pre-parsed definitions. Used for catalogs
-    /// received from a remote host's daemon, which parses and renders the
-    /// skills against its own filesystem.
-    pub(crate) fn from_definitions(
-        definitions: impl IntoIterator<Item = (String, ParsedSkill, BundledSkillActivation)>,
-    ) -> Self {
-        let definitions = definitions
-            .into_iter()
-            .map(|(id, skill, activation)| {
-                // MCP-gated skills carry their integration's brand icon, like
-                // the local figma catalog loaded from `mcp_skills/figma`.
-                let icon = match &activation {
-                    BundledSkillActivation::RequiresMcp(McpIntegration::Figma) => Icon::Figma,
-                    BundledSkillActivation::Always
-                    | BundledSkillActivation::RequiresFeature(_)
-                    | BundledSkillActivation::RequiresFile(_) => icon_for_bundled_skill(&id),
-                };
-                (
-                    id,
-                    BundledSkillDefinition {
-                        skill,
-                        activation,
-                        icon,
-                    },
-                )
-            })
-            .collect();
-        Self { definitions }
-    }
-
     /// Iterates the catalog's definitions as `(id, skill, activation)`.
     /// Used by the daemon to serialize its catalog for the
     /// aggregate remote Agent Mode context snapshot.
@@ -313,7 +262,6 @@ async fn load_bundled_skill_definitions(
     read_bundled_skills(&skills_dir, resources_dir)
         .await
         .into_iter()
-        .filter(|(id, _)| id != FACTORY_DEFERRED_REPOSITORIES_SKILL)
         .map(|(id, skill)| {
             let icon = icon_for_bundled_skill(&id);
             let activation = activation_for_bundled_skill(&id, resources_dir);

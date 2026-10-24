@@ -20,27 +20,9 @@ pub struct WarningBoxButtonConfig {
     pub on_click: Box<dyn Fn(&mut EventContext) + 'static>,
 }
 
-impl WarningBoxButtonConfig {
-    pub fn new(
-        label: impl Into<String>,
-        mouse_state: MouseStateHandle,
-        on_click: impl Fn(&mut EventContext) + 'static,
-    ) -> Self {
-        Self {
-            label: label.into(),
-            mouse_state,
-            on_click: Box::new(on_click),
-        }
-    }
-}
-pub enum WarningBoxTitle {
-    Text(String),
-    Formatted(FormattedTextInline),
-}
-
 pub struct WarningBoxConfig {
     pub icon: Icon,
-    pub title: WarningBoxTitle,
+    pub title: FormattedTextInline,
     pub description: Option<String>,
 
     /// Optional max width. If provided, the WarningBox will not exceed this width,
@@ -53,15 +35,7 @@ pub struct WarningBoxConfig {
 }
 
 impl WarningBoxConfig {
-    pub fn new(title: impl Into<String>) -> Self {
-        Self::from_title(WarningBoxTitle::Text(title.into()))
-    }
-
     pub fn formatted_title(title: FormattedTextInline) -> Self {
-        Self::from_title(WarningBoxTitle::Formatted(title))
-    }
-
-    fn from_title(title: WarningBoxTitle) -> Self {
         Self {
             icon: Icon::AlertTriangle,
             title,
@@ -70,26 +44,6 @@ impl WarningBoxConfig {
             margin_top: 8.,
             button: None,
         }
-    }
-
-    pub fn with_description(mut self, description: impl Into<String>) -> Self {
-        self.description = Some(description.into());
-        self
-    }
-
-    pub fn with_icon(mut self, icon: Icon) -> Self {
-        self.icon = icon;
-        self
-    }
-
-    pub fn with_width(mut self, width: f32) -> Self {
-        self.width = Some(width);
-        self
-    }
-
-    pub fn with_button(mut self, button: WarningBoxButtonConfig) -> Self {
-        self.button = Some(button);
-        self
     }
 }
 pub fn render_warning_box(config: WarningBoxConfig, appearance: &Appearance) -> Box<dyn Element> {
@@ -108,31 +62,21 @@ pub fn render_warning_box(config: WarningBoxConfig, appearance: &Appearance) -> 
 
     let background = theme.surface_2().blend(&warning_fill.with_opacity(15));
 
-    let title = match config.title {
-        WarningBoxTitle::Text(title) => Text::new(
-            title,
-            appearance.ui_font_family(),
-            appearance.ui_font_size(),
-        )
-        .with_color(text_color)
-        .soft_wrap(true)
-        .finish(),
-        WarningBoxTitle::Formatted(title) => FormattedTextElement::new(
-            FormattedText::new([FormattedTextLine::Line(title)]),
-            appearance.ui_font_size(),
-            appearance.ui_font_family(),
-            appearance.ui_font_family(),
-            text_color,
-            Default::default(),
-        )
-        .with_hyperlink_font_color(theme.accent().into())
-        .register_default_click_handlers_with_action_support(|hyperlink, _event, app| {
-            if let HyperlinkLens::Url(url) = hyperlink {
-                app.open_url(url);
-            }
-        })
-        .finish(),
-    };
+    let title = FormattedTextElement::new(
+        FormattedText::new([FormattedTextLine::Line(config.title)]),
+        appearance.ui_font_size(),
+        appearance.ui_font_family(),
+        appearance.ui_font_family(),
+        text_color,
+        Default::default(),
+    )
+    .with_hyperlink_font_color(theme.accent().into())
+    .register_default_click_handlers_with_action_support(|hyperlink, _event, app| {
+        if let HyperlinkLens::Url(url) = hyperlink {
+            app.open_url(url);
+        }
+    })
+    .finish();
 
     let mut text_col = Flex::column()
         .with_cross_axis_alignment(CrossAxisAlignment::Start)

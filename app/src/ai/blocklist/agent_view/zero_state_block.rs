@@ -28,7 +28,7 @@ use torchui::{
     ViewContext,
 };
 
-use crate::ai::active_agent_views_model::{ActiveAgentViewsModel, ConversationOrTaskId};
+use crate::ai::active_agent_views_model::ActiveAgentViewsModel;
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::blocklist::agent_view::{
     AgentViewController, AgentViewEntryOrigin, ENTER_AGENT_VIEW_NEW_CONVERSATION_KEYSTROKE,
@@ -276,8 +276,7 @@ impl AgentViewZeroStateBlock {
     ) -> Vec<ConversationNavigationData> {
         let open_conversation_ids = ActiveAgentViewsModel::as_ref(app)
             .get_all_open_conversation_ids(app)
-            .iter()
-            .filter_map(ConversationOrTaskId::conversation_id)
+            .into_iter()
             .collect::<std::collections::HashSet<_>>();
         ConversationNavigationData::all_conversations(app)
             .into_iter()

@@ -1,20 +1,17 @@
 //! Source-facing helpers that centralize the derivation of the agent-icon shape
 //! ([`IconWithStatusVariant`]) from the underlying state models. The invariant the
-//! helpers enforce: any single logical agent run renders as the same brand color, glyph,
-//! and ambient-vs-local treatment regardless of which surface is rendering it (vertical
-//! tabs, pane header, conversation list, notifications mailbox).
+//! helpers enforce: any single logical agent run renders as the same brand color and glyph
+//! regardless of which surface is rendering it (vertical tabs, pane header, conversation list,
+//! notifications mailbox).
 //!
 //! Each helper is a thin adapter over one data source. Surfaces call the helper for
 //! whichever source they hold and feed the resulting variant into
 //! [`render_icon_with_status`]. The pure inner functions in this module are exercised
-//! directly by the cross-surface consistency tests in `agent_icon_tests.rs`.
-use torch_cli::agent::Harness;
+//! directly by the tests in `agent_icon_tests.rs`.
 use torchui::{AppContext, SingletonEntity};
 
 use crate::agent_status::ConversationStatus;
-use crate::ai::agent_conversations_model::{
-    AgentConversationEntry, AgentConversationsModel, AgentRunDisplayStatus,
-};
+use crate::ai::agent_conversations_model::AgentConversationEntry;
 use crate::terminal::CLIAgent;
 use crate::terminal::cli_agent_sessions::CLIAgentSessionsModel;
 use crate::terminal::view::TerminalView;
@@ -26,59 +23,21 @@ use crate::ui_components::icon_with_status::IconWithStatusVariant;
 /// Resolution order:
 /// 1. A [`CLIAgentSessionsModel`] session with a known agent wins. Plugin-backed sessions
 ///    surface rich status; command-detected sessions don't.
-/// 2. A task-backed run uses task status and harness so the terminal chrome and the
-///    matching conversation list card stay in lockstep.
-/// 3. Live ambient pre-dispatch or a selected local conversation falls through to the
-///    no-task waterfall.
-/// 4. Everything else returns `None` so the caller renders a plain-terminal indicator.
+/// 2. A selected local conversation renders the Torch agent variant.
+/// 3. Everything else returns `None` so the caller renders a plain-terminal indicator.
 pub(crate) fn terminal_view_agent_icon_variant(
     terminal_view: &TerminalView,
     app: &AppContext,
 ) -> Option<IconWithStatusVariant> {
     let cli_agent_session = CLIAgentSessionsModel::as_ref(app).session(terminal_view.id());
 
-    // Ambient task id from a restored cloud transcript's server metadata. This is a genuine
-    // cloud signal (unlike an orchestrator task id on a `User` share's `source_task_id`).
-    let server_ambient_task_id = terminal_view
-        .selected_conversation_server_metadata(app)
-        .and_then(|m| m.ambient_agent_task_id);
-
-    // Used only to look up task data for status; the cloud-vs-local treatment is decided by
-    // `is_cloud` below.
-    let task_data = server_ambient_task_id
-        .and_then(|task_id| AgentConversationsModel::as_ref(app).get_task_data(&task_id));
-
-    // Local orchestration children are dispatched as server tasks (so they carry an ambient
-    // task id) but execute on the user's machine, so they must not get the cloud treatment.
-    let is_local_child = terminal_view.selected_conversation_is_local_child(app);
-
-    // Whether this pane is a restored cloud conversation (server metadata) for icon purposes.
-    // Local orchestration children always keep the local treatment.
-    let is_cloud = server_ambient_task_id.is_some() && !is_local_child;
-
-    // Defer to the card helper when we have task data and no CLI session takes precedence.
-    if cli_agent_session.is_none()
-        && let Some(task) = task_data.as_ref()
-    {
-        let status = AgentRunDisplayStatus::from_task(task, app).to_conversation_status();
-        let harness = task
-            .agent_config_snapshot
-            .as_ref()
-            .and_then(|config| config.harness.as_ref())
-            .map(|harness| harness.harness_type)
-            .unwrap_or(Harness::Oz);
-        return Some(agent_icon_variant_for_run(harness, status, is_cloud));
-    }
-
     let inputs = TerminalIconInputs {
-        is_ambient: is_cloud,
         cli_session: cli_agent_session.map(|session| CLISessionInputs {
             agent: session.agent,
             has_listener: session.listener.is_some(),
             status: session.status.to_conversation_status(),
             supports_rich_status: session.supports_rich_status(),
         }),
-        selected_third_party_cli_agent: None,
         selected_conversation_status: terminal_view.selected_conversation_status_for_display(app),
         has_selected_conversation: terminal_view
             .selected_conversation_display_title(app)
@@ -90,25 +49,19 @@ pub(crate) fn terminal_view_agent_icon_variant(
 pub(crate) fn agent_conversation_entry_icon_variant(
     entry: &AgentConversationEntry,
 ) -> IconWithStatusVariant {
-    let status = entry.display.status.to_conversation_status();
-    agent_icon_variant_for_run(
-        entry.display.harness.unwrap_or(Harness::Oz),
-        status,
-        entry.is_cloud_agent_run(),
-    )
+    IconWithStatusVariant::OzAgent {
+        status: Some(entry.display.status.to_conversation_status()),
+        is_ambient: false,
+    }
 }
 
 /// Primitive inputs to the terminal-view waterfall, gathered once from the live
 /// [`TerminalView`] / [`AppContext`].
 struct TerminalIconInputs {
-    is_ambient: bool,
     cli_session: Option<CLISessionInputs>,
-    /// Third-party CLI agent for a live ambient run before task data is available (e.g.
-    /// Claude pre-dispatch). `None` otherwise; task-derived harnesses are handled upstream.
-    selected_third_party_cli_agent: Option<CLIAgent>,
     /// The conversation status that the terminal view would surface in its status-icon slot.
     selected_conversation_status: Option<ConversationStatus>,
-    /// Whether the terminal view currently has a selected conversation (ambient or local).
+    /// Whether the terminal view currently has a selected conversation.
     has_selected_conversation: bool,
 }
 
@@ -141,58 +94,19 @@ fn agent_icon_variant_from_terminal_inputs(
         return Some(IconWithStatusVariant::CLIAgent {
             agent: session.agent,
             status,
-            is_ambient: inputs.is_ambient,
+            is_ambient: false,
         });
     }
 
-    // 2. Live ambient run with a third-party harness selected, before task data is
-    //    available (e.g. Claude pre-dispatch). `Unknown` is filtered so an unrecognized
-    //    harness doesn't render as an unbranded gray circle.
-    if inputs.is_ambient
-        && let Some(agent) = inputs
-            .selected_third_party_cli_agent
-            .filter(|agent| !matches!(agent, CLIAgent::Unknown))
-    {
-        return Some(IconWithStatusVariant::CLIAgent {
-            agent,
-            status: inputs.selected_conversation_status.clone(),
-            is_ambient: true,
-        });
-    }
-
-    // 3. Selected conversation OR ambient (Oz) terminal: Oz agent variant.
-    if inputs.has_selected_conversation || inputs.is_ambient {
+    // 2. Selected conversation: Torch agent variant.
+    if inputs.has_selected_conversation {
         return Some(IconWithStatusVariant::OzAgent {
             status: inputs.selected_conversation_status.clone(),
-            is_ambient: inputs.is_ambient,
+            is_ambient: false,
         });
     }
 
     None
-}
-
-/// Pure run-card logic: maps a [`Harness`], status, and ambient flag into an
-/// [`IconWithStatusVariant`]. Falls back to the Oz variant for [`Harness::Oz`] and
-/// [`Harness::Unknown`], the latter so a future-server harness this client doesn't
-/// recognize doesn't render an unbranded gray circle.
-pub(crate) fn agent_icon_variant_for_run(
-    harness: Harness,
-    status: ConversationStatus,
-    is_ambient: bool,
-) -> IconWithStatusVariant {
-    let cli_agent =
-        CLIAgent::from_harness(harness).filter(|agent| !matches!(agent, CLIAgent::Unknown));
-    match cli_agent {
-        Some(agent) => IconWithStatusVariant::CLIAgent {
-            agent,
-            status: Some(status),
-            is_ambient,
-        },
-        None => IconWithStatusVariant::OzAgent {
-            status: Some(status),
-            is_ambient,
-        },
-    }
 }
 
 #[cfg(test)]

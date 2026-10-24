@@ -159,12 +159,6 @@ impl TemplatableMCPServerManager {
         }
     }
 
-    pub fn get_installed_templatable_servers(
-        &self,
-    ) -> &HashMap<Uuid, TemplatableMCPServerInstallation> {
-        &self.locally_installed_servers
-    }
-
     pub fn get_installed_server(
         &self,
         installation_uuid: &Uuid,
@@ -253,16 +247,6 @@ impl TemplatableMCPServerManager {
                 let _ = tx.send(result.clone());
             }
         }
-    }
-
-    pub fn get_server_state(&self, installation_uuid: Uuid) -> Option<MCPServerState> {
-        self.server_states.get(&installation_uuid).copied()
-    }
-
-    pub fn get_server_error_message(&self, installation_uuid: Uuid) -> Option<&str> {
-        self.server_error_messages
-            .get(&installation_uuid)
-            .map(|s| s.as_str())
     }
 
     pub fn resources(&self) -> impl Iterator<Item = &rmcp::model::Resource> {
@@ -383,7 +367,6 @@ impl TemplatableMCPServerManager {
 pub enum TemplatableMCPServerManagerEvent {
     StateChanged {
         uuid: Uuid,
-        state: MCPServerState,
     },
     // TODO(aeybel) Right now most of the app doesn't use these events to communicate
     // We should change them so this manager is source of truth and all communication goes through here

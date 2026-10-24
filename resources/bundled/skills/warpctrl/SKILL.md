@@ -121,7 +121,6 @@ These are frequently used commands that are safe to invoke directly. For less co
 {{warpctrl_binary_name}} surface left-panel toggle
 {{warpctrl_binary_name}} surface right-panel toggle
 {{warpctrl_binary_name}} surface vertical-tabs open
-{{warpctrl_binary_name}} surface agent-management open
 
 # Open a file in Torch
 {{warpctrl_binary_name}} file open ./src/main.rs --line 42

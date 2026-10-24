@@ -19,15 +19,15 @@ use super::graphql::GraphQLError;
 use super::ids::{ClientId, HashableId, ObjectUid, ServerId, SyncId, ToServerId};
 use super::server_api::auth::UserAuthenticationError;
 use super::server_api::object::ObjectClient;
-use crate::ai::ambient_agents::scheduled::CloudScheduledAmbientAgentModel;
-use crate::ai::cloud_agent_config::CloudAgentConfigModel;
-use crate::ai::cloud_environments::CloudAmbientAgentEnvironmentModel;
 use crate::ai::execution_profiles::CloudAIExecutionProfileModel;
 use crate::ai::facts::CloudAIFactModel;
 use crate::ai::mcp::CloudMCPServerModel;
 use crate::ai::mcp::templatable::CloudTemplatableMCPServerModel;
 use crate::cloud_object::model::actions::{
     ObjectAction, ObjectActionHistory, ObjectActionSubtype, ObjectActionType,
+};
+use crate::cloud_object::model::cloud_agent_objects::{
+    CloudAgentConfigModel, CloudAmbientAgentEnvironmentModel, CloudScheduledAmbientAgentModel,
 };
 use crate::cloud_object::model::generic_string_model::GenericStringObjectId;
 use crate::cloud_object::{

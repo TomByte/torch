@@ -117,7 +117,6 @@ log.workspace = true
 log-panics = { version = "2.1.0", features = ["with-backtrace"] }
 lsp.workspace = true
 torch_logging.workspace = true
-torch_harness_usage.workspace = true
 lz4_flex = "0.11"
 markdown_parser.workspace = true
 mcp.workspace = true
@@ -279,7 +278,6 @@ wgpu.workspace = true
 app-installation-detection.workspace = true
 async-io.workspace = true
 axum.workspace = true
-build_cache.workspace = true
 cloud_object_persistence.workspace = true
 comfy-table = "7.1.4"
 inquire = "0.9.1"
@@ -539,7 +537,6 @@ default = [
     "artifact_command",
     "conversation_api",
     "cloud_environments",
-    "create_environment_slash_command",
     "code_review_find",
     "async_find",
     "mcp_grouped_server_context",
@@ -790,7 +787,6 @@ test-util = [
 terminal_lifecycle_recovery = []
 # Feature enabled only when app is compiled for integration tests.
 integration_tests = [
-    "torch_cli/integration_tests",
     "torchui/integration_tests",
     "torchui/test-util",
     "torch_core/integration_tests",
@@ -877,7 +873,6 @@ cloud_environments = []
 cloud_runners = []
 cloud_agent_runners = []
 cloud_agent_execution_config = []
-create_environment_slash_command = []
 summarize_conversation_command = []
 mcp_grouped_server_context = []
 web_search_ui = []

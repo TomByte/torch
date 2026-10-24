@@ -7,7 +7,6 @@ use torchui::{Entity, EntityId, ModelContext, SingletonEntity};
 
 use super::{ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessActionInput};
 use crate::ai::agent::{AIAgentActionId, AIAgentActionType};
-use crate::ai::ambient_agents::AmbientAgentTaskId;
 use crate::ai::blocklist::BlocklistAIHistoryModel;
 use crate::features::FeatureFlag;
 use crate::send_telemetry_from_ctx;
@@ -16,7 +15,6 @@ use crate::workspaces::user_workspaces::TeamContext;
 
 pub struct RequestComputerUseExecutor {
     terminal_view_id: EntityId,
-    ambient_agent_task_id: Option<AmbientAgentTaskId>,
     /// Actions that were determined to be auto-executed in should_autoexecute().
     /// Used to determine is_autoexecuted when emitting telemetry in execute().
     autoexecuted_actions: HashSet<AIAgentActionId>,
@@ -26,13 +24,8 @@ impl RequestComputerUseExecutor {
     pub fn new(terminal_view_id: EntityId) -> Self {
         Self {
             terminal_view_id,
-            ambient_agent_task_id: None,
             autoexecuted_actions: HashSet::new(),
         }
-    }
-
-    pub fn set_ambient_agent_task_id(&mut self, id: Option<AmbientAgentTaskId>) {
-        self.ambient_agent_task_id = id;
     }
 
     pub(super) fn should_autoexecute(
@@ -83,7 +76,6 @@ impl RequestComputerUseExecutor {
                 client_conversation_id: conversation_id,
                 server_conversation_id,
                 is_autoexecuted,
-                ambient_agent_task_id: self.ambient_agent_task_id,
             },
             ctx
         );

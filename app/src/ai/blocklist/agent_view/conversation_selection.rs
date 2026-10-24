@@ -7,8 +7,7 @@ use super::{
 use crate::ai::active_agent_views_model::ActiveAgentViewsModel;
 use crate::ai::agent::conversation::{AIConversationAutoexecuteMode, AIConversationId};
 use crate::ai::agent_conversations_model::{
-    AgentConversationEntry, AgentConversationEntryId, AgentConversationListEntryState,
-    AgentConversationListPolicy,
+    AgentConversationEntry, AgentConversationListEntryState, AgentConversationListPolicy,
 };
 use crate::ai::blocklist::conversation_selection::{
     ConversationSelection, ConversationSelectionEvent,
@@ -69,8 +68,8 @@ impl AgentViewConversationSelection {
 
 /// Applies GUI list-state precedence without consulting frontend models.
 fn classify_gui_list_entry(
-    selected_entry_id: Option<AgentConversationEntryId>,
-    entry_id: AgentConversationEntryId,
+    selected_entry_id: Option<AIConversationId>,
+    entry_id: AIConversationId,
     open_terminal_view_id: Option<EntityId>,
     terminal_surface_id: EntityId,
     has_open_action: impl FnOnce() -> bool,
@@ -95,11 +94,9 @@ impl AgentConversationListPolicy for AgentViewConversationSelection {
         entry: &AgentConversationEntry,
         app: &AppContext,
     ) -> AgentConversationListEntryState {
-        let selected_entry_id = self
-            .selected_conversation_id(app)
-            .map(AgentConversationEntryId::Conversation);
+        let selected_entry_id = self.selected_conversation_id(app);
         let open_terminal_view_id =
-            ActiveAgentViewsModel::as_ref(app).get_terminal_view_id_for_entry(entry, app);
+            ActiveAgentViewsModel::as_ref(app).get_terminal_view_id_for_conversation(entry.id, app);
         classify_gui_list_entry(
             selected_entry_id,
             entry.id,

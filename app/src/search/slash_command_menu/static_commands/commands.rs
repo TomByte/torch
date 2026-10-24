@@ -138,34 +138,6 @@ pub const STATUS: StaticCommand = StaticCommand {
     argument: None,
 };
 
-pub static CREATE_ENVIRONMENT: LazyLock<StaticCommand> = LazyLock::new(|| StaticCommand {
-    name: "/create-environment",
-    description: "Create an Oz environment (Docker image + repos) via guided setup",
-    kind: SlashCommandKind::CreateEnvironment,
-    supported_surfaces: SlashCommandSurfaces::GuiOnly {
-        icon_path: "bundled/svg/dataflow.svg",
-    },
-    availability: Availability::AI_ENABLED,
-    auto_enter_ai_mode: false,
-    argument: Some(
-        Argument::optional()
-            .with_hint_text("<optional repo paths or GitHub URLs>")
-            .with_execute_on_selection(),
-    ),
-});
-
-pub const CREATE_DOCKER_SANDBOX: StaticCommand = StaticCommand {
-    name: "/docker-sandbox",
-    description: "Create a new docker sandbox terminal session",
-    kind: SlashCommandKind::CreateDockerSandbox,
-    supported_surfaces: SlashCommandSurfaces::GuiOnly {
-        icon_path: "bundled/svg/docker.svg",
-    },
-    availability: Availability::LOCAL.union(Availability::AI_ENABLED),
-    auto_enter_ai_mode: false,
-    argument: None,
-};
-
 pub static CREATE_NEW_PROJECT: LazyLock<StaticCommand> = LazyLock::new(|| StaticCommand {
     name: "/create-new-project",
     description: "Have Oz walk you through creating a new coding project",
@@ -473,20 +445,6 @@ pub static PLAN: LazyLock<StaticCommand> = LazyLock::new(|| StaticCommand {
     argument: Some(Argument::optional().with_hint_text("<describe your task>")),
 });
 
-pub const ORCHESTRATE_NAME: &str = "/orchestrate";
-
-pub static ORCHESTRATE: LazyLock<StaticCommand> = LazyLock::new(|| StaticCommand {
-    name: ORCHESTRATE_NAME,
-    description: "Break a task into subtasks and run them in parallel with multiple agents",
-    kind: SlashCommandKind::Orchestrate,
-    supported_surfaces: SlashCommandSurfaces::GuiAndTui {
-        icon_path: "bundled/svg/warp-3.svg",
-    },
-    availability: Availability::LOCAL | Availability::AI_ENABLED,
-    auto_enter_ai_mode: true,
-    argument: Some(Argument::optional().with_hint_text("<describe your task>")),
-});
-
 /// If `query` starts with the given command `name` followed by a space,
 /// returns the remainder of the query. Otherwise returns `None`.
 pub fn strip_command_prefix(query: &str, name: &str) -> Option<String> {
@@ -779,10 +737,6 @@ fn all_commands_for_all_surfaces() -> Vec<StaticCommand> {
         VOICE,
     ];
 
-    if FeatureFlag::LocalDockerSandbox.is_enabled() {
-        commands.push(CREATE_DOCKER_SANDBOX);
-    }
-
     if FeatureFlag::Changelog.is_enabled() {
         commands.push(CHANGELOG);
     }
@@ -792,10 +746,6 @@ fn all_commands_for_all_surfaces() -> Vec<StaticCommand> {
     }
 
     commands.push(OPEN_CODE_REVIEW);
-
-    if FeatureFlag::CreateEnvironmentSlashCommand.is_enabled() {
-        commands.push(CREATE_ENVIRONMENT.clone());
-    }
 
     if FeatureFlag::CreateProjectFlow.is_enabled() {
         commands.push(CREATE_NEW_PROJECT.clone());
@@ -839,8 +789,6 @@ fn all_commands_for_all_surfaces() -> Vec<StaticCommand> {
     if FeatureFlag::InlineRepoMenu.is_enabled() && !cfg!(target_family = "wasm") {
         commands.push(OPEN_REPO);
     }
-
-    commands.push(ORCHESTRATE.clone());
 
     if FeatureFlag::SettingsFile.is_enabled() && cfg!(feature = "local_fs") {
         commands.push(OPEN_SETTINGS_FILE);

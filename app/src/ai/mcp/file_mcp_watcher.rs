@@ -133,15 +133,6 @@ struct InFlightParse {
     abort_handle: AbortHandle,
 }
 
-/// A batch of config sources whose first parse a consumer waits on before proceeding.
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub enum PendingScan {
-    /// Every provider config file in a cloud-environment repo, keyed by repo root.
-    CloudEnvRepo(PathBuf),
-    /// Every global (home-directory and Torch-managed) config source read at startup.
-    InitialGlobal,
-}
-
 /// Model that watches the filesystem for file-based MCP config changes and emits
 /// [`FileMCPWatcherEvent`]s.
 pub struct FileMCPWatcher {
@@ -161,10 +152,6 @@ pub struct FileMCPWatcher {
     /// Set of project repository root paths we are already watching for file-based MCP configs.
     /// Used purely for deduplication — we never tear down project watchers during the session.
     project_repo_watchers: HashSet<PathBuf>,
-    /// Config sources each in-progress scan still owes a first result for. A source is settled
-    /// by its current parse completing or by an explicit removal; once a scan's set drains, its
-    /// entry is removed and [`FileMCPWatcherEvent::ScanComplete`] is emitted.
-    pending_scans: HashMap<PendingScan, HashSet<(PathBuf, MCPProvider)>>,
 }
 
 impl FileMCPWatcher {
@@ -194,14 +181,6 @@ impl FileMCPWatcher {
                 let DetectedRepositoriesEvent::DetectedGitRepo { repository, source } = event;
                 if should_watch_repository(*source) {
                     let repo_path = repository.as_ref(ctx).root_dir().to_local_path_lossy();
-                    if matches!(source, RepoDetectionSource::CloudEnvironmentPrep) {
-                        me.pending_scans.insert(
-                            PendingScan::CloudEnvRepo(repo_path.clone()),
-                            providers_in_scope(repo_path.clone(), repo_path.clone())
-                                .map(|(provider, config_path)| (config_path, provider))
-                                .collect(),
-                        );
-                    }
                     me.register_repo_for_file_mcp_watching(repo_path, ctx, file_mcp_tx.clone());
                 }
             }
@@ -241,17 +220,10 @@ impl FileMCPWatcher {
             next_parse_generation: 0,
             home_provider_watchers,
             project_repo_watchers: HashSet::new(),
-            pending_scans: HashMap::from([(
-                PendingScan::InitialGlobal,
-                global_configs
-                    .iter()
-                    .map(|(config_path, _, provider)| (config_path.clone(), *provider))
-                    .collect(),
-            )]),
         };
-        // Every global source is read explicitly so the initial-global scan settles even when a
-        // provider's home subdir watcher never registers. A subdir watcher's own scan of the
-        // same file simply supersedes the explicit parse.
+        // Every global source is read explicitly even when a provider's home subdir watcher never
+        // registers. A subdir watcher's own scan of the same file simply supersedes the explicit
+        // parse.
         for (config_path, root_path, provider) in global_configs {
             watcher.update_servers_from_config_file(&config_path, root_path, provider, ctx);
         }
@@ -266,7 +238,6 @@ impl FileMCPWatcher {
             next_parse_generation: 0,
             home_provider_watchers: HashMap::new(),
             project_repo_watchers: HashSet::new(),
-            pending_scans: HashMap::new(),
         }
     }
 
@@ -569,8 +540,7 @@ impl FileMCPWatcher {
         }
     }
 
-    /// Drops any in-flight parse for the source, reports it removed, and settles it for any
-    /// pending scan still waiting on it.
+    /// Drops any in-flight parse for the source and reports it removed.
     fn remove_config(
         &mut self,
         config_path: PathBuf,
@@ -584,29 +554,6 @@ impl FileMCPWatcher {
             root_path,
             provider,
         });
-        self.settle_pending_source(&config_path, provider, ctx);
-    }
-
-    /// Marks the source as no longer owed by any pending scan, emitting
-    /// [`FileMCPWatcherEvent::ScanComplete`] for each scan this drains.
-    fn settle_pending_source(
-        &mut self,
-        config_path: &Path,
-        provider: MCPProvider,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        let source = (config_path.to_path_buf(), provider);
-        let mut completed = Vec::new();
-        self.pending_scans.retain(|scan, sources| {
-            sources.remove(&source);
-            if sources.is_empty() {
-                completed.push(scan.clone());
-            }
-            !sources.is_empty()
-        });
-        for scan in completed {
-            ctx.emit(FileMCPWatcherEvent::ScanComplete(scan));
-        }
     }
 
     fn abort_config_parse(&mut self, config_path: &Path, provider: MCPProvider) {
@@ -670,8 +617,7 @@ impl FileMCPWatcher {
                 }
 
                 let (config_path, provider) = callback_key;
-                emit_parse_outcome(outcome, config_path.clone(), root_path, provider, ctx);
-                me.settle_pending_source(&config_path, provider, ctx);
+                emit_parse_outcome(outcome, config_path, root_path, provider, ctx);
             },
         );
         self.in_flight_parses.insert(
@@ -686,7 +632,7 @@ impl FileMCPWatcher {
 
 fn should_watch_repository(source: RepoDetectionSource) -> bool {
     match source {
-        RepoDetectionSource::TerminalNavigation | RepoDetectionSource::CloudEnvironmentPrep => true,
+        RepoDetectionSource::TerminalNavigation => true,
         RepoDetectionSource::ProjectRulesIndexing
         | RepoDetectionSource::CodeReviewInitialization => false,
     }
@@ -936,9 +882,6 @@ pub enum FileMCPWatcherEvent {
     },
     /// A config could not be read or parsed. Consumers should preserve the last-known-good state.
     ConfigError { diagnostic: FileMCPConfigDiagnostic },
-    /// Every source owed by the scan has been parsed or removed. Emitted after the events
-    /// carrying those sources' results.
-    ScanComplete(PendingScan),
 }
 
 impl Entity for FileMCPWatcher {

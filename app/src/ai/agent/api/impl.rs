@@ -8,7 +8,6 @@ use warp_multi_agent_api as api;
 use super::convert_to::convert_input;
 use super::{ConvertToAPITypeError, RequestParams, ResponseStream};
 use crate::ai::agent::redaction;
-use crate::ai::blocklist::video_recording_enabled;
 use crate::server::server_api::{AIApiError, ServerApi};
 use crate::server::team_scope::RequestTeamScope;
 use crate::terminal::model::session::SessionType;
@@ -88,7 +87,6 @@ pub async fn generate_multi_agent_output(
             should_preserve_file_content_in_history: true,
             supports_todos_ui: true,
             supports_linked_code_blocks: FeatureFlag::LinkedCodeBlocks.is_enabled(),
-            supports_started_child_task_message: true,
             supports_suggest_prompt: true,
             supports_read_image_files: FeatureFlag::ReadImageFiles.is_enabled(),
             supports_reasoning_message: true,
@@ -105,19 +103,14 @@ pub async fn generate_multi_agent_output(
                 FeatureFlag::SummarizationViaMessageReplacement.is_enabled(),
             supports_bundled_skills: FeatureFlag::BundledSkills.is_enabled(),
             supports_research_agent: params.research_agent_enabled,
-            supports_orchestration_v2: supports_orchestration_v2(params.orchestration_enabled),
-            supports_orchestration_runners: params.orchestration_enabled
-                && FeatureFlag::CloudAgentRunners.is_enabled(),
             supports_background_computer_use: FeatureFlag::BackgroundComputerUse.is_enabled()
                 && computer_use::background_supported(),
             supports_stored_screenshots: FeatureFlag::StoredScreenshots.is_enabled(),
-            // Unconditional: echoed agent messages are always confirmed delivered, so injection
-            // cannot produce a duplicate turn.
-            supports_server_side_agent_message_injection: true,
             supports_chatgpt_subscription_error: true,
             supports_chatgpt_subscription_copy_text: true,
             custom_model_providers: params.custom_model_providers,
             custom_model_routers: params.custom_model_routers,
+            ..Default::default()
         }),
         metadata: Some(api::request::Metadata {
             logging: logging_metadata,
@@ -125,10 +118,6 @@ pub async fn generate_multi_agent_output(
                 .conversation_token
                 .as_ref()
                 .map(|token| token.as_str().to_string())
-                .unwrap_or_default(),
-            ambient_agent_task_id: params
-                .ambient_agent_task_id
-                .map(|id| id.to_string())
                 .unwrap_or_default(),
             forked_from_conversation_id: if params.conversation_token.is_none() {
                 // We only include this param on our initial request to the server
@@ -140,8 +129,7 @@ pub async fn generate_multi_agent_output(
             } else {
                 String::new()
             },
-            parent_agent_id: params.parent_agent_id.unwrap_or_default(),
-            agent_name: params.agent_name.unwrap_or_default(),
+            ..Default::default()
         }),
         existing_suggestions: params
             .existing_suggestions
@@ -218,10 +206,6 @@ fn api_keys_with_warp_credit_fallback_setting(
     }
 }
 
-fn supports_orchestration_v2(orchestration_enabled: bool) -> bool {
-    orchestration_enabled
-}
-
 fn get_supported_tools(params: &RequestParams) -> Vec<api::ToolType> {
     let mut supported_tools = vec![
         api::ToolType::Grep,
@@ -253,10 +237,6 @@ fn get_supported_tools(params: &RequestParams) -> Vec<api::ToolType> {
                 api::ToolType::ApplyFileDiffs,
                 api::ToolType::SearchCodebase,
             ]);
-
-            if FeatureFlag::ArtifactCommand.is_enabled() {
-                supported_tools.push(api::ToolType::UploadFileArtifact);
-            }
         }
         Some(SessionType::WarpifiedRemote { host_id: Some(_) }) => {
             // Remote session with a known host — enable tools that route
@@ -276,23 +256,12 @@ fn get_supported_tools(params: &RequestParams) -> Vec<api::ToolType> {
     if FeatureFlag::AgentModeComputerUse.is_enabled() && params.computer_use_enabled {
         supported_tools.extend(&[api::ToolType::UseComputer]);
         supported_tools.extend(&[api::ToolType::RequestComputerUse]);
-
-        if video_recording_enabled() {
-            supported_tools.extend(&[api::ToolType::StartRecording, api::ToolType::StopRecording]);
-        }
     }
 
     supported_tools.push(api::ToolType::InsertReviewComments);
 
     if FeatureFlag::ListSkills.is_enabled() {
         supported_tools.push(api::ToolType::ReadSkill);
-    }
-
-    if params.orchestration_enabled {
-        supported_tools.extend([api::ToolType::RunAgents, api::ToolType::SendMessageToAgent]);
-        // Declare client-handled wait_for_events so the server doesn't
-        // fall back to the legacy server-handled form.
-        supported_tools.push(api::ToolType::WaitForEvents);
     }
 
     if FeatureFlag::AskUserQuestion.is_enabled() && params.ask_user_question_enabled {

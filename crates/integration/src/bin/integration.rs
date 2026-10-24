@@ -125,7 +125,6 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
     // Add new tests here
     register_test!(test_single_command);
     register_test!(test_add_and_close_session);
-    register_test!(test_child_pill_after_reopening_closed_parent_tab);
     register_test!(test_add_many_sessions);
     register_test!(test_ctrl_tab_session_switching);
     register_test!(test_ctrl_d_eot);
@@ -448,7 +447,6 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
     register_test!(test_selection_last_to_ai_semantic);
     register_test!(test_selection_last_to_ai_lines);
     register_test!(test_restored_ai_block_renders_mermaid_and_local_images);
-    register_test!(test_cancelled_run_agents_card_renders_cancelled_state);
 
     register_test!(test_agent_mode_pane_minimum_size);
     register_test!(test_git_prompt_chips);

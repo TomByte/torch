@@ -2301,33 +2301,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "build_cache"
-version = "0.1.0"
-dependencies = [
- "async-io",
- "chrono",
- "command",
- "futures",
- "futures-lite 1.13.0",
- "hex",
- "instant",
- "is_executable",
- "itertools 0.14.0",
- "log",
- "nix 0.26.4",
- "serde",
- "serde_json",
- "sha2 0.10.9",
- "tempfile",
- "thiserror 2.0.17",
- "tokio",
- "torch_core",
- "torch_errors",
- "tracing",
- "walkdir",
-]
-
-[[package]]
 name = "built"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -13477,7 +13450,6 @@ dependencies = [
  "block",
  "blocking",
  "bounded-vec-deque",
- "build_cache",
  "byte-unit",
  "bytecount",
  "bytemuck",
@@ -13678,7 +13650,6 @@ dependencies = [
  "torch_errors",
  "torch_files",
  "torch_graphql",
- "torch_harness_usage",
  "torch_isolation_platform",
  "torch_logging",
  "torch_managed_secrets",
@@ -13758,20 +13729,15 @@ dependencies = [
  "anyhow",
  "cfg-if",
  "cfg_aliases 0.2.1",
- "chrono",
  "clap",
  "clap_complete",
  "color-print",
- "humantime",
- "jaq-all",
  "local_control",
  "serde",
  "serde_json",
- "serial_test",
  "torch_core",
  "torch_util",
  "url",
- "uuid",
  "windows 0.62.2",
 ]
 
@@ -13996,15 +13962,6 @@ dependencies = [
  "anyhow",
  "cynic",
  "cynic-codegen",
-]
-
-[[package]]
-name = "torch_harness_usage"
-version = "0.0.0"
-dependencies = [
- "chrono",
- "serde",
- "serde_json",
 ]
 
 [[package]]

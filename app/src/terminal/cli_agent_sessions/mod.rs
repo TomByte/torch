@@ -182,19 +182,6 @@ impl CLIAgentSession {
         self.received_rich_notification
     }
 
-    /// Whether the session is blocked on a `NeedsInput` notification, so nothing should be
-    /// typed into its terminal.
-    #[cfg_attr(target_family = "wasm", allow(dead_code))]
-    pub fn is_blocked_on_needs_input(&self) -> bool {
-        matches!(
-            self.status,
-            CLIAgentSessionStatus::Blocked {
-                source: BlockedSource::NeedsInput,
-                ..
-            }
-        )
-    }
-
     /// Clears state populated by `PermissionRequest`. Called whenever the
     /// session leaves the permission flow (the user replied, a blocking tool
     /// completed, a new prompt is submitted, or the session ends successfully)

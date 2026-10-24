@@ -14,7 +14,6 @@ use torch_util::local_or_remote_path::LocalOrRemotePath;
 use torchui::fonts::FamilyId;
 use torchui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
 
-use crate::ai::agent_conversations_model::{AgentConversationsModel, AgentConversationsModelEvent};
 use crate::ai::blocklist::block::cli_controller::{CLISubagentController, CLISubagentEvent};
 use crate::ai::blocklist::{BlocklistAIHistoryEvent, BlocklistAIHistoryModel};
 use crate::ai::skills::{SkillDescriptor, SkillManager};
@@ -63,7 +62,6 @@ fn split_command_and_argument(buffer: &str) -> (&str, Option<&str>) {
 /// These do not depend on GUI-only concepts such as cloud mode or the agent view;
 /// they are computed once per recompute and shared by both surfaces.
 pub struct CommonCommandGates {
-    is_orchestration_enabled: bool,
     is_cli_agent_input: bool,
 }
 
@@ -139,20 +137,6 @@ pub(super) fn subscribe_to_shared_dependencies<T>(
                 event,
                 BlocklistAIHistoryEvent::SetActiveConversation { .. }
                     | BlocklistAIHistoryEvent::ClearedActiveConversation { .. }
-            ) {
-                recompute_active_commands(me, ctx);
-            }
-        },
-    );
-    // Recompute when task data is updated so commands gated on a conversation's task
-    // harness (e.g. /continue-locally) appear once the task fetch resolves.
-    ctx.subscribe_to_model(
-        &AgentConversationsModel::handle(ctx),
-        move |me, _, event, ctx| {
-            if matches!(
-                event,
-                AgentConversationsModelEvent::TasksUpdated
-                    | AgentConversationsModelEvent::NewTasksReceived
             ) {
                 recompute_active_commands(me, ctx);
             }
@@ -411,9 +395,6 @@ pub trait SlashCommandDataSource {
         if !command.is_active(availability) {
             return false;
         }
-        if command.name == commands::ORCHESTRATE_NAME && !gates.is_orchestration_enabled {
-            return false;
-        }
         // When CLI agent input is open, restrict to the explicit allowlist.
         if gates.is_cli_agent_input && !CLI_AGENT_INPUT_ALLOWED_COMMANDS.contains(&command.name) {
             return false;
@@ -422,9 +403,8 @@ pub trait SlashCommandDataSource {
     }
 
     fn common_command_gates(&self, ctx: &AppContext) -> CommonCommandGates {
-        let ai_settings = AISettings::as_ref(ctx);
+        let _ai_settings = AISettings::as_ref(ctx);
         CommonCommandGates {
-            is_orchestration_enabled: ai_settings.is_orchestration_enabled(ctx),
             is_cli_agent_input: self.is_cli_agent_input_open(ctx),
         }
     }
@@ -558,7 +538,6 @@ pub trait SlashCommandDataSource {
         use itertools::Itertools;
 
         let prioritized_commands = vec![
-            &*commands::CREATE_ENVIRONMENT,
             &*commands::EDIT,
             &commands::CONVERSATIONS,
             &commands::PROMPTS,

@@ -3,10 +3,9 @@ mod convert_from;
 mod convert_to;
 mod r#impl;
 
-use std::collections::HashSet;
 use std::path::Path;
 use std::pin::Pin;
-use std::sync::{Arc, LazyLock, Mutex};
+use std::sync::Arc;
 
 pub use ai::agent::convert::ConvertToAPITypeError;
 use ai::api_keys::ApiKeyManager;
@@ -15,8 +14,6 @@ pub use convert_from::{
     ConversionParams, ConvertAPIMessageToClientOutputMessage, MaybeAIAgentOutputMessage,
     MessageToAIAgentOutputMessageError, user_inputs_from_messages,
 };
-#[cfg_attr(target_family = "wasm", allow(unused_imports))]
-pub(crate) use convert_to::serde_json_to_prost;
 use futures_lite::Stream;
 pub use r#impl::generate_multi_agent_output;
 use mcp::TemplatableMCPServerInfo;
@@ -29,15 +26,12 @@ use torchui::{AppContext, EntityId, SingletonEntity as _};
 
 use super::{AIAgentInput, MCPContext, MCPServer, RequestMetadata, ServerOutputId, Suggestions};
 use crate::ai::agent::conversation::AIConversationId;
-use crate::ai::ambient_agents::AmbientAgentTaskId;
 use crate::ai::blocklist::{BlocklistAIPermissions, RequestInput, SessionContext};
 use crate::ai::execution_profiles::AIExecutionProfileAppExt;
 use crate::ai::execution_profiles::profiles::AIExecutionProfilesModel;
 use crate::ai::llms::{LLMId, LLMPreferences};
 use crate::ai::mcp::TemplatableMCPServerManager;
-use crate::send_telemetry_from_app_ctx;
 use crate::server::server_api::AIApiError;
-use crate::server::telemetry::TelemetryEvent;
 use crate::settings::AISettings;
 use crate::terminal::safe_mode_settings::get_secret_obfuscation_mode;
 use crate::workspaces::user_workspaces::{TeamScope, UserWorkspaces};
@@ -132,7 +126,6 @@ pub struct RequestParams {
     pub input: Vec<AIAgentInput>,
     pub conversation_token: Option<ServerConversationToken>,
     pub forked_from_conversation_token: Option<ServerConversationToken>,
-    pub ambient_agent_task_id: Option<AmbientAgentTaskId>,
     pub tasks: Vec<warp_multi_agent_api::Task>,
     pub existing_suggestions: Option<Suggestions>,
     pub metadata: Option<RequestMetadata>,
@@ -173,12 +166,7 @@ pub struct RequestParams {
     pub computer_use_enabled: bool,
     pub ask_user_question_enabled: bool,
     pub research_agent_enabled: bool,
-    pub orchestration_enabled: bool,
     pub supported_tools_override: Option<Vec<warp_multi_agent_api::ToolType>>,
-    /// The conversation ID of the parent agent that spawned this child agent, if any.
-    pub parent_agent_id: Option<String>,
-    /// The display name for this agent (e.g. "Agent 1"), assigned by the orchestrator.
-    pub agent_name: Option<String>,
 }
 
 pub type Event = Result<warp_multi_agent_api::ResponseEvent, Arc<AIApiError>>;
@@ -198,7 +186,6 @@ pub struct ConversationData {
     pub tasks: Vec<warp_multi_agent_api::Task>,
     pub server_conversation_token: Option<ServerConversationToken>,
     pub forked_from_conversation_token: Option<ServerConversationToken>,
-    pub ambient_agent_task_id: Option<AmbientAgentTaskId>,
     pub existing_suggestions: Option<Suggestions>,
     pub use_warp_credits_instead_of_chatgpt: bool,
 }
@@ -210,7 +197,6 @@ impl RequestParams {
             input: vec![],
             conversation_token: None,
             forked_from_conversation_token: None,
-            ambient_agent_task_id: None,
             tasks: vec![],
             existing_suggestions: None,
             metadata: None,
@@ -237,10 +223,7 @@ impl RequestParams {
             computer_use_enabled: false,
             ask_user_question_enabled: false,
             research_agent_enabled: false,
-            orchestration_enabled: false,
             supported_tools_override: None,
-            parent_agent_id: None,
-            agent_name: None,
         }
     }
 
@@ -380,32 +363,16 @@ impl RequestParams {
             .flatten()
             .and_then(|s| s.parse().ok())
             .unwrap_or_default();
-        let is_ambient_agent = conversation.ambient_agent_task_id.is_some();
         let computer_use_requested = FeatureFlag::AgentModeComputerUse.is_enabled()
             && BlocklistAIPermissions::as_ref(app)
                 .get_computer_use_setting(terminal_view_id, scope, app)
                 .is_enabled()
-            && (FeatureFlag::LocalComputerUse.is_enabled() || is_ambient_agent);
-        let computer_use_supported = computer_use::is_supported_on_current_platform();
-        let computer_use_enabled = computer_use_requested && computer_use_supported;
-        if computer_use_requested
-            && !computer_use_supported
-            && let Some(task_id) = conversation.ambient_agent_task_id
-        {
-            report_computer_use_unavailable(task_id, app_execution_mode.is_sandboxed(), app);
-        }
+            && FeatureFlag::LocalComputerUse.is_enabled();
+        let computer_use_enabled =
+            computer_use_requested && computer_use::is_supported_on_current_platform();
         let ask_user_question_enabled = BlocklistAIPermissions::as_ref(app)
             .get_ask_user_question_setting(app, terminal_view_id)
             != crate::ai::execution_profiles::AskUserQuestionPermission::Never;
-
-        let orchestration_enabled = ai_settings.is_orchestration_enabled(app)
-            && BlocklistAIPermissions::as_ref(app)
-                .get_run_agents_setting(app, terminal_view_id)
-                .is_enabled()
-            && session_context
-                .session_type()
-                .as_ref()
-                .is_none_or(|t| matches!(t, crate::terminal::model::session::SessionType::Local));
 
         // Reconcile the persisted override against the active base model's
         // current `LLMContextWindow` instead of trusting whatever was stored
@@ -422,7 +389,6 @@ impl RequestParams {
             input: request_input.all_inputs().cloned().collect(),
             conversation_token: conversation.server_conversation_token,
             forked_from_conversation_token: conversation.forked_from_conversation_token,
-            ambient_agent_task_id: conversation.ambient_agent_task_id,
             tasks: conversation.tasks,
             existing_suggestions: conversation.existing_suggestions,
             context_window_limit,
@@ -449,31 +415,7 @@ impl RequestParams {
             computer_use_enabled,
             ask_user_question_enabled,
             research_agent_enabled,
-            orchestration_enabled,
             supported_tools_override: request_input.supported_tools_override.clone(),
-            parent_agent_id: None,
-            agent_name: None,
         }
     }
-}
-
-/// Reports that computer use was enabled for a run but is unavailable on this host, at most once
-/// per run for the lifetime of the process. Request params are rebuilt for every request, so
-/// emitting unconditionally would produce one event per turn.
-fn report_computer_use_unavailable(task_id: AmbientAgentTaskId, sandboxed: bool, app: &AppContext) {
-    static REPORTED_TASKS: LazyLock<Mutex<HashSet<AmbientAgentTaskId>>> =
-        LazyLock::new(Default::default);
-    let newly_reported = REPORTED_TASKS
-        .lock()
-        .is_ok_and(|mut reported| reported.insert(task_id));
-    if !newly_reported {
-        return;
-    }
-    send_telemetry_from_app_ctx!(
-        TelemetryEvent::ComputerUseUnavailable {
-            ambient_agent_task_id: task_id,
-            sandboxed,
-        },
-        app
-    );
 }

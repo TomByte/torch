@@ -24,7 +24,6 @@ mod comments;
 mod header;
 mod imported_comments;
 mod input;
-mod orchestration;
 pub mod output;
 pub mod query;
 mod todos;
@@ -963,8 +962,6 @@ impl View for AIBlock {
                 state_handles: &self.state_handles,
                 action_buttons: &self.action_buttons,
                 view_screenshot_buttons: &self.view_screenshot_buttons,
-                open_recording_buttons: &self.open_recording_buttons,
-                has_recording_related_actions: self.has_recording_related_actions,
                 action_model: &self.action_model,
                 active_session: &self.active_session,
                 editor_views: &self.code_editor_views,
@@ -1019,7 +1016,6 @@ impl View for AIBlock {
                     .gemini_enterprise_credentials_error_view
                     .as_ref(),
                 imported_comments: &self.imported_comments,
-                run_agents_card_views: &self.run_agents_card_views,
                 #[cfg(feature = "local_fs")]
                 resolved_code_block_paths: &self.resolved_code_block_paths,
                 #[cfg(feature = "local_fs")]
@@ -1259,19 +1255,13 @@ impl AIAgentInput {
             | AIAgentInput::AutoCodeDiffQuery { .. }
             | AIAgentInput::ResumeConversation { .. }
             | AIAgentInput::InitProjectRules { .. }
-            | AIAgentInput::CreateEnvironment { .. }
             | AIAgentInput::TriggerPassiveSuggestion { .. }
             | AIAgentInput::CreateNewProject { .. }
             | AIAgentInput::CloneRepository { .. }
             | AIAgentInput::SummarizeConversation { .. }
             | AIAgentInput::InvokeSkill { .. }
-            | AIAgentInput::StartFromAmbientRunPrompt { .. }
             | AIAgentInput::ActionResult { .. }
-            | AIAgentInput::MessagesReceivedFromAgents { .. }
-            | AIAgentInput::EventsFromAgents { .. }
-            | AIAgentInput::PassiveSuggestionResult { .. }
-            | AIAgentInput::OrchestrationConfigUpdate { .. }
-            | AIAgentInput::AgentWake => None,
+            | AIAgentInput::PassiveSuggestionResult { .. } => None,
         }
     }
 }

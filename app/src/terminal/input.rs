@@ -142,9 +142,7 @@ use crate::agent_status::footer::{CLIAgentFooter, CLIAgentFooterEvent};
 use crate::ai::AIRequestUsageModel;
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent::{AIAgentContext, AIAgentExchangeId, CancellationReason, EntrypointType};
-use crate::ai::agent_conversations_model::{
-    AgentConversationNavigationSubject, AgentConversationsModel,
-};
+use crate::ai::agent_conversations_model::AgentConversationsModel;
 use crate::ai::block_context::BlockContext;
 use crate::ai::blocklist::agent_view::shortcuts::AgentShortcutViewModel;
 use crate::ai::blocklist::agent_view::{
@@ -949,7 +947,6 @@ pub enum Event {
     },
     OpenConversationHistory,
     OpenProjectRulesPane,
-    OpenEnvironmentManagementPane,
     OpenFilesPalette {
         source: PaletteSource,
     },
@@ -975,13 +972,8 @@ pub enum Event {
         conversation_id: Option<AIConversationId>,
         origin: AgentViewEntryOrigin,
     },
-    CreateDockerSandbox,
     ScrollToExchange {
         exchange_id: AIAgentExchangeId,
-    },
-    /// Trigger environment setup flow with optional repository arguments
-    TriggerEnvironmentSetup {
-        repos: Vec<String>,
     },
     RegisterPluginListener(CLIAgent),
     #[cfg(not(target_family = "wasm"))]
@@ -3343,22 +3335,6 @@ impl Input {
         ctx: &mut ViewContext<Self>,
     ) {
         // Read the origin before dispatch; the row is removed once it fires.
-        if QueuedQueryModel::as_ref(ctx).is_dispatch_blocked(conversation_id) {
-            return;
-        }
-        if QueuedQueryModel::as_ref(ctx)
-            .queue(conversation_id)
-            .iter()
-            .any(|row| row.id() == query_id && row.shared_session_prompt().is_some())
-        {
-            // "Send now" targets the clicked row specifically, which may not be the queue head
-            // (e.g. after reordering) -- passing `query_id` through dispatches that exact row
-            // instead of whatever currently happens to be at the head.
-            self.ai_controller.update(ctx, |controller, ctx| {
-                controller.dispatch_queued_warp_agent_prompt(conversation_id, Some(query_id), ctx);
-            });
-            return;
-        }
         let origin = QueuedQueryModel::as_ref(ctx)
             .queue(conversation_id)
             .iter()
@@ -3734,7 +3710,7 @@ impl Input {
                 }
                 self.clear_buffer_and_reset_undo_stack(ctx);
                 match AgentConversationsModel::resolve_open_action(
-                    AgentConversationNavigationSubject::Entry(*item_id),
+                    *item_id,
                     Some(RestoreConversationLayout::ActivePane),
                     ctx,
                 ) {
@@ -5180,20 +5156,6 @@ impl Input {
                 get_stable_agent_mode_hint_text(&mut self.cached_agent_mode_hint_text).to_owned()
             }
             (InputType::AI, _) => {
-                if let Some(conversation) =
-                    self.ai_context_model.as_ref(app).selected_conversation(app)
-                    && conversation.is_child_agent_conversation()
-                {
-                    let agent_name = conversation.agent_name().unwrap_or("child");
-                    if conversation.status().is_in_progress() {
-                        if is_queue_next_prompt_enabled {
-                            return format!("Queue a follow up for the {agent_name} agent");
-                        }
-                        return format!("Steer the {agent_name} agent");
-                    }
-                    return format!("Ask the {agent_name} agent a follow up");
-                }
-
                 // Follow the `agent_indicator` pattern (see `app/src/tab.rs`):
                 //  * `None` (no conversation, empty, passive, or untitled) => new conversation => "Torch anything"
                 //  * `InProgress`                                           => agent running    => "Steer"

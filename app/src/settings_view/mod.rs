@@ -37,7 +37,7 @@ use crate::GlobalResourceHandlesProvider;
 use crate::appearance::Appearance;
 use crate::editor::{
     EditorView, Event as EditorEvent, PropagateAndNoOpNavigationKeys, SingleLineEditorOptions,
-    TextColors, TextOptions,
+    TextOptions,
 };
 use crate::menu::{self, Menu, MenuItem, MenuItemFields};
 use crate::pane_group::focus_state::PaneFocusHandle;
@@ -52,16 +52,12 @@ use crate::workspace::WorkspaceAction;
 
 mod about_page;
 mod admin_actions;
-mod agent_assisted_environment_modal;
 mod ai_shared;
 mod appearance_page;
 mod cli_agents_page;
-mod delete_environment_confirmation_dialog;
 mod directory_color_add_picker;
-pub(crate) mod environments_page;
 mod features;
 mod features_page;
-pub(crate) mod handoff_environment_creation_modal;
 pub mod keybindings;
 pub mod pane_manager;
 mod privacy;
@@ -70,7 +66,6 @@ mod projects_page;
 mod scripting_page;
 mod settings_file_footer;
 pub(crate) mod settings_page;
-pub mod update_environment_form;
 
 pub(crate) use admin_actions::AdminActions;
 #[cfg(not(target_family = "wasm"))]
@@ -126,15 +121,6 @@ pub const SEARCH_EDITOR_POSITION_ID: &str = "settings_search_editor";
 /// actually drawn instead of re-deriving the filter rules.
 pub fn nav_page_position_id(section: SettingsSection) -> String {
     format!("settings_nav_page:{section:?}")
-}
-
-pub(super) fn editor_text_colors(appearance: &Appearance) -> TextColors {
-    let theme = appearance.theme();
-    TextColors {
-        default_color: theme.active_ui_text_color(),
-        disabled_color: theme.disabled_ui_text_color(),
-        hint_color: theme.disabled_ui_text_color(),
-    }
 }
 
 /// Small inline pill rendered next to a settings label to mark a feature as beta.
@@ -1126,12 +1112,6 @@ impl SettingsView {
     ) {
         match event {
             SettingsPageEvent::FocusModal => ctx.focus(&self.search_editor),
-            SettingsPageEvent::Pane(_)
-            | SettingsPageEvent::EnvironmentSetupModeSelectorToggled { .. }
-            | SettingsPageEvent::AgentAssistedEnvironmentModalToggled { .. } => {
-                // These events are not handled in standalone settings - only used
-                // when the view is hosted inside a pane.
-            }
         }
     }
 

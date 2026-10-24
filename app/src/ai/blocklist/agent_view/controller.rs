@@ -11,9 +11,6 @@ use torchui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, Singleton
 use super::{DismissalStrategy, EphemeralMessage, EphemeralMessageModel};
 use crate::BlocklistAIHistoryModel;
 use crate::ai::agent::conversation::AIConversationId;
-use crate::ai::blocklist::orchestration_topology::{
-    OrchestrationNavigationDirection, adjacent_orchestration_child_conversation_id,
-};
 use crate::terminal::TerminalModel;
 use crate::terminal::input::message_bar::{Message, MessageItem};
 use crate::terminal::input::slash_commands::SlashCommandTrigger;
@@ -137,7 +134,6 @@ pub enum AgentViewEntryOrigin {
         trigger: SlashCommandTrigger,
     },
     SlashInit,
-    CreateEnvironment,
     /// Entered agent view from the new-conversation keybinding.
     Keybinding(Keystroke),
     /// Entered agent view by attaching context from the code review panel.
@@ -153,14 +149,6 @@ pub enum AgentViewEntryOrigin {
 
     /// Entered agent view by long-running command.
     LongRunningCommand,
-
-    /// Entered agent view because a parent agent started this child agent via StartAgent.
-    ChildAgent,
-
-    /// Entered agent view by clicking a pill / breadcrumb in the orchestration
-    /// pill bar (or breadcrumb row) to navigate the current pane to a sibling
-    /// or parent conversation in the same orchestration tree.
-    OrchestrationPillBar,
 
     /// Entered agent view after opening project from OS directory picker.
     ProjectEntry,
@@ -407,21 +395,6 @@ impl AgentViewController {
 
     pub fn agent_view_state(&self) -> &AgentViewState {
         &self.agent_view_state
-    }
-
-    /// Resolves the conversation adjacent to the active agent-view conversation
-    /// in the canonical orchestration pill order.
-    pub fn adjacent_orchestration_conversation_id(
-        &self,
-        direction: OrchestrationNavigationDirection,
-        app: &AppContext,
-    ) -> Option<AIConversationId> {
-        let active_conversation_id = self.agent_view_state.active_conversation_id()?;
-        adjacent_orchestration_child_conversation_id(
-            BlocklistAIHistoryModel::as_ref(app),
-            active_conversation_id,
-            direction,
-        )
     }
 
     /// Returns whether the user is allowed to exit agent view.
@@ -774,29 +747,22 @@ impl AgentViewController {
         }
 
         let history_model = BlocklistAIHistoryModel::handle(ctx);
-        let (conversation_id, exchange_count, is_existing_child_placeholder) =
-            if let Some(conversation) =
-                conversation_id.and_then(|id| history_model.as_ref(ctx).conversation(&id))
-            {
-                (
-                    conversation.id(),
-                    conversation.exchange_count(),
-                    conversation.is_remote_child()
-                        || (conversation.is_viewing_shared_session()
-                            && conversation.parent_conversation_id().is_some()),
+        let (conversation_id, exchange_count) = if let Some(conversation) =
+            conversation_id.and_then(|id| history_model.as_ref(ctx).conversation(&id))
+        {
+            (conversation.id(), conversation.exchange_count())
+        } else {
+            let id = history_model.update(ctx, |history_model, ctx| {
+                history_model.start_new_conversation(
+                    self.terminal_view_id,
+                    false,
+                    false,
+                    matches!(&origin, AgentViewEntryOrigin::ThirdPartyCloudAgent),
+                    ctx,
                 )
-            } else {
-                let id = history_model.update(ctx, |history_model, ctx| {
-                    history_model.start_new_conversation(
-                        self.terminal_view_id,
-                        false,
-                        false,
-                        matches!(&origin, AgentViewEntryOrigin::ThirdPartyCloudAgent),
-                        ctx,
-                    )
-                });
-                (id, 0, false)
-            };
+            });
+            (id, 0)
+        };
         history_model.update(ctx, |history_model, ctx| {
             history_model.set_active_conversation_id(conversation_id, self.terminal_view_id, ctx)
         });
@@ -815,12 +781,7 @@ impl AgentViewController {
             .block_list_mut()
             .enter_conversation_context(conversation_id, display_mode.is_inline(), is_cloud);
 
-        // An empty child placeholder is still an existing run, not a brand-new
-        // cloud conversation. This applies to owner-side remote children and
-        // viewer-side shared-session children. Preserve that distinction so
-        // TerminalView does not insert cloud composition UI while the child is
-        // restoring or waiting for its first streamed exchange.
-        let is_new = exchange_count == 0 && !is_existing_child_placeholder;
+        let is_new = exchange_count == 0;
         ctx.emit(AgentViewControllerEvent::EnteredAgentView {
             conversation_id,
             is_new,

@@ -1,13 +1,9 @@
 use std::collections::{HashMap, HashSet};
 
-use ai::agent::orchestration_config::{OrchestrationConfig, OrchestrationConfigStatus};
-use ai::document::AIDocumentId;
 use ai::skills::SkillPathOrigin;
-use anyhow::Context as _;
 use chrono::{DateTime, Local, TimeZone};
 use indexmap::IndexMap;
 use itertools::Itertools as _;
-use torch_cli::agent::Harness;
 use torch_core::command::ExitCode;
 use torch_core::execution_mode::AppExecutionMode;
 use torch_core::features::FeatureFlag;
@@ -30,11 +26,10 @@ use super::task::{
 };
 use super::task_store::TaskStore;
 use super::{
-    AIAgentAction, AIAgentActionId, AIAgentActionResultType, AIAgentActionType, AIAgentContext,
-    AIAgentExchange, AIAgentExchangeId, AIAgentInput, AIAgentOutput, AIAgentOutputStatus,
-    AIAgentTodo, AIAgentTodoId, FinishedAIAgentOutput, MessageId, OutputModelInfo,
-    RenderableAIError, RequestCost, ServerOutputId, Shared, StartRecordingResult,
-    StopRecordingResult, SuggestedLoggingId, Suggestions,
+    AIAgentAction, AIAgentActionId, AIAgentContext, AIAgentExchange, AIAgentExchangeId,
+    AIAgentInput, AIAgentOutput, AIAgentOutputStatus, AIAgentTodo, AIAgentTodoId,
+    FinishedAIAgentOutput, MessageId, OutputModelInfo, RenderableAIError, RequestCost,
+    ServerOutputId, Shared, SuggestedLoggingId, Suggestions,
 };
 use crate::agent_status::ConversationStatus;
 use crate::ai::agent::api::convert_conversation::{
@@ -55,8 +50,6 @@ use crate::ai::agent::{
     AIAgentOutputMessage, AIAgentOutputMessageType, AIIdentifiers, CancellationOutcome,
     CancellationReason, MessageToAIAgentOutputMessageError, SummarizationType,
 };
-use crate::ai::ambient_agents::AmbientAgentTaskId;
-use crate::ai::artifacts::Artifact;
 use crate::ai::blocklist::{
     BlocklistAIHistoryEvent, ConversationStatusUpdate, RequestInput, ResponseStreamId,
     SerializedBlockListItem,
@@ -64,7 +57,6 @@ use crate::ai::blocklist::{
 use crate::ai::llms::LLMPreferences;
 use crate::ai::skills::SkillDescriptor;
 use crate::code_review::CodeReviewTelemetryEvent;
-use crate::notebooks::NotebookId;
 use crate::persistence::ModelEvent;
 use crate::persistence::model::{
     AgentConversationData, ChargedUsageTotals, ContextWindowSegment, ConversationUsageMetadata,
@@ -77,28 +69,6 @@ use crate::terminal::model::block::{
 };
 use crate::workspaces::user_profiles::UserProfileWithUID;
 use crate::{BlocklistAIHistoryModel, GlobalResourceHandlesProvider};
-
-/// How a conversation's status should synchronize to the server `ai_tasks` row via
-/// `LocalAgentTaskSyncModel` (REMOTE-2661).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum TaskSyncMode {
-    /// Ordinary conversation: its status drives the task's state and status message.
-    #[default]
-    Normal,
-    /// A debug conversation bootstrapped into a retained setup-failure session. Its
-    /// conversation ID is still reported, but its status must never construct a new task
-    /// status message — the original failure record is preserved. Defense in depth: the
-    /// server independently guards this by comparing the active execution ID.
-    PreserveTerminalSetupFailure,
-}
-
-impl TaskSyncMode {
-    /// Whether conversation status updates should be suppressed from constructing a new task
-    /// state or status message for this conversation.
-    pub fn suppresses_task_lifecycle_updates(self) -> bool {
-        matches!(self, TaskSyncMode::PreserveTerminalSetupFailure)
-    }
-}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TodoStatus {
@@ -113,18 +83,6 @@ impl TodoStatus {
     pub fn is_cancelled(&self) -> bool {
         matches!(self, TodoStatus::Cancelled)
     }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct RecordingSpanInfo {
-    pub recording_id: String,
-    pub status: RecordingSpanStatus,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum RecordingSpanStatus {
-    Active,
-    Captured,
 }
 
 /// The wire counters are `uint64` while the persisted and displayed usage rows
@@ -338,19 +296,6 @@ pub struct AIConversation {
     /// This must be roundtripped to the server when sending follow-ups within a given conversation.
     server_conversation_token: Option<ServerConversationToken>,
 
-    /// The server-assigned task/run identifier (`ai_tasks.id`) for this
-    /// conversation, used for v2 orchestration.
-    ///
-    /// For local conversations, parsed from `StreamInit.run_id` on the first
-    /// response. For remote child agents spawned via `POST /agent/run`, set
-    /// from `SpawnAgentResponse.task_id`.
-    ///
-    /// Used for messaging API, events API, poller self-filtering, lifecycle
-    /// reports, parent↔child agent identity, and task status reporting.
-    /// The string form (for APIs that accept a run_id) is obtained via
-    /// `run_id()` which calls `.to_string()` on this field.
-    task_id: Option<AmbientAgentTaskId>,
-
     /// The server conversation ID of the source conversation if this conversation was forked.
     forked_from_server_conversation_token: Option<ServerConversationToken>,
 
@@ -396,63 +341,9 @@ pub struct AIConversation {
     /// Fallback title used when no task description or initial query exists.
     fallback_display_title: Option<String>,
 
-    /// Artifacts created during this conversation (plans, PRs, etc.).
-    artifacts: Vec<Artifact>,
-
-    // TODO(advait): Group child-agent-only fields (parent_agent_id,
-    // agent_name, orchestration_harness_type, parent_conversation_id,
-    // pinned) into a ChildAgentState sub-struct. See PR #10777 review.
-    /// Server-side identifier of the parent agent that spawned this child, if any.
-    /// For current orchestration, this holds the parent's `run_id`. Persisted as
-    /// `parent_agent_id` for serde compatibility with older conversation data.
-    parent_agent_id: Option<String>,
-    /// The display name for this agent (e.g. "Agent 1"), assigned by the orchestrator.
-    agent_name: Option<String>,
-    /// Harness metadata associated with this child agent in orchestration flows.
-    orchestration_harness_type: Option<String>,
-    /// The local conversation ID of the parent that spawned this child, if any.
-    parent_conversation_id: Option<AIConversationId>,
-
-    /// The last event sequence number observed from the v2 orchestration
-    /// event log. Used on restore to resume event delivery without
-    /// re-delivering already-processed events.
-    last_event_sequence: Option<i64>,
-
-    /// Per-plan orchestration configs hydrated from
-    /// `OrchestrationConfigSnapshot` messages in the conversation's task list.
-    /// Keyed by `plan_id`; snapshots with empty `plan_id` are ignored.
-    orchestration_configs: HashMap<String, (OrchestrationConfig, OrchestrationConfigStatus)>,
-
-    /// Whether the user has pinned this child agent in the
-    /// orchestration pill bar. Persisted via `AgentConversationData.pinned`.
-    pinned: bool,
-
-    /// Server-side last-update time of the remote run a remote-child conversation stands in
-    /// for. Lets a placeholder with no exchanges sort by recency alongside hydrated siblings.
-    remote_run_updated_at: Option<DateTime<Local>>,
-
-    /// How this conversation's status synchronizes to the server task row. Not persisted: it
-    /// only matters for the live process that bootstrapped the conversation, and a restored
-    /// conversation resumes ordinary synchronization.
-    task_sync_mode: TaskSyncMode,
-
     /// Whether the user chose Torch-funded inference for this conversation after a ChatGPT
     /// token-sharing failure. Sticky for the rest of the conversation and inherited by forks.
     use_warp_credits_instead_of_chatgpt: bool,
-}
-
-pub(crate) fn artifact_from_fork_proto(
-    proto_artifact: &api::message::artifact_event::ConversationArtifact,
-) -> Option<Artifact> {
-    use api::message::artifact_event::conversation_artifact::Artifact as ProtoArtifact;
-
-    match &proto_artifact.artifact {
-        Some(ProtoArtifact::PullRequest(pr)) => Some(Artifact::from(pr.clone())),
-        Some(ProtoArtifact::Screenshot(ss)) => Some(Artifact::from(ss.clone())),
-        Some(ProtoArtifact::Plan(plan)) => Some(Artifact::from(plan.clone())),
-        Some(ProtoArtifact::File(file)) => Some(Artifact::from(file.clone())),
-        None => None,
-    }
 }
 
 impl AIConversation {
@@ -479,7 +370,6 @@ impl AIConversation {
             has_opened_code_review: false,
             conversation_usage_metadata: ConversationUsageMetadata::default(),
             server_conversation_token: None,
-            task_id: None,
             forked_from_server_conversation_token: None,
             server_metadata: None,
             transaction: None,
@@ -493,16 +383,6 @@ impl AIConversation {
             total_token_usage_by_model: Default::default(),
             has_usage_metadata: false,
             fallback_display_title: None,
-            artifacts: Vec::new(),
-            parent_agent_id: None,
-            agent_name: None,
-            orchestration_harness_type: None,
-            parent_conversation_id: None,
-            last_event_sequence: None,
-            orchestration_configs: HashMap::new(),
-            pinned: false,
-            remote_run_updated_at: None,
-            task_sync_mode: TaskSyncMode::default(),
             use_warp_credits_instead_of_chatgpt: false,
         }
     }
@@ -630,16 +510,7 @@ impl AIConversation {
             has_usage_metadata,
             conversation_usage_metadata,
             reverted_action_ids,
-            artifacts,
-            parent_agent_id,
-            agent_name,
-            orchestration_harness_type,
-            parent_conversation_id,
-            is_remote_child,
-            run_id,
             autoexecute_override,
-            last_event_sequence,
-            pinned,
             use_warp_credits_instead_of_chatgpt,
         ) = if let Some(data) = conversation_data {
             let server_conversation_token = data
@@ -659,21 +530,6 @@ impl AIConversation {
             let forked_from_server_conversation_token = data
                 .forked_from_server_conversation_token
                 .map(ServerConversationToken::new);
-            let artifacts: Vec<Artifact> = data
-                .artifacts_json
-                .and_then(|json| {
-                    serde_json::from_str(&json)
-                        .map_err(|e| {
-                            report_error!(
-                                anyhow::Error::new(e).context("Failed to deserialize artifacts")
-                            )
-                        })
-                        .ok()
-                })
-                .unwrap_or_default();
-            let parent_conversation_id = data
-                .parent_conversation_id
-                .and_then(|id| AIConversationId::try_from(id).ok());
             let autoexecute_override = if FeatureFlag::RememberFastForwardState.is_enabled() {
                 data.autoexecute_override
                     .map(Into::into)
@@ -687,16 +543,7 @@ impl AIConversation {
                 has_usage_metadata,
                 conversation_usage_metadata,
                 reverted_action_ids,
-                artifacts,
-                data.parent_agent_id,
-                data.agent_name,
-                data.orchestration_harness_type,
-                parent_conversation_id,
-                data.is_remote_child,
-                data.run_id,
                 autoexecute_override,
-                data.last_event_sequence,
-                data.pinned,
                 data.use_warp_credits_instead_of_chatgpt,
             )
         } else {
@@ -706,28 +553,14 @@ impl AIConversation {
                 false,
                 ConversationUsageMetadata::default(),
                 HashSet::new(),
-                Vec::new(),
-                None,
-                None,
-                None,
-                None,
-                false,
-                None,
                 AIConversationAutoexecuteMode::default(),
-                None,
-                false,
                 false,
             )
-        };
-        let driver = if is_remote_child {
-            ConversationDriver::RemoteChild
-        } else {
-            ConversationDriver::Native
         };
 
         Ok(Self {
             id,
-            driver,
+            driver: ConversationDriver::Native,
             task_store,
             status,
             status_error: None,
@@ -737,7 +570,6 @@ impl AIConversation {
             has_opened_code_review: false,
             conversation_usage_metadata,
             server_conversation_token,
-            task_id: run_id.as_deref().and_then(|id| id.parse().ok()),
             forked_from_server_conversation_token,
             server_metadata: None,
             transaction: None,
@@ -752,16 +584,6 @@ impl AIConversation {
             has_usage_metadata,
             optimistic_cli_subagent_subtask_id: None,
             fallback_display_title: None,
-            artifacts,
-            parent_agent_id,
-            agent_name,
-            orchestration_harness_type,
-            parent_conversation_id,
-            last_event_sequence,
-            orchestration_configs: HashMap::new(),
-            pinned,
-            remote_run_updated_at: None,
-            task_sync_mode: TaskSyncMode::default(),
             use_warp_credits_instead_of_chatgpt,
         })
     }
@@ -1110,31 +932,6 @@ impl AIConversation {
             .or_else(|| self.forked_from_server_conversation_token())
     }
 
-    /// Returns the server-assigned run identifier as a string.
-    pub fn run_id(&self) -> Option<String> {
-        self.task_id.map(|id| id.to_string())
-    }
-
-    /// Sets the task ID by parsing a run_id string.
-    pub fn set_run_id(&mut self, id: String) {
-        self.task_id = id.parse().ok();
-    }
-
-    /// Returns the server-assigned task ID, if available.
-    pub fn task_id(&self) -> Option<AmbientAgentTaskId> {
-        self.task_id
-    }
-
-    /// Sets the task ID directly (used for child agents spawned via `SpawnAgentResponse`).
-    pub fn set_task_id(&mut self, id: AmbientAgentTaskId) {
-        self.task_id = Some(id);
-    }
-
-    /// Returns the server-side agent identifier for orchestration.
-    pub fn orchestration_agent_id(&self) -> Option<String> {
-        self.run_id()
-    }
-
     /// Updates the server conversation token for this conversation.
     ///
     /// This is used internally for session sharing when a forked conversation receives
@@ -1189,75 +986,6 @@ impl AIConversation {
         self.server_metadata = Some(metadata);
     }
 
-    pub fn parent_agent_id(&self) -> Option<&str> {
-        self.parent_agent_id.as_deref()
-    }
-
-    pub fn set_parent_agent_id(&mut self, id: String) {
-        self.parent_agent_id = Some(id);
-    }
-
-    pub fn agent_name(&self) -> Option<&str> {
-        self.agent_name.as_deref()
-    }
-
-    pub fn set_agent_name(&mut self, name: String) {
-        self.agent_name = Some(name);
-    }
-
-    pub fn orchestration_harness_type(&self) -> Option<&str> {
-        self.orchestration_harness_type.as_deref()
-    }
-
-    pub fn orchestration_harness(&self) -> Option<Harness> {
-        self.orchestration_harness_type
-            .as_deref()
-            .map(parse_orchestration_harness_type)
-            .or_else(|| {
-                self.server_metadata
-                    .as_ref()
-                    .map(|metadata| Harness::from(metadata.harness))
-            })
-    }
-
-    pub fn set_orchestration_harness(&mut self, harness: Harness) {
-        self.orchestration_harness_type = Some(harness.config_name().to_string());
-    }
-
-    pub fn parent_conversation_id(&self) -> Option<AIConversationId> {
-        self.parent_conversation_id
-    }
-
-    pub fn set_parent_conversation_id(&mut self, id: AIConversationId) {
-        self.parent_conversation_id = Some(id);
-    }
-
-    /// Returns the last observed v2 orchestration event sequence number,
-    /// if any. The cursor is per-conversation: the highest sequence the
-    /// streamer has seen on the run-ids this conversation watches
-    /// (`watched_run_ids` for owner-side conversations, the ancestor
-    /// subtree for viewer-mode orchestrator placeholders).
-    pub fn last_event_sequence(&self) -> Option<i64> {
-        self.last_event_sequence
-    }
-
-    /// Updates the last observed v2 orchestration event sequence number.
-    pub fn set_last_event_sequence(&mut self, sequence: i64) {
-        self.last_event_sequence = Some(sequence);
-    }
-
-    /// Returns whether the user has pinned this conversation in the
-    /// orchestration pill bar.
-    pub fn is_pinned(&self) -> bool {
-        self.pinned
-    }
-
-    /// Sets the persisted pin state. Callers must follow up with
-    /// `write_updated_conversation_state` to push the change to SQLite.
-    pub fn set_pinned(&mut self, pinned: bool) {
-        self.pinned = pinned;
-    }
-
     /// Returns whether requests in this conversation must run on Torch's OpenAI key instead of
     /// the user's ChatGPT subscription.
     pub fn use_warp_credits_instead_of_chatgpt(&self) -> bool {
@@ -1268,109 +996,6 @@ impl AIConversation {
     /// with `write_updated_conversation_state` to push the change to SQLite.
     pub fn set_use_warp_credits_instead_of_chatgpt(&mut self) {
         self.use_warp_credits_instead_of_chatgpt = true;
-    }
-
-    /// Returns true if this conversation was spawned by a parent orchestrator
-    /// agent — either via a local parent placeholder
-    /// (`parent_conversation_id`, set in the GUI parent) or via the parent's
-    /// server-side run identifier (`parent_agent_id`, stamped in
-    /// driver-hosted processes).
-    pub fn is_child_agent_conversation(&self) -> bool {
-        self.parent_conversation_id.is_some() || self.parent_agent_id.is_some()
-    }
-
-    /// Whether the conversation is a [`ConversationDriver::RemoteChild`]. Prefer asking
-    /// [`ConversationDriver`] the behavioural question at hand (`owns_turn_lifecycle`,
-    /// `reports_task_status`, `is_persisted_locally`, ...) instead.
-    pub fn is_remote_child(&self) -> bool {
-        matches!(self.driver, ConversationDriver::RemoteChild)
-    }
-
-    /// Switches the driver to [`ConversationDriver::RemoteChild`]. Prefer [`Self::set_driver`].
-    pub fn mark_as_remote_child(&mut self) {
-        self.driver = ConversationDriver::RemoteChild;
-    }
-
-    pub fn remote_run_updated_at(&self) -> Option<DateTime<Local>> {
-        self.remote_run_updated_at
-    }
-
-    pub fn set_remote_run_updated_at(&mut self, updated_at: DateTime<Local>) {
-        self.remote_run_updated_at = Some(updated_at);
-    }
-
-    /// Returns how this conversation's status synchronizes to the server task row.
-    pub fn task_sync_mode(&self) -> TaskSyncMode {
-        self.task_sync_mode
-    }
-
-    /// Sets how this conversation's status synchronizes to the server task row. Called once,
-    /// right after creating a debug-turn bootstrap conversation with no prior token.
-    pub fn set_task_sync_mode(&mut self, mode: TaskSyncMode) {
-        self.task_sync_mode = mode;
-    }
-
-    /// Returns the orchestration config and status for a specific plan,
-    /// or `None` if no config has been hydrated for that plan.
-    pub fn orchestration_config_for_plan(
-        &self,
-        plan_id: &str,
-    ) -> Option<(&OrchestrationConfig, OrchestrationConfigStatus)> {
-        self.orchestration_configs
-            .get(plan_id)
-            .map(|(config, status)| (config, *status))
-    }
-
-    /// Returns `true` if at least one plan has an orchestration config.
-    pub fn has_any_orchestration_config(&self) -> bool {
-        !self.orchestration_configs.is_empty()
-    }
-
-    /// Inserts or replaces the orchestration config for a specific plan.
-    /// Returns `true` if the value actually changed.
-    pub fn set_orchestration_config_for_plan(
-        &mut self,
-        plan_id: String,
-        config: OrchestrationConfig,
-        status: OrchestrationConfigStatus,
-    ) -> bool {
-        use std::collections::hash_map::Entry;
-        match self.orchestration_configs.entry(plan_id) {
-            Entry::Occupied(mut entry) => {
-                let existing = entry.get();
-                if existing.0 != config || existing.1 != status {
-                    entry.insert((config, status));
-                    true
-                } else {
-                    false
-                }
-            }
-            Entry::Vacant(entry) => {
-                entry.insert((config, status));
-                true
-            }
-        }
-    }
-
-    /// Returns a reference to the full per-plan config map.
-    pub fn orchestration_configs(
-        &self,
-    ) -> &HashMap<String, (OrchestrationConfig, OrchestrationConfigStatus)> {
-        &self.orchestration_configs
-    }
-
-    /// Bulk-replaces all orchestration configs (used during hydration).
-    /// Returns `true` if the map actually changed.
-    pub fn set_orchestration_configs(
-        &mut self,
-        configs: HashMap<String, (OrchestrationConfig, OrchestrationConfigStatus)>,
-    ) -> bool {
-        if self.orchestration_configs != configs {
-            self.orchestration_configs = configs;
-            true
-        } else {
-            false
-        }
     }
 
     /// Returns a flat list of linearized messages across all tasks, interpolating subtask messages
@@ -1559,9 +1184,6 @@ impl AIConversation {
             // 3p transcript viewers create an internal conversation only so agent-view
             // filtering can associate the restored block snapshot with an active conversation.
             || self.is_cli_agent_transcript()
-            // Child agent conversations spawned by an orchestrator are managed via the parent's
-            // status card and shouldn't clutter the navigation list.
-            || self.is_child_agent_conversation()
     }
 
     pub fn existing_suggestions(&self) -> Option<&Suggestions> {
@@ -1740,67 +1362,10 @@ impl AIConversation {
         self.fallback_display_title = Some(title);
     }
 
-    /// Returns the last time this conversation was modified. For a remote child this is the
-    /// run's server-side update time, so the value doesn't change once the transcript is
-    /// loaded; otherwise it is when the latest exchange finished (or started).
+    /// Returns when the latest exchange finished (or started).
     pub fn last_modified_at(&self) -> Option<DateTime<Local>> {
-        self.remote_run_updated_at.or_else(|| {
-            self.latest_exchange()
-                .map(|e| e.finish_time.unwrap_or(e.start_time))
-        })
-    }
-
-    /// Returns artifacts created during this conversation.
-    pub fn artifacts(&self) -> &[Artifact] {
-        &self.artifacts
-    }
-
-    /// Adds an artifact to this conversation and persists the change.
-    pub fn add_artifact(
-        &mut self,
-        artifact: Artifact,
-        terminal_surface_id: EntityId,
-        ctx: &mut ModelContext<BlocklistAIHistoryModel>,
-    ) {
-        self.artifacts.push(artifact.clone());
-        self.write_updated_conversation_state(ctx);
-        ctx.emit(BlocklistAIHistoryEvent::UpdatedConversationArtifacts {
-            terminal_surface_id,
-            conversation_id: self.id,
-            artifact,
-        });
-    }
-
-    /// Updates the notebook_uid for a plan artifact when it's synced to Torch Drive.
-    pub fn update_plan_notebook_uid(
-        &mut self,
-        document_uid: AIDocumentId,
-        notebook_uid: NotebookId,
-        terminal_surface_id: Option<EntityId>,
-        ctx: &mut ModelContext<BlocklistAIHistoryModel>,
-    ) {
-        let document_uid = document_uid.to_string();
-        for artifact in &mut self.artifacts {
-            if let Artifact::Plan {
-                document_uid: doc_uid,
-                notebook_uid: nb_uid,
-                ..
-            } = artifact
-                && doc_uid == &document_uid
-            {
-                *nb_uid = Some(notebook_uid);
-                let updated_artifact = artifact.clone();
-                self.write_updated_conversation_state(ctx);
-                if let Some(terminal_surface_id) = terminal_surface_id {
-                    ctx.emit(BlocklistAIHistoryEvent::UpdatedConversationArtifacts {
-                        terminal_surface_id,
-                        conversation_id: self.id,
-                        artifact: updated_artifact,
-                    });
-                }
-                return;
-            }
-        }
+        self.latest_exchange()
+            .map(|e| e.finish_time.unwrap_or(e.start_time))
     }
 
     pub fn initial_query(&self) -> Option<String> {
@@ -1868,153 +1433,6 @@ impl AIConversation {
                         .collect::<Vec<_>>()
                 })
         })
-    }
-
-    #[cfg(test)]
-    pub fn recording_span_for_action(
-        &self,
-        action_id: &AIAgentActionId,
-        action_model: Option<&crate::ai::blocklist::BlocklistAIActionModel>,
-    ) -> Option<RecordingSpanInfo> {
-        self.recording_spans_by_action_id(action_model)
-            .get(action_id)
-            .cloned()
-    }
-
-    /// Maps action IDs to the recording span containing them, derived from the
-    /// conversation transcript so restored/cloud conversations render the same
-    /// as live ones.
-    ///
-    /// Walks all exchanges in order: a successful `StartRecording` result opens
-    /// a span; the start action and any `UseComputer` actions inside an open
-    /// span are buffered; a matching successful `StopRecording` result marks
-    /// the span as captured and flushes the buffer into the map; a failed or
-    /// cancelled stop drops the buffer, since no recording was saved; a span
-    /// still open at the end of the scan is flushed as active so in-progress
-    /// recordings decorate their rows. Exchanges that finished in an error
-    /// expose no output and are skipped.
-    pub fn recording_spans_by_action_id(
-        &self,
-        action_model: Option<&crate::ai::blocklist::BlocklistAIActionModel>,
-    ) -> HashMap<AIAgentActionId, RecordingSpanInfo> {
-        // Transcript-held action results, collected once up front. These are
-        // conversation-scoped, covering restored/cloud transcripts. The action
-        // model is only a fallback for live results not yet drained into a
-        // follow-up request's inputs: its maps are keyed globally by action ID
-        // across conversations, so it must not take precedence.
-        let mut results_by_action_id: HashMap<&AIAgentActionId, &AIAgentActionResultType> =
-            HashMap::new();
-        for exchange in self.all_exchanges() {
-            for input in &exchange.input {
-                if let AIAgentInput::ActionResult { result, .. } = input {
-                    results_by_action_id.insert(&result.id, &result.result);
-                }
-            }
-        }
-        let result_for_action = |action_id: &AIAgentActionId| {
-            results_by_action_id.get(action_id).copied().or_else(|| {
-                action_model
-                    .and_then(|model| model.get_action_result(action_id))
-                    .map(|result| &result.result)
-            })
-        };
-
-        let mut active_span: Option<RecordingSpanInfo> = None;
-        let mut buffered_action_ids: Vec<AIAgentActionId> = Vec::new();
-        let mut spans_by_action_id = HashMap::new();
-        let flush_buffer =
-            |span: RecordingSpanInfo,
-             buffered: &mut Vec<AIAgentActionId>,
-             map: &mut HashMap<AIAgentActionId, RecordingSpanInfo>| {
-                for action_id in buffered.drain(..) {
-                    map.insert(action_id, span.clone());
-                }
-            };
-
-        for exchange in self.all_exchanges() {
-            let Some(output) = exchange.output_status.output() else {
-                continue;
-            };
-            for output_message in &output.get().messages {
-                let AIAgentOutputMessageType::Action(action) = &output_message.message else {
-                    continue;
-                };
-
-                match &action.action {
-                    AIAgentActionType::StartRecording { .. } => {
-                        if let Some(AIAgentActionResultType::StartRecording(
-                            StartRecordingResult::Success(started),
-                        )) = result_for_action(&action.id)
-                        {
-                            // A new successful start while another span is open
-                            // can't happen live (the runtime enforces a single
-                            // recording), but flush defensively so the prior
-                            // span's rows keep their open attribution.
-                            if let Some(prior_span) = active_span.take() {
-                                flush_buffer(
-                                    prior_span,
-                                    &mut buffered_action_ids,
-                                    &mut spans_by_action_id,
-                                );
-                            }
-                            active_span = Some(RecordingSpanInfo {
-                                recording_id: started.recording_id.clone(),
-                                status: RecordingSpanStatus::Active,
-                            });
-                            buffered_action_ids = vec![action.id.clone()];
-                        }
-                    }
-                    AIAgentActionType::UseComputer(_) => {
-                        if active_span.is_some() {
-                            buffered_action_ids.push(action.id.clone());
-                        }
-                    }
-                    AIAgentActionType::StopRecording { recording_id, .. } => {
-                        let Some(span) = active_span.as_ref() else {
-                            continue;
-                        };
-                        if span.recording_id != *recording_id {
-                            continue;
-                        }
-
-                        match result_for_action(&action.id) {
-                            Some(AIAgentActionResultType::StopRecording(
-                                StopRecordingResult::Success(_),
-                            )) => {
-                                let mut stopped_span = span.clone();
-                                stopped_span.status = RecordingSpanStatus::Captured;
-                                buffered_action_ids.push(action.id.clone());
-                                flush_buffer(
-                                    stopped_span,
-                                    &mut buffered_action_ids,
-                                    &mut spans_by_action_id,
-                                );
-                                active_span = None;
-                            }
-                            Some(AIAgentActionResultType::StopRecording(
-                                StopRecordingResult::Error(_)
-                                | StopRecordingResult::Cancelled
-                                | StopRecordingResult::Discarded,
-                            )) => {
-                                // The stop saved no recording, so the buffered
-                                // rows must not be labeled as captured.
-                                buffered_action_ids.clear();
-                                active_span = None;
-                            }
-                            _ => {}
-                        }
-                    }
-                    _ => {}
-                }
-            }
-        }
-
-        // A span that never closed is still recording: flush it as open.
-        if let Some(span) = active_span {
-            flush_buffer(span, &mut buffered_action_ids, &mut spans_by_action_id);
-        }
-
-        spans_by_action_id
     }
 
     pub fn contains_action(&self, action_id: &AIAgentActionId) -> bool {
@@ -2270,8 +1688,6 @@ impl AIConversation {
 
         self.server_conversation_token =
             Some(ServerConversationToken::new(init_event.conversation_id));
-        let run_id = Some(init_event.run_id).filter(|s| !s.is_empty());
-        self.task_id = run_id.as_deref().and_then(|id| id.parse().ok());
         Ok(())
     }
 
@@ -3023,83 +2439,6 @@ impl AIConversation {
                                 }
                             }
                         }
-                        Some(api::message::Message::ArtifactEvent(artifact_event)) => {
-                            match &artifact_event.event {
-                                Some(api::message::artifact_event::Event::Created(
-                                    artifact_created,
-                                )) => {
-                                    match &artifact_created.artifact {
-                                        Some(
-                                            api::message::artifact_event::artifact_created::Artifact::PullRequest(pr),
-                                        ) => {
-                                            self.add_artifact(
-                                                Artifact::from(pr.clone()),
-                                                terminal_surface_id,
-                                                ctx,
-                                            );
-                                        }
-                                        Some(
-                                            api::message::artifact_event::artifact_created::Artifact::Screenshot(screenshot),
-                                        ) => {
-                                            self.add_artifact(
-                                                Artifact::from(screenshot.clone()),
-                                                terminal_surface_id,
-                                                ctx,
-                                            );
-                                        }
-                                        Some(
-                                            api::message::artifact_event::artifact_created::Artifact::File(file),
-                                        ) => {
-                                            self.add_artifact(
-                                                Artifact::from(file.clone()),
-                                                terminal_surface_id,
-                                                ctx,
-                                            );
-                                        }
-                                        None => {}
-                                    }
-                                }
-                                Some(api::message::artifact_event::Event::ForkArtifacts(
-                                    fork_artifacts,
-                                )) => {
-                                    for proto_artifact in &fork_artifacts.artifacts {
-                                        let Some(artifact) =
-                                            artifact_from_fork_proto(proto_artifact)
-                                        else {
-                                            continue;
-                                        };
-                                        self.add_artifact(artifact, terminal_surface_id, ctx);
-                                    }
-                                }
-                                None => {}
-                            }
-                        }
-                        Some(api::message::Message::OrchestrationConfigSnapshot(
-                            snapshot,
-                        )) => {
-                            if !snapshot.plan_id.is_empty()
-                                && let Some(config) = snapshot
-                                    .config
-                                    .as_ref()
-                                    .map(OrchestrationConfig::from_proto)
-                                {
-                                    let status = OrchestrationConfigStatus::from_proto(
-                                        snapshot.status.as_ref(),
-                                    );
-                                    if self.set_orchestration_config_for_plan(
-                                        snapshot.plan_id.clone(),
-                                        config,
-                                        status,
-                                    ) {
-                                        ctx.emit(
-                                            BlocklistAIHistoryEvent::OrchestrationConfigUpdated {
-                                                conversation_id: self.id,
-                                                from_restore: false,
-                                            },
-                                        );
-                                    }
-                                }
-                        }
                         Some(api::message::Message::ToolCallResult(tcr)) => {
                             // Shared-session viewers do not own temp directories created by
                             // conversation search subagents.
@@ -3254,30 +2593,6 @@ impl AIConversation {
                 message: Some(message),
                 mask: Some(mask),
             }) => {
-                // Process OrchestrationConfigSnapshot if the updated
-                // message carries one (e.g. create_orchestration_config
-                // tool call result updating a single message in place).
-                if let Some(api::message::Message::OrchestrationConfigSnapshot(snapshot)) =
-                    &message.message
-                    && !snapshot.plan_id.is_empty()
-                    && let Some(config) = snapshot
-                        .config
-                        .as_ref()
-                        .map(OrchestrationConfig::from_proto)
-                {
-                    let status = OrchestrationConfigStatus::from_proto(snapshot.status.as_ref());
-                    if self.set_orchestration_config_for_plan(
-                        snapshot.plan_id.clone(),
-                        config,
-                        status,
-                    ) {
-                        ctx.emit(BlocklistAIHistoryEvent::OrchestrationConfigUpdated {
-                            conversation_id: self.id,
-                            from_restore: false,
-                        });
-                    }
-                }
-
                 let task_id = TaskId::new(task_id);
                 // Updates may target messages from exchanges added by earlier response
                 // streams (e.g. the server swapping computer-use screenshot bytes for a
@@ -3849,16 +3164,6 @@ impl AIConversation {
 
     /// The conversation as the `ConversationData` the server stores for native history.
     // Only the ACP harness runner in `agent_sdk` uploads it, and that is not built for wasm.
-    #[cfg_attr(target_family = "wasm", allow(dead_code))]
-    pub(crate) fn to_conversation_data(&self) -> api::ConversationData {
-        api::ConversationData {
-            tasks: self
-                .all_tasks()
-                .filter_map(|task| task.source_for_persistence())
-                .collect(),
-            ..Default::default()
-        }
-    }
 
     pub(crate) fn write_updated_conversation_state(
         &mut self,
@@ -3897,20 +3202,6 @@ impl AIConversation {
             )
         };
 
-        let artifacts_json = if self.artifacts.is_empty() {
-            None
-        } else {
-            match serde_json::to_string(&self.artifacts)
-                .context("Failed to serialize artifacts when persisting conversation data")
-            {
-                Ok(json) => Some(json),
-                Err(e) => {
-                    report_error!(e);
-                    None
-                }
-            }
-        };
-
         let updated_tasks: Vec<_> = self
             .all_tasks()
             .filter_map(|task| task.source_for_persistence())
@@ -3929,21 +3220,12 @@ impl AIConversation {
                     .forked_from_server_conversation_token
                     .clone()
                     .map(|token| token.into()),
-                artifacts_json,
-                parent_agent_id: self.parent_agent_id.clone(),
-                agent_name: self.agent_name.clone(),
-                orchestration_harness_type: self.orchestration_harness_type.clone(),
-                parent_conversation_id: self.parent_conversation_id.map(|id| id.to_string()),
-                is_remote_child: self.is_remote_child(),
                 // Legacy field; retained for backward-compatible
                 // deserialization but no longer written. The optimistic-root
                 // case is now handled by `Task::source_for_persistence`
                 // (returns `None`) and `new_restored_synthesizing_on_empty`.
                 root_task_is_optimistic: None,
-                run_id: self.task_id.map(|id| id.to_string()),
                 autoexecute_override: Some(self.autoexecute_override.into()),
-                last_event_sequence: self.last_event_sequence,
-                pinned: self.pinned,
                 use_warp_credits_instead_of_chatgpt: self.use_warp_credits_instead_of_chatgpt,
             },
         };
@@ -4637,12 +3919,6 @@ fn subagent_pair_message_ids_to_remove(
     extra_ids
 }
 
-fn parse_orchestration_harness_type(value: &str) -> Harness {
-    Harness::from_config_name(value)
-        .or_else(|| Harness::parse_orchestration_harness(value))
-        .unwrap_or(Harness::Unknown)
-}
-
 pub(super) fn update_todo_list_from_todo_op(
     todo_lists: &mut Vec<AIAgentTodoList>,
     op: api::message::update_todos::Operation,
@@ -4842,14 +4118,8 @@ pub struct ServerAIConversationMetadata {
     /// Permissions for this conversation (space, guests, link sharing).
     pub permissions: crate::cloud_object::ServerPermissions,
 
-    /// The ID of the associated ambient agent task, if any.
-    pub ambient_agent_task_id: Option<crate::ai::ambient_agents::AmbientAgentTaskId>,
-
     /// The server conversation token used to identify this conversation on the server.
     pub server_conversation_token: ServerConversationToken,
-
-    /// Artifacts (plans, PRs) created during this conversation.
-    pub artifacts: Vec<Artifact>,
 }
 
 /// Returns an iterator over `AIAgentContext`s attached to inputs in the given `exchanges`, in the

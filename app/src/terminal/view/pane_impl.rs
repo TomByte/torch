@@ -1,14 +1,11 @@
 //! This module contains the implementation of `BackingView` for `TerminalView`, as well as
 //! business logic for integrating the terminal view with the pane infra (`crate::pane_group`).
 use torchui::elements::{
-    ConstrainedBox, CrossAxisAlignment, Empty, Flex, MainAxisAlignment, MainAxisSize,
-    ParentElement, Shrinkable,
+    ConstrainedBox, CrossAxisAlignment, Flex, MainAxisAlignment, MainAxisSize, ParentElement,
+    Shrinkable,
 };
 use torchui::prelude::{ChildView, Container};
 use torchui::text_layout::ClipConfig;
-use torchui::ui_components::components::UiComponent;
-#[cfg(not(target_arch = "wasm32"))]
-use torchui::ui_components::components::UiComponentStyles;
 use torchui::{
     AppContext, Element, ModelHandle, SingletonEntity, TypedActionView, ViewContext,
     WeakModelHandle,
@@ -16,26 +13,21 @@ use torchui::{
 
 use super::{Event, PaneConfiguration, TerminalAction, TerminalViewState};
 use crate::agent_status::ConversationStatus;
-use crate::ai::agent::conversation::{AIConversation, ServerAIConversationMetadata};
-use crate::ai::blocklist::BlocklistAIHistoryModel;
-use crate::ai::blocklist::agent_view::orchestration_conversation_links::parent_conversation_navigation_card;
-use crate::ai::blocklist::orchestration_topology::orchestration_aware_conversation_status;
+use crate::ai::agent::conversation::AIConversation;
 use crate::appearance::Appearance;
 use crate::features::FeatureFlag;
 use crate::menu::{MenuItem, MenuItemFields};
 use crate::pane_group::focus_state::{PaneFocusHandle, PaneGroupFocusEvent, PaneGroupFocusState};
-use crate::pane_group::pane::view::PaneHeaderAction;
 use crate::pane_group::pane::view::header::components::{
     CenteredHeaderEdgeWidth, header_edge_min_width, render_pane_header_buttons,
     render_pane_header_title_text, render_three_column_header,
 };
-use crate::pane_group::pane::view::header::{PANE_HEADER_HEIGHT, render_pane_header_draggable};
+use crate::pane_group::pane::view::header::render_pane_header_draggable;
 use crate::pane_group::pane::{PaneStack, view};
 use crate::pane_group::{BackingView, SplitPaneState, TOGGLE_MAXIMIZE_PANE_BINDING_NAME};
 use crate::terminal::cli_agent_sessions::CLIAgentSessionsModel;
 use crate::terminal::{TerminalManager, TerminalView};
 use crate::ui_components::agent_icon::terminal_view_agent_icon_variant;
-use crate::ui_components::buttons::icon_button_with_color;
 use crate::ui_components::icon_with_status::render_icon_with_status;
 use crate::ui_components::{blended_colors, icons};
 use crate::util::bindings::keybinding_name_to_display_string;
@@ -195,15 +187,6 @@ impl TerminalView {
         header_ctx: &view::HeaderRenderContext,
         app: &AppContext,
     ) -> Box<dyn Element> {
-        // V2 swap-panes semantics: every conversation in the orchestration
-        // tree (orchestrator + each child) gets the orchestration pill bar
-        // rendered above the agent view header, so the pane title here
-        // falls back to the regular conversation title. Breadcrumbs used
-        // to render here for split-off child views, but the swap-panes
-        // refactor removed the split-off code path — the pill bar is now
-        // shown on every view, so a breadcrumb row alongside it would
-        // double-render the same navigation affordance.
-
         let appearance = Appearance::as_ref(app);
         let pane_config = self.pane_configuration.as_ref(app);
         let title = pane_config.title().to_owned();
@@ -291,56 +274,9 @@ impl TerminalView {
             None
         };
 
-        let mut left_of_overflow = None;
-
-        let mut icon_button_count: u32 = 0;
-
-        // The gate and the render path are split by target: on desktop the panel is pane-level
-        // and `can_show_conversation_details_ui` is correct. On WASM the panel is
-        // workspace-level; the pane-header button is shown only for surfaces that lack a tab-bar
-        // affordance — i.e. ambient cloud tasks where `get_simplified_wasm_tab_bar_content`
-        // returns `None`. Transcript viewers and shared sessions already show the simplified WASM
-        // tab-bar `(i)` button via `should_show_conversation_details_panel`, so the pane header
-        // must not add a second identical button on those pages.
-        let show_details_button = {
-            #[cfg(not(target_arch = "wasm32"))]
-            {
-                self.can_show_conversation_details_ui(app)
-            }
-            #[cfg(target_arch = "wasm32")]
-            {
-                self.should_show_wasm_pane_header_details_button(app)
-            }
-        };
-        let button_element = if show_details_button {
-            #[cfg(not(target_arch = "wasm32"))]
-            {
-                Some(self.render_conversation_details_toggle_button(app))
-            }
-            #[cfg(target_arch = "wasm32")]
-            {
-                Some(self.render_wasm_conversation_details_toggle_button(app))
-            }
-        } else {
-            None
-        };
-
-        if let Some(button) = button_element {
-            icon_button_count += 1;
-            if let Some(existing) = left_of_overflow {
-                left_of_overflow =
-                    Some(Flex::row().with_child(existing).with_child(button).finish());
-            } else {
-                left_of_overflow = Some(button);
-            }
-        }
-
         let mut right_row = Flex::row()
             .with_cross_axis_alignment(CrossAxisAlignment::Center)
             .with_main_axis_size(MainAxisSize::Min);
-        if let Some(content) = left_of_overflow {
-            right_row.add_child(content);
-        }
         let show_close_button = self
             .focus_handle
             .as_ref()
@@ -354,95 +290,10 @@ impl TerminalView {
                 button_size,
             ),
         );
-        icon_button_count += show_close_button as u32 + header_ctx.has_overflow_items as u32;
+        let icon_button_count = show_close_button as u32 + header_ctx.has_overflow_items as u32;
 
         let min_width = header_edge_min_width(icon_button_count);
         (right_row.finish(), min_width)
-    }
-
-    fn render_parent_conversation_header_card(&self, app: &AppContext) -> Option<Box<dyn Element>> {
-        if !(FeatureFlag::AgentView.is_enabled()
-            && self.agent_view_controller.as_ref(app).is_fullscreen())
-        {
-            return None;
-        }
-
-        let active_conversation_id = self
-            .agent_view_controller
-            .as_ref(app)
-            .agent_view_state()
-            .active_conversation_id()?;
-        let active_conversation =
-            BlocklistAIHistoryModel::as_ref(app).conversation(&active_conversation_id)?;
-        parent_conversation_navigation_card(
-            active_conversation,
-            self.mouse_states.parent_conversation_header_link.clone(),
-            app,
-        )
-    }
-
-    fn maybe_add_parent_navigation_card(
-        &self,
-        header: Box<dyn Element>,
-        parent_conversation_header_card: Option<Box<dyn Element>>,
-        app: &AppContext,
-    ) -> Box<dyn Element> {
-        // The pill bar is shown for the orchestrator and swap-target child panes.
-        // Split-off panes ("Open in new pane" / "Open in new tab") render a
-        // breadcrumb row instead. When no children have arrived yet,
-        // `OrchestrationPillBar::pill_specs` returns `None` and the pill
-        // bar's `render` short-circuits to `Empty`.
-        if FeatureFlag::AgentView.is_enabled()
-            && self.agent_view_controller.as_ref(app).is_fullscreen()
-        {
-            // The wrapping `Flex::column` would otherwise pass an infinite
-            // vertical max constraint down to its non-flex children. That
-            // breaks the title's vertical centering: with infinite max.y,
-            // the centered `Align` inside `render_three_column_header`
-            // collapses to the title's own (small) line-box height, and
-            // the outer row's `CrossAxisAlignment::Stretch` then pins the
-            // title to the top of the row. Pinning the header to its
-            // standard `PANE_HEADER_HEIGHT` here restores the finite
-            // vertical constraint the centering logic relies on, while
-            // letting the pill bar / breadcrumb row sit immediately below
-            // at its own height.
-            let pinned_header = ConstrainedBox::new(header)
-                .with_height(PANE_HEADER_HEIGHT)
-                .finish();
-            let secondary_row: Box<dyn Element> = if self.is_orchestration_split_off() {
-                crate::ai::blocklist::agent_view::render_orchestration_breadcrumbs(
-                    self.agent_view_controller.as_ref(app),
-                    self.mouse_states.parent_conversation_header_link.clone(),
-                    self.mouse_states.breadcrumbs_horizontal_scroll.clone(),
-                    app,
-                )
-                .unwrap_or_else(|| Empty::new().finish())
-            } else {
-                ChildView::new(&self.orchestration_pill_bar).finish()
-            };
-            return Flex::column()
-                .with_cross_axis_alignment(CrossAxisAlignment::Stretch)
-                .with_child(pinned_header)
-                .with_child(secondary_row)
-                .finish();
-        }
-
-        if let Some(parent_card) = parent_conversation_header_card {
-            Flex::column()
-                .with_cross_axis_alignment(CrossAxisAlignment::Stretch)
-                .with_child(
-                    Container::new(parent_card)
-                        .with_padding_left(4.)
-                        .with_padding_right(4.)
-                        .with_padding_top(4.)
-                        .with_padding_bottom(2.)
-                        .finish(),
-                )
-                .with_child(header)
-                .finish()
-        } else {
-            header
-        }
     }
 
     fn render_terminal_pane_header(
@@ -452,7 +303,6 @@ impl TerminalView {
     ) -> Box<dyn Element> {
         let is_fullscreen_agent_view = FeatureFlag::AgentView.is_enabled()
             && self.agent_view_controller.as_ref(app).is_fullscreen();
-        let parent_conversation_header_card = self.render_parent_conversation_header_card(app);
 
         let left = self.maybe_render_header_back_button(app);
         let center = self.render_header_title(is_fullscreen_agent_view, header_ctx, app);
@@ -469,19 +319,10 @@ impl TerminalView {
             header_ctx.header_left_inset,
             header_ctx.draggable_state.is_dragging(),
         );
-        // Make only the title row draggable; the secondary row (pill
-        // bar / breadcrumbs / navigation card) sits outside the drag
-        // region so its own mouse-driven widgets (notably the pill
-        // bar's scrollbar thumb) keep their hit-targets.
-        let draggable_header = render_pane_header_draggable::<TerminalView>(
+        render_pane_header_draggable::<TerminalView>(
             self.pane_configuration.clone(),
             header,
             header_ctx.draggable_state.clone(),
-            app,
-        );
-        self.maybe_add_parent_navigation_card(
-            draggable_header,
-            parent_conversation_header_card,
             app,
         )
     }
@@ -580,113 +421,6 @@ impl BackingView for TerminalView {
 }
 
 impl TerminalView {
-    /// Render the info button for toggling the conversation details panel.
-    /// Only available on non-WASM platforms; on WASM the workspace-level transcript panel is used,
-    /// toggled via `render_wasm_conversation_details_toggle_button`.
-    #[cfg(not(target_arch = "wasm32"))]
-    fn render_conversation_details_toggle_button(&self, app: &AppContext) -> Box<dyn Element> {
-        let appearance = Appearance::as_ref(app);
-        let theme = appearance.theme();
-        let is_open = self.is_conversation_details_panel_open;
-        let ui_builder = appearance.ui_builder().clone();
-
-        // Use main text color when panel is open (hover-like appearance), sub color when closed
-        let icon_color = if is_open {
-            blended_colors::text_main(theme, theme.background()).into()
-        } else {
-            blended_colors::text_sub(theme, theme.background()).into()
-        };
-
-        let button = icon_button_with_color(
-            appearance,
-            icons::Icon::Info,
-            is_open, // show active background when panel is open
-            self.conversation_details_panel_toggle_mouse_state.clone(),
-            icon_color,
-        );
-
-        // Add explicit background when panel is open
-        let button = if is_open {
-            button.with_style(UiComponentStyles::default().set_background(theme.surface_2().into()))
-        } else {
-            button
-        };
-
-        button
-            .with_tooltip(move || {
-                let tooltip_text = if is_open {
-                    "Hide details"
-                } else {
-                    "Show details"
-                };
-                ui_builder
-                    .tool_tip(tooltip_text.to_string())
-                    .build()
-                    .finish()
-            })
-            .build()
-            .on_click(|ctx, _, _| {
-                ctx.dispatch_typed_action::<PaneHeaderAction<TerminalAction, TerminalAction>>(
-                    PaneHeaderAction::CustomAction(TerminalAction::ToggleConversationDetailsPanel),
-                );
-            })
-            .finish()
-    }
-
-    /// Render the info button for toggling the workspace-level conversation details panel on WASM.
-    /// Shown only for ambient cloud tasks without a tab-bar affordance. Derives open state from
-    /// the authoritative `WorkspaceState` at render time so it stays accurate across pane/tab
-    /// focus changes without any per-view mirroring. Icon color tracks open state (main text when
-    /// open, sub text when closed), matching the desktop button's color logic.
-    #[cfg(target_arch = "wasm32")]
-    fn render_wasm_conversation_details_toggle_button(&self, app: &AppContext) -> Box<dyn Element> {
-        let appearance = Appearance::as_ref(app);
-        let theme = appearance.theme();
-        // Derive open state from the authoritative workspace state at render time rather than
-        // mirroring it into a TerminalView field, which would become stale on focus changes.
-        let is_open = WorkspaceRegistry::as_ref(app)
-            .get(self.window_id, app)
-            .as_ref()
-            .is_some_and(|workspace| {
-                workspace
-                    .as_ref(app)
-                    .current_workspace_state
-                    .is_transcript_details_panel_open
-            });
-        let ui_builder = appearance.ui_builder().clone();
-
-        // Use main text color when panel is open (hover-like appearance), sub color when closed
-        let icon_color = if is_open {
-            blended_colors::text_main(theme, theme.background()).into()
-        } else {
-            blended_colors::text_sub(theme, theme.background()).into()
-        };
-
-        icon_button_with_color(
-            appearance,
-            icons::Icon::Info,
-            is_open, // show active background when panel is open
-            self.conversation_details_panel_toggle_mouse_state.clone(),
-            icon_color,
-        )
-        .with_tooltip(move || {
-            let tooltip_text = if is_open {
-                "Hide details"
-            } else {
-                "Show details"
-            };
-            ui_builder
-                .tool_tip(tooltip_text.to_string())
-                .build()
-                .finish()
-        })
-        .build()
-        .on_click(|ctx, _, _| {
-            ctx.dispatch_typed_action(WorkspaceAction::ToggleConversationTranscriptDetailsPanel);
-        })
-        .finish()
-    }
-
     /// Render the indicator for terminal mode (no conversation selected).
     /// Shows error indicator if terminal is in error state, otherwise shell indicator on Windows.
     fn render_terminal_mode_indicator(&self, app: &AppContext) -> Option<Box<dyn Element>> {
@@ -758,9 +492,7 @@ impl TerminalView {
     }
 
     /// Selected conversation status for chrome, or [`ConversationStatus::InProgress`] while the
-    /// active block is long-running (terminal-derived; not mirrored in history events). For orchestrator
-    /// conversations, returns the aggregated child status so tab/header badges keep reflecting
-    /// active descendants after its turn finishes.
+    /// active block is long-running (terminal-derived; not mirrored in history events).
     pub fn selected_conversation_status(&self, ctx: &AppContext) -> Option<ConversationStatus> {
         let long_running = self.is_long_running();
 
@@ -774,10 +506,7 @@ impl TerminalView {
             return None;
         }
 
-        Some(orchestration_aware_conversation_status(
-            BlocklistAIHistoryModel::as_ref(ctx),
-            conversation,
-        ))
+        Some(conversation.status().clone())
     }
 
     pub fn selected_conversation_is_empty(&self, ctx: &AppContext) -> bool {
@@ -807,26 +536,6 @@ impl TerminalView {
     pub fn selected_conversation_display_title(&self, ctx: &AppContext) -> Option<String> {
         self.selected_conversation_for_user_facing_chrome(ctx)
             .map(|conversation| self.selected_conversation_display_title_for_chrome(conversation))
-    }
-
-    /// Whether the selected conversation is a local orchestration child: it was spawned by a
-    /// parent orchestrator and is not executing on a remote worker. These runs are backed by a
-    /// server task (so they carry an ambient task id) but execute locally, so their agent icon
-    /// must use the local treatment rather than the cloud/ambient one.
-    pub(crate) fn selected_conversation_is_local_child(&self, ctx: &AppContext) -> bool {
-        self.selected_conversation_for_user_facing_chrome(ctx)
-            .is_some_and(|conversation| {
-                conversation.is_child_agent_conversation() && !conversation.is_remote_child()
-            })
-    }
-
-    /// Server metadata for the selected conversation, if any.
-    pub fn selected_conversation_server_metadata<'a>(
-        &'a self,
-        ctx: &'a AppContext,
-    ) -> Option<&'a ServerAIConversationMetadata> {
-        self.selected_conversation_for_user_facing_chrome(ctx)
-            .and_then(AIConversation::server_metadata)
     }
 
     pub fn selected_conversation_latest_user_prompt_for_tab_name(

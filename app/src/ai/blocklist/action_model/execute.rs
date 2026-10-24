@@ -12,18 +12,11 @@ pub(super) mod read_mcp_resource;
 pub(super) mod read_skill;
 pub(super) mod request_computer_use;
 pub(super) mod request_file_edits;
-pub(super) mod run_agents;
 pub(super) mod search_codebase;
-pub(super) mod send_message;
 pub(super) mod shell_command;
-pub(super) mod start_agent;
-pub(super) mod start_recording;
-pub(super) mod stop_recording;
 pub(super) mod suggest_new_conversation;
 pub(super) mod suggest_prompt;
-pub(super) mod upload_artifact;
 pub(super) mod use_computer;
-pub(super) mod wait_for_events;
 
 use std::any::Any;
 use std::path::PathBuf;
@@ -56,16 +49,8 @@ pub use request_file_edits::{
     RequestFileEditsExecutor, RequestFileEditsFormatKind, RequestFileEditsTelemetryEvent,
 };
 pub(crate) use request_file_edits::{FileReadResult, MalformedFinalLineProxyEvent, apply_edits};
-pub use run_agents::{RunAgentsExecutor, RunAgentsExecutorEvent, RunAgentsSpawningSnapshot};
-pub use send_message::SendMessageToAgentExecutor;
 use serde::{Deserialize, Serialize};
 pub use shell_command::{ShellCommandExecutor, ShellCommandExecutorEvent};
-pub use start_agent::{
-    StartAgentExecutor, StartAgentExecutorEvent, StartAgentRequest, StartAgentRequestId,
-    TEAM_CHANGED_DURING_CHILD_LAUNCH_ERROR,
-};
-use start_recording::StartRecordingExecutor;
-use stop_recording::StopRecordingExecutor;
 pub use suggest_new_conversation::NewConversationDecision;
 use suggest_new_conversation::SuggestNewConversationExecutor;
 pub use suggest_prompt::PromptSuggestionExecutor;
@@ -78,9 +63,7 @@ use torch_util::file::FileLoadError;
 use torch_util::file_type::is_buffer_binary;
 use torchui::r#async::{Spawnable, SpawnableOutput};
 use torchui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
-use upload_artifact::UploadArtifactExecutor;
 use use_computer::UseComputerExecutor;
-use wait_for_events::WaitForEventsExecutor;
 
 use self::search_codebase::SearchCodebaseExecutor;
 use crate::BlocklistAIHistoryModel;
@@ -90,9 +73,6 @@ use crate::ai::agent::{
     AIAgentActionType, AIAgentActionTypeDiscriminants, CancellationReason, FileContext,
     FileLocations, ReadFilesFailedFile, ServerOutputId,
 };
-use crate::ai::ambient_agents::AmbientAgentTaskId;
-use crate::ai::blocklist::action_model::recording_controller::RecordingController;
-use crate::ai::blocklist::telemetry::send_run_agents_completed_telemetry;
 use crate::ai::get_relevant_files::controller::GetRelevantFilesController;
 #[cfg(feature = "local_fs")]
 use crate::ai::{agent::AnyFileContent, paths::host_native_absolute_path};
@@ -252,7 +232,6 @@ impl AsyncExecutingAction {
 pub struct BlocklistAIActionExecutor {
     shell_command_executor: ModelHandle<ShellCommandExecutor>,
     read_files_executor: ModelHandle<ReadFilesExecutor>,
-    upload_artifact_executor: ModelHandle<UploadArtifactExecutor>,
     search_codebase_executor: ModelHandle<SearchCodebaseExecutor>,
     request_file_edits_executor: ModelHandle<RequestFileEditsExecutor>,
     grep_executor: ModelHandle<GrepExecutor>,
@@ -266,15 +245,9 @@ pub struct BlocklistAIActionExecutor {
     create_documents_executor: ModelHandle<CreateDocumentsExecutor>,
     use_computer_executor: ModelHandle<UseComputerExecutor>,
     request_computer_use_executor: ModelHandle<RequestComputerUseExecutor>,
-    start_recording_executor: ModelHandle<StartRecordingExecutor>,
-    stop_recording_executor: ModelHandle<StopRecordingExecutor>,
     read_skill_executor: ModelHandle<ReadSkillExecutor>,
     fetch_conversation_executor: ModelHandle<FetchConversationExecutor>,
-    start_agent_executor: ModelHandle<StartAgentExecutor>,
-    run_agents_executor: ModelHandle<RunAgentsExecutor>,
-    send_message_executor: ModelHandle<SendMessageToAgentExecutor>,
     ask_user_question_executor: ModelHandle<AskUserQuestionExecutor>,
-    wait_for_events_executor: ModelHandle<WaitForEventsExecutor>,
     /// The actions currently executing asynchronously, keyed by action ID.
     /// We track them per action rather than as a single slot so multiple actions from the same
     /// parallel phase can complete independently.
@@ -295,8 +268,6 @@ impl BlocklistAIActionExecutor {
     ) -> Self {
         let read_files_executor =
             ctx.add_model(|_| ReadFilesExecutor::new(active_session.clone(), terminal_view_id));
-        let upload_artifact_executor = ctx
-            .add_model(|_| UploadArtifactExecutor::new(active_session.clone(), terminal_view_id));
         let search_codebase_executor = ctx.add_model(|ctx| {
             SearchCodebaseExecutor::new(
                 active_session.clone(),
@@ -335,28 +306,13 @@ impl BlocklistAIActionExecutor {
         let use_computer_executor = ctx.add_model(|_| UseComputerExecutor::new());
         let request_computer_use_executor =
             ctx.add_model(|_| RequestComputerUseExecutor::new(terminal_view_id));
-        let start_recording_executor = ctx.add_model(|_| StartRecordingExecutor::new());
-        let stop_recording_executor = ctx.add_model(|_| StopRecordingExecutor::new());
         let read_skill_executor = ctx.add_model(|_| ReadSkillExecutor::new(active_session.clone()));
         let fetch_conversation_executor = ctx.add_model(|_| FetchConversationExecutor::new());
-        let start_agent_executor = ctx.add_model(StartAgentExecutor::new);
-        let team_context_resolver_for_run_agents = team_context_resolver.clone();
-        let run_agents_executor = ctx.add_model(|_| {
-            RunAgentsExecutor::new(
-                start_agent_executor.clone(),
-                terminal_view_id,
-                team_context_resolver_for_run_agents,
-            )
-        });
-        let send_message_executor = ctx.add_model(|_| SendMessageToAgentExecutor::new());
         let ask_user_question_executor =
             ctx.add_model(|_| AskUserQuestionExecutor::new(terminal_view_id));
-        let wait_for_events_executor =
-            ctx.add_model(|ctx| WaitForEventsExecutor::new(terminal_view_id, ctx));
         Self {
             shell_command_executor,
             read_files_executor,
-            upload_artifact_executor,
             search_codebase_executor,
             request_file_edits_executor,
             grep_executor,
@@ -370,17 +326,11 @@ impl BlocklistAIActionExecutor {
             create_documents_executor,
             use_computer_executor,
             request_computer_use_executor,
-            start_recording_executor,
-            stop_recording_executor,
             async_executing_actions: Default::default(),
             team_context_resolver,
             read_skill_executor,
             fetch_conversation_executor,
-            start_agent_executor,
-            run_agents_executor,
-            send_message_executor,
             ask_user_question_executor,
-            wait_for_events_executor,
         }
     }
 
@@ -388,29 +338,6 @@ impl BlocklistAIActionExecutor {
         self.async_executing_actions
             .get(action_id)
             .map(|running| &running.action)
-    }
-
-    /// Returns the action_id of any running WaitForEvents action for the
-    /// given conversation. There is at most one (wait_for_events is
-    /// documented as exclusive within a turn).
-    pub(super) fn find_running_wait_for_events(
-        &self,
-        conversation_id: AIConversationId,
-    ) -> Option<AIAgentActionId> {
-        self.async_executing_actions
-            .iter()
-            .find_map(|(action_id, running)| {
-                if running.conversation_id == conversation_id
-                    && matches!(
-                        running.action.action,
-                        AIAgentActionType::WaitForEvents { .. }
-                    )
-                {
-                    Some(action_id.clone())
-                } else {
-                    None
-                }
-            })
     }
 
     pub fn shell_command_executor(&self) -> &ModelHandle<ShellCommandExecutor> {
@@ -433,14 +360,6 @@ impl BlocklistAIActionExecutor {
 
     pub fn suggest_prompt_executor(&self) -> &ModelHandle<PromptSuggestionExecutor> {
         &self.suggest_prompt_executor
-    }
-
-    pub fn start_agent_executor(&self) -> &ModelHandle<StartAgentExecutor> {
-        &self.start_agent_executor
-    }
-
-    pub fn run_agents_executor(&self) -> &ModelHandle<RunAgentsExecutor> {
-        &self.run_agents_executor
     }
 
     pub fn action_phase(&self, action: &AIAgentAction, ctx: &AppContext) -> RunningActionPhase {
@@ -471,20 +390,6 @@ impl BlocklistAIActionExecutor {
         &self.ask_user_question_executor
     }
 
-    pub fn set_ambient_agent_task_id(
-        &self,
-        id: Option<AmbientAgentTaskId>,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        self.send_message_executor.update(ctx, |executor, _| {
-            executor.set_ambient_agent_task_id(id);
-        });
-        self.request_computer_use_executor
-            .update(ctx, |executor, _| {
-                executor.set_ambient_agent_task_id(id);
-            });
-    }
-
     pub fn preprocess_action(
         &self,
         action: &AIAgentAction,
@@ -505,9 +410,6 @@ impl BlocklistAIActionExecutor {
                 .update(ctx, |executor, ctx| executor.preprocess_action(input, ctx)),
             AIAgentActionType::ReadFiles(..) => self
                 .read_files_executor
-                .update(ctx, |executor, ctx| executor.preprocess_action(input, ctx)),
-            AIAgentActionType::UploadArtifact(..) => self
-                .upload_artifact_executor
                 .update(ctx, |executor, ctx| executor.preprocess_action(input, ctx)),
             AIAgentActionType::SearchCodebase(..) => self
                 .search_codebase_executor
@@ -555,29 +457,14 @@ impl BlocklistAIActionExecutor {
             AIAgentActionType::RequestComputerUse(_) => self
                 .request_computer_use_executor
                 .update(ctx, |executor, ctx| executor.preprocess_action(input, ctx)),
-            AIAgentActionType::StartRecording { .. } => self
-                .start_recording_executor
-                .update(ctx, |executor, ctx| executor.preprocess_action(input, ctx)),
-            AIAgentActionType::StopRecording { .. } => self
-                .stop_recording_executor
-                .update(ctx, |executor, ctx| executor.preprocess_action(input, ctx)),
             AIAgentActionType::ReadSkill(_) => self
                 .read_skill_executor
                 .update(ctx, |executor, ctx| executor.preprocess_action(input, ctx)),
             AIAgentActionType::FetchConversation { .. } => self
                 .fetch_conversation_executor
                 .update(ctx, |executor, ctx| executor.preprocess_action(input, ctx)),
-            AIAgentActionType::SendMessageToAgent { .. } => self
-                .send_message_executor
-                .update(ctx, |executor, ctx| executor.preprocess_action(input, ctx)),
             AIAgentActionType::AskUserQuestion { .. } => self
                 .ask_user_question_executor
-                .update(ctx, |executor, ctx| executor.preprocess_action(input, ctx)),
-            AIAgentActionType::RunAgents(_) => self
-                .run_agents_executor
-                .update(ctx, |executor, ctx| executor.preprocess_action(input, ctx)),
-            AIAgentActionType::WaitForEvents { .. } => self
-                .wait_for_events_executor
                 .update(ctx, |executor, ctx| executor.preprocess_action(input, ctx)),
         }
     }
@@ -676,9 +563,6 @@ impl BlocklistAIActionExecutor {
                 .read_files_executor
                 .update(ctx, |executor, ctx| executor.execute(input, ctx))
                 .into(),
-            AIAgentActionType::UploadArtifact(..) => self
-                .upload_artifact_executor
-                .update(ctx, |executor, ctx| executor.execute(input, ctx)),
             AIAgentActionType::SearchCodebase(..) => {
                 let team_context_resolver = self.team_context_resolver.clone();
                 self.search_codebase_executor
@@ -740,13 +624,6 @@ impl BlocklistAIActionExecutor {
                 .request_computer_use_executor
                 .update(ctx, |executor, ctx| executor.execute(input, ctx))
                 .into(),
-            AIAgentActionType::StartRecording { .. } => self
-                .start_recording_executor
-                .update(ctx, |executor, ctx| executor.execute(input, ctx))
-                .into(),
-            AIAgentActionType::StopRecording { .. } => self
-                .stop_recording_executor
-                .update(ctx, |executor, ctx| executor.execute(input, ctx)),
             AIAgentActionType::ReadSkill(_) => self
                 .read_skill_executor
                 .update(ctx, |executor, ctx| executor.execute(input, ctx))
@@ -755,19 +632,8 @@ impl BlocklistAIActionExecutor {
                 .fetch_conversation_executor
                 .update(ctx, |executor, ctx| executor.execute(input, ctx))
                 .into(),
-            AIAgentActionType::SendMessageToAgent { .. } => self
-                .send_message_executor
-                .update(ctx, |executor, ctx| executor.execute(input, ctx)),
             AIAgentActionType::AskUserQuestion { .. } => self
                 .ask_user_question_executor
-                .update(ctx, |executor, ctx| executor.execute(input, ctx))
-                .into(),
-            AIAgentActionType::RunAgents(_) => self
-                .run_agents_executor
-                .update(ctx, |executor, ctx| executor.execute(input, ctx))
-                .into(),
-            AIAgentActionType::WaitForEvents { .. } => self
-                .wait_for_events_executor
                 .update(ctx, |executor, ctx| executor.execute(input, ctx))
                 .into(),
         };
@@ -869,34 +735,8 @@ impl BlocklistAIActionExecutor {
                 self.search_codebase_executor.update(ctx, |executor, ctx| {
                     executor.cancel_execution(&running.action.id, ctx);
                 });
-            } else if matches!(running.action.action, AIAgentActionType::RunAgents(..)) {
-                self.run_agents_executor.update(ctx, |executor, ctx| {
-                    executor.cancel_execution(&running.action.id, ctx);
-                });
-            } else if matches!(
-                running.action.action,
-                AIAgentActionType::StartRecording { .. }
-            ) {
-                RecordingController::handle(ctx).update(ctx, |controller, _| {
-                    controller.abort_start(running.conversation_id);
-                });
-            } else if let AIAgentActionType::WaitForEvents { tool_call_id, .. } =
-                &running.action.action
-            {
-                // Drop the executor's pending entry; the shared cancel
-                // path emits FinishedAction(Cancelled).
-                let tool_call_id = tool_call_id.clone();
-                self.wait_for_events_executor.update(ctx, |executor, _| {
-                    executor.cancel_execution(&tool_call_id);
-                });
             }
             let result = running.action.action.cancelled_result();
-            send_run_agents_completed_telemetry(
-                running.conversation_id,
-                &running.action.action,
-                &result,
-                ctx,
-            );
             ctx.emit(BlocklistAIActionExecutorEvent::FinishedAction {
                 result: Arc::new(AIAgentActionResult {
                     id: running.action.id.clone(),
@@ -965,11 +805,6 @@ impl BlocklistAIActionExecutor {
                     executor.should_autoexecute(input, &team_context_resolver(ctx), ctx)
                 })
             }
-            AIAgentActionType::UploadArtifact(_) => {
-                self.upload_artifact_executor.update(ctx, |executor, ctx| {
-                    executor.should_autoexecute(input, &team_context_resolver(ctx), ctx)
-                })
-            }
             AIAgentActionType::SearchCodebase(_) => {
                 self.search_codebase_executor.update(ctx, |executor, ctx| {
                     executor.should_autoexecute(input, &team_context_resolver(ctx), ctx)
@@ -1022,29 +857,14 @@ impl BlocklistAIActionExecutor {
                         executor.should_autoexecute(input, &team_context_resolver(ctx), ctx)
                     })
             }
-            AIAgentActionType::StartRecording { .. } => self
-                .start_recording_executor
-                .update(ctx, |executor, ctx| executor.should_autoexecute(input, ctx)),
-            AIAgentActionType::StopRecording { .. } => self
-                .stop_recording_executor
-                .update(ctx, |executor, ctx| executor.should_autoexecute(input, ctx)),
             AIAgentActionType::ReadSkill(_) => self
                 .read_skill_executor
                 .update(ctx, |executor, ctx| executor.should_autoexecute(input, ctx)),
             AIAgentActionType::FetchConversation { .. } => self
                 .fetch_conversation_executor
                 .update(ctx, |executor, ctx| executor.should_autoexecute(input, ctx)),
-            AIAgentActionType::SendMessageToAgent { .. } => self
-                .send_message_executor
-                .update(ctx, |executor, ctx| executor.should_autoexecute(input, ctx)),
             AIAgentActionType::AskUserQuestion { .. } => self
                 .ask_user_question_executor
-                .update(ctx, |executor, ctx| executor.should_autoexecute(input, ctx)),
-            AIAgentActionType::RunAgents(_) => self
-                .run_agents_executor
-                .update(ctx, |executor, ctx| executor.should_autoexecute(input, ctx)),
-            AIAgentActionType::WaitForEvents { .. } => self
-                .wait_for_events_executor
                 .update(ctx, |executor, ctx| executor.should_autoexecute(input, ctx)),
         }
     }

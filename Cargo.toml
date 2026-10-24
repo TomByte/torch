@@ -34,7 +34,6 @@ ai_types = { path = "crates/ai_types" }
 app-installation-detection = { path = "crates/app-installation-detection" }
 asset_cache = { path = "crates/asset_cache" }
 asset_macro = { path = "crates/asset_macro" }
-build_cache = { path = "crates/build_cache" }
 channel_versions = { path = "crates/channel_versions", default-features = false }
 command = { path = "crates/command" }
 cloud_objects = { path = "crates/cloud_objects" }
@@ -89,7 +88,6 @@ torch_features = { path = "crates/torch_features" }
 torch_files = { path = "crates/torch_files" }
 torch_graphql = { path = "crates/graphql" }
 torch_graphql_schema = { path = "crates/torch_graphql_schema" }
-torch_harness_usage = { path = "crates/torch_harness_usage" }
 torch_isolation_platform = { path = "crates/isolation_platform" }
 torch_logging = { path = "crates/torch_logging" }
 torch_managed_secrets = { path = "crates/managed_secrets" }

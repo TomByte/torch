@@ -2,7 +2,6 @@ use futures::executor::block_on;
 use mockito::Server;
 
 use super::*;
-use crate::server::retry_strategies::is_transient_http_error;
 
 /// Sends a GET request to a mock endpoint returning `status`/`headers`/`body`, then feeds the
 /// resulting response through [`ServerApi::error_from_response`].
@@ -36,7 +35,7 @@ fn status_in_chain(err: &anyhow::Error) -> Option<u16> {
 }
 
 #[test]
-fn permanent_4xx_client_error_carries_status_and_fails_fast() {
+fn client_error_carries_status_and_message() {
     let err = error_from_mock_response(
         403,
         &[],
@@ -44,7 +43,6 @@ fn permanent_4xx_client_error_carries_status_and_fails_fast() {
     );
 
     assert_eq!(status_in_chain(&err), Some(403));
-    assert!(!is_transient_http_error(&err));
     assert_eq!(err.to_string(), "checkpoint generation is incomplete");
     assert_eq!(
         err.downcast_ref::<ClientError>().unwrap().error,
@@ -57,7 +55,6 @@ fn permanent_4xx_without_parseable_body_still_carries_status() {
     let err = error_from_mock_response(404, &[], "not found");
 
     assert_eq!(status_in_chain(&err), Some(404));
-    assert!(!is_transient_http_error(&err));
     assert_eq!(
         err.to_string(),
         "API request failed with status 404 Not Found"
@@ -65,9 +62,8 @@ fn permanent_4xx_without_parseable_body_still_carries_status() {
 }
 
 #[test]
-fn transient_5xx_still_retries() {
+fn server_error_carries_status() {
     let err = error_from_mock_response(503, &[], "unavailable");
 
     assert_eq!(status_in_chain(&err), Some(503));
-    assert!(is_transient_http_error(&err));
 }

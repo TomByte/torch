@@ -40,20 +40,12 @@ pub(crate) struct StatusBadgeStyle {
     pub ring_ratio: f32,
     /// Status-icon glyph diameter as a fraction of `total_size`.
     pub icon_ratio: f32,
-    pub inner_shape: BadgeInnerShape,
-}
-
-#[derive(Clone, Copy)]
-pub(crate) enum BadgeInnerShape {
-    Circle,
-    RoundedSquare { radius_px: f32 },
 }
 
 impl StatusBadgeStyle {
     pub(crate) const DEFAULT: Self = Self {
         ring_ratio: DEFAULT_BADGE_RATIO,
         icon_ratio: DEFAULT_BADGE_ICON_RATIO,
-        inner_shape: BadgeInnerShape::Circle,
     };
 }
 
@@ -140,17 +132,6 @@ pub(crate) enum IconWithStatusVariant {
     /// A CLI agent icon on the agent's brand color background.
     CLIAgent {
         agent: CLIAgent,
-        status: Option<ConversationStatus>,
-        is_ambient: bool,
-    },
-    /// A pre-rendered avatar with an optional status overlay (cloud lobe when
-    /// ambient). The overlay is anchored to the `total_size` box's bottom-right
-    /// corner however big `avatar` is, so pass either an avatar sized to
-    /// `circle_size(total_size)` (to match the overhang of the other variants)
-    /// or an element that already fills the `total_size` box and places its own
-    /// artwork inside it.
-    CustomAvatar {
-        avatar: Box<dyn Element>,
         status: Option<ConversationStatus>,
         is_ambient: bool,
     },
@@ -253,20 +234,6 @@ pub(crate) fn render_icon_with_status_with_badge_style(
                 status_container_background,
             )
         }
-        IconWithStatusVariant::CustomAvatar {
-            avatar,
-            status,
-            is_ambient,
-        } => attach_status_overlay(
-            avatar,
-            status.as_ref(),
-            is_ambient,
-            total_size,
-            overlay_extra_overhang_ratio,
-            badge_style,
-            theme,
-            status_container_background,
-        ),
     }
 }
 
@@ -461,15 +428,11 @@ fn render_with_optional_status_badge(
         .with_width(badge_icon_diameter)
         .with_height(badge_icon_diameter)
         .finish();
-    let inner_radius = match badge_style.inner_shape {
-        BadgeInnerShape::Circle => Radius::Percentage(50.),
-        BadgeInnerShape::RoundedSquare { radius_px } => Radius::Pixels(radius_px),
-    };
     let badge = Container::new(badge_icon)
         .with_uniform_padding(pad)
-        .with_corner_radius(CornerRadius::with_all(inner_radius))
+        .with_corner_radius(CornerRadius::with_all(Radius::Percentage(50.)))
         .finish();
-    // Cutout ring around the badge; always circular (only the inner holder varies).
+    // Cutout ring around the badge.
     let badge_with_ring = Container::new(badge)
         .with_uniform_padding(pad)
         .with_background(status_container_background)

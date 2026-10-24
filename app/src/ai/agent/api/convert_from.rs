@@ -6,10 +6,7 @@ use std::time::Duration;
 use ai::agent::UnknownCitationTypeError;
 use ai::agent::action::ReadSkillRequest;
 use ai::agent::convert::ToolToAIAgentActionError;
-use ai::skills::{
-    ParsedSkill, SkillPathOrigin, skill_reference_from_api_skill_ref,
-    skill_reference_from_read_skill_ref,
-};
+use ai::skills::{ParsedSkill, SkillPathOrigin, skill_reference_from_read_skill_ref};
 use api::ask_user_question::question::QuestionType;
 use torch_core::channel::ChannelState;
 use warp_multi_agent_api as api;
@@ -23,13 +20,11 @@ use crate::ai::agent::todos::AIAgentTodoList;
 use crate::ai::agent::util::parse_markdown_into_text_and_code_sections;
 use crate::ai::agent::{
     AIAgentAction, AIAgentActionType, AIAgentAttachment, AIAgentCitation, AIAgentInput,
-    AIAgentOutputMessage, AIAgentText, AIAgentTodo, ArtifactCreatedData, BaseUserQuery,
-    CloneRepositoryURL, InvokeSkillUserQuery, MessageId, RunAgentsAgentRunConfig,
-    RunAgentsExecutionMode, RunAgentsRequest, SubagentCall, SubagentType,
-    SuggestedAgentModeWorkflow, SuggestedRule, Suggestions, SummarizationType, TodoOperation,
-    UserQueryMode, WebFetchStatus, WebSearchStatus,
+    AIAgentOutputMessage, AIAgentText, AIAgentTodo, BaseUserQuery, CloneRepositoryURL,
+    InvokeSkillUserQuery, MessageId, SubagentCall, SubagentType, SuggestedAgentModeWorkflow,
+    SuggestedRule, Suggestions, SummarizationType, TodoOperation, UserQueryMode, WebFetchStatus,
+    WebSearchStatus,
 };
-use crate::ai::artifact_download::sanitized_basename;
 use crate::ai::document::ai_document_model::{AIDocumentId, AIDocumentVersion};
 
 impl TryFrom<api::Attachment> for AIAgentAttachment {
@@ -74,87 +69,8 @@ pub(crate) fn convert_user_query_mode(mode: Option<&api::UserQueryMode>) -> User
 
     match &mode.r#type {
         Some(api::user_query_mode::Type::Plan(_)) => UserQueryMode::Plan,
-        Some(api::user_query_mode::Type::Orchestrate(_)) => UserQueryMode::Orchestrate,
-        None => UserQueryMode::Normal,
+        Some(api::user_query_mode::Type::Orchestrate(_)) | None => UserQueryMode::Normal,
     }
-}
-
-/// Maps the proto `Harness` oneof to a client-side string identifier
-/// (e.g. "oz", "claude"). Returns `None` for an unset variant.
-pub(crate) fn convert_run_agents_harness(harness: Option<&api::Harness>) -> Option<String> {
-    let variant = harness?.variant.as_ref()?;
-    Some(
-        match variant {
-            api::harness::Variant::Oz(_) => "oz",
-            api::harness::Variant::ClaudeCode(_) => "claude",
-            api::harness::Variant::OpenCode(_) => "opencode",
-            api::harness::Variant::Gemini(_) => "gemini",
-            api::harness::Variant::Codex(_) => "codex",
-            api::harness::Variant::Pi(_) => "pi",
-        }
-        .to_string(),
-    )
-}
-
-fn convert_run_agents_execution_mode(
-    execution_mode: Option<api::run_agents::ExecutionModeOneOf>,
-) -> RunAgentsExecutionMode {
-    match execution_mode {
-        Some(api::run_agents::ExecutionModeOneOf::Remote(remote)) => {
-            RunAgentsExecutionMode::Remote {
-                environment_id: remote.environment_id,
-                worker_host: remote.worker_host,
-                computer_use_enabled: remote.computer_use_enabled,
-                runner_id: remote.runner_id,
-            }
-        }
-        Some(api::run_agents::ExecutionModeOneOf::Local(_)) | None => RunAgentsExecutionMode::Local,
-    }
-}
-
-fn convert_run_agents(
-    run_agents: api::RunAgents,
-    skill_path_origin: &SkillPathOrigin,
-) -> AIAgentActionType {
-    let api::RunAgents {
-        metadata,
-        summary,
-        base_prompt,
-        skills,
-        model_id,
-        harness,
-        agent_run_configs,
-        execution_mode,
-        plan_id,
-    } = run_agents;
-    AIAgentActionType::RunAgents(Box::new(RunAgentsRequest {
-        metadata,
-        summary,
-        base_prompt,
-        skills: skills
-            .into_iter()
-            .filter_map(|skill| skill_reference_from_api_skill_ref(skill, skill_path_origin))
-            .collect(),
-        model_id,
-        harness_type: convert_run_agents_harness(harness.as_ref()).unwrap_or_default(),
-        execution_mode: convert_run_agents_execution_mode(execution_mode),
-        agent_run_configs: agent_run_configs
-            .into_iter()
-            .map(|config| RunAgentsAgentRunConfig {
-                metadata: config.metadata,
-                name: config.name,
-                prompt: config.prompt,
-                title: config.title,
-                agent_identity_uid: config.agent_identity_uid,
-                model_id: config.model_id,
-            })
-            .collect(),
-        plan_id,
-        // Auth secret is a client-side dispatch concern populated by the
-        // confirmation card from `CloudAgentSettings.last_selected_auth_secret`
-        // before Accept. The proto does not carry it.
-        harness_auth_secret_name: None,
-    }))
 }
 
 /// Unexpected errors when trying to convert an [`api::Message`] to an [`AIAgentOutputMessage`].
@@ -492,101 +408,6 @@ impl ConvertAPIMessageToClientOutputMessage for api::Message {
                     Ok(MaybeAIAgentOutputMessage::NoClientRepresentation)
                 }
             }
-            api::message::Message::ArtifactEvent(artifact_event) => match artifact_event.event {
-                Some(api::message::artifact_event::Event::Created(artifact_created)) => {
-                    match artifact_created.artifact {
-                        Some(
-                            api::message::artifact_event::artifact_created::Artifact::PullRequest(
-                                pr,
-                            ),
-                        ) => Ok(MaybeAIAgentOutputMessage::Message(
-                            AIAgentOutputMessage::artifact_created(
-                                MessageId::new(self.id),
-                                ArtifactCreatedData::PullRequest {
-                                    url: pr.url,
-                                    branch: pr.branch,
-                                },
-                            )
-                            .with_citations(citations),
-                        )),
-                        Some(
-                            api::message::artifact_event::artifact_created::Artifact::Screenshot(
-                                screenshot,
-                            ),
-                        ) => Ok(MaybeAIAgentOutputMessage::Message(
-                            AIAgentOutputMessage::artifact_created(
-                                MessageId::new(self.id),
-                                ArtifactCreatedData::Screenshot {
-                                    artifact_uid: screenshot.artifact_uid,
-                                    mime_type: screenshot.mime_type,
-                                    description: if screenshot.description.is_empty() {
-                                        None
-                                    } else {
-                                        Some(screenshot.description)
-                                    },
-                                },
-                            )
-                            .with_citations(citations),
-                        )),
-                        Some(api::message::artifact_event::artifact_created::Artifact::File(
-                            file,
-                        )) => Ok(MaybeAIAgentOutputMessage::Message(
-                            AIAgentOutputMessage::artifact_created(
-                                MessageId::new(self.id),
-                                ArtifactCreatedData::File {
-                                    artifact_uid: file.artifact_uid,
-                                    filename: sanitized_basename(&file.filepath)
-                                        .unwrap_or_else(|| file.filepath.clone()),
-                                    filepath: file.filepath,
-                                    mime_type: file.mime_type,
-                                    description: if file.description.is_empty() {
-                                        None
-                                    } else {
-                                        Some(file.description)
-                                    },
-                                    size_bytes: file.size_bytes,
-                                },
-                            )
-                            .with_citations(citations),
-                        )),
-                        None => Ok(MaybeAIAgentOutputMessage::NoClientRepresentation),
-                    }
-                }
-                Some(api::message::artifact_event::Event::ForkArtifacts(_)) | None => {
-                    Ok(MaybeAIAgentOutputMessage::NoClientRepresentation)
-                }
-            },
-            api::message::Message::MessagesReceivedFromAgents(messages_received_from_agents) => {
-                let messages = messages_received_from_agents
-                    .messages
-                    .into_iter()
-                    .map(|msg| crate::ai::agent::ReceivedMessageDisplay {
-                        message_id: msg.message_id,
-                        sender_agent_id: msg.sender_agent_id,
-                        addresses: msg.addresses,
-                        subject: msg.subject,
-                        message_body: msg.message_body,
-                    })
-                    .collect();
-                Ok(MaybeAIAgentOutputMessage::Message(
-                    AIAgentOutputMessage::messages_received_from_agents(
-                        MessageId::new(self.id),
-                        messages,
-                    )
-                    .with_citations(citations),
-                ))
-            }
-            api::message::Message::EventsFromAgents(events) => {
-                let event_ids = events
-                    .agent_events
-                    .iter()
-                    .map(|e| e.event_id.clone())
-                    .collect();
-                Ok(MaybeAIAgentOutputMessage::Message(
-                    AIAgentOutputMessage::events_from_agents(MessageId::new(self.id), event_ids)
-                        .with_citations(citations),
-                ))
-            }
             // These messages don't indicate an error but they don't translate to a client-side output message.
             api::message::Message::UserQuery(_)
             | api::message::Message::SystemQuery(_)
@@ -595,9 +416,9 @@ impl ConvertAPIMessageToClientOutputMessage for api::Message {
             | api::message::Message::ServerEvent(_)
             | api::message::Message::InvokeSkill(_)
             | api::message::Message::PassiveSuggestionResult(_)
-            // Stage 2 plan-card config snapshot: hydrated separately by the
-            // plan card's `AIDocumentModel` subscription, not via the
-            // exchange/output stream. No client output message representation.
+            | api::message::Message::ArtifactEvent(_)
+            | api::message::Message::MessagesReceivedFromAgents(_)
+            | api::message::Message::EventsFromAgents(_)
             | api::message::Message::OrchestrationConfigSnapshot(_)
             | api::message::Message::RequestMetadata(_) => {
                 Ok(MaybeAIAgentOutputMessage::NoClientRepresentation)
@@ -662,9 +483,6 @@ impl ConvertAPIToolCallToAIAgentAction for api::message::ToolCall {
             api::message::tool_call::Tool::ReadFiles(read_files) => {
                 create_standard_action(read_files.into())
             }
-            api::message::tool_call::Tool::UploadFileArtifact(upload_file_artifact) => {
-                create_standard_action(upload_file_artifact.try_into()?)
-            }
             api::message::tool_call::Tool::SearchCodebase(search_codebase) => {
                 create_standard_action(search_codebase.into())
             }
@@ -720,12 +538,6 @@ impl ConvertAPIToolCallToAIAgentAction for api::message::ToolCall {
             api::message::tool_call::Tool::RequestComputerUse(request_computer_use) => {
                 create_standard_action(request_computer_use.into())
             }
-            api::message::tool_call::Tool::StartRecording(start_recording) => {
-                create_standard_action(start_recording.try_into()?)
-            }
-            api::message::tool_call::Tool::StopRecording(stop_recording) => {
-                create_standard_action(stop_recording.into())
-            }
             api::message::tool_call::Tool::Subagent(subagent) => {
                 use api::message::tool_call::subagent::Metadata;
                 use api::message::tool_call::subagent::conversation_search_metadata::Target;
@@ -741,23 +553,19 @@ impl ConvertAPIToolCallToAIAgentAction for api::message::ToolCall {
                         } else {
                             Some(cs_meta.query)
                         };
-                        let (conversation_id, agent_run_id) = match cs_meta.target {
+                        let conversation_id = match cs_meta.target {
                             Some(Target::ConversationId(conversation_id))
                                 if !conversation_id.is_empty() =>
                             {
-                                (Some(conversation_id), None)
-                            }
-                            Some(Target::AgentRunId(agent_run_id)) if !agent_run_id.is_empty() => {
-                                (None, Some(agent_run_id))
+                                Some(conversation_id)
                             }
                             Some(Target::ConversationId(_))
                             | Some(Target::AgentRunId(_))
-                            | None => (None, None),
+                            | None => None,
                         };
                         SubagentType::ConversationSearch {
                             query,
                             conversation_id,
-                            agent_run_id,
                         }
                     }
                     Some(Metadata::WarpDocumentationSearch(_)) => {
@@ -769,16 +577,6 @@ impl ConvertAPIToolCallToAIAgentAction for api::message::ToolCall {
                     task_id: subagent.task_id,
                     subagent_type,
                 }))
-            }
-            api::message::tool_call::Tool::RunAgents(orchestrate) => {
-                create_standard_action(convert_run_agents(orchestrate, params.skill_path_origin))
-            }
-            api::message::tool_call::Tool::SendMessageToAgent(send_message) => {
-                create_standard_action(AIAgentActionType::SendMessageToAgent {
-                    addresses: send_message.addresses,
-                    subject: send_message.subject,
-                    message: send_message.message,
-                })
             }
             api::message::tool_call::Tool::InsertReviewComments(insert_review_comments) => {
                 create_standard_action(insert_review_comments.into())
@@ -801,12 +599,6 @@ impl ConvertAPIToolCallToAIAgentAction for api::message::ToolCall {
             // them is not an error.
             api::message::tool_call::Tool::Server(_) => {
                 Ok(MaybeAIAgentAction::NoClientRepresentation)
-            }
-            api::message::tool_call::Tool::WaitForEvents(payload) => {
-                create_standard_action(AIAgentActionType::WaitForEvents {
-                    tool_call_id: self.tool_call_id.clone(),
-                    idle_timeout_seconds: payload.idle_timeout_seconds,
-                })
             }
             _ => Err(ToolToAIAgentActionError::UnexpectedTool),
         }

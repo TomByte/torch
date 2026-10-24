@@ -78,7 +78,6 @@ fn header_toolbar_chip_selection_custom_without_code_review_reports_absent() {
     assert!(config.contains_item(&HeaderToolbarItemKind::TabsPanel));
     assert!(config.contains_item(&HeaderToolbarItemKind::ToolsPanel));
     assert!(config.contains_item(&HeaderToolbarItemKind::NotificationsMailbox));
-    assert!(!config.contains_item(&HeaderToolbarItemKind::AgentManagement));
 }
 
 #[test]

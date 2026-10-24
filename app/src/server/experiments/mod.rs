@@ -18,7 +18,7 @@ use crate::features::FeatureFlag;
 mod convert;
 mod model;
 
-pub use model::{Event as ServerExperimentsEvent, ServerExperiments};
+pub use model::ServerExperiments;
 
 /// The known server-side experiments.
 #[allow(clippy::enum_variant_names)]

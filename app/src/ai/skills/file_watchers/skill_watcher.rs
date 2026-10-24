@@ -25,7 +25,6 @@ use super::subscribers::{
 use super::utils::{
     find_local_project_skill_files_on_filesystem, find_project_skill_files_in_tree,
     is_home_provider_path, is_home_skill_directory, is_skill_file, read_skills_from_directories,
-    read_skills_from_files,
 };
 use crate::ai::remote_context_files::{
     REMOTE_CONTEXT_MAX_BATCH_BYTES, REMOTE_CONTEXT_MAX_FILE_BYTES, read_remote_text_file_contents,
@@ -78,24 +77,6 @@ pub struct SkillWatcher {
 }
 
 impl SkillWatcher {
-    /// Synchronously reads skills from the given local repo paths.
-    /// Requires file trees to already be built (i.e. `RepositoryUpdated` has fired).
-    /// Returns the parsed skills; the caller is responsible for feeding them into
-    /// `SkillManager::handle_skills_added`.
-    pub fn read_local_skills_for_repos(
-        repo_paths: &[PathBuf],
-        ctx: &AppContext,
-    ) -> Vec<ParsedSkill> {
-        let repo_metadata = RepoMetadataModel::as_ref(ctx);
-        let skill_files: Vec<PathBuf> = repo_paths
-            .iter()
-            .filter_map(|repo_path| RepositoryIdentifier::try_local(repo_path))
-            .flat_map(|repo_id| find_project_skill_files_in_tree(&repo_id, repo_metadata, ctx))
-            .filter_map(|path| path.to_local_path().map(Path::to_path_buf))
-            .collect();
-        read_skills_from_files(skill_files)
-    }
-
     pub fn new(ctx: &mut ModelContext<Self>, watcher_event_tx: Sender<SkillWatcherEvent>) -> Self {
         // Local-only builds have no agent that consumes skills, and agent CLIs write to their
         // home directories (e.g. `~/.claude`) constantly, so don't scan or watch them.

@@ -20,7 +20,6 @@ use crate::ai::agent::{
     AIAgentActionId, AIAgentExchangeId, AIAgentInput as FullAIAgentInput, AIIdentifiers,
     EntrypointType, PassiveSuggestionTrigger, ServerOutputId, SuggestedLoggingId,
 };
-use crate::ai::ambient_agents::AmbientAgentTaskId;
 use crate::ai::blocklist::agent_view::AgentViewEntryOrigin;
 use crate::ai::blocklist::{
     AIBlockResponseRating, CommandExecutionPermissionAllowedReason, InputType,
@@ -618,10 +617,6 @@ pub enum AgentModeEntrypoint {
     /// User manually switched between terminal and AI input modes in UDI interface
     #[serde(rename = "udi_terminal_input_switcher")]
     UDITerminalInputSwitcher,
-
-    /// The agent management view, where you can see both local interactive and ambient agent tasks
-    #[serde(rename = "agent_management_view")]
-    AgentManagementView,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -715,14 +710,6 @@ pub enum AgentModeSetupCodebaseContextActionType {
     IndexCodebase,
     #[serde(rename = "skip_indexing")]
     SkipIndexing,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum AgentModeSetupCreateEnvironmentActionType {
-    #[serde(rename = "create_environment")]
-    CreateEnvironment,
-    #[serde(rename = "skip_environment")]
-    SkipEnvironment,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -854,7 +841,6 @@ pub enum AIAgentInput {
     AutoCodeDiffQuery { query: String },
     ResumeConversation,
     InitProjectRules { display_query: Option<String> },
-    CreateEnvironment { display_query: Option<String> },
     TriggerSuggestPrompt { trigger: PassiveSuggestionTrigger },
     ActionResult { action_id: AIAgentActionId },
     CreateNewProject { query: String },
@@ -862,12 +848,7 @@ pub enum AIAgentInput {
     CodeReview,
     SummarizeConversation,
     InvokeSkill { skill_name: String },
-    StartFromAmbientRunPrompt,
-    MessagesReceivedFromAgents { message_count: usize },
-    EventsFromAgents { event_count: usize },
     PassiveSuggestionResult,
-    OrchestrationConfigUpdate,
-    AgentWake,
 }
 
 impl From<FullAIAgentInput> for AIAgentInput {
@@ -878,9 +859,6 @@ impl From<FullAIAgentInput> for AIAgentInput {
             FullAIAgentInput::ResumeConversation { .. } => Self::ResumeConversation,
             FullAIAgentInput::InitProjectRules { display_query, .. } => {
                 Self::InitProjectRules { display_query }
-            }
-            FullAIAgentInput::CreateEnvironment { display_query, .. } => {
-                Self::CreateEnvironment { display_query }
             }
             FullAIAgentInput::TriggerPassiveSuggestion { trigger, .. } => {
                 Self::TriggerSuggestPrompt { trigger }
@@ -897,18 +875,7 @@ impl From<FullAIAgentInput> for AIAgentInput {
             FullAIAgentInput::InvokeSkill { skill, .. } => Self::InvokeSkill {
                 skill_name: skill.name.clone(),
             },
-            FullAIAgentInput::StartFromAmbientRunPrompt { .. } => Self::StartFromAmbientRunPrompt,
-            FullAIAgentInput::MessagesReceivedFromAgents { messages } => {
-                Self::MessagesReceivedFromAgents {
-                    message_count: messages.len(),
-                }
-            }
-            FullAIAgentInput::EventsFromAgents { events } => Self::EventsFromAgents {
-                event_count: events.len(),
-            },
             FullAIAgentInput::PassiveSuggestionResult { .. } => Self::PassiveSuggestionResult,
-            FullAIAgentInput::OrchestrationConfigUpdate { .. } => Self::OrchestrationConfigUpdate,
-            FullAIAgentInput::AgentWake => Self::AgentWake,
         }
     }
 }
@@ -946,14 +913,11 @@ pub enum TelemetryAgentViewEntryOrigin {
     ConversationListView,
     Keybinding,
     SlashInit,
-    CreateEnvironment,
     ProjectEntry,
     ClearBuffer,
     DefaultSessionMode,
-    ChildAgent,
     LinearDeepLink,
     ThirdPartyCloudAgent,
-    OrchestrationPillBar,
     JumpToLatestAgentMessage,
 }
 
@@ -995,13 +959,10 @@ impl From<AgentViewEntryOrigin> for TelemetryAgentViewEntryOrigin {
             AgentViewEntryOrigin::ConversationListView => Self::ConversationListView,
             AgentViewEntryOrigin::Keybinding(_) => Self::Keybinding,
             AgentViewEntryOrigin::SlashInit => Self::SlashInit,
-            AgentViewEntryOrigin::CreateEnvironment => Self::CreateEnvironment,
             AgentViewEntryOrigin::ProjectEntry => Self::ProjectEntry,
             AgentViewEntryOrigin::ClearBuffer => Self::ClearBuffer,
             AgentViewEntryOrigin::DefaultSessionMode => Self::DefaultSessionMode,
-            AgentViewEntryOrigin::ChildAgent => Self::ChildAgent,
             AgentViewEntryOrigin::LinearDeepLink => Self::LinearDeepLink,
-            AgentViewEntryOrigin::OrchestrationPillBar => Self::OrchestrationPillBar,
             AgentViewEntryOrigin::JumpToLatestAgentMessage => Self::JumpToLatestAgentMessage,
         }
     }
@@ -2151,9 +2112,6 @@ pub enum TelemetryEvent {
     AgentModeSetupCodebaseContextAction {
         action: AgentModeSetupCodebaseContextActionType,
     },
-    AgentModeSetupCreateEnvironmentAction {
-        action: AgentModeSetupCreateEnvironmentActionType,
-    },
     InputBufferSubmitted {
         input_type: input_classifier::InputType,
         is_locked: bool,
@@ -2197,14 +2155,6 @@ pub enum TelemetryEvent {
         block_id: BlockId,
         user_took_over: bool,
     },
-    /// Emitted when the user toggles the Agent Management View.
-    AgentManagementViewToggled {
-        is_open: bool,
-    },
-    /// Emitted when the user opens a session from the Agent Management View.
-    AgentManagementViewOpenedSession,
-    /// Emitted when the user copies a session link from the Agent Management View.
-    AgentManagementViewCopiedSessionLink,
     /// Detected that Torch is running in an isolated sandbox.
     DetectedIsolationPlatform {
         platform: torch_isolation_platform::IsolationPlatformType,
@@ -2339,20 +2289,11 @@ pub enum TelemetryEvent {
         client_conversation_id: AIConversationId,
         server_conversation_id: Option<String>,
         is_autoexecuted: bool,
-        ambient_agent_task_id: Option<AmbientAgentTaskId>,
     },
     /// Emitted when a RequestComputerUse action is cancelled/rejected.
     ComputerUseCancelled {
         client_conversation_id: AIConversationId,
         server_conversation_id: Option<String>,
-        ambient_agent_task_id: Option<AmbientAgentTaskId>,
-    },
-    /// Emitted when computer use is enabled for a cloud agent run but the host cannot provide it
-    /// (e.g. no display), so the run's requests omit the computer-use tools. At most once per run.
-    ComputerUseUnavailable {
-        ambient_agent_task_id: AmbientAgentTaskId,
-        /// Whether the client is running inside a sandbox (a Torch-hosted cloud agent).
-        sandboxed: bool,
     },
     /// Emitted when a warp://linear deeplink is opened.
     LinearIssueLinkOpened,
@@ -3829,9 +3770,6 @@ impl TelemetryEvent {
             TelemetryEvent::AgentModeSetupCodebaseContextAction { action } => Some(json!({
                 "action": action,
             })),
-            TelemetryEvent::AgentModeSetupCreateEnvironmentAction { action } => Some(json!({
-                "action": action,
-            })),
             #[cfg(windows)]
             TelemetryEvent::WSLRegistryError
             | TelemetryEvent::AutoupdateUnableToCloseApplications
@@ -3911,11 +3849,6 @@ impl TelemetryEvent {
                 "block_id": block_id,
                 "user_took_over": user_took_over,
             })),
-            TelemetryEvent::AgentManagementViewToggled { is_open } => Some(json!({
-                "is_open": is_open,
-            })),
-            TelemetryEvent::AgentManagementViewOpenedSession => None,
-            TelemetryEvent::AgentManagementViewCopiedSessionLink => None,
             TelemetryEvent::DetectedIsolationPlatform { platform } => Some(json!({
                 "platform": platform,
             })),
@@ -4016,29 +3949,17 @@ impl TelemetryEvent {
                 client_conversation_id,
                 server_conversation_id,
                 is_autoexecuted,
-                ambient_agent_task_id,
             } => Some(json!({
                 "client_conversation_id": client_conversation_id,
                 "server_conversation_id": server_conversation_id,
                 "is_autoexecuted": is_autoexecuted,
-                "ambient_agent_task_id": ambient_agent_task_id.map(|id| id.to_string()),
             })),
             TelemetryEvent::ComputerUseCancelled {
                 client_conversation_id,
                 server_conversation_id,
-                ambient_agent_task_id,
             } => Some(json!({
                 "client_conversation_id": client_conversation_id,
                 "server_conversation_id": server_conversation_id,
-                "ambient_agent_task_id": ambient_agent_task_id.map(|id| id.to_string()),
-            })),
-            TelemetryEvent::ComputerUseUnavailable {
-                ambient_agent_task_id,
-                sandboxed,
-            } => Some(json!({
-                "ambient_agent_task_id": ambient_agent_task_id.to_string(),
-                "sandboxed": sandboxed,
-                "os": std::env::consts::OS,
             })),
             TelemetryEvent::QueuedPromptEdited { origin } => Some(json!({
                 "origin": origin,
@@ -4373,7 +4294,6 @@ impl TelemetryEvent {
             | TelemetryEvent::AgentModeSetupBannerDismissed
             | TelemetryEvent::AgentModeSetupProjectScopedRulesAction { .. }
             | TelemetryEvent::AgentModeSetupCodebaseContextAction { .. }
-            | TelemetryEvent::AgentModeSetupCreateEnvironmentAction { .. }
             | TelemetryEvent::FileTreeItemAttachedAsContext { .. }
             | TelemetryEvent::CodeSelectionAddedAsContext { .. }
             | TelemetryEvent::FileTreeItemCreated
@@ -4397,9 +4317,6 @@ impl TelemetryEvent {
             | TelemetryEvent::CLISubagentInputDismissed { .. }
             | TelemetryEvent::CLISubagentActionExecuted { .. }
             | TelemetryEvent::CLISubagentActionRejected { .. }
-            | TelemetryEvent::AgentManagementViewToggled { .. }
-            | TelemetryEvent::AgentManagementViewOpenedSession
-            | TelemetryEvent::AgentManagementViewCopiedSessionLink
             | TelemetryEvent::DetectedIsolationPlatform { .. }
             | TelemetryEvent::AgentTipShown { .. }
             | TelemetryEvent::AgentTipClicked { .. }
@@ -4421,7 +4338,6 @@ impl TelemetryEvent {
             | TelemetryEvent::LinearIssueLinkOpened
             | TelemetryEvent::ComputerUseApproved { .. }
             | TelemetryEvent::ComputerUseCancelled { .. }
-            | TelemetryEvent::ComputerUseUnavailable { .. }
             | TelemetryEvent::RemoteServerBinaryCheck { .. }
             | TelemetryEvent::RemoteServerInstallation { .. }
             | TelemetryEvent::RemoteServerInitialization { .. }
@@ -4827,7 +4743,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::AgentModeSetupBannerDismissed => EnablementState::Always,
             Self::AgentModeSetupProjectScopedRulesAction { .. } => EnablementState::Always,
             Self::AgentModeSetupCodebaseContextAction { .. } => EnablementState::Always,
-            Self::AgentModeSetupCreateEnvironmentAction { .. } => EnablementState::Always,
             Self::InputBufferSubmitted => EnablementState::ChannelSpecific {
                 channels: vec![Channel::Local, Channel::Dev],
             },
@@ -4844,11 +4759,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             | Self::CLISubagentInputDismissed { .. }
             | Self::CLISubagentActionExecuted { .. }
             | Self::CLISubagentActionRejected { .. } => EnablementState::Always,
-            Self::AgentManagementViewToggled { .. }
-            | Self::AgentManagementViewOpenedSession
-            | Self::AgentManagementViewCopiedSessionLink => {
-                EnablementState::Flag(FeatureFlag::AgentManagementView)
-            }
             Self::DetectedIsolationPlatform { .. } => EnablementState::Always,
             Self::AgentExitedShellProcess { .. } => EnablementState::Always,
             Self::CLIAgentToolbarVoiceInputUsed { .. } => EnablementState::Always,
@@ -4872,9 +4782,7 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::ToggleCLIAgentToolbarSetting { .. } => EnablementState::Always,
             Self::CodexModalOpened | Self::CodexModalUseCodexClicked => EnablementState::Always,
             Self::LinearIssueLinkOpened => EnablementState::Always,
-            Self::ComputerUseApproved
-            | Self::ComputerUseCancelled
-            | Self::ComputerUseUnavailable => {
+            Self::ComputerUseApproved | Self::ComputerUseCancelled => {
                 EnablementState::Flag(FeatureFlag::AgentModeComputerUse)
             }
             Self::RemoteServerBinaryCheck
@@ -5300,9 +5208,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::AgentModeSetupCodebaseContextAction { .. } => {
                 "Agent Mode.Setup Codebase Context Action"
             }
-            Self::AgentModeSetupCreateEnvironmentAction { .. } => {
-                "AgentMode.SetupCreateEnvironmentAction"
-            }
             Self::InputBufferSubmitted => "AgentMode.NaturalLanguageDetection.InputBufferSubmitted",
             Self::RecentMenuItemSelected { .. } => "Recent Menu Item Selected",
             Self::CLISubagentControlStateChanged { .. } => "CLI Subagent Control State Changed",
@@ -5310,11 +5215,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::CLISubagentInputDismissed { .. } => "CLI Subagent Input Dismissed",
             Self::CLISubagentActionExecuted { .. } => "CLI Subagent Action Executed",
             Self::CLISubagentActionRejected { .. } => "CLI Subagent Action Rejected",
-            Self::AgentManagementViewToggled { .. } => "Agent Management View Toggled",
-            Self::AgentManagementViewOpenedSession => "Agent Management View Opened Session",
-            Self::AgentManagementViewCopiedSessionLink => {
-                "Agent Management View Copied Session Link"
-            }
             Self::DetectedIsolationPlatform { .. } => "Isolation.DetectedIsolationPlatform",
             Self::AgentTipShown => "AgentTip Shown",
             Self::AgentTipClicked => "AgentTip Clicked",
@@ -5337,7 +5237,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::LinearIssueLinkOpened => "Linear.IssueLinkOpened",
             Self::ComputerUseApproved => "ComputerUse.Approved",
             Self::ComputerUseCancelled => "ComputerUse.Cancelled",
-            Self::ComputerUseUnavailable => "ComputerUse.Unavailable",
         }
     }
 
@@ -5938,9 +5837,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::AgentModeSetupCodebaseContextAction { .. } => {
                 "User clicked a button in the Agent Mode setup codebase context step"
             }
-            Self::AgentModeSetupCreateEnvironmentAction { .. } => {
-                "User clicked a button in the Agent Mode setup create environment step"
-            }
             Self::InputBufferSubmitted => "Input buffer submitted",
             Self::RecentMenuItemSelected { .. } => {
                 "User selected an item from the recents list on the new tab zero state"
@@ -5959,15 +5855,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             }
             Self::CLISubagentActionRejected { .. } => {
                 "User rejected a blocked action from the CLI subagent"
-            }
-            Self::AgentManagementViewToggled { .. } => {
-                "User toggled the Agent Management View open or closed"
-            }
-            Self::AgentManagementViewOpenedSession => {
-                "User opened a session from the Agent Management View"
-            }
-            Self::AgentManagementViewCopiedSessionLink => {
-                "User copied a session link from the Agent Management View"
             }
             Self::DetectedIsolationPlatform { .. } => {
                 "Detected that Torch is running in an isolated sandbox"
@@ -6017,9 +5904,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
                 "A RequestComputerUse action was approved (manually or auto-executed)"
             }
             Self::ComputerUseCancelled => "A RequestComputerUse action was cancelled/rejected",
-            Self::ComputerUseUnavailable => {
-                "Computer use was enabled for a cloud agent run but unavailable on the host"
-            }
             Self::RemoteServerBinaryCheck => {
                 "Remote server binary check completed (found, not found, or error)"
             }

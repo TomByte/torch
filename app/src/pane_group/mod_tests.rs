@@ -20,18 +20,10 @@ use watcher::HomeDirectoryWatcher;
 use super::*;
 use crate::ai::AIRequestUsageModel;
 use crate::ai::active_agent_views_model::ActiveAgentViewsModel;
-use crate::ai::agent::conversation::{AIConversation, AIConversationId};
 use crate::ai::agent_conversations_model::AgentConversationsModel;
-use crate::ai::ambient_agents::github_auth_notifier::GitHubAuthNotifier;
-use crate::ai::blocklist::agent_view::AgentViewEntryOrigin;
-use crate::ai::blocklist::local_agent_task_sync_model::LocalAgentTaskSyncModel;
-use crate::ai::blocklist::orchestration_event_streamer::OrchestrationEventStreamer;
-use crate::ai::blocklist::orchestration_events::OrchestrationEventService;
 use crate::ai::blocklist::{BlocklistAIHistoryModel, QueuedQueryModel};
-use crate::ai::cloud_environments::CloudEnvironmentCatalog;
 use crate::ai::document::ai_document_model::AIDocumentModel;
 use crate::ai::execution_profiles::profiles::AIExecutionProfilesModel;
-use crate::ai::harness_availability::HarnessAvailabilityModel;
 use crate::ai::llms::LLMPreferences;
 use crate::ai::mcp::templatable_manager::TemplatableMCPServerManager;
 use crate::ai::mcp::{FileBasedMCPManager, FileMCPWatcher};
@@ -107,7 +99,6 @@ fn initialize_app_with_history(app: &mut App, conversations: Vec<AgentConversati
     app.add_singleton_model(|_| SystemStats::new());
     app.add_singleton_model(SyncQueue::mock);
     app.add_singleton_model(CloudModel::mock);
-    app.add_singleton_model(CloudEnvironmentCatalog::new);
     app.add_singleton_model(UserWorkspaces::default_mock);
     app.add_singleton_model(TeamTesterStatus::mock);
     app.add_singleton_model(TeamUpdateManager::mock);
@@ -141,21 +132,7 @@ fn initialize_app_with_history(app: &mut App, conversations: Vec<AgentConversati
     // QueuedQueryModel subscribes to history events; register after the
     // history model is in place.
     app.add_singleton_model(QueuedQueryModel::new);
-    // Pill bar model subscribes to history events; register after the
-    // history model is in place.
-    app.add_singleton_model(|ctx| {
-        crate::ai::blocklist::agent_view::orchestration_pill_bar_model::OrchestrationPillBarModel::new(
-            Default::default(),
-            ctx,
-        )
-    });
     app.add_singleton_model(|_| CLIAgentSessionsModel::new());
-    app.add_singleton_model(OrchestrationEventService::new);
-    app.add_singleton_model(LocalAgentTaskSyncModel::new);
-    app.add_singleton_model(
-        crate::ai::blocklist::pending_cli_harness_prompt_queue::PendingCliHarnessPromptQueue::new,
-    );
-    app.add_singleton_model(OrchestrationEventStreamer::new);
     app.add_singleton_model(|_| ActiveAgentViewsModel::new());
     app.add_singleton_model(crate::ai::blocklist::BlocklistAIPermissions::new);
     app.add_singleton_model(AgentNotificationsModel::new);
@@ -166,7 +143,6 @@ fn initialize_app_with_history(app: &mut App, conversations: Vec<AgentConversati
         AIRequestUsageModel::new_for_test(ServerApiProvider::as_ref(ctx).get_ai_client(), ctx)
     });
     app.add_singleton_model(LLMPreferences::new);
-    app.add_singleton_model(HarnessAvailabilityModel::new);
     #[cfg(feature = "voice_input")]
     app.add_singleton_model(voice_input::VoiceInput::new);
     #[cfg(feature = "local_fs")]
@@ -191,7 +167,6 @@ fn initialize_app_with_history(app: &mut App, conversations: Vec<AgentConversati
     app.add_singleton_model(|_| IgnoredSuggestionsModel::new(vec![]));
     app.add_singleton_model(AIDocumentModel::new);
     app.add_singleton_model(|_| History::new(vec![]));
-    app.add_singleton_model(|_| GitHubAuthNotifier::new());
     app.add_singleton_model(AgentConversationsModel::new);
     app.add_singleton_model(remote_server::manager::RemoteServerManager::new);
 }
@@ -253,82 +228,6 @@ fn is_active_session(panes: &PaneGroup, pane_id: PaneId, ctx: &AppContext) -> bo
 
 fn new_notebook(ctx: &mut ViewContext<PaneGroup>) -> ViewHandle<NotebookView> {
     ctx.add_typed_action_view(NotebookView::new)
-}
-
-fn start_parent_conversation(
-    panes: &PaneGroup,
-    parent_pane_id: PaneId,
-    ctx: &mut ViewContext<PaneGroup>,
-) -> AIConversationId {
-    let parent_terminal_view_id = panes
-        .terminal_view_from_pane_id(parent_pane_id, ctx)
-        .expect("parent pane should have a terminal view")
-        .id();
-    start_parent_conversation_for_terminal_view(parent_terminal_view_id, ctx)
-}
-
-fn start_parent_conversation_for_terminal_view(
-    terminal_view_id: EntityId,
-    ctx: &mut ViewContext<PaneGroup>,
-) -> AIConversationId {
-    BlocklistAIHistoryModel::handle(ctx).update(ctx, |history_model, ctx| {
-        history_model.start_new_conversation(terminal_view_id, false, false, false, ctx)
-    })
-}
-fn restore_conversation_for_terminal_view(
-    terminal_view_id: EntityId,
-    conversation: AIConversation,
-    ctx: &mut ViewContext<PaneGroup>,
-) -> AIConversationId {
-    let conversation_id = conversation.id();
-
-    BlocklistAIHistoryModel::handle(ctx).update(ctx, |history_model, ctx| {
-        history_model.restore_conversations(terminal_view_id, vec![conversation], ctx);
-    });
-
-    conversation_id
-}
-
-fn restore_child_conversation_for_terminal_view(
-    terminal_view_id: EntityId,
-    parent_conversation_id: AIConversationId,
-    ctx: &mut ViewContext<PaneGroup>,
-) -> AIConversationId {
-    let mut child_conversation = AIConversation::new(false, false);
-    child_conversation.set_parent_conversation_id(parent_conversation_id);
-    restore_conversation_for_terminal_view(terminal_view_id, child_conversation, ctx)
-}
-
-fn restore_child_conversation(
-    panes: &PaneGroup,
-    pane_id: PaneId,
-    parent_conversation_id: AIConversationId,
-    ctx: &mut ViewContext<PaneGroup>,
-) -> AIConversationId {
-    let terminal_view_id = panes
-        .terminal_view_from_pane_id(pane_id, ctx)
-        .expect("child pane should have a terminal view")
-        .id();
-    restore_child_conversation_for_terminal_view(terminal_view_id, parent_conversation_id, ctx)
-}
-
-fn enter_agent_view_for_conversation(
-    panes: &PaneGroup,
-    pane_id: PaneId,
-    conversation_id: AIConversationId,
-    ctx: &mut ViewContext<PaneGroup>,
-) {
-    panes
-        .terminal_view_from_pane_id(pane_id, ctx)
-        .expect("pane should have a terminal view")
-        .update(ctx, |terminal_view, ctx| {
-            terminal_view.enter_agent_view_for_conversation(
-                None,
-                AgentViewEntryOrigin::RestoreExistingConversation,
-                conversation_id,
-                ctx,
-            );
-        });
 }
 
 struct PreAttachReturnsFalsePane {
@@ -424,148 +323,6 @@ impl pane::PaneContent for PreAttachReturnsFalsePane {
 //         })
 //     });
 // }
-
-#[test]
-fn test_ensure_hidden_child_agent_pane_restores_child_from_detached_group() {
-    let _agent_view = FeatureFlag::AgentView.override_enabled(true);
-
-    App::test((), |mut app| async move {
-        initialize_app(&mut app);
-        let closed_pane_group = mock_pane_group(&mut app, Default::default());
-        let reopened_pane_group = mock_pane_group(&mut app, Default::default());
-
-        let (parent_conversation, child_conversation_id, previous_owner) = closed_pane_group
-            .update(&mut app, |panes, ctx| {
-                let parent_pane_id = panes.focused_pane_id(ctx);
-                let parent_conversation_id = start_parent_conversation(panes, parent_pane_id, ctx);
-                let mut child = AIConversation::new(false, false);
-                child.set_parent_conversation_id(parent_conversation_id);
-                child.set_agent_name("architect".to_string());
-                let child_conversation_id = child.id();
-                panes.create_hidden_child_agent_pane(child, parent_pane_id, ctx);
-
-                let previous_owner = panes
-                    .terminal_view_from_pane_id(
-                        panes.child_agent_panes[&child_conversation_id],
-                        ctx,
-                    )
-                    .unwrap();
-                let parent_conversation = BlocklistAIHistoryModel::as_ref(ctx)
-                    .conversation(&parent_conversation_id)
-                    .unwrap()
-                    .clone();
-                panes.swap_active_pane_to_conversation(parent_pane_id, child_conversation_id, ctx);
-                panes.detach_panes(ctx);
-
-                (parent_conversation, child_conversation_id, previous_owner)
-            });
-
-        let restored_child = reopened_pane_group.update(&mut app, |panes, ctx| {
-            let parent_pane_id = panes.focused_pane_id(ctx);
-            let parent_view = panes
-                .terminal_view_from_pane_id(parent_pane_id, ctx)
-                .unwrap();
-            let parent_conversation_id =
-                restore_conversation_for_terminal_view(parent_view.id(), parent_conversation, ctx);
-            BlocklistAIHistoryModel::handle(ctx).update(ctx, |history, ctx| {
-                history.set_active_conversation_id(parent_conversation_id, parent_view.id(), ctx);
-            });
-
-            assert!(
-                panes.ensure_hidden_child_agent_pane_for_conversation(child_conversation_id, ctx)
-            );
-            let child_pane_id = *panes
-                .child_agent_panes
-                .get(&child_conversation_id)
-                .expect("an undo-retained owner must not prevent restoring the child");
-            panes.swap_active_pane_to_conversation(parent_pane_id, child_conversation_id, ctx);
-
-            assert_eq!(panes.focused_pane_id(ctx), child_pane_id);
-            let child_view = panes
-                .terminal_view_from_pane_id(child_pane_id, ctx)
-                .unwrap();
-            assert_eq!(
-                child_view.as_ref(ctx).active_conversation_id(ctx),
-                Some(child_conversation_id)
-            );
-            child_view
-        });
-
-        assert_ne!(restored_child.id(), previous_owner.id());
-        closed_pane_group.update(&mut app, |panes, ctx| {
-            panes.reattach_panes(ctx);
-            assert!(!panes.child_agent_panes.contains_key(&child_conversation_id));
-            assert_eq!(
-                panes.find_pane_id_for_terminal_view(previous_owner.id(), ctx),
-                None
-            );
-            assert_eq!(panes.visible_pane_count(), 1);
-            assert!(
-                panes.ensure_hidden_child_agent_pane_for_conversation(child_conversation_id, ctx)
-            );
-        });
-        closed_pane_group.update(&mut app, |panes, ctx| {
-            panes.clean_up_panes(ctx);
-        });
-        app.read(|ctx| {
-            assert_eq!(
-                BlocklistAIHistoryModel::as_ref(ctx)
-                    .terminal_surface_id_for_conversation(&child_conversation_id),
-                Some(restored_child.id())
-            );
-            assert_eq!(
-                restored_child.as_ref(ctx).active_conversation_id(ctx),
-                Some(child_conversation_id)
-            );
-        });
-    });
-}
-
-#[test]
-fn test_entering_parent_agent_view_skips_child_owned_by_another_pane_group() {
-    let _agent_view = FeatureFlag::AgentView.override_enabled(true);
-
-    App::test((), |mut app| async move {
-        initialize_app(&mut app);
-        let parent_pane_group = mock_pane_group(&mut app, Default::default());
-        let other_pane_group = mock_pane_group(&mut app, Default::default());
-
-        let (parent_conversation_id, parent_pane_id) =
-            parent_pane_group.update(&mut app, |panes, ctx| {
-                let parent_pane_id = get_newly_created_pane_id(panes, &[]);
-                let parent_conversation_id = start_parent_conversation(panes, parent_pane_id, ctx);
-                (parent_conversation_id, parent_pane_id)
-            });
-        let (child_conversation_id, child_owner_terminal_view_id) =
-            other_pane_group.update(&mut app, |panes, ctx| {
-                let child_pane_id = get_newly_created_pane_id(panes, &[]);
-                let child_conversation_id =
-                    restore_child_conversation(panes, child_pane_id, parent_conversation_id, ctx);
-                let initial_owner_terminal_view_id = panes
-                    .terminal_view_from_pane_id(child_pane_id, ctx)
-                    .expect("child pane should have a terminal view")
-                    .id();
-
-                enter_agent_view_for_conversation(panes, child_pane_id, child_conversation_id, ctx);
-                (child_conversation_id, initial_owner_terminal_view_id)
-            });
-        let initial_pane_count = parent_pane_group.update(&mut app, |panes, ctx| {
-            let initial_pane_count = panes.pane_count();
-            enter_agent_view_for_conversation(panes, parent_pane_id, parent_conversation_id, ctx);
-            initial_pane_count
-        });
-
-        parent_pane_group.update(&mut app, |panes, ctx| {
-            assert!(!panes.child_agent_panes.contains_key(&child_conversation_id));
-            assert_eq!(panes.pane_count(), initial_pane_count);
-            assert_eq!(
-                BlocklistAIHistoryModel::as_ref(ctx)
-                    .terminal_surface_id_for_conversation(&child_conversation_id),
-                Some(child_owner_terminal_view_id)
-            );
-        });
-    });
-}
 
 #[test]
 #[allow(clippy::clone_on_copy)]

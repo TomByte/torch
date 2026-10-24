@@ -673,16 +673,6 @@ impl BlocklistAIPermissions {
             .run_agents
     }
 
-    pub fn get_run_agents_setting(
-        &self,
-        ctx: &AppContext,
-        terminal_view_id: Option<EntityId>,
-    ) -> crate::ai::execution_profiles::RunAgentsPermission {
-        let active_profile =
-            AIExecutionProfilesModel::as_ref(ctx).active_profile(terminal_view_id, ctx);
-        self.get_run_agents_setting_for_profile(ctx, active_profile.id())
-    }
-
     /// Returns whether or not Agent Mode can auto-read the given files.
     pub fn can_read_files_with_conversation(
         &self,

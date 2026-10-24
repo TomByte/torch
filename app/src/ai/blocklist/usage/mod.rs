@@ -4,7 +4,6 @@ use torchui::Element;
 
 pub mod conversation_usage_view;
 pub mod request_metadata_turn_view;
-pub mod rollup;
 
 fn icon_for_context_window_usage(context_window_usage: f32) -> Icon {
     // The circle's solid (white) marks represent the context *remaining*, not

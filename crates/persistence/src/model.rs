@@ -345,7 +345,6 @@ pub struct NewWindow {
     pub voltron_width: Option<f32>,
     pub warp_drive_index_width: Option<f32>,
     pub fullscreen_state: i32,
-    pub agent_management_filters: Option<String>,
     pub left_panel_open: Option<bool>,
     pub vertical_tabs_panel_open: Option<bool>,
     pub team_uid: Option<String>,
@@ -1166,30 +1165,6 @@ pub struct AgentConversationData {
     /// The server conversation ID of the source conversation if this conversation was forked.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub forked_from_server_conversation_token: Option<String>,
-    /// Serialized Vec<Artifact> for local artifact tracking.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub artifacts_json: Option<String>,
-    /// Server-side identifier of the parent agent that spawned this child.
-    /// In v1 this is the parent's conversation token; in v2 it is the parent's run_id.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub parent_agent_id: Option<String>,
-    /// The display name for this agent, assigned by the orchestrator.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub agent_name: Option<String>,
-    /// Harness type used to render the child agent's shared icon in orchestration UI.
-    #[serde(
-        default,
-        alias = "orchestration_avatar_id",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub orchestration_harness_type: Option<String>,
-    /// The local conversation ID of the parent conversation.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub parent_conversation_id: Option<String>,
-    /// True when this conversation is a parent-side placeholder for a child
-    /// agent executing on a remote worker.
-    #[serde(default, skip_serializing_if = "is_false")]
-    pub is_remote_child: bool,
     /// Legacy marker that previously recorded whether the root task was still
     /// optimistic when this conversation was persisted. Retained on the struct
     /// for backward-compatible deserialization of rows written by older builds;
@@ -1199,22 +1174,8 @@ pub struct AgentConversationData {
     // `Some(true)` rows that legacy code paths might trip over.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub root_task_is_optimistic: Option<bool>,
-    /// The server-assigned run identifier (`ai_tasks.id`) for v2 orchestration.
-    /// For local agents this arrives via StreamInit; for cloud agents it will
-    /// come from SpawnAgentResponse once the local→cloud spawn path is wired.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub run_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub autoexecute_override: Option<PersistedAutoexecuteMode>,
-    /// The last event sequence number from the v2 orchestration event log
-    /// that this conversation has observed. Used on restore to resume event
-    /// delivery without re-delivering already-processed events.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub last_event_sequence: Option<i64>,
-    /// Whether the user has pinned this child agent in the orchestration
-    /// pill bar. Orchestrator conversations always serialize as `false`.
-    #[serde(default, skip_serializing_if = "is_false")]
-    pub pinned: bool,
     /// Whether the user chose Torch-funded inference for this conversation after a ChatGPT
     /// token-sharing failure. Sent as `skip_chatgpt_subscription` on every request.
     #[serde(default, skip_serializing_if = "is_false")]

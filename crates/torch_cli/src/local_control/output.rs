@@ -4,7 +4,7 @@ use std::io::Write as _;
 use local_control::protocol::{ControlError, ErrorCode};
 use serde::Serialize;
 
-use crate::agent::OutputFormat;
+use crate::local_control::OutputFormat;
 
 /// JSON/NDJSON error payload emitted by `warpctrl`.
 #[derive(Serialize)]

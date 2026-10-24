@@ -83,9 +83,7 @@ pub fn init(app: &mut AppContext) {
     delete_conversation_confirmation_dialog::init(app);
     crate::tab_configs::remove_confirmation_dialog::init(app);
     tab_configs::session_config_modal::init(app);
-    view::launch_modal::oz_launch::init(app);
     view::openwarp_launch_modal::init(app);
-    view::orchestration_launch_modal::init(app);
     view::agent_cli_launch_modal::init(app);
     view::feature_intro_modal::init(app);
     view::chatgpt_plan_modal::init(app);
@@ -151,18 +149,6 @@ pub fn init(app: &mut AppContext) {
                 )
                 .with_context_predicate(id!("Workspace")),
                 EditableBinding::new(
-                    "workspace:open_oz_launch_modal",
-                    "[Debug] Open Oz Launch Modal",
-                    WorkspaceAction::OpenOzLaunchModal,
-                )
-                .with_context_predicate(id!("Workspace")),
-                EditableBinding::new(
-                    "workspace:reset_oz_launch_modal_state",
-                    "[Debug] Reset Oz Launch Modal State",
-                    WorkspaceAction::ResetOzLaunchModalState,
-                )
-                .with_context_predicate(id!("Workspace")),
-                EditableBinding::new(
                     "workspace:open_openwarp_launch_modal",
                     "[Debug] Open OpenWarp Launch Modal",
                     WorkspaceAction::OpenOpenWarpLaunchModal,
@@ -172,18 +158,6 @@ pub fn init(app: &mut AppContext) {
                     "workspace:reset_openwarp_launch_modal_state",
                     "[Debug] Reset OpenWarp Launch Modal State",
                     WorkspaceAction::ResetOpenWarpLaunchModalState,
-                )
-                .with_context_predicate(id!("Workspace")),
-                EditableBinding::new(
-                    "workspace:open_orchestration_launch_modal",
-                    "[Debug] Open Orchestration Launch Modal",
-                    WorkspaceAction::OpenOrchestrationLaunchModal,
-                )
-                .with_context_predicate(id!("Workspace")),
-                EditableBinding::new(
-                    "workspace:reset_orchestration_launch_modal_state",
-                    "[Debug] Reset Orchestration Launch Modal State",
-                    WorkspaceAction::ResetOrchestrationLaunchModalState,
                 )
                 .with_context_predicate(id!("Workspace")),
                 EditableBinding::new(
@@ -1091,27 +1065,9 @@ pub fn init(app: &mut AppContext) {
         .with_custom_action(CustomAction::ToggleResourceCenter)]);
     }
 
-    // Oz and Torch Control CLI install/uninstall actions (macOS only)
+    // Torch Control CLI install/uninstall actions (macOS only)
     #[cfg(target_os = "macos")]
     {
-        if !ChannelState::is_local_only() {
-            app.register_editable_bindings([
-                EditableBinding::new(
-                    "workspace:install_cli",
-                    "Install Oz CLI globally for use outside of Torch",
-                    WorkspaceAction::InstallOz,
-                )
-                .with_group(bindings::BindingGroup::Settings.as_str())
-                .with_context_predicate(id!("Workspace")),
-                EditableBinding::new(
-                    "workspace:uninstall_cli",
-                    "Undo global Oz CLI installation (oz will still work within Torch)",
-                    WorkspaceAction::UninstallOz,
-                )
-                .with_group(bindings::BindingGroup::Settings.as_str())
-                .with_context_predicate(id!("Workspace")),
-            ]);
-        }
         if FeatureFlag::WarpControlCli.is_enabled() {
             app.register_editable_bindings([
                 EditableBinding::new(
@@ -1261,17 +1217,6 @@ pub fn init(app: &mut AppContext) {
 
     add_open_setting_pages_as_editable_binding(app);
     add_overflow_menu_items_as_editable_binding(app);
-
-    app.register_editable_bindings([EditableBinding::new(
-        "workspace:toggle_agent_management_view",
-        "Toggle the agent management view",
-        WorkspaceAction::ToggleAgentManagementView,
-    )
-    .with_enabled(|| FeatureFlag::AgentManagementView.is_enabled())
-    .with_context_predicate(id!("Workspace") & id!(flags::IS_ANY_AI_ENABLED))
-    .with_mac_key_binding("cmd-shift-M")
-    .with_linux_or_windows_key_binding("ctrl-shift-M")
-    .with_group(bindings::BindingGroup::WarpAi.as_str())]);
 }
 
 fn add_open_setting_pages_as_editable_binding(app: &mut AppContext) {

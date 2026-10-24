@@ -6,7 +6,6 @@ pub mod callout_bubble;
 mod compact_dropdown;
 pub mod compactible_action_button;
 pub mod compactible_split_action_button;
-pub mod copyable_text_field;
 mod dismissible_toast;
 pub mod dropdown;
 mod feature_popup;
@@ -18,13 +17,10 @@ mod warning_box;
 
 pub use alert::Alert;
 pub use compact_dropdown::{CompactDropdown, CompactDropdownEvent, CompactDropdownItem};
-pub use copyable_text_field::*;
 pub use dismissible_toast::*;
 pub use dropdown::{Dropdown, DropdownItem, DropdownItemAction};
 pub use feature_popup::*;
-pub use filterable_dropdown::{
-    FilterableDropdown, FilterableDropdownEvent, FilterableDropdownOrientation,
-};
+pub use filterable_dropdown::{FilterableDropdown, FilterableDropdownOrientation};
 pub use markdown_toggle_view::{MarkdownToggleEvent, MarkdownToggleView};
 pub use submittable_text_input::*;
 pub use warning_box::*;

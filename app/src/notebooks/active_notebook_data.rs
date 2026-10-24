@@ -183,15 +183,6 @@ impl ActiveNotebookData {
                     ctx.emit(ActiveNotebookDataEvent::TrashStatusChanged);
                 }
             }
-            (ObjectOperation::MoveToDrive, OperationSuccessType::Success) => {
-                let current_id = self.id();
-                let server_id = result.server_id.expect("Expect server id on success");
-                if let Some(id) = current_id
-                    && id.into_server() == Some(server_id)
-                {
-                    ctx.emit(ActiveNotebookDataEvent::MovedToSpace);
-                }
-            }
             _ => {}
         }
     }
@@ -381,7 +372,6 @@ pub enum ActiveNotebookDataEvent {
     /// This notebook was trashed or untrashed (used for refreshing pane overflow items)
     TrashStatusChanged,
     // This notebook was moved to a shared space.
-    MovedToSpace,
 }
 
 /// Whether or not a notebook is trashed.

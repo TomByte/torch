@@ -7,11 +7,6 @@ use command::blocking::Command;
 use torch_core::channel::ChannelState;
 use torch_util::path::ShellFamily;
 
-/// Compute the target path where the Oz CLI symlink should be installed, based on channel
-fn oz_install_target_path() -> PathBuf {
-    PathBuf::from("/usr/local/bin").join(ChannelState::channel().cli_command_name())
-}
-
 /// Compute the target path where the Torch Control symlink should be installed, based on channel
 fn warpctrl_install_target_path() -> PathBuf {
     PathBuf::from("/usr/local/bin").join(ChannelState::channel().warpctrl_command_name())
@@ -19,12 +14,10 @@ fn warpctrl_install_target_path() -> PathBuf {
 
 /// Compute the source path of the warpctrl wrapper inside the current app bundle.
 ///
-/// Oz commands are part of the shared executable's normal argument parser, so
-/// Oz can symlink directly to the current executable. Torch Control has a
-/// separate parser selected by the hidden `--warpctrl` flag, so its installed
-/// symlink must target the bundled wrapper that injects that flag. Without it,
-/// Torch Control subcommands such as `tab` would reach the normal parser and be
-/// rejected as unknown.
+/// Torch Control has a separate parser selected by the hidden `--warpctrl`
+/// flag, so its installed symlink must target the bundled wrapper that injects
+/// that flag. Without it, Torch Control subcommands such as `tab` would reach
+/// the normal parser and be rejected as unknown.
 fn warpctrl_bundle_source_path() -> Result<PathBuf> {
     let current_binary =
         std::env::current_exe().context("Failed to get current executable path")?;
@@ -194,23 +187,6 @@ fn uninstall_symlink(target: &Path, command_name: &str) -> Result<()> {
     }
 
     Ok(())
-}
-
-/// Install the Oz CLI by symlinking the shared Torch executable into /usr/local/bin.
-///
-/// The normal argument parser dispatches Oz subcommands directly. It also uses
-/// the `oz`-prefixed invocation name to print CLI help rather than launch the
-/// GUI when no subcommand is provided.
-pub fn install_oz() -> Result<()> {
-    let oz_path = oz_install_target_path();
-    let current_binary =
-        std::env::current_exe().context("Failed to get current executable path")?;
-    install_symlink(&current_binary, &oz_path, "Oz CLI")
-}
-
-/// Uninstall the Oz CLI by removing the symlink from /usr/local/bin
-pub fn uninstall_oz() -> Result<()> {
-    uninstall_symlink(&oz_install_target_path(), "Oz command")
 }
 
 /// Install Torch Control by symlinking its bundled wrapper into /usr/local/bin.

@@ -7,15 +7,11 @@ publish.workspace = true
 license.workspace = true
 
 [dependencies]
-chrono.workspace = true
 clap = { workspace = true, features = ["derive", "env"] }
 cfg-if = { workspace = true }
-humantime.workspace = true
-jaq-all.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 url = { workspace = true, features = ["serde"] }
-uuid = { workspace = true }
 torch_core = { path = "../torch_core" }
 color-print = "0.3"
 torch_util = { path = "../torch_util" }
@@ -31,10 +27,3 @@ windows = { workspace = true, features = [
 [build-dependencies]
 cfg_aliases.workspace = true
 
-[features]
-integration_tests = []
-
-
-[dev-dependencies]
-serial_test = "0.8.0"
-torch_core = { workspace = true, features = ["test-util"] }

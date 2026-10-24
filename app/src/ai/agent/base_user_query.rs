@@ -33,22 +33,6 @@ impl BaseUserQuery {
         Self(Box::new(query))
     }
 
-    /// A query whose author cannot be established, marked with a `ServerSynthesized` origin
-    /// naming `reason` so warp-server neither treats it as fresh local input nor leaves it
-    /// looking like the sharer's own.
-    pub(crate) fn unattributed(reason: &str) -> Self {
-        Self::from_proto(api::request::input::UserQuery {
-            origin: Some(api::UserQueryOrigin {
-                variant: Some(api::user_query_origin::Variant::ServerSynthesized(
-                    api::user_query_origin::ServerSynthesized {
-                        reason: reason.to_string(),
-                    },
-                )),
-            }),
-            ..Default::default()
-        })
-    }
-
     /// Lifts a persisted or streamed `Message.UserQuery`'s attribution (origin, author, source
     /// message, and nothing else) so a restored or live input keeps who was behind it when it
     /// is sent again. `None` when the message carries no attribution: historical queries stay
@@ -63,17 +47,6 @@ impl BaseUserQuery {
             source_message: query.source_message.clone(),
             ..Default::default()
         }))
-    }
-
-    /// Whether the server issued this query as an agent-message wake.
-    pub(crate) fn is_agent_message_wake(&self) -> bool {
-        matches!(
-            self.0
-                .origin
-                .as_ref()
-                .and_then(|origin| origin.variant.as_ref()),
-            Some(api::user_query_origin::Variant::AgentMessageWake(_))
-        )
     }
 
     /// The query text, or `None` when the server left it empty and only duplicated it into

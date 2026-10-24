@@ -24,7 +24,6 @@ use std::time::Duration;
 // Re-export types that were moved to the ai and ai_types crates.
 pub use ai::agent::action::*;
 pub use ai::agent::action_result::*;
-use ai::agent::orchestration_config::{OrchestrationConfig, OrchestrationConfigStatus};
 pub use ai::agent::{AIAgentCitation, FileLocations};
 use ai::skills::ParsedSkill;
 pub use ai_types::{AIAgentActionId, EntrypointType, PassiveSuggestionTriggerType};
@@ -40,7 +39,7 @@ use torch_core::channel::ChannelState;
 use torch_core::features::FeatureFlag;
 use torch_editor::render::model::LineCount;
 use uuid::Uuid;
-use warp_multi_agent_api::{AgentEvent, AgentType, diff_hunk as diff_hunk_api};
+use warp_multi_agent_api::{AgentType, diff_hunk as diff_hunk_api};
 
 pub use self::api::{MaybeAIAgentOutputMessage, MessageToAIAgentOutputMessageError};
 pub use self::base_user_query::BaseUserQuery;
@@ -646,16 +645,7 @@ impl AIAgentOutput {
                     result.push(format!("[DEBUG] {text}"));
                     last_was_action = false;
                 }
-                AIAgentOutputMessageType::ArtifactCreated(_) => continue,
                 AIAgentOutputMessageType::SkillInvoked(_) => continue,
-                AIAgentOutputMessageType::MessagesReceivedFromAgents { messages } => {
-                    result.push(format!("Received {} messages", messages.len()));
-                    last_was_action = false;
-                }
-                AIAgentOutputMessageType::EventsFromAgents { event_ids } => {
-                    result.push(format!("Received {} agent events", event_ids.len()));
-                    last_was_action = false;
-                }
             }
         }
 
@@ -1363,32 +1353,6 @@ impl<'a> std::fmt::Display for MarkdownActionResult<'a> {
                 ReadFilesResult::Error(error) => write!(f, "\n_Read files error: {error} _"),
                 ReadFilesResult::Cancelled => write!(f, "\n_Read files cancelled_"),
             },
-            AIAgentActionResultType::UploadArtifact(result) => match result {
-                UploadArtifactResult::Success {
-                    artifact_uid,
-                    filepath,
-                    mime_type,
-                    description,
-                    size_bytes,
-                } => {
-                    write!(f, "\n**Artifact Uploaded:** `{artifact_uid}`")?;
-                    if let Some(filepath) = filepath {
-                        write!(f, "\n\n**File:** `{filepath}`")?;
-                    }
-                    write!(
-                        f,
-                        "\n\n**MIME Type:** `{mime_type}`\n\n**Size:** `{size_bytes}` bytes"
-                    )?;
-                    if let Some(description) = description {
-                        write!(f, "\n\n**Description:** {description}")?;
-                    }
-                    Ok(())
-                }
-                UploadArtifactResult::Error(error) => {
-                    write!(f, "\n_Upload artifact error: {error} _")
-                }
-                UploadArtifactResult::Cancelled => write!(f, "\n_Upload artifact cancelled_"),
-            },
             AIAgentActionResultType::SearchCodebase(result) => match result {
                 SearchCodebaseResult::Success { files } => {
                     write!(f, "\n\n**Codebase Search Results:**\n\n")?;
@@ -1534,7 +1498,6 @@ impl AIAgentActionResult {
                     RequestCommandOutputResult::CancelledBeforeExecution
                 )
                 | AIAgentActionResultType::ReadFiles(ReadFilesResult::Cancelled)
-                | AIAgentActionResultType::UploadArtifact(UploadArtifactResult::Cancelled)
                 | AIAgentActionResultType::SearchCodebase(SearchCodebaseResult::Cancelled)
                 | AIAgentActionResultType::Grep(GrepResult::Cancelled)
                 | AIAgentActionResultType::FileGlob(FileGlobResult::Cancelled)
@@ -1849,12 +1812,8 @@ pub enum SubagentType {
     Summarization,
     ConversationSearch {
         query: Option<String>,
-        /// Search targets are mutually exclusive; at most one of `conversation_id` or
-        /// `agent_run_id` should be populated for a single conversation search subagent.
         /// The ID of the conversation being searched.
         conversation_id: Option<String>,
-        /// The ID of the agent run being searched.
-        agent_run_id: Option<String>,
     },
     WarpDocumentationSearch,
     Unknown,
@@ -1875,16 +1834,6 @@ impl Display for SubagentCall {
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct InvokedSkill {
     pub name: String,
-}
-
-/// Data for a single received message, used for rendering in the UI.
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub struct ReceivedMessageDisplay {
-    pub message_id: String,
-    pub sender_agent_id: String,
-    pub addresses: Vec<String>,
-    pub subject: String,
-    pub message_body: String,
 }
 
 impl Display for InvokedSkill {
@@ -1926,38 +1875,7 @@ pub enum AIAgentOutputMessageType {
     DebugOutput {
         text: String,
     },
-    /// Notification that an artifact was created (e.g. a PR).
-    ArtifactCreated(ArtifactCreatedData),
     SkillInvoked(InvokedSkill),
-    /// Messages received from other agent conversations.
-    MessagesReceivedFromAgents {
-        messages: Vec<ReceivedMessageDisplay>,
-    },
-    /// Lifecycle events received from other agent conversations.
-    EventsFromAgents {
-        event_ids: Vec<String>,
-    },
-}
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub enum ArtifactCreatedData {
-    PullRequest {
-        url: String,
-        branch: String,
-    },
-    Screenshot {
-        artifact_uid: String,
-        mime_type: String,
-        description: Option<String>,
-    },
-    File {
-        artifact_uid: String,
-        filepath: String,
-        filename: String,
-        mime_type: String,
-        description: Option<String>,
-        size_bytes: i64,
-    },
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -2107,30 +2025,8 @@ impl Display for AIAgentOutputMessage {
                 comments: comment_ids,
             } => write!(f, "Addressed {} comments", comment_ids.len())?,
             AIAgentOutputMessageType::DebugOutput { text } => write!(f, "[DEBUG] {text}")?,
-            AIAgentOutputMessageType::ArtifactCreated(data) => match data {
-                ArtifactCreatedData::PullRequest { url, branch } => {
-                    write!(f, "Created PR: {url} (branch: {branch})")?
-                }
-                ArtifactCreatedData::Screenshot { artifact_uid, .. } => {
-                    write!(f, "Screenshot captured (artifact: {artifact_uid})")?
-                }
-                ArtifactCreatedData::File {
-                    artifact_uid,
-                    filepath,
-                    ..
-                } => write!(
-                    f,
-                    "File artifact uploaded: {filepath} (artifact: {artifact_uid})"
-                )?,
-            },
             AIAgentOutputMessageType::SkillInvoked(invoked_skill) => {
                 write!(f, "Skill Invoked: {}", invoked_skill.name)?
-            }
-            AIAgentOutputMessageType::MessagesReceivedFromAgents { messages } => {
-                write!(f, "Received {} messages", messages.len())?
-            }
-            AIAgentOutputMessageType::EventsFromAgents { event_ids } => {
-                write!(f, "Received {} agent events", event_ids.len())?
             }
         }
 
@@ -2240,14 +2136,6 @@ impl AIAgentOutputMessage {
         }
     }
 
-    pub fn artifact_created(id: MessageId, data: ArtifactCreatedData) -> Self {
-        Self {
-            id,
-            message: AIAgentOutputMessageType::ArtifactCreated(data),
-            citations: vec![],
-        }
-    }
-
     pub fn with_citations(self, citations: Vec<AIAgentCitation>) -> Self {
         Self { citations, ..self }
     }
@@ -2256,25 +2144,6 @@ impl AIAgentOutputMessage {
         Self {
             id,
             message: AIAgentOutputMessageType::SkillInvoked(invoked_skill),
-            citations: vec![],
-        }
-    }
-
-    pub fn messages_received_from_agents(
-        id: MessageId,
-        messages: Vec<ReceivedMessageDisplay>,
-    ) -> Self {
-        Self {
-            id,
-            message: AIAgentOutputMessageType::MessagesReceivedFromAgents { messages },
-            citations: vec![],
-        }
-    }
-
-    pub fn events_from_agents(id: MessageId, event_ids: Vec<String>) -> Self {
-        Self {
-            id,
-            message: AIAgentOutputMessageType::EventsFromAgents { event_ids },
             citations: vec![],
         }
     }
@@ -2897,14 +2766,11 @@ pub enum UserQueryMode {
     #[default]
     Normal,
     Plan,
-    Orchestrate,
 }
 
 pub fn extract_user_query_mode(query: String) -> (String, UserQueryMode) {
     if let Some(query) = commands::strip_command_prefix(&query, commands::PLAN_NAME) {
         (query, UserQueryMode::Plan)
-    } else if let Some(query) = commands::strip_command_prefix(&query, commands::ORCHESTRATE_NAME) {
-        (query, UserQueryMode::Orchestrate)
     } else {
         (query, UserQueryMode::Normal)
     }
@@ -2921,7 +2787,6 @@ pub fn display_user_query_with_mode(mode: UserQueryMode, query: &str) -> String 
     match mode {
         UserQueryMode::Normal => query.to_owned(),
         UserQueryMode::Plan => format!("{} {query}", commands::PLAN.name),
-        UserQueryMode::Orchestrate => format!("{} {query}", commands::ORCHESTRATE.name),
     }
 }
 
@@ -2991,12 +2856,6 @@ pub enum AIAgentInput {
         display_query: Option<String>,
     },
 
-    CreateEnvironment {
-        context: Arc<[AIAgentContext]>,
-        display_query: Option<String>,
-        repo_paths: Vec<String>,
-    },
-
     TriggerPassiveSuggestion {
         context: Arc<[AIAgentContext]>,
         attachments: Vec<AIAgentAttachment>,
@@ -3031,34 +2890,11 @@ pub enum AIAgentInput {
         user_query: Option<InvokeSkillUserQuery>,
     },
 
-    /// Start a conversation using the prompt stored for an ambient agent run.
-    /// The server resolves the prompt from the run's latest known prompt.
-    /// If runtime_skill is provided, the server will create an InvokeSkill message. The skill
-    /// instructions are sent to the LLM but not displayed in the UI query bubble.
-    StartFromAmbientRunPrompt {
-        ambient_run_id: String,
-        context: Arc<[AIAgentContext]>,
-        /// Optional skill to use as base context (content hidden from user in UI).
-        runtime_skill: Option<ai::skills::ParsedSkill>,
-        /// Optional directory path where the client downloaded task attachments.
-        /// Passed to the server so it can construct correct file paths for the LLM.
-        attachments_dir: Option<String>,
-    },
-
     /// The result of an `AIAgentAction`, relayed back to the LLM for it to continue answering a
     /// user query.
     ActionResult {
         result: AIAgentActionResult,
         context: Arc<[AIAgentContext]>,
-    },
-
-    /// Messages received from other agent conversations via the message bus.
-    MessagesReceivedFromAgents {
-        messages: Vec<ReceivedMessageInput>,
-    },
-    /// Events received from other agent conversations.
-    EventsFromAgents {
-        events: Vec<AgentEvent>,
     },
 
     /// The result of a passive suggestion that should be
@@ -3068,29 +2904,6 @@ pub enum AIAgentInput {
         suggestion: PassiveSuggestionResultType,
         context: Arc<[AIAgentContext]>,
     },
-
-    /// Piggybacked orchestration config update from the plan card.
-    /// Sent on the next outbound request after the user edits the
-    /// config block or toggles approval.
-    OrchestrationConfigUpdate {
-        plan_id: String,
-        config: OrchestrationConfig,
-        status: OrchestrationConfigStatus,
-    },
-
-    /// Reports that the run was woken; the server injects any pending agent messages into the
-    /// turn.
-    AgentWake,
-}
-
-/// Data for a single message received by an agent from another agent.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ReceivedMessageInput {
-    pub message_id: String,
-    pub sender_agent_id: String,
-    pub addresses: Vec<String>,
-    pub subject: String,
-    pub message_body: String,
 }
 
 /// A simple struct that holds a URL to be used for the CloneRepository input.
@@ -3131,7 +2944,6 @@ impl Display for AIAgentInput {
             Self::ActionResult { result, .. } => write!(f, "ActionResult: {result}"),
             Self::ResumeConversation { .. } => write!(f, "ResumeConversation"),
             Self::InitProjectRules { .. } => write!(f, "InitProjectRules"),
-            Self::CreateEnvironment { .. } => write!(f, "CreateEnvironment"),
             Self::TriggerPassiveSuggestion { .. } => write!(f, "TriggerSuggestPrompt"),
             Self::CreateNewProject { .. } => write!(f, "CreateNewProject"),
             Self::CloneRepository { .. } => write!(f, "CloneRepository"),
@@ -3150,16 +2962,7 @@ impl Display for AIAgentInput {
                     write!(f, "InvokeSkill: {}", skill.name)
                 }
             }
-            Self::StartFromAmbientRunPrompt { .. } => write!(f, "StartFromAmbientRunPrompt"),
-            Self::MessagesReceivedFromAgents { messages } => {
-                write!(f, "MessagesReceivedFromAgents({} messages)", messages.len())
-            }
-            Self::EventsFromAgents { events } => {
-                write!(f, "EventsFromAgents({} events)", events.len())
-            }
             Self::PassiveSuggestionResult { .. } => write!(f, "PassiveSuggestionResult"),
-            Self::OrchestrationConfigUpdate { .. } => write!(f, "OrchestrationConfigUpdate"),
-            Self::AgentWake => write!(f, "AgentWake"),
         }
     }
 }
@@ -3181,8 +2984,7 @@ impl AIAgentInput {
                 clone_repo_url: url,
                 ..
             } => Some(url.query.clone()),
-            Self::InitProjectRules { display_query, .. }
-            | Self::CreateEnvironment { display_query, .. } => display_query.clone(),
+            Self::InitProjectRules { display_query, .. } => display_query.clone(),
             Self::CodeReview { .. } => Some("Address these comments".to_string()),
             Self::InvokeSkill {
                 skill, user_query, ..
@@ -3217,12 +3019,7 @@ impl AIAgentInput {
             | Self::TriggerPassiveSuggestion { .. }
             | Self::ResumeConversation { .. }
             | Self::SummarizeConversation { .. }
-            | Self::StartFromAmbientRunPrompt { .. }
-            | Self::MessagesReceivedFromAgents { .. }
-            | Self::EventsFromAgents { .. }
-            | Self::PassiveSuggestionResult { .. }
-            | Self::OrchestrationConfigUpdate { .. }
-            | Self::AgentWake => None,
+            | Self::PassiveSuggestionResult { .. } => None,
         }
     }
 
@@ -3316,19 +3113,13 @@ impl AIAgentInput {
             | Self::AutoCodeDiffQuery { context, .. }
             | Self::ResumeConversation { context, .. }
             | Self::InitProjectRules { context, .. }
-            | Self::CreateEnvironment { context, .. }
             | Self::TriggerPassiveSuggestion { context, .. }
             | Self::CreateNewProject { context, .. }
             | Self::CloneRepository { context, .. }
             | Self::CodeReview { context, .. }
             | Self::InvokeSkill { context, .. }
-            | Self::StartFromAmbientRunPrompt { context, .. }
             | Self::PassiveSuggestionResult { context, .. } => Some(context),
             Self::SummarizeConversation { context, .. } => Some(context),
-            Self::MessagesReceivedFromAgents { .. }
-            | Self::EventsFromAgents { .. }
-            | Self::OrchestrationConfigUpdate { .. }
-            | Self::AgentWake => None,
         }
     }
 
@@ -3349,18 +3140,12 @@ impl AIAgentInput {
             | Self::AutoCodeDiffQuery { .. }
             | Self::ResumeConversation { .. }
             | Self::InitProjectRules { .. }
-            | Self::CreateEnvironment { .. }
             | Self::CreateNewProject { .. }
             | Self::CloneRepository { .. }
             | Self::CodeReview { .. }
             | Self::SummarizeConversation { .. }
             | Self::InvokeSkill { .. }
-            | Self::StartFromAmbientRunPrompt { .. }
-            | Self::MessagesReceivedFromAgents { .. }
-            | Self::EventsFromAgents { .. }
-            | Self::PassiveSuggestionResult { .. }
-            | Self::OrchestrationConfigUpdate { .. }
-            | Self::AgentWake => None,
+            | Self::PassiveSuggestionResult { .. } => None,
         }
     }
 
@@ -3373,9 +3158,7 @@ impl AIAgentInput {
     pub fn has_custom_display_query(&self) -> bool {
         matches!(
             self,
-            AIAgentInput::InitProjectRules { .. }
-                | AIAgentInput::CreateEnvironment { .. }
-                | AIAgentInput::InvokeSkill { .. }
+            AIAgentInput::InitProjectRules { .. } | AIAgentInput::InvokeSkill { .. }
         )
     }
 }

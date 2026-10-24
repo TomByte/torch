@@ -30,9 +30,6 @@ pub enum AIAgentActionResultType {
     /// The output of a read files action.
     ReadFiles(ReadFilesResult),
 
-    /// The output of an upload artifact action.
-    UploadArtifact(UploadArtifactResult),
-
     /// The output of a search codebase action.
     SearchCodebase(SearchCodebaseResult),
 
@@ -85,30 +82,13 @@ pub enum AIAgentActionResultType {
     /// The output of requesting computer use.
     RequestComputerUse(RequestComputerUseResult),
 
-    /// The result of starting a video recording.
-    StartRecording(StartRecordingResult),
-
-    /// The result of stopping a video recording.
-    StopRecording(StopRecordingResult),
-
     /// The result of fetching a conversation's tasks.
     FetchConversation(FetchConversationResult),
-
-    /// The result of sending a message to another agent.
-    SendMessageToAgent(SendMessageToAgentResult),
 
     /// The output of transferring shell command control to the user.
     TransferShellCommandControlToUser(TransferShellCommandControlToUserResult),
     /// The result of asking the user a question.
     AskUserQuestion(AskUserQuestionResult),
-
-    /// The result of an orchestrate tool call: launched (with per-agent
-    /// outcomes), launch denied (Stage 2), failure, or cancelled.
-    RunAgents(RunAgentsResult),
-
-    /// Result of the client-side wait_for_events watchdog or inbound
-    /// resume.
-    WaitForEvents(WaitForEventsResult),
 }
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 pub struct ReadFilesFailedFile {
@@ -159,7 +139,6 @@ impl Display for AIAgentActionResultType {
             AIAgentActionResultType::WriteToLongRunningShellCommand(result) => result.fmt(f),
             AIAgentActionResultType::RequestFileEdits(result) => result.fmt(f),
             AIAgentActionResultType::ReadFiles(result) => result.fmt(f),
-            AIAgentActionResultType::UploadArtifact(result) => result.fmt(f),
             AIAgentActionResultType::SearchCodebase(result) => result.fmt(f),
             AIAgentActionResultType::Grep(result) => result.fmt(f),
             AIAgentActionResultType::FileGlob(result) => result.fmt(f),
@@ -176,14 +155,9 @@ impl Display for AIAgentActionResultType {
             AIAgentActionResultType::UseComputer(result) => result.fmt(f),
             AIAgentActionResultType::InsertReviewComments(result) => result.fmt(f),
             AIAgentActionResultType::RequestComputerUse(result) => result.fmt(f),
-            AIAgentActionResultType::StartRecording(result) => result.fmt(f),
-            AIAgentActionResultType::StopRecording(result) => result.fmt(f),
             AIAgentActionResultType::FetchConversation(result) => result.fmt(f),
-            AIAgentActionResultType::SendMessageToAgent(result) => result.fmt(f),
             AIAgentActionResultType::TransferShellCommandControlToUser(result) => result.fmt(f),
             AIAgentActionResultType::AskUserQuestion(result) => result.fmt(f),
-            AIAgentActionResultType::RunAgents(result) => result.fmt(f),
-            AIAgentActionResultType::WaitForEvents(result) => result.fmt(f),
             AIAgentActionResultType::OpenCodeReview | AIAgentActionResultType::InitProject => {
                 Ok(())
             }
@@ -537,36 +511,6 @@ impl Display for ReadFilesResult {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub enum UploadArtifactResult {
-    Success {
-        artifact_uid: String,
-        filepath: Option<String>,
-        mime_type: String,
-        description: Option<String>,
-        size_bytes: i64,
-    },
-    Error(String),
-    Cancelled,
-}
-
-impl Display for UploadArtifactResult {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            UploadArtifactResult::Success {
-                artifact_uid,
-                filepath,
-                ..
-            } => match filepath {
-                Some(filepath) => write!(f, "Uploaded artifact {artifact_uid} from {filepath}"),
-                None => write!(f, "Uploaded artifact {artifact_uid}"),
-            },
-            UploadArtifactResult::Error(error) => write!(f, "Upload artifact error: {error}"),
-            UploadArtifactResult::Cancelled => write!(f, "Upload artifact cancelled"),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct DocumentContext {
     pub document_id: AIDocumentId,
     pub document_version: AIDocumentVersion,
@@ -865,7 +809,6 @@ impl AIAgentActionResultType {
                 "The diff from editing the last file in Agent Mode"
             }
             AIAgentActionResultType::ReadFiles(_) => "The requested file content",
-            AIAgentActionResultType::UploadArtifact(_) => "The uploaded artifact metadata",
             AIAgentActionResultType::SearchCodebase(_) => "The codebase search results",
             AIAgentActionResultType::Grep(_) => "The results of the grep operation",
             AIAgentActionResultType::FileGlob(_) => "The results of the file glob operation",
@@ -886,21 +829,12 @@ impl AIAgentActionResultType {
             AIAgentActionResultType::ReadShellCommandOutput(_) => "The shell command output",
             AIAgentActionResultType::UseComputer(_) => "The computer use result",
             AIAgentActionResultType::RequestComputerUse(_) => "The computer use request result",
-            AIAgentActionResultType::StartRecording(_) => "The result of starting a recording",
-            AIAgentActionResultType::StopRecording(_) => "The result of stopping a recording",
             AIAgentActionResultType::FetchConversation(_) => "The fetched conversation tasks",
-            AIAgentActionResultType::SendMessageToAgent(_) => "The result of sending a message",
             AIAgentActionResultType::TransferShellCommandControlToUser(_) => {
                 "The result of transferring shell command control to user"
             }
             AIAgentActionResultType::AskUserQuestion(_) => {
                 "The user's answers to clarifying questions"
-            }
-            AIAgentActionResultType::RunAgents(_) => {
-                "The result of an orchestrate batch of child agents"
-            }
-            AIAgentActionResultType::WaitForEvents(_) => {
-                "The local watchdog timed out while waiting for inbound events"
             }
         }
     }
@@ -910,7 +844,6 @@ impl AIAgentActionResultType {
             Self::RequestCommandOutput(r) => r.is_successful(),
             Self::RequestFileEdits(RequestFileEditsResult::Success { .. })
             | Self::ReadFiles(ReadFilesResult::Success { .. })
-            | Self::UploadArtifact(UploadArtifactResult::Success { .. })
             | Self::SearchCodebase(SearchCodebaseResult::Success { .. })
             | Self::Grep(GrepResult::Success { .. })
             | Self::FileGlob(FileGlobResult::Success { .. })
@@ -929,23 +862,14 @@ impl AIAgentActionResultType {
             | Self::UseComputer(UseComputerResult::Success { .. })
             | Self::InsertReviewComments(InsertReviewCommentsResult::Success { .. })
             | Self::RequestComputerUse(RequestComputerUseResult::Approved { .. })
-            | Self::StartRecording(StartRecordingResult::Success(_))
-            | Self::StopRecording(
-                StopRecordingResult::Success(_) | StopRecordingResult::Discarded,
-            )
             | Self::OpenCodeReview
             | Self::ReadSkill(ReadSkillResult::Success { .. })
             | Self::FetchConversation(FetchConversationResult::Success { .. })
-            | Self::SendMessageToAgent(SendMessageToAgentResult::Success { .. })
             | Self::TransferShellCommandControlToUser(
                 TransferShellCommandControlToUserResult::Snapshot { .. }
                 | TransferShellCommandControlToUserResult::CommandFinished { .. },
             ) => true,
             Self::AskUserQuestion(AskUserQuestionResult::Success { .. }) => true,
-            Self::RunAgents(RunAgentsResult::Launched { agents, .. }) => agents
-                .iter()
-                .any(|agent| matches!(agent.kind, RunAgentsAgentOutcomeKind::Launched { .. })),
-            Self::WaitForEvents(WaitForEventsResult::Completed) => true,
             _ => false,
         }
     }
@@ -955,7 +879,6 @@ impl AIAgentActionResultType {
             Self::RequestCommandOutput(r) => r.failed(),
             Self::RequestFileEdits(RequestFileEditsResult::DiffApplicationFailed { .. })
             | Self::ReadFiles(ReadFilesResult::Error(_))
-            | Self::UploadArtifact(UploadArtifactResult::Error(_))
             | Self::SearchCodebase(SearchCodebaseResult::Failed { .. })
             | Self::Grep(GrepResult::Error(_))
             | Self::FileGlob(FileGlobResult::Error(_))
@@ -971,20 +894,11 @@ impl AIAgentActionResultType {
             | Self::UseComputer(UseComputerResult::Error(_))
             | Self::InsertReviewComments(InsertReviewCommentsResult::Error { .. })
             | Self::RequestComputerUse(RequestComputerUseResult::Error(_))
-            | Self::StartRecording(StartRecordingResult::Error(_))
-            | Self::StopRecording(StopRecordingResult::Error(_))
             | Self::FetchConversation(FetchConversationResult::Error(_))
-            | Self::SendMessageToAgent(SendMessageToAgentResult::Error(_))
             | Self::AskUserQuestion(AskUserQuestionResult::Error(_))
             | Self::TransferShellCommandControlToUser(
                 TransferShellCommandControlToUserResult::Error(_),
-            )
-            | Self::RunAgents(RunAgentsResult::Failure { .. } | RunAgentsResult::Denied { .. }) => {
-                true
-            }
-            Self::RunAgents(RunAgentsResult::Launched { agents, .. }) => agents
-                .iter()
-                .all(|agent| matches!(agent.kind, RunAgentsAgentOutcomeKind::Failed { .. })),
+            ) => true,
             _ => false,
         }
     }
@@ -999,7 +913,6 @@ impl AIAgentActionResultType {
             }) if exit_code.value() == 130 => true,
             Self::RequestFileEdits(RequestFileEditsResult::Cancelled)
             | Self::ReadFiles(ReadFilesResult::Cancelled)
-            | Self::UploadArtifact(UploadArtifactResult::Cancelled)
             | Self::SearchCodebase(SearchCodebaseResult::Cancelled)
             | Self::Grep(GrepResult::Cancelled)
             | Self::FileGlob(FileGlobResult::Cancelled)
@@ -1015,8 +928,6 @@ impl AIAgentActionResultType {
             | Self::UseComputer(UseComputerResult::Cancelled)
             | Self::InsertReviewComments(InsertReviewCommentsResult::Cancelled)
             | Self::RequestComputerUse(RequestComputerUseResult::Cancelled)
-            | Self::StartRecording(StartRecordingResult::Cancelled)
-            | Self::StopRecording(StopRecordingResult::Cancelled)
             | Self::TransferShellCommandControlToUser(
                 TransferShellCommandControlToUserResult::Cancelled,
             )
@@ -1025,11 +936,8 @@ impl AIAgentActionResultType {
             )
             | Self::ReadSkill(ReadSkillResult::Cancelled)
             | Self::FetchConversation(FetchConversationResult::Cancelled)
-            | Self::SendMessageToAgent(SendMessageToAgentResult::Cancelled)
             // SkippedByAutoApprove is intentionally excluded: the agent should continue.
-            | Self::AskUserQuestion(AskUserQuestionResult::Cancelled)
-            | Self::RunAgents(RunAgentsResult::Cancelled)
-            | Self::WaitForEvents(WaitForEventsResult::Cancelled) => true,
+            | Self::AskUserQuestion(AskUserQuestionResult::Cancelled) => true,
             _ => false,
         }
     }
@@ -1379,76 +1287,6 @@ impl Display for RequestComputerUseResult {
     }
 }
 
-/// The result of a `StartRecording` tool call. Carries the resolved capture
-/// dimensions; frame rate and limits are server-owned and not echoed back.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum StartRecordingResult {
-    Success(RecordingStarted),
-    Error(String),
-    Cancelled,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct RecordingStarted {
-    pub recording_id: String,
-    pub started_at: SystemTime,
-    pub width_px: i32,
-    pub height_px: i32,
-}
-
-impl Display for StartRecordingResult {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            StartRecordingResult::Success(started) => write!(
-                f,
-                "Recording started ({}x{})",
-                started.width_px, started.height_px
-            ),
-            StartRecordingResult::Error(error) => write!(f, "Start recording error: {error}"),
-            StartRecordingResult::Cancelled => write!(f, "Start recording cancelled"),
-        }
-    }
-}
-
-/// The result of a `StopRecording` tool call. Carries the published artifact
-/// reference and video metadata; never the file path or bytes.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum StopRecordingResult {
-    Success(RecordingStopped),
-    Error(String),
-    Cancelled,
-    /// The agent opted not to persist the recording (`should_persist=false`), so
-    /// it was discarded without uploading. Distinct from `Cancelled` so the
-    /// agent's turn continues.
-    Discarded,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct RecordingStopped {
-    pub artifact_uid: String,
-    pub duration: Duration,
-    pub width_px: i32,
-    pub height_px: i32,
-    pub size_bytes: i64,
-    pub completion_status: computer_use::RecordingCompletionStatus,
-    pub termination_reason: String,
-}
-
-impl Display for StopRecordingResult {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            StopRecordingResult::Success(stopped) => write!(
-                f,
-                "Recording stopped (artifact {}, {} bytes)",
-                stopped.artifact_uid, stopped.size_bytes
-            ),
-            StopRecordingResult::Error(error) => write!(f, "Stop recording error: {error}"),
-            StopRecordingResult::Cancelled => write!(f, "Stop recording cancelled"),
-            StopRecordingResult::Discarded => write!(f, "Recording discarded"),
-        }
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FetchConversationResult {
     Success { directory_path: String },
@@ -1466,110 +1304,6 @@ impl Display for FetchConversationResult {
                 write!(f, "Fetch conversation error: {error}")
             }
             FetchConversationResult::Cancelled => write!(f, "Fetch conversation cancelled"),
-        }
-    }
-}
-
-/// The terminal outcome of an orchestrate tool call.
-///
-/// Mirrors the proto `RunAgentsResult` oneof, with an additional
-/// `Cancelled` variant used internally by the action machinery when the
-/// user clicks Reject. The proto wire form for cancellation is the
-/// generic `ToolCallResult.Cancel` marker; the conversion code emits
-/// `ConvertToAPITypeError::Ignore` for `Cancelled` so the input
-/// interceptor can synthesize the marker on the next outbound input.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub enum RunAgentsResult {
-    /// Orchestration launched. Carries the resolved configuration and one
-    /// `AgentOutcome` per `agent_run_configs[]` entry, in input order.
-    Launched {
-        model_id: String,
-        harness_type: String,
-        execution_mode: RunAgentsLaunchedExecutionMode,
-        agents: Vec<RunAgentsAgentOutcome>,
-    },
-    /// Declined for a non-error reason (currently disapproval).
-    Denied { reason: String },
-    /// Actual error path: server-side validation rejected the call, or the
-    /// client could not begin the launch sequence at all.
-    Failure { error: String },
-    /// User rejected via the Reject button. Wire form is the generic
-    /// `ToolCallResult.Cancel` marker, synthesized by the server's input
-    /// interceptor on the next user input.
-    Cancelled,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub enum RunAgentsLaunchedExecutionMode {
-    Local,
-    Remote {
-        environment_id: String,
-        worker_host: String,
-        computer_use_enabled: bool,
-        /// Resolved runner UID the batch committed to; empty when none.
-        #[serde(default)]
-        runner_id: String,
-    },
-}
-
-/// Per-agent outcome reported in `RunAgentsResult::Launched.agents`.
-/// Order mirrors the input order of `RunAgents.agent_run_configs[]`,
-/// regardless of which `CreateAgentTask` call returned first.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct RunAgentsAgentOutcome {
-    pub name: String,
-    pub kind: RunAgentsAgentOutcomeKind,
-    /// The model that was actually used for this child agent. Set from the
-    /// per-agent `model_id` override when present; otherwise from the
-    /// batch-level resolved model. Empty when the server did not populate it.
-    #[serde(default)]
-    pub resolved_model_id: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub enum RunAgentsAgentOutcomeKind {
-    Launched { agent_id: String },
-    Failed { error: String },
-}
-
-impl Display for RunAgentsResult {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            RunAgentsResult::Launched { agents, .. } => {
-                let launched = agents
-                    .iter()
-                    .filter(|a| matches!(a.kind, RunAgentsAgentOutcomeKind::Launched { .. }))
-                    .count();
-                write!(
-                    f,
-                    "Orchestrate launched ({launched}/{} agents started)",
-                    agents.len()
-                )
-            }
-            RunAgentsResult::Denied { reason } => {
-                write!(f, "Orchestrate launch denied: {reason}")
-            }
-            RunAgentsResult::Failure { error } => write!(f, "Orchestrate failure: {error}"),
-            RunAgentsResult::Cancelled => write!(f, "Orchestrate cancelled"),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub enum SendMessageToAgentResult {
-    Success { message_id: String },
-    Error(String),
-    Cancelled,
-}
-
-impl Display for SendMessageToAgentResult {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            SendMessageToAgentResult::Success { message_id } => {
-                write!(f, "Sent message with id {message_id}")
-            }
-            SendMessageToAgentResult::Error(error) => write!(f, "Send message error: {error}"),
-            SendMessageToAgentResult::Cancelled => write!(f, "Send message cancelled"),
         }
     }
 }
@@ -1681,27 +1415,6 @@ impl Display for AskUserQuestionResult {
                     question_ids.len()
                 )
             }
-        }
-    }
-}
-
-/// Result of a client-side wait_for_events action.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-pub enum WaitForEventsResult {
-    /// Watchdog fired or an inbound resume signal closed the wait. The
-    /// agent's next turn observes an empty WaitForEvents result on the
-    /// wire and decides how to proceed.
-    Completed,
-    /// User cancelled the conversation while waiting. Mirrors
-    /// RunAgents::Cancelled: no tool-call result is sent on the wire.
-    Cancelled,
-}
-
-impl Display for WaitForEventsResult {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Completed => write!(f, "Wait for events completed"),
-            Self::Cancelled => write!(f, "Wait for events cancelled"),
         }
     }
 }

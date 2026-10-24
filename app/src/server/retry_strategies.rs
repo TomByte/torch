@@ -3,11 +3,7 @@ use std::future::Future;
 use std::time::Duration;
 
 use anyhow::Result;
-use torchui::r#async::Timer;
 use torchui::{RetryOption, duration_with_jitter};
-
-use crate::server::graphql::GraphQLError;
-use crate::server::server_api::presigned_upload::HttpStatusError;
 
 /// Common duration for a periodic poll. In our app, we generally have the following to update the same data:
 /// - RTC messages
@@ -45,72 +41,6 @@ pub const LISTENER_RETRY_STRATEGY: RetryOption = RetryOption::linear(
 )
 .with_jitter(0.6 /* max_jitter_multiplier */);
 
-/// Classify an HTTP-backed error as transient (worth retrying) or permanent (fail fast).
-///
-/// Transient: 5xx responses, 408, 429, or any error whose chain does not carry an
-/// [`HttpStatusError`] (connection reset, timeout, DNS failure, etc.).
-/// Permanent: other 4xx responses (bad signature, 404, 403, etc.).
-pub(crate) fn is_transient_http_error(e: &anyhow::Error) -> bool {
-    // Callers typically wrap an `HttpStatusError` cause with a `.context(...)` message for
-    // human-friendly Display, so the typed error sits somewhere in the chain rather than as
-    // the top-level error object — walk the chain.
-    for cause in e.chain() {
-        if let Some(http_err) = cause.downcast_ref::<HttpStatusError>() {
-            return is_transient_status(http_err.status);
-        }
-    }
-    true
-}
-
-/// Classify GraphQL/public-API status errors as transient or permanent.
-///
-/// Unlike [`is_transient_http_error`], errors without a typed HTTP/GraphQL transport
-/// cause are treated as permanent. This is intended for GraphQL operations where
-/// user-facing GraphQL errors are converted into plain `anyhow` errors at the
-/// operation layer and should not be retried or placed into transient cooldowns.
-pub(crate) fn is_transient_graphql_or_http_error(e: &anyhow::Error) -> bool {
-    for cause in e.chain() {
-        if let Some(graphql_err) = cause.downcast_ref::<GraphQLError>() {
-            return match graphql_err {
-                GraphQLError::RequestError(_) => true,
-                GraphQLError::HttpError { status, .. } => is_transient_status(status.as_u16()),
-                GraphQLError::StagingAccessBlocked
-                | GraphQLError::IapChallengeBlocked
-                | GraphQLError::ResponseError(_) => false,
-            };
-        }
-
-        if let Some(http_err) = cause.downcast_ref::<HttpStatusError>() {
-            return is_transient_status(http_err.status);
-        }
-    }
-
-    false
-}
-
-fn is_transient_status(status: u16) -> bool {
-    matches!(status, 408 | 429 | 500..=599)
-}
-
-/// Returns `true` if the error chain carries an [`HttpStatusError`] with an
-/// authentication/authorization status (401 or 403).
-///
-/// Used by long-lived listeners to distinguish "credentials are permanently
-/// invalid" (for example, a cloud-agent task whose token stops working once the
-/// task ends) from generic permanent errors, so they can stop retrying instead
-/// of reconnecting forever.
-pub(crate) fn is_auth_error(e: &anyhow::Error) -> bool {
-    for cause in e.chain() {
-        if let Some(http_err) = cause.downcast_ref::<HttpStatusError>() {
-            return matches!(http_err.status, 401 | 403);
-        }
-    }
-    false
-}
-
-/// Maximum total attempts per operation (initial attempt plus retries on transient errors).
-pub(crate) const MAX_ATTEMPTS: usize = 3;
-
 /// Base backoff between retry attempts; each subsequent attempt multiplies by [`BACKOFF_FACTOR`].
 const INITIAL_BACKOFF: Duration = Duration::from_millis(500);
 
@@ -136,55 +66,6 @@ pub(crate) fn backoff_after_attempts(attempts_made: usize) -> Duration {
         .min(BACKOFF_MAX_EXPONENT);
     let delay = INITIAL_BACKOFF.mul_f32(BACKOFF_FACTOR.powi(exponent));
     duration_with_jitter(delay, BACKOFF_JITTER)
-}
-
-/// Run `attempt_fn` with bounded exponential-backoff retries on transient failures.
-///
-/// `operation` is included in retry logs so concurrent callers can be distinguished.
-///
-/// `attempt_fn` is called repeatedly with a fresh `Future` per attempt, so callers that need
-/// per-attempt state (e.g. cloning a request body) own that inside their closure.
-///
-/// Transient errors (per [`is_transient_http_error`]) are retried up to [`MAX_ATTEMPTS`]
-/// total. Permanent errors return immediately. A warning is logged between attempts so
-/// retries are visible in logs.
-pub(crate) async fn with_bounded_retry<T, F, Fut>(operation: &str, attempt_fn: F) -> Result<T>
-where
-    F: FnMut() -> Fut,
-    Fut: Future<Output = Result<T>>,
-{
-    with_bounded_retry_using(operation, MAX_ATTEMPTS, is_transient_http_error, attempt_fn).await
-}
-
-/// General form of [`with_bounded_retry`] for callers that need a different transient-error
-/// classifier than [`is_transient_http_error`] (e.g. [`is_transient_graphql_or_http_error`] for
-/// GraphQL operations), a different attempt budget than [`MAX_ATTEMPTS`], or both.
-///
-/// Otherwise behaves identically: exponential backoff between attempts (see
-/// [`backoff_after_attempts`]), a warning logged before each retry, and the last error
-/// returned once `max_attempts` is reached.
-pub(crate) async fn with_bounded_retry_using<T, F, Fut>(
-    operation: &str,
-    max_attempts: usize,
-    is_transient: impl Fn(&anyhow::Error) -> bool,
-    attempt_fn: F,
-) -> Result<T>
-where
-    F: FnMut() -> Fut,
-    Fut: Future<Output = Result<T>>,
-{
-    with_retry(
-        operation,
-        attempt_fn,
-        |err| is_transient(err),
-        |delay| async move {
-            Timer::after(delay).await;
-        },
-        |attempts_made| {
-            (attempts_made + 1 < max_attempts).then(|| backoff_after_attempts(attempts_made + 1))
-        },
-    )
-    .await
 }
 
 /// Generalized retry function that gives callers control over retry classification and backoff.

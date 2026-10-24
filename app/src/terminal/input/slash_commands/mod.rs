@@ -519,9 +519,6 @@ impl Input {
                     origin: AgentViewEntryOrigin::SlashCommand { trigger },
                 });
             }
-            SlashCommandKind::CreateDockerSandbox => {
-                ctx.emit(Event::CreateDockerSandbox);
-            }
             SlashCommandKind::Conversations => {
                 if FeatureFlag::AgentView.is_enabled() {
                     self.open_conversation_menu(ctx);
@@ -604,19 +601,6 @@ impl Input {
                 };
 
                 ctx.dispatch_typed_action(&WorkspaceAction::SetActiveTabColor(color));
-            }
-            SlashCommandKind::CreateEnvironment => {
-                // If the user included args after the slash command, treat them as repo paths/URLs.
-                let repos = argument
-                    .map(|arg| {
-                        arg.split_whitespace()
-                            .filter(|s| !s.is_empty())
-                            .map(|s| s.to_string())
-                            .collect()
-                    })
-                    .unwrap_or_default();
-
-                ctx.emit(Event::TriggerEnvironmentSetup { repos });
             }
             SlashCommandKind::CreateNewProject => {
                 if argument.is_none_or(|args| args.is_empty()) {
@@ -1048,7 +1032,7 @@ impl Input {
                 }
                 self.open_repos_menu(ctx);
             }
-            SlashCommandKind::Compact | SlashCommandKind::Plan | SlashCommandKind::Orchestrate => {
+            SlashCommandKind::Compact | SlashCommandKind::Plan => {
                 // These slash commands just send AI requests with the slash command text as a
                 // prefix, and special handling is done downstream as an implementation detail
                 // of handling user queries with specific slash command prefixes.
@@ -1262,7 +1246,7 @@ impl Input {
 /// local action.
 ///
 /// This is the single source of truth for the "reiterated as a prompt vs handled immediately"
-/// distinction: only `/compact`, `/plan`, and `/orchestrate` are sent as prompts (mirroring the
+/// distinction: only `/compact` and `/plan` are sent as prompts (mirroring the
 /// `command_that_just_sends_ai_request_with_prefix` arm in [`Input::execute_slash_command`]).
 /// Every other slash command emits an immediate action (forking, switching model, opening a
 /// menu, etc.), so callers gating prompt queuing or shared-session forwarding should treat those
@@ -1270,7 +1254,7 @@ impl Input {
 pub fn slash_command_is_submitted_as_prompt(command: &StaticCommand) -> bool {
     matches!(
         command.kind,
-        SlashCommandKind::Compact | SlashCommandKind::Plan | SlashCommandKind::Orchestrate
+        SlashCommandKind::Compact | SlashCommandKind::Plan
     )
 }
 

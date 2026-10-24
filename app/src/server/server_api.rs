@@ -2,13 +2,8 @@ pub mod ai;
 pub mod auth;
 #[cfg(not(target_family = "wasm"))]
 pub(crate) mod download;
-pub mod factory;
-pub mod harness_support;
-pub mod integrations;
-pub mod managed_mcp;
 pub mod managed_secrets;
 pub mod object;
-pub(crate) mod presigned_upload;
 pub mod team;
 pub mod workspace;
 
@@ -21,10 +16,8 @@ use ai::AIClient;
 use anyhow::{Context, Result, anyhow};
 use auth::AuthClient;
 use channel_versions::ChannelVersions;
-use chrono::{DateTime, FixedOffset, Utc};
-use factory::FactoryClient;
+use chrono::{DateTime, FixedOffset};
 use instant::Instant;
-use managed_mcp::ManagedMcpClient;
 use managed_secrets::AppManagedSecretsClient;
 use object::ObjectClient;
 use parking_lot::Mutex;
@@ -37,7 +30,7 @@ use torch_server_client::HttpStatusError;
 use torch_server_client::auth::{AuthClientImpl, AuthEvent, EXPERIMENT_ID_HEADER};
 use torch_server_client::base_client::{
     AmbientHeaderPolicy, AuthenticatedGraphqlConfig, BaseClient, GraphqlRoutingConfig,
-    HeaderOverride, TEAM_UID_HEADER,
+    TEAM_UID_HEADER,
 };
 use torch_server_client::iap::{IapManager, IapState};
 use torch_server_client::network_logging::NetworkLogModel;
@@ -48,7 +41,6 @@ use workspace::WorkspaceClient;
 
 use super::experiments::{ServerExperiment, ServerExperiments};
 use crate::ChannelState;
-use crate::ai::ambient_agents::AmbientAgentTaskId;
 use crate::ai::get_relevant_files::api::{GetRelevantFiles, GetRelevantFilesResponse};
 use crate::ai::predict::generate_ai_input_suggestions::GenerateAIInputSuggestionsRequest;
 use crate::ai::predict::generate_am_query_suggestions::GenerateAMQuerySuggestionsRequest;
@@ -428,7 +420,6 @@ impl ServerApi {
     fn new(
         auth_state: Arc<AuthState>,
         event_sender: async_channel::Sender<AuthEvent>,
-        agent_source: Option<ai::AgentSource>,
         iap_state: Option<Arc<IapState>>,
         ctx: &mut ModelContext<ServerApiProvider>,
     ) -> Self {
@@ -448,7 +439,6 @@ impl ServerApi {
             Arc::new(external_client),
             auth_state,
             event_sender,
-            agent_source,
             iap_token_provider,
         )
     }
@@ -458,7 +448,6 @@ impl ServerApi {
         external_client: Arc<http_client::Client>,
         auth_state: Arc<AuthState>,
         event_sender: async_channel::Sender<AuthEvent>,
-        agent_source: Option<ai::AgentSource>,
         iap_token_provider: Option<Arc<dyn http_client::iap::IapTokenProvider>>,
     ) -> Self {
         let graphql_routing = GraphqlRoutingConfig {
@@ -473,7 +462,7 @@ impl ServerApi {
             external_client,
             auth_state,
             event_sender,
-            agent_source.map(|source| source.as_str().to_string()),
+            None,
             graphql_routing,
             authenticated_graphql,
             iap_token_provider,
@@ -497,7 +486,6 @@ impl ServerApi {
             auth_state,
             tx,
             None,
-            None,
         )
     }
 
@@ -516,58 +504,7 @@ impl ServerApi {
             auth_state,
             event_sender,
             None,
-            None,
         )
-    }
-
-    /// Sets the ambient agent task ID to be sent with all subsequent requests.
-    pub fn set_ambient_agent_task_id(&self, task_id: Option<AmbientAgentTaskId>) {
-        self.base_client
-            .set_ambient_agent_task_id(task_id.map(|task_id| task_id.to_string()));
-    }
-
-    /// Returns ambient agent headers to attach to requests.
-    async fn ambient_agent_headers(&self) -> Result<Vec<(String, String)>> {
-        self.ambient_headers(AmbientHeaderPolicy::inherit_all())
-            .await
-    }
-
-    /// Returns ambient agent headers (workload token, cloud-agent ID) scoped to one task,
-    /// without disturbing the client's own inherited ambient-agent-task-ID state.
-    async fn ambient_agent_headers_for_task(
-        &self,
-        task_id: &AmbientAgentTaskId,
-    ) -> Result<Vec<(String, String)>> {
-        self.ambient_headers(AmbientHeaderPolicy::for_task(task_id.to_string()))
-            .await
-    }
-
-    /// Returns task-scoped ambient agent headers for a caller that pins them into a long-lived
-    /// transport instead of resolving them per request.
-    ///
-    /// `must_outlive` is the instant through which the pinned headers have to keep working,
-    /// typically the end of the run. The workload token is attached only when it stays valid
-    /// that long, since warp-server rejects an expired one but tolerates its absence. Pass
-    /// `None` when no such instant is known, which resolves the token the same way an ordinary
-    /// per-request caller would.
-    pub async fn pinned_ambient_agent_headers_for_task(
-        &self,
-        task_id: &AmbientAgentTaskId,
-        must_outlive: Option<DateTime<Utc>>,
-    ) -> Result<Vec<(String, String)>> {
-        let workload_token = match must_outlive {
-            Some(must_outlive) => self
-                .base_client
-                .get_ambient_workload_token_valid_until(must_outlive)
-                .await?
-                .map_or(HeaderOverride::Omit, HeaderOverride::Set),
-            None => HeaderOverride::Inherit,
-        };
-        self.ambient_headers(AmbientHeaderPolicy {
-            workload_token,
-            ..AmbientHeaderPolicy::for_task(task_id.to_string())
-        })
-        .await
     }
 
     pub fn send_graphql_request<'a, QF, O: torch_graphql::client::Operation<QF> + Send + 'a>(
@@ -610,125 +547,16 @@ impl ServerApi {
         }
     }
 
+    /// Returns ambient agent headers to attach to requests.
+    async fn ambient_agent_headers(&self) -> Result<Vec<(String, String)>> {
+        self.ambient_headers(AmbientHeaderPolicy::inherit_all())
+            .await
+    }
+
     fn team_uid_header_value(team_scope: RequestTeamScope) -> Option<String> {
         team_scope
             .team_uid()
             .map(|team_uid| team_uid.uid().to_string())
-    }
-
-    /// Opens an SSE stream to the agent event-push endpoint.
-    ///
-    /// The returned `EventSourceStream` yields `reqwest_eventsource::Event`
-    /// items until the connection closes or an error occurs. The caller is
-    /// responsible for reading the stream and handling reconnection.
-    ///
-    /// The stream is served by warp-server-rtc (not the main warp-server pool),
-    /// so the URL is built from `ChannelState::rtc_http_url()` rather than
-    /// `server_root_url()`.
-    pub async fn stream_agent_events(
-        &self,
-        run_ids: &[String],
-        since_sequence: i64,
-    ) -> Result<http_client::EventSourceStream> {
-        debug_assert!(!run_ids.is_empty(), "run_ids must not be empty");
-        let auth_token = self
-            .get_or_refresh_access_token()
-            .await
-            .context("Failed to get access token for SSE stream")?;
-
-        let run_ids_param: String = run_ids
-            .iter()
-            .map(|id| format!("run_ids[]={}", urlencoding::encode(id)))
-            .collect::<Vec<_>>()
-            .join("&");
-        let url = format!(
-            "{}/api/v1/agent/events/stream?{run_ids_param}&since={since_sequence}",
-            ChannelState::rtc_http_url()
-        );
-
-        let mut request = self.base_client.http_client().get(&url);
-        if let Some(token) = auth_token.as_bearer_token() {
-            request = request.bearer_auth(token);
-        }
-
-        for (name, value) in self.ambient_agent_headers().await? {
-            request = request.header(name, value);
-        }
-
-        Ok(self.wrap_eventsource_with_iap_detection(request.eventsource()))
-    }
-
-    /// Opens an SSE stream against the ancestor-scoped agent event endpoint.
-    pub async fn stream_agent_events_for_ancestor(
-        &self,
-        ancestor_run_id: &str,
-        include_self: bool,
-        since_sequence: i64,
-    ) -> Result<http_client::EventSourceStream> {
-        debug_assert!(
-            !ancestor_run_id.is_empty(),
-            "ancestor_run_id must not be empty"
-        );
-        let auth_token = self
-            .get_or_refresh_access_token()
-            .await
-            .context("Failed to get access token for SSE stream")?;
-
-        let include_self_param = if include_self {
-            "&include_self=true"
-        } else {
-            ""
-        };
-        let url = format!(
-            "{}/api/v1/agent/events/stream?ancestor_run_id={}&since={since_sequence}{include_self_param}",
-            ChannelState::rtc_http_url(),
-            urlencoding::encode(ancestor_run_id),
-        );
-
-        let mut request = self.base_client.http_client().get(&url);
-        if let Some(token) = auth_token.as_bearer_token() {
-            request = request.bearer_auth(token);
-        }
-
-        for (name, value) in self.ambient_agent_headers().await? {
-            request = request.header(name, value);
-        }
-
-        Ok(self.wrap_eventsource_with_iap_detection(request.eventsource()))
-    }
-
-    pub async fn stream_agent_events_for_task(
-        &self,
-        task_id: &AmbientAgentTaskId,
-        run_ids: &[String],
-        since_sequence: i64,
-    ) -> Result<http_client::EventSourceStream> {
-        debug_assert!(!run_ids.is_empty(), "run_ids must not be empty");
-        let auth_token = self
-            .get_or_refresh_access_token()
-            .await
-            .context("Failed to get access token for SSE stream")?;
-
-        let run_ids_param: String = run_ids
-            .iter()
-            .map(|id| format!("run_ids[]={}", urlencoding::encode(id)))
-            .collect::<Vec<_>>()
-            .join("&");
-        let url = format!(
-            "{}/api/v1/agent/events/stream?{run_ids_param}&since={since_sequence}",
-            ChannelState::rtc_http_url()
-        );
-
-        let mut request = self.base_client.http_client().get(&url);
-        if let Some(token) = auth_token.as_bearer_token() {
-            request = request.bearer_auth(token);
-        }
-
-        for (name, value) in self.ambient_agent_headers_for_task(task_id).await? {
-            request = request.header(name, value);
-        }
-
-        Ok(self.wrap_eventsource_with_iap_detection(request.eventsource()))
     }
 
     /// Sends a POST request to a public API endpoint and returns the raw response on success.
@@ -783,45 +611,6 @@ impl ServerApi {
             self.observe_iap_challenge(&response);
             Err(Self::error_from_response(response).await)
         }
-    }
-
-    async fn get_public_api_for_team<R>(
-        &self,
-        path: &str,
-        team_scope: RequestTeamScope,
-    ) -> Result<R>
-    where
-        R: serde::de::DeserializeOwned,
-    {
-        let auth_token = self
-            .get_or_refresh_access_token()
-            .await
-            .context("Failed to get access token for API request")?;
-        let url = format!("{}/api/v1/{path}", ChannelState::server_root_url());
-        let mut request = self.base_client.http_client().get(&url);
-        if let Some(token) = auth_token.as_bearer_token() {
-            request = request.bearer_auth(token);
-        }
-        if let Some(team_uid) = Self::team_uid_header_value(team_scope) {
-            request = request.header(TEAM_UID_HEADER, team_uid);
-        }
-        for (name, value) in self.ambient_agent_headers().await? {
-            request = request.header(name, value);
-        }
-
-        let response = request
-            .send()
-            .await
-            .with_context(|| format!("Failed to send API request to {url}"))?;
-        if !response.status().is_success() {
-            self.observe_iap_challenge(&response);
-            return Err(Self::error_from_response(response).await);
-        }
-
-        response
-            .json::<R>()
-            .await
-            .with_context(|| format!("Failed to deserialize response from {url}"))
     }
 
     /// Converts a non-success public API response into the most specific client error
@@ -886,149 +675,6 @@ impl ServerApi {
             .json::<R>()
             .await
             .with_context(|| format!("Failed to deserialize response from {url}"))
-    }
-
-    async fn post_public_api_for_team<B, R>(
-        &self,
-        path: &str,
-        body: &B,
-        team_scope: RequestTeamScope,
-    ) -> Result<R>
-    where
-        B: Serialize,
-        R: serde::de::DeserializeOwned,
-    {
-        let response = self
-            .post_public_api_response_for_team(path, body, Some(team_scope))
-            .await?;
-        let url = response.url().clone();
-        response
-            .json::<R>()
-            .await
-            .with_context(|| format!("Failed to deserialize response from {url}"))
-    }
-
-    /// Sends a PUT request to a public API endpoint and returns the raw response on success.
-    async fn put_public_api_response<B>(
-        &self,
-        path: &str,
-        body: &B,
-    ) -> Result<http_client::Response>
-    where
-        B: Serialize,
-    {
-        let auth_token = self
-            .get_or_refresh_access_token()
-            .await
-            .context("Failed to get access token for API request")?;
-
-        let url = format!("{}/api/v1/{}", ChannelState::server_root_url(), path);
-
-        let mut request = self.base_client.http_client().put(&url).json(body);
-        if let Some(token) = auth_token.as_bearer_token() {
-            request = request.bearer_auth(token);
-        }
-
-        for (name, value) in self.ambient_agent_headers().await? {
-            request = request.header(name, value);
-        }
-
-        let response = request
-            .send()
-            .await
-            .with_context(|| format!("Failed to send API request to {url}"))?;
-
-        if response.status().is_success() {
-            Ok(response)
-        } else {
-            Err(Self::error_from_response(response).await)
-        }
-    }
-
-    /// Sends a PUT request to a public API endpoint.
-    async fn put_public_api<B, R>(&self, path: &str, body: &B) -> Result<R>
-    where
-        B: Serialize,
-        R: serde::de::DeserializeOwned,
-    {
-        let response = self.put_public_api_response(path, body).await?;
-        let url = response.url().clone();
-        response
-            .json::<R>()
-            .await
-            .with_context(|| format!("Failed to deserialize response from {url}"))
-    }
-
-    /// Sends a POST request to a public API endpoint that returns no response body.
-    async fn post_public_api_unit<B>(&self, path: &str, body: &B) -> Result<()>
-    where
-        B: Serialize,
-    {
-        self.post_public_api_response(path, body).await?;
-        Ok(())
-    }
-
-    /// Sends a DELETE request to a public API endpoint that returns no response body.
-    async fn delete_public_api_unit(&self, path: &str) -> Result<()> {
-        let auth_token = self
-            .get_or_refresh_access_token()
-            .await
-            .context("Failed to get access token for API request")?;
-
-        let url = format!("{}/api/v1/{}", ChannelState::server_root_url(), path);
-
-        let mut request = self.base_client.http_client().delete(&url);
-        if let Some(token) = auth_token.as_bearer_token() {
-            request = request.bearer_auth(token);
-        }
-
-        for (name, value) in self.ambient_agent_headers().await? {
-            request = request.header(name, value);
-        }
-
-        let response = request
-            .send()
-            .await
-            .with_context(|| format!("Failed to send API request to {url}"))?;
-
-        if response.status().is_success() {
-            Ok(())
-        } else {
-            Err(Self::error_from_response(response).await)
-        }
-    }
-
-    /// Sends a PATCH request to a public API endpoint that returns no response body.
-    async fn patch_public_api_unit<B>(&self, path: &str, body: &B) -> Result<()>
-    where
-        B: Serialize,
-    {
-        let auth_token = self
-            .get_or_refresh_access_token()
-            .await
-            .context("Failed to get access token for API request")?;
-
-        let url = format!("{}/api/v1/{}", ChannelState::server_root_url(), path);
-
-        let mut request = self.base_client.http_client().patch(&url).json(body);
-        if let Some(token) = auth_token.as_bearer_token() {
-            request = request.bearer_auth(token);
-        }
-
-        for (name, value) in self.ambient_agent_headers().await? {
-            request = request.header(name, value);
-        }
-
-        let response = request
-            .send()
-            .await
-            .with_context(|| format!("Failed to send API request to {url}"))?;
-
-        if response.status().is_success() {
-            Ok(())
-        } else {
-            Err(Self::error_from_response(response).await)
-        }
     }
 
     /// Sends an authenticated empty POST request to /client/login, which signals to the server
@@ -1370,19 +1016,12 @@ impl ServerApiProvider {
     #[cfg_attr(target_family = "wasm", allow(unused_variables))]
     pub fn new(
         auth_state: Arc<AuthState>,
-        agent_source: Option<ai::AgentSource>,
         iap_state: Option<Arc<IapState>>,
         ctx: &mut ModelContext<Self>,
     ) -> Self {
         let (event_sender, event_receiver) = async_channel::bounded(10);
 
-        let server_api = ServerApi::new(
-            auth_state.clone(),
-            event_sender,
-            agent_source,
-            iap_state,
-            ctx,
-        );
+        let server_api = ServerApi::new(auth_state.clone(), event_sender, iap_state, ctx);
 
         ctx.spawn_stream_local(
             event_receiver,
@@ -1472,20 +1111,7 @@ impl ServerApiProvider {
         self.server_api.clone()
     }
 
-    pub fn get_integrations_client(&self) -> Arc<dyn integrations::IntegrationsClient> {
-        self.server_api.clone()
-    }
-
     pub fn get_managed_secrets_client(&self) -> Arc<AppManagedSecretsClient> {
-        self.server_api.clone()
-    }
-
-    #[cfg_attr(target_family = "wasm", expect(dead_code))]
-    pub fn get_managed_mcp_client(&self) -> Arc<dyn ManagedMcpClient> {
-        self.server_api.clone()
-    }
-
-    pub fn get_factory_client(&self) -> Arc<dyn FactoryClient> {
         self.server_api.clone()
     }
 
@@ -1493,11 +1119,6 @@ impl ServerApiProvider {
     /// and includes standard Torch request headers.
     pub fn get_http_client(&self) -> Arc<http_client::Client> {
         self.server_api.owned_http_client()
-    }
-
-    #[cfg_attr(target_family = "wasm", expect(dead_code))]
-    pub fn get_harness_support_client(&self) -> Arc<dyn harness_support::HarnessSupportClient> {
-        self.server_api.clone()
     }
 }
 

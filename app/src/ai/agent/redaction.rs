@@ -32,17 +32,13 @@ pub(crate) fn redact_inputs(inputs: &mut [AIAgentInput]) {
             AIAgentInput::CreateNewProject { context, .. }
             | AIAgentInput::CloneRepository { context, .. }
             | AIAgentInput::ResumeConversation { context }
-            | AIAgentInput::InitProjectRules { context, .. }
-            | AIAgentInput::StartFromAmbientRunPrompt { context, .. } => {
+            | AIAgentInput::InitProjectRules { context, .. } => {
                 redact_context(Arc::make_mut(context));
             }
             AIAgentInput::SummarizeConversation { prompt, context } => {
                 if let Some(p) = prompt {
                     redact_secrets(p);
                 }
-                redact_context(Arc::make_mut(context));
-            }
-            AIAgentInput::CreateEnvironment { context, .. } => {
                 redact_context(Arc::make_mut(context));
             }
             AIAgentInput::TriggerPassiveSuggestion {
@@ -87,11 +83,6 @@ pub(crate) fn redact_inputs(inputs: &mut [AIAgentInput]) {
                     redact_secrets(&mut diff.diff_content);
                 }
             }
-            // No user-provided text to redact in inter-agent relay inputs.
-            AIAgentInput::MessagesReceivedFromAgents { .. }
-            | AIAgentInput::EventsFromAgents { .. }
-            | AIAgentInput::OrchestrationConfigUpdate { .. }
-            | AIAgentInput::AgentWake => {}
             AIAgentInput::ActionResult { result, context } => {
                 redact_context(Arc::make_mut(context));
                 match &mut result.result {
@@ -143,25 +134,6 @@ pub(crate) fn redact_inputs(inputs: &mut [AIAgentInput]) {
                                 redact_secrets(&mut failed_file.path);
                                 redact_secrets(&mut failed_file.message);
                             }
-                        }
-                    }
-                    AIAgentActionResultType::UploadArtifact(upload_result) => {
-                        use crate::ai::agent::UploadArtifactResult;
-                        match upload_result {
-                            UploadArtifactResult::Success {
-                                filepath,
-                                description,
-                                ..
-                            } => {
-                                if let Some(filepath) = filepath {
-                                    redact_secrets(filepath);
-                                }
-                                if let Some(description) = description {
-                                    redact_secrets(description);
-                                }
-                            }
-                            UploadArtifactResult::Error(error) => redact_secrets(error),
-                            UploadArtifactResult::Cancelled => {}
                         }
                     }
                     AIAgentActionResultType::SearchCodebase(search_codebase_result) => {
@@ -239,8 +211,6 @@ pub(crate) fn redact_inputs(inputs: &mut [AIAgentInput]) {
                     // (client inputs -> redaction -> server request -> task messages)
                     AIAgentActionResultType::FetchConversation(_) => {}
 
-                    // SendMessageToAgent results contain only a message ID or error string, no secrets
-                    AIAgentActionResultType::SendMessageToAgent(_) => {}
                     // TransferShellCommandControlToUser result - similar to WriteToLongRunningShellCommand
                     AIAgentActionResultType::TransferShellCommandControlToUser(result) => {
                         match result {
@@ -259,14 +229,6 @@ pub(crate) fn redact_inputs(inputs: &mut [AIAgentInput]) {
                     AIAgentActionResultType::AskUserQuestion(result) => {
                         redact_ask_user_question_result(result);
                     }
-                    // Orchestrate results contain agent IDs / canonical error
-                    // strings only; no user-provided text to redact.
-                    AIAgentActionResultType::RunAgents(_)
-                    | AIAgentActionResultType::WaitForEvents(_) => {}
-
-                    // Recording results carry an artifact ref and metadata only.
-                    AIAgentActionResultType::StartRecording(_)
-                    | AIAgentActionResultType::StopRecording(_) => {}
                 }
             }
             AIAgentInput::InvokeSkill {

@@ -2,7 +2,6 @@
 mod action_model;
 pub mod agent_view;
 pub mod block;
-mod child_agent_launch;
 pub mod code_block;
 mod context_model;
 mod controller;
@@ -10,13 +9,7 @@ pub(crate) mod conversation_selection;
 pub(crate) mod diff_storage;
 pub(crate) mod diff_types;
 
-pub(crate) mod local_agent_task_sync_model;
-pub(crate) mod orchestration_child_tracker;
-pub(crate) mod orchestration_event_streamer;
-pub(crate) mod orchestration_events;
-pub(crate) mod orchestration_topology;
 mod passive_suggestions;
-pub(crate) mod pending_cli_harness_prompt_queue;
 pub(crate) mod queued_query;
 pub(super) use controller::RequestInput;
 pub mod history_model;
@@ -30,18 +23,12 @@ pub mod suggested_agent_mode_workflow_modal;
 pub mod suggested_rule_modal;
 mod suggestion_chip_view;
 pub mod summarization_cancel_dialog;
-pub(crate) mod telemetry;
 pub mod usage;
 
 pub(crate) mod codebase_index_speedbump_banner;
 pub(crate) mod telemetry_banner;
 pub(crate) mod view_util;
 
-pub(crate) use action_model::recording_controller::{RecordingController, video_recording_enabled};
-#[cfg(not(target_family = "wasm"))]
-pub(crate) use action_model::recording_finalize::{
-    FinalizeReason, finalize_recording_for_conversation,
-};
 pub use action_model::{
     BlocklistAIActionEvent, BlocklistAIActionModel, ShellCommandExecutor, ShellCommandExecutorEvent,
 };
@@ -50,38 +37,22 @@ pub(crate) use action_model::{
     FileReadResult, ReadFileContextResult, RequestFileEditsFormatKind, apply_edits,
     read_local_file_context,
 };
-#[cfg_attr(target_family = "wasm", allow(unused_imports))]
-pub use action_model::{
-    StartAgentExecutor, StartAgentExecutorEvent, StartAgentRequest, StartAgentRequestId,
-    TEAM_CHANGED_DURING_CHILD_LAUNCH_ERROR,
-};
 #[cfg(any(test, feature = "integration_tests"))]
 pub(crate) use block::model::testing::FakeAIBlockModel;
 pub(crate) use block::{AIBlock, AIBlockEvent, RequestedEditResolution, init, model};
 pub use block::{keyboard_navigable_buttons, toggleable_items};
-pub use child_agent_launch::inherit_child_agent_settings;
-#[cfg(not(target_family = "wasm"))]
-pub use child_agent_launch::{
-    apply_child_agent_model_override, finish_local_oz_child_conversation,
-    prepare_local_oz_child_launch,
-};
 pub(crate) use context_model::block_context_from_terminal_model;
 pub use context_model::{
     AttachmentType, BlocklistAIContextEvent, BlocklistAIContextModel, PendingAttachment,
     PendingFile,
 };
 pub use controller::BlocklistAIController;
-#[cfg_attr(target_family = "wasm", allow(unused_imports))]
-pub(in crate::ai) use controller::external_harness::ExternalHarnessPrompt;
-#[cfg_attr(target_family = "wasm", allow(unused_imports))]
-pub(crate) use controller::external_harness::{ExternalHarnessCancel, ExternalHarnessTurn};
 pub use controller::input_context::{
     BLOCK_CONTEXT_ATTACHMENT_REGEX, DIFF_HUNK_ATTACHMENT_REGEX, DRIVE_OBJECT_ATTACHMENT_REGEX,
 };
 pub(crate) use controller::response_stream::ResponseStreamId;
 pub(crate) use controller::{
-    BlocklistAIControllerEvent, CancellationRoute, ClientIdentifiers, SessionContext,
-    SlashCommandRequest,
+    BlocklistAIControllerEvent, ClientIdentifiers, SessionContext, SlashCommandRequest,
 };
 pub(crate) use conversation_selection::{
     ConversationSelection, ConversationSelectionEvent, ConversationSelectionHandle,
@@ -99,19 +70,13 @@ pub(crate) use passive_suggestions::{
     MaaPassiveSuggestionsModel, PassiveSuggestionsModels,
 };
 pub use permissions::{BlocklistAIPermissions, CommandExecutionPermissionAllowedReason};
-#[cfg_attr(target_family = "wasm", allow(unused_imports))]
-pub(crate) use permissions::{
-    CommandExecutionPermission, CommandExecutionPermissionDeniedReason, FileWritePermission,
-    FileWritePermissionDeniedReason,
-};
 #[cfg_attr(target_family = "wasm", allow(unused))]
 pub(crate) use persistence::PersistedAIInputType;
 #[cfg_attr(target_family = "wasm", allow(unused))]
 pub use persistence::maybe_build_ai_query_upsert_event;
 pub(crate) use persistence::{PersistedAIInput, SerializedBlockListItem};
 pub(crate) use queued_query::{
-    AutofireAction, QueuedPromptDeliveryMode, QueuedQuery, QueuedQueryId, QueuedQueryOrigin,
-    is_lrc_auto_queue_active,
+    AutofireAction, QueuedQuery, QueuedQueryId, QueuedQueryOrigin, is_lrc_auto_queue_active,
 };
 pub use queued_query::{QueuedQueryEvent, QueuedQueryModel};
 pub use suggestion_chip_view::*;

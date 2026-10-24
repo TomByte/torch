@@ -8,8 +8,6 @@ use crate::ai::agent::{
     AIAgentAction, AIAgentActionType, CreateDocumentsRequest, CreateDocumentsResult,
     DocumentContext,
 };
-use crate::ai::artifacts::Artifact;
-use crate::ai::blocklist::BlocklistAIHistoryModel;
 use crate::ai::document::ai_document_model::{AIDocumentModel, AIDocumentVersion};
 use crate::ai::execution_profiles::profiles::AIExecutionProfilesModel;
 use crate::notebooks::editor::model::FileLinkResolutionContext;
@@ -108,19 +106,6 @@ impl CreateDocumentsExecutor {
                         model.sync_to_warp_drive(id, model_ctx);
                     });
                 }
-
-                // Add plan artifact to the conversation.
-                let artifact = Artifact::Plan {
-                    document_uid: id.to_string(),
-                    notebook_uid: None, // Will be updated when synced to Torch Drive
-                    title: Some(document.title.clone()),
-                };
-                let terminal_view_id = self.terminal_view_id;
-                BlocklistAIHistoryModel::handle(ctx).update(ctx, |history, ctx| {
-                    if let Some(conversation) = history.conversation_mut(&conversation_id) {
-                        conversation.add_artifact(artifact, terminal_view_id, ctx);
-                    }
-                });
 
                 // Read the actual content from the created document.
                 // The AIDocumentModel does some processing to remove additional newlines, since our rich text editor

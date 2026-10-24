@@ -4,6 +4,7 @@ mod completions;
 mod output;
 mod selectors;
 use std::ffi::OsString;
+use std::fmt;
 use std::process::ExitCode;
 
 use clap::{Args, CommandFactory, FromArgMatches, Parser, Subcommand, ValueEnum};
@@ -17,8 +18,30 @@ use commands::{
 use completions::generate_completions_to_stdout;
 use output::write_control_error;
 
-use crate::agent::OutputFormat;
+/// Output format for command results.
+#[derive(Debug, Copy, Clone, ValueEnum, Eq, PartialEq, Default)]
+pub enum OutputFormat {
+    /// Output as JSON.
+    #[value(name = "json")]
+    Json,
+    /// Output as newline-delimited JSON.
+    #[value(name = "ndjson")]
+    Ndjson,
+    /// Output as human-readable text.
+    #[default]
+    #[value(name = "pretty")]
+    Pretty,
+    /// Output as plain text.
+    #[value(name = "text")]
+    Text,
+}
 
+impl fmt::Display for OutputFormat {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let value = self.to_possible_value().expect("no values are skipped");
+        f.write_str(value.get_name())
+    }
+}
 /// Hidden flag used by the channel-specific Torch app binary to enter `warpctrl` mode.
 pub const CONTROL_MODE_FLAG: &str = "--warpctrl";
 
@@ -436,10 +459,6 @@ pub enum SurfaceCommand {
     /// Open or toggle vertical tabs.
     #[command(subcommand)]
     VerticalTabs(SurfaceOpenToggleCommand),
-
-    /// Open agent management.
-    #[command(subcommand)]
-    AgentManagement(SurfaceOpenCommand),
 }
 
 #[derive(Debug, Clone, Subcommand)]

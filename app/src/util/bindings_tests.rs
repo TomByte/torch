@@ -74,28 +74,6 @@ fn test_keybinding_name_to_display_string() {
 }
 
 // Local-only builds hide the Torch agent orchestration bindings.
-#[cfg(not(feature = "local_only"))]
-#[test]
-fn test_orchestration_cycle_bindings_are_editable() {
-    App::test((), |mut app| async move {
-        app.update(terminal::init);
-
-        app.update(|ctx| {
-            let next = ctx
-                .editable_bindings()
-                .find(|binding| binding.name == "terminal:cycle_next_orchestration_child_agent")
-                .and_then(|binding| trigger_to_keystroke(binding.trigger));
-            let previous = ctx
-                .editable_bindings()
-                .find(|binding| binding.name == "terminal:cycle_previous_orchestration_child_agent")
-                .and_then(|binding| trigger_to_keystroke(binding.trigger));
-
-            assert_eq!(next, Keystroke::parse("ctrl-alt-]").ok());
-            assert_eq!(previous, Keystroke::parse("ctrl-alt-[").ok());
-        });
-    });
-}
-
 #[cfg(feature = "local_only")]
 #[test]
 fn torch_hides_warp_agent_bindings_from_the_shortcuts_page() {
@@ -103,11 +81,7 @@ fn torch_hides_warp_agent_bindings_from_the_shortcuts_page() {
         app.update(terminal::init);
 
         app.update(|ctx| {
-            for name in [
-                "terminal:cycle_next_orchestration_child_agent",
-                "terminal:cycle_previous_orchestration_child_agent",
-                "terminal:jump_to_latest_agent_message",
-            ] {
+            for name in ["terminal:jump_to_latest_agent_message"] {
                 assert!(
                     ctx.editable_bindings().all(|binding| binding.name != name),
                     "{name} should be hidden"

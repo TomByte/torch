@@ -404,7 +404,6 @@ pub enum UsageLabelKind {
     LastResponse,
     Total,
     Plain,
-    DetailsPanel,
 }
 
 /// Matches the label to the unit [`format_usage`] will render.
@@ -419,22 +418,14 @@ pub fn usage_label(
             UsageDisplayUnit::Credits
         }
     };
-    let base = match (kind, unit) {
-        (UsageLabelKind::DetailsPanel, UsageDisplayUnit::Credits) => "Credits used",
-        (UsageLabelKind::DetailsPanel, UsageDisplayUnit::Dollars) => "Usage",
-        (
-            UsageLabelKind::LastResponse | UsageLabelKind::Total | UsageLabelKind::Plain,
-            UsageDisplayUnit::Credits,
-        ) => "Credits spent",
-        (
-            UsageLabelKind::LastResponse | UsageLabelKind::Total | UsageLabelKind::Plain,
-            UsageDisplayUnit::Dollars,
-        ) => "Usage charged",
+    let base = match unit {
+        UsageDisplayUnit::Credits => "Credits spent",
+        UsageDisplayUnit::Dollars => "Usage charged",
     };
     let suffix = match kind {
         UsageLabelKind::LastResponse => " (last response)",
         UsageLabelKind::Total => " (total)",
-        UsageLabelKind::Plain | UsageLabelKind::DetailsPanel => "",
+        UsageLabelKind::Plain => "",
     };
     format!("{base}{suffix}")
 }

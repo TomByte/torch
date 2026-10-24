@@ -150,10 +150,6 @@ pub enum ObjectUpdateMessage {
         history: ObjectActionHistory,
     },
     TeamMembershipsChanged,
-    AmbientTaskUpdated {
-        task_id: String,
-        timestamp: DateTime<Utc>,
-    },
 }
 
 impl ObjectUpdateMessage {
@@ -167,7 +163,6 @@ impl ObjectUpdateMessage {
             ObjectDeleted { .. } => "ObjectDeleted",
             ObjectActionOccurred { .. } => "ObjectActionOccurred",
             TeamMembershipsChanged => "TeamMembershipsChanged",
-            AmbientTaskUpdated { .. } => "AmbientTaskUpdated",
         }
     }
 }

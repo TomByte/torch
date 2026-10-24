@@ -4,7 +4,6 @@ use super::*;
 fn launch_modes_select_expected_logging_frontend() {
     let app = LaunchMode::App {
         args: Default::default(),
-        api_key: None,
     };
     let test = LaunchMode::Test {
         driver: Box::new(None),

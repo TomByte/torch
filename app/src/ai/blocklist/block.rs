@@ -23,7 +23,7 @@ use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use ai::agent::action::{AskUserQuestionItem, InsertReviewComment, RunAgentsRequest};
+use ai::agent::action::{AskUserQuestionItem, InsertReviewComment};
 use ai::document::DEFAULT_PLANNING_DOCUMENT_TITLE;
 use base64::Engine as _;
 use chrono::{DateTime, Duration, Local};
@@ -42,7 +42,6 @@ use rustc_hash::FxHashSet;
 use serde::Serialize;
 use settings::Setting as _;
 use string_offset::StringRange;
-use torch_core::channel::ChannelState;
 use torch_core::features::FeatureFlag;
 use torch_core::ui::theme::Fill;
 use torch_core::ui::theme::color::internal_colors;
@@ -100,11 +99,9 @@ use crate::ai::agent::{
     CancellationReason, CreateDocumentsRequest, CreateDocumentsResult, DocumentToCreate,
     EditDocumentsResult, MessageId, PassiveSuggestionTrigger, ProgrammingLanguage,
     RenderableAIError, RequestCommandOutputResult, RequestFileEditsResult, ScreenshotSource,
-    SearchCodebaseResult, ServerOutputId, SubagentCall, SubagentType, SuggestPromptRequest,
-    SuggestPromptResult, SuggestedLoggingId, SummarizationType, TodoOperation,
+    SearchCodebaseResult, ServerOutputId, SuggestPromptRequest, SuggestPromptResult,
+    SuggestedLoggingId, SummarizationType, TodoOperation,
 };
-use crate::ai::agent_conversations_model::{AgentConversationsModel, AgentConversationsModelEvent};
-use crate::ai::ambient_agents::AmbientAgentTaskId;
 use crate::ai::blocklist::action_model::NewConversationDecision;
 use crate::ai::blocklist::agent_view::{AgentViewController, AgentViewEntryOrigin};
 use crate::ai::blocklist::block::keyboard_navigable_buttons::{
@@ -127,9 +124,6 @@ use crate::ai::blocklist::inline_action::gemini_enterprise_credentials_error::{
 use crate::ai::blocklist::inline_action::requested_command::{
     self, RequestedActionViewType, RequestedCommand, RequestedCommandView,
     RequestedCommandViewEvent,
-};
-use crate::ai::blocklist::inline_action::run_agents_card_view::{
-    self, RunAgentsCardView, RunAgentsCardViewEvent,
 };
 use crate::ai::blocklist::inline_action::search_codebase::{
     SearchCodebaseView, SearchCodebaseViewEvent,
@@ -181,7 +175,6 @@ use crate::server::telemetry::{
 use crate::settings::{
     AISettings, AISettingsChangedEvent, AgentModeCodingPermissionsType, FontSettings,
     InputModeSettings, InputModeSettingsChangedEvent, InputSettings,
-    OrchestrationMessageDisplayMode,
 };
 use crate::terminal::find::TerminalFindModel;
 use crate::terminal::model::BlockId;
@@ -326,7 +319,6 @@ pub fn init(app: &mut AppContext) {
     ask_user_question_view::init(app);
     code_diff_view::init(app);
     requested_command::init(app);
-    run_agents_card_view::init(app);
     cli::init(app);
 }
 
@@ -461,10 +453,6 @@ pub(super) struct AIBlockStateHandles {
     /// Mouse state handles per citation.
     /// A given citation should only appear once per block.
     footer_citation_chip_handles: HashMap<AIAgentCitation, MouseStateHandle>,
-    /// Persistent mouse-state handles per received-message transcript row,
-    /// used by the clickable sender avatar.
-    pub(super) transcript_avatar_handles: HashMap<MessageId, MouseStateHandle>,
-
     references_section_collapsible_handle: MouseStateHandle,
 
     autoread_files_speedbump_checkbox_handle: MouseStateHandle,
@@ -834,23 +822,6 @@ impl CollapsibleElementState {
         }
     }
 
-    /// Applies orchestration message display behavior after streaming finishes.
-    fn finish_orchestration_message(&mut self, display_mode: OrchestrationMessageDisplayMode) {
-        let should_auto_collapse = self.should_auto_collapse_on_finish();
-
-        self.sync_finished_state(true);
-
-        if display_mode.should_collapse_agent_message_body_on_finish() && should_auto_collapse {
-            self.expansion_state = CollapsibleExpansionState::Collapsed;
-        } else if let CollapsibleExpansionState::Expanded {
-            scroll_pinned_to_bottom,
-            ..
-        } = &mut self.expansion_state
-        {
-            *scroll_pinned_to_bottom = false;
-        }
-    }
-
     fn toggle_expansion(&mut self) {
         if !self.last_known_is_finished {
             self.user_toggled_while_streaming = true;
@@ -875,42 +846,6 @@ impl CollapsibleElementState {
                     scroll_pinned_to_bottom: true
                 }
             )
-    }
-}
-
-const RECEIVED_MESSAGE_COLLAPSIBLE_ID_PREFIX: &str = "received-message:";
-
-pub(crate) fn received_message_collapsible_id(message_id: &str) -> MessageId {
-    MessageId::new(format!(
-        "{RECEIVED_MESSAGE_COLLAPSIBLE_ID_PREFIX}{message_id}"
-    ))
-}
-
-fn default_collapsible_state_for_orchestration_action(
-    action: &AIAgentActionType,
-    display_mode: OrchestrationMessageDisplayMode,
-) -> Option<CollapsibleElementState> {
-    match action {
-        AIAgentActionType::SendMessageToAgent { .. } => {
-            Some(default_orchestration_collapsible_state(
-                display_mode.should_expand_agent_message_body(),
-            ))
-        }
-        _ => None,
-    }
-}
-
-fn default_collapsible_state_for_orchestration_message(
-    display_mode: OrchestrationMessageDisplayMode,
-) -> CollapsibleElementState {
-    default_orchestration_collapsible_state(display_mode.should_expand_agent_message_body())
-}
-
-fn default_orchestration_collapsible_state(expanded: bool) -> CollapsibleElementState {
-    if expanded {
-        CollapsibleElementState::default()
-    } else {
-        CollapsibleElementState::collapsed()
     }
 }
 
@@ -1063,15 +998,6 @@ pub struct AIBlock {
     /// Per-action button components for "View screenshot" buttons on UseComputer actions.
     view_screenshot_buttons: HashMap<AIAgentActionId, ui_components::button::Button>,
 
-    /// Per-action button components for "Open recording" buttons on StopRecording actions.
-    open_recording_buttons: HashMap<AIAgentActionId, ui_components::button::Button>,
-
-    /// Whether this block's output contains recording-related actions
-    /// (StartRecording/StopRecording/UseComputer). Computed on output updates so
-    /// rendering can skip the conversation-wide recording span derivation for
-    /// unrelated blocks.
-    has_recording_related_actions: bool,
-
     /// Stores the last command that was right-clicked by a child component.
     /// When set, CopyCommand will copy this specific command instead of all commands.
     last_right_clicked_command: Option<String>,
@@ -1099,9 +1025,6 @@ pub struct AIBlock {
     imported_comments: HashMap<AIAgentActionId, ImportedCommentGroup>,
     has_imported_comments: bool,
 
-    /// Per-action `RunAgentsCardView`, lazily created.
-    run_agents_card_views: HashMap<AIAgentActionId, ViewHandle<RunAgentsCardView>>,
-
     /// Handle for the background link detection task, kept so we can abort a previous
     /// detection when a new one is spawned (e.g. on shell data change).
     link_detection_handle: Option<SpawnedFutureHandle>,
@@ -1123,24 +1046,6 @@ struct EmbeddedCodeEditorView {
     language: Option<ProgrammingLanguage>,
     length: usize,
 }
-/// Builds the authenticated Oz run-page URL for a recording artifact.
-///
-/// The task ID is assigned to the conversation by the server when the run
-/// starts, while the artifact UID comes directly from the StopRecording action.
-/// When either value is unavailable, callers should fall back to the signed
-/// artifact download URL.
-fn recording_artifact_view_url(
-    task_id: Option<AmbientAgentTaskId>,
-    artifact_uid: &str,
-) -> Option<String> {
-    let task_id = task_id?;
-    Some(format!(
-        "{}/runs/{task_id}?artifact={}",
-        ChannelState::oz_root_url(),
-        urlencoding::encode(artifact_uid),
-    ))
-}
-
 impl AIBlock {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
@@ -1230,18 +1135,10 @@ impl AIBlock {
                     ctx.notify();
                 }
                 AISettingsChangedEvent::ThinkingDisplayMode { .. }
-                | AISettingsChangedEvent::OrchestrationMessageDisplayMode { .. }
                 | AISettingsChangedEvent::UsageDisplayUnit { .. } => {
                     ctx.notify();
                 }
                 _ => {}
-            },
-        );
-
-        ctx.subscribe_to_model(
-            &AgentConversationsModel::handle(ctx),
-            |me, _, event, ctx| {
-                me.handle_agent_conversations_model_event(event, ctx);
             },
         );
 
@@ -1526,8 +1423,6 @@ impl AIBlock {
             disable_rule_suggestions_button,
             rewind_button,
             view_screenshot_buttons: Default::default(),
-            open_recording_buttons: Default::default(),
-            has_recording_related_actions: false,
             last_right_clicked_command: None,
             is_usage_footer_expanded: false,
             is_turn_panel_expanded: false,
@@ -1537,7 +1432,6 @@ impl AIBlock {
             gemini_enterprise_credentials_error_view: None,
             imported_comments: Default::default(),
             has_imported_comments: false,
-            run_agents_card_views: Default::default(),
             link_detection_handle: None,
             #[cfg(feature = "local_fs")]
             resolved_code_block_paths: Default::default(),
@@ -1892,7 +1786,6 @@ impl AIBlock {
         match status {
             AIBlockOutputStatus::Pending => {
                 self.requested_action_ids.clear();
-                self.has_recording_related_actions = false;
                 self.secret_redaction_state.reset();
             }
             AIBlockOutputStatus::PartiallyReceived { output } => {
@@ -1924,7 +1817,6 @@ impl AIBlock {
                     let output = output.get();
                     self.handle_updated_output(&output, ctx);
                 }
-                self.notify_run_agents_card_views(ctx);
                 self.spawn_link_detection(ctx);
                 self.finish(FinishReason::Cancelled, ctx);
 
@@ -1963,7 +1855,6 @@ impl AIBlock {
                 self.maybe_create_aws_bedrock_credentials_error_view(&error, ctx);
                 self.maybe_create_gemini_enterprise_credentials_error_view(&error, ctx);
                 self.maybe_create_chatgpt_subscription_action_handles(&error);
-                self.notify_run_agents_card_views(ctx);
                 // There are no actions to be taken in this block, it is finished.
                 self.finish(FinishReason::Error, ctx);
             }
@@ -1982,22 +1873,6 @@ impl AIBlock {
             }
         }
 
-        let has_recording_related_actions = output.actions().any(|action| {
-            matches!(
-                &action.action,
-                AIAgentActionType::StartRecording { .. }
-                    | AIAgentActionType::StopRecording { .. }
-                    | AIAgentActionType::UseComputer(_)
-            )
-        });
-        if self.has_recording_related_actions || has_recording_related_actions {
-            let conversation_id = self.client_ids.conversation_id;
-            self.action_model.update(ctx, |action_model, _ctx| {
-                action_model.invalidate_recording_spans(conversation_id);
-            });
-        }
-        self.has_recording_related_actions = has_recording_related_actions;
-
         if FeatureFlag::WebSearchUI.is_enabled() {
             // Handle WebSearch messages
             self.handle_web_search_messages(&output.messages, ctx);
@@ -2007,8 +1882,6 @@ impl AIBlock {
             // Handle WebFetch messages
             self.handle_web_fetch_messages(&output.messages, ctx);
         }
-
-        self.fetch_conversation_search_agent_run_titles(output, ctx);
 
         let new_action_ids: FxHashSet<AIAgentActionId> =
             output.actions().map(|action| action.id.clone()).collect();
@@ -2076,19 +1949,9 @@ impl AIBlock {
                     .or_default();
             }
 
-            if let AIAgentActionType::RunAgents(req) = &action.action {
-                self.ensure_run_agents_card_view(&action.id, req, ctx);
-            }
-
             // Ensure a button component exists for UseComputer actions.
             if matches!(&action.action, AIAgentActionType::UseComputer(_)) {
                 self.view_screenshot_buttons
-                    .entry(action.id.clone())
-                    .or_default();
-            }
-
-            if matches!(&action.action, AIAgentActionType::StopRecording { .. }) {
-                self.open_recording_buttons
                     .entry(action.id.clone())
                     .or_default();
             }
@@ -2289,40 +2152,6 @@ impl AIBlock {
                     .entry(message.id.clone())
                     .or_insert_with(CollapsibleElementState::collapsed);
             }
-
-            // Register collapsible state for orchestration action messages.
-            let orchestration_message_display_mode =
-                AISettings::as_ref(ctx).orchestration_message_display_mode;
-            match &message.message {
-                AIAgentOutputMessageType::Action(AIAgentAction { action, .. }) => {
-                    if let Some(state) = default_collapsible_state_for_orchestration_action(
-                        action,
-                        orchestration_message_display_mode,
-                    ) {
-                        self.collapsible_block_states
-                            .entry(message.id.clone())
-                            .or_insert(state);
-                    }
-                }
-                AIAgentOutputMessageType::MessagesReceivedFromAgents { messages } => {
-                    for received_message in messages {
-                        let collapsible_id =
-                            received_message_collapsible_id(&received_message.message_id);
-                        self.collapsible_block_states
-                            .entry(collapsible_id.clone())
-                            .or_insert_with(|| {
-                                default_collapsible_state_for_orchestration_message(
-                                    orchestration_message_display_mode,
-                                )
-                            });
-                        self.state_handles
-                            .transcript_avatar_handles
-                            .entry(collapsible_id)
-                            .or_default();
-                    }
-                }
-                _ => {}
-            }
         }
 
         if get_secret_obfuscation_mode(ctx).should_redact_secret() {
@@ -2332,63 +2161,6 @@ impl AIBlock {
                     get_secret_obfuscation_mode(ctx).is_visually_obfuscated(),
                 );
         }
-    }
-
-    fn fetch_conversation_search_agent_run_titles(
-        &self,
-        output: &AIAgentOutput,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        for task_id in Self::conversation_search_agent_run_ids(output) {
-            AgentConversationsModel::handle(ctx).update(ctx, |model, ctx| {
-                model.get_or_async_fetch_task_data(&task_id, ctx);
-            });
-        }
-    }
-
-    fn handle_agent_conversations_model_event(
-        &mut self,
-        event: &AgentConversationsModelEvent,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        // Conversation-search labels may render with an agent-run fallback before the
-        // async task title fetch completes. `TasksUpdated` is the signal that the real
-        // title may now be cached, so only notify blocks that render those labels.
-        if matches!(event, AgentConversationsModelEvent::TasksUpdated)
-            && self.output_references_agent_run_for_conversation_search(ctx)
-        {
-            ctx.notify();
-        }
-    }
-
-    fn output_references_agent_run_for_conversation_search(&self, app: &AppContext) -> bool {
-        self.model
-            .status(app)
-            .output_to_render()
-            .is_some_and(|output| {
-                !Self::conversation_search_agent_run_ids(&output.get()).is_empty()
-            })
-    }
-
-    fn conversation_search_agent_run_ids(output: &AIAgentOutput) -> Vec<AmbientAgentTaskId> {
-        let mut task_ids = HashSet::new();
-        for message in &output.messages {
-            let AIAgentOutputMessageType::Subagent(SubagentCall {
-                subagent_type:
-                    SubagentType::ConversationSearch {
-                        agent_run_id: Some(agent_run_id),
-                        ..
-                    },
-                ..
-            }) = &message.message
-            else {
-                continue;
-            };
-            if let Ok(task_id) = agent_run_id.parse() {
-                task_ids.insert(task_id);
-            }
-        }
-        task_ids.into_iter().collect()
     }
 
     fn set_keyboard_navigable_buttons(
@@ -2491,59 +2263,7 @@ impl AIBlock {
         self.keyboard_navigable_buttons = Some(menu);
     }
 
-    /// Applies final display behavior to orchestration message bodies.
-    fn finish_orchestration_message_collapsible_states(
-        &mut self,
-        output: &AIAgentOutput,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        let display_mode = AISettings::as_ref(ctx).orchestration_message_display_mode;
-        for message in &output.messages {
-            match &message.message {
-                AIAgentOutputMessageType::Action(AIAgentAction {
-                    action: AIAgentActionType::SendMessageToAgent { .. },
-                    ..
-                }) => {
-                    self.collapsible_block_states
-                        .entry(message.id.clone())
-                        .or_insert_with(|| {
-                            default_orchestration_collapsible_state(
-                                display_mode.should_expand_agent_message_body(),
-                            )
-                        })
-                        .finish_orchestration_message(display_mode);
-                }
-                AIAgentOutputMessageType::MessagesReceivedFromAgents { messages } => {
-                    for received_message in messages {
-                        let collapsible_id =
-                            received_message_collapsible_id(&received_message.message_id);
-                        self.collapsible_block_states
-                            .entry(collapsible_id)
-                            .or_insert_with(|| {
-                                default_collapsible_state_for_orchestration_message(display_mode)
-                            })
-                            .finish_orchestration_message(display_mode);
-                    }
-                }
-                AIAgentOutputMessageType::Text(_)
-                | AIAgentOutputMessageType::Reasoning { .. }
-                | AIAgentOutputMessageType::Summarization { .. }
-                | AIAgentOutputMessageType::Subagent(_)
-                | AIAgentOutputMessageType::Action(_)
-                | AIAgentOutputMessageType::TodoOperation(_)
-                | AIAgentOutputMessageType::WebSearch(_)
-                | AIAgentOutputMessageType::WebFetch(_)
-                | AIAgentOutputMessageType::CommentsAddressed { .. }
-                | AIAgentOutputMessageType::DebugOutput { .. }
-                | AIAgentOutputMessageType::ArtifactCreated(_)
-                | AIAgentOutputMessageType::SkillInvoked(_)
-                | AIAgentOutputMessageType::EventsFromAgents { .. } => {}
-            }
-        }
-    }
-
     fn handle_complete_output(&mut self, output: &AIAgentOutput, ctx: &mut ViewContext<Self>) {
-        self.finish_orchestration_message_collapsible_states(output, ctx);
         let mut suggestions = BlocklistAIHistoryModel::as_ref(ctx)
             .existing_suggestions_for_conversation(self.client_ids.conversation_id)
             .cloned()
@@ -5018,14 +4738,6 @@ impl AIBlock {
         {
             ctx.focus(ask_user_question_view);
             did_focus_subview = true;
-        } else if let Some(card_view) =
-            pending_action_id.and_then(|id| self.run_agents_card_views.get(id))
-        {
-            // If there's a blocking RunAgents card, focus it so its
-            // own keybindings (`enter -> Accept`, `cmdorctrl-e ->
-            // ToggleEdit`, etc.) resolve.
-            ctx.focus(card_view);
-            did_focus_subview = true;
         } else if let Some(keyboard_navigable_buttons) = self.keyboard_navigable_buttons.as_ref() {
             // If there's buttons to take action on, focus those.
             ctx.focus(keyboard_navigable_buttons);
@@ -6404,9 +6116,6 @@ pub enum AIBlockAction {
     OpenCommentInGitHub {
         url: String,
     },
-    OpenRecordingArtifact {
-        artifact_uid: String,
-    },
 }
 
 #[cfg(feature = "local_fs")]
@@ -6565,36 +6274,9 @@ impl TypedActionView for AIBlock {
                 self.cancel_action(action_id, ctx);
             }
             AIBlockAction::ExecuteNextPendingAction => {
-                // If the next pending action is a RunAgents tool call,
-                // delegate to the per-card view's Accept handler so
-                // Enter routes through the executor-backed dispatch
-                // path. (Focus normally goes to the card view via
-                // `focus_subview_if_necessary`, in which case the
-                // card's own keybinding fires; this handler covers
-                // the case where focus is still on AIBlock.)
-                let run_agents_id = self
-                    .action_model
-                    .as_ref(ctx)
-                    .get_pending_actions_for_conversation(&self.client_ids.conversation_id)
-                    .filter(|action| matches!(action.action, AIAgentActionType::RunAgents(_)))
-                    .last()
-                    .map(|action| action.id.clone());
-                if let Some(run_agents_id) = run_agents_id {
-                    match self.run_agents_card_views.get(&run_agents_id).cloned() {
-                        Some(card_view) => {
-                            card_view.update(ctx, |view, ctx_view| view.accept(ctx_view));
-                        }
-                        _ => {
-                            log::warn!(
-                                "ExecuteNextPendingAction: no RunAgentsCardView for {run_agents_id:?}"
-                            );
-                        }
-                    }
-                } else {
-                    self.action_model.update(ctx, |action_model, ctx| {
-                        action_model.execute_next_action_for_user(self.conversation_id(), ctx)
-                    });
-                }
+                self.action_model.update(ctx, |action_model, ctx| {
+                    action_model.execute_next_action_for_user(self.conversation_id(), ctx)
+                });
             }
             AIBlockAction::ExecuteRequestedAction { action_id } => {
                 self.action_model.update(ctx, |action_model, ctx| {
@@ -7053,42 +6735,6 @@ impl TypedActionView for AIBlock {
             AIBlockAction::OpenCommentInGitHub { url } => {
                 ctx.open_url(url);
             }
-            AIBlockAction::OpenRecordingArtifact { artifact_uid } => {
-                let conversation_id = self.client_ids.conversation_id;
-                let task_id = BlocklistAIHistoryModel::as_ref(ctx)
-                    .conversation(&conversation_id)
-                    .and_then(|conversation| conversation.task_id());
-                if let Some(url) = recording_artifact_view_url(task_id, artifact_uid) {
-                    ctx.open_url(&url);
-                    return;
-                }
-                let ai_client = ServerApiProvider::handle(ctx).as_ref(ctx).get_ai_client();
-                let artifact_uid = artifact_uid.clone();
-                let artifact_uid_for_error = artifact_uid.clone();
-                ctx.spawn(
-                    async move { ai_client.get_artifact_download(&artifact_uid).await },
-                    move |_, result, ctx| match result {
-                        Ok(artifact) => {
-                            ctx.open_url(artifact.download_url());
-                        }
-                        Err(error) => {
-                            log::warn!(
-                                "Failed to prepare recording artifact {artifact_uid_for_error}: {error:#}"
-                            );
-                            let window_id = ctx.window_id();
-                            ToastStack::handle(ctx).update(ctx, |toast_stack, ctx| {
-                                toast_stack.add_ephemeral_toast(
-                                    DismissibleToast::error(
-                                        "Failed to open recording.".to_string(),
-                                    ),
-                                    window_id,
-                                    ctx,
-                                );
-                            });
-                        }
-                    },
-                );
-            }
             AIBlockAction::ViewScreenshot { action_id } => {
                 // Collect all UseComputer action IDs across the entire conversation
                 // so the lightbox can navigate between their screenshots.
@@ -7231,83 +6877,5 @@ impl TypedActionView for AIBlock {
             }
         }
         ctx.notify();
-    }
-}
-
-impl AIBlock {
-    /// Lazily create the per-action `RunAgentsCardView` so the
-    /// orchestrate confirmation card can render on its first frame.
-    /// Idempotent: re-running with an already-populated entry leaves
-    /// it unchanged. The view drives Accept dispatch through
-    /// [`BlocklistAIActionModel::execute_run_agents`] itself; only
-    /// `RejectRequested` flows back here so the existing
-    /// [`Self::cancel_action`] entry point handles cancellation.
-    fn ensure_run_agents_card_view(
-        &mut self,
-        action_id: &AIAgentActionId,
-        request: &RunAgentsRequest,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        if let Some(existing_view) = self.run_agents_card_views.get(action_id) {
-            // The view was created on an earlier streaming chunk that may
-            // have carried a partial/empty request. Re-sync the edit state
-            // from the latest (potentially more complete) request so the
-            // card renders the correct agent count, summary, etc.
-            existing_view.update(ctx, |view, ctx| {
-                view.update_request(request, ctx);
-            });
-            return;
-        }
-
-        // Read the active orchestration config for auto-launch /
-        // denied decisions from the conversation (not the singleton).
-        let active_config = {
-            let history = crate::BlocklistAIHistoryModel::as_ref(ctx);
-            let conv = history.conversation(&self.client_ids.conversation_id);
-
-            if !request.plan_id.is_empty() {
-                conv.and_then(|conv| {
-                    conv.orchestration_config_for_plan(&request.plan_id)
-                        .map(|(config, status)| (config.clone(), status))
-                })
-            } else {
-                None
-            }
-        };
-
-        let action_id_clone = action_id.clone();
-        let request_clone = request.clone();
-        let action_model = self.action_model.clone();
-        let run_agents_executor = self.action_model.as_ref(ctx).run_agents_executor(ctx);
-        let block_model = self.model.clone();
-        let view = ctx.add_typed_action_view(move |ctx_view| {
-            RunAgentsCardView::new(
-                action_id_clone,
-                &request_clone,
-                active_config,
-                action_model,
-                run_agents_executor,
-                block_model,
-                ctx_view,
-            )
-        });
-        let action_id_for_event = action_id.clone();
-        ctx.subscribe_to_view(&view, move |me, _, event, ctx| match event {
-            RunAgentsCardViewEvent::RejectRequested => {
-                me.cancel_action(&action_id_for_event, ctx);
-            }
-        });
-        self.run_agents_card_views.insert(action_id.clone(), view);
-    }
-
-    /// Re-renders the orchestrate cards after the block's output stream ends
-    /// without succeeding. A `RunAgents` tool call that was still streaming at
-    /// that point never reaches the action queue, so it produces no action
-    /// result and no event of its own; without this nudge its card would keep
-    /// rendering the "Configuring agents…" placeholder forever.
-    fn notify_run_agents_card_views(&self, ctx: &mut ViewContext<Self>) {
-        for view in self.run_agents_card_views.values().cloned().collect_vec() {
-            view.update(ctx, |_, ctx| ctx.notify());
-        }
     }
 }

@@ -1608,13 +1608,9 @@ pub fn object_update_message_from_gql(value: WarpDriveUpdate) -> Result<ObjectUp
         WarpDriveUpdate::TeamMembershipsChanged(_) => {
             Ok(ObjectUpdateMessage::TeamMembershipsChanged)
         }
-        WarpDriveUpdate::AmbientTaskUpdated(message) => {
-            Ok(ObjectUpdateMessage::AmbientTaskUpdated {
-                task_id: message.task_id.inner().to_string(),
-                timestamp: message.task_updated_ts.utc(),
-            })
+        WarpDriveUpdate::AmbientTaskUpdated(_) | WarpDriveUpdate::Unknown => {
+            bail!("Unexpected WarpDriveUpdate variant")
         }
-        WarpDriveUpdate::Unknown => bail!("Unexpected WarpDriveUpdate variant"),
     }
 }
 

@@ -277,8 +277,6 @@ pub enum WorkspaceAction {
     },
     /// Add a new tab that immediately enters agent view with a new conversation.
     AddAgentTab,
-    /// Add a new tab running a local Docker sandbox via `sbx`.
-    AddDockerSandboxTab,
     OpenNewSessionMenu {
         anchor: NewSessionMenuAnchor,
     },
@@ -488,7 +486,6 @@ pub enum WorkspaceAction {
         /// The type of zero state prompt suggestion to start with (optional).
         zero_state_prompt_suggestion_type: Option<ZeroStatePromptSuggestionType>,
     },
-    OpenCloudAgentSetupGuide,
     /// Dismisses the Wayland crash recovery banner and opens a link to our docs page with more
     /// information.
     #[cfg(target_os = "linux")]
@@ -499,8 +496,6 @@ pub enum WorkspaceAction {
         query: String,
     },
     OpenAIFactCollection,
-    /// Open the Environment Management pane in Create mode.
-    OpenEnvironmentManagementPane,
     ToggleAIDocumentPane {
         document_id: AIDocumentId,
         document_version: AIDocumentVersion,
@@ -586,12 +581,6 @@ pub enum WorkspaceAction {
         /// Optional prompt to send after summarization completes successfully.
         initial_prompt: Option<String>,
     },
-    /// Install the Oz CLI command to /usr/local/bin
-    #[cfg(target_os = "macos")]
-    InstallOz,
-    /// Uninstall the Oz CLI command from /usr/local/bin
-    #[cfg(target_os = "macos")]
-    UninstallOz,
     /// Install the Torch Control CLI command to /usr/local/bin
     #[cfg(target_os = "macos")]
     InstallWarpctrl,
@@ -634,28 +623,15 @@ pub enum WorkspaceAction {
     OpenGlobalSearch,
     ToggleConversationListView,
     OpenConversationListView,
-    OpenAgentManagementView,
     /// Reset the AWS Bedrock login banner dismissed state (for debugging).
     #[cfg(debug_assertions)]
     DebugResetAwsBedrockLoginBannerDismissed,
-    /// Open the Oz Launch Modal (for debugging)
-    #[cfg(debug_assertions)]
-    OpenOzLaunchModal,
-    /// Reset the Oz launch modal dismissed state (for debugging)
-    #[cfg(debug_assertions)]
-    ResetOzLaunchModalState,
     /// Open the OpenWarp Launch Modal (for debugging)
     #[cfg(debug_assertions)]
     OpenOpenWarpLaunchModal,
     /// Reset the OpenWarp launch modal dismissed state (for debugging)
     #[cfg(debug_assertions)]
     ResetOpenWarpLaunchModalState,
-    /// Open the Orchestration Launch Modal (for debugging)
-    #[cfg(debug_assertions)]
-    OpenOrchestrationLaunchModal,
-    /// Reset the orchestration launch modal dismissed state (for debugging)
-    #[cfg(debug_assertions)]
-    ResetOrchestrationLaunchModalState,
     /// Open the Torch Agent CLI Launch Modal (for debugging)
     #[cfg(debug_assertions)]
     OpenAgentCliLaunchModal,
@@ -679,10 +655,6 @@ pub enum WorkspaceAction {
     SampleProcess,
     ToggleNotificationMailbox {
         select_first: bool,
-    },
-    ToggleAgentManagementView,
-    ViewAgentRunsForEnvironment {
-        environment_id: String,
     },
     /// Show the rewind confirmation dialog before rewinding an AI conversation
     ShowRewindConfirmationDialog {
@@ -837,7 +809,6 @@ impl WorkspaceAction {
             | NewAgentWorktreeSession { .. }
             | AddTabWithShell { .. }
             | AddAgentTab
-            | AddDockerSandboxTab
             | AddWindow
             | AddWindowWithShell { .. }
             | CloseWindow
@@ -904,7 +875,6 @@ impl WorkspaceAction {
             | DispatchToSettingsTab { .. }
             | ToggleResourceCenter
             | ToggleUserMenu
-            | OpenCloudAgentSetupGuide
             | ToggleKeybindingsPage
             | ShowCommandSearch(_)
             | TriggerExternalCtrlTFileSearch
@@ -992,9 +962,6 @@ impl WorkspaceAction {
             | ToggleConversationListView
             | OpenConversationListView
             | ToggleNotificationMailbox { .. }
-            | ToggleAgentManagementView
-            | OpenAgentManagementView
-            | ViewAgentRunsForEnvironment { .. }
             | ToggleAIDocumentPane { .. }
             | HideAIDocumentPanes
             | OpenAIDocumentPane { .. }
@@ -1016,12 +983,8 @@ impl WorkspaceAction {
             | OpenNetworkLogPane => false,
             #[cfg(debug_assertions)]
             DebugResetAwsBedrockLoginBannerDismissed
-            | OpenOzLaunchModal
-            | ResetOzLaunchModalState
             | OpenOpenWarpLaunchModal
             | ResetOpenWarpLaunchModalState
-            | OpenOrchestrationLaunchModal
-            | ResetOrchestrationLaunchModalState
             | OpenAgentCliLaunchModal
             | ResetAgentCliLaunchModalState
             | OpenFeatureIntroModal
@@ -1033,14 +996,11 @@ impl WorkspaceAction {
             #[cfg(target_os = "macos")]
             SampleProcess => false,
             #[cfg(target_os = "macos")]
-            InstallOz | UninstallOz => false,
-            #[cfg(target_os = "macos")]
             InstallWarpctrl | UninstallWarpctrl => false,
             #[cfg(feature = "local_fs")]
             FileRenamed { .. } => false, // File rename doesn't change workspace state
             #[cfg(feature = "local_fs")]
             FileDeleted { .. } => false, // File deletion doesn't change workspace state
-            OpenEnvironmentManagementPane => false,
             #[cfg(target_os = "linux")]
             DismissWaylandCrashRecoveryBannerAndOpenLink => false,
             #[cfg(target_family = "wasm")]

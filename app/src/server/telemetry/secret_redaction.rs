@@ -17,7 +17,6 @@
 //! not track `SecretLevel`s or character ranges, since the telemetry path doesn't need
 //! either.
 use std::collections::HashSet;
-use std::ops::Range;
 
 use lazy_static::lazy_static;
 use parking_lot::RwLock;
@@ -25,7 +24,6 @@ use regex_automata::meta::Regex;
 use torch_errors::report_error;
 
 use crate::terminal::model::secrets::regexes::DEFAULT_REGEXES_WITH_NAMES;
-const REDACTION_REPLACEMENT_CHARACTER: &str = "*";
 lazy_static! {
     /// Regex used to redact secrets from telemetry payloads. Initialized with the
     /// default patterns so that redaction works even before the user's privacy
@@ -82,39 +80,6 @@ fn compose_patterns<'a>(
         }
     }
     patterns
-}
-/// Replaces every detected secret in `input` with a run of asterisks of the same
-/// byte length. Overlapping matches (which can occur when multiple patterns match
-/// the same region) are merged before replacement, so each character is replaced
-/// at most once.
-pub fn redact_secrets_in_string(input: &mut String) {
-    let ranges: Vec<Range<usize>> = {
-        let regex = TELEMETRY_SECRETS_REGEX.read();
-        regex.find_iter(input.as_str()).map(|m| m.range()).collect()
-    };
-    replace_byte_ranges_with_asterisks(input, ranges);
-}
-/// Replaces each byte range in `input` with a run of asterisks of the same byte
-/// length. Handles overlapping ranges by merging them first, and replaces from
-/// the end of the string so earlier byte indices stay valid as we mutate.
-fn replace_byte_ranges_with_asterisks(input: &mut String, mut ranges: Vec<Range<usize>>) {
-    if ranges.is_empty() {
-        return;
-    }
-    // Sort and merge overlapping ranges so we don't double-replace.
-    ranges.sort_by_key(|r| r.start);
-    let mut merged: Vec<Range<usize>> = Vec::with_capacity(ranges.len());
-    for range in ranges {
-        match merged.last_mut() {
-            Some(last) if range.start <= last.end => last.end = last.end.max(range.end),
-            _ => merged.push(range),
-        }
-    }
-    // Replace from the end of the string so earlier byte indices stay valid.
-    for range in merged.into_iter().rev() {
-        let len = range.end - range.start;
-        input.replace_range(range, &REDACTION_REPLACEMENT_CHARACTER.repeat(len));
-    }
 }
 #[cfg(test)]
 #[path = "secret_redaction_tests.rs"]

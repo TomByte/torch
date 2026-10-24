@@ -732,7 +732,6 @@ fn needs_input_blocks_session_with_the_event_summary() {
     };
     assert_eq!(new_status, Some(expected.clone()));
     assert_eq!(session.status, expected);
-    assert!(session.is_blocked_on_needs_input());
 }
 
 #[test]
@@ -746,7 +745,6 @@ fn needs_input_without_a_summary_blocks_session_with_the_generic_message() {
         source: BlockedSource::NeedsInput,
     };
     assert_eq!(new_status, Some(expected));
-    assert!(session.is_blocked_on_needs_input());
 }
 
 #[test]
@@ -770,21 +768,20 @@ fn blocked_status_records_the_event_that_caused_it() {
             panic!("expected a blocked status");
         };
         assert_eq!(source, expected_source);
-        assert_eq!(
-            session.is_blocked_on_needs_input(),
-            expected_source == BlockedSource::NeedsInput
-        );
     }
 }
 
 #[test]
-fn permission_request_after_needs_input_is_no_longer_blocked_on_needs_input() {
+fn permission_request_after_needs_input_replaces_the_blocked_source() {
     let mut session = cli_agent_session(CLIAgentSessionStatus::InProgress, true);
     session.apply_event(&rich_event(CLIAgentEventType::NeedsInput));
 
     session.apply_event(&rich_event(CLIAgentEventType::PermissionRequest));
 
-    assert!(!session.is_blocked_on_needs_input());
+    let CLIAgentSessionStatus::Blocked { source, .. } = session.status else {
+        panic!("expected a blocked status");
+    };
+    assert_eq!(source, BlockedSource::PermissionRequest);
 }
 
 #[test]
@@ -795,7 +792,6 @@ fn tool_complete_after_needs_input_returns_session_to_in_progress() {
     session.apply_event(&rich_event(CLIAgentEventType::ToolComplete));
 
     assert_eq!(session.status, CLIAgentSessionStatus::InProgress);
-    assert!(!session.is_blocked_on_needs_input());
 }
 
 #[test]
@@ -810,7 +806,6 @@ fn idle_prompt_after_needs_input_keeps_session_blocked() {
         session.status,
         CLIAgentSessionStatus::Blocked { .. }
     ));
-    assert!(session.is_blocked_on_needs_input());
 }
 
 fn assert_needs_input_blocks_session_in_mode(mode: ExecutionMode, expect_blocked: bool) {

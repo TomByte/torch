@@ -73,9 +73,7 @@ fn file_backed_execution_profiles_enabled(launch_mode: &LaunchMode) -> bool {
         LaunchMode::App { .. } | LaunchMode::Test { .. } => {
             FeatureFlag::FileBackedExecutionProfiles.is_enabled()
         }
-        LaunchMode::CommandLine { .. }
-        | LaunchMode::RemoteServerProxy
-        | LaunchMode::RemoteServerDaemon { .. } => false,
+        LaunchMode::RemoteServerProxy | LaunchMode::RemoteServerDaemon { .. } => false,
     }
 }
 
@@ -192,13 +190,6 @@ pub enum DefaultProfileState {
     Synced {
         id: ExecutionProfileId,
     },
-    /// Currently, the behavior of the CLI default is that it
-    /// cannot be updated and will never be synced.
-    #[allow(dead_code)]
-    Cli {
-        id: ExecutionProfileId,
-        profile: AIExecutionProfile,
-    },
 }
 
 impl std::fmt::Display for DefaultProfileState {
@@ -206,7 +197,6 @@ impl std::fmt::Display for DefaultProfileState {
         match self {
             DefaultProfileState::Unsynced { .. } => write!(f, "Unsynced"),
             DefaultProfileState::Synced { .. } => write!(f, "Synced"),
-            DefaultProfileState::Cli { .. } => write!(f, "CLI"),
         }
     }
 }
@@ -216,7 +206,6 @@ impl DefaultProfileState {
         match self {
             DefaultProfileState::Unsynced { id, .. } => id.clone(),
             DefaultProfileState::Synced { id } => id.clone(),
-            DefaultProfileState::Cli { id, .. } => id.clone(),
         }
     }
 }
@@ -334,13 +323,6 @@ impl AIExecutionProfilesModel {
                                     id: source.default_profile_id(),
                                     profile: super::create_default_from_legacy_settings(ctx),
                                 },
-                            }
-                        }
-                        // When running as a CLI, we ignore the GUI default and use a more permissive default.
-                        LaunchMode::CommandLine { is_sandboxed, computer_use_override, .. } => {
-                            DefaultProfileState::Cli {
-                                profile: AIExecutionProfile::create_default_cli_profile(*is_sandboxed, *computer_use_override),
-                                id: ExecutionProfileId::new(),
                             }
                         }
                         // RemoteServerProxy and RemoteServerDaemon don't use AI
@@ -974,11 +956,6 @@ impl AIExecutionProfilesModel {
                     data,
                 }
             }
-            DefaultProfileState::Cli { id, profile } => AIExecutionProfileInfo {
-                id: id.clone(),
-                sync_id: None,
-                data: profile.clone(),
-            },
         }
     }
 
@@ -1001,33 +978,6 @@ impl AIExecutionProfilesModel {
         self.session_computer_use.get(&terminal_view_id)
     }
 
-    #[cfg(not(target_family = "wasm"))]
-    pub(crate) fn set_session_computer_use(
-        &mut self,
-        terminal_view_id: EntityId,
-        enabled: bool,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        self.session_computer_use
-            .insert(terminal_view_id, SessionComputerUse { enabled });
-        ctx.emit(AIExecutionProfilesModelEvent::UpdatedActiveProfile { terminal_view_id });
-    }
-
-    #[cfg(not(target_family = "wasm"))]
-    pub(crate) fn clear_session_computer_use(
-        &mut self,
-        terminal_view_id: EntityId,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        if self
-            .session_computer_use
-            .remove(&terminal_view_id)
-            .is_some()
-        {
-            ctx.emit(AIExecutionProfilesModelEvent::UpdatedActiveProfile { terminal_view_id });
-        }
-    }
-
     /// Returns a profile by its client ID.
     /// Returns None if the profile is not found.
     pub fn get_profile_by_id(
@@ -1047,10 +997,9 @@ impl AIExecutionProfilesModel {
                     data,
                 });
         }
-        // Handle an unsynced default profile (including CLI)
+        // Handle an unsynced default profile
         match &self.default_profile_state {
-            DefaultProfileState::Unsynced { id, profile }
-            | DefaultProfileState::Cli { id, profile } => {
+            DefaultProfileState::Unsynced { id, profile } => {
                 if profile_id == id {
                     return Some(AIExecutionProfileInfo {
                         id: id.clone(),
@@ -1940,14 +1889,6 @@ impl AIExecutionProfilesModel {
             }
             return true;
         }
-        // We don't yet support editing the default profile for the CLI.
-        if let DefaultProfileState::Cli { id, .. } = &self.default_profile_state
-            && id == profile_id
-        {
-            log::warn!("Attempted to edit CLI default profile, which is not yet supported.");
-            return false;
-        }
-
         // Case: this might be an edit to a not-yet-created default profile object. If so, we need to create
         // a cloud object to back the default profile.
         if let DefaultProfileState::Unsynced { id, profile } = &self.default_profile_state
@@ -2157,7 +2098,7 @@ impl AIExecutionProfilesModel {
                 self.remove_deleted_mcp_servers(ctx);
             }
             TemplatableMCPServerManagerEvent::LegacyServerConverted
-            | TemplatableMCPServerManagerEvent::StateChanged { uuid: _, state: _ }
+            | TemplatableMCPServerManagerEvent::StateChanged { uuid: _ }
             | TemplatableMCPServerManagerEvent::ServerInstallationAdded(_)
             | TemplatableMCPServerManagerEvent::ServerInstallationDeleted(_) => {}
         }
@@ -2186,12 +2127,6 @@ impl AIExecutionProfilesModel {
 
         // Check if this is the default profile
         if object.model().string_model.is_default_profile {
-            // Don't add the cloud default profile if we're in CLI mode
-            if matches!(self.default_profile_state, DefaultProfileState::Cli { .. }) {
-                log::info!("Ignoring cloud default profile in CLI mode: {sync_id:?}");
-                return;
-            }
-
             // If we're in an unsynced state, transition to synced
             if let DefaultProfileState::Unsynced { id, .. } = &self.default_profile_state {
                 let id = id.clone();
@@ -2352,16 +2287,12 @@ impl AIExecutionProfilesModel {
                 }
             }
             match &mut self.default_profile_state {
-                DefaultProfileState::Unsynced { id, .. }
-                | DefaultProfileState::Synced { id }
-                | DefaultProfileState::Cli { id, .. }
+                DefaultProfileState::Unsynced { id, .. } | DefaultProfileState::Synced { id }
                     if *id == profile_id =>
                 {
                     id.clone_from(&migrated_profile_id);
                 }
-                DefaultProfileState::Unsynced { .. }
-                | DefaultProfileState::Synced { .. }
-                | DefaultProfileState::Cli { .. } => {}
+                DefaultProfileState::Unsynced { .. } | DefaultProfileState::Synced { .. } => {}
             }
         }
         log::info!("Updated profile id mapping after creating a new execution profile");
