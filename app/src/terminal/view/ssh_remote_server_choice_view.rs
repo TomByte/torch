@@ -30,13 +30,13 @@ use torchui::{
     ViewHandle,
 };
 
+use crate::Appearance;
 use crate::terminal::model::session::SessionId;
 use crate::terminal::warpify::settings::{SshExtensionInstallMode, WarpifySettings};
 use crate::ui_components::blended_colors;
 use crate::view_components::keyboard_navigable_buttons::{
     KeyboardNavigableButtons, rich_navigation_button,
 };
-use crate::Appearance;
 
 const PROMPT_BORDER_RADIUS: f32 = 8.;
 const HORIZONTAL_PADDING: f32 = 16.;

@@ -42,8 +42,8 @@ use crate::code::editor::view::{CodeEditorEvent, CodeEditorView};
 use crate::code_review::code_review_view::CodeReviewView;
 use crate::code_review::comment_rendering::CommentViewCard;
 use crate::code_review::comments::{
-    AttachedReviewComment, AttachedReviewCommentTarget, CommentId,
-    ReviewCommentBatch, ReviewCommentBatchEvent,
+    AttachedReviewComment, AttachedReviewCommentTarget, CommentId, ReviewCommentBatch,
+    ReviewCommentBatchEvent,
 };
 use crate::menu::{Event, Menu, MenuItem, MenuItemFields};
 use crate::notebooks::editor::view::{EditorViewEvent, RichTextEditorView};
@@ -1146,11 +1146,7 @@ impl TypedActionView for CommentListView {
                     self.overflow_menu.update(ctx, |menu, ctx| {
                         let appearance = Appearance::handle(ctx).as_ref(ctx);
                         menu.set_items(
-                            Self::menu_items_for_comment(
-                                is_file_level,
-                                is_outdated,
-                                appearance,
-                            ),
+                            Self::menu_items_for_comment(is_file_level, is_outdated, appearance),
                             ctx,
                         );
                     });

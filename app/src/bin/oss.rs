@@ -4,9 +4,7 @@
 
 use anyhow::Result;
 use torch_core::AppId;
-use torch_core::channel::{
-    AutoupdateConfig, Channel, ChannelConfig, ChannelState,
-};
+use torch_core::channel::{AutoupdateConfig, Channel, ChannelConfig, ChannelState};
 
 // Simple wrapper around torch::run() for Torch OSS builds.
 fn main() -> Result<()> {

@@ -906,7 +906,6 @@ fn open_file(window_id: Option<WindowId>, path: PathBuf, ctx: &mut AppContext) {
                 }
             }
         }
-
     }
 }
 
@@ -971,7 +970,6 @@ fn execute_file(window_id: WindowId, path_str: &str, ctx: &mut AppContext) {
             input.set_pending_command(&path_str, i_ctx);
         })
     });
-
 }
 
 /// Helper function to dispatch an action to an existing window

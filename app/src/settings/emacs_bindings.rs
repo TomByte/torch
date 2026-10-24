@@ -1,5 +1,5 @@
+use settings::SupportedPlatforms;
 use settings::macros::define_settings_group;
-use settings::{SupportedPlatforms};
 
 use crate::banner::BannerState;
 

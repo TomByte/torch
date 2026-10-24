@@ -122,7 +122,6 @@ use super::util::{
     WorkspaceMouseStates, WorkspaceState,
 };
 use super::{ActiveSession, TabBarDropTargetData, TabBarLocation, WorkspaceRegistry, util};
-use crate::palette::PaletteSource;
 use crate::agent_status::AgentNotificationsEvent;
 use crate::agent_status::footer::editor::{AgentToolbarEditorEvent, AgentToolbarEditorModal};
 use crate::agent_status::notifications::NotificationFilter;
@@ -136,9 +135,7 @@ use crate::app_state::{
     TabSnapshot, TerminalPaneSnapshot, WindowSnapshot,
 };
 use crate::appearance::{Appearance, AppearanceManager};
-use crate::autoupdate::{
-    AutoupdateState, RelaunchModel, is_incoming_version_past_current,
-};
+use crate::autoupdate::{AutoupdateState, RelaunchModel, is_incoming_version_past_current};
 use crate::banner::BannerState;
 use crate::changelog_model::{ChangelogModel, ChangelogRequestType, Event as ChangelogEvent};
 use crate::channel::ChannelState;
@@ -165,14 +162,13 @@ use crate::menu::{
 use crate::modal::{Modal, ModalEvent, ModalViewState};
 use crate::network::{NetworkStatus, NetworkStatusEvent};
 use crate::notification::NotificationContext;
-use crate::palette::PaletteMode;
+use crate::palette::{PaletteMode, PaletteSource};
 #[cfg(feature = "local_fs")]
 use crate::pane_group::FilePane;
 use crate::pane_group::pane::ActionOrigin;
 use crate::pane_group::{
     self, AnyPaneContent, CodePane, CodeReviewPanelArg, Direction as PaneGroupDirection, Direction,
-    NewTerminalOptions, PaneGroup, PaneId, PanesLayout, TabBarHoverIndex,
-    TerminalPaneId,
+    NewTerminalOptions, PaneGroup, PaneId, PanesLayout, TabBarHoverIndex, TerminalPaneId,
 };
 use crate::persisted_workspace::PersistedWorkspace;
 use crate::persistence::ModelEvent;
@@ -200,9 +196,9 @@ use crate::settings::{
     AccessibilitySettings, AliasExpansionSettings, AppEditorSettings, BlockVisibilitySettings,
     CLIAgentSettings, CLIAgentSettingsChangedEvent, ChangelogSettings, CodeSettings,
     CodeSettingsChangedEvent, CtrlTabBehavior, CursorBlink, DebugSettings, DefaultSessionMode,
-    DefaultSessionSettings, FontSettings, InputModeSettings, InputSettings,
-    MonospaceFontSize, PaneSettings, SelectionSettings, Settings, SshSettings, ThemeSettings,
-    active_theme_kind, respect_system_theme,
+    DefaultSessionSettings, FontSettings, InputModeSettings, InputSettings, MonospaceFontSize,
+    PaneSettings, SelectionSettings, Settings, SshSettings, ThemeSettings, active_theme_kind,
+    respect_system_theme,
 };
 use crate::settings_view::keybindings::{KeybindingChangedEvent, KeybindingChangedNotifier};
 use crate::settings_view::pane_manager::SettingsPaneManager;
@@ -213,8 +209,8 @@ use crate::tab::{
     COMPACT_TAB_WIDTH_THRESHOLD, ColorPickerTarget, MOVE_TO_GROUP_LABEL, NewSessionMenuItem,
     PaneNameMenuTarget, SelectedTabColor, TAB_BAR_BORDER_HEIGHT, TAB_INDICATOR_HEIGHT,
     TAB_PIN_INDICATOR_ICON_SIZE, TAB_PIN_VANISH_THRESHOLD, TabBarState, TabComponent, TabData,
-    TabShortcutModifierState, color_picker_menu_items, next_tab_color,
-    tab_position_id, uses_vertical_tabs,
+    TabShortcutModifierState, color_picker_menu_items, next_tab_color, tab_position_id,
+    uses_vertical_tabs,
 };
 use crate::tab_configs::action_sidecar::SidecarItemKind;
 use crate::tab_configs::remove_confirmation_dialog::{
@@ -440,7 +436,6 @@ const KEYBINDINGS_TO_CACHE: [&str; 3] = [
     SHOW_SETTINGS_KEYBINDING_NAME,
     TOGGLE_COMMAND_PALETTE_KEYBINDING_NAME,
 ];
-
 
 #[cfg(target_family = "wasm")]
 const MOBILE_OVERLAY_PANEL_WIDTH_RATIO: f32 = 0.9;
@@ -4671,7 +4666,7 @@ impl Workspace {
         ctx: &mut ViewContext<Self>,
     ) {
         if tab_config.params.is_empty() {
-                let worktree_branch_name = self.maybe_generate_worktree_name(&tab_config);
+            let worktree_branch_name = self.maybe_generate_worktree_name(&tab_config);
             let param_values = tab_config.default_param_values();
             self.open_tab_config_with_params(
                 tab_config,
@@ -5917,7 +5912,6 @@ impl Workspace {
             return;
         }
 
-
         let grouping_on = FeatureFlag::TabbedEditorView.is_enabled()
             && *EditorSettings::as_ref(ctx)
                 .prefer_tabbed_editor_view
@@ -6093,7 +6087,6 @@ impl Workspace {
             self.welcome_tips_view.update(ctx, |tips_view, ctx| {
                 tips_view.set_action_target(ctx.window_id(), input_id, ctx)
             });
-
         }
         ctx.focus(&self.welcome_tips_view);
         ctx.notify();
@@ -6462,11 +6455,7 @@ impl Workspace {
             diff_state_model,
         };
 
-        self.open_right_panel(
-            &context,
-            &pane_group,
-            ctx,
-        );
+        self.open_right_panel(&context, &pane_group, ctx);
     }
 
     fn update_right_panel_open_state(
@@ -7551,8 +7540,7 @@ impl Workspace {
                     worktree_name.as_deref(),
                     ctx,
                 );
-                if should_track_existing_config_open {
-                }
+                if should_track_existing_config_open {}
                 self.close_tab_config_params_modal(ctx);
                 self.complete_pending_session_config_replacement(ctx);
             }
@@ -8574,7 +8562,6 @@ impl Workspace {
                     })
                     .build();
 
-
                 if cfg!(all(not(target_family = "wasm"), target_os = "macos")) {
                     AppContext::show_native_platform_modal(ctx, dialog);
                     return false;
@@ -8640,8 +8627,7 @@ impl Workspace {
         let tabs_closed = self.close_tabs(indices_to_remove, skip_confirmation, true, ctx);
 
         // Telemetry whenever tabs actually closed, not when confirmation dialog comes up.
-        if tabs_closed {
-        }
+        if tabs_closed {}
     }
 
     /// Opens a confirmation dialog if necessary, or closes immediately if not.
@@ -8662,8 +8648,7 @@ impl Workspace {
         // Telemetry whenever tabs actually closed, not when confirmation dialog comes up.
         if tabs_closed {
             match direction {
-                TabMovement::Right if self.active_tab_index > index => {
-                }
+                TabMovement::Right if self.active_tab_index > index => {}
                 _ => (),
             }
         }
@@ -8828,11 +8813,7 @@ impl Workspace {
     }
 
     // Adds a tab with a specific shell, only meant to be dispatched directly by actions.
-    fn add_tab_with_shell(
-        &mut self,
-        shell: AvailableShell,
-        ctx: &mut ViewContext<Self>,
-    ) {
+    fn add_tab_with_shell(&mut self, shell: AvailableShell, ctx: &mut ViewContext<Self>) {
         self.add_new_session_tab(
             NewSessionSource::Tab,
             Some(ctx.window_id()),
@@ -9501,7 +9482,6 @@ impl Workspace {
                     }
                 }
             });
-
         }
     }
 
@@ -9856,7 +9836,6 @@ impl Workspace {
         }
 
         ctx.focus(&self.palette);
-
 
         ctx.notify();
     }
@@ -10988,8 +10967,7 @@ impl Workspace {
                     input_handle.read(ctx, |input, ctx| input.menu_positioning(ctx))
                 });
 
-            if !self.current_workspace_state.is_command_search_open {
-            }
+            if !self.current_workspace_state.is_command_search_open {}
 
             // Make sure we close any already-open input suggestions panel.
             if let Some(input_handle) = &active_input_handle {
@@ -11339,9 +11317,7 @@ impl Workspace {
         fallback_behavior: TerminalSessionFallbackBehavior,
         ctx: &mut ViewContext<Self>,
     ) {
-        if let Some(terminal_view_handle) =
-            self.focus_terminal_input(fallback_behavior, ctx)
-        {
+        if let Some(terminal_view_handle) = self.focus_terminal_input(fallback_behavior, ctx) {
             let terminal_input =
                 terminal_view_handle.read(ctx, |terminal_view, _| terminal_view.input().clone());
             terminal_input.update(ctx, |input, ctx| {
@@ -12026,7 +12002,6 @@ impl Workspace {
         self.close_all_overlays(ctx);
         self.current_workspace_state.is_prompt_editor_open = true;
         ctx.focus(&self.prompt_editor_modal);
-
     }
 
     fn open_agent_toolbar_editor(&mut self, ctx: &mut ViewContext<Self>) {
@@ -15301,7 +15276,6 @@ impl Workspace {
             left_panel.update_available_views(views, ctx);
         });
     }
-
 }
 
 impl Entity for Workspace {
@@ -15859,8 +15833,7 @@ impl TypedActionView for Workspace {
                         left_panel.focus_active_view_on_entry(ctx);
                     });
 
-                    if file_tree_active {
-                    }
+                    if file_tree_active {}
                 }
             }
             ToggleRightPanel => {
@@ -16136,7 +16109,6 @@ impl TypedActionView for Workspace {
                     view.add_ephemeral_toast(new_toast, ctx);
                 });
 
-
                 self.process_updated_sync_state(ctx);
             }
             ToggleSyncTerminalInputsInTab => {
@@ -16164,7 +16136,6 @@ impl TypedActionView for Workspace {
                     let new_toast = DismissibleToast::default(message);
                     view.add_ephemeral_toast(new_toast, ctx);
                 });
-
 
                 self.process_updated_sync_state(ctx);
             }
@@ -17096,7 +17067,8 @@ impl View for Workspace {
                             PositionedElementOffsetBounds::WindowBySize,
                             anchor,
                             child_anchor,
-                        ),
+                        )
+                        .with_conditional_anchors(),
                     );
                 }
                 (true, NewSessionMenuAnchor::Pointer(_))

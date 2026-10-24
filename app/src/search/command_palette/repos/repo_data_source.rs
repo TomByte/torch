@@ -1,10 +1,9 @@
-use crate::persisted_workspace::WorkspaceMetadata;
 use fuzzy_match::{FuzzyMatchResult, match_indices_case_insensitive};
 use itertools::Itertools;
 use torchui::{AppContext, Entity, SingletonEntity};
 
 use super::RepoSearchItem;
-use crate::persisted_workspace::PersistedWorkspace;
+use crate::persisted_workspace::{PersistedWorkspace, WorkspaceMetadata};
 use crate::search::command_palette::mixer::CommandPaletteItemAction;
 use crate::search::data_source::{Query, QueryResult};
 use crate::search::mixer::{DataSourceRunErrorWrapper, SyncDataSource};

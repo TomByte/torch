@@ -1,4 +1,5 @@
 use chrono::{Local, TimeZone};
+use serial_test::serial;
 use torch_core::execution_mode::{AppExecutionMode, ExecutionMode};
 use torchui::{App, ModelHandle, UpdateModel};
 
@@ -192,6 +193,7 @@ fn make_version_info(version_string: impl Into<String>, is_rollback: bool) -> Ve
 /// without cleanup, every failed download retry would leave lots of failed artifacts behind,
 /// eventually filling the user's cache directory.
 #[test]
+#[serial]
 fn test_download_failure_allows_retry() {
     App::test((), |mut app| async move {
         app.add_singleton_model(|ctx| AppExecutionMode::new(ExecutionMode::App, false, ctx));
@@ -234,6 +236,7 @@ fn test_download_failure_allows_retry() {
 /// After a successful download, `downloaded_update` is set and subsequent `should_update`
 /// calls return `UpdateReady::Yes` — preventing re-downloads on the next poll.
 #[test]
+#[serial]
 fn test_successful_download_prevents_redownload() {
     App::test((), |mut app| async move {
         app.add_singleton_model(|ctx| AppExecutionMode::new(ExecutionMode::App, false, ctx));
@@ -286,6 +289,7 @@ fn test_successful_download_prevents_redownload() {
 /// fix: `download_new_update` captures `last_successful_update_id` from `downloaded_update`,
 /// so failure cleanup preserves the old download's directory on disk.
 #[test]
+#[serial]
 fn test_failed_download_preserves_previous_successful_download() {
     App::test((), |mut app| async move {
         app.add_singleton_model(|ctx| AppExecutionMode::new(ExecutionMode::App, false, ctx));
@@ -354,6 +358,7 @@ fn test_failed_download_preserves_previous_successful_download() {
 /// Verifies that after a failed download preserves an earlier success, a subsequent
 /// successful download correctly replaces it.
 #[test]
+#[serial]
 fn test_successful_download_after_failure_replaces_preserved_download() {
     App::test((), |mut app| async move {
         app.add_singleton_model(|ctx| AppExecutionMode::new(ExecutionMode::App, false, ctx));
@@ -408,6 +413,7 @@ fn test_successful_download_after_failure_replaces_preserved_download() {
 }
 
 #[test]
+#[serial]
 fn test_should_update() {
     App::test((), |mut app| async move {
         app.add_singleton_model(|ctx| AppExecutionMode::new(ExecutionMode::App, false, ctx));

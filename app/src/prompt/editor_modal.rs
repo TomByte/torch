@@ -15,6 +15,7 @@ use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 
+use crate::Appearance;
 use crate::appearance::AppearanceEvent;
 use crate::chip_configurator::{ChipConfigurator, ChipConfiguratorAction, ChipConfiguratorLayout};
 use crate::context_chips::prompt::{Prompt, PromptConfiguration, PromptSelection};
@@ -29,7 +30,6 @@ use crate::terminal::model::ObfuscateSecrets;
 use crate::terminal::model::blockgrid::BlockGrid;
 use crate::terminal::session_settings::SessionSettings;
 use crate::view_components::{Dropdown, DropdownItem};
-use crate::Appearance;
 
 const MODAL_WIDTH: f32 = 700.;
 const BORDER_WIDTH: f32 = 1.;

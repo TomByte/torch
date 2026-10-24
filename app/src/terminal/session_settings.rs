@@ -8,8 +8,8 @@ pub use new_session_shell::*;
 use serde::{Deserialize, Serialize};
 pub use startup_shell::*;
 use torch_core::features::FeatureFlag;
+use torch_core::settings::SupportedPlatforms;
 use torch_core::settings::macros::define_settings_group;
-use torch_core::settings::{SupportedPlatforms};
 pub use working_directory_config::*;
 
 use crate::agent_status::footer::toolbar_item::AgentToolbarItemKind;

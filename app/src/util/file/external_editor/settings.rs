@@ -1,6 +1,6 @@
 use serde::{Deserialize, Deserializer, Serialize};
+use settings::SupportedPlatforms;
 use settings::macros::define_settings_group;
-use settings::{SupportedPlatforms};
 
 pub use crate::util::openable_file_type::EditorLayout;
 

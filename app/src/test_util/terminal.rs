@@ -1,16 +1,17 @@
+use std::sync::Arc;
+
 #[cfg(feature = "local_fs")]
 #[cfg(feature = "local_fs")]
 use repo_metadata::RepoMetadataModel;
 use repo_metadata::repositories::DetectedRepositories;
 use repo_metadata::watcher::DirectoryWatcher;
-use std::sync::Arc;
-
 use torch_core::ui::appearance::Appearance;
 use torchui::platform::WindowStyle;
 use torchui::{App, ViewHandle, WindowId};
 use watcher::HomeDirectoryWatcher;
 
 use super::settings::initialize_history_persistence_for_tests;
+use crate::AgentNotificationsModel;
 use crate::changelog_model::ChangelogModel;
 use crate::code_review::git_repo_model::GitRepoModels;
 use crate::context_chips::prompt::Prompt;
@@ -31,7 +32,6 @@ use crate::warp_managed_paths_watcher::WarpManagedPathsWatcher;
 use crate::workflows::local_workflows::LocalWorkflows;
 use crate::workspace::sync_inputs::SyncedInputState;
 use crate::workspace::{ActiveSession, WorkspaceRegistry};
-use crate::AgentNotificationsModel;
 
 /// Initializes all of the necessary models to use a terminal view.
 pub fn initialize_app_for_terminal_view(app: &mut App) {
@@ -56,9 +56,7 @@ pub fn initialize_app_for_terminal_view(app: &mut App) {
     app.add_singleton_model(DirectoryWatcher::new);
     app.add_singleton_model(|_| DetectedRepositories::default());
     #[cfg(feature = "local_fs")]
-    app.add_singleton_model(|ctx| {
-        RepoMetadataModel::new(ctx)
-    });
+    app.add_singleton_model(|ctx| RepoMetadataModel::new(ctx));
     app.add_singleton_model(FileSearchModel::new);
     app.add_singleton_model(|_| GitRepoModels::new());
     app.add_singleton_model(HomeDirectoryWatcher::new_for_test);

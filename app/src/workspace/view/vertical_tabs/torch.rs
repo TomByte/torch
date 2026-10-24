@@ -16,9 +16,8 @@ use torchui::ViewContext;
 use torchui::elements::DraggableState;
 
 use super::*;
-use crate::palette::PaletteSource;
 use crate::menu::{MenuItem, MenuItemFields};
-use crate::palette::PaletteMode;
+use crate::palette::{PaletteMode, PaletteSource};
 use crate::tab::{ColorPickerTarget, color_picker_menu_items};
 use crate::terminal::CLIAgent;
 use crate::terminal::cli_agent_sessions::{

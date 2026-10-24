@@ -1,7 +1,7 @@
 use std::time::Duration;
 
+use settings::SupportedPlatforms;
 use settings::macros::define_settings_group;
-use settings::{SupportedPlatforms};
 
 define_settings_group!(UndoCloseSettings, settings: [
     enabled: UndoCloseEnabled {

@@ -2,7 +2,6 @@ use std::borrow::Cow;
 use std::fs::File;
 use std::path::PathBuf;
 
-use crate::persisted_workspace::WorkspaceMetadata;
 use csv::Writer;
 use enclose::enclose;
 use itertools::Itertools;
@@ -21,7 +20,7 @@ use torchui::{AppContext, SingletonEntity};
 
 use crate::default_terminal::DefaultTerminal;
 use crate::features::{FeatureFlag, runtime_flags_menu_items};
-use crate::persisted_workspace::PersistedWorkspace;
+use crate::persisted_workspace::{PersistedWorkspace, WorkspaceMetadata};
 use crate::root_view::OpenLaunchConfigArg;
 use crate::settings::{BlockVisibilitySettings, DebugSettings, SelectionSettings};
 use crate::terminal::alt_screen_reporting::AltScreenReporting;

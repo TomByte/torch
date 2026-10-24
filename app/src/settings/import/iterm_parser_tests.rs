@@ -7,6 +7,7 @@ use torchui::keymap::Keystroke;
 use virtual_fs::{Stub, VirtualFS};
 
 use super::{ITermTheme, ITermThemeType, color_dictionary_to_coloru};
+use crate::settings::DEFAULT_MONOSPACE_FONT_SIZE;
 use crate::settings::import::config::{
     GlobalHotkey, HotkeyError, ImportedFont, ParseableConfig, ThemeType,
 };
@@ -294,14 +295,14 @@ fn test_parse_font_without_size() {
 
 #[test]
 fn test_parse_font_with_default_size() {
-    let warp_default_profile = ITermProfile {
+    let default_size_profile = ITermProfile {
         font_name: Some("CourierNewPSMT".to_string()),
-        font_size: Some("13".to_string()),
+        font_size: Some((DEFAULT_MONOSPACE_FONT_SIZE as u32).to_string()),
         ..Default::default()
     };
     let fonts = courier_new();
     assert_eq!(
-        *warp_default_profile
+        *default_size_profile
             .remove_default_values()
             .parse(&fonts)
             .font

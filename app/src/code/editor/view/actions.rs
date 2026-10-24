@@ -18,14 +18,14 @@ use torch_util::user_input::UserInput;
 use torchui::actions::StandardAction;
 use torchui::elements::Axis;
 use torchui::event::ModifiersState;
-use torchui::keymap::{EditableBinding, FixedBinding, Keystroke, PerPlatformKeystroke};
+use torchui::keymap::{EditableBinding, FixedBinding, PerPlatformKeystroke};
 use torchui::units::Pixels;
 use torchui::{AppContext, TypedActionView, ViewContext, WeakViewHandle};
 
 use crate::cmd_or_ctrl_shift;
 use crate::code::editor::line::EditorLineLocation;
 use crate::code::editor::model::CodeEditorModel;
-use crate::code::editor::view::{CodeEditorEvent, CodeEditorView, VimMode};
+use crate::code::editor::view::{CodeEditorEvent, CodeEditorView};
 use crate::code_review::comments::CommentId;
 use crate::editor::InteractionState;
 use crate::features::FeatureFlag;
@@ -48,66 +48,28 @@ pub fn init(app: &mut AppContext) {
     // We use this to disable some keybindings that would conflict with the Agent Mode embedded editor.
     let editable_state = text_entry.clone() & !id!(NON_EDITABLE_KEYMAP_CONTEXT);
     app.register_fixed_bindings([
-        FixedBinding::new(
-            "enter",
-            CodeEditorViewAction::Enter,
-            editable_state.clone() & !id!("Vim"),
-        ),
-        FixedBinding::new(
-            "enter",
-            CodeEditorViewAction::VimEnter,
-            text_entry.clone() & id!("Vim"),
-        ),
+        FixedBinding::new("enter", CodeEditorViewAction::Enter, editable_state.clone()),
         FixedBinding::new(
             "numpadenter",
             CodeEditorViewAction::Enter,
-            text_entry.clone() & !id!("Vim"),
-        ),
-        FixedBinding::new(
-            "numpadenter",
-            CodeEditorViewAction::VimEnter,
-            text_entry.clone() & id!("Vim"),
+            text_entry.clone(),
         ),
         FixedBinding::new(
             "shift-enter",
             CodeEditorViewAction::Enter,
-            text_entry.clone() & !id!("Vim"),
-        ),
-        FixedBinding::new(
-            "shift-enter",
-            CodeEditorViewAction::VimShiftEnter,
-            text_entry.clone() & id!("Vim"),
+            text_entry.clone(),
         ),
         FixedBinding::new(
             "backspace",
             CodeEditorViewAction::Backspace,
-            text_entry.clone() & !id!("Vim"),
-        ),
-        FixedBinding::new(
-            "backspace",
-            CodeEditorViewAction::VimBackspace,
-            text_entry.clone() & id!("Vim"),
+            text_entry.clone(),
         ),
         FixedBinding::new(
             "shift-backspace",
             CodeEditorViewAction::Backspace,
             text_entry.clone(),
         ),
-        FixedBinding::new(
-            "shift-backspace",
-            CodeEditorViewAction::VimBackspace,
-            text_entry.clone() & id!("Vim"),
-        ),
-        FixedBinding::new(
-            "delete",
-            CodeEditorViewAction::Delete,
-            text_entry.clone() & !id!("Vim"),
-        ),
-        FixedBinding::new(
-            "delete",
-            CodeEditorViewAction::VimDelete,
-            text_entry.clone() & id!("Vim"),
-        ),
+        FixedBinding::new("delete", CodeEditorViewAction::Delete, text_entry.clone()),
         FixedBinding::new(
             "shift-up",
             CodeEditorViewAction::SelectUp,
@@ -154,25 +116,11 @@ pub fn init(app: &mut AppContext) {
             CodeEditorViewAction::MoveToLineEnd,
             text_entry.clone(),
         ),
-        FixedBinding::new(
-            "tab",
-            CodeEditorViewAction::Tab,
-            text_entry.clone() & !id!("Vim"),
-        ),
-        FixedBinding::new(
-            "tab",
-            CodeEditorViewAction::VimTab,
-            text_entry.clone() & id!("Vim"),
-        ),
+        FixedBinding::new("tab", CodeEditorViewAction::Tab, text_entry.clone()),
         FixedBinding::new(
             "shift-tab",
             CodeEditorViewAction::ShiftTab,
-            text_entry.clone() & !id!("Vim"),
-        ),
-        FixedBinding::new(
-            "shift-tab",
-            CodeEditorViewAction::VimShiftTab,
-            text_entry.clone() & id!("Vim"),
+            text_entry.clone(),
         ),
         // Also create the word movement shortcuts with `meta` in place of `alt`, to accommodate
         // the "Left Option is Meta" and "Right Option is Meta" settings.
@@ -285,13 +233,6 @@ pub fn init(app: &mut AppContext) {
         ),
         FixedBinding::new("escape", CodeEditorViewAction::Escape, text_entry.clone()),
     ]);
-
-    // Bind Ctrl-R to Redo when in Vim normal mode.
-    app.register_fixed_bindings([FixedBinding::new(
-        "ctrl-r",
-        CodeEditorViewAction::Redo,
-        text_entry.clone() & id!("VimNormalMode"),
-    )]);
 
     // Editable navigation keybindings:
     app.register_editable_bindings([
@@ -502,24 +443,8 @@ pub fn init(app: &mut AppContext) {
         .with_context_predicate(text_entry.clone())
         .with_key_binding("cmdorctrl-/"),
         EditableBinding::new("editor_view:delete", "Delete", CodeEditorViewAction::Delete)
-            .with_context_predicate(
-                text_entry.clone() & !id!("VimNormalMode") & !id!("VimVisualMode"),
-            )
+            .with_context_predicate(text_entry.clone())
             .with_key_binding("ctrl-d"),
-        EditableBinding::new(
-            "editor_view:vim_scroll_half_page_down",
-            "Scroll down half a page (vim)",
-            CodeEditorViewAction::ScrollHalfPageDown,
-        )
-        .with_context_predicate(text_entry.clone() & (id!("VimNormalMode") | id!("VimVisualMode")))
-        .with_key_binding("ctrl-d"),
-        EditableBinding::new(
-            "editor_view:vim_scroll_half_page_up",
-            "Scroll up half a page (vim)",
-            CodeEditorViewAction::ScrollHalfPageUp,
-        )
-        .with_context_predicate(text_entry.clone() & (id!("VimNormalMode") | id!("VimVisualMode")))
-        .with_key_binding("ctrl-u"),
         EditableBinding::new(
             "editor_view:cut_word_left",
             "Cut word left",
@@ -584,15 +509,6 @@ pub fn init(app: &mut AppContext) {
         .with_mac_key_binding("cmd-delete"),
     ]);
 
-    // Editable Vim keybindings
-    app.register_editable_bindings([EditableBinding::new(
-        "editor_view:vim_exit_insert_mode",
-        "Exit Vim insert mode",
-        CodeEditorViewAction::VimEscape,
-    )
-    .with_context_predicate(text_entry.clone() & id!("Vim"))
-    .with_key_binding("ctrl-[")]);
-
     // Editable Find Bar keybindings
     app.register_editable_bindings([EditableBinding::new(
         "code_editor:find",
@@ -618,16 +534,12 @@ pub fn init(app: &mut AppContext) {
 #[derive(Debug, Clone)]
 pub enum CodeEditorViewAction {
     UserTyped(UserInput<String>),
-    VimUserTyped(UserInput<String>),
     Enter,
     Delete,
     Backspace,
-    VimBackspace,
     ToggleComment,
     ScrollVertical(Pixels),
     ScrollHorizontal(Pixels),
-    ScrollHalfPageDown,
-    ScrollHalfPageUp,
     SelectUp,
     SelectDown,
     SelectLeft,
@@ -712,12 +624,6 @@ pub enum CodeEditorViewAction {
     ShowFindBar,
     ShowGoToLine,
     Escape,
-    VimEnter,
-    VimTab,
-    VimDelete,
-    VimShiftTab,
-    VimShiftEnter,
-    VimEscape,
 }
 
 impl CodeEditorViewAction {
@@ -734,11 +640,9 @@ impl CodeEditorViewAction {
     fn allowed_in_selectable_state(&self) -> bool {
         match self {
             Self::UserTyped(_)
-            | Self::VimUserTyped(_)
             | Self::Enter
             | Self::Delete
             | Self::Backspace
-            | Self::VimBackspace
             | Self::ToggleComment
             | Self::DeleteLineLeft
             | Self::DeleteLineRight
@@ -753,20 +657,12 @@ impl CodeEditorViewAction {
             | Self::Undo
             | Self::Redo
             | Self::Tab
-            | Self::ShiftTab
-            | Self::VimEnter
-            | Self::VimTab
-            | Self::VimDelete
-            | Self::VimShiftTab
-            | Self::VimShiftEnter
-            | Self::VimEscape => false,
+            | Self::ShiftTab => false,
 
             #[cfg(windows)]
             Self::WindowsCtrlC => true,
             Self::ScrollVertical(_)
             | Self::ScrollHorizontal(_)
-            | Self::ScrollHalfPageDown
-            | Self::ScrollHalfPageUp
             | Self::SelectUp
             | Self::SelectDown
             | Self::SelectLeft
@@ -821,56 +717,19 @@ impl TypedActionView for CodeEditorView {
 
         match action {
             UserTyped(content) => self.user_insert(content, ctx),
-            VimUserTyped(content) => {
-                // Don't handle vim input when the find input is active
-                let allow_vim = match &self.find_bar {
-                    Some(find_bar) => {
-                        let open = find_bar.as_ref(ctx).is_open();
-                        let editable = find_bar.as_ref(ctx).is_find_input_editable(ctx);
-                        !(open && editable)
-                    }
-                    None => true,
-                };
-                if allow_vim {
-                    self.vim_user_insert(content, ctx);
-                }
-            }
             ToggleDiffNav(line_range) => self.toggle_diff_nav(line_range.clone(), ctx),
             Enter => self.model.update(ctx, |model, ctx| model.enter(ctx)),
-            VimEnter => self.vim_keystroke(&Keystroke::parse("enter").expect("enter parses"), ctx),
             Delete => self.model.update(ctx, |model, ctx| {
                 model.delete(TextDirection::Forwards, TextUnit::Character, false, ctx);
             }),
-            VimDelete => {
-                self.vim_keystroke(&Keystroke::parse("delete").expect("delete parses"), ctx)
-            }
             Backspace => {
                 self.model.update(ctx, |model, ctx| {
                     model.backspace(ctx);
                 });
             }
-            VimBackspace => {
-                self.vim_keystroke(
-                    &Keystroke::parse("backspace").expect("backspace parses"),
-                    ctx,
-                );
-            }
-            ToggleComment => {
-                match self.vim_mode(ctx) {
-                    Some(VimMode::Visual(_)) => {
-                        // In Vim Visual mode, if we get a ToggleComment request via the keyboard
-                        // shortcut (cmd+/), simulate `gc` to the VimModel so that we correctly
-                        // calculate the current visual selections, apply the toggle, and exit to
-                        // normal mode.
-                        self.vim_user_insert("gc", ctx);
-                    }
-                    _ => {
-                        self.model.update(ctx, |model, ctx| {
-                            model.toggle_comments(ctx);
-                        });
-                    }
-                }
-            }
+            ToggleComment => self.model.update(ctx, |model, ctx| {
+                model.toggle_comments(ctx);
+            }),
             ScrollVertical(delta) => self.model.update(ctx, |model, ctx| {
                 model.render_state().update(ctx, |render_state, ctx| {
                     render_state.scroll(*delta, ctx);
@@ -881,12 +740,6 @@ impl TypedActionView for CodeEditorView {
                     render_state.scroll_horizontal(*delta, ctx);
                 })
             }),
-            ScrollHalfPageDown => {
-                self.vim_keystroke(&Keystroke::parse("ctrl-d").expect("ctrl-d parses"), ctx)
-            }
-            ScrollHalfPageUp => {
-                self.vim_keystroke(&Keystroke::parse("ctrl-u").expect("ctrl-u parses"), ctx)
-            }
             SelectUp => self.model.update(ctx, |model, ctx| {
                 model.select_up(ctx);
             }),
@@ -1024,22 +877,9 @@ impl TypedActionView for CodeEditorView {
             Tab => self.model.update(ctx, |model, ctx| {
                 model.indent(false, ctx);
             }),
-            VimTab => self.vim_keystroke(&Keystroke::parse("tab").expect("tab parses"), ctx),
             ShiftTab => self.model.update(ctx, |model, ctx| {
                 model.indent(true, ctx);
             }),
-            VimShiftTab => self.vim_keystroke(
-                &Keystroke::parse("shift-tab").expect("shift-tab parses"),
-                ctx,
-            ),
-            VimShiftEnter => self.vim_keystroke(
-                &Keystroke::parse("shift-enter").expect("shift-enter parses"),
-                ctx,
-            ),
-            VimEscape => {
-                self.vim_keystroke(&Keystroke::parse("escape").expect("escape parses"), ctx)
-            }
-
             ShowFindBar => self.show_find_bar(ctx),
             ShowGoToLine => self.show_goto_line(ctx),
             Escape => self.escape(ctx),
@@ -1175,18 +1015,6 @@ impl RichTextAction<CodeEditorView> for CodeEditorViewAction {
             return None;
         }
         Some(CodeEditorViewAction::UserTyped(UserInput::new(chars)))
-    }
-
-    fn vim_user_typed(
-        chars: String,
-        parent_view: &WeakViewHandle<CodeEditorView>,
-        ctx: &AppContext,
-    ) -> Option<Self> {
-        let view = parent_view.upgrade(ctx)?;
-        if !view.as_ref(ctx).is_editable(ctx) {
-            return None;
-        }
-        Some(CodeEditorViewAction::VimUserTyped(UserInput::new(chars)))
     }
 
     fn left_mouse_down(

@@ -14,10 +14,10 @@ use repo_metadata::file_tree_store::{
 use repo_metadata::local_model::IndexedRepoState;
 use repo_metadata::repositories::DetectedRepositories;
 use repo_metadata::{FileTreeEntry, RepoMetadataModel};
+use torch_core::HostId;
 use torch_core::features::FeatureFlag;
 use torch_core::ui::theme::Fill;
 use torch_core::ui::theme::color::internal_colors;
-use torch_core::HostId;
 use torch_util::path::LineAndColumnArg;
 use torch_util::standardized_path::StandardizedPath;
 use torchui::clipboard::ClipboardContent;
@@ -2221,7 +2221,6 @@ impl FileTreeView {
                 editor_layout,
             )
         };
-
 
         ctx.emit(FileTreeEvent::OpenFile {
             path: LocalOrRemotePath::Local(path.to_path_buf()),

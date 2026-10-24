@@ -35,16 +35,14 @@ use torchui::{
 use typed_path::TypedPath;
 use uuid::Uuid;
 
-#[cfg(feature = "local_fs")]
-use crate::palette::PaletteSource;
-use crate::app_state::CodePaneSnapShot;
 use crate::app_state::{
-    self, BranchSnapshot, LeafContents, LeafSnapshot, NotebookPaneSnapshot, PaneNodeSnapshot,
-    PaneUuid, SettingsPaneSnapshot, TerminalPaneSnapshot,
+    self, BranchSnapshot, CodePaneSnapShot, LeafContents, LeafSnapshot, NotebookPaneSnapshot,
+    PaneNodeSnapshot, PaneUuid, SettingsPaneSnapshot, TerminalPaneSnapshot,
 };
 use crate::appearance::Appearance;
 use crate::banner::{Banner, BannerEvent, BannerState, BannerTextContent, DismissalType};
 use crate::channel::{Channel, ChannelState};
+use crate::cmd_or_ctrl_shift;
 use crate::code::active_file::ActiveFileModel;
 use crate::code::buffer_location::LocalOrRemotePath;
 #[cfg(feature = "local_fs")]
@@ -54,6 +52,8 @@ use crate::features::FeatureFlag;
 use crate::launch_configs::launch_config::{self, PaneTemplateType};
 use crate::notebooks::file::FileNotebookView;
 use crate::palette::PaletteMode;
+#[cfg(feature = "local_fs")]
+use crate::palette::PaletteSource;
 use crate::pane_group::focus_state::PaneGroupFocusEvent;
 use crate::pane_group::pane::ActionOrigin;
 use crate::persistence::ModelEvent;
@@ -93,7 +93,6 @@ use crate::view_components::ToastFlavor;
 use crate::workflows::{WorkflowSelectionSource, WorkflowSource, WorkflowType};
 use crate::workspace::tab_group::TabGroupId;
 use crate::workspace::{self, CommandSearchOptions, PaneViewLocator, TabBarLocation};
-use crate::cmd_or_ctrl_shift;
 
 pub mod focus_state;
 pub mod pane;

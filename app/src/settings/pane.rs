@@ -1,5 +1,5 @@
+use settings::SupportedPlatforms;
 use settings::macros::define_settings_group;
-use settings::{SupportedPlatforms};
 
 define_settings_group!(PaneSettings, settings: [
     should_dim_inactive_panes: ShouldDimInactivePanes {

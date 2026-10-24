@@ -10,8 +10,8 @@ use crate::integration_testing::view_getters::{
 };
 use crate::terminal::CLIAgent;
 use crate::terminal::cli_agent_sessions::{
-    CLIAgentInputState, CLIAgentSession, CLIAgentSessionContext,
-    CLIAgentSessionStatus, CLIAgentSessionsModel,
+    CLIAgentInputState, CLIAgentSession, CLIAgentSessionContext, CLIAgentSessionStatus,
+    CLIAgentSessionsModel,
 };
 use crate::terminal::view::TerminalAction;
 

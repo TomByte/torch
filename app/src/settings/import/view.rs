@@ -15,6 +15,7 @@ use torchui::{
 };
 
 use super::config::{QuakeModeWindow, ThemeType};
+use crate::GlobalResourceHandlesProvider;
 use crate::settings::import::config::{Config, SettingType};
 use crate::settings::import::model::{ImportedConfigModel, TerminalTypeAndProfile};
 use crate::settings::{
@@ -28,7 +29,6 @@ use crate::themes::theme::{CustomTheme, SelectedSystemThemes, ThemeKind};
 use crate::ui_components::blended_colors;
 use crate::user_config::{self, WarpConfig};
 use crate::window_settings::WindowSettings;
-use crate::GlobalResourceHandlesProvider;
 
 // UI does not scale, so we set a fixed size for all text.
 const FONT_SIZE: f32 = 14.;
@@ -878,7 +878,6 @@ impl SettingsImportView {
         self.state = State::Completed { imported_idx: None };
         ctx.notify();
     }
-
 }
 
 impl View for SettingsImportView {

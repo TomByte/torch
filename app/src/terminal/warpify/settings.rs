@@ -2,9 +2,7 @@ use anyhow::Result;
 use lazy_static::lazy_static;
 use regex::Regex;
 use settings::macros::{maybe_define_setting, register_settings_events};
-use settings::{
-    ChangeEventReason, Setting, SupportedPlatforms,
-};
+use settings::{ChangeEventReason, Setting, SupportedPlatforms};
 use strum_macros::EnumIter;
 use torch_errors::report_error;
 use torch_util::path::ShellFamily;

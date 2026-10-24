@@ -1,9 +1,10 @@
 use std::ops::Range;
 
-use crate::code::diff_types::DiffDelta;
 use rangemap::RangeSet;
 use torch_editor::content::text::LineCount;
 use torch_editor::render::model::LineCount as RenderLineCount;
+
+use crate::code::diff_types::DiffDelta;
 
 /// The number of context lines to show before and after each change
 const CONTEXT_LINES: usize = 4;

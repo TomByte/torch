@@ -121,7 +121,7 @@ mod testing {
     use torchui::{App, Element};
 
     use super::*;
-        use crate::terminal::ShellLaunchState;
+    use crate::terminal::ShellLaunchState;
     use crate::terminal::shell::{ShellName, ShellType};
 
     struct TerminalRootView {

@@ -5,8 +5,7 @@ use torchui::{App, ModelHandle};
 
 use super::super::diff_state_tracker::RemoteDiffStateManager;
 use super::super::proto::{
-    ServerMessage, WriteFileResponse, WriteFileSuccess, server_message,
-    write_file_response,
+    ServerMessage, WriteFileResponse, WriteFileSuccess, server_message, write_file_response,
 };
 use super::super::protocol::RequestId;
 use super::super::server_buffer_tracker::ServerBufferTracker;

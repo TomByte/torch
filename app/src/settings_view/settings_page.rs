@@ -224,18 +224,18 @@ pub fn render_sub_sub_header(
 ) -> Box<dyn Element> {
     Flex::row()
         .with_child(
-        Container::new(
-            Align::new(
-                Text::new_inline(text_name, appearance.ui_font_family(), CONTENT_FONT_SIZE)
-                    .with_style(Properties::default().weight(Weight::Bold))
-                    .with_color(appearance.theme().active_ui_text_color().into())
-                    .finish(),
+            Container::new(
+                Align::new(
+                    Text::new_inline(text_name, appearance.ui_font_family(), CONTENT_FONT_SIZE)
+                        .with_style(Properties::default().weight(Weight::Bold))
+                        .with_color(appearance.theme().active_ui_text_color().into())
+                        .finish(),
+                )
+                .left()
+                .finish(),
             )
-            .left()
+            .with_padding_bottom(4.)
             .finish(),
-        )
-        .with_padding_bottom(4.)
-        .finish(),
         )
         .finish()
 }
@@ -443,13 +443,7 @@ pub fn render_body_item<T: Clone + Action>(
     description_text: Option<String>,
 ) -> Box<dyn Element> {
     build_toggle_element(
-        render_body_item_label(
-            label_text,
-            None,
-            additional_info,
-            toggle_state,
-            appearance,
-        ),
+        render_body_item_label(label_text, None, additional_info, toggle_state, appearance),
         child_element,
         appearance,
         description_text,

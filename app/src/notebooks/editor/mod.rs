@@ -10,8 +10,8 @@ use torch_editor::content::text::{
     BlockHeaderSize, BlockType as ContentBlockType, BufferBlockStyle, CodeBlockType,
 };
 use torch_editor::render::model::{
-    BrokenLinkStyle, CheckBoxStyle, HorizontalRuleStyle, InlineCodeStyle,
-    ParagraphStyles, RichTextStyles, TableStyle,
+    BrokenLinkStyle, CheckBoxStyle, HorizontalRuleStyle, InlineCodeStyle, ParagraphStyles,
+    RichTextStyles, TableStyle,
 };
 use torch_util::user_input::UserInput;
 use torchui::elements::{Border, ListIndentLevel};

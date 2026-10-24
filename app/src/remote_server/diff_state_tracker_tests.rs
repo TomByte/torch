@@ -79,8 +79,7 @@ fn unsubscribe_last_connection_removes_model() {
 
     // Simulate model insertion + subscription (what handle_get_diff_state does).
     torchui::App::test((), |mut app| async move {
-        let handle =
-            app.add_model(|ctx| LocalDiffStateModel::new(None, ctx));
+        let handle = app.add_model(|ctx| LocalDiffStateModel::new(None, ctx));
         model.insert_model(key.clone(), handle);
         model.subscribe_connection(key.clone(), conn);
 
@@ -99,8 +98,7 @@ fn unsubscribe_one_of_two_keeps_model() {
     let conn_b = new_conn();
 
     torchui::App::test((), |mut app| async move {
-        let handle =
-            app.add_model(|ctx| LocalDiffStateModel::new(None, ctx));
+        let handle = app.add_model(|ctx| LocalDiffStateModel::new(None, ctx));
         model.insert_model(key.clone(), handle);
         model.subscribe_connection(key.clone(), conn_a);
         model.subscribe_connection(key.clone(), conn_b);
@@ -120,8 +118,7 @@ fn unsubscribe_clears_pending_responses_for_that_connection() {
     let conn_b = new_conn();
 
     torchui::App::test((), |mut app| async move {
-        let handle =
-            app.add_model(|ctx| LocalDiffStateModel::new(None, ctx));
+        let handle = app.add_model(|ctx| LocalDiffStateModel::new(None, ctx));
         model.insert_model(key.clone(), handle);
         model.subscribe_connection(key.clone(), conn_a);
         model.subscribe_connection(key.clone(), conn_b);
@@ -147,10 +144,8 @@ fn remove_connection_unsubscribes_from_all_keys() {
     let conn = new_conn();
 
     torchui::App::test((), |mut app| async move {
-        let h1 =
-            app.add_model(|ctx| LocalDiffStateModel::new(None, ctx));
-        let h2 =
-            app.add_model(|ctx| LocalDiffStateModel::new(None, ctx));
+        let h1 = app.add_model(|ctx| LocalDiffStateModel::new(None, ctx));
+        let h2 = app.add_model(|ctx| LocalDiffStateModel::new(None, ctx));
         model.insert_model(key_head.clone(), h1);
         model.insert_model(key_main.clone(), h2);
         model.subscribe_connection(key_head.clone(), conn);
@@ -172,8 +167,7 @@ fn remove_connection_keeps_models_with_other_subscribers() {
     let conn_b = new_conn();
 
     torchui::App::test((), |mut app| async move {
-        let handle =
-            app.add_model(|ctx| LocalDiffStateModel::new(None, ctx));
+        let handle = app.add_model(|ctx| LocalDiffStateModel::new(None, ctx));
         model.insert_model(key.clone(), handle);
         model.subscribe_connection(key.clone(), conn_a);
         model.subscribe_connection(key.clone(), conn_b);
@@ -192,8 +186,7 @@ fn remove_connection_clears_pending_responses() {
     let conn = new_conn();
 
     torchui::App::test((), |mut app| async move {
-        let handle =
-            app.add_model(|ctx| LocalDiffStateModel::new(None, ctx));
+        let handle = app.add_model(|ctx| LocalDiffStateModel::new(None, ctx));
         model.insert_model(key.clone(), handle);
         model.subscribe_connection(key.clone(), conn);
         model.add_pending_response(key.clone(), RequestId::new(), conn);
@@ -274,8 +267,7 @@ fn insert_and_get_model() {
     let key = test_key("/repo", DiffMode::Head);
 
     torchui::App::test((), |mut app| async move {
-        let handle =
-            app.add_model(|ctx| LocalDiffStateModel::new(None, ctx));
+        let handle = app.add_model(|ctx| LocalDiffStateModel::new(None, ctx));
         model.insert_model(key.clone(), handle);
 
         assert!(model.get_model(&key).is_some());
@@ -289,8 +281,7 @@ fn remove_model_clears_pending_and_subscriptions() {
     let conn = new_conn();
 
     torchui::App::test((), |mut app| async move {
-        let handle =
-            app.add_model(|ctx| LocalDiffStateModel::new(None, ctx));
+        let handle = app.add_model(|ctx| LocalDiffStateModel::new(None, ctx));
         model.insert_model(key.clone(), handle);
         model.subscribe_connection(key.clone(), conn);
         model.add_pending_response(key.clone(), RequestId::new(), conn);

@@ -21,7 +21,6 @@ use std::sync::mpsc::SyncSender;
 use std::sync::{Arc, OnceLock};
 use std::thread::JoinHandle;
 
-use crate::persisted_workspace::WorkspaceMetadata as CodeWorkspaceMetadata;
 use chrono::{DateTime, Local};
 use instant::Instant;
 use lsp::supported_servers::LSPServerType;
@@ -40,7 +39,7 @@ use torchui::{Entity, SingletonEntity};
 
 use self::model::Project;
 use crate::app_state::AppState;
-use crate::persisted_workspace::EnablementState;
+use crate::persisted_workspace::{EnablementState, WorkspaceMetadata as CodeWorkspaceMetadata};
 use crate::suggestions::ignored_suggestions_model::SuggestionType;
 use crate::terminal::history::PersistedCommand;
 use crate::terminal::model::block::SerializedBlock;

@@ -35,6 +35,7 @@ use torchui::ui_components::text_input::TextInput;
 use torchui::{AppContext, EntityId, SingletonEntity, ViewHandle, WindowId};
 
 use super::{render_group_member_icon_collage, select_unique_pane_kinds};
+use crate::FeatureFlag;
 use crate::agent_status::{AgentNotificationsModel, ConversationStatus, render_status_element};
 use crate::appearance::Appearance;
 use crate::code::editor::{add_color, remove_color};
@@ -72,7 +73,6 @@ use crate::workspace::{
     PaneViewLocator, TabBarLocation, TabContextMenuAnchor, VerticalTabsPaneContextMenuTarget,
     VerticalTabsPaneDropTargetData, Workspace,
 };
-use crate::FeatureFlag;
 
 const PANEL_WIDTH: f32 = 248.;
 const MIN_PANEL_WIDTH: f32 = 200.;
@@ -3623,10 +3623,9 @@ impl TypedPane<'_> {
                 .as_ref(app)
                 .contains_unsaved_changes(app)
                 .then(|| "Unsaved".to_string()),
-            TypedPane::Terminal(_)
-            | TypedPane::File
-            | TypedPane::Settings
-            | TypedPane::Other => None,
+            TypedPane::Terminal(_) | TypedPane::File | TypedPane::Settings | TypedPane::Other => {
+                None
+            }
         }
     }
 
@@ -3904,10 +3903,7 @@ impl<'a> PaneProps<'a> {
                 self.display_title_override.as_deref(),
                 app,
             ),
-            TypedPane::Code(_)
-            | TypedPane::File
-            | TypedPane::Settings
-            | TypedPane::Other => {
+            TypedPane::Code(_) | TypedPane::File | TypedPane::Settings | TypedPane::Other => {
                 non_terminal_search_text_fragments(self.generated_or_tab_title(), &self.subtitle)
             }
         };

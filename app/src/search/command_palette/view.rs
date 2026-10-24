@@ -823,7 +823,6 @@ impl View {
                         &pane_view_locator,
                     );
                 }
-
             }
             CommandPaletteItemAction::NavigateToTab {
                 pane_group_id,
@@ -919,7 +918,6 @@ impl View {
         action: &dyn torchui::Action,
         ctx: &mut ViewContext<Self>,
     ) {
-
         let (window_id, view_id) = match self.binding_source.as_ref(ctx) {
             BindingSource::View {
                 window_id, view_id, ..

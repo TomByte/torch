@@ -7,8 +7,7 @@ use torchui::App;
 use crate::code::buffer_location::LocalOrRemotePath;
 use crate::code::editor::line::EditorLineLocation;
 use crate::code_review::comments::{
-    AttachedReviewComment, AttachedReviewCommentTarget, LineDiffContent,
-    ReviewCommentBatch,
+    AttachedReviewComment, AttachedReviewCommentTarget, LineDiffContent, ReviewCommentBatch,
 };
 
 fn line_comment(file_path: &str, line_number: usize, content: &str) -> AttachedReviewComment {

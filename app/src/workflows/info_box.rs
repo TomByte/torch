@@ -448,11 +448,7 @@ impl WorkflowsMoreInfoView {
         )
     }
 
-    fn render_info_box(
-        &self,
-        appearance: &Appearance,
-        input_mode: &InputMode,
-    ) -> Box<dyn Element> {
+    fn render_info_box(&self, appearance: &Appearance, input_mode: &InputMode) -> Box<dyn Element> {
         let content_and_args = self.render_content_and_arguments(appearance);
 
         let workflow = self.workflow.as_workflow();

@@ -8,7 +8,6 @@ use super::{RenderContext, RenderableBlock};
 use crate::editor::RunnableCommandModel;
 use crate::extract_block;
 use crate::render::BLOCK_FOOTER_HEIGHT;
-use crate::render::element::paint::{CursorData, CursorDisplayType};
 use crate::render::model::viewport::ViewportItem;
 use crate::render::model::{BlockItem, RenderState, bounds};
 const MERMAID_RENDER_TIMEOUT: Duration = Duration::from_secs(10);
@@ -155,13 +154,11 @@ impl RenderableBlock for RenderableMermaidDiagram {
             let end_of_line_position =
                 content_position + vec2f(self.viewport_item.content_size.x(), 0.);
             ctx.draw_and_save_cursor(
-                CursorDisplayType::Bar,
                 end_of_line_position,
                 vec2f(
                     model.styles().cursor_width,
                     self.viewport_item.content_size.y(),
                 ),
-                CursorData::default(),
                 model.styles(),
             );
         }

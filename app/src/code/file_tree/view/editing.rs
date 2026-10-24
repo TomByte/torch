@@ -183,7 +183,6 @@ impl FileTreeView {
                             return;
                         }
 
-
                         FileTreeEntryState::File(metadata.clone())
                     } else {
                         return;

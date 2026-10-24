@@ -514,7 +514,6 @@ pub struct Command {
     pub is_agent_executed: Option<bool>,
 }
 
-
 pub type TokenUsageCategory = String;
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]

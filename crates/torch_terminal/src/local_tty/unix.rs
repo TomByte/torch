@@ -603,8 +603,8 @@ impl Pty {
         let signals = Signals::new([signal_hook::consts::SIGCHLD])
             .context("error preparing signal handling")?;
 
-        let (PtySpawnResult { pid, leader_fd }, pty_handle) = PtySpawner::handle(ctx)
-            .update(ctx, |pty_spawner, _| pty_spawner.spawn_pty(options))?;
+        let (PtySpawnResult { pid, leader_fd }, pty_handle) =
+            PtySpawner::handle(ctx).update(ctx, |pty_spawner, _| pty_spawner.spawn_pty(options))?;
 
         log::info!(
             "Successfully spawned child {} process with pid {}",

@@ -97,8 +97,7 @@ fn custom_theme_relative_parent_dir_path_is_preserved() {
 }
 
 #[test]
-fn custom_theme_absolute_parent_dir_path_under_theme_root_storage_helper_preserves_path()
- {
+fn custom_theme_absolute_parent_dir_path_under_theme_root_storage_helper_preserves_path() {
     let root = PathBuf::from("/Users/example/.warp/themes");
     let path = root.join("../outside.yml");
 

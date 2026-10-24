@@ -8,6 +8,7 @@ use torchui::r#async::Timer;
 use torchui::windowing::WindowManager;
 use torchui::{AppContext, Entity, SingletonEntity, TypedActionView};
 
+use crate::GlobalResourceHandlesProvider;
 use crate::app_state::get_app_state;
 use crate::network::NetworkStatus;
 use crate::persistence::ModelEvent;
@@ -17,7 +18,6 @@ use crate::terminal::general_settings::GeneralSettings;
 use crate::undo_close::UndoCloseStack;
 use crate::workspace::cross_window_tab_drag::CrossWindowTabDrag;
 use crate::workspace::{Workspace, WorkspaceAction};
-use crate::GlobalResourceHandlesProvider;
 
 /// DEPRECATED. Global actions are being phased out.
 /// Do not add any more global actions; use typed actions instead.

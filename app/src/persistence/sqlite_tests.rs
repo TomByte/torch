@@ -1,7 +1,6 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use crate::persisted_workspace::WorkspaceMetadata;
 use chrono::Utc;
 use diesel::connection::SimpleConnection;
 use pathfinder_geometry::rect::RectF;
@@ -17,6 +16,7 @@ use crate::app_state::{
     TabGroupSnapshot, TabSnapshot, TerminalPaneSnapshot, WindowSnapshot,
 };
 use crate::code::editor_management::CodeSource;
+use crate::persisted_workspace::WorkspaceMetadata;
 use crate::persistence::{BlockCompleted, ModelEvent, PersistedDataScope, PersistenceScope};
 use crate::tab::SelectedTabColor;
 use crate::terminal::ShellLaunchData;
@@ -121,8 +121,8 @@ fn sqlite_read_restores_app_state_and_codebase_metadata() {
     let metadata = test_codebase_metadata("/tmp/remote-repo");
     save_codebase_index_metadata(&mut conn, metadata.clone())
         .expect("codebase index metadata should save");
-    let restored = read_sqlite_data(&mut conn, PersistedDataScope::Full)
-        .expect("persisted data should load");
+    let restored =
+        read_sqlite_data(&mut conn, PersistedDataScope::Full).expect("persisted data should load");
     let restored_app_state = restored
         .app_state
         .expect("app state should be present for the full scope");

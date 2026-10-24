@@ -924,7 +924,6 @@ impl GlobalSearchView {
                 search_id,
                 remote_host_count,
             } => {
-
                 self.current_search_id = Some(*search_id);
                 self.active_search_remote_host_count = *remote_host_count;
 

@@ -1,8 +1,8 @@
 use enum_iterator::Sequence;
 use serde::{Deserialize, Serialize};
 use torch_core::channel::{Channel, ChannelState};
+use torch_core::settings::SupportedPlatforms;
 use torch_core::settings::macros::define_settings_group;
-use torch_core::settings::{SupportedPlatforms};
 
 /// The app icon to use (mac-only).
 #[derive(

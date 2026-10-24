@@ -184,5 +184,4 @@ impl Input {
             .with_margin_right(margin)
             .finish()
     }
-
 }

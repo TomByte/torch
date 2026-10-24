@@ -25,7 +25,6 @@ use torchui_core::{
     AfterLayoutContext, AppContext, Element, Event, EventContext, LayoutContext, ModelHandle,
     PaintContext, SizeConstraint, WeakViewHandle,
 };
-use vim::vim::VimMode;
 
 use self::empty::Empty;
 use self::header::RenderableHeader;
@@ -34,7 +33,7 @@ use self::horizontal_rule::HorizontalRule;
 use self::image::RenderableImage;
 use self::mermaid::RenderableMermaidDiagram;
 use self::ordered_list::RenderableOrderedListItem;
-pub use self::paint::{CursorData, CursorDisplayType, RenderContext};
+pub use self::paint::RenderContext;
 use self::paragraph::RenderableParagraph;
 use self::runnable_command::RenderableRunnableCommand;
 use self::table::RenderableTable;
@@ -126,10 +125,6 @@ pub struct RichTextElement<V: EditorView> {
     /// in bounds of the viewport. For hit testing, we still use `child_max_z_index`, since
     /// un-handled hits on a child element are still hits on the editor.
     content_z_index: Option<ZIndex>,
-    /// Current VimMode of the rich text element, if there is one.
-    vim_mode: Option<VimMode>,
-    /// Vim visual tails - stored cursor positions when entering vim visual mode
-    vim_visual_tails: Vec<CharOffset>,
 }
 
 /// State purely related to the display of this element. Generally, render-layer state should be
@@ -318,13 +313,6 @@ pub trait RichTextAction<V>: Sized {
     fn user_typed(chars: String, parent_view: &WeakViewHandle<V>, ctx: &AppContext)
     -> Option<Self>;
 
-    /// Create a new event that represents a user typing characters in vim mode.
-    fn vim_user_typed(
-        chars: String,
-        parent_view: &WeakViewHandle<V>,
-        ctx: &AppContext,
-    ) -> Option<Self>;
-
     /// Create a new event for a left mouse press. This is only fired for mouse events
     /// that successfully hit-test. Usually, this maps to a selection event, but
     /// the implementation and/or event receiver is responsible for determining
@@ -433,8 +421,6 @@ impl<V: EditorView> RichTextElement<V> {
         parent_view: WeakViewHandle<V>,
         display_options: DisplayOptions,
         display_state: DisplayStateHandle,
-        vim_mode: Option<VimMode>,
-        vim_visual_tails: Vec<CharOffset>,
     ) -> Self {
         Self {
             element_size: None,
@@ -450,8 +436,6 @@ impl<V: EditorView> RichTextElement<V> {
             max_width: None,
             buffer_version: None,
             pending_edits_flushed: false,
-            vim_mode,
-            vim_visual_tails,
         }
     }
 
@@ -738,22 +722,12 @@ impl<V: EditorView> RichTextElement<V> {
         app: &AppContext,
         ctx: &mut EventContext,
     ) -> bool {
-        if self.vim_mode.is_some() {
-            match V::Action::vim_user_typed(chars, &self.parent_view, app) {
-                Some(action) => {
-                    ctx.dispatch_typed_action(action);
-                    true
-                }
-                None => false,
+        match V::Action::user_typed(chars, &self.parent_view, app) {
+            Some(action) => {
+                ctx.dispatch_typed_action(action);
+                true
             }
-        } else {
-            match V::Action::user_typed(chars, &self.parent_view, app) {
-                Some(action) => {
-                    ctx.dispatch_typed_action(action);
-                    true
-                }
-                None => false,
-            }
+            None => false,
         }
     }
 
@@ -985,17 +959,6 @@ impl<V: EditorView> RichTextElement<V> {
                 .blink_cursor_visible
                 .load(Ordering::Relaxed)
     }
-
-    /// The type of cursor to render depending on the vim mode
-    fn cursor_display_type(&self) -> CursorDisplayType {
-        self.vim_mode
-            .map(|vim_mode| match vim_mode {
-                VimMode::Normal | VimMode::Visual(_) => CursorDisplayType::Block,
-                VimMode::Replace => CursorDisplayType::Underline,
-                VimMode::Insert => CursorDisplayType::Bar,
-            })
-            .unwrap_or(CursorDisplayType::Bar)
-    }
 }
 
 impl<V: EditorView> Element for RichTextElement<V> {
@@ -1141,7 +1104,6 @@ impl<V: EditorView> Element for RichTextElement<V> {
             self.display_options.focused,
             self.display_options.editable,
             self.blinking_cursors_visible(),
-            self.cursor_display_type(),
             parent.text_decorations(
                 model.viewport_charoffset_range(),
                 model.next_render_buffer_version(),
@@ -1151,8 +1113,6 @@ impl<V: EditorView> Element for RichTextElement<V> {
             viewport_size,
             model,
             ctx,
-            self.vim_mode,
-            &self.vim_visual_tails,
         );
 
         model.record_text_selection(&mut ctx);

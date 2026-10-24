@@ -34,8 +34,7 @@ pub async fn get_current_changelog(client: &http_client::Client) -> Result<Optio
         };
     }
 
-    let versions: ChannelVersions =
-        fetch_channel_versions(client).await?;
+    let versions: ChannelVersions = fetch_channel_versions(client).await?;
 
     let res = versions.changelogs.and_then(|changelogs| {
         match channel {

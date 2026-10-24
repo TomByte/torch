@@ -731,7 +731,6 @@ pub fn init(app: &mut AppContext) {
 #[derive(Debug, Clone, PartialEq)]
 pub enum EditorViewAction {
     UserTyped(UserInput<String>),
-    VimUserTyped(UserInput<String>),
     Enter,
     ShiftEnter,
     /// Cmd/Ctrl+Enter pressed (used by comment editor mode to submit comments).
@@ -2612,8 +2611,6 @@ impl View for RichTextEditorView {
             self.self_handle.clone(),
             display_options,
             self.display_state.clone(),
-            None,       // Not currently supporting vim in notebooks
-            Vec::new(), // Not currently supporting vim in notebooks
         )
         .with_max_width(self.max_width)
         .finish_scrollable();
@@ -2740,17 +2737,6 @@ impl TypedActionView for RichTextEditorView {
         match action {
             UserTyped(content) => {
                 if self.can_edit(ctx) {
-                    self.user_typed(content, ctx)
-                }
-            }
-            VimUserTyped(content) => {
-                if self.can_edit(ctx) {
-                    // Not supporting vim mode for notebooks yet.
-                    // This should never be triggered because VimMode should be set to None for
-                    // `RichTextEditorView`.
-                    //
-                    // If we do reach this, log a warning and handle text as if in non-vim mode.
-                    log::warn!("vim mode triggered in a notebook, should not be enabled");
                     self.user_typed(content, ctx)
                 }
             }
@@ -3245,8 +3231,9 @@ impl TypedActionView for RichTextEditorView {
             | EditorViewAction::RunWorkflow(_)
             | EditorViewAction::OpenFile { .. }
             | EditorViewAction::MermaidDisplayModeSelected { .. }
-            | EditorViewAction::OpenMermaidDiagramLightbox { .. }
-            | EditorViewAction::VimUserTyped(_) => ActionAccessibilityContent::Empty,
+            | EditorViewAction::OpenMermaidDiagramLightbox { .. } => {
+                ActionAccessibilityContent::Empty
+            }
         }
     }
 }
@@ -3326,15 +3313,6 @@ impl RichTextAction<RichTextEditorView> for EditorViewAction {
         // we need a AppContext. For now, we always dispatch the event and check focus in the
         // event handler.
         Some(EditorViewAction::UserTyped(UserInput::new(chars)))
-    }
-
-    fn vim_user_typed(
-        chars: String,
-        _view: &WeakViewHandle<RichTextEditorView>,
-        _ctx: &AppContext,
-    ) -> Option<Self> {
-        // Vim mode not enabled yet for notebooks; this should not be triggered.
-        Some(EditorViewAction::VimUserTyped(UserInput::new(chars)))
     }
 
     fn left_mouse_down(

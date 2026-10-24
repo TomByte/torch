@@ -6,7 +6,6 @@ use super::*;
 // Tests behavior based on which query parameters are required.
 fn test_open_docker_container() {
     App::test((), |mut app| async move {
-
         let base_url = Url::parse("warplocal://action/docker/open_subshell")
             .expect("base url should be successfully parsed");
 

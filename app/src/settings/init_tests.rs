@@ -2,8 +2,8 @@ use instant::Duration;
 use settings::{PrivatePreferences, PublicPreferences, Setting, SettingsManager};
 use settings_value::SettingsValue;
 use torch_core::features::FeatureFlag;
+use torch_core::settings::SupportedPlatforms;
 use torch_core::settings::macros::define_settings_group;
-use torch_core::settings::{SupportedPlatforms};
 use torch_core::user_preferences::GetUserPreferences as _;
 use torchui::SingletonEntity;
 use torchui_extras::user_preferences;
@@ -375,8 +375,8 @@ fn test_migration_with_multiple_setting_types() {
 
 mod notifications_migration {
     use settings::{PrivatePreferences, PublicPreferences, SettingsManager};
-    use torch_core::settings::macros::define_settings_group;
     use torch_core::settings::SupportedPlatforms;
+    use torch_core::settings::macros::define_settings_group;
     use torchui_extras::user_preferences;
 
     use crate::terminal::session_settings::NotificationsSettings;

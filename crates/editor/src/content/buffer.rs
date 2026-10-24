@@ -348,29 +348,6 @@ pub enum BufferEditAction<'a> {
         offset_before_marker: CharOffset,
         embedding: Arc<dyn EmbeddedItem>,
     },
-    /// VimEvent consisting of inserting given text at a point relative
-    /// to the current cursor, then repositioning the cursor by an offset.
-    VimEvent {
-        text: String,
-        insert_point: VimInsertPoint,
-        cursor_offset_len: usize,
-    },
-}
-
-#[derive(Debug)]
-pub enum VimInsertPoint {
-    /// Before the cursor, like `i`
-    BeforeCursor,
-    /// Just after the cursor, like `a`
-    AtCursor,
-    /// At the end of the line, like `A`
-    LineEnd,
-    /// At the non-whitespace start of the line, like `I`
-    LineFirstNonWhitespace,
-    /// At the start of the line, like `O` (if a newline is added after it)
-    LineStart,
-    /// On the next line, like `o`
-    NextLine,
 }
 
 impl BufferEditAction<'_> {
@@ -414,8 +391,7 @@ impl BufferEditAction<'_> {
             | BufferEditAction::Redo
             | BufferEditAction::Indent { .. }
             | BufferEditAction::RemoveEmbeddingAtOffset { .. }
-            | BufferEditAction::TogglePrefixForLines { .. }
-            | BufferEditAction::VimEvent { .. } => ShouldAutoscroll::Yes,
+            | BufferEditAction::TogglePrefixForLines { .. } => ShouldAutoscroll::Yes,
         }
     }
 }
@@ -1987,17 +1963,6 @@ impl Buffer {
             } => {
                 self.remove_embedding_at_offset(offset_before_marker, selection_model.clone(), ctx)
             }
-            BufferEditAction::VimEvent {
-                text,
-                insert_point,
-                cursor_offset_len,
-            } => self.vim_event(
-                text,
-                insert_point,
-                cursor_offset_len,
-                selection_model.clone(),
-                ctx,
-            ),
         };
 
         if !is_undo_redo && edit_result.undo_item.is_none() && edit_result.delta.is_some() {
@@ -5298,69 +5263,6 @@ impl Buffer {
 
     pub fn buffer_version(&self) -> BufferVersion {
         self.version
-    }
-
-    /// Handle a VimEvent, which usually consists of inserting text at a given point relative to
-    /// the current cursor, then repositioning the cursor from the start of that inserted text by
-    /// an offset amount.
-    fn vim_event(
-        &mut self,
-        text: String,
-        insert_point: VimInsertPoint,
-        cursor_offset_len: usize,
-        selection_model: ModelHandle<BufferSelectionModel>,
-        ctx: &mut ModelContext<Self>,
-    ) -> EditResult {
-        self.modify_each_selection(
-            selection_model,
-            |buffer, selection, selection_model, _| {
-                let head = selection_model.selection_head(selection);
-                let mut insert_point = match insert_point {
-                    VimInsertPoint::BeforeCursor => head,
-                    VimInsertPoint::AtCursor => head + 1,
-                    VimInsertPoint::LineStart => buffer.containing_line_start(head),
-                    VimInsertPoint::LineEnd => buffer.containing_line_end(head) - 1,
-                    VimInsertPoint::NextLine => buffer.containing_line_end(head),
-                    VimInsertPoint::LineFirstNonWhitespace => {
-                        buffer.containing_line_first_nonwhitespace(head)
-                    }
-                };
-
-                // Clamp to the end of the buffer.
-                insert_point = insert_point.min(buffer.max_charoffset());
-
-                let block_type = buffer.block_type_at_point(head);
-                let inheritance_block_style = match block_type {
-                    BlockType::Text(style) => style,
-                    BlockType::Item(_) => BufferBlockStyle::PlainText,
-                };
-                let formatted = convert_text_with_style_to_formatted_text(
-                    &text,
-                    TextStyles::default(),
-                    inheritance_block_style,
-                );
-
-                let actions = vec![CoreEditorAction::new(
-                    insert_point..insert_point,
-                    CoreEditorActionType::Insert {
-                        text: formatted,
-                        source: EditOrigin::UserInitiated,
-                        override_next_style: false,
-                        insert_on_selection: true,
-                    },
-                )];
-
-                ActionWithSelectionDelta::new_with_offsets(
-                    actions,
-                    &mut buffer.internal_anchors,
-                    insert_point,
-                    insert_point,
-                    cursor_offset_len,
-                    AnchorSide::Left,
-                )
-            },
-            ctx,
-        )
     }
 }
 

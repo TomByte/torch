@@ -1,7 +1,7 @@
 use std::path::Path;
 
+use settings::SupportedPlatforms;
 use settings::macros::define_settings_group;
-use settings::{SupportedPlatforms};
 use torchui::{AppContext, SingletonEntity};
 
 use crate::tab_configs::TabConfig;

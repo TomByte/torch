@@ -17,10 +17,9 @@ use crate::proto::{
     Abort, BufferEdit, ClientMessage, CloseBuffer, CodebaseIndexLimits, DiffMode,
     DiffStateFileDelta, DiffStateMetadataUpdate, DiffStateSnapshot, ErrorCode, GitStatusMetadata,
     Initialize, InitializeResponse, LoadRepoMetadataDirectoryResponse,
-    NavigatedToDirectoryResponse, PrInfo, RepositoryInfo,
-    RunCommandRequest, RunCommandResponse, ServerMessage, SessionBootstrapped, TextEdit,
-    UnsubscribeDiffState, UpdateGitHubPrInfo, UpdateGitHubRepoInfo, UpdateGitStatus, notification,
-    server_message, session_scoped_request,
+    NavigatedToDirectoryResponse, PrInfo, RepositoryInfo, RunCommandRequest, RunCommandResponse,
+    ServerMessage, SessionBootstrapped, TextEdit, UnsubscribeDiffState, UpdateGitHubPrInfo,
+    UpdateGitHubRepoInfo, UpdateGitStatus, notification, server_message, session_scoped_request,
 };
 use crate::repo_metadata_proto::{proto_snapshot_to_update, proto_to_repo_metadata_update};
 

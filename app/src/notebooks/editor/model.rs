@@ -2148,8 +2148,7 @@ impl ChildModels {
         // We have to add new models in a separate pass, because creating anchors requires a
         // mutable borrow of `content`, while the `outline_blocks` iterator already immutably
         // borrows it.
-        self.models
-            .reserve(to_add.len() + reset_selection.len());
+        self.models.reserve(to_add.len() + reset_selection.len());
 
         for (model_start, model) in reset_selection {
             model.set_selected(false, ctx);
@@ -2178,7 +2177,6 @@ impl ChildModels {
 
             self.models.insert(outline.start, Box::new(new_model));
         }
-
     }
 }
 

@@ -19,10 +19,10 @@ use torch_errors::report_error;
 use torchui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity, ViewHandle};
 
 use super::event_loop::EventLoop;
+use super::mio_channel;
 use super::shell::{ShellStarter, ShellStarterSource};
 #[cfg(unix)]
 use super::terminal_attributes::TerminalAttributesPoller;
-use super::mio_channel;
 use crate::banner::BannerState;
 use crate::context_chips::ContextChipKind;
 use crate::persistence::ModelEvent;

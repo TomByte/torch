@@ -1,4 +1,4 @@
-use std::collections::{HashMap};
+use std::collections::HashMap;
 use std::mem;
 use std::ops::Range;
 use std::path::{Path, PathBuf};
@@ -1533,7 +1533,6 @@ impl CodeReviewView {
             return;
         }
 
-
         let preferred_session = self.preferred_review_session(ctx);
         self.diff_state_model.update(ctx, |model, ctx| {
             model.set_diff_mode(mode, false, preferred_session, ctx);
@@ -1669,12 +1668,7 @@ impl CodeReviewView {
 
         if let Some(comment) = &existing_comment {
             composer.update(ctx, |editor, ctx| {
-                editor.reopen_saved_comment(
-                    &comment.id,
-                    None,
-                    &comment.content,
-                    ctx,
-                );
+                editor.reopen_saved_comment(&comment.id, None, &comment.content, ctx);
             });
         }
 
@@ -1758,12 +1752,7 @@ impl CodeReviewView {
 
                 editor_state.editor().update(ctx, |local_editor, ctx| {
                     local_editor.editor().update(ctx, |editor, ctx| {
-                        editor.open_existing_comment(
-                            &comment.id,
-                            line,
-                            &comment.content,
-                            ctx,
-                        );
+                        editor.open_existing_comment(&comment.id, line, &comment.content, ctx);
                     });
                 });
 
@@ -2205,7 +2194,6 @@ impl CodeReviewView {
             model.clear_results();
         });
 
-
         // Clear finder match decorations
         #[cfg(not(target_family = "wasm"))]
         if let CodeReviewViewState::Loaded(state) = self.state() {
@@ -2466,7 +2454,6 @@ impl CodeReviewView {
             });
         }
 
-
         if self.all_editors_loaded() {
             self.reposition_comments_in_file(ctx);
         }
@@ -2684,7 +2671,6 @@ impl CodeReviewView {
             model.update(ctx, |batch, ctx| {
                 batch.delete_comment(id, ctx);
             });
-
         }
     }
 
@@ -3011,8 +2997,7 @@ impl CodeReviewView {
             });
 
             let local_code_view = ctx.add_typed_action_view(|ctx| {
-                let mut local_code_view =
-                    LocalCodeEditorView::new(code_editor_view, ctx);
+                let mut local_code_view = LocalCodeEditorView::new(code_editor_view, ctx);
                 if FeatureFlag::HoaCodeReview.is_enabled() {
                     local_code_view =
                         local_code_view.with_selection_as_context(Box::new(move |_, app| {
@@ -5722,7 +5707,7 @@ impl CodeReviewView {
     ) {
         if let Ok(selections_vec1) = Vec1::try_from_vec(selections) {
             editor.model.update(ctx, |model, ctx| {
-                model.vim_set_selections(
+                model.set_selections(
                     selections_vec1,
                     AutoScrollBehavior::None, // Don't auto-scroll when restoring position
                     ctx,
@@ -6328,7 +6313,6 @@ impl CodeReviewView {
             *settings.open_file_layout,
             None,
         );
-
 
         ctx.emit(CodeReviewViewEvent::OpenFileWithTarget {
             path: full_path,

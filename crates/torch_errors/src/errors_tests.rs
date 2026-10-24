@@ -1,4 +1,4 @@
-use std::sync::{Mutex, OnceLock};
+use std::sync::{Mutex, MutexGuard, OnceLock};
 
 use log::{Level, Log, Metadata, Record};
 
@@ -15,6 +15,7 @@ struct TestLogger;
 
 static LOGGER: TestLogger = TestLogger;
 static LOGS: OnceLock<Mutex<Vec<LogEntry>>> = OnceLock::new();
+static SERIAL_TESTS: Mutex<()> = Mutex::new(());
 
 impl Log for TestLogger {
     fn enabled(&self, _metadata: &Metadata) -> bool {
@@ -36,10 +37,13 @@ fn logs() -> &'static Mutex<Vec<LogEntry>> {
     LOGS.get_or_init(|| Mutex::new(Vec::new()))
 }
 
-fn init_logger() {
+/// Tests share one global logger, so each holds the returned guard for its whole run.
+fn init_logger() -> MutexGuard<'static, ()> {
+    let guard = SERIAL_TESTS.lock().unwrap_or_else(|err| err.into_inner());
     let _ = log::set_logger(&LOGGER);
     log::set_max_level(log::LevelFilter::Trace);
     logs().lock().unwrap().clear();
+    guard
 }
 
 fn logged_report_count(message: &str) -> usize {
@@ -80,7 +84,7 @@ fn report_if_error_once_per_run(result: Result<(), anyhow::Error>) {
 
 #[test]
 fn report_error_log_mode_controls_log_frequency() {
-    init_logger();
+    let _serial = init_logger();
 
     for _ in 0..2 {
         report_error!(anyhow::anyhow!("default"));
@@ -117,7 +121,7 @@ fn report_error_log_mode_controls_log_frequency() {
 
 #[test]
 fn new_macro_forms_log_as_expected() {
-    init_logger();
+    let _serial = init_logger();
 
     // Bare string-literal form wraps the message in an anyhow error and reports it.
     report_error!("a static message");

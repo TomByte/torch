@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
+use settings::SupportedPlatforms;
 use settings::macros::define_settings_group;
-use settings::{SupportedPlatforms};
 use torch_core::features::FeatureFlag;
 use torchui::units::Pixels;
 use torchui::{AppContext, SingletonEntity};
@@ -119,7 +119,6 @@ impl AltScreenPaddingMode {
             Self::Custom { .. } => Self::MatchBlocklist,
         }
     }
-
 }
 
 define_settings_group!(TerminalSettings, settings: [

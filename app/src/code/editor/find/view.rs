@@ -27,8 +27,6 @@ use crate::editor::{
     EditorView, Event as EditorEvent, InteractionState, PropagateAndNoOpNavigationKeys,
     SingleLineEditorOptions, TextOptions,
 };
-use crate::features::FeatureFlag;
-use crate::settings::AppEditorSettings;
 use crate::themes::theme::Fill;
 use crate::ui_components::blended_colors;
 use crate::ui_components::icons::Icon;
@@ -71,7 +69,6 @@ pub enum Event {
     SelectAll,
     ReplaceSelected,
     ReplaceAll,
-    VimEnterAndFocusEditor,
 }
 
 pub struct CodeEditorFind {
@@ -220,7 +217,7 @@ impl CodeEditorFind {
                     ctx.notify();
                 }
                 SearchEvent::SelectedResultChanged => {
-                    // The selected match index changed (e.g., via Vim n/N), needed to re-render index label.
+                    // The selected match index changed (e.g., via next/previous match), needed to re-render index label.
                     ctx.notify();
                 }
                 SearchEvent::InvalidQuery => {}
@@ -273,18 +270,6 @@ impl CodeEditorFind {
         self.find_editor.as_ref(app).can_edit(app)
     }
 
-    /// Enable or disable the find input editor's interactivity.
-    pub fn set_find_input_editable(&self, ctx: &mut ViewContext<Self>, is_editable: bool) {
-        self.find_editor.update(ctx, |editor, ctx| {
-            let state = if is_editable {
-                InteractionState::Editable
-            } else {
-                InteractionState::Disabled
-            };
-            editor.set_interaction_state(state, ctx);
-        });
-    }
-
     /// Makes the find input editable, selects its current query, and focuses it.
     fn activate_find_input(&mut self, ctx: &mut ViewContext<Self>) {
         self.find_editor.update(ctx, |editor, ctx| {
@@ -309,27 +294,9 @@ impl CodeEditorFind {
                 self.emit_result_a11y_content(ctx);
                 ctx.notify();
             }
-            EditorEvent::Enter => {
-                let vim_enabled = FeatureFlag::VimCodeEditor.is_enabled()
-                    && AppEditorSettings::as_ref(ctx).vim_mode_enabled();
-
-                if !vim_enabled {
-                    self.focus_next_match(FindDirection::Down, ctx);
-                } else {
-                    // Vim: treat "enter" as ending the search query entry and shift focus back to the editor
-                    self.find_editor.update(ctx, |editor, ctx| {
-                        editor.clear_selections(ctx);
-                        editor.set_interaction_state(InteractionState::Disabled, ctx);
-                    });
-                    ctx.emit(Event::VimEnterAndFocusEditor);
-                }
-            }
+            EditorEvent::Enter => self.focus_next_match(FindDirection::Down, ctx),
             EditorEvent::ShiftEnter | EditorEvent::AltEnter => {
-                let vim_enabled = FeatureFlag::VimCodeEditor.is_enabled()
-                    && AppEditorSettings::as_ref(ctx).vim_mode_enabled();
-                if !vim_enabled {
-                    self.focus_next_match(FindDirection::Up, ctx);
-                }
+                self.focus_next_match(FindDirection::Up, ctx);
             }
             EditorEvent::Escape => {
                 self.close_find_bar(ctx);
@@ -898,17 +865,6 @@ impl CodeEditorFind {
     }
 }
 
-#[cfg(test)]
-impl CodeEditorFind {
-    pub fn find_editor_for_test(&self) -> ViewHandle<EditorView> {
-        self.find_editor.clone()
-    }
-
-    pub fn find_editor_position_id_for_test(&self) -> &str {
-        &self.find_editor_position_id
-    }
-}
-
 impl Entity for CodeEditorFind {
     type Event = Event;
 }
@@ -934,10 +890,9 @@ impl TypedActionView for CodeEditorFind {
                 ctx.notify();
             }
             FindAction::FocusFindInput => {
-                // While Vim owns the editor caret the find input is disabled, so the editor
-                // element ignores mouse events and the click can only be handled here. When the
-                // input is already editable the editor element handles the click itself, placing
-                // the caret where the user clicked.
+                // A disabled find input ignores mouse events, so the click can only be handled
+                // here. When the input is already editable the editor element handles the click
+                // itself, placing the caret where the user clicked.
                 if !self.is_find_input_editable(ctx) {
                     self.activate_find_input(ctx);
                 }
@@ -1000,14 +955,7 @@ impl View for CodeEditorFind {
         .any(|entity_id| focused_view_id == Some(*entity_id));
 
         // On blur, should clear selected result and disable auto-select.
-        // Exception: in vim mode, Enter moves focus back to the editor while the find bar stays
-        // open as a status indicator; we want to preserve the selected match so it stays
-        // highlighted and n/N can cycle from it.
-        let vim_enabled = FeatureFlag::VimCodeEditor.is_enabled()
-            && AppEditorSettings::as_ref(ctx).vim_mode_enabled();
-        let keep_selection_for_vim = vim_enabled && self.is_open;
-
-        if !is_focus_within_find_bar && !keep_selection_for_vim {
+        if !is_focus_within_find_bar {
             self.searcher.update(ctx, |searcher, ctx| {
                 searcher.clear_selected_result(ctx);
                 searcher.set_auto_select(false);

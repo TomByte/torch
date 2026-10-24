@@ -31,18 +31,16 @@ use super::ai_shared::{
     update_editor_interaction_state,
 };
 use super::settings_page::{
-    AdditionalInfo, CONTENT_FONT_SIZE, Category, CategoryHeader, HEADER_PADDING,
-    MatchData, PageTitle, PageType, SettingsPageMeta, SettingsPageViewHandle,
-    SettingsWidget, ToggleState, build_toggle_element, render_body_item_label,
+    AdditionalInfo, CONTENT_FONT_SIZE, Category, CategoryHeader, HEADER_PADDING, MatchData,
+    PageTitle, PageType, SettingsPageMeta, SettingsPageViewHandle, SettingsWidget, ToggleState,
+    build_toggle_element, render_body_item_label,
 };
 use super::{SettingsAction, SettingsSection, ToggleSettingActionPair, flags};
 use crate::agent_status::footer::editor::AgentToolbarInlineEditor;
 use crate::appearance::Appearance;
 use crate::local_hooks::{SetupState, StatusAgent};
 use crate::menu::{MenuItem, MenuItemFields};
-use crate::settings::{
-    CLIAgentSettings, CLIAgentSettingsChangedEvent,
-};
+use crate::settings::{CLIAgentSettings, CLIAgentSettingsChangedEvent};
 use crate::terminal::CLIAgent;
 use crate::util::bindings;
 use crate::view_components::dropdown::DropdownAction;

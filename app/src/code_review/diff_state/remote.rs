@@ -17,9 +17,8 @@ use torch_util::standardized_path::StandardizedPath;
 use torchui::{ModelContext, SingletonEntity};
 
 use super::{
-    CommitChainMode, DiffMetadata, DiffMode, DiffState,
-    DiffStateError, DiffStateModelEvent, DiffStats, FileDiffAndContent, GitDiffData,
-    GitDiffWithBaseContent,
+    CommitChainMode, DiffMetadata, DiffMode, DiffState, DiffStateError, DiffStateModelEvent,
+    DiffStats, FileDiffAndContent, GitDiffData, GitDiffWithBaseContent,
 };
 use crate::remote_server::diff_state_proto::{try_decode_file_delta, try_decode_snapshot};
 use crate::remote_server::proto;
@@ -233,11 +232,7 @@ impl RemoteDiffStateModel {
     /// `preferred_session` is supplied by the triggering callsite (the
     /// session-scoped view) so the request rides the connection that needs the
     /// result; `None` (e.g. reconnect) falls back to any connected session.
-    fn resubscribe(
-        &mut self,
-        preferred_session: Option<SessionId>,
-        ctx: &mut ModelContext<Self>,
-    ) {
+    fn resubscribe(&mut self, preferred_session: Option<SessionId>, ctx: &mut ModelContext<Self>) {
         let host_id = self.remote_path.host_id.clone();
         let repo_path = self.remote_path.path.clone();
         let mode = self.mode.clone();

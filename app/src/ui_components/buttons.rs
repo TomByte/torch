@@ -211,4 +211,3 @@ pub fn icon_button(
 pub fn close_button(appearance: &Appearance, mouse_state_handle: MouseStateHandle) -> Button {
     icon_button(appearance, Icon::X, false, mouse_state_handle)
 }
-

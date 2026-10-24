@@ -38,7 +38,6 @@ fn initialize_app(
     app.add_singleton_model(|_| VimRegisters::new());
     app.add_singleton_model(|_| KeybindingChangedNotifier::mock());
 
-
     let detected_repositories = app.add_singleton_model(|_| DetectedRepositories::default());
     let repository_metadata_model = app.add_singleton_model(RepoMetadataModel::new);
 

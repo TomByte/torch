@@ -20,8 +20,6 @@ use torch_util::path::LineAndColumnArg;
 use torchui::SingletonEntity;
 use torchui::{AppContext, ModelContext, TypedActionView};
 
-#[cfg(feature = "local_fs")]
-use crate::palette::PaletteSource;
 use crate::code::editor_management::CodeSource;
 use crate::local_control::LocalControlBridge;
 use crate::local_control::handlers::ack;
@@ -33,6 +31,8 @@ use crate::local_control::resolver::{
     target_pane_id, target_session_pane_id, target_window_id_for_target, target_workspace,
 };
 use crate::palette::PaletteMode;
+#[cfg(feature = "local_fs")]
+use crate::palette::PaletteSource;
 use crate::pane_group::{ActivationReason, Direction, PaneGroupAction};
 use crate::settings_view::SettingsSection;
 #[cfg(feature = "local_fs")]

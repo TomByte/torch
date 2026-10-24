@@ -72,7 +72,6 @@ pub struct WorkflowDisplayData {
     /// if workflow.arguments = ["foo", "bar"] and the workflow is "echo {{foo}} {{bar}} {{foo}}",
     /// the entry for "foo" would be [5-8, 13-16].
     pub argument_index_to_char_range_map: HashMap<WorkflowArgumentIndex, Vec<Range<CharOffset>>>,
-
 }
 
 #[derive(Clone)]

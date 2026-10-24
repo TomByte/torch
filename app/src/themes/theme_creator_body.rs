@@ -24,10 +24,10 @@ use torchui::{
 
 use crate::appearance::{Appearance, AppearanceManager};
 use crate::editor::{EditorView, Event as EditorEvent};
-use crate::themes::theme::{InMemoryThemeOptions, ThemeKind};
-use crate::user_config;
 #[cfg(feature = "local_fs")]
 use crate::themes::theme::CustomTheme;
+use crate::themes::theme::{InMemoryThemeOptions, ThemeKind};
+use crate::user_config;
 
 const BUTTON_PADDING: f32 = 12.;
 const BUTTON_FONT_SIZE: f32 = 14.;

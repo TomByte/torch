@@ -468,12 +468,10 @@ impl Sessions {
         self.sessions
             .iter()
             .filter_map(|(id, session)| {
-                session.subshell_info().as_ref().map(|info| {
-                    (
-                        *id,
-                        SubshellSource::Command(info.spawning_command.clone()),
-                    )
-                })
+                session
+                    .subshell_info()
+                    .as_ref()
+                    .map(|info| (*id, SubshellSource::Command(info.spawning_command.clone())))
             })
             .collect()
     }

@@ -54,7 +54,6 @@ use torchui::{
     ViewHandle, WindowId,
 };
 use vec1::Vec1;
-use vim::vim::{MotionType, VimMode};
 
 use crate::code::buffer_location::LocalOrRemotePath as BufferFileLocation;
 use crate::code::editor::EditorReviewComment;
@@ -73,7 +72,6 @@ const HOVER_DEBOUNCE_PERIOD: Duration = Duration::from_millis(500);
 /// How long to wait after the user stops typing before triggering a debounced
 /// auto-save. Mirrors VS Code's default `files.autoSaveDelay` of 1000ms.
 const AUTO_SAVE_DEBOUNCE_PERIOD: Duration = Duration::from_millis(1000);
-
 
 use super::ImmediateSaveError;
 use super::editor::scroll::{ScrollPosition, ScrollTrigger};
@@ -105,8 +103,6 @@ pub enum LocalCodeEditorEvent {
     FailedToSave {
         error: Arc<FileSaveError>,
     },
-    /// Emitted when a user presses Escape in Vim Normal mode inside the embedded editor.
-    VimMinimizeRequested,
     /// Emitted when a user edits the file.
     UserEdited,
     /// Emitted when the diff status changes (e.g., line counts update).
@@ -296,10 +292,7 @@ pub struct LocalCodeEditorView {
 }
 
 impl LocalCodeEditorView {
-    pub fn new(
-        editor: ViewHandle<CodeEditorView>,
-        ctx: &mut ViewContext<Self>,
-    ) -> Self {
+    pub fn new(editor: ViewHandle<CodeEditorView>, ctx: &mut ViewContext<Self>) -> Self {
         let context_menu = ctx.add_typed_action_view(|_| {
             Menu::new()
                 .prevent_interaction_with_other_elements()
@@ -328,13 +321,6 @@ impl LocalCodeEditorView {
                     if *CodeSettings::as_ref(ctx).auto_save {
                         let _ = me.auto_save_debounce_tx.try_send(());
                     }
-                }
-            }
-            CodeEditorEvent::VimEscapeInNormalMode => {
-                if me.dismiss_lsp_overlays(ctx) {
-                    ctx.notify();
-                } else {
-                    ctx.emit(LocalCodeEditorEvent::VimMinimizeRequested);
                 }
             }
             CodeEditorEvent::EscapePressed => {
@@ -437,19 +423,6 @@ impl LocalCodeEditorView {
             }
             CodeEditorEvent::DelayedRenderingFlushed => {
                 ctx.emit(LocalCodeEditorEvent::DelayedRenderingFlushed);
-            }
-            CodeEditorEvent::VimGotoDefinition
-            | CodeEditorEvent::VimFindReferences
-            | CodeEditorEvent::VimShowHover => {
-                if me.dismiss_lsp_overlays(ctx) {
-                    ctx.notify();
-                }
-                match event {
-                    CodeEditorEvent::VimGotoDefinition => me.goto_definition_at_cursor(ctx),
-                    CodeEditorEvent::VimFindReferences => me.find_references_at_cursor(ctx),
-                    CodeEditorEvent::VimShowHover => me.show_hover_at_cursor(ctx),
-                    _ => unreachable!(),
-                }
             }
             _ => {}
         });
@@ -1830,23 +1803,10 @@ impl LocalCodeEditorView {
         let mut line_range: Option<Range<LineCount>> = None;
         let mut selected_text: Option<String> = None;
         self.editor.update(ctx, |editor, ctx| {
-            // If we have a vim visual selection, update the editor model to use that as a selection range
-            let has_vim_visual = matches!(editor.vim_mode(ctx), Some(VimMode::Visual(_)));
-            if has_vim_visual {
-                editor.model.update(ctx, |model, ctx| {
-                    model.vim_visual_selection_range(MotionType::Linewise, false, ctx);
-                });
-            }
-
             if let Some((start, end)) = editor.selected_lines(ctx) {
                 // selected_lines() returns 1-indexed row numbers.
                 line_range = Some(LineCount::from(start as usize)..LineCount::from(end as usize));
                 selected_text = Some(editor.selected_text(ctx).unwrap_or_default());
-            }
-
-            // Enter normal mode
-            if has_vim_visual {
-                editor.enter_vim_normal_mode(ctx);
             }
         });
 
@@ -1915,35 +1875,23 @@ impl LocalCodeEditorView {
 
         self.call_goto_definition(
             lsp_position,
-            move |_me, result, ctx| {
-                match result {
-                    Ok(locations) => {
-                        if let Some(location) = locations.first() {
-                            ctx.emit(LocalCodeEditorEvent::GotoDefinition {
-                                path: location.target.path.clone(),
-                                line: location.target.location.line,
-                                column: location.target.location.column,
-                                source_server_id,
-                            });
-                        }
+            move |_me, result, ctx| match result {
+                Ok(locations) => {
+                    if let Some(location) = locations.first() {
+                        ctx.emit(LocalCodeEditorEvent::GotoDefinition {
+                            path: location.target.path.clone(),
+                            line: location.target.location.line,
+                            column: location.target.location.column,
+                            source_server_id,
+                        });
                     }
-                    Err(e) => {
-                        log::debug!("Failed to get goto definition: {e}");
-                    }
+                }
+                Err(e) => {
+                    log::debug!("Failed to get goto definition: {e}");
                 }
             },
             ctx,
         );
-    }
-
-    /// Show hover (documentation/type info) at the current cursor position.
-    fn show_hover_at_cursor(&mut self, ctx: &mut ViewContext<Self>) {
-        if !self.is_lsp_server_available(ctx) {
-            return;
-        }
-        let cursor_offset = self.editor().as_ref(ctx).cursor_head_offset(ctx);
-        self.lsp_hover_state = LspHoverState::Loading(None);
-        self.hover_for_offset(cursor_offset, ctx);
     }
 
     /// Close the find references card if it is open and refocus the editor.

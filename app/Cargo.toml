@@ -426,7 +426,6 @@ default = [
     "revert_diff_hunk",
     "code_review_save_changes",
     "file_tree",
-    "vim_code_editor",
     "code_launch_modal",
     "allow_ignoring_input_suggestions",
     "ui_zoom",
@@ -594,7 +593,6 @@ code_find_replace = []
 command_palette_file_search = []
 preview_channel = []
 tabbed_editor_view = []
-vim_code_editor = []
 undo_closed_panes = []
 revert_diff_hunk = []
 code_review_save_changes = []

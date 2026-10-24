@@ -287,7 +287,6 @@ fn test_blank_query_preserves_chronological_order_despite_differing_priors() {
     let _flag = FeatureFlag::HistorySearchRankingV2.override_enabled(true);
 
     App::test((), |mut app| async move {
-
         // Both entries share a timestamp so recency can't be what preserves order; only ignoring
         // the session prior can.
         let same_ts = Local::now();
@@ -473,7 +472,6 @@ fn test_query_filter_limits_data_sources() {
 #[test]
 fn test_async_data_source() {
     App::test((), |mut app| async move {
-
         let mixer = app.add_model(|_| TestMixer::new());
         mixer.update(&mut app, |mixer, ctx| {
             mixer.add_async_source(
@@ -518,7 +516,6 @@ fn test_async_data_source() {
 #[test]
 fn test_async_data_source_run_twice_with_debounce() {
     App::test((), |mut app| async move {
-
         let mixer = app.add_model(|_| TestMixer::new());
         mixer.update(&mut app, |mixer, ctx| {
             mixer.add_async_source(
@@ -580,7 +577,6 @@ fn test_async_data_source_run_twice_with_debounce() {
 #[test]
 fn test_async_data_source_run_twice_without_debounce() {
     App::test((), |mut app| async move {
-
         let mixer = app.add_model(|_| TestMixer::new());
         mixer.update(&mut app, |mixer, ctx| {
             mixer.add_async_source(
@@ -633,7 +629,6 @@ fn test_async_data_source_run_twice_without_debounce() {
 #[test]
 fn test_async_source_with_include_in_unfiltered_runs_on_empty_filters() {
     App::test((), |mut app| async move {
-
         let mixer = app.add_model(|_| TestMixer::new());
         mixer.update(&mut app, |mixer, ctx| {
             mixer.add_async_source(
@@ -675,7 +670,6 @@ fn test_async_source_with_include_in_unfiltered_runs_on_empty_filters() {
 #[test]
 fn test_async_source_without_include_in_unfiltered_skipped_on_empty_filters() {
     App::test((), |mut app| async move {
-
         let mixer = app.add_model(|_| TestMixer::new());
         mixer.update(&mut app, |mixer, ctx| {
             mixer.add_async_source(
@@ -714,7 +708,6 @@ fn test_history_search_disabled_flag_skips_whitespace_tokenization() {
     let _flag = FeatureFlag::HistorySearchRankingV2.override_enabled(false);
 
     App::test((), |mut app| async move {
-
         let mixer = app.add_model(|_| CommandSearchMixer::new());
         mixer.update(&mut app, |mixer, ctx| {
             mixer.add_async_source(
@@ -752,7 +745,6 @@ fn test_history_search_disabled_flag_scores_raw_skim_with_no_priors() {
     let _flag = FeatureFlag::HistorySearchRankingV2.override_enabled(false);
 
     App::test((), |mut app| async move {
-
         let command = "git status".to_owned();
         let raw_score = fuzzy_match::match_indices_case_insensitive(&command, "git status")
             .expect("the command should fuzzy-match itself")
@@ -797,7 +789,6 @@ fn test_history_search_disabled_flag_scores_raw_skim_with_no_priors() {
 #[test]
 fn test_sync_and_async_data_sources() {
     App::test((), |mut app| async move {
-
         let mixer = app.add_model(|_| TestMixer::new());
         mixer.update(&mut app, |mixer, ctx| {
             mixer.add_sync_source(SlowDataSource {}, [QueryFilter::Actions]);

@@ -5,7 +5,6 @@ use torchui_extras::user_preferences::registry_backed::KEY_NOT_FOUND_ERR;
 use windows_registry::CURRENT_USER;
 use windows_result::Error as WindowsError;
 
-
 const DOCKER_DESKTOP_WSL_DISTRO_PREFIX: &str = "docker-desktop";
 const RANCHER_DESKTOP_WSL_DISTRO_PREFIX: &str = "rancher-desktop";
 

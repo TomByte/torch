@@ -1,4 +1,4 @@
-use settings::{SupportedPlatforms};
+use settings::SupportedPlatforms;
 use torch_core::define_settings_group;
 
 use crate::banner::BannerState;

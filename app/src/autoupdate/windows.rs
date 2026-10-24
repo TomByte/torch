@@ -148,4 +148,3 @@ fn app_name_prefix(channel: Channel) -> &'static str {
         Channel::Oss => "Torch",
     }
 }
-

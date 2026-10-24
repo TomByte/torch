@@ -100,8 +100,6 @@ use super::view::{
 };
 use super::warpify::SubshellSource;
 use super::{History, HistoryEntry, SizeInfo, TerminalModel, prompt, should_right_click_paste};
-#[allow(unused_imports)]
-use crate::palette::PaletteSource;
 use crate::agent_status::PendingImages;
 use crate::agent_status::footer::{CLIAgentFooter, CLIAgentFooterEvent};
 use crate::appearance::{Appearance, AppearanceEvent};
@@ -128,6 +126,8 @@ use crate::input_suggestions::{
     Event as InputSuggestionsEvent, HistoryInputSuggestion, InputSuggestions,
     TabCompletionsPreselectOption,
 };
+#[allow(unused_imports)]
+use crate::palette::PaletteSource;
 use crate::pane_group::PaneGroupAction;
 use crate::pane_group::focus_state::PaneFocusHandle;
 #[cfg(feature = "local_fs")]
@@ -180,9 +180,7 @@ use crate::workflows::command_parser::{
     compute_workflow_display_data_for_history_command,
     compute_workflow_display_data_with_overrides,
 };
-use crate::workflows::info_box::{
-    WORKFLOW_PARAMETER_HIGHLIGHT_COLOR, WorkflowsMoreInfoView,
-};
+use crate::workflows::info_box::{WORKFLOW_PARAMETER_HIGHLIGHT_COLOR, WorkflowsMoreInfoView};
 use crate::workflows::local_workflows::LocalWorkflows;
 use crate::workflows::{self, WorkflowSelectionSource, WorkflowSource, WorkflowType};
 use crate::workspace::sync_inputs::SyncedInputState;
@@ -365,7 +363,6 @@ impl InputSuggestionsMode {
         // but in the future we might build this out/add more detail here.
         self.is_inline_menu()
     }
-
 }
 
 /// Where a command execution request originates from.
@@ -2647,7 +2644,6 @@ impl Input {
             } => {
                 let workflow_source = *workflow_source;
 
-
                 self.show_workflows_info_box_on_workflow_selection(
                     *workflow.clone(),
                     workflow_source,
@@ -3045,7 +3041,6 @@ impl Input {
                 if !self.confirm_and_execute_suggestion(suggestion, ctx) {
                     return;
                 }
-
 
                 self.close_input_suggestions(/*should_focus_input=*/ true, ctx);
 
@@ -5844,8 +5839,7 @@ impl Input {
                     suggestions.confirm_and_execute(ctx);
                 });
             }
-            InputSuggestionsMode::InlineHistoryMenu
-            | InputSuggestionsMode::Closed => {}
+            InputSuggestionsMode::InlineHistoryMenu | InputSuggestionsMode::Closed => {}
         }
     }
 
@@ -6054,7 +6048,6 @@ impl Input {
         let workflow_command = {
             match self.workflows_state.selected_workflow_state.as_ref() {
                 Some(selected_workflow_state) => {
-
                     // Local workflows have no unique ID and are tracked just by persisting the
                     // workflow contents.
                     selected_workflow_state

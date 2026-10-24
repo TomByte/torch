@@ -290,7 +290,7 @@ impl<T: EventLoopSender> RemoteServerController<T> {
                         });
                     }
                     SshExtensionInstallMode::AlwaysInstall => {
-                                self.state = SshInitState::AwaitingInstall {
+                        self.state = SshInitState::AwaitingInstall {
                             session_id,
                             session_info,
                             transport: transport.clone(),
@@ -361,10 +361,8 @@ impl<T: EventLoopSender> RemoteServerController<T> {
             return;
         }
 
-        let SshInitState::AwaitingConnect {
-            session_info,
-            ..
-        } = std::mem::replace(&mut self.state, SshInitState::Idle)
+        let SshInitState::AwaitingConnect { session_info, .. } =
+            std::mem::replace(&mut self.state, SshInitState::Idle)
         else {
             unreachable!("just matched AwaitingConnect above");
         };
@@ -430,15 +428,15 @@ impl<T: EventLoopSender> RemoteServerController<T> {
             return;
         }
 
-        let (session_info, transport) =
-            match std::mem::replace(&mut self.state, SshInitState::Idle) {
-                SshInitState::AwaitingInstall {
-                    session_info,
-                    transport,
-                    ..
-                } => (session_info, transport),
-                _ => unreachable!("just matched AwaitingInstall above"),
-            };
+        let (session_info, transport) = match std::mem::replace(&mut self.state, SshInitState::Idle)
+        {
+            SshInitState::AwaitingInstall {
+                session_info,
+                transport,
+                ..
+            } => (session_info, transport),
+            _ => unreachable!("just matched AwaitingInstall above"),
+        };
         match result {
             Ok(()) => {
                 let socket_path = transport.socket_path().clone();

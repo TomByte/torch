@@ -106,8 +106,6 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::UndoClosedPanes,
         #[cfg(feature = "github_pr_prompt_chip")]
         FeatureFlag::GithubPrPromptChip,
-        #[cfg(feature = "vim_code_editor")]
-        FeatureFlag::VimCodeEditor,
         #[cfg(feature = "revert_diff_hunk")]
         FeatureFlag::RevertDiffHunk,
         #[cfg(feature = "code_review_save_changes")]

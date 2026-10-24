@@ -5,9 +5,7 @@ use std::time::Duration;
 use ::settings::{Setting, ToggleableSetting};
 use lazy_static::lazy_static;
 use torch_core::channel::ChannelState;
-use torch_core::semantic_selection::{
-    SemanticSelection, SemanticSelectionChangedEvent,
-};
+use torch_core::semantic_selection::{SemanticSelection, SemanticSelectionChangedEvent};
 use torch_errors::{report_error, report_if_error};
 use torchui::elements::{
     Align, Border, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Dismiss,
@@ -33,10 +31,10 @@ use super::keybindings::KeyBindingModifyingState;
 #[cfg(feature = "local_tty")]
 use super::settings_page::render_sub_sub_header;
 use super::settings_page::{
-    AdditionalInfo, CONTENT_FONT_SIZE, Category, HEADER_PADDING, MatchData,
-    PageType, SettingsPageMeta, SettingsPageViewHandle, SettingsWidget,
-    TOGGLE_BUTTON_RIGHT_PADDING, ToggleState, add_setting, build_reset_button,
-    build_toggle_element, render_body_item, render_body_item_label, render_dropdown_item,
+    AdditionalInfo, CONTENT_FONT_SIZE, Category, HEADER_PADDING, MatchData, PageType,
+    SettingsPageMeta, SettingsPageViewHandle, SettingsWidget, TOGGLE_BUTTON_RIGHT_PADDING,
+    ToggleState, add_setting, build_reset_button, build_toggle_element, render_body_item,
+    render_body_item_label, render_dropdown_item,
 };
 use super::{
     DisplayCount, SettingsAction, SettingsSection, ToggleSettingActionPair, features, flags,
@@ -53,28 +51,24 @@ use crate::root_view::QuakeModePinPosition;
 use crate::search::command_search::settings::CommandSearchSettings;
 use crate::settings::native_preference::{NativePreferenceSettings, UserNativePreference};
 use crate::settings::{
-    AliasExpansionSettings, AppEditorSettings, CLIAgentSettings, ChangelogSettings,
-    CodeSettings, CtrlTabBehavior,
-    DEFAULT_QUAKE_MODE_SIZE_PERCENTAGES, ExtraMetaKeys, GPUSettings,
+    AliasExpansionSettings, AppEditorSettings, CLIAgentSettings, ChangelogSettings, CodeSettings,
+    CtrlTabBehavior, DEFAULT_QUAKE_MODE_SIZE_PERCENTAGES, ExtraMetaKeys, GPUSettings,
     GlobalHotkeyMode, InputSettings, InputSettingsChangedEvent, QUAKE_WINDOW_AUTOHIDE_SUPPORTED,
-    QuakeModeSettings, RightClickBehavior, ScrollSettings,
-    ScrollSettingsChangedEvent, SelectionSettings, SelectionSettingsChangedEvent, SshSettings, TabBehavior,
+    QuakeModeSettings, RightClickBehavior, ScrollSettings, ScrollSettingsChangedEvent,
+    SelectionSettings, SelectionSettingsChangedEvent, SshSettings, TabBehavior,
 };
+use crate::terminal::BlockListSettings;
 use crate::terminal::alt_screen_reporting::AltScreenReporting;
 use crate::terminal::general_settings::GeneralSettings;
 use crate::terminal::input::OPEN_COMPLETIONS_KEYBINDING_NAME;
-use crate::terminal::keys_settings::{
-    KeysSettings, KeysSettingsChangedEvent,
-};
+use crate::terminal::keys_settings::{KeysSettings, KeysSettingsChangedEvent};
 use crate::terminal::session_settings::{
     Notifications, NotificationsMode, NotificationsSettings, SessionSettings,
     SessionSettingsChangedEvent,
 };
 use crate::terminal::settings::{
-    Osc52ClipboardAccess,
-    TerminalSettings, TerminalSettingsChangedEvent,
+    Osc52ClipboardAccess, TerminalSettings, TerminalSettingsChangedEvent,
 };
-use crate::terminal::BlockListSettings;
 use crate::undo_close::UndoCloseSettings;
 use crate::util::bindings::{
     keybinding_name_to_display_string, reset_keybinding_to_default, set_custom_keybinding,
@@ -1512,7 +1506,6 @@ impl TypedActionView for FeaturesPageView {
                 });
             }
         }
-
     }
 }
 
@@ -4356,10 +4349,7 @@ impl SettingsWidget for StartupShellWidget {
     ) -> Box<dyn Element> {
         Flex::column()
             .with_children([
-                render_sub_sub_header(
-                    appearance,
-                    "Default shell for new sessions".to_string(),
-                ),
+                render_sub_sub_header(appearance, "Default shell for new sessions".to_string()),
                 ChildView::new(&view.startup_shell_view).finish(),
             ])
             .finish()
@@ -4386,10 +4376,7 @@ impl SettingsWidget for WorkingDirectoryWidget {
     ) -> Box<dyn Element> {
         Flex::column()
             .with_children([
-                render_sub_sub_header(
-                    appearance,
-                    "Working directory for new sessions".to_string(),
-                ),
+                render_sub_sub_header(appearance, "Working directory for new sessions".to_string()),
                 ChildView::new(&view.working_directory_view).finish(),
             ])
             .finish()

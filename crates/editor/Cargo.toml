@@ -56,7 +56,6 @@ torch_errors.workspace = true
 torch_util.workspace = true
 rayon.workspace = true
 line-ending.workspace = true
-vim.workspace = true
 imara-diff = "0.2"
 
 [dev-dependencies]

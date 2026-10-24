@@ -8,7 +8,6 @@ use torchui_core::{AppContext, Element, SizeConstraint};
 use super::RenderableBlock;
 use crate::editor::EmbeddedItemModel;
 use crate::extract_block;
-use crate::render::element::paint::{CursorData, CursorDisplayType};
 use crate::render::model::viewport::ViewportItem;
 use crate::render::model::{BlockItem, RichTextStyles};
 
@@ -140,10 +139,8 @@ impl RenderableBlock for RenderableBrokenEmbedding {
             let end_of_line_position =
                 broken_link.reserved_origin() + background_rect.size() + vec2f(5., -line_height);
             ctx.draw_and_save_cursor(
-                CursorDisplayType::Bar,
                 end_of_line_position,
                 vec2f(styles.cursor_width, line_height),
-                CursorData::default(),
                 styles,
             );
         }

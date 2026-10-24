@@ -9,7 +9,7 @@ use torchui::elements::HyperlinkUrl;
 use torchui::event::ModifiersState;
 use torchui::units::Lines;
 
-use super::inline_banner::{OpenInWarpBannerAction, VimModeBannerAction};
+use super::inline_banner::VimModeBannerAction;
 use super::{
     AliasExpansionBannerAction, ContextMenuAction, GridHighlightedLink, InputContextMenuAction,
     NotificationsDiscoveryBannerAction, NotificationsErrorBannerAction, TerminalEditor,
@@ -202,7 +202,6 @@ pub enum TerminalAction {
     ShowSubshellBanner(String),
     InsertMostRecentCommandCorrection,
     AliasExpansionBanner(AliasExpansionBannerAction),
-    OpenInWarpBanner(OpenInWarpBannerAction),
     OpenBlockFilterEditor(BlockIndex),
     ImportSettings,
     ToggleBlockFilterOnSelectedOrLastBlock,
@@ -382,7 +381,6 @@ impl fmt::Debug for TerminalAction {
             ShowSubshellBanner(_) => f.write_str("ShowSubshellBanner"),
             InsertMostRecentCommandCorrection => f.write_str("InsertMostRecentCommandCorrection"),
             AliasExpansionBanner(action) => write!(f, "AliasExpansionBanner({action:?}"),
-            OpenInWarpBanner(action) => write!(f, "OpenInWarpBanner({action:?})"),
             OpenBlockFilterEditor(block_index) => {
                 write!(f, "OpenBlockFilterEditor({block_index:?})")
             }

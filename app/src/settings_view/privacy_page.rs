@@ -11,8 +11,9 @@ use torch_core::ui::theme::color::internal_colors;
 use torch_errors::{report_error, report_if_error};
 use torchui::r#async::{SpawnedFutureHandle, Timer};
 use torchui::elements::{
-    ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Expanded, Flex, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, Rect,
-    Shrinkable, Text,
+    ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Expanded, Flex,
+    MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, Rect, Shrinkable,
+    Text,
 };
 use torchui::fonts::Weight;
 use torchui::keymap::ContextPredicate;
@@ -26,8 +27,8 @@ use torchui::{
 
 use super::privacy::{AddRegexModal, AddRegexModalEvent};
 use super::settings_page::{
-    HEADER_PADDING, MatchData, PageType, SettingsPageMeta,
-    SettingsPageViewHandle, SettingsWidget, TOGGLE_BUTTON_RIGHT_PADDING, render_sub_header,
+    HEADER_PADDING, MatchData, PageType, SettingsPageMeta, SettingsPageViewHandle, SettingsWidget,
+    TOGGLE_BUTTON_RIGHT_PADDING, render_sub_header,
 };
 use super::{SettingsAction, SettingsSection, ToggleSettingActionPair, flags};
 use crate::appearance::Appearance;
@@ -35,8 +36,7 @@ use crate::modal::{Modal, ModalEvent, ModalViewState};
 use crate::settings::{CustomSecretRegex, PrivacySettings, RegexDisplayInfo};
 use crate::settings_view::privacy::AddRegexModalViewState;
 use crate::terminal::safe_mode_settings::{
-    SafeModeSettings, SecretDisplayMode,
-    get_effective_secret_display_mode,
+    SafeModeSettings, SecretDisplayMode, get_effective_secret_display_mode,
 };
 use crate::ui_components::buttons::icon_button;
 use crate::ui_components::icons::Icon;
@@ -188,7 +188,6 @@ impl PrivacyPageView {
     fn toggle_safe_mode(&mut self, ctx: &mut ViewContext<Self>) {
         let safe_mode_settings = SafeModeSettings::handle(ctx);
         let new_value = { !*safe_mode_settings.as_ref(ctx).safe_mode_enabled.value() };
-
 
         ctx.update_model(&safe_mode_settings, move |safe_mode_settings, ctx| {
             report_if_error!(
@@ -801,11 +800,7 @@ impl SettingsWidget for SecretRedactionWidget {
         let secret_redaction_title_row = Container::new(
             Flex::row()
                 .with_child(
-                    Shrinkable::new(
-                        1.0,
-                        render_sub_header(appearance, SAFE_MODE_TITLE),
-                    )
-                    .finish(),
+                    Shrinkable::new(1.0, render_sub_header(appearance, SAFE_MODE_TITLE)).finish(),
                 )
                 .with_child(
                     Container::new(

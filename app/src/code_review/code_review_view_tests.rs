@@ -290,7 +290,8 @@ fn test_relocate_comments_empty_input() {
         let ctx = TestContext::new(&mut app, "test.txt", "line 1\nline 2\nline 3");
 
         ctx.code_review_view.update(&mut app, |_view, view_ctx| {
-            let relocated = CodeReviewView::relocate_comments(vec![], &ctx.state, &ctx.repo_location, view_ctx);
+            let relocated =
+                CodeReviewView::relocate_comments(vec![], &ctx.state, &ctx.repo_location, view_ctx);
 
             assert!(
                 relocated.is_empty(),
@@ -562,7 +563,7 @@ fn test_native_indented_context_comment_not_outdated() {
             },
             last_update_time: Local::now(),
             outdated: false,
-            };
+        };
 
         ctx.code_review_view.update(&mut app, |_view, view_ctx| {
             let relocated = CodeReviewView::relocate_comments(

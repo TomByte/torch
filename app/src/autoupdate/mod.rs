@@ -26,10 +26,10 @@ use torchui::{AppContext, Entity, ModelContext, SingletonEntity, ViewContext};
 
 pub use self::changelog::get_current_changelog;
 use self::channel_versions::fetch_channel_versions;
+use crate::ChannelState;
 use crate::channel::Channel;
 use crate::features::FeatureFlag;
 use crate::workspace::Workspace;
-use crate::ChannelState;
 
 /// A successfully downloaded and unpacked target update.
 #[derive(Clone, Debug)]

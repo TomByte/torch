@@ -124,10 +124,7 @@ pub(super) fn start_confirm(me: &mut GitDialog, ctx: &mut ViewContext<GitDialog>
 }
 
 /// Shared create-PR completion: toast (with Open PR link) + close.
-pub(super) fn finish_create_pr(
-    result: anyhow::Result<PrInfo>,
-    ctx: &mut ViewContext<GitDialog>,
-) {
+pub(super) fn finish_create_pr(result: anyhow::Result<PrInfo>, ctx: &mut ViewContext<GitDialog>) {
     match &result {
         Ok(pr_info) => show_pr_created_toast(pr_info, ctx),
         Err(err) => {

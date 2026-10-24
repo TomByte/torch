@@ -5,9 +5,7 @@ use std::fmt::Debug;
 use std::ops::Range;
 use std::path::Path;
 
-use crate::code::diff_types::DiffDelta;
 use lazy_static::lazy_static;
-use num_traits::SaturatingSub;
 use pathfinder_geometry::vector::vec2f;
 use settings::Setting as _;
 use string_offset::CharOffset;
@@ -40,7 +38,6 @@ use torchui::elements::{
     Shrinkable, Stack,
 };
 use torchui::event::ModifiersState;
-use torchui::keymap::Keystroke;
 use torchui::platform::Cursor;
 use torchui::prelude::RectF;
 use torchui::text::point::Point;
@@ -50,9 +47,9 @@ use torchui::{
     SingletonEntity, View, ViewContext, ViewHandle, WeakViewHandle, WindowId,
 };
 use vec1::{Vec1, vec1};
-use vim::vim::{Direction, InsertPosition, VimMode, VimModel, VimState, VimSubscriber};
 
 use crate::appearance::Appearance;
+use crate::code::diff_types::DiffDelta;
 use crate::code::editor::EditorReviewComment;
 use crate::code::editor::comment_editor::{CommentEditor, CommentEditorEvent};
 use crate::code::editor::comments::PendingComment;
@@ -65,7 +62,7 @@ use crate::code::editor::find::view::{CodeEditorFind as Find, Event as FindViewE
 use crate::code::editor::goto_line::view::{Event as GoToLineEvent, GoToLineView};
 use crate::code::editor::line::EditorLineLocation;
 use crate::code::editor::model::{
-    CodeEditorModel, CodeEditorModelEvent, HoverableLink, LineBound, StableEditorLine,
+    CodeEditorModel, CodeEditorModelEvent, HoverableLink, StableEditorLine,
 };
 use crate::code::editor::nav_bar::{NavBar, NavBarEvent};
 use crate::code::editor::scroll::{ScrollPosition, ScrollTrigger, ScrollWheelBehavior};
@@ -83,8 +80,6 @@ use crate::view_components::find::FindDirection;
 mod actions;
 pub(super) use actions::CodeEditorViewAction;
 pub use actions::init;
-
-mod vim_handler;
 
 /// Limit the keybindings that conflict with the Agent Mode embedded editor.
 const NON_EDITABLE_KEYMAP_CONTEXT: &str = "NonEditableKeymapContext";
@@ -104,8 +99,6 @@ pub enum CodeEditorEvent {
     SelectionStart,
     SelectionEnd,
     CopiedEmptyText,
-    /// Emitted when the editor is in Vim mode and a user Escape while already in Normal mode.
-    VimEscapeInNormalMode,
     /// Emitted when escape key is pressed (regardless of Vim state).
     /// This allows parent views to handle escape for closing overlays.
     EscapePressed,
@@ -145,9 +138,6 @@ pub enum CodeEditorEvent {
     DeleteComment {
         id: CommentId,
     },
-    VimGotoDefinition,
-    VimFindReferences,
-    VimShowHover,
 }
 
 /// Store all states related to displaying the editor content.
@@ -263,10 +253,6 @@ pub struct CodeEditorView {
     self_handle: WeakViewHandle<Self>,
     display_options: CodeEditorViewDisplayOptions,
     pending_scroll: Option<ScrollTrigger>,
-    supports_vim_mode: bool,
-    vim_model: ModelHandle<VimModel>,
-    // Track the most recent Vim search direction to determine how to cycle (n/N) thereafter.
-    last_search_direction: Direction,
     active_comment_editor: ViewHandle<CommentEditor>,
     /// TODO: maybe turn into a map for fast UUID or range lookup
     comment_locations: Vec<SavedComment>,
@@ -349,20 +335,6 @@ impl CodeEditorView {
             }
         });
 
-        // If feature flag is enabled, enable vim mode.
-        let supports_vim_mode = FeatureFlag::VimCodeEditor.is_enabled();
-
-        let vim_model = ctx.add_model(|_| VimModel::new());
-        ctx.subscribe_to_model(&vim_model, Self::handle_vim_event);
-
-        // Ensure CodeEditorView starts in Normal mode when Vim keybindings are enabled.
-        if supports_vim_mode && AppEditorSettings::as_ref(ctx).vim_mode_enabled() {
-            vim_model.update(ctx, |vim_model, ctx| {
-                if let Ok(escape) = Keystroke::parse("escape") {
-                    vim_model.keypress(&escape, ctx);
-                }
-            });
-        }
         // Ensure that we re-render when the rendering model changes.
         ctx.observe(&model.as_ref(ctx).render_state().clone(), |_, _, ctx| {
             ctx.notify();
@@ -413,9 +385,6 @@ impl CodeEditorView {
                 line_height_override: render_options.line_height_override,
             },
             pending_scroll: None,
-            supports_vim_mode,
-            vim_model,
-            last_search_direction: Direction::Forward,
             active_comment_editor: comment_editor,
             comment_save_position_id: format!("code_editor_comment_{}", ctx.view_id()),
             show_comment_editor_provider: render_options.show_comment_editor_provider,
@@ -701,12 +670,6 @@ impl CodeEditorView {
             return;
         }
 
-        // If vim mode is enabled, let vim handle escape
-        if self.vim_mode_enabled(ctx) {
-            self.enter_vim_normal_mode(ctx);
-            return;
-        }
-
         // Editor didn't handle escape - emit event for parent views (e.g., close overlays)
         ctx.emit(CodeEditorEvent::EscapePressed);
     }
@@ -954,11 +917,6 @@ impl CodeEditorView {
 
         match event {
             FindViewEvent::CloseFindBar => {
-                // If vim mode is enabled and there is a selected search match, move the cursor
-                // to the start of that match before closing the find bar.
-                if self.vim_mode_enabled(ctx) {
-                    self.move_cursor_to_selected_match(ctx);
-                }
                 self.close_find_bar(true, ctx);
             }
             FindViewEvent::Update { query } => {
@@ -972,23 +930,6 @@ impl CodeEditorView {
                 });
 
                 self.move_cursor_to_selected_match(ctx);
-
-                // After navigating via the find bar, only return focus to the editor in Vim mode.
-                if self.vim_mode_enabled(ctx) {
-                    self.focus(ctx);
-                }
-            }
-            FindViewEvent::VimEnterAndFocusEditor => {
-                // Shift focus back to the main editor when Enter is pressed in Vim mode in the find bar.
-                // Select the nearest match from the cursor position and move to it.
-                self.searcher
-                    .update(ctx, |searcher, ctx| match self.last_search_direction {
-                        Direction::Forward => searcher.select_next_from_cursor(ctx),
-                        Direction::Backward => searcher.select_prev_from_cursor(ctx),
-                    });
-                self.move_cursor_to_selected_match(ctx);
-                self.focus(ctx);
-                ctx.notify();
             }
             FindViewEvent::SelectAll => {
                 // Get all search results from the find model
@@ -1251,7 +1192,6 @@ impl CodeEditorView {
             }
             CodeEditorModelEvent::SelectionChanged => {
                 self.reset_for_editing_change();
-                self.vim_maybe_enforce_cursor_line_cap(ctx);
                 ctx.emit(CodeEditorEvent::SelectionChanged);
                 if *AppEditorSettings::as_ref(ctx)
                     .code_editor_line_number_mode
@@ -1265,7 +1205,6 @@ impl CodeEditorView {
             CodeEditorModelEvent::ContentChanged { origin } => {
                 if origin.from_user() {
                     self.reset_for_editing_change();
-                    self.vim_maybe_enforce_cursor_line_cap(ctx);
                 }
                 ctx.emit(CodeEditorEvent::ContentChanged { origin: *origin });
             }
@@ -1635,11 +1574,6 @@ impl CodeEditorView {
         self.offset_to_lsp_position(selection.head, ctx)
     }
 
-    /// Returns the buffer offset at the current cursor head.
-    pub fn cursor_head_offset(&self, ctx: &AppContext) -> CharOffset {
-        self.model.as_ref(ctx).selections(ctx).first().head
-    }
-
     pub fn hovered_symbol_range<'a>(
         &'a self,
         ctx: &'a AppContext,
@@ -1880,82 +1814,6 @@ impl CodeEditorView {
         Some((start_line, end_line))
     }
 
-    /// If vim keybindings are enabled, return the [`VimMode`]. Otherwise, return None.
-    pub fn vim_mode(&self, ctx: &AppContext) -> Option<VimMode> {
-        self.vim_state(ctx).map(|state| state.mode)
-    }
-
-    /// If vim keybindings are enabled, return the [`VimState`]. Otherwise, return None.
-    pub fn vim_state<'a>(&self, ctx: &'a AppContext) -> Option<VimState<'a>> {
-        self.vim_mode_enabled(ctx)
-            .then(|| self.vim_model.as_ref(ctx).state())
-    }
-
-    pub fn vim_mode_enabled(&self, ctx: &AppContext) -> bool {
-        self.supports_vim_mode && AppEditorSettings::as_ref(ctx).vim_mode_enabled()
-    }
-
-    pub fn enter_vim_normal_mode(&mut self, ctx: &mut ViewContext<Self>) {
-        if self.vim_mode_enabled(ctx) {
-            self.vim_escape(ctx);
-        }
-    }
-
-    /// Send the 'escape' keystroke to the VimFSA.
-    fn vim_escape(&mut self, ctx: &mut ViewContext<Self>) {
-        self.vim_keystroke(&Keystroke::parse("escape").expect("escape parses"), ctx)
-    }
-
-    fn vim_apply_insert_position(
-        &mut self,
-        position: &InsertPosition,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        match position {
-            InsertPosition::AtCursor => {}
-            InsertPosition::AfterCursor => {
-                self.model.update(ctx, |model, ctx| {
-                    model.vim_move_horizontal_by_offset(
-                        1,
-                        &Direction::Forward,
-                        false, // keep_selection
-                        true,  // stop_at_line_boundary
-                        ctx,
-                    );
-                });
-            }
-            InsertPosition::LineFirstNonWhitespace => self.model.update(ctx, |model, ctx| {
-                model.vim_move_to_first_nonwhitespace(false, ctx);
-            }),
-            InsertPosition::LineEnd => self.model.update(ctx, |model, ctx| {
-                model.vim_move_to_line_bound(LineBound::End, false, ctx);
-            }),
-            InsertPosition::LineAbove => {
-                self.model.update(ctx, |model, ctx| {
-                    model.vim_newline(true, ctx);
-                });
-            }
-            InsertPosition::LineBelow => {
-                self.model.update(ctx, |model, ctx| {
-                    model.vim_newline(false, ctx);
-                });
-            }
-        }
-    }
-
-    /// When in Vim mode, specifically normal mode, the block cursor cannot go past the last
-    /// character on the line as the beam cursor can. We call this "line capping." This helper
-    /// method determines if line capping needs to be enforced, and if so, enforces it.
-    fn vim_maybe_enforce_cursor_line_cap(&mut self, ctx: &mut ViewContext<Self>) {
-        if let Some(VimMode::Normal) = self.vim_mode(ctx)
-            && self.model.as_ref(ctx).vim_needs_line_capping(ctx)
-        {
-            self.model.update(ctx, |model, ctx| {
-                model.vim_enforce_cursor_line_cap(ctx);
-            });
-        }
-    }
-
     fn user_insert(&mut self, typed: &str, ctx: &mut ViewContext<Self>) {
         if ctx.is_self_focused() {
             if let Some(first_char) = typed.chars().next()
@@ -2019,29 +1877,6 @@ impl CodeEditorView {
         })
     }
 
-    fn vim_user_insert(&mut self, text: &str, ctx: &mut ViewContext<Self>) {
-        // Only handle Vim input when this editor is focused.
-        if !ctx.is_self_focused() {
-            return;
-        }
-        self.vim_model.update(ctx, |vim_model, ctx| {
-            for c in text.chars() {
-                vim_model.typed_character(c, ctx);
-            }
-        });
-    }
-
-    /// Similar to Self::vim_user_insert, but for keystrokes which aren't represented by a char.
-    pub fn vim_keystroke(&mut self, keystroke: &Keystroke, ctx: &mut ViewContext<Self>) {
-        // Only handle Vim keystrokes when this editor is focused.
-        if !ctx.is_self_focused() {
-            return;
-        }
-        self.vim_model.update(ctx, |vim_model, ctx| {
-            vim_model.keypress(keystroke, ctx);
-        });
-    }
-
     pub fn open_existing_comment(
         &mut self,
         id: &CommentId,
@@ -2064,12 +1899,7 @@ impl CodeEditorView {
 
         self.active_comment_editor
             .update(ctx, |comment_editor, ctx| {
-                comment_editor.reopen_saved_comment(
-                    id,
-                    Some(location.clone()),
-                    comment_text,
-                    ctx,
-                );
+                comment_editor.reopen_saved_comment(id, Some(location.clone()), comment_text, ctx);
             });
 
         self.model.update(ctx, |editor_model, ctx| {
@@ -2115,23 +1945,11 @@ impl View for CodeEditorView {
 
         let render_state = self.model.as_ref(app).render_state();
 
-        // Align Vim visual tails with the render state's selection coordinate system.
-        // The render model stores selection head/tail as (buffer_offset - 1), so apply the same
-        // transformation to the visual tails to avoid off-by-one mismatches when highlighting.
-        let vim_visual_tails = self
-            .model
-            .as_ref(app)
-            .vim_visual_tails()
-            .iter()
-            .map(|t| t.saturating_sub(&CharOffset::from(1)))
-            .collect::<Vec<_>>();
         let editor_rich_content = RichTextElement::<Self>::new(
             render_state.clone(),
             self.self_handle.clone(),
             display_options,
             self.display_states.display_state.clone(),
-            self.vim_mode(app),
-            vim_visual_tails,
         );
 
         let collapsible_diffs = self.display_options.collapsible_diffs;
@@ -2327,18 +2145,6 @@ impl View for CodeEditorView {
 
         if self.interaction_state(app) != InteractionState::Editable {
             context.set.insert(NON_EDITABLE_KEYMAP_CONTEXT);
-        }
-        if let Some(vim_mode) = self.vim_mode(app) {
-            context.set.insert("Vim");
-            match vim_mode {
-                VimMode::Normal => {
-                    context.set.insert("VimNormalMode");
-                }
-                VimMode::Visual(_) => {
-                    context.set.insert("VimVisualMode");
-                }
-                _ => {}
-            }
         }
         if self.find_bar.is_some() {
             context.set.insert("FindBarAvailable");

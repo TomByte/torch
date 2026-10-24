@@ -321,7 +321,6 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
     register_test!(test_history_command_is_linked_to_local_workflow);
     register_test!(test_up_arrow_history_enters_shift_tab_for_workflow);
 
-
     register_test!(test_secret_is_obfuscated_on_copy);
     register_test!(test_secret_tooltip_shows_on_click);
     register_test!(test_secret_tooltip_respects_safe_mode_setting);
@@ -358,8 +357,6 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
     register_test!(test_undo_close_grace_period_cleanup);
     register_test!(test_closed_panes_cleared_on_rearrangement);
     register_test!(test_tab_closes_when_last_visible_pane_closed);
-
-    register_test!(test_open_in_warp_banner);
 
     // Workflow tests
 

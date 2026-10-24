@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
+use torch_core::settings::SupportedPlatforms;
 use torch_core::settings::macros::define_settings_group;
-use torch_core::settings::{SupportedPlatforms};
 
 use crate::banner::BannerState;
 use crate::resource_center::Tip;
@@ -94,20 +94,6 @@ define_settings_group!(GeneralSettings, settings: [
     user_default_shell_unsupported_banner_state: UserDefaultShellUnsupportedBannerState {
         type: BannerState,
         default: BannerState::default(),
-        supported_platforms: SupportedPlatforms::ALL,
-        surface: settings::SettingSurfaces::GUI,
-        private: true,
-    },
-    open_in_warp_banner_dismissed_for_markdown: OpenInWarpBannerDismissedMarkdown {
-        type: bool,
-        default: false,
-        supported_platforms: SupportedPlatforms::ALL,
-        surface: settings::SettingSurfaces::GUI,
-        private: true,
-    },
-    open_in_warp_banner_dismissed_for_code_and_text: OpenInWarpBannerDismissedCode {
-        type: bool,
-        default: false,
         supported_platforms: SupportedPlatforms::ALL,
         surface: settings::SettingSurfaces::GUI,
         private: true,

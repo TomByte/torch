@@ -86,4 +86,3 @@ pub(super) fn block_footer_action_button(
         // Revert to the default cursor instead of the editor I-beam
         .with_cursor(Cursor::Arrow)
 }
-

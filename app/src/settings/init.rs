@@ -106,7 +106,6 @@ pub fn init(
     startup_toml_parse_error: Option<user_preferences::Error>,
     ctx: &mut AppContext,
 ) -> UserDefaultsOnStartup {
-
     register_all_settings(ctx);
 
     // One-time migration: copy public settings from the platform-native store

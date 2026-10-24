@@ -535,38 +535,6 @@ pub trait CoreEditorModel: Entity {
         self.validate(ctx);
     }
 
-    /// Moves to first nonwhitespace character, optionally keeping selection.
-    fn vim_move_to_first_nonwhitespace(
-        &mut self,
-        keep_selection: bool,
-        ctx: &mut ModelContext<Self::T>,
-    ) {
-        let current_selections = self.selections(ctx);
-        let content = self.content().as_ref(ctx);
-
-        let new_selections = current_selections.mapped(|selection_offset| {
-            let cursor_offset = selection_offset.head;
-            let first_nonwhitespace = content.containing_line_first_nonwhitespace(cursor_offset);
-
-            SelectionOffsets {
-                head: first_nonwhitespace,
-                tail: if keep_selection {
-                    selection_offset.tail
-                } else {
-                    first_nonwhitespace
-                },
-            }
-        });
-
-        self.update_selection(
-            BufferSelectAction::SetSelectionOffsets {
-                selections: new_selections,
-            },
-            AutoScrollBehavior::Selection,
-            ctx,
-        );
-    }
-
     fn select_all(&mut self, ctx: &mut ModelContext<Self::T>) {
         self.update_selection(BufferSelectAction::SelectAll, AutoScrollBehavior::None, ctx);
     }

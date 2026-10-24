@@ -21,8 +21,8 @@ use super::diff_state_tracker::{
     DiffModelKey, DiffStateUpdate, RemoteDiffStateManager, SubscribeOutcome,
 };
 use super::proto::{
-    Abort, BranchInfo, BufferEdit, BufferUpdatedPush, ClientMessage, CloseBuffer,
-    DeleteFile, DeleteFileResponse, DeleteFileSuccess, DiscardFilesError, DiscardFilesResponse,
+    Abort, BranchInfo, BufferEdit, BufferUpdatedPush, ClientMessage, CloseBuffer, DeleteFile,
+    DeleteFileResponse, DeleteFileSuccess, DiscardFilesError, DiscardFilesResponse,
     DiscardFilesSuccess, ErrorCode, ErrorResponse, FileOperationError, GetBranchesError,
     GetBranchesResponse, GetBranchesSuccess, GetDiffStateResponse, GitCommitChainRequest,
     GitCommitChainResponse, GitCommitChainSuccess, GitCreatePrRequest, GitCreatePrResponse,

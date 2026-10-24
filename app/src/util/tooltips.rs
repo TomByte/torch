@@ -123,10 +123,7 @@ where
         TooltipRedaction::SecretNotSentToLLMMessaging
         | TooltipRedaction::SecretWillNotBeSentToLLMMessaging => {
             let theme = appearance.theme();
-            let title = if matches!(
-                redaction,
-                TooltipRedaction::SecretNotSentToLLMMessaging
-            ) {
+            let title = if matches!(redaction, TooltipRedaction::SecretNotSentToLLMMessaging) {
                 "This wasn't included in the AI conversation."
             } else {
                 "This won't be included in any AI conversations or shared blocks."

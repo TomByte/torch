@@ -73,7 +73,6 @@ fn torch_cannot_reenable_file_search_or_editor_features() {
         FeatureFlag::FileTree,
         FeatureFlag::GlobalSearch,
         FeatureFlag::TabbedEditorView,
-        FeatureFlag::VimCodeEditor,
         FeatureFlag::CodeFindReplace,
         FeatureFlag::CodeReviewSaveChanges,
         FeatureFlag::AutoOpenCodeReviewPane,

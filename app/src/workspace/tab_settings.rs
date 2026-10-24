@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::path::Path;
 
+use settings::SupportedPlatforms;
 use settings::macros::define_settings_group;
-use settings::{SupportedPlatforms};
 use torch_core::ui::theme::AnsiColorIdentifier;
 
 #[derive(

@@ -302,8 +302,7 @@ impl BlockFilterEditor {
                 // the user now types in a non-empty query, then we should count this as an `UpdateBlockFilterQuery` event.
                 if self.previous_editor_event_was_select_all
                     && !self.query_editor_text(ctx).is_empty()
-                {
-                }
+                {}
                 self.previous_editor_event_was_select_all = false;
             }
             EditorEvent::Escape => self.close(ctx),

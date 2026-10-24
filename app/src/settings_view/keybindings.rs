@@ -20,8 +20,8 @@ use torchui::{
 
 use super::SettingsSection;
 use super::settings_page::{
-    MatchData, PageType, SettingsPageMeta, SettingsPageViewHandle,
-    SettingsWidget, render_sub_header,
+    MatchData, PageType, SettingsPageMeta, SettingsPageViewHandle, SettingsWidget,
+    render_sub_header,
 };
 use crate::appearance::Appearance;
 use crate::editor::{
@@ -30,11 +30,11 @@ use crate::editor::{
 };
 use crate::keyboard::{UserDefinedKeybinding, write_custom_keybinding};
 use crate::search_bar::SearchBar;
+use crate::themes;
 use crate::util::bindings::{
     CommandBinding, filter_bindings_including_keystroke, reset_keybinding_to_default,
     set_custom_keybinding,
 };
-use crate::themes;
 
 const FONT_DELTA: f32 = 2.;
 const CANCEL_SAVE_BUTTONS_SPACING: f32 = 4.0;
@@ -620,7 +620,6 @@ impl KeybindingsView {
             );
             row.binding.trigger = default_trigger;
 
-
             self.modifying_row = None;
             row.editor_open = false;
             ctx.enable_key_bindings_dispatching();
@@ -939,8 +938,7 @@ fn trigger_keybinding_notifier(
 }
 
 #[derive(Default)]
-struct KeybindingsWidget {
-}
+struct KeybindingsWidget {}
 
 impl KeybindingsWidget {
     fn render_description(

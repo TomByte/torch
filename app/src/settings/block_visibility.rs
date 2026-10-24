@@ -1,5 +1,5 @@
+use settings::SupportedPlatforms;
 use settings::macros::define_settings_group;
-use settings::{SupportedPlatforms};
 
 // Settings for visibility of non-user command blocks like the bootstrap block
 // and in-band command blocks.

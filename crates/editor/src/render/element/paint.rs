@@ -3,13 +3,11 @@
 use std::ops::Range;
 
 use string_offset::CharOffset;
-use torch_core::ui::appearance::DEFAULT_UI_FONT_SIZE;
 use torchui_core::PaintContext;
 use torchui_core::elements::{CornerRadius, Point, Radius};
 use torchui_core::geometry::rect::RectF;
 use torchui_core::geometry::vector::{Vector2F, vec2f};
 use torchui_core::text_layout::{Line, PaintStyleOverride, TextFrame};
-use vim::vim::VimMode;
 
 use crate::editor::TextDecoration;
 use crate::render::layout::line_height;
@@ -17,37 +15,6 @@ use crate::render::model::saved_positions::SavedPositions;
 use crate::render::model::{
     Decoration, Paragraph, ParagraphStyles, Positioned, RenderState, RichTextStyles,
 };
-
-const DEFAULT_BLOCK_CURSOR_WIDTH: f32 = 8.;
-
-/// Cursor display types for vim mode support.
-#[derive(Default, Clone, Copy, PartialEq, Eq)]
-pub enum CursorDisplayType {
-    #[default]
-    Bar,
-    Block,
-    Underline,
-}
-
-/// Cursor data struct for rendering block and underline cursors in vim mode
-#[derive(Default)]
-pub struct CursorData {
-    pub block_width: Option<f32>,
-    pub font_size: Option<f32>,
-}
-
-impl CursorData {
-    /// Unzip cursor data, defaulting to constants if the values are `None`
-    fn unzip(&self) -> (f32, f32) {
-        let font_size = self.font_size.unwrap_or(DEFAULT_UI_FONT_SIZE);
-
-        let fallback_block_cursor_width =
-            DEFAULT_BLOCK_CURSOR_WIDTH * (font_size / DEFAULT_UI_FONT_SIZE);
-        let block_width = self.block_width.unwrap_or(fallback_block_cursor_width);
-
-        (font_size, block_width)
-    }
-}
 
 /// Bundle of context needed to render a viewported rich text item.
 pub struct RenderContext<'a, 'b> {
@@ -62,17 +29,11 @@ pub struct RenderContext<'a, 'b> {
     /// Cursor blink state - this is true if cursor blink is disabled _or_ blinking cursors are
     /// visible.
     blink_on: bool,
-    /// The cursor type to display
-    pub cursor_type: CursorDisplayType,
     text_decorations: TextDecoration<'a>,
     /// Underlying paint context for rendering.
     pub paint: &'a mut PaintContext<'b>,
     saved_positions: &'a SavedPositions,
     pub viewport_size: Vector2F,
-    /// Current VimMode of the rich text element, if there is one.
-    pub vim_mode: Option<VimMode>,
-    /// Vim visual tails - stored cursor positions when entering vim visual mode
-    pub vim_visual_tails: &'a [CharOffset],
 }
 
 impl<'a, 'b> RenderContext<'a, 'b> {
@@ -82,14 +43,11 @@ impl<'a, 'b> RenderContext<'a, 'b> {
         focused: bool,
         editable: bool,
         blink_on: bool,
-        cursor_type: CursorDisplayType,
         text_decorations: TextDecoration<'a>,
         scroll_top: f32,
         viewport_size: Vector2F,
         model: &'a RenderState,
         paint: &'a mut PaintContext<'b>,
-        vim_mode: Option<VimMode>,
-        vim_visual_tails: &'a [CharOffset],
     ) -> Self {
         Self {
             bounds,
@@ -100,13 +58,10 @@ impl<'a, 'b> RenderContext<'a, 'b> {
             focused,
             editable,
             blink_on,
-            cursor_type,
             text_decorations,
             paint,
             saved_positions: model.saved_positions(),
             viewport_size,
-            vim_mode,
-            vim_visual_tails,
         }
     }
 
@@ -276,46 +231,21 @@ impl<'a, 'b> RenderContext<'a, 'b> {
     /// If cursors are not visible, they will be saved but not drawn.
     pub fn draw_and_save_cursor(
         &mut self,
-        cursor_display_type: CursorDisplayType,
         content_position: Vector2F,
         size: Vector2F,
-        cursor_data: CursorData,
         styles: &RichTextStyles,
     ) {
-        let (font_size, block_width) = cursor_data.unzip();
-        let height = size.y();
-
-        let cursor_size = match cursor_display_type {
-            CursorDisplayType::Bar => size,
-            CursorDisplayType::Block => vec2f(block_width, height),
-            CursorDisplayType::Underline => vec2f(block_width, height - font_size),
-        };
-
-        let cursor_origin = match cursor_display_type {
-            CursorDisplayType::Bar => {
-                // Center the cursor on its origin. This reduces the amount of overlap with glyphs,
-                // especially for wider cursors.
-                self.content_to_screen(content_position) - vec2f(size.x() / 2., 0.)
-            }
-            CursorDisplayType::Block => self.content_to_screen(content_position),
-            CursorDisplayType::Underline => {
-                self.content_to_screen(content_position) + vec2f(0., font_size)
-            }
-        };
-
-        let bounds = RectF::new(cursor_origin, cursor_size);
-
-        let cursor_corner_radius = match cursor_display_type {
-            CursorDisplayType::Block | CursorDisplayType::Underline => Radius::Pixels(0.),
-            _ => Radius::Percentage(50.),
-        };
+        // Center the cursor on its origin. This reduces the amount of overlap with glyphs,
+        // especially for wider cursors.
+        let cursor_origin = self.content_to_screen(content_position) - vec2f(size.x() / 2., 0.);
+        let bounds = RectF::new(cursor_origin, size);
 
         if self.cursors_visible() {
             self.paint
                 .scene
                 .draw_rect_with_hit_recording(bounds)
                 .with_background(styles.cursor_fill)
-                .with_corner_radius(CornerRadius::with_all(cursor_corner_radius));
+                .with_corner_radius(CornerRadius::with_all(Radius::Percentage(50.)));
         }
 
         // The cursor should only exist at one location, so we can save it here.

@@ -78,7 +78,9 @@ fn test_config_from_snapshot_flattens_single_pane() {
                 PaneNodeSnapshot::Leaf(LeafSnapshot {
                     is_focused: true,
                     custom_vertical_tabs_title: None,
-                    contents: LeafContents::Notebook(NotebookPaneSnapshot::LocalFileNotebook { path: None }),
+                    contents: LeafContents::Notebook(NotebookPaneSnapshot::LocalFileNotebook {
+                        path: None,
+                    }),
                 }),
             ),
             (
@@ -137,7 +139,9 @@ fn test_config_from_snapshot_filters_panes() {
                 PaneNodeSnapshot::Leaf(LeafSnapshot {
                     is_focused: false,
                     custom_vertical_tabs_title: None,
-                    contents: LeafContents::Notebook(NotebookPaneSnapshot::LocalFileNotebook { path: None }),
+                    contents: LeafContents::Notebook(NotebookPaneSnapshot::LocalFileNotebook {
+                        path: None,
+                    }),
                 }),
             ),
             (
@@ -194,7 +198,9 @@ fn test_config_from_snapshot_filters_tabs() {
             PaneNodeSnapshot::Leaf(LeafSnapshot {
                 is_focused: true,
                 custom_vertical_tabs_title: None,
-                contents: LeafContents::Notebook(NotebookPaneSnapshot::LocalFileNotebook { path: None }),
+                contents: LeafContents::Notebook(NotebookPaneSnapshot::LocalFileNotebook {
+                    path: None,
+                }),
             }),
         )],
     }));
@@ -384,7 +390,9 @@ fn test_config_with_active_tab_index_and_filtered_tabs() {
                         PaneNodeSnapshot::Leaf(LeafSnapshot {
                             is_focused: true,
                             custom_vertical_tabs_title: None,
-                            contents: LeafContents::Notebook(NotebookPaneSnapshot::LocalFileNotebook { path: None }),
+                            contents: LeafContents::Notebook(
+                                NotebookPaneSnapshot::LocalFileNotebook { path: None },
+                            ),
                         }),
                     )],
                 }),
@@ -470,7 +478,9 @@ fn test_config_with_active_tab_being_filtered() {
                         PaneNodeSnapshot::Leaf(LeafSnapshot {
                             is_focused: true,
                             custom_vertical_tabs_title: None,
-                            contents: LeafContents::Notebook(NotebookPaneSnapshot::LocalFileNotebook { path: None }),
+                            contents: LeafContents::Notebook(
+                                NotebookPaneSnapshot::LocalFileNotebook { path: None },
+                            ),
                         }),
                     )],
                 }),
@@ -524,7 +534,9 @@ fn unsaveable_tab(group_id: Option<TabGroupId>) -> TabSnapshot {
         root: PaneNodeSnapshot::Leaf(LeafSnapshot {
             is_focused: true,
             custom_vertical_tabs_title: None,
-            contents: LeafContents::Notebook(NotebookPaneSnapshot::LocalFileNotebook { path: None }),
+            contents: LeafContents::Notebook(NotebookPaneSnapshot::LocalFileNotebook {
+                path: None,
+            }),
         }),
         left_panel: None,
         right_panel: None,

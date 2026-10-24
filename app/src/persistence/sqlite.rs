@@ -27,10 +27,9 @@ use torchui::windowing::{MIN_WINDOW_HEIGHT, MIN_WINDOW_WIDTH};
 
 use super::block_list::{delete_blocks, save_block};
 use super::model::{
-    self, AI_DOCUMENT_PANE_KIND, AI_FACT_PANE_KIND, CODE_PANE_KIND,
-    ENV_VAR_COLLECTION_PANE_KIND, EXECUTION_PROFILE_EDITOR_PANE_KIND, MCP_SERVER_PANE_KIND,
-    NOTEBOOK_PANE_KIND, NewApp, NewCommand, NewTab, NewTabGroup, NewWindow,
-    NewWorkspaceMetadata, Project, SETTINGS_PANE_KIND,
+    self, AI_DOCUMENT_PANE_KIND, AI_FACT_PANE_KIND, CODE_PANE_KIND, ENV_VAR_COLLECTION_PANE_KIND,
+    EXECUTION_PROFILE_EDITOR_PANE_KIND, MCP_SERVER_PANE_KIND, NOTEBOOK_PANE_KIND, NewApp,
+    NewCommand, NewTab, NewTabGroup, NewWindow, NewWorkspaceMetadata, Project, SETTINGS_PANE_KIND,
     TERMINAL_PANE_KIND, Tab, TabGroup, WORKFLOW_PANE_KIND, Window,
     WorkspaceMetadata as WorkspaceMetadataModel,
 };
@@ -48,6 +47,7 @@ use crate::code::editor_management::CodeSource;
 use crate::persisted_workspace::EnablementState;
 use crate::persistence::block_list::get_all_restored_blocks;
 use crate::persistence::model::{CODE_REVIEW_PANE_KIND, GET_STARTED_PANE_KIND};
+use crate::safe_info;
 use crate::settings_view::SettingsSection;
 use crate::suggestions::ignored_suggestions_model::SuggestionType;
 use crate::tab::SelectedTabColor;
@@ -56,7 +56,6 @@ use crate::terminal::cli_agent_sessions::resume::ResumableAgentSession;
 use crate::terminal::history::PersistedCommand;
 use crate::themes::theme::AnsiColorIdentifier;
 use crate::workspace::tab_group::TabGroupId;
-use crate::safe_info;
 
 diesel::define_sql_function! {
     fn json_extract(target: diesel::sql_types::Text, path: diesel::sql_types::Text) -> diesel::sql_types::Text;
@@ -997,7 +996,10 @@ fn get_all_codebase_index_metadata(
 
     Ok(workspace_metadata
         .load_iter::<WorkspaceMetadataModel, DefaultLoadingMode>(conn)?
-        .filter_map(|item| item.ok().map(crate::persisted_workspace::WorkspaceMetadata::from))
+        .filter_map(|item| {
+            item.ok()
+                .map(crate::persisted_workspace::WorkspaceMetadata::from)
+        })
         .collect_vec())
 }
 
@@ -1235,7 +1237,9 @@ fn read_node(conn: &mut SqliteConnection, node: model::PaneNode) -> Result<PaneN
                     })
                 }
                 WORKFLOW_PANE_KIND | ENV_VAR_COLLECTION_PANE_KIND => {
-                    bail!("Legacy cloud workflow and environment variable panes are no longer supported")
+                    bail!(
+                        "Legacy cloud workflow and environment variable panes are no longer supported"
+                    )
                 }
                 CODE_PANE_KIND => {
                     let code_pane = schema::code_panes::dsl::code_panes

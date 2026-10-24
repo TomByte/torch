@@ -1,6 +1,5 @@
 use std::path::{Path, PathBuf};
 
-use crate::code::diff_types::DiffDelta;
 use torch_util::path::LineAndColumnArg;
 use torchui::elements::{DraggableState, Empty, MouseStateHandle};
 use torchui::{
@@ -10,6 +9,7 @@ use torchui::{
 use super::buffer_location::LocalOrRemotePath;
 use super::editor_management::CodeSource;
 use super::local_code_editor::LocalCodeEditorView;
+use crate::code::diff_types::DiffDelta;
 use crate::pane_group::focus_state::PaneFocusHandle;
 use crate::pane_group::pane::view::{HeaderContent, HeaderRenderContext};
 use crate::pane_group::{BackingView, CodePane, PaneConfiguration, PaneEvent};

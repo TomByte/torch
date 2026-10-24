@@ -41,7 +41,6 @@ use torchui_core::{AppContext, Entity, EntityId, ModelContext, ModelHandle};
 use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::UnicodeWidthStr;
 use vec1::Vec1;
-use vim::vim::{MotionType, VimMode};
 
 pub use self::char_cell_display::{DisplayLattice, DisplayRow, DisplayRowKind};
 use self::location::WrapDirection;
@@ -55,7 +54,7 @@ use self::viewport::{
 };
 use super::BLOCK_FOOTER_HEIGHT;
 use super::element::broken_embedding::RenderableBrokenEmbedding;
-use super::element::{CursorData, RenderContext, RenderableBlock};
+use super::element::{RenderContext, RenderableBlock};
 use super::layout::{TextLayout, line_height};
 use crate::content::edit::{
     EditDelta, LaidOutRenderDelta, ParsedUrl, TemporaryBlock, layout_temporary_blocks,
@@ -5004,7 +5003,7 @@ impl<'a> Positioned<'a, Paragraph> {
     /// Draws any selection highlights and cursors that are within this paragraph.
     pub(super) fn draw_selection(&self, model: &RenderState, ctx: &mut RenderContext) {
         let styles = &model.styles;
-        for (i, selection) in model.selections().iter().enumerate() {
+        for selection in model.selections().iter() {
             let start = selection.start();
             let end = selection.end();
             let bias = selection.cursor_bias();
@@ -5014,27 +5013,6 @@ impl<'a> Positioned<'a, Paragraph> {
             // If the selection is a cursor, don't also draw a selection highlight.
             if start != end {
                 self.draw_highlight(start, end, styles.selection_fill, ctx, model.max_line());
-            } else if let Some(VimMode::Visual(_)) = ctx.vim_mode {
-                // If we're in Vim visual mode, render the visual mode selection.
-                let Some(visual_tail) = ctx.vim_visual_tails.get(i) else {
-                    continue;
-                };
-
-                let visual_start = *visual_tail;
-                let visual_end = selection.head;
-                let (visual_start, visual_end) = if visual_start > visual_end {
-                    (visual_end, visual_start)
-                } else {
-                    (visual_start, visual_end)
-                };
-
-                self.draw_highlight(
-                    visual_start,
-                    visual_end,
-                    styles.selection_fill,
-                    ctx,
-                    model.max_line(),
-                );
             }
 
             if cursor_offset >= self.start_char_offset && cursor_offset < self.end_char_offset() {
@@ -5071,77 +5049,11 @@ impl<'a> Positioned<'a, Paragraph> {
                 0.,
             );
 
-        let cursor_type = ctx.cursor_type;
-        let block_width = line
-            .item
-            .width_for_index(frame_offset.as_usize())
-            .filter(|width| *width > 0.0);
-
-        let cursor_data = CursorData {
-            block_width,
-            font_size: Some(line.item.font_size),
-        };
-
         ctx.draw_and_save_cursor(
-            cursor_type,
             cursor_position,
             vec2f(styles.cursor_width, line_height(line.item)),
-            cursor_data,
             styles,
         );
-    }
-
-    /// Draws a background highlight over the portion of this block that overlaps with the given
-    /// range.
-    pub(super) fn draw_highlight(
-        &self,
-        start: CharOffset,
-        end: CharOffset,
-        fill: Fill,
-        ctx: &mut RenderContext,
-        buffer_max_line: LineCount,
-    ) {
-        match ctx.vim_mode {
-            Some(VimMode::Visual(MotionType::Linewise)) => {
-                // For linewise visual mode, we want to highlight entire lines from the starting row to ending row.
-                self.draw_linewise_highlight(start, end, fill, ctx, buffer_max_line)
-            }
-            Some(VimMode::Visual(MotionType::Charwise)) => {
-                // Charwise visual mode should include the character under the block cursor.
-                self.draw_charwise_highlight(start, end + 1, fill, ctx, buffer_max_line)
-            }
-            _ => self.draw_charwise_highlight(start, end, fill, ctx, buffer_max_line),
-        }
-    }
-
-    /// Draws linewise visual selection highlighting - highlights complete lines from start row to end row
-    fn draw_linewise_highlight(
-        &self,
-        start: CharOffset,
-        end: CharOffset,
-        fill: Fill,
-        ctx: &mut RenderContext,
-        _buffer_max_line: LineCount,
-    ) {
-        for line in self.lines() {
-            let line_start_within_buffer = self.buffer_index(line.item.first_index().into());
-            let line_end_within_buffer = self.buffer_index(line.item.end_index().into());
-
-            // Check if this line intersects with the selection range.
-            if line_end_within_buffer >= start && line_start_within_buffer <= end {
-                // Start at beginning of line, go to last char in line
-                let start_x = 0.0;
-                let end_x = line.item.width;
-
-                ctx.paint
-                    .scene
-                    .draw_rect_with_hit_recording(RectF::new(
-                        ctx.content_to_screen(line.content_origin()) + vec2f(start_x, 0.),
-                        vec2f(end_x - start_x, line_height(line.item)),
-                    ))
-                    .with_background(fill);
-            }
-        }
     }
 
     /// Computes the x positions for a given character offset range within a line.
@@ -5184,8 +5096,9 @@ impl<'a> Positioned<'a, Paragraph> {
         Some((start_x, end_x))
     }
 
-    /// Draws highlighting for typical selections going charwise from start to end.
-    fn draw_charwise_highlight(
+    /// Draws a background highlight over the portion of this block that overlaps with the given
+    /// range.
+    pub(super) fn draw_highlight(
         &self,
         start: CharOffset,
         end: CharOffset,

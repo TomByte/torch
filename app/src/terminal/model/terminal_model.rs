@@ -24,9 +24,7 @@ use torchui::image_cache::ImageType;
 
 use super::super::{AltScreen, BlockList};
 use super::ansi::{BootstrappedValue, FinishUpdateValue, InputBufferValue, Mode, PendingHook};
-use super::block::{
-    Block, BlockId, BlockMetadata, BlockSize, BlockState, SerializedBlock,
-};
+use super::block::{Block, BlockId, BlockMetadata, BlockSize, BlockState, SerializedBlock};
 use super::blockgrid::BlockGrid;
 use super::blocks::ActiveBlockCompletion;
 use super::grid::grid_handler::{
@@ -2350,7 +2348,8 @@ impl ansi::Handler for TerminalModel {
         let disposition = self
             .block_list
             .classify_next_block_id(&data.completion_metadata.next_block_id);
-        let transition = self.plan_lifecycle_transition(LifecycleInput::CommandFinished(disposition));
+        let transition =
+            self.plan_lifecycle_transition(LifecycleInput::CommandFinished(disposition));
         if matches!(transition.action, LifecycleAction::AcceptCommandFinished) {
             self.complete_command(data.completion_metadata);
         }
@@ -2380,7 +2379,8 @@ impl ansi::Handler for TerminalModel {
         let disposition = self
             .block_list
             .classify_next_block_id(&data.completion_metadata.next_block_id);
-        let transition = self.plan_lifecycle_transition(LifecycleInput::PrecmdWithCompletionMetadata(disposition));
+        let transition = self
+            .plan_lifecycle_transition(LifecycleInput::PrecmdWithCompletionMetadata(disposition));
         match transition.action {
             LifecycleAction::ApplyPrecmd => self.apply_precmd_to_fresh_block(data.prompt_metadata),
             LifecycleAction::ReconcileCompletionThenApplyPrecmd => {

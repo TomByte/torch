@@ -5,8 +5,8 @@ use super::event::{
     CLIAgentEvent, CLIAgentEventPayload, CLIAgentEventSource, CLIAgentEventType, parse_event,
 };
 use super::{
-    BlockedSource, CLIAgentInputState, CLIAgentSession,
-    CLIAgentSessionContext, CLIAgentSessionStatus, CLIAgentSessionsModel,
+    BlockedSource, CLIAgentInputState, CLIAgentSession, CLIAgentSessionContext,
+    CLIAgentSessionStatus, CLIAgentSessionsModel,
 };
 use crate::terminal::CLIAgent;
 

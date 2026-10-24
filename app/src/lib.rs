@@ -1156,7 +1156,6 @@ pub(crate) fn initialize_app(
     // Add a singleton model for resizable modals whose size should be persisted through restarts.
     ctx.add_singleton_model(|_| ResizableData::default());
 
-
     AutoupdateState::register(ctx, http_client);
 
     ctx.add_singleton_model(LocalWorkflows::new);
@@ -1297,7 +1296,6 @@ pub(crate) fn app_callbacks(is_integration_test: bool) -> torchui::platform::App
 
             let summary = UnsavedStateSummary::for_window(window_id, ctx);
 
-
             // Don't show dialog on integration test. Machine can't press buttons.
             if !is_integration_test && summary.save_unsaved_code_and_should_warn(ctx) {
                 let shown = summary
@@ -1335,7 +1333,6 @@ pub(crate) fn app_callbacks(is_integration_test: bool) -> torchui::platform::App
             if source == TerminationRequestSource::System {
                 return ApproveTerminateResult::Terminate;
             }
-
 
             // If there's a pending autoupdate, apply that before showing the unsaved changes
             // dialog. We apply the update first so that the dialog can force-terminate.
@@ -1464,7 +1461,6 @@ pub(crate) fn app_callbacks(is_integration_test: bool) -> torchui::platform::App
 fn on_close_app_cancelled(open_navigation_palette: bool, ctx: &mut AppContext) {
     autoupdate::cancel_relaunch(ctx);
 
-
     let sessions = SessionNavigationData::all_sessions(ctx).collect_vec();
     let sessions_summary = RunningSessionSummary::new(&sessions);
 
@@ -1511,7 +1507,6 @@ fn on_close_window_cancelled(
     open_navigation_palette: bool,
     ctx: &mut AppContext,
 ) {
-
     let sessions = SessionNavigationData::all_sessions(ctx).collect_vec();
     let sessions_summary = RunningSessionSummary::new(&sessions);
     let num_processes_in_window = sessions_summary.processes_in_window(&window_id).len();

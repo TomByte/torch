@@ -657,7 +657,6 @@ impl LeftPanelView {
                     }
                 };
 
-
                 ctx.emit(LeftPanelEvent::OpenFileWithTarget {
                     location: location.clone(),
                     target,
@@ -858,8 +857,7 @@ impl LeftPanelView {
                     },
                     ctx,
                 );
-                if !was_active {
-                }
+                if !was_active {}
             }
         }
     }

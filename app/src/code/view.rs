@@ -534,7 +534,6 @@ impl CodeView {
             }
             LocalCodeEditorEvent::DiffStatusUpdated => (),
             LocalCodeEditorEvent::UserEdited => (),
-            LocalCodeEditorEvent::VimMinimizeRequested => (),
             LocalCodeEditorEvent::ViewportUpdated => (),
             LocalCodeEditorEvent::LayoutInvalidated => (),
             LocalCodeEditorEvent::DiscardUnsavedChanges { path } => {

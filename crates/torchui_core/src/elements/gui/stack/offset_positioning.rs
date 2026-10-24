@@ -95,6 +95,16 @@ impl OffsetPositioning {
         )
     }
 
+    /// Skips the stack child, rather than panicking, on a frame where the saved position it is
+    /// anchored to has not been rendered. Only supported for positioning relative to a saved
+    /// position.
+    pub fn with_conditional_anchors(self) -> Self {
+        OffsetPositioning {
+            x_axis: self.x_axis.with_conditional_anchor(),
+            y_axis: self.y_axis.with_conditional_anchor(),
+        }
+    }
+
     /// Returns the size constraint to be used for the stack child, according to the
     /// anchors and bounding behaviors specified in the [`PositionAxis`]'s.
     pub fn size_constraint(

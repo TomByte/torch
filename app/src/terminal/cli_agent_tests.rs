@@ -373,10 +373,7 @@ fn test_detect_alias_multi_word_value() {
 #[test]
 fn test_detect_with_env_var_prefix() {
     assert_eq!(
-        CLIAgent::detect(
-            "EXAMPLE=true opencode",
-            Some(EscapeChar::Backslash),
-            None),
+        CLIAgent::detect("EXAMPLE=true opencode", Some(EscapeChar::Backslash), None),
         Some(CLIAgent::OpenCode),
     );
     assert_eq!(
@@ -391,7 +388,8 @@ fn test_detect_with_multiple_env_vars() {
         CLIAgent::detect(
             "FOO=1 BAR=2 opencode --flag",
             Some(EscapeChar::Backslash),
-            None),
+            None
+        ),
         Some(CLIAgent::OpenCode),
     );
 }

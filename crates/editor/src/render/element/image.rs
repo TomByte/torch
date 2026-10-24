@@ -4,7 +4,6 @@ use torchui_core::{Element, SizeConstraint};
 
 use super::{RenderContext, RenderableBlock};
 use crate::extract_block;
-use crate::render::element::paint::{CursorData, CursorDisplayType};
 use crate::render::model::viewport::ViewportItem;
 use crate::render::model::{BlockItem, RenderState};
 
@@ -92,10 +91,8 @@ impl RenderableBlock for RenderableImage {
         if draw_cursor {
             let end_of_line_position = content_position + vec2f(size.x(), 0.);
             ctx.draw_and_save_cursor(
-                CursorDisplayType::Bar,
                 end_of_line_position,
                 vec2f(model.styles().cursor_width, size.y()),
-                CursorData::default(),
                 model.styles(),
             );
         }

@@ -142,9 +142,6 @@ pub enum FeatureFlag {
     /// Enables the prompt chip that displays the GitHub PR for the current branch.
     GithubPrPromptChip,
 
-    /// Enables vim keybindings in the code editor.
-    VimCodeEditor,
-
     /// Enables the ability to undo closed panes.
     UndoClosedPanes,
 
@@ -337,7 +334,6 @@ pub enum FeatureFlag {
     /// fuzzy-match score against the whole query as a single pattern. Disabling this is a full
     /// return to the pre-APP-5650 history search behavior, not an approximation of it.
     HistorySearchRankingV2,
-
 }
 
 static FLAG_STATES: [AtomicBool; cardinality::<FeatureFlag>()] =
@@ -425,7 +421,6 @@ impl FeatureFlag {
                     | Self::CodeFindReplace
                     | Self::CommandPaletteFileSearch
                     | Self::TabbedEditorView
-                    | Self::VimCodeEditor
                     | Self::FileTree
                     | Self::GlobalSearch
                     | Self::CodeReviewSaveChanges

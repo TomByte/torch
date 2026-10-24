@@ -40,7 +40,10 @@ pub(super) fn serialize_variables_for_shell<'s>(
                 ShellFamily::Posix => shell_family.escape(value).into_owned(),
                 ShellFamily::PowerShell => format!("'{}'", value.replace('\'', "''")),
             };
-            format!("{prefix}{}{separator}{value}{postfix}", shell_family.escape(name))
+            format!(
+                "{prefix}{}{separator}{value}{postfix}",
+                shell_family.escape(name)
+            )
         })
         .join(" ")
 }

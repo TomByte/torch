@@ -4,9 +4,8 @@ use torchui_core::AppContext;
 use torchui_core::geometry::vector::{Vector2F, vec2f};
 use torchui_core::text_layout::{LayoutCache, Line};
 
-use super::{CursorData, RenderContext};
+use super::RenderContext;
 use crate::content::text::BufferBlockStyle;
-use crate::render::element::paint::CursorDisplayType;
 use crate::render::layout::{TextLayout, line_height};
 use crate::render::model::viewport::ViewportItem;
 use crate::render::model::{BlockItem, RenderState};
@@ -119,13 +118,7 @@ impl BlockPlaceholder {
                 // focus (since the cursor positions other UI elements).
                 if *contains_cursor {
                     let cursor_size = vec2f(model.styles().cursor_width, line_height(line));
-                    ctx.draw_and_save_cursor(
-                        CursorDisplayType::Bar,
-                        content_origin,
-                        cursor_size,
-                        CursorData::default(),
-                        model.styles(),
-                    );
+                    ctx.draw_and_save_cursor(content_origin, cursor_size, model.styles());
                 }
                 true
             }

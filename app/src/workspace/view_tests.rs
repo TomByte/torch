@@ -19,12 +19,12 @@ use torchui::{App, ViewHandle};
 use watcher::HomeDirectoryWatcher;
 
 use super::*;
-use crate::palette::PaletteSource;
 use crate::context_chips::prompt::Prompt;
 use crate::editor::Event;
 use crate::menu::MenuAction;
 use crate::network::NetworkStatus;
 use crate::notebooks::editor::keys::NotebookKeybindings;
+use crate::palette::PaletteSource;
 use crate::pane_group::{Direction, PaneGroupAction, PaneId};
 use crate::persisted_workspace::PersistedWorkspace;
 use crate::settings::PrivacySettings;
@@ -44,9 +44,7 @@ use crate::user_config::tab_configs_dir;
 use crate::util::traffic_lights::windows::RendererState;
 use crate::warp_managed_paths_watcher::WarpManagedPathsWatcher;
 use crate::workflows::local_workflows::LocalWorkflows;
-use crate::{
-    AgentNotificationsModel, GlobalResourceHandlesProvider, workspace,
-};
+use crate::{AgentNotificationsModel, GlobalResourceHandlesProvider, workspace};
 pub(crate) fn initialize_app(app: &mut App) {
     initialize_settings_for_tests(app);
 
@@ -58,7 +56,9 @@ pub(crate) fn initialize_app(app: &mut App) {
     app.add_singleton_model(|_| crate::settings::ProjectCatalog::default());
     app.add_singleton_model(|_ctx| PtySpawner::new_for_test());
     app.add_singleton_model(|_| Prompt::mock());
-    app.add_singleton_model(|_| AutoupdateState::new(Arc::new(http_client::Client::new_for_test())));
+    app.add_singleton_model(|_| {
+        AutoupdateState::new(Arc::new(http_client::Client::new_for_test()))
+    });
     app.add_singleton_model(|_| NetworkStatus::new());
     app.add_singleton_model(|_| SystemStats::new());
     app.add_singleton_model(|_| crate::tab::TabShortcutModifierState::new());
@@ -112,7 +112,6 @@ pub(crate) fn initialize_app(app: &mut App) {
 
     #[cfg(enable_crash_recovery)]
     crate::crash_recovery::CrashRecovery::register_for_test(app);
-
 
     app.add_singleton_model(|ctx| PersistedWorkspace::new(vec![], HashMap::new(), None, ctx));
     app.add_singleton_model(|_| History::new(vec![]));
@@ -480,215 +479,6 @@ fn test_worktree_sidecar_close_via_select_item_executes_from_workspace() {
 
         workspace.read(&app, |workspace, _| {
             assert_eq!(workspace.tab_count(), 2);
-        });
-    });
-}
-
-/// Regression test for the agent file-range preview's "Open file" button: the
-/// handler used to zero out `range_start`, so consumers that read the jump
-/// target off the `CodeSource` opened the file at the top.
-#[cfg(feature = "local_fs")]
-#[test]
-fn test_open_file_with_target_event_preserves_requested_line() {
-    use crate::code::editor_management::CodeManager;
-    use crate::code::global_buffer_model::GlobalBufferModel;
-    use crate::terminal::local_shell::LocalShellState;
-
-    App::test((), |mut app| async move {
-        initialize_app(&mut app);
-        app.add_singleton_model(|_| CodeManager::default());
-        app.add_singleton_model(|_| LocalShellState::NotLoaded);
-        app.add_singleton_model(GlobalBufferModel::new);
-        let workspace = mock_workspace(&mut app);
-        let temp_dir = TempDir::new().expect("failed to create temp dir");
-        let code_path = temp_dir.path().join("main.rs");
-        let contents: String = (1..=80).map(|line| format!("// line {line}\n")).collect();
-        std::fs::write(&code_path, contents).expect("failed to write code file");
-
-        let range_start = LineAndColumnArg {
-            line_num: 42,
-            column_num: None,
-        };
-
-        workspace.update(&mut app, |workspace, ctx| {
-            let pane_group = workspace.active_tab_pane_group().clone();
-            workspace.handle_file_tree_event(
-                pane_group,
-                &crate::pane_group::Event::OpenFileWithTarget {
-                    path: code_path.clone(),
-                    target: FileTarget::CodeEditor(EditorLayout::SplitPane),
-                    line_col: Some(range_start),
-                },
-                ctx,
-            );
-        });
-
-        workspace.read(&app, |workspace, ctx| {
-            let pane_group = workspace.active_tab_pane_group().as_ref(ctx);
-            let code_panes = pane_group.code_panes(ctx).collect_vec();
-            assert_eq!(code_panes.len(), 1);
-            assert_eq!(
-                *code_panes[0].1.as_ref(ctx).source(),
-                CodeSource::Link {
-                    path: code_path.clone(),
-                    range_start: Some(range_start),
-                    range_end: None,
-                }
-            );
-        });
-    });
-}
-
-/// Pressing the Markdown display mode shortcut should swap a Markdown file between its raw code
-/// pane and its rendered pane, and should be left unhandled by a code pane showing any other file.
-#[cfg(feature = "local_fs")]
-#[test]
-fn test_markdown_toggle_shortcut_switches_between_raw_and_rendered_panes() {
-    use torchui::keymap::Keystroke;
-
-    use crate::code::editor_management::CodeManager;
-    use crate::code::global_buffer_model::GlobalBufferModel;
-    use crate::notebooks::file::TOGGLE_MARKDOWN_DISPLAY_MODE_KEY_BINDING;
-    use crate::terminal::local_shell::LocalShellState;
-
-    App::test((), |mut app| async move {
-        initialize_app(&mut app);
-        app.add_singleton_model(|_| CodeManager::default());
-        app.add_singleton_model(|_| LocalShellState::NotLoaded);
-        app.add_singleton_model(GlobalBufferModel::new);
-        app.update(crate::code::view::init);
-        app.update(crate::notebooks::file::init);
-        let workspace = mock_workspace(&mut app);
-        let window_id = app.read(|ctx| workspace.window_id(ctx));
-        let temp_dir = TempDir::new().expect("failed to create temp dir");
-        let markdown_path = temp_dir.path().join("README.md");
-        std::fs::write(&markdown_path, "# Test\n").expect("failed to write markdown file");
-        let code_path = temp_dir.path().join("main.rs");
-        std::fs::write(&code_path, "fn main() {}\n").expect("failed to write code file");
-        let keystroke = Keystroke::parse(TOGGLE_MARKDOWN_DISPLAY_MODE_KEY_BINDING).unwrap();
-
-        let open_in_code_editor = |app: &mut App, path: &std::path::Path| {
-            workspace.update(app, |workspace, ctx| {
-                let pane_group = workspace.active_tab_pane_group().clone();
-                workspace.handle_file_tree_event(
-                    pane_group,
-                    &crate::pane_group::Event::OpenFileWithTarget {
-                        path: path.to_path_buf(),
-                        target: FileTarget::CodeEditor(EditorLayout::SplitPane),
-                        line_col: None,
-                    },
-                    ctx,
-                );
-            });
-        };
-        // The ids of the views backing the code panes and rendered file panes, respectively.
-        let pane_view_ids = |app: &App| {
-            workspace.read(app, |workspace, ctx| {
-                let pane_group = workspace.active_tab_pane_group().as_ref(ctx);
-                (
-                    pane_group
-                        .code_panes(ctx)
-                        .map(|(_, view)| view.id())
-                        .collect_vec(),
-                    pane_group
-                        .file_notebook_panes(ctx)
-                        .map(|(_, view)| view.id())
-                        .collect_vec(),
-                )
-            })
-        };
-
-        // Sends the keystroke the way a real key press is routed: through the focused view and its
-        // ancestors, so a binding on the focused editor would take precedence over the pane's.
-        // Returns whether it was handled, after checking that focus is on a view inside `pane`.
-        let press_shortcut_in_focused_child_of = |app: &mut App, pane: EntityId| {
-            let responder_chain = app.read(|ctx| {
-                let focused = ctx
-                    .focused_view_id(window_id)
-                    .expect("a view should be focused");
-                ctx.view_ancestors(window_id, focused)
-            });
-            assert!(
-                responder_chain.contains(&pane) && responder_chain.last() != Some(&pane),
-                "focus should be on a child of the pane"
-            );
-            app.dispatch_keystroke(window_id, &responder_chain, &keystroke, false)
-                .unwrap()
-        };
-
-        open_in_code_editor(&mut app, &markdown_path);
-        let (code_views, file_views) = pane_view_ids(&app);
-        assert_eq!((code_views.len(), file_views.len()), (1, 0));
-
-        // Raw -> rendered.
-        assert!(press_shortcut_in_focused_child_of(&mut app, code_views[0]));
-        let (code_views, file_views) = pane_view_ids(&app);
-        assert_eq!((code_views.len(), file_views.len()), (0, 1));
-
-        // Rendered -> raw.
-        assert!(press_shortcut_in_focused_child_of(&mut app, file_views[0]));
-        let (code_views, file_views) = pane_view_ids(&app);
-        assert_eq!((code_views.len(), file_views.len()), (1, 0));
-
-        // A code pane showing a file with no rendered view leaves the keystroke unhandled.
-        open_in_code_editor(&mut app, &code_path);
-        let (all_code_views, _) = pane_view_ids(&app);
-        let non_markdown_views = all_code_views
-            .into_iter()
-            .filter(|id| !code_views.contains(id))
-            .collect_vec();
-        assert_eq!(non_markdown_views.len(), 1);
-        assert!(!press_shortcut_in_focused_child_of(
-            &mut app,
-            non_markdown_views[0]
-        ));
-        let (code_views, file_views) = pane_view_ids(&app);
-        assert_eq!((code_views.len(), file_views.len()), (2, 0));
-    });
-}
-
-/// Regression test for the raw-code toggle: the notebook-viewer target used to
-/// drop the `CodeSource` outright, so the raw view always started at line 1.
-#[cfg(feature = "local_fs")]
-#[test]
-fn test_open_markdown_viewer_target_preserves_requested_line() {
-    App::test((), |mut app| async move {
-        initialize_app(&mut app);
-        let workspace = mock_workspace(&mut app);
-        let temp_dir = TempDir::new().expect("failed to create temp dir");
-        let markdown_path = temp_dir.path().join("README.md");
-        std::fs::write(&markdown_path, "# Test\n").expect("failed to write markdown file");
-
-        let range_start = LineAndColumnArg {
-            line_num: 12,
-            column_num: None,
-        };
-
-        workspace.update(&mut app, |workspace, ctx| {
-            let pane_group = workspace.active_tab_pane_group().clone();
-            workspace.handle_file_tree_event(
-                pane_group,
-                &crate::pane_group::Event::OpenFileWithTarget {
-                    path: markdown_path.clone(),
-                    target: FileTarget::MarkdownViewer(EditorLayout::SplitPane),
-                    line_col: Some(range_start),
-                },
-                ctx,
-            );
-        });
-
-        workspace.read(&app, |workspace, ctx| {
-            let pane_group = workspace.active_tab_pane_group().as_ref(ctx);
-            let markdown_panes = pane_group.file_notebook_panes(ctx).collect_vec();
-            assert_eq!(markdown_panes.len(), 1);
-            assert_eq!(
-                markdown_panes[0].1.as_ref(ctx).code_source(),
-                Some(&CodeSource::Link {
-                    path: markdown_path.clone(),
-                    range_start: Some(range_start),
-                    range_end: None,
-                })
-            );
         });
     });
 }
@@ -1881,231 +1671,6 @@ fn test_close_active_session() {
     });
 }
 
-fn set_left_panel_visibility_across_tabs(is_enabled: bool, ctx: &mut ViewContext<Workspace>) {
-    WindowSettings::handle(ctx).update(ctx, |window_settings, ctx| {
-        window_settings
-            .left_panel_visibility_across_tabs
-            .set_value(is_enabled, ctx)
-            .expect("Failed to update left_panel_visibility_across_tabs setting");
-    });
-}
-
-fn add_settings_tab(workspace: &mut Workspace, ctx: &mut ViewContext<Workspace>) {
-    workspace.show_settings(ctx);
-}
-
-fn find_terminal_tab_index(workspace: &Workspace, ctx: &AppContext) -> usize {
-    workspace
-        .tabs
-        .iter()
-        .position(|tab| tab.pane_group.as_ref(ctx).has_terminal_panes())
-        .expect("Expected a terminal tab")
-}
-
-fn find_non_following_tab_index(workspace: &Workspace, ctx: &AppContext) -> usize {
-    workspace
-        .tabs
-        .iter()
-        .position(|tab| {
-            !Workspace::should_enable_file_tree_and_global_search_for_pane_group(
-                tab.pane_group.as_ref(ctx),
-            )
-        })
-        .expect("Expected a non-following tab")
-}
-
-#[test]
-fn test_left_panel_window_scoped_reconciles_between_terminal_tabs_when_enabled() {
-    let _conversation_list_guard =
-        FeatureFlag::AgentViewConversationListView.override_enabled(false);
-
-    App::test((), |mut app| async move {
-        initialize_app(&mut app);
-
-        let workspace = mock_workspace(&mut app);
-
-        workspace.update(&mut app, |workspace, ctx| {
-            set_left_panel_visibility_across_tabs(true, ctx);
-
-            workspace.add_terminal_tab(false, ctx);
-
-            workspace.activate_tab(0, ctx);
-            assert!(
-                !workspace
-                    .active_tab_pane_group()
-                    .as_ref(ctx)
-                    .left_panel_open
-            );
-            assert!(!workspace.left_panel_open);
-
-            workspace.open_left_panel(ctx);
-            assert!(
-                workspace
-                    .active_tab_pane_group()
-                    .as_ref(ctx)
-                    .left_panel_open
-            );
-            assert!(workspace.left_panel_open);
-
-            workspace.activate_tab(1, ctx);
-            assert!(
-                workspace
-                    .active_tab_pane_group()
-                    .as_ref(ctx)
-                    .left_panel_open
-            );
-
-            workspace.close_left_panel(ctx);
-            assert!(
-                !workspace
-                    .active_tab_pane_group()
-                    .as_ref(ctx)
-                    .left_panel_open
-            );
-            assert!(!workspace.left_panel_open);
-
-            workspace.activate_tab(0, ctx);
-            assert!(
-                !workspace
-                    .active_tab_pane_group()
-                    .as_ref(ctx)
-                    .left_panel_open
-            );
-        });
-    });
-}
-
-#[test]
-fn test_left_panel_window_scoped_non_following_tab_does_not_reconcile_but_updates_window_state() {
-    let _conversation_list_guard =
-        FeatureFlag::AgentViewConversationListView.override_enabled(false);
-
-    App::test((), |mut app| async move {
-        initialize_app(&mut app);
-
-        let workspace = mock_workspace(&mut app);
-
-        workspace.update(&mut app, |workspace, ctx| {
-            set_left_panel_visibility_across_tabs(true, ctx);
-
-            // Establish window-scoped desired state = open on a terminal tab.
-            workspace.open_left_panel(ctx);
-            assert!(workspace.left_panel_open);
-
-            // Create a non-following tab (e.g. Settings), which should not auto-open even though
-            // the window state is open.
-            add_settings_tab(workspace, ctx);
-            let non_following_tab_index = find_non_following_tab_index(workspace, ctx);
-            workspace.activate_tab(non_following_tab_index, ctx);
-
-            assert!(
-                !workspace
-                    .active_tab_pane_group()
-                    .as_ref(ctx)
-                    .left_panel_open
-            );
-            assert!(workspace.left_panel_open);
-
-            // User actions in the non-following tab still update window state.
-            workspace.open_left_panel(ctx);
-            assert!(
-                workspace
-                    .active_tab_pane_group()
-                    .as_ref(ctx)
-                    .left_panel_open
-            );
-            assert!(workspace.left_panel_open);
-
-            workspace.close_left_panel(ctx);
-            assert!(
-                !workspace
-                    .active_tab_pane_group()
-                    .as_ref(ctx)
-                    .left_panel_open
-            );
-            assert!(!workspace.left_panel_open);
-
-            // The window state should reconcile back onto following tabs.
-            let terminal_tab_index = find_terminal_tab_index(workspace, ctx);
-            workspace.activate_tab(terminal_tab_index, ctx);
-            assert!(
-                !workspace
-                    .active_tab_pane_group()
-                    .as_ref(ctx)
-                    .left_panel_open
-            );
-
-            // But toggling the window state from a following tab should not auto-open the
-            // non-following tab.
-            workspace.open_left_panel(ctx);
-            assert!(workspace.left_panel_open);
-
-            workspace.activate_tab(non_following_tab_index, ctx);
-            assert!(
-                !workspace
-                    .active_tab_pane_group()
-                    .as_ref(ctx)
-                    .left_panel_open
-            );
-            assert!(workspace.left_panel_open);
-        });
-    });
-}
-
-#[test]
-fn test_left_panel_window_scoped_disabled_keeps_per_tab_state() {
-    let _conversation_list_guard =
-        FeatureFlag::AgentViewConversationListView.override_enabled(false);
-
-    App::test((), |mut app| async move {
-        initialize_app(&mut app);
-
-        let workspace = mock_workspace(&mut app);
-
-        workspace.update(&mut app, |workspace, ctx| {
-            set_left_panel_visibility_across_tabs(false, ctx);
-
-            workspace.add_terminal_tab(false, ctx);
-
-            // Open left panel on tab 0.
-            workspace.activate_tab(0, ctx);
-            workspace.open_left_panel(ctx);
-            assert!(
-                workspace
-                    .active_tab_pane_group()
-                    .as_ref(ctx)
-                    .left_panel_open
-            );
-
-            // With window scoping disabled, switching tabs should not reconcile the open state.
-            workspace.activate_tab(1, ctx);
-            assert!(
-                !workspace
-                    .active_tab_pane_group()
-                    .as_ref(ctx)
-                    .left_panel_open
-            );
-
-            // Each tab can be toggled independently.
-            workspace.open_left_panel(ctx);
-            assert!(
-                workspace
-                    .active_tab_pane_group()
-                    .as_ref(ctx)
-                    .left_panel_open
-            );
-
-            workspace.activate_tab(0, ctx);
-            assert!(
-                workspace
-                    .active_tab_pane_group()
-                    .as_ref(ctx)
-                    .left_panel_open
-            );
-        });
-    });
-}
-
 #[test]
 fn test_vertical_tabs_panel_visibility_restores_from_window_snapshot() {
     let _vertical_tabs_guard = FeatureFlag::VerticalTabs.override_enabled(true);
@@ -2189,41 +1754,6 @@ fn test_vertical_tabs_panel_restored_open_when_show_in_restored_windows_enabled(
 }
 
 #[test]
-fn test_vertical_tabs_panel_closed_when_disabled_even_if_persisted_open() {
-    // Regression for #9505: when `vertical_tabs_panel_open=true` is persisted
-    // and the user then disables vertical tabs, restoring the workspace must
-    // not honor the stale snapshot — otherwise a dismiss underlay paints over
-    // the window and silently swallows every click.
-    let _vertical_tabs_guard = FeatureFlag::VerticalTabs.override_enabled(true);
-    App::test((), |mut app| async move {
-        initialize_app(&mut app);
-
-        // Snapshot the workspace with the panel open while vertical tabs are enabled.
-        app.update(|ctx| {
-            TabSettings::handle(ctx).update(ctx, |settings, ctx| {
-                report_if_error!(settings.use_vertical_tabs.set_value(true, ctx));
-            });
-        });
-        let workspace = mock_workspace(&mut app);
-        let open_snapshot = workspace.update(&mut app, |workspace, ctx| {
-            workspace.vertical_tabs_panel_open = true;
-            workspace.snapshot(ctx.window_id(), false, ctx)
-        });
-
-        // Disable vertical tabs, then restore. The panel must stay closed.
-        app.update(|ctx| {
-            TabSettings::handle(ctx).update(ctx, |settings, ctx| {
-                report_if_error!(settings.use_vertical_tabs.set_value(false, ctx));
-            });
-        });
-        let restored = restored_workspace(&mut app, open_snapshot);
-        restored.read(&app, |workspace, _| {
-            assert!(!workspace.vertical_tabs_panel_open);
-        });
-    });
-}
-
-#[test]
 fn test_vertical_tabs_panel_defaults_open_for_new_window_when_vertical_tabs_enabled() {
     let _vertical_tabs_guard = FeatureFlag::VerticalTabs.override_enabled(true);
 
@@ -2268,62 +1798,12 @@ fn test_vertical_tabs_panel_inherits_transferred_tab_source_window_state() {
 }
 
 #[test]
-fn test_vertical_tabs_panel_auto_shows_when_setting_enabled() {
-    let _vertical_tabs_guard = FeatureFlag::VerticalTabs.override_enabled(true);
-
+fn test_active_tab_bar_position_id_is_vertical_panel() {
+    // Torch always lays tabs out in the vertical panel, so cross-window drag hit-testing must
+    // never target the horizontal bar.
     App::test((), |mut app| async move {
         initialize_app(&mut app);
 
-        let workspace = mock_workspace(&mut app);
-
-        workspace.read(&app, |workspace, _| {
-            assert!(!workspace.vertical_tabs_panel_open);
-        });
-
-        // Enabling vertical tabs should auto-open the panel.
-        workspace.update(&mut app, |_, ctx| {
-            TabSettings::handle(ctx).update(ctx, |settings, ctx| {
-                report_if_error!(settings.use_vertical_tabs.set_value(true, ctx));
-            });
-        });
-        workspace.read(&app, |workspace, _| {
-            assert!(workspace.vertical_tabs_panel_open);
-        });
-
-        // Disabling vertical tabs should auto-close the panel.
-        workspace.update(&mut app, |_, ctx| {
-            TabSettings::handle(ctx).update(ctx, |settings, ctx| {
-                report_if_error!(settings.use_vertical_tabs.set_value(false, ctx));
-            });
-        });
-        workspace.read(&app, |workspace, _| {
-            assert!(!workspace.vertical_tabs_panel_open);
-        });
-    });
-}
-
-#[test]
-fn test_active_tab_bar_position_id_tracks_layout() {
-    // Cross-window drag hit-testing (`tab_bar_rects_for_window`) targets only
-    // the active tab presentation. Regression guard for the bug where the
-    // inactive horizontal bar registered as a drop zone while vertical tabs
-    // were enabled, lighting up a spurious placeholder over the top bar.
-    let _vertical_tabs_guard = FeatureFlag::VerticalTabs.override_enabled(true);
-    App::test((), |mut app| async move {
-        initialize_app(&mut app);
-
-        // Horizontal tabs (setting off): the horizontal bar is the drop zone.
-        app.read(|ctx| {
-            assert_eq!(active_tab_bar_position_id(ctx), TAB_BAR_POSITION_ID);
-        });
-
-        // Vertical tabs (setting on): only the vertical panel is the drop zone,
-        // so the horizontal bar no longer registers as a cross-window target.
-        app.update(|ctx| {
-            TabSettings::handle(ctx).update(ctx, |settings, ctx| {
-                report_if_error!(settings.use_vertical_tabs.set_value(true, ctx));
-            });
-        });
         app.read(|ctx| {
             assert_eq!(
                 active_tab_bar_position_id(ctx),
@@ -2433,9 +1913,11 @@ fn test_new_session_menu_is_capped_to_window_height() {
                 ctx,
             );
 
-            let expected_height =
-                (window_height - NEW_SESSION_MENU_WINDOW_MARGIN - NEW_SESSION_MENU_CHROME_HEIGHT)
-                    .max(NEW_SESSION_MENU_MIN_HEIGHT);
+            let expected_height = (window_height
+                - TOTAL_TAB_BAR_HEIGHT
+                - NEW_SESSION_MENU_WINDOW_MARGIN
+                - NEW_SESSION_MENU_CHROME_HEIGHT)
+                .max(NEW_SESSION_MENU_MIN_HEIGHT);
             let menu_height = workspace.new_session_menu_max_height(
                 crate::workspace::action::NewSessionMenuAnchor::AddTabButton(Vector2F::zero()),
                 ctx,
@@ -2824,35 +2306,6 @@ fn test_worktree_sidecar_hides_linked_worktrees_from_repo_list() {
             assert!(labels.iter().any(|label| label == "Search repos"));
             assert!(labels.iter().any(|label| label == &main_repo_label));
             assert!(!labels.iter().any(|label| label == &linked_worktree_label));
-        });
-    });
-}
-
-#[test]
-fn test_vertical_tabs_context_menu_does_not_show_hover_only_tab_bar() {
-    let _full_screen_zen_mode_guard = FeatureFlag::FullScreenZenMode.override_enabled(true);
-    let _vertical_tabs_guard = FeatureFlag::VerticalTabs.override_enabled(true);
-
-    App::test((), |mut app| async move {
-        initialize_app(&mut app);
-
-        let workspace = mock_workspace(&mut app);
-
-        workspace.update(&mut app, |workspace, ctx| {
-            TabSettings::handle(ctx).update(ctx, |settings, ctx| {
-                report_if_error!(
-                    settings
-                        .workspace_decoration_visibility
-                        .set_value(WorkspaceDecorationVisibility::OnHover, ctx)
-                );
-                report_if_error!(settings.use_vertical_tabs.set_value(true, ctx));
-            });
-            workspace.vertical_tabs_panel_open = true;
-
-            workspace.show_tab_right_click_menu =
-                Some((0, TabContextMenuAnchor::Pointer(Vector2F::zero())));
-
-            assert_eq!(workspace.tab_bar_mode(ctx), ShowTabBar::Hidden);
         });
     });
 }

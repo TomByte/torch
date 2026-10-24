@@ -537,51 +537,40 @@ fn test_open_file_executable_bash_zsh_fish_route_to_execute() {
 }
 
 #[test]
-fn test_open_file_markdown_routes_to_editor_when_viewer_disabled() {
+fn test_open_file_markdown_routes_to_session_when_viewer_disabled() {
     let dir = tempfile::tempdir().unwrap();
     let p = dir.path().join("README.md");
     std::fs::write(&p, b"# hi\n").unwrap();
-    assert_eq!(classify_open_file_action(&p, false), OpenFileAction::Editor);
+    assert_eq!(
+        classify_open_file_action(&p, false),
+        OpenFileAction::ExecuteInSession
+    );
 }
 
 #[test]
-fn test_open_file_ipynb_opens_in_editor_when_disabled() {
-    // Without the feature flag, `.ipynb` is not rendered in the notebook viewer
-    // and falls through to the code editor.
+fn test_open_file_ipynb_routes_to_session_when_disabled() {
+    // Torch has no in-app code editor, so a `.ipynb` file that is not rendered in the
+    // notebook viewer falls through to the shell.
     let _flag = crate::features::FeatureFlag::JupyterNotebookRendering.override_enabled(false);
     let dir = tempfile::tempdir().unwrap();
     let p = dir.path().join("analysis.ipynb");
     std::fs::write(&p, b"{\"nbformat\": 4, \"cells\": []}\n").unwrap();
-    assert_eq!(classify_open_file_action(&p, true), OpenFileAction::Editor);
+    assert_eq!(
+        classify_open_file_action(&p, true),
+        OpenFileAction::ExecuteInSession
+    );
 }
 
 #[test]
 #[cfg(feature = "local_fs")]
-fn test_open_file_rust_source_still_opens_in_editor() {
+fn test_open_file_rust_source_routes_to_session() {
     let dir = tempfile::tempdir().unwrap();
     let p = dir.path().join("main.rs");
     std::fs::write(&p, b"fn main() {}\n").unwrap();
-    assert_eq!(classify_open_file_action(&p, true), OpenFileAction::Editor);
-}
-
-#[test]
-#[cfg(unix)]
-fn test_open_file_editor_executable_sh_opens_in_editor() {
-    use std::os::unix::fs::PermissionsExt;
-    let dir = tempfile::tempdir().unwrap();
-    let p = dir.path().join("run.sh");
-    std::fs::write(&p, b"#!/bin/sh\n:\n").unwrap();
-    std::fs::set_permissions(&p, std::fs::Permissions::from_mode(0o755)).unwrap();
-    assert!(can_open_file_editor_path(&p));
-}
-
-#[test]
-#[cfg(feature = "local_fs")]
-fn test_open_file_editor_rust_source_opens_in_editor() {
-    let dir = tempfile::tempdir().unwrap();
-    let p = dir.path().join("main.rs");
-    std::fs::write(&p, b"fn main() {}\n").unwrap();
-    assert!(can_open_file_editor_path(&p));
+    assert_eq!(
+        classify_open_file_action(&p, true),
+        OpenFileAction::ExecuteInSession
+    );
 }
 
 #[test]

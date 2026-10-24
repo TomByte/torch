@@ -14,7 +14,6 @@ use torchui::{App, ModelHandle};
 use watcher::HomeDirectoryWatcher;
 
 use super::*;
-use crate::settings_view::SettingsSection;
 use crate::app_state::SettingsPaneSnapshot;
 use crate::changelog_model::ChangelogModel;
 use crate::context_chips::prompt::Prompt;
@@ -24,6 +23,7 @@ use crate::persisted_workspace::PersistedWorkspace;
 use crate::resource_center::TipsCompleted;
 use crate::search::files::model::FileSearchModel;
 use crate::settings::PrivacySettings;
+use crate::settings_view::SettingsSection;
 use crate::settings_view::keybindings::KeybindingChangedNotifier;
 use crate::suggestions::ignored_suggestions_model::IgnoredSuggestionsModel;
 use crate::system::SystemStats;
@@ -39,9 +39,7 @@ use crate::warp_managed_paths_watcher::WarpManagedPathsWatcher;
 use crate::workflows::local_workflows::LocalWorkflows;
 use crate::workspace::sync_inputs::SyncedInputState;
 use crate::workspace::{ActiveSession, WorkspaceRegistry};
-use crate::{
-    AgentNotificationsModel, GlobalResourceHandles, GlobalResourceHandlesProvider,
-};
+use crate::{AgentNotificationsModel, GlobalResourceHandles, GlobalResourceHandlesProvider};
 
 fn initialize_app(app: &mut App) {
     initialize_settings_for_tests(app);

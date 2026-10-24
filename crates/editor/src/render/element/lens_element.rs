@@ -126,8 +126,7 @@ impl<V: EditorView> Element for RichTextElementLens<V> {
             content_bounds,
             self.display_options.focused,
             self.display_options.editable,
-            false,              /* no cursor blink */
-            Default::default(), /* no cursor type */
+            false, /* no cursor blink */
             parent.text_decorations(
                 model.viewport_charoffset_range(),
                 model.next_render_buffer_version(),
@@ -137,8 +136,6 @@ impl<V: EditorView> Element for RichTextElementLens<V> {
             viewport_size,
             model,
             ctx,
-            None,
-            &[],
         );
         for block in self.blocks.as_mut().unwrap().iter_mut() {
             block.paint(model, &mut ctx, app);

@@ -1748,7 +1748,6 @@ impl TypedActionView for CodeFooterView {
                     let workspace_root = server.as_ref(ctx).initial_workspace().to_path_buf();
                     let server_type = server.as_ref(ctx).server_type();
 
-
                     // Remove from manager (stops and removes)
                     LspManagerModel::handle(ctx).update(ctx, |manager, ctx| {
                         manager.remove_server(&workspace_root, server_type, ctx);

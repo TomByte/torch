@@ -1,6 +1,5 @@
 use std::path::Path;
 
-use crate::persisted_workspace::WorkspaceMetadata;
 use fuzzy_match::FuzzyMatchResult;
 use ordered_float::OrderedFloat;
 use torch_core::ui::theme::Fill;
@@ -9,6 +8,7 @@ use torchui::fonts::{Properties, Weight};
 use torchui::{AppContext, Element, SingletonEntity};
 
 use crate::appearance::Appearance;
+use crate::persisted_workspace::WorkspaceMetadata;
 use crate::search::action::search_item::styles;
 use crate::search::command_palette::mixer::CommandPaletteItemAction;
 use crate::search::command_palette::render_util;

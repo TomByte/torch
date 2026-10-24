@@ -633,11 +633,7 @@ impl GitDialog {
                     GitDialogMode::Push(state) => state.publish,
                     _ => return,
                 };
-                push::finish_push(
-                    publish,
-                    result.clone().map_err(|e| anyhow::anyhow!(e)),
-                    ctx,
-                );
+                push::finish_push(publish, result.clone().map_err(|e| anyhow::anyhow!(e)), ctx);
             }
             GitOpResult::PrCreated(result) => {
                 pr::finish_create_pr(result.clone().map_err(|e| anyhow::anyhow!(e)), ctx);

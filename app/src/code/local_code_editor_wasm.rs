@@ -30,8 +30,6 @@ pub enum LocalCodeEditorEvent {
     #[allow(dead_code)]
     FailedToSave { error: Arc<FileSaveError> },
     #[allow(dead_code)]
-    VimMinimizeRequested,
-    #[allow(dead_code)]
     UserEdited,
     #[allow(dead_code)]
     DiffStatusUpdated,
@@ -62,10 +60,7 @@ pub struct LocalCodeEditorView {
 }
 
 impl LocalCodeEditorView {
-    pub fn new(
-        editor: ViewHandle<CodeEditorView>,
-        _ctx: &mut ViewContext<Self>,
-    ) -> Self {
+    pub fn new(editor: ViewHandle<CodeEditorView>, _ctx: &mut ViewContext<Self>) -> Self {
         Self { editor }
     }
 

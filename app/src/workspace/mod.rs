@@ -35,10 +35,9 @@ pub use view::{
     TAB_BAR_HEIGHT, TOTAL_TAB_BAR_HEIGHT, WORKSPACE_PADDING, Workspace,
 };
 
-use crate::palette::PaletteSource;
 use crate::channel::{Channel, ChannelState};
 use crate::features::FeatureFlag;
-use crate::palette::PaletteMode;
+use crate::palette::{PaletteMode, PaletteSource};
 use crate::settings_view::{self, SettingsSection, flags};
 use crate::tab::{NewSessionMenuItem, uses_vertical_tabs};
 use crate::util::bindings::{self, CustomAction, cmd_or_ctrl_shift, is_binding_pty_compliant};
@@ -1016,7 +1015,6 @@ pub fn init(app: &mut AppContext) {
         .with_context_predicate(id!("Workspace"))
         .with_key_binding("cmdorctrl-shift-)"),
     ]);
-
 
     app.register_editable_bindings([
         EditableBinding::new(

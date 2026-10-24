@@ -44,7 +44,9 @@ use crate::uri::OpenSettingsArgs;
 use crate::util::bindings::{self, is_binding_pty_compliant};
 use crate::window_settings::WindowSettings;
 use crate::workspace::{PaneViewLocator, Workspace, WorkspaceAction, WorkspaceRegistry};
-use crate::{ChannelState, GlobalResourceHandles, GlobalResourceHandlesProvider, UpdateQuakeModeEventArg};
+use crate::{
+    ChannelState, GlobalResourceHandles, GlobalResourceHandlesProvider, UpdateQuakeModeEventArg,
+};
 
 const WINDOW_TITLE: &str = "Torch";
 
@@ -343,7 +345,6 @@ fn open_launch_config(arg: &OpenLaunchConfigArg, ctx: &mut AppContext) {
             );
         }
     }
-
 }
 
 fn send_feedback(_: &(), ctx: &mut AppContext) {
@@ -921,7 +922,6 @@ fn toggle_quake_mode_window(global_resource_handles: &GlobalResourceHandles, ctx
     let state = get_quake_mode_state(ctx);
     match state {
         None => {
-
             let config = quake_mode_config(
                 &KeysSettings::as_ref(ctx)
                     .quake_mode_settings
@@ -970,7 +970,6 @@ fn toggle_quake_mode_window(global_resource_handles: &GlobalResourceHandles, ctx
             });
         }
         Some(state) if matches!(state.window_state, WindowState::Hidden) => {
-
             // If quake mode does not have a set pin screen -- move it to the current active screen.
             if KeysSettings::as_ref(ctx)
                 .quake_mode_settings
@@ -1376,11 +1375,7 @@ impl TypedActionView for RootView {
 impl WorkspaceArgs {
     fn create_workspace(self, ctx: &mut ViewContext<RootView>) -> ViewHandle<Workspace> {
         ctx.add_typed_action_view(|ctx| {
-            Workspace::new(
-                self.global_resource_handles,
-                self.workspace_setting,
-                ctx,
-            )
+            Workspace::new(self.global_resource_handles, self.workspace_setting, ctx)
         })
     }
 }

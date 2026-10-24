@@ -11,7 +11,6 @@ use torch_util::standardized_path::StandardizedPath;
 use crate::palette::PaletteSource;
 use crate::persisted_workspace::{LspTask, PersistedWorkspace};
 mod link_detection;
-mod open_in_warp;
 mod pane_impl;
 #[cfg(not(target_family = "wasm"))]
 pub(crate) mod plugin_instructions_block;
@@ -57,10 +56,10 @@ use enclose::enclose;
 pub use init::{CANCEL_COMMAND_KEYBINDING, init};
 use init::{INPUT_BOX_VISIBLE_KEY, TOGGLE_BLOCK_FILTER_KEYBINDING};
 use inline_banner::{
-    AliasExpansionBanner, AliasExpansionBannerAction, OpenInWarpBannerState, VimModeBannerAction,
+    AliasExpansionBanner, AliasExpansionBannerAction, VimModeBannerAction,
     render_alias_expansion_banner, render_inline_notifications_discovery_banner,
-    render_inline_notifications_error_banner, render_open_in_warp_banner,
-    render_shell_process_terminated_banner, render_vim_mode_banner,
+    render_inline_notifications_error_banner, render_shell_process_terminated_banner,
+    render_vim_mode_banner,
 };
 pub use inline_banner::{NotificationsDiscoveryBannerAction, NotificationsErrorBannerAction};
 use instant::Instant;
@@ -134,9 +133,7 @@ use super::available_shells::AvailableShell;
 use super::block_list_viewport::FindMatchScrollLocation;
 use super::event::SshLoginStatus;
 use super::find::FindOptions;
-use super::model::block::{
-    BlockSection, LONG_RUNNING_COMMAND_DURATION_MS,
-};
+use super::model::block::{BlockSection, LONG_RUNNING_COMMAND_DURATION_MS};
 use super::model::completions::ShellCompletion;
 use super::model::rich_content::RichContentType;
 use super::model::selection::ExpandedSelectionRange;
@@ -174,9 +171,7 @@ use crate::pane_group::{
 };
 use crate::persistence::{self, FinishedCommandMetadata};
 use crate::projects::ProjectManagementModel;
-use crate::remote_server::manager::{
-    RemoteServerManager, RemoteServerManagerEvent,
-};
+use crate::remote_server::manager::{RemoteServerManager, RemoteServerManagerEvent};
 use crate::resource_center::{
     Tip, TipHint, TipsCompleted, mark_feature_used_and_write_to_user_defaults,
 };
@@ -223,9 +218,8 @@ use crate::terminal::cli_agent_sessions::notification::{
 #[cfg(not(target_family = "wasm"))]
 use crate::terminal::cli_agent_sessions::plugin_manager::{PluginModalKind, plugin_manager};
 use crate::terminal::cli_agent_sessions::{
-    CLIAgentInputState, CLIAgentSession,
-    CLIAgentSessionContext, CLIAgentSessionStatus, CLIAgentSessionsModel,
-    CLIAgentSessionsModelEvent,
+    CLIAgentInputState, CLIAgentSession, CLIAgentSessionContext, CLIAgentSessionStatus,
+    CLIAgentSessionsModel, CLIAgentSessionsModelEvent,
 };
 use crate::terminal::color::List;
 use crate::terminal::event::{
@@ -796,8 +790,6 @@ struct InlineBannersState {
     /// shell process has terminated, or None if there is no
     /// banner to display.
     shell_process_terminated_banner: Option<ShellProcessTerminatedBanner>,
-
-    open_in_warp_banner: Option<OpenInWarpBannerState>,
 
     vim_banner_state: Option<VimModeBannerState>,
 }
@@ -1527,7 +1519,6 @@ pub struct TerminalView {
     mouse_down_block_index: Option<BlockIndex>,
 
     mouse_states: TerminalViewMouseStates,
-
 
     /// A sender used to handle messages for whenever the entire terminal view
     /// changes size.  Note that this size contains not just the content element
@@ -2640,7 +2631,6 @@ impl TerminalView {
                 }
             });
         }
-
 
         terminal_view
     }
@@ -4027,7 +4017,6 @@ impl TerminalView {
             };
 
             ctx.notify();
-
         }
     }
 
@@ -4085,7 +4074,6 @@ impl TerminalView {
         self.write_init_subshell_bytes_to_pty(shell_type, ctx);
 
         self.start_bootstrap_timer(BOOTSTRAP_FAILED_DURATION, ctx);
-
     }
 
     /// Util method to update the ssh block, with a lock
@@ -4263,7 +4251,6 @@ impl TerminalView {
         );
         ctx.emit_a11y_content(a11y_content);
 
-
         ctx.notify();
     }
 
@@ -4406,7 +4393,6 @@ impl TerminalView {
         );
         ctx.emit_a11y_content(a11y_content);
 
-
         ctx.notify();
     }
 
@@ -4438,7 +4424,6 @@ impl TerminalView {
             },
         };
 
-
         self.model
             .lock()
             .block_list_mut()
@@ -4462,7 +4447,6 @@ impl TerminalView {
             .lock()
             .block_list_mut()
             .append_inline_banner(InlineBannerItem::new(banner_id, InlineBannerType::VimMode));
-
 
         ctx.notify();
     }
@@ -5288,9 +5272,7 @@ impl TerminalView {
                     });
                 }
             }
-            ModelEvent::AfterBlockCompleted(AfterBlockCompletedEvent {
-                block_type, ..
-            }) => {
+            ModelEvent::AfterBlockCompleted(AfterBlockCompletedEvent { block_type, .. }) => {
                 // To automatically warpify a subshell, we run the relevant command to open the
                 // subshell and create a future to delay bootstrapping the subshell long enough for
                 // the command to complete. We receive AfterBlockCompleted if the subshell command
@@ -5461,8 +5443,6 @@ impl TerminalView {
                     if self.can_suggest_alias_expansion(ctx) {
                         self.maybe_suggest_alias_expansion(block_completed, ctx);
                     }
-
-                    self.maybe_suggest_open_in_warp(block_completed, ctx);
 
                     let terminal_view_state = {
                         let model = self.model.lock();
@@ -6207,8 +6187,7 @@ impl TerminalView {
             sessions_model.update_from_event(self.view_id, &notification, ctx);
         });
 
-        if notification.event == CLIAgentEventType::SessionStart {
-        }
+        if notification.event == CLIAgentEventType::SessionStart {}
     }
 
     fn register_cli_agent_listener_from_event(
@@ -6388,12 +6367,7 @@ impl TerminalView {
         } else {
             NotificationsTrigger::AgentTaskCompleted(true)
         };
-        self.send_agent_desktop_notification_or_show_banner(
-            trigger,
-            title,
-            description,
-            ctx,
-        );
+        self.send_agent_desktop_notification_or_show_banner(trigger, title, description, ctx);
     }
 
     /// Handles the initialization of a session within this terminal pane.
@@ -8362,7 +8336,6 @@ impl TerminalView {
             items,
             ctx,
         );
-
     }
 
     fn open_block_filter_editor(
@@ -8393,8 +8366,7 @@ impl TerminalView {
                 });
         }
         self.focus_block_filter_editor(ctx);
-        if matches!(opened_from_click, OpenedFromClick::Yes) {
-        }
+        if matches!(opened_from_click, OpenedFromClick::Yes) {}
     }
 
     fn close_block_filter_editor(&mut self, ctx: &mut ViewContext<Self>) {
@@ -8757,8 +8729,7 @@ impl TerminalView {
                             self.reset_selection_to_single_block(*block_index, ctx);
                         }
 
-                        if !self.has_active_cli_agent_input_session(ctx) {
-                        }
+                        if !self.has_active_cli_agent_input_session(ctx) {}
                         self.tips_completed.update(ctx, |tips, ctx| {
                             mark_feature_used_and_write_to_user_defaults(
                                 Tip::Hint(TipHint::BlockSelect),
@@ -9058,7 +9029,6 @@ impl TerminalView {
 
     pub fn toggle_snackbar_in_active_pane(&mut self, ctx: &mut ViewContext<Self>) {
         self.show_snackbar = !self.show_snackbar;
-
 
         ctx.notify()
     }
@@ -9597,7 +9567,6 @@ impl TerminalView {
             ctx,
         );
 
-
         self.tips_completed.update(ctx, |tips, ctx| {
             mark_feature_used_and_write_to_user_defaults(
                 Tip::Hint(TipHint::BlockSelect),
@@ -9655,7 +9624,6 @@ impl TerminalView {
 
             self.scroll_to_if_not_visible(new_block_index, ctx);
             ctx.notify();
-
 
             self.tips_completed.update(ctx, |tips, ctx| {
                 mark_feature_used_and_write_to_user_defaults(
@@ -10449,8 +10417,7 @@ impl TerminalView {
             || previous_filter
                 .is_some_and(|previous_filter| !previous_filter.is_active_and_nonempty()))
             && block_filter_query.is_active_and_nonempty()
-        {
-        }
+        {}
         drop(model);
 
         self.update_block_filter_for_block(
@@ -11034,7 +11001,6 @@ impl TerminalView {
     fn jump_to_bookmark(&mut self, index: BlockIndex, ctx: &mut ViewContext<Self>) {
         self.reset_selection_to_single_block(index, ctx);
         self.jump_to_previous_command(index, ctx);
-
 
         ctx.notify();
     }
@@ -11867,13 +11833,6 @@ impl TerminalView {
             );
         }
 
-        if let Some(open_in_warp_banner) = &self.inline_banners_state.open_in_warp_banner {
-            inline_banners.insert(
-                open_in_warp_banner.id,
-                render_open_in_warp_banner(open_in_warp_banner, self.view_id, appearance),
-            );
-        }
-
         if let Some(vim_banner_state) = &self.inline_banners_state.vim_banner_state {
             inline_banners.insert(
                 vim_banner_state.id,
@@ -12625,7 +12584,6 @@ impl TerminalView {
                 });
             }
         }
-
     }
 
     fn close_notification_error_banner(&mut self, ctx: &mut ViewContext<Self>) {
@@ -12731,7 +12689,6 @@ impl TerminalView {
                 ctx.notify();
             }
         }
-
     }
 
     /// Toggles the block filter on the last selected block, or the last non-hidden
@@ -12766,7 +12723,6 @@ impl TerminalView {
                 is_active: !block_filter_query.is_active,
                 ..block_filter_query
             };
-
 
             self.update_block_filter_for_block(
                 selected_or_last_block_index,
@@ -13046,7 +13002,6 @@ impl TerminalView {
             footer.show_warpify(ctx);
         });
         self.maybe_show_use_agent_footer_in_blocklist(ctx);
-
     }
 
     fn show_initialization_block(&mut self) {
@@ -13451,7 +13406,6 @@ impl TypedActionView for TerminalView {
             | StartLspServer => ActionAccessibilityContent::from_debug(),
             #[cfg(feature = "local_fs")]
             OpenCodeInWarp { .. } => ActionAccessibilityContent::from_debug(),
-            OpenInWarpBanner(action) => self.open_in_warp_banner_accessibility_content(*action),
             PickRepoToOpen => Custom(AccessibilityContent::new_without_help(
                 "Use file picker to select a git repository".to_owned(),
                 WarpA11yRole::PopoverRole,
@@ -13680,7 +13634,6 @@ impl TypedActionView for TerminalView {
                 self.open_highlighted_link(link, ctx);
             }
             ShowInFileExplorer(path) => {
-
                 ctx.open_file_path_in_explorer(path);
             }
             OpenFileInWarp(path) => {
@@ -13720,12 +13673,10 @@ impl TypedActionView for TerminalView {
             }
             DismissWarpifyBanner(remember) => {
                 self.dismiss_warpify_banner(remember, ctx);
-                if !remember.is_ssh() {
-                }
+                if !remember.is_ssh() {}
             }
             InsertMostRecentCommandCorrection => self.insert_most_recent_command_correction(ctx),
             AliasExpansionBanner(action) => self.alias_expansion_banner_action(*action, ctx),
-            OpenInWarpBanner(action) => self.handle_open_in_warp_banner_action(*action, ctx),
             OpenBlockFilterEditor(block_index) => {
                 self.open_block_filter_editor(*block_index, OpenedFromClick::Yes, ctx)
             }

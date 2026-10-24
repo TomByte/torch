@@ -1,5 +1,5 @@
+use settings::SupportedPlatforms;
 use settings::macros::define_settings_group;
-use settings::{SupportedPlatforms};
 use torchui::accessibility::AccessibilityVerbosity;
 
 define_settings_group!(AccessibilitySettings, settings: [

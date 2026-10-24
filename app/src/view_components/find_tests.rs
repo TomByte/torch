@@ -1,4 +1,3 @@
-
 use torch_core::ui::appearance::Appearance;
 use torchui::App;
 use torchui::platform::WindowStyle;

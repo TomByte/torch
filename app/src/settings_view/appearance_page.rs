@@ -35,10 +35,9 @@ use torchui::{
 
 use super::directory_color_add_picker::{DirectoryColorAddPicker, DirectoryColorAddPickerEvent};
 use super::settings_page::{
-    AdditionalInfo, CONTENT_FONT_SIZE, Category, HEADER_PADDING, MatchData,
-    PageType, SettingsPageEvent, SettingsPageMeta, SettingsPageViewHandle, SettingsWidget,
-    ToggleState, build_reset_button, render_body_item, render_body_item_label,
-    render_dropdown_item,
+    AdditionalInfo, CONTENT_FONT_SIZE, Category, HEADER_PADDING, MatchData, PageType,
+    SettingsPageEvent, SettingsPageMeta, SettingsPageViewHandle, SettingsWidget, ToggleState,
+    build_reset_button, render_body_item, render_body_item_label, render_dropdown_item,
 };
 use super::{SettingsAction, SettingsSection, ToggleSettingActionPair, flags};
 use crate::appearance::{Appearance, AppearanceEvent};
@@ -53,11 +52,10 @@ use crate::editor::{
 use crate::features::FeatureFlag;
 use crate::settings::app_icon::{AppIcon, AppIconSettings};
 use crate::settings::{
-    AppEditorSettings, CodeSettings, CursorBlink, CursorDisplayType,
-    DEFAULT_MONOSPACE_FONT_NAME, EnforceMinimumContrast, FontSettings,
-    FontSettingsChangedEvent, GPUSettings, InputBoxType, InputModeSettings,
-    InputSettings, InputSettingsChangedEvent, MonospaceFontName, PaneSettings, ThemeSettings, active_theme_kind,
-    respect_system_theme,
+    AppEditorSettings, CodeSettings, CursorBlink, CursorDisplayType, DEFAULT_MONOSPACE_FONT_NAME,
+    EnforceMinimumContrast, FontSettings, FontSettingsChangedEvent, GPUSettings, InputBoxType,
+    InputModeSettings, InputSettings, InputSettingsChangedEvent, MonospaceFontName, PaneSettings,
+    ThemeSettings, active_theme_kind, respect_system_theme,
 };
 use crate::terminal::block_list_viewport::InputMode;
 use crate::terminal::blockgrid_element::BlockGridElement;
@@ -65,12 +63,9 @@ use crate::terminal::ligature_settings::LigatureSettings;
 use crate::terminal::model::ObfuscateSecrets;
 use crate::terminal::model::blockgrid::BlockGrid;
 use crate::terminal::session_settings::SessionSettings;
-use crate::terminal::settings::{
-    AltScreenPaddingMode, SpacingMode, TerminalSettings,
-};
-use crate::terminal::{
-    BlockListSettings, SizeInfo,
-};
+use crate::terminal::settings::{AltScreenPaddingMode, SpacingMode, TerminalSettings};
+use crate::terminal::{BlockListSettings, SizeInfo};
+use crate::themes;
 use crate::themes::theme::{self, RespectSystemTheme, SelectedSystemThemes, ThemeKind, WarpTheme};
 use crate::themes::theme_chooser::ThemeChooserMode;
 use crate::ui_components::color_dot::{TAB_COLOR_OPTIONS, render_color_dot};
@@ -85,11 +80,9 @@ use crate::window_settings::{
 use crate::workspace::WorkspaceAction;
 use crate::workspace::header_toolbar_editor::HeaderToolbarInlineEditor;
 use crate::workspace::tab_settings::{
-    DirectoryTabColor, TabCloseButtonPosition,
-    TabSettings, TabSettingsChangedEvent, WorkspaceDecorationVisibility,
-    canonical_directory_key,
+    DirectoryTabColor, TabCloseButtonPosition, TabSettings, TabSettingsChangedEvent,
+    WorkspaceDecorationVisibility, canonical_directory_key,
 };
-use crate::themes;
 
 const FONT_SIZE_INPUT_BOX_WIDTH: f32 = 80.;
 const NOTEBOOK_FONT_SIZE_INPUT_BOX_WIDTH: f32 = 50.;
@@ -625,8 +618,9 @@ impl TypedActionView for AppearanceSettingsPageView {
                 PaneSettings::handle(ctx).update(ctx, |pane_settings, ctx| {
                     if let Err(e) = pane_settings
                         .focus_panes_on_hover
-                        .toggle_and_save_value(ctx) {
-                            report_error!(e);
+                        .toggle_and_save_value(ctx)
+                    {
+                        report_error!(e);
                     }
                 });
                 ctx.notify();
@@ -1815,7 +1809,6 @@ impl AppearanceSettingsPageView {
             editor.set_buffer_text(&format!("{DEFAULT_UI_LINE_HEIGHT_RATIO}"), ctx);
         });
 
-
         FontSettings::handle(ctx).update(ctx, |font_settings, ctx| {
             report_if_error!(
                 font_settings
@@ -1835,7 +1828,6 @@ impl AppearanceSettingsPageView {
         let current_line_height = appearance.ui_builder().line_height_ratio();
 
         if (current_line_height - new_line_height).abs() > f32::EPSILON {
-
             if (MIN_LINE_SPACING..=MAX_LINE_SPACING).contains(&new_line_height) {
                 FontSettings::handle(ctx).update(ctx, |font_settings, ctx| {
                     report_if_error!(
@@ -1999,7 +1991,7 @@ impl AppearanceSettingsPageView {
     fn set_thin_strokes(&mut self, value: &ThinStrokes, ctx: &mut ViewContext<Self>) {
         FontSettings::handle(ctx).update(ctx, |font_settings, ctx| {
             if let Err(e) = font_settings.use_thin_strokes.set_value(*value, ctx) {
-                    report_error!(e);
+                report_error!(e);
             }
         });
     }
@@ -2061,8 +2053,9 @@ impl AppearanceSettingsPageView {
         PaneSettings::handle(ctx).update(ctx, |pane_settings, ctx| {
             if let Err(e) = pane_settings
                 .should_dim_inactive_panes
-                .toggle_and_save_value(ctx) {
-                    report_error!(e);
+                .toggle_and_save_value(ctx)
+            {
+                report_error!(e);
             }
         });
     }
@@ -2166,7 +2159,6 @@ impl AppearanceSettingsPageView {
         ctx.update_model(&tab_settings, move |tab_settings, ctx| {
             report_if_error!(tab_settings.show_indicators.set_value(new_value, ctx));
         });
-
     }
 
     fn toggle_show_code_review_button(&mut self, ctx: &mut ViewContext<Self>) {
@@ -2193,7 +2185,6 @@ impl AppearanceSettingsPageView {
                     .set_value(new_value, ctx)
             );
         });
-
     }
 
     fn toggle_vertical_tabs(&mut self, ctx: &mut ViewContext<Self>) {
@@ -2243,7 +2234,10 @@ impl AppearanceSettingsPageView {
     /// Toggle among the supported workspace decoration visibility values.
     fn toggle_workspace_decoration_visiblity(&mut self, ctx: &mut ViewContext<Self>) {
         TabSettings::handle(ctx).update(ctx, |tab_settings, ctx| {
-            let new_value = tab_settings.workspace_decoration_visibility.value().toggled();
+            let new_value = tab_settings
+                .workspace_decoration_visibility
+                .value()
+                .toggled();
             report_if_error!(
                 tab_settings
                     .workspace_decoration_visibility
@@ -2421,7 +2415,6 @@ impl AppearanceSettingsPageView {
                         .set_value(new_value, ctx)
                 );
             });
-
         }
     }
 
@@ -3444,9 +3437,7 @@ impl SettingsWidget for PromptWidget {
                 .finish()
         })
         .with_cursor(Cursor::PointingHand)
-        .on_click(|ctx, _, _| {
-            ctx.dispatch_typed_action(WorkspaceAction::OpenPromptEditor)
-        })
+        .on_click(|ctx, _, _| ctx.dispatch_typed_action(WorkspaceAction::OpenPromptEditor))
         .finish()
     }
 }

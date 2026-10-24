@@ -697,7 +697,6 @@ impl TerminalView {
             sessions_model.open_input(view_id, true, ctx);
         });
 
-
         // Input mode switch, buffer clear, draft restoration, and hint text
         // are handled reactively by Input's subscription to InputSessionChanged.
         self.redetermine_terminal_focus(ctx);

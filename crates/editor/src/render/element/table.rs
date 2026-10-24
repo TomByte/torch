@@ -12,7 +12,6 @@ use torchui_core::geometry::vector::{Vector2F, vec2f};
 use torchui_core::units::{IntoPixels, Pixels};
 use torchui_core::{AppContext, ClipBounds, Event, EventContext};
 
-use super::paint::{CursorData, CursorDisplayType};
 use super::{RenderContext, RenderableBlock};
 use crate::extract_block;
 use crate::render::model::table_offset_map::CellAtOffset;
@@ -646,10 +645,8 @@ fn paint_cursor(
             let cursor_content_y = content_position.y() + (cursor_screen_y - screen_position.y());
 
             ctx.draw_and_save_cursor(
-                CursorDisplayType::Bar,
                 vec2f(cursor_content_x, cursor_content_y),
                 vec2f(model.styles().cursor_width, cursor_height),
-                CursorData::default(),
                 model.styles(),
             );
         }

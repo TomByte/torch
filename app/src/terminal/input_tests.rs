@@ -43,8 +43,8 @@ use crate::terminal::TerminalView;
 use crate::terminal::alt_screen_reporting::AltScreenReporting;
 use crate::terminal::block_list_viewport::ScrollPosition;
 use crate::terminal::cli_agent_sessions::{
-    CLIAgentInputState, CLIAgentSession, CLIAgentSessionContext,
-    CLIAgentSessionStatus, CLIAgentSessionsModel,
+    CLIAgentInputState, CLIAgentSession, CLIAgentSessionContext, CLIAgentSessionStatus,
+    CLIAgentSessionsModel,
 };
 use crate::terminal::event::{
     BlockCompletedEvent, BlockMetadataReceivedEvent, BlockType, BootstrappedEvent,
@@ -71,9 +71,7 @@ use crate::test_util::settings::initialize_settings_for_tests;
 use crate::themes::theme::AnsiColorIdentifier;
 use crate::warp_managed_paths_watcher::WarpManagedPathsWatcher;
 use crate::workspace::{ActiveSession, ToastStack, WorkspaceRegistry};
-use crate::{
-    AgentNotificationsModel, GlobalResourceHandles, GlobalResourceHandlesProvider,
-};
+use crate::{AgentNotificationsModel, GlobalResourceHandles, GlobalResourceHandlesProvider};
 
 fn pending_ctrl_r_handoff() -> PendingShellWidgetHandoff {
     PendingShellWidgetHandoff {
@@ -4136,8 +4134,8 @@ fn test_multiple_workflows_selected() {
         .await;
         let input = terminal.read(&app, |terminal, _| terminal.input().clone());
 
-        let workflow = Workflow::new("test", "p1 {{foo}} bar")
-            .with_arguments(vec![Argument::new("foo")]);
+        let workflow =
+            Workflow::new("test", "p1 {{foo}} bar").with_arguments(vec![Argument::new("foo")]);
 
         input.update(&mut app, |input, ctx| {
             input.show_workflows_info_box_on_workflow_selection(

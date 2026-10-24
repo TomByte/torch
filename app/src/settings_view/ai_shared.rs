@@ -7,19 +7,15 @@
 //! `Setting` parameter, and an anonymous argument-position parameter keeps
 //! those call sites working untouched.
 
-
 use torch_core::ui::theme::color::internal_colors;
-use torchui::elements::{
-    ChildView, Container, Element, Fill, Flex, ParentElement,
-};
+use torchui::elements::{ChildView, Container, Element, Fill, Flex, ParentElement};
 use torchui::ui_components::components::{UiComponent, UiComponentStyles};
 use torchui::ui_components::switch::SwitchStateHandle;
 use torchui::{Action, AppContext, SingletonEntity, View, ViewContext, ViewHandle};
 
 use super::SettingsAction;
 use super::settings_page::{
-    CONTENT_FONT_SIZE, ToggleState, build_toggle_element,
-    render_body_item_label,
+    CONTENT_FONT_SIZE, ToggleState, build_toggle_element, render_body_item_label,
 };
 use crate::agent_status::footer::editor::AgentToolbarInlineEditor;
 use crate::appearance::Appearance;

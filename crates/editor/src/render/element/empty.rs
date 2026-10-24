@@ -3,7 +3,6 @@ use super::placeholder::{self, BlockPlaceholder};
 use super::{RenderContext, RenderableBlock};
 use crate::content::text::BufferBlockStyle;
 use crate::extract_block;
-use crate::render::element::paint::CursorData;
 use crate::render::model::viewport::ViewportItem;
 use crate::render::model::{BlockItem, RenderState};
 
@@ -63,18 +62,7 @@ impl RenderableBlock for Empty {
             .iter()
             .any(|selection| selection.is_cursor() && selection.head >= cursor.start_char_offset)
         {
-            let base = &model.styles().base_text;
-            let cursor_data = CursorData {
-                block_width: None,
-                font_size: Some(base.font_size),
-            };
-            ctx.draw_and_save_cursor(
-                ctx.cursor_type,
-                cursor.content_origin(),
-                cursor.item.size(),
-                cursor_data,
-                model.styles(),
-            );
+            ctx.draw_and_save_cursor(cursor.content_origin(), cursor.item.size(), model.styles());
         }
     }
 }

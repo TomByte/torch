@@ -12,7 +12,6 @@ pub(in crate::terminal) use transition::{
     LifecycleSnapshot, LifecycleTransition, NextBlockIdDisposition, PreexecObservation,
 };
 
-
 /// Describes whether a command-start intent was accepted or conservatively ignored.
 ///
 /// Callers must perform start-dependent side effects, such as writing PTY bytes or attaching

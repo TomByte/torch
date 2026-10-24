@@ -33,7 +33,7 @@ impl TerminalView {
         use pathfinder_geometry::vector::vec2f;
         use torchui::units::{IntoPixels as _, Pixels};
 
-                use crate::terminal::BlockPadding;
+        use crate::terminal::BlockPadding;
         use crate::terminal::event_listener::ChannelEventListener;
         use crate::terminal::model::block::BlockSize;
         use crate::themes::default_themes::dark_theme;

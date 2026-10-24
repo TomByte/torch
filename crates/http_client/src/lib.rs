@@ -96,7 +96,9 @@ impl Client {
     }
 
     pub fn from_client_builder(client_builder: reqwest::ClientBuilder) -> reqwest::Result<Self> {
-        client_builder.build().map(|client| Self { wrapped: client })
+        client_builder
+            .build()
+            .map(|client| Self { wrapped: client })
     }
 
     fn builder(&self, wrapped: reqwest::RequestBuilder) -> RequestBuilder<'_> {

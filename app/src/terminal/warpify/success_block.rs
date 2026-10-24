@@ -90,10 +90,8 @@ impl WarpifySuccessBlock {
                 // If warpification wasn't triggered automatically, show a snippet about
                 // how to automatically warpify.
                 (!subshell_info.was_triggered_by_rc_file_snippet).then(|| {
-                    let (command, is_executable) = subshell_bootstrap_success_block_bytes(
-                        shell.shell_type(),
-                        remote_os,
-                    );
+                    let (command, is_executable) =
+                        subshell_bootstrap_success_block_bytes(shell.shell_type(), remote_os);
                     if command.is_empty() {
                         return ("".into(), false);
                     }
