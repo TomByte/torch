@@ -11,7 +11,6 @@ use watcher::HomeDirectoryWatcher;
 
 use super::settings::initialize_history_persistence_for_tests;
 use crate::auth::AuthStateProvider;
-use crate::auth::auth_manager::AuthManager;
 use crate::changelog_model::ChangelogModel;
 use crate::code_review::git_repo_model::GitRepoModels;
 use crate::context_chips::prompt::Prompt;
@@ -34,10 +33,7 @@ use crate::warp_managed_paths_watcher::WarpManagedPathsWatcher;
 use crate::workflows::local_workflows::LocalWorkflows;
 use crate::workspace::sync_inputs::SyncedInputState;
 use crate::workspace::{ActiveSession, WorkspaceRegistry};
-use crate::workspaces::team_tester::TeamTesterStatus;
-use crate::workspaces::update_manager::TeamUpdateManager;
-use crate::workspaces::user_workspaces::UserWorkspaces;
-use crate::{AgentNotificationsModel, experiments};
+use crate::AgentNotificationsModel;
 
 /// Initializes all of the necessary models to use a terminal view.
 pub fn initialize_app_for_terminal_view(app: &mut App) {
@@ -59,9 +55,6 @@ pub fn initialize_app_for_terminal_view(app: &mut App) {
     app.add_singleton_model(|_| NetworkStatus::new());
     app.add_singleton_model(|_| SystemStats::new());
     app.add_singleton_model(|_| Prompt::mock());
-    app.add_singleton_model(UserWorkspaces::default_mock);
-    app.add_singleton_model(TeamTesterStatus::mock);
-    app.add_singleton_model(TeamUpdateManager::mock);
     app.add_singleton_model(|_| Appearance::mock());
     app.add_singleton_model(PrivacySettings::mock);
     app.add_singleton_model(|_ctx| SyncedInputState::mock());
@@ -76,7 +69,6 @@ pub fn initialize_app_for_terminal_view(app: &mut App) {
     app.add_singleton_model(|_| ActiveSession::default());
     app.add_singleton_model(|_| AuthStateProvider::new_for_test());
     app.add_singleton_model(AppTelemetryContextProvider::new_context_provider);
-    app.add_singleton_model(AuthManager::new_for_test);
     app.add_singleton_model(DirectoryWatcher::new);
     app.add_singleton_model(|_| DetectedRepositories::default());
     #[cfg(feature = "local_fs")]
@@ -95,7 +87,6 @@ pub fn initialize_app_for_terminal_view(app: &mut App) {
     app.add_singleton_model(|_| IgnoredSuggestionsModel::new(vec![]));
     app.add_singleton_model(PersistedWorkspace::new_for_test);
 
-    app.update(experiments::init);
     AltScreenReporting::register(app);
 }
 

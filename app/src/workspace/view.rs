@@ -139,9 +139,6 @@ use crate::app_state::{
     TabSnapshot, TerminalPaneSnapshot, WindowSnapshot,
 };
 use crate::appearance::{Appearance, AppearanceManager};
-use crate::auth::AuthStateProvider;
-use crate::auth::auth_manager::{AuthManager, AuthManagerEvent};
-use crate::auth::auth_state::AuthState;
 use crate::autoupdate::{
     AutoupdateState, AutoupdateStateEvent, RelaunchModel, is_incoming_version_past_current,
 };
@@ -341,7 +338,6 @@ use crate::workspace::view::left_panel::{
     LeftPanelAction, LeftPanelEvent, LeftPanelView, ToolPanelView,
 };
 use crate::workspace::view::right_panel::{RightPanelEvent, RightPanelView};
-use crate::workspaces::user_workspaces::UserWorkspaces;
 use crate::{
     AgentNotificationsModel, GlobalResourceHandles, TelemetryEvent, autoupdate,
     send_telemetry_from_ctx,
@@ -725,7 +721,6 @@ pub struct Workspace {
     tips_completed: ModelHandle<TipsCompleted>,
     user_default_shell_unsupported_banner_model_handle: ModelHandle<BannerState>,
     server_api: Arc<ServerApi>,
-    auth_state: Arc<AuthState>,
     server_time: Option<Arc<ServerTime>>,
     tab_bar_overflow_menu: ViewHandle<Menu<WorkspaceAction>>,
     show_tab_bar_overflow_menu: bool,
@@ -1949,9 +1944,6 @@ impl Workspace {
             me.handle_palette_event(event, ctx);
         });
 
-        let auth_manager = AuthManager::handle(ctx);
-        ctx.subscribe_to_model(&auth_manager, Self::handle_auth_manager_event);
-
         // Handle theme updates when there is a cloud update to themes while the picker is open.
         ctx.subscribe_to_model(&ThemeSettings::handle(ctx), |me, _, _, ctx| {
             if me.is_theme_chooser_open() {
@@ -2203,7 +2195,6 @@ impl Workspace {
             tips_completed,
             user_default_shell_unsupported_banner_model_handle,
             server_api,
-            auth_state: AuthStateProvider::as_ref(ctx).get().clone(),
             server_time,
             tab_bar_overflow_menu,
             show_tab_bar_overflow_menu: false,
@@ -8200,29 +8191,6 @@ impl Workspace {
         ctx.notify();
     }
 
-    fn handle_auth_manager_event(
-        &mut self,
-        _handle: ModelHandle<AuthManager>,
-        event: &AuthManagerEvent,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        match event {
-            AuthManagerEvent::AuthComplete => {
-                // This workspace can survive an anonymous user signing up from
-                // inside the app. Refresh the cached auth state and recompute
-                // effective toolbelt availability so onboarding preferences
-                // (for example, Torch Drive and conversation history) take
-                // effect without requiring an off/on toggle.
-                self.auth_state = AuthStateProvider::as_ref(ctx).get().clone();
-                self.update_left_panel_available_views(ctx);
-                ctx.notify();
-            }
-            _ => {
-                ctx.notify();
-            }
-        }
-    }
-
     pub fn toggle_block_snackbar(&mut self, ctx: &mut ViewContext<Self>) {
         BlockListSettings::handle(ctx).update(ctx, |blocklist_settings, ctx| {
             report_if_error!(
@@ -8436,7 +8404,6 @@ impl Workspace {
         WindowSnapshot {
             tabs,
             active_tab_index,
-            team_uid: UserWorkspaces::as_ref(app).team_uid_for_window(window_id),
             bounds: window_bounds,
             fullscreen_state: window_fullscreen_state,
             quake_mode,
@@ -15612,13 +15579,6 @@ impl Workspace {
         self.tab_views().map(|tab| tab.id())
     }
 
-    /// Triggers the necessary cleanup for when a user logs out.
-    pub fn on_log_out(&mut self, ctx: &mut ViewContext<Self>) {
-        // Logging out should mimic the same behaviour as closing a window.
-        // This gives views a chance to clean up any state through on_view_detached before being dropped.
-        self.on_window_closed(ctx);
-    }
-
     fn open_left_panel_view(&mut self, action: &LeftPanelAction, ctx: &mut ViewContext<Self>) {
         if !crate::code::editor_available() {
             return;
@@ -16578,17 +16538,6 @@ impl TypedActionView for Workspace {
                     // `CrossWindowTabDrag::pending_source_window_closes`.
                 }
             }
-            CopyAccessTokenToClipboard => {
-                // Blocking is ok here only because this action is only registered in dev and local
-                // builds to aid in debugging and development.
-                let access_token =
-                    torchui::r#async::block_on(self.server_api.get_or_refresh_access_token());
-                if let Ok(token) = access_token
-                    && let Some(bearer) = token.bearer_token()
-                {
-                    ctx.clipboard().write(ClipboardContent::plain_text(bearer));
-                }
-            }
             CopyTextToClipboard(text) => {
                 ctx.clipboard()
                     .write(ClipboardContent::plain_text(text.to_string()));
@@ -17133,10 +17082,6 @@ impl View for Workspace {
         }
         if *CodeSettings::as_ref(app).show_hidden_files {
             context.set.insert(flags::SHOW_HIDDEN_FILES);
-        }
-
-        if self.auth_state.is_anonymous_or_logged_out() {
-            context.set.insert("IsAnonymousUser");
         }
 
         self.add_toggle_setting_context_flags(app, &mut context);

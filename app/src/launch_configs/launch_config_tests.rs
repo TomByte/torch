@@ -24,7 +24,6 @@ fn single_tab_snapshot(root: PaneNodeSnapshot) -> AppState {
                 pinned: false,
             }],
             active_tab_index: 0,
-            team_uid: None,
             bounds: None,
             quake_mode: false,
             universal_search_width: None,
@@ -48,7 +47,6 @@ fn multi_tab_snapshot(active_tab_index: usize, tabs: Vec<TabSnapshot>) -> AppSta
         windows: vec![WindowSnapshot {
             tabs,
             active_tab_index,
-            team_uid: None,
             bounds: None,
             quake_mode: false,
             universal_search_width: None,

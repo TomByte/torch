@@ -51,7 +51,7 @@ use crate::editor::{
     TextOptions,
 };
 use crate::features::FeatureFlag;
-use crate::gpu_state::{GPUState, GPUStateEvent};
+use crate::gpu_state::GPUState;
 use crate::prompt::editor_modal::OpenSource as PromptEditorOpenSource;
 use crate::server::telemetry::{InputUXChangeOrigin, TelemetryEvent};
 use crate::settings::app_icon::{AppIcon, AppIconSettings};
@@ -800,12 +800,6 @@ impl AppearanceSettingsPageView {
                 editor_view.set_interaction_state(InteractionState::Disabled, ctx);
             })
         }
-
-        ctx.subscribe_to_model(&GPUState::handle(ctx), |_, _, event, ctx| {
-            if matches!(event, GPUStateEvent::LowPowerGPUAvailable) {
-                ctx.notify();
-            }
-        });
 
         let appearance_handle = Appearance::handle(ctx);
         ctx.subscribe_to_model(&appearance_handle, Self::handle_appearance_update);

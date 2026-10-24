@@ -14,8 +14,6 @@ use crate::themes::theme::{RespectSystemTheme, SelectedSystemThemes, ThemeKind};
 define_settings_group!(ThemeSettings, settings: [
     theme_kind: Theme {
         type: ThemeKind,
-        // Note that for new users, we now override this default value in SettingsInitializer
-        // to set the default theme to Phenomenon.
         default: if torch_core::channel::ChannelState::is_local_only() { ThemeKind::Light } else { ThemeKind::default() },
         supported_platforms: SupportedPlatforms::ALL,
         surface: settings::SettingSurfaces::GUI,

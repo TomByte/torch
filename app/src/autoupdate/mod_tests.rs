@@ -3,7 +3,7 @@ use torch_core::execution_mode::{AppExecutionMode, ExecutionMode};
 use torchui::{App, ModelHandle, ReadModel, UpdateModel};
 
 use super::*;
-use crate::auth::{AuthManager, AuthStateProvider};
+use crate::auth::AuthStateProvider;
 use crate::server::server_api::ServerApiProvider;
 use crate::server::telemetry::context_provider::AppTelemetryContextProvider;
 
@@ -11,7 +11,6 @@ fn initialize_app(app: &mut App) -> ModelHandle<AutoupdateState> {
     let server_api_provider = app.add_singleton_model(|_| ServerApiProvider::new_for_test());
     app.add_singleton_model(|_| AuthStateProvider::new_for_test());
     app.add_singleton_model(AppTelemetryContextProvider::new_context_provider);
-    app.add_singleton_model(AuthManager::new_for_test);
 
     let server_api = app.read_model(&server_api_provider, |server_api_provider, _| {
         server_api_provider.get()

@@ -40,15 +40,11 @@ use torchui::{AppContext, Entity, SingletonEntity};
 
 use self::model::Project;
 use crate::app_state::AppState;
-use crate::auth::auth_manager::PersistedCurrentUserInformation;
 use crate::persisted_workspace::EnablementState;
-use crate::server::experiments::ServerExperiment;
 use crate::suggestions::ignored_suggestions_model::SuggestionType;
 use crate::terminal::history::PersistedCommand;
 use crate::terminal::model::block::SerializedBlock;
 use crate::terminal::model::session::SessionId;
-use crate::workspaces::user_profiles::UserProfileWithUID;
-use crate::workspaces::workspace::{Workspace as WorkspaceMetadata, WorkspaceUid};
 
 #[derive(Clone)]
 pub enum PersistenceScope {
@@ -102,11 +98,6 @@ impl PersistedDataScope {
     fn command_history(self) -> bool {
         matches!(self, PersistedDataScope::Full)
     }
-
-    /// User profiles used to identify cloud-object creators.
-    fn user_profiles(self) -> bool {
-        self != PersistedDataScope::CodebaseIndicesOnly
-    }
 }
 
 /// Initializes the persistence "subsystem".
@@ -129,35 +120,6 @@ pub fn initialize(
             sqlite::initialize(ctx, scope, data_scope)
         } else {
             (None, None)
-        }
-    }
-}
-
-// Remove sqlite database as part of Logout v0.
-// TODO: Implement per user scoping of sqlite.
-#[cfg_attr(not(feature = "local_fs"), allow(unused_variables))]
-pub fn remove(sender: &Option<SyncSender<ModelEvent>>) {
-    cfg_if::cfg_if! {
-        if #[cfg(feature = "local_fs")] {
-            if let Some(sender) = sender.clone() {
-                sqlite::remove(sender);
-            }
-        } else {
-            log::info!("Local filesystem persistence is not enabled.");
-        }
-    }
-}
-
-// Reconstruct sqlite database as part of Logout v0.
-#[cfg_attr(not(feature = "local_fs"), allow(unused_variables))]
-pub fn reconstruct(sender: &Option<SyncSender<ModelEvent>>) {
-    cfg_if::cfg_if! {
-        if #[cfg(feature = "local_fs")] {
-            if let Some(sender) = sender.clone() {
-                sqlite::reconstruct(sender);
-            }
-        } else {
-            log::info!("Local filesystem persistence is not enabled.");
         }
     }
 }
@@ -236,11 +198,7 @@ pub struct PersistedData {
     /// [`PersistedDataScope`] excludes it entirely (the daemon).
     pub app_state: Option<AppState>,
 
-    pub workspaces: Vec<WorkspaceMetadata>,
-    pub current_workspace_uid: Option<WorkspaceUid>,
     pub command_history: Vec<PersistedCommand>,
-    pub user_profiles: Vec<UserProfileWithUID>,
-    pub experiments: Vec<ServerExperiment>,
     pub codebase_indices: Vec<CodeWorkspaceMetadata>,
     pub workspace_language_servers: HashMap<PathBuf, HashMap<LSPServerType, EnablementState>>,
     pub projects: Vec<Project>,
@@ -281,39 +239,14 @@ pub enum ModelEvent {
     SaveBlock(BlockCompleted),
     DeleteBlocks(Vec<u8>),
     Snapshot(AppState),
-    UpsertWorkspace {
-        workspace: Box<WorkspaceMetadata>,
-    },
-    UpsertWorkspaces {
-        workspaces: Vec<WorkspaceMetadata>,
-    },
-    SetCurrentWorkspace {
-        workspace_uid: WorkspaceUid,
-    },
     InsertCommand {
         metadata: StartedCommandMetadata,
     },
     UpdateFinishedCommand {
         metadata: FinishedCommandMetadata,
     },
-    UpsertUserProfiles {
-        profiles: Vec<UserProfileWithUID>,
-    },
-    ClearUserProfiles,
-    SaveExperiments {
-        experiments: Vec<ServerExperiment>,
-    },
-    // `PauseAndRemoveDatabase` and `ReconstructAndResume` are used to pause and resume the writer thread.
-    // These are employed as part of Logout v0 to ensure that the writer thread
-    // does not continue writing to the DB after the user has logged out and the DB is deleted.
-    PauseAndRemoveDatabase,
-    #[cfg(feature = "local_fs")]
-    ReconstructAndResume,
     /// Close the SQLite writer thread when the app is about to quit.
     Terminate,
-    UpsertCurrentUserInformation {
-        user_information: PersistedCurrentUserInformation,
-    },
     UpsertCodebaseIndexMetadata {
         index_metadata: Box<CodeWorkspaceMetadata>,
     },

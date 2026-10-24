@@ -1,9 +1,6 @@
-pub mod auth;
 #[cfg(not(target_family = "wasm"))]
 pub(crate) mod download;
 pub mod managed_secrets;
-pub mod team;
-pub mod workspace;
 
 use std::ops::Deref;
 use std::sync::Arc;
@@ -11,7 +8,6 @@ use std::time::Duration;
 
 use ::http::header::CONTENT_LENGTH;
 use anyhow::{Result, anyhow};
-use auth::AuthClient;
 use channel_versions::ChannelVersions;
 use chrono::{DateTime, FixedOffset};
 use instant::Instant;
@@ -19,10 +15,9 @@ use managed_secrets::AppManagedSecretsClient;
 use parking_lot::Mutex;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
-use team::TeamClient;
 use torch_core::context_flag::ContextFlag;
 use torch_errors::report_error;
-use torch_server_client::auth::{AuthClientImpl, AuthEvent, EXPERIMENT_ID_HEADER};
+use torch_server_client::auth::{AuthEvent, EXPERIMENT_ID_HEADER};
 use torch_server_client::base_client::{
     AuthenticatedGraphqlConfig, BaseClient, GraphqlRoutingConfig,
 };
@@ -31,11 +26,8 @@ use torch_server_client::network_logging::NetworkLogModel;
 use torchui::r#async::BoxFuture;
 use torchui::{Entity, ModelContext, SingletonEntity};
 use url::Url;
-use workspace::WorkspaceClient;
 
-use super::experiments::{ServerExperiment, ServerExperiments};
 use crate::ChannelState;
-use crate::auth::auth_manager::AuthManager;
 use crate::auth::auth_state::AuthState;
 use crate::server::team_scope::RequestTeamScope;
 
@@ -372,7 +364,6 @@ impl ServerApi {
 /// or any of its implemented trait objects.
 pub struct ServerApiProvider {
     server_api: Arc<ServerApi>,
-    auth_client: Arc<dyn AuthClient>,
 }
 
 impl ServerApiProvider {
@@ -391,22 +382,6 @@ impl ServerApiProvider {
             event_receiver,
             move |_, event, ctx| {
                 match event {
-                    AuthEvent::UserAccountDisabled => {
-                        // We dispatch a global action here because the log out code requires
-                        // `server_api`, causing a circular model reference panic when it calls
-                        // `ServerApiProvider` to get access.
-                        // TODO: We should remove this pattern where `ServerApiProvider` responds
-                        // to events; it's prone to these sorts of circular reference issues.
-                        ctx.dispatch_global_action("app:log_out", ());
-                    }
-                    AuthEvent::NeedsReauth => {
-                        // AuthManager depends on a reference to ServerApi, so ServerApi can't easily
-                        // hold a ref to AuthManager. To get around this, we emit an event on ServerApi
-                        // and handle calling the AuthManager here instead.
-                        AuthManager::handle(ctx).update(ctx, |auth_manager, ctx| {
-                            auth_manager.set_needs_reauth(true, ctx);
-                        });
-                    }
                     AuthEvent::IapChallengeReceived => {
                         IapManager::handle(ctx)
                             .update(ctx, |manager, ctx| manager.handle_challenge(ctx));
@@ -419,51 +394,22 @@ impl ServerApiProvider {
             },
             |_, _| {},
         );
-        let server_api = Arc::new(server_api);
-        let auth_client = Arc::new(AuthClientImpl::new(server_api.base_client.clone()));
         Self {
-            server_api,
-            auth_client,
+            server_api: Arc::new(server_api),
         }
-    }
-
-    /// Handles fetching server-side experiments by updating the appropriate app state.
-    pub fn handle_experiments_fetched(
-        &self,
-        experiments: Vec<ServerExperiment>,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        ServerExperiments::handle(ctx).update(ctx, |state, ctx| {
-            state.apply_latest_state(experiments, ctx);
-        });
     }
 
     /// Constructs a new SeverApiProvider for tests.
     #[cfg(test)]
     pub fn new_for_test() -> Self {
-        let server_api = Arc::new(ServerApi::new_for_test());
-        let auth_client = Arc::new(AuthClientImpl::new(server_api.base_client.clone()));
         Self {
-            server_api,
-            auth_client,
+            server_api: Arc::new(ServerApi::new_for_test()),
         }
     }
 
     /// Returns a handle to the underlying [`ServerApi`] object.
     /// Prefer retrieving a specific trait object related to the methods you're calling.
     pub fn get(&self) -> Arc<ServerApi> {
-        self.server_api.clone()
-    }
-
-    pub fn get_auth_client(&self) -> Arc<dyn AuthClient> {
-        self.auth_client.clone()
-    }
-
-    pub fn get_workspace_client(&self) -> Arc<dyn WorkspaceClient> {
-        self.server_api.clone()
-    }
-
-    pub fn get_team_client(&self) -> Arc<dyn TeamClient> {
         self.server_api.clone()
     }
 

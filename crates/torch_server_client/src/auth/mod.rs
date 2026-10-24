@@ -39,8 +39,6 @@ use torch_graphql::queries::api_keys::{
 use torch_graphql::queries::get_user::{GetUser, GetUserVariables, UserOutput as GqlUserOutput};
 use torch_graphql::queries::get_user_settings::{GetUserSettings, GetUserSettingsVariables};
 use torch_server_auth::credentials::{AuthToken, Credentials, FirebaseToken, LoginToken};
-pub use torch_server_auth::user_uid;
-pub use user_uid::{TEST_USER_EMAIL, TEST_USER_UID, UserUid};
 
 use crate::base_client::{BaseClient, TEAM_UID_HEADER};
 use crate::graphql_helpers::{send_graphql_request, send_graphql_request_with_options};

@@ -58,12 +58,6 @@ pub enum FeatureFlag {
     /// Torch Agent Mode.
     AgentMode,
 
-    /// Whether the user is part of the Torch Alpha Program (AI Trusted Testers).
-    /// This is enabled automatically for local and dev builds.
-    /// Collect conversation and input autodetection data for agent mode.
-    /// Also collects block data for Next Command, if enabled.
-    AgentModeAnalytics,
-
     /// A setting to enable a traditional completions experience.
     ClassicCompletions,
 
@@ -131,9 +125,6 @@ pub enum FeatureFlag {
     SshDragAndDrop,
     DragTabsToWindows,
 
-    /// Enables multi-workspace selection.
-    MultiWorkspace,
-
     /// Maximizes data in flat storage to reduce memory usage.
     MaximizeFlatStorage,
 
@@ -154,9 +145,6 @@ pub enum FeatureFlag {
 
     /// Enables using `esc` to clear autosuggestions.
     ClearAutosuggestionOnEscape,
-
-    /// If enabled, the default theme is set to Adeberry for new users.
-    DefaultAdeberryTheme,
 
     /// New, less intrusive autoupdate UI.
     AutoupdateUIRevamp,
@@ -262,10 +250,6 @@ pub enum FeatureFlag {
 
     /// Enables auto-opening code review pane on first agent change and its setting UI.
     AutoOpenCodeReviewPane,
-
-    /// Feature flags for the Build Plan Auto Reload experiment.
-    BuildPlanAutoReloadBannerToggle,
-    BuildPlanAutoReloadPostPurchaseModal,
 
     /// Enables inline code review functionality
     InlineCodeReview,
@@ -416,9 +400,6 @@ pub enum FeatureFlag {
     /// Enables Torch local control through the standalone warpctrl CLI.
     WarpControlCli,
 
-    /// When enabled, solo users (not on a team) can use BYO API keys.
-    SoloUserByok,
-
     /// Replaces the in-block warpification banner with a warpify footer.
     WarpifyFooter,
 
@@ -508,10 +489,8 @@ pub const DOGFOOD_FLAGS: &[FeatureFlag] = &[
     FeatureFlag::ToggleBootstrapBlock,
     FeatureFlag::RemoveAutosuggestionDuringTabCompletions,
     FeatureFlag::ResizeFix,
-    FeatureFlag::AgentModeAnalytics,
     FeatureFlag::LazySceneBuilding,
     FeatureFlag::SshDragAndDrop,
-    FeatureFlag::MultiWorkspace,
     FeatureFlag::ImeMarkedText,
     FeatureFlag::MSYS2Shells,
     FeatureFlag::ContextLineReviewComments,

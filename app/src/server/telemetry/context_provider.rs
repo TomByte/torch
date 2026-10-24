@@ -14,9 +14,8 @@ impl AppTelemetryContextProvider {
 }
 
 impl TelemetryContextProvider for AppTelemetryContextProvider {
-    fn user_id(&self, ctx: &AppContext) -> Option<String> {
-        let auth_state = AuthStateProvider::as_ref(ctx).get();
-        auth_state.user_id().map(|uid| uid.as_string())
+    fn user_id(&self, _ctx: &AppContext) -> Option<String> {
+        None
     }
 
     fn anonymous_id(&self, ctx: &AppContext) -> String {

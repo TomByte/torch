@@ -25,14 +25,12 @@ use super::spawner::{PtySpawnHooks, PtySpawnMode};
 #[cfg(unix)]
 use super::terminal_attributes::TerminalAttributesPoller;
 use super::{mio_channel, recorder};
-use crate::auth::AuthStateProvider;
-use crate::auth::auth_state::AuthState;
 use crate::banner::BannerState;
 use crate::context_chips::ContextChipKind;
 use crate::features::FeatureFlag;
 use crate::persistence::ModelEvent;
-use crate::send_telemetry_on_executor;
 use crate::server::telemetry::{PtySpawnMode as TelemetryPtySpawnMode, TelemetryEvent};
+use crate::send_telemetry_on_executor;
 use crate::settings::{DebugSettings, SshSettings};
 use crate::terminal::available_shells::{AvailableShell, AvailableShells};
 use crate::terminal::color::List as ColorList;
@@ -297,7 +295,6 @@ impl<S> TerminalManager<S> {
 
         // This is purely for measuring throughput on WarpDev.
         if FeatureFlag::RecordPtyThroughput.is_enabled() {
-            let auth_state = AuthStateProvider::as_ref(ctx).get().clone();
             let telemetry_executor = Arc::clone(ctx.background_executor());
             recorder::record_pty_throughput(
                 inactive_pty_reads_rx.clone().activate(),
@@ -308,7 +305,6 @@ impl<S> TerminalManager<S> {
                 },
                 move |max_bytes_per_second| {
                     send_telemetry_on_executor!(
-                        auth_state,
                         TelemetryEvent::PtyThroughput {
                             max_bytes_per_second,
                         },
@@ -476,15 +472,14 @@ fn on_shell_determined<S: TerminalSurface>(
     }
 
     log::debug!("Using shell starter source {shell_starter_source:?}");
-    let bg_executor = ctx.background_executor();
-    let auth_state = AuthStateProvider::as_ref(ctx).get();
 
     let is_fallback_shell = matches!(
         shell_starter_source,
         Some(ShellStarterSource::Fallback { .. })
     );
-    let shell_starter = shell_starter_source
-        .map(|source| get_shell_starter_internal(source, bg_executor, auth_state));
+    let bg_executor = ctx.background_executor();
+    let shell_starter =
+        shell_starter_source.map(|source| get_shell_starter_internal(source, bg_executor));
     let shell_starter = match shell_starter {
         Some(shell_starter) => shell_starter,
         None => {
@@ -860,7 +855,6 @@ fn wire_up_terminal_attribute_poller_with_surface<S: TerminalSurface>(
 
 pub fn get_shell_starter(
     chosen_shell: Option<AvailableShell>,
-    auth_state: &AuthState,
     ctx: &mut AppContext,
 ) -> Option<ShellStarter> {
     let preferred_shell = chosen_shell.unwrap_or_else(|| {
@@ -874,18 +868,13 @@ pub fn get_shell_starter(
             torchui::r#async::block_on(async { starter.to_shell_starter_source().await })
         })
         .map(|starter_source| {
-            get_shell_starter_internal(
-                starter_source,
-                ctx.background_executor().clone(),
-                auth_state,
-            )
+            get_shell_starter_internal(starter_source, ctx.background_executor().clone())
         })
 }
 
 fn get_shell_starter_internal(
     shell_starter_source: ShellStarterSource,
     background_executor: Arc<Background>,
-    auth_state: &AuthState,
 ) -> ShellStarter {
     match shell_starter_source {
         ShellStarterSource::Override(shell_starter) => shell_starter,
@@ -898,7 +887,6 @@ fn get_shell_starter_internal(
         } => {
             if let Some(unsupported_shell) = unsupported_shell {
                 send_telemetry_on_executor!(
-                    auth_state,
                     TelemetryEvent::UnsupportedShell {
                         shell: unsupported_shell
                     },

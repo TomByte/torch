@@ -150,8 +150,6 @@ use crate::agent_status::AgentReviewCommentBatch;
 use crate::agent_status::footer::toolbar_item::AgentToolbarItemKind;
 use crate::antivirus::AntivirusInfo;
 use crate::appearance::{Appearance, AppearanceEvent};
-use crate::auth::AuthStateProvider;
-use crate::auth::auth_state::AuthState;
 use crate::autoupdate::{self, AutoupdateStage, get_update_state};
 use crate::banner::{
     Banner, BannerAction, BannerEvent, BannerState, BannerTextButton, BannerTextContent,
@@ -196,8 +194,7 @@ use crate::settings::{
     BlockVisibilitySettingsChangedEvent, CLIAgentSettings, CodeSettings, DebugSettings,
     DebugSettingsChangedEvent, EmacsBindingsSettings, FontSettings, FontSettingsChangedEvent,
     InputModeSettings, InputModeSettingsChangedEvent, InputSettings, PaneSettings,
-    PaneSettingsChangedEvent, PrivacySettings, PrivacySettingsChangedEvent,
-    PrivacySettingsSnapshot, SelectionSettings, VimBannerSettings,
+    PaneSettingsChangedEvent, SelectionSettings, VimBannerSettings,
 };
 use crate::settings_view::keybindings::KeybindingChangedNotifier;
 use crate::settings_view::{SettingsSection, flags};
@@ -1555,7 +1552,6 @@ pub struct TerminalView {
 
     mouse_states: TerminalViewMouseStates,
 
-    auth_state: Arc<AuthState>,
 
     /// A sender used to handle messages for whenever the entire terminal view
     /// changes size.  Note that this size contains not just the content element
@@ -1642,14 +1638,6 @@ pub struct TerminalView {
 
     last_focus_ts: Option<NaiveDateTime>,
     tips_completed: ModelHandle<TipsCompleted>,
-
-    /// A manually managed [`PrivacySettingsSnapshot`]. We must maintain a separate snapshot of
-    /// [`PrivacySettings`] (rather than using it directly), so we can decide whether to send a
-    /// telemetry event in the view's `drop()` method, which does not have access to a ViewContext
-    /// (which is required for reading the `PrivacySettings` model). This is a less-than-ideal
-    /// workaround; other usages of PrivacyModel should directly read from the singleton model
-    /// managed by the UI framework (e.g. via `PrivacySettings::handle(ctx)`).
-    privacy_settings_snapshot: PrivacySettingsSnapshot,
 
     /// Whether or not this terminal session was ever active.
     was_ever_visible: bool,
@@ -2276,17 +2264,6 @@ impl TerminalView {
         let ligature_handle = LigatureSettings::handle(ctx);
         ctx.subscribe_to_model(&ligature_handle, |_, _, _, ctx| ctx.notify());
 
-        let privacy_settings_handle = PrivacySettings::handle(ctx);
-        ctx.subscribe_to_model(
-            &privacy_settings_handle,
-            |me, privacy_settings_handle, event, ctx| {
-                if let PrivacySettingsChangedEvent::UpdateIsTelemetryEnabled { .. } = event {
-                    me.privacy_settings_snapshot =
-                        privacy_settings_handle.as_ref(ctx).get_snapshot()
-                }
-            },
-        );
-
         let block_visibility_settings_handle = BlockVisibilitySettings::handle(ctx);
         ctx.subscribe_to_model(
             &block_visibility_settings_handle,
@@ -2450,7 +2427,6 @@ impl TerminalView {
             mouse_down_block_index: None,
             mouse_states: Default::default(),
             open_grid_link_tool_tip: None,
-            auth_state: AuthStateProvider::as_ref(ctx).get().clone(),
             find_bar,
             resize_tx,
             find_link_tx,
@@ -2485,7 +2461,6 @@ impl TerminalView {
             file_link_scanning_join_handle: None,
             last_focus_ts: None,
             tips_completed: resources.tips_completed.clone(),
-            privacy_settings_snapshot: privacy_settings_handle.as_ref(ctx).get_snapshot(),
             was_ever_visible: false,
             view_id: ctx.view_id(),
             current_state: TerminalViewStateChange::default(),
@@ -13427,7 +13402,7 @@ impl TerminalView {
             // TODO(CORE-2300): This appears to be used for invoking env vars.
             // Before we close out CORE-2300, we should evaluate if we need to add
             // shell info here.
-            let shell_starter = get_shell_starter(None, &self.auth_state, ctx)?;
+            let shell_starter = get_shell_starter(None, ctx)?;
             let shell_path = match &shell_starter {
                 ShellStarter::Direct(direct_shell_starter)
                 | ShellStarter::MSYS2(direct_shell_starter) => direct_shell_starter

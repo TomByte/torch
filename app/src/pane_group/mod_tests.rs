@@ -16,7 +16,6 @@ use watcher::HomeDirectoryWatcher;
 
 use super::*;
 use crate::auth::AuthStateProvider;
-use crate::auth::auth_manager::AuthManager;
 use crate::changelog_model::ChangelogModel;
 use crate::context_chips::prompt::Prompt;
 use crate::network::NetworkStatus;
@@ -42,12 +41,8 @@ use crate::warp_managed_paths_watcher::WarpManagedPathsWatcher;
 use crate::workflows::local_workflows::LocalWorkflows;
 use crate::workspace::sync_inputs::SyncedInputState;
 use crate::workspace::{ActiveSession, WorkspaceRegistry};
-use crate::workspaces::team_tester::TeamTesterStatus;
-use crate::workspaces::update_manager::TeamUpdateManager;
-use crate::workspaces::user_profiles::UserProfiles;
-use crate::workspaces::user_workspaces::UserWorkspaces;
 use crate::{
-    AgentNotificationsModel, GlobalResourceHandles, GlobalResourceHandlesProvider, experiments,
+    AgentNotificationsModel, GlobalResourceHandles, GlobalResourceHandlesProvider,
 };
 
 fn initialize_app(app: &mut App) {
@@ -67,13 +62,9 @@ fn initialize_app(app: &mut App) {
     app.add_singleton_model(|ctx| ChangelogModel::new(ServerApiProvider::as_ref(ctx).get()));
     app.add_singleton_model(|_| AuthStateProvider::new_for_test());
     app.add_singleton_model(AppTelemetryContextProvider::new_context_provider);
-    app.add_singleton_model(AuthManager::new_for_test);
     app.add_singleton_model(|_ctx| PtySpawner::new_for_test());
     app.add_singleton_model(|_| NetworkStatus::new());
     app.add_singleton_model(|_| SystemStats::new());
-    app.add_singleton_model(UserWorkspaces::default_mock);
-    app.add_singleton_model(TeamTesterStatus::mock);
-    app.add_singleton_model(TeamUpdateManager::mock);
 
     // Initialize file-based MCP dependencies.
     app.add_singleton_model(|_| DetectedRepositories::default());
@@ -81,7 +72,6 @@ fn initialize_app(app: &mut App) {
     app.add_singleton_model(DirectoryWatcher::new);
     app.add_singleton_model(WarpManagedPathsWatcher::new_for_testing);
 
-    app.add_singleton_model(|_ctx| UserProfiles::new(Vec::new()));
     app.add_singleton_model(|_| Appearance::mock());
     app.add_singleton_model(PrivacySettings::mock);
     app.add_singleton_model(|_ctx| SyncedInputState::mock());
@@ -102,7 +92,6 @@ fn initialize_app(app: &mut App) {
     app.add_singleton_model(FileSearchModel::new);
     app.add_singleton_model(|_| crate::code_review::git_repo_model::GitRepoModels::new());
     crate::terminal::available_shells::register(app);
-    app.update(experiments::init);
     AltScreenReporting::register(app);
     app.add_singleton_model(|ctx| PersistedWorkspace::new(vec![], HashMap::new(), None, ctx));
     app.add_singleton_model(|_| WorkspaceRegistry::new());

@@ -14,7 +14,6 @@ use torchui::{App, AppContext, Element, SingletonEntity};
 use super::*;
 use crate::appearance::Appearance;
 use crate::auth::AuthStateProvider;
-use crate::auth::auth_manager::AuthManager;
 use crate::search::command_search::history::{
     history_data_source, history_data_source_for_session,
 };
@@ -121,7 +120,6 @@ fn initialize_app(app: &mut App) {
     app.add_singleton_model(|_| ServerApiProvider::new_for_test());
     app.add_singleton_model(|_| AuthStateProvider::new_for_test());
     app.add_singleton_model(AppTelemetryContextProvider::new_context_provider);
-    app.add_singleton_model(AuthManager::new_for_test);
 }
 
 #[test]

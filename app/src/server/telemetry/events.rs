@@ -177,7 +177,6 @@ pub enum PaletteSource {
     Keybinding,
     CtrlTab { shift_pressed_initially: bool },
     QuitModal,
-    LogOutModal,
     IntegrationTest,
     ConversationManager,
     ContextChip,
@@ -426,7 +425,6 @@ pub enum TelemetryEvent {
     /// A new block of background output was started and added to the block list.
     BackgroundBlockStarted,
     SessionCreation,
-    Login,
     ConfirmSuggestion {
         mode: TelemetryInputSuggestionsMode,
         match_type: MatchType,
@@ -692,11 +690,6 @@ pub enum TelemetryEvent {
     InputSelectAll,
     InputPaste,
     InputCommandSearch,
-    ExperimentTriggered {
-        experiment: &'static str,
-        layer: &'static str,
-        group_assignment: &'static str,
-    },
     ToggleSyncAllPanesInAllTabs {
         enabled: bool,
     },
@@ -754,7 +747,6 @@ pub enum TelemetryEvent {
     ShowVimKeybindingsBanner,
     EnableVimKeybindingsFromBanner,
     DismissVimKeybindingsBanner,
-    NeedsReauth,
     ToggleSecretRedaction {
         enabled: bool,
     },
@@ -782,7 +774,6 @@ pub enum TelemetryEvent {
     UnsupportedShell {
         shell: String,
     },
-    LogOut,
     SettingsImportInitiated,
     OpenAndWarpifyDockerSubshell {
         /// Some variant if we support this shell type, and None otherwise.
@@ -1415,13 +1406,6 @@ impl TelemetryEvent {
             TelemetryEvent::CodeSelectionAddedAsContext { destination } => Some(json!({
                 "destination": destination,
             })),
-            TelemetryEvent::ExperimentTriggered {
-                experiment,
-                layer,
-                group_assignment,
-            } => Some(
-                json!({ "experiment": experiment, "layer": layer, "group_assignment": group_assignment }),
-            ),
             TelemetryEvent::ToggleSyncAllPanesInAllTabs { enabled } => {
                 Some(json!({ "enabled": enabled }))
             }
@@ -1608,7 +1592,6 @@ impl TelemetryEvent {
             })),
             TelemetryEvent::BackgroundBlockStarted
             | TelemetryEvent::SessionCreation
-            | TelemetryEvent::Login
             | TelemetryEvent::ContextMenuInsertSelectedText
             | TelemetryEvent::JumpToPreviousCommand
             | TelemetryEvent::OpenThemeChooser
@@ -1662,11 +1645,9 @@ impl TelemetryEvent {
             | TelemetryEvent::ShowVimKeybindingsBanner
             | TelemetryEvent::EnableVimKeybindingsFromBanner
             | TelemetryEvent::DismissVimKeybindingsBanner
-            | TelemetryEvent::NeedsReauth
             | TelemetryEvent::CustomSecretRegexAdded
             | TelemetryEvent::CopySecret
             | TelemetryEvent::CommandFileRun
-            | TelemetryEvent::LogOut
             | TelemetryEvent::UpdateBlockFilterQuery
             | TelemetryEvent::BlockFilterToolbeltButtonClicked
             | TelemetryEvent::PaneDragInitiated
@@ -1916,7 +1897,6 @@ impl TelemetryEvent {
             | TelemetryEvent::BlockCompletedOnDogfoodOnly { .. }
             | TelemetryEvent::BackgroundBlockStarted
             | TelemetryEvent::SessionCreation
-            | TelemetryEvent::Login
             | TelemetryEvent::ConfirmSuggestion { .. }
             | TelemetryEvent::ContextMenuCopy(_, _)
             | TelemetryEvent::ContextMenuOpenShareModal(_)
@@ -2029,7 +2009,6 @@ impl TelemetryEvent {
             | TelemetryEvent::InputSelectAll
             | TelemetryEvent::InputPaste
             | TelemetryEvent::InputCommandSearch
-            | TelemetryEvent::ExperimentTriggered { .. }
             | TelemetryEvent::ToggleSyncAllPanesInAllTabs { .. }
             | TelemetryEvent::ToggleSyncAllPanesInTab { .. }
             | TelemetryEvent::ToggleSameLinePrompt { .. }
@@ -2055,7 +2034,6 @@ impl TelemetryEvent {
             | TelemetryEvent::ShowVimKeybindingsBanner
             | TelemetryEvent::EnableVimKeybindingsFromBanner
             | TelemetryEvent::DismissVimKeybindingsBanner
-            | TelemetryEvent::NeedsReauth
             | TelemetryEvent::ToggleSecretRedaction { .. }
             | TelemetryEvent::CustomSecretRegexAdded
             | TelemetryEvent::ToggleObfuscateSecret { .. }
@@ -2065,7 +2043,6 @@ impl TelemetryEvent {
             | TelemetryEvent::CommandFileRun
             | TelemetryEvent::PageUpDownInEditorPressed { .. }
             | TelemetryEvent::UnsupportedShell { .. }
-            | TelemetryEvent::LogOut
             | TelemetryEvent::OpenAndWarpifyDockerSubshell { .. }
             | TelemetryEvent::UpdateBlockFilterQuery
             | TelemetryEvent::UpdateBlockFilterQueryContextLines { .. }
@@ -2191,7 +2168,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::BlockCompleted => EnablementState::Always,
             Self::BackgroundBlockStarted => EnablementState::Always,
             Self::SessionCreation => EnablementState::Always,
-            Self::Login => EnablementState::Always,
             Self::ConfirmSuggestion => EnablementState::Always,
             Self::ContextMenuCopy => EnablementState::Always,
             Self::ContextMenuOpenShareModal => EnablementState::Always,
@@ -2302,7 +2278,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::InputSelectAll => EnablementState::Always,
             Self::InputPaste => EnablementState::Always,
             Self::InputCommandSearch => EnablementState::Always,
-            Self::ExperimentTriggered => EnablementState::Always,
             Self::ToggleSyncAllPanesInAllTabs => EnablementState::Always,
             Self::ToggleSyncAllPanesInTab => EnablementState::Always,
             Self::ToggleSameLinePrompt => EnablementState::Always,
@@ -2331,7 +2306,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::ShowVimKeybindingsBanner => EnablementState::Always,
             Self::EnableVimKeybindingsFromBanner => EnablementState::Always,
             Self::DismissVimKeybindingsBanner => EnablementState::Always,
-            Self::NeedsReauth => EnablementState::Always,
             Self::ToggleSecretRedaction => EnablementState::Always,
             Self::CustomSecretRegexAdded => EnablementState::Always,
             Self::ToggleObfuscateSecret => EnablementState::Always,
@@ -2340,7 +2314,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::CommandFileRun => EnablementState::Always,
             Self::PageUpDownInEditorPressed => EnablementState::Always,
             Self::UnsupportedShell => EnablementState::Always,
-            Self::LogOut => EnablementState::Always,
             Self::SettingsImportInitiated => EnablementState::Always,
             Self::OpenAndWarpifyDockerSubshell => EnablementState::Always,
             Self::UpdateBlockFilterQuery => EnablementState::Always,
@@ -2429,7 +2402,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::BlockCompletedOnDogfoodOnly => "Block Completed (dogfood only)",
             Self::BackgroundBlockStarted => "Background Block Started",
             Self::SessionCreation => "Tab Creation",
-            Self::Login => "Logged in to native app",
             Self::ReinputCommands => "Context Menu: Reinput Commands",
             Self::ToggleFocusPaneOnHover => "Toggle Focus Pane On Hover",
             Self::JumpToPreviousCommand => "Jumped to Previous Command",
@@ -2523,7 +2495,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::SaveLaunchConfig => "Save Launch Config",
             Self::OpenLaunchConfigFile => "Open Launch Config File",
             Self::OpenLaunchConfig => "Open Launch Config",
-            Self::LogOut => "Log Out",
             Self::SelectNavigationPaletteItem => "Select Navigation Palette Item",
             Self::SetLineHeight => "Set Line Height",
             Self::ResourceCenterOpened => "Resource Center Opened",
@@ -2559,7 +2530,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::InputSelectAll => "InputBoxSelectAll",
             Self::InputPaste => "InputBoxPaste",
             Self::InputCommandSearch => "InputBoxCommandSearch",
-            Self::ExperimentTriggered => "experiments.client.enroll_client",
             Self::ToggleSyncAllPanesInAllTabs => "Toggle Sync Inputs Across All Panes in All Tabs",
             Self::ToggleSyncAllPanesInTab => "Toggle Sync Inputs Across All Panes in Current Tab",
             Self::ToggleSameLinePrompt => "Toggle Same Line Prompt",
@@ -2585,7 +2555,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::ShowAliasExpansionBanner => "Show Alias Expansion Banner",
             Self::DismissAliasExpansionBanner => "Dismiss Alias Expansion Banner",
             Self::EnableAliasExpansionFromBanner => "Enable Alias Expansion From Banner",
-            Self::NeedsReauth => "Needs Reauth",
             Self::ToggleSecretRedaction => "Toggle Secret Redaction",
             Self::CustomSecretRegexAdded => "Custom Secret Regex Added",
             Self::ToggleObfuscateSecret => "Toggle Obfuscate Secret",
@@ -2697,7 +2666,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             }
             #[cfg(feature = "local_fs")]
             Self::PreviewPanePromoted => "Promoted a preview code tab to a normal tab",
-            Self::Login => "Login is successful",
             Self::ConfirmSuggestion => "Accepted tab completion suggestion",
             Self::ContextMenuCopy => "Clicked \"Copy\" in context menu",
             Self::ContextMenuOpenShareModal => "Opened \"Share\" modal via context menu",
@@ -2887,7 +2855,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::InputCommandSearch => {
                 "Opened Command Search via the Input Editor's context menu (right clicking the buffer)"
             }
-            Self::ExperimentTriggered => "Client assigned to A/B test",
             Self::ToggleSyncAllPanesInAllTabs => {
                 "Enable the synchronization of the Input Editor's buffer to all the panes in all the tabs"
             }
@@ -2965,7 +2932,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
             Self::DismissVimKeybindingsBanner => {
                 "Dismissed the banner to enable Vim keybindings in the Input Editor"
             }
-            Self::NeedsReauth => "User needs to re-authenticate",
             Self::ToggleSecretRedaction => {
                 "Toggled on/off the setting for Secret Redaction - attempts to redact secrets and sensitive information"
             }
@@ -2981,7 +2947,6 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
                 "Pressed `PAGE-UP` or `PAGE-DOWN` within the Input Editor"
             }
             Self::UnsupportedShell => "Booted Torch with a shell that isn't supported",
-            Self::LogOut => "Logged out of the Torch client",
             Self::SettingsImportInitiated => "Started the import settings flow for new users",
             Self::OpenAndWarpifyDockerSubshell => {
                 "Warpifying a docker subshell from using the docker extension"

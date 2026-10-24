@@ -1,65 +1,8 @@
 use torchui::integration::{AssertionCallback, TestStep};
-use torchui::{SingletonEntity, async_assert, async_assert_eq};
+use torchui::{async_assert, async_assert_eq};
 
 use crate::integration_testing::view_getters::workspace_view;
 use crate::util::bindings::keybinding_name_to_display_string;
-use crate::workspaces::team::{Team, TeamVisibility};
-use crate::workspaces::user_workspaces::UserWorkspaces;
-use crate::workspaces::workspace::Workspace;
-
-pub fn join_a_workspace() -> TestStep {
-    TestStep::new("Join a Torch Drive workspace")
-        .with_action(move |app, _, _| {
-            UserWorkspaces::handle(app).update(app, |user_workspaces, ctx| {
-                let workspace_uid = "workspace_uid123456789".to_string().into();
-                let teams: Vec<Team> = vec![Team {
-                    uid: "team_uid12345678912345".try_into().expect("ID is valid"),
-                    name: "My Team".to_string(),
-                    color: None,
-                    invite_link: Default::default(),
-                    members: Default::default(),
-                    pending_email_invites: Default::default(),
-                    invite_link_domain_restrictions: Default::default(),
-                    billing_metadata: Default::default(),
-                    stripe_customer_id: None,
-                    settings: Default::default(),
-                    is_eligible_for_discovery: false,
-                    has_billing_history: false,
-                    visibility: TeamVisibility::Open,
-                }];
-                let workspaces: Vec<Workspace> = vec![Workspace {
-                    uid: workspace_uid,
-                    name: "My Workspace".to_string(),
-                    stripe_customer_id: None,
-                    teams: teams.clone(),
-                    open_teams: Default::default(),
-                    billing_metadata: Default::default(),
-                    bonus_grants_purchased_this_month: Default::default(),
-                    billing_cycle_usage: None,
-                    has_billing_history: false,
-                    settings: Default::default(),
-                    invite_link_domain_restrictions: Default::default(),
-                    pending_email_invites: Default::default(),
-                    is_eligible_for_discovery: false,
-                    members: Default::default(),
-                    total_requests_used_since_last_refresh: 0,
-                }];
-
-                user_workspaces.update_workspaces(workspaces, ctx);
-                user_workspaces.set_current_workspace_uid(workspace_uid, ctx)
-            });
-        })
-        .add_assertion(move |app, _| {
-            UserWorkspaces::handle(app).read(app, |user_workspaces, _| {
-                async_assert!(user_workspaces.has_teams(), "user is on a team")
-            })
-        })
-        .add_assertion(move |app, _| {
-            UserWorkspaces::handle(app).read(app, |user_workspaces, _| {
-                async_assert!(user_workspaces.has_workspaces(), "user is on a workspace")
-            })
-        })
-}
 
 pub fn assert_binding_display_string(
     binding: &'static str,

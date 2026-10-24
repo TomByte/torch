@@ -9,15 +9,9 @@ use warp_multi_agent_api::response_event::stream_finished;
 use warp_multi_agent_api::{self as api};
 
 use super::schema::{
-    app,
-    blocks, code_pane_tabs, code_panes, code_review_panes, commands,
-    current_user_information,
-    ignored_suggestions,
-    notebook_panes, pane_branches,
-    pane_leaves, pane_nodes, panels, projects, server_experiments, settings_panes,
-    tab_groups, tabs, team_members, team_settings, teams, terminal_panes, user_profiles, windows,
-    workspace_language_server, workspace_metadata, workspace_teams,
-    workspaces,
+    app, blocks, code_pane_tabs, code_panes, code_review_panes, commands, ignored_suggestions,
+    notebook_panes, pane_branches, pane_leaves, pane_nodes, panels, projects, settings_panes,
+    tab_groups, tabs, terminal_panes, windows, workspace_language_server, workspace_metadata,
 };
 
 #[derive(Insertable)]
@@ -45,77 +39,6 @@ pub struct Window {
     pub vertical_tabs_panel_open: Option<bool>,
     pub team_uid: Option<String>,
     pub vertical_tabs_panel_width: Option<f32>,
-}
-
-#[derive(Identifiable, Insertable, Queryable)]
-pub struct Team {
-    pub id: i32,
-    pub name: String,
-    pub server_uid: String,
-    pub billing_metadata_json: Option<String>,
-    pub feature_model_choice_json: Option<String>,
-}
-
-#[derive(Insertable, AsChangeset)]
-#[diesel(table_name = teams)]
-pub struct NewTeam {
-    pub name: String,
-    pub server_uid: String,
-    pub billing_metadata_json: Option<String>,
-    pub feature_model_choice_json: Option<String>,
-}
-
-#[derive(Identifiable, Queryable)]
-#[diesel(table_name = team_members)]
-pub struct TeamMemberRow {
-    pub id: i32,
-    pub team_id: i32,
-    pub user_uid: String,
-    pub email: String,
-    pub role: String,
-    pub is_disabled: bool,
-}
-
-#[derive(Insertable)]
-#[diesel(table_name = team_members)]
-pub struct NewTeamMember {
-    pub team_id: i32,
-    pub user_uid: String,
-    pub email: String,
-    pub role: String,
-    pub is_disabled: bool,
-}
-
-#[derive(Identifiable, Insertable, Queryable)]
-pub struct Workspace {
-    pub id: i32,
-    pub name: String,
-    pub server_uid: String,
-    pub is_selected: bool,
-    pub feature_model_choice_json: Option<String>,
-}
-
-#[derive(Insertable, AsChangeset)]
-#[diesel(table_name = workspaces)]
-pub struct NewWorkspace {
-    pub name: String,
-    pub server_uid: String,
-    pub is_selected: bool,
-    pub feature_model_choice_json: Option<String>,
-}
-
-#[derive(Identifiable, Insertable, Queryable)]
-pub struct TeamSetting {
-    pub id: i32,
-    pub team_id: i32,
-    pub settings_json: String,
-}
-
-#[derive(Insertable, AsChangeset)]
-#[diesel(table_name = team_settings)]
-pub struct NewTeamSettings {
-    pub team_id: i32,
-    pub settings_json: String,
 }
 
 #[derive(Clone, Identifiable, Queryable, AsChangeset)]
@@ -176,20 +99,6 @@ impl PartialEq for Project {
 
 impl Eq for Project {}
 
-#[derive(Identifiable, Insertable, Queryable)]
-pub struct WorkspaceTeam {
-    pub id: i32,
-    pub workspace_server_uid: String,
-    pub team_server_uid: String,
-}
-
-#[derive(Insertable, AsChangeset)]
-#[diesel(table_name = workspace_teams)]
-pub struct NewWorkspaceTeam {
-    pub workspace_server_uid: String,
-    pub team_server_uid: String,
-}
-
 #[derive(Insertable)]
 #[diesel(table_name = windows)]
 pub struct NewWindow {
@@ -206,7 +115,6 @@ pub struct NewWindow {
     pub fullscreen_state: i32,
     pub left_panel_open: Option<bool>,
     pub vertical_tabs_panel_open: Option<bool>,
-    pub team_uid: Option<String>,
     pub vertical_tabs_panel_width: Option<f32>,
 }
 
@@ -604,33 +512,6 @@ pub struct Command {
     pub cloud_workflow_id: Option<String>,
     pub workflow_command: Option<String>,
     pub is_agent_executed: Option<bool>,
-}
-
-#[derive(Identifiable, Queryable, Insertable)]
-#[diesel(table_name = user_profiles)]
-#[diesel(primary_key(firebase_uid))]
-pub struct UserProfile {
-    pub firebase_uid: String,
-    pub photo_url: String,
-    pub email: String,
-    pub display_name: Option<String>,
-}
-
-#[derive(Insertable, Queryable)]
-pub struct ServerExperiment {
-    pub experiment: String,
-}
-
-#[derive(Insertable)]
-#[diesel(table_name = server_experiments)]
-pub struct NewServerExperiment {
-    pub experiment: String,
-}
-
-#[derive(Debug, Insertable)]
-#[diesel(table_name = current_user_information)]
-pub struct CurrentUserInformation {
-    pub email: String,
 }
 
 

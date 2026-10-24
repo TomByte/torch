@@ -2,16 +2,13 @@ use torchui::App;
 use torchui::platform::WindowStyle;
 
 use super::*;
-use crate::auth::{AuthManager, AuthStateProvider};
+use crate::auth::AuthStateProvider;
 use crate::network::NetworkStatus;
 use crate::server::server_api::ServerApiProvider;
 use crate::server::telemetry::context_provider::AppTelemetryContextProvider;
 use crate::settings_view::keybindings::KeybindingChangedNotifier;
 use crate::system::SystemStats;
 use crate::test_util::settings::initialize_settings_for_tests;
-use crate::workspaces::team_tester::TeamTesterStatus;
-use crate::workspaces::update_manager::TeamUpdateManager;
-use crate::workspaces::user_workspaces::UserWorkspaces;
 
 fn initialize_app(app: &mut App) {
     initialize_settings_for_tests(app);
@@ -19,12 +16,8 @@ fn initialize_app(app: &mut App) {
     app.add_singleton_model(|_| ServerApiProvider::new_for_test());
     app.add_singleton_model(|_| AuthStateProvider::new_for_test());
     app.add_singleton_model(AppTelemetryContextProvider::new_context_provider);
-    app.add_singleton_model(AuthManager::new_for_test);
     app.add_singleton_model(|_| NetworkStatus::new());
     app.add_singleton_model(|_| SystemStats::new());
-    app.add_singleton_model(UserWorkspaces::default_mock);
-    app.add_singleton_model(TeamTesterStatus::mock);
-    app.add_singleton_model(TeamUpdateManager::mock);
     app.add_singleton_model(|_| Appearance::mock());
     app.add_singleton_model(|_| ResizableData::default());
     app.add_singleton_model(|_| KeybindingChangedNotifier::mock());

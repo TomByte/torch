@@ -71,8 +71,6 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::SshDragAndDrop,
         #[cfg(feature = "drag_tabs_to_windows")]
         FeatureFlag::DragTabsToWindows,
-        #[cfg(feature = "multi_workspace")]
-        FeatureFlag::MultiWorkspace,
         #[cfg(feature = "ime_marked_text")]
         FeatureFlag::ImeMarkedText,
         #[cfg(feature = "iterm_images")]
@@ -87,8 +85,6 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::AutoupdateUIRevamp,
         #[cfg(all(not(windows), feature = "kitty_images"))]
         FeatureFlag::KittyImages,
-        #[cfg(feature = "default_adeberry_theme")]
-        FeatureFlag::DefaultAdeberryTheme,
         #[cfg(feature = "suggested_rules")]
         FeatureFlag::SuggestedRules,
         #[cfg(feature = "command_correction_key")]
@@ -249,8 +245,6 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::CLIAgentRichInput,
         #[cfg(feature = "warpify_footer")]
         FeatureFlag::WarpifyFooter,
-        #[cfg(feature = "solo_user_byok")]
-        FeatureFlag::SoloUserByok,
         #[cfg(feature = "git_operations_in_code_review")]
         FeatureFlag::GitOperationsInCodeReview,
         #[cfg(feature = "codex_plugin")]

@@ -16,16 +16,11 @@ use torch_completer::parsers::simple::top_level_command;
 use torch_editor::content::buffer::Buffer;
 use torch_editor::content::markdown::MarkdownStyle;
 use torch_util::path::EscapeChar;
-use torchui::{AppContext, SingletonEntity};
 
 use crate::agent_status::{AgentReviewCommentBatch, DiffSetHunk};
 use crate::code::editor::line::EditorLineLocation;
 use crate::code_review::comments::AttachedReviewCommentTarget;
 use crate::ui_components::icons::Icon;
-use crate::workspaces::user_workspaces::UserWorkspaces;
-
-/// UID for the Uber team.
-const UBER_TEAM_UID: &str = "BdVbYjy9LRZcZrYBemSfAF";
 
 /// Claude/Anthropic brand color (official brand orange #D97757).
 /// Reference: https://github.com/anthropics/skills/blob/main/skills/brand-guidelines/SKILL.md
@@ -428,7 +423,6 @@ impl CLIAgent {
         command: &str,
         escape_char: Option<EscapeChar>,
         aliases: Option<&HashMap<SmolStr, String>>,
-        ctx: &AppContext,
     ) -> Option<CLIAgent> {
         let trimmed = command.trim_start();
         let first_word = Self::extract_first_command(trimmed, escape_char)?;
@@ -447,31 +441,9 @@ impl CLIAgent {
             .unwrap_or(Cow::Borrowed(trimmed));
 
         // Check if resolved command matches any known CLI agent.
-        // Also matches `aifx agent run claude` as Claude for Uber employees.
         enum_iterator::all::<CLIAgent>()
             .filter(|agent| !matches!(agent, CLIAgent::Unknown))
-            .find(|agent| {
-                agent.matches_command(&resolved_command, escape_char)
-                    || (matches!(agent, CLIAgent::Claude)
-                        && Self::is_aifx_agent_run_claude(&resolved_command, ctx))
-            })
-    }
-
-    /// Returns true if the resolved command is `aifx agent run claude` (Uber's
-    /// internal wrapper around Claude) and the user is on the Uber team.
-    /// We special-case this so Uber employees get the toolbar without needing
-    /// to configure anything.
-    fn is_aifx_agent_run_claude(resolved_command: &str, ctx: &AppContext) -> bool {
-        resolved_command.starts_with("aifx agent run claude")
-            && Self::is_on_uber_team(UserWorkspaces::as_ref(ctx))
-    }
-
-    fn is_on_uber_team(user_workspaces: &UserWorkspaces) -> bool {
-        user_workspaces
-            .workspaces()
-            .iter()
-            .flat_map(|workspace| workspace.teams.iter())
-            .any(|team| team.uid.uid() == UBER_TEAM_UID)
+            .find(|agent| agent.matches_command(&resolved_command, escape_char))
     }
 }
 

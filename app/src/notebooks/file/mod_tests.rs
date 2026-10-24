@@ -20,20 +20,16 @@ use super::{
     TOGGLE_MARKDOWN_DISPLAY_MODE_KEY_BINDING,
 };
 use crate::auth::AuthStateProvider;
-use crate::auth::auth_manager::AuthManager;
 use crate::notebooks::context_menu::MenuSource;
 use crate::notebooks::editor::keys::NotebookKeybindings;
 use crate::notebooks::file::is_markdown_file;
 use crate::search::files::model::FileSearchModel;
 use crate::server::server_api::ServerApiProvider;
-use crate::server::server_api::team::MockTeamClient;
-use crate::server::server_api::workspace::MockWorkspaceClient;
 use crate::server::telemetry::context_provider::AppTelemetryContextProvider;
 use crate::settings_view::keybindings::KeybindingChangedNotifier;
 use crate::terminal::model::session::Session;
 use crate::test_util::settings::initialize_settings_for_tests;
 use crate::workspace::ActiveSession;
-use crate::workspaces::user_workspaces::UserWorkspaces;
 use crate::{GlobalResourceHandles, GlobalResourceHandlesProvider};
 
 fn init_app(app: &mut App) {
@@ -54,17 +50,6 @@ fn init_app(app: &mut App) {
     app.add_singleton_model(|_| ServerApiProvider::new_for_test());
     app.add_singleton_model(|_| AuthStateProvider::new_for_test());
     app.add_singleton_model(AppTelemetryContextProvider::new_context_provider);
-    app.add_singleton_model(AuthManager::new_for_test);
-    let team_client_mock = Arc::new(MockTeamClient::new());
-    let workspace_client_mock = Arc::new(MockWorkspaceClient::new());
-    app.add_singleton_model(|ctx| {
-        UserWorkspaces::mock(
-            team_client_mock.clone(),
-            workspace_client_mock.clone(),
-            vec![],
-            ctx,
-        )
-    });
 }
 
 #[test]

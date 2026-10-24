@@ -19,8 +19,7 @@ macro_rules! send_telemetry_sync_from_app_ctx {
 /// Telemetry is never collected or sent; see [`torch_core::send_telemetry_from_ctx`].
 #[macro_export]
 macro_rules! send_telemetry_on_executor {
-    ($auth_state: expr_2021, $event:expr_2021, $executor:expr_2021) => {
-        let _ = $auth_state;
+    ($event:expr_2021, $executor:expr_2021) => {
         let _ = $event;
         let _ = $executor;
     };

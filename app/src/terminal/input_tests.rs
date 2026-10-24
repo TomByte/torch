@@ -27,7 +27,6 @@ use workflows::workflow::{Argument, Workflow};
 
 use super::*;
 use crate::auth::AuthStateProvider;
-use crate::auth::auth_manager::AuthManager;
 use crate::changelog_model::ChangelogModel;
 use crate::context_chips::prompt::Prompt;
 use crate::editor::{DisplayPoint, EditorAction, Point, TextStyleOperation};
@@ -75,11 +74,8 @@ use crate::test_util::settings::initialize_settings_for_tests;
 use crate::themes::theme::AnsiColorIdentifier;
 use crate::warp_managed_paths_watcher::WarpManagedPathsWatcher;
 use crate::workspace::{ActiveSession, ToastStack, WorkspaceRegistry};
-use crate::workspaces::team_tester::TeamTesterStatus;
-use crate::workspaces::update_manager::TeamUpdateManager;
-use crate::workspaces::user_workspaces::UserWorkspaces;
 use crate::{
-    AgentNotificationsModel, GlobalResourceHandles, GlobalResourceHandlesProvider, experiments,
+    AgentNotificationsModel, GlobalResourceHandles, GlobalResourceHandlesProvider,
 };
 
 fn pending_ctrl_r_handoff() -> PendingShellWidgetHandoff {
@@ -233,9 +229,6 @@ pub fn initialize_app(app: &mut App) {
     app.add_singleton_model(|_| SystemStats::new());
     app.add_singleton_model(|_| Prompt::mock());
     app.add_singleton_model(ImportedConfigModel::new);
-    app.add_singleton_model(UserWorkspaces::default_mock);
-    app.add_singleton_model(TeamTesterStatus::mock);
-    app.add_singleton_model(TeamUpdateManager::mock);
     app.add_singleton_model(|_| Appearance::mock());
     app.add_singleton_model(PrivacySettings::mock);
     app.add_singleton_model(|_ctx| SyncedInputState::mock());
@@ -248,7 +241,6 @@ pub fn initialize_app(app: &mut App) {
     app.add_singleton_model(AgentNotificationsModel::new);
     app.add_singleton_model(|_| AuthStateProvider::new_for_test());
     app.add_singleton_model(AppTelemetryContextProvider::new_context_provider);
-    app.add_singleton_model(AuthManager::new_for_test);
     app.add_singleton_model(DirectoryWatcher::new);
     app.add_singleton_model(|_| DetectedRepositories::default());
     app.add_singleton_model(crate::remote_server::manager::RemoteServerManager::new);
@@ -277,7 +269,6 @@ pub fn initialize_app(app: &mut App) {
         app.add_singleton_model(SystemInfo::new);
     }
 
-    app.update(experiments::init);
     AltScreenReporting::register(app);
     app.add_singleton_model(|_| WorkspaceRegistry::new());
     app.add_singleton_model(|_| ToastStack);

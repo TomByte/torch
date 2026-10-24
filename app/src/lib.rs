@@ -25,7 +25,6 @@ mod debug_dump;
 mod default_terminal;
 #[cfg(windows)]
 mod dynamic_libraries;
-mod experiments;
 #[cfg(target_family = "wasm")]
 mod font_fallback;
 mod global_resource_handles;
@@ -79,7 +78,6 @@ mod warp_managed_paths_watcher;
 #[cfg(target_family = "wasm")]
 mod wasm_nux_dialog;
 mod window_settings;
-mod workspaces;
 
 // PLEASE DO NOT ADD MORE PUBLIC MODULES!
 //
@@ -112,7 +110,6 @@ pub mod tab_configs;
 pub mod terminal;
 pub mod themes;
 use agent_status::AgentNotificationsModel;
-use auth::auth_manager::AuthManager;
 use auth::auth_state::{AuthState, AuthStateProvider};
 use code::editor_management::CodeManager;
 use code::opened_files::OpenedFilesModel;
@@ -194,7 +191,6 @@ use crate::code::global_buffer_model::GlobalBufferModel;
 use crate::code::language_server_shutdown_manager::LanguageServerShutdownManager;
 use crate::context_chips::prompt::Prompt;
 use crate::default_terminal::DefaultTerminal;
-use crate::experiments::ImprovedPaletteSearch;
 pub use crate::global_resource_handles::{GlobalResourceHandles, GlobalResourceHandlesProvider};
 use crate::gpu_state::GPUState;
 use crate::network::NetworkStatus;
@@ -206,11 +202,10 @@ use crate::projects::ProjectManagementModel;
 use crate::root_view::{
     OpenFromRestoredArg, OpenPath, quake_mode_window_id, quake_mode_window_is_open,
 };
-use crate::server::experiments::ServerExperiments;
 #[cfg(not(target_family = "wasm"))]
 use crate::server::server_api::managed_secrets::AppManagedSecretManager as ManagedSecretManager;
 pub use crate::server::telemetry::TelemetryEvent;
-use crate::server::telemetry::{AppStartupInfo, CloseTarget, PaletteSource};
+use crate::server::telemetry::{CloseTarget, PaletteSource};
 use crate::session_management::{RunningSessionSummary, SessionNavigationData};
 use crate::settings::manager::SettingsManager;
 use crate::settings::{AccessibilitySettings, ScrollSettings, SelectionSettings};
@@ -229,10 +224,6 @@ use crate::vim_registers::VimRegisters;
 use crate::warp_managed_paths_watcher::{WarpManagedPathsWatcher, ensure_warp_watch_roots_exist};
 use crate::workflows::local_workflows::LocalWorkflows;
 use crate::workspace::{ActiveSession, PaneViewLocator, ToastStack, Workspace, WorkspaceAction};
-use crate::workspaces::team_tester::TeamTesterStatus;
-use crate::workspaces::update_manager::TeamUpdateManager;
-use crate::workspaces::user_profiles::UserProfiles;
-use crate::workspaces::user_workspaces::UserWorkspaces;
 
 /// Our embedded application assets.
 pub static ASSETS: torch_assets::Assets = torch_assets::Assets;
@@ -846,9 +837,7 @@ fn run_internal(mut launch_mode: LaunchMode) -> Result<()> {
 
         let app_state = initialize_app(&launch_mode, timer, startup_toml_parse_error, ctx);
 
-        if ImprovedPaletteSearch::improved_search_enabled(ctx) {
-            FeatureFlag::UseTantivySearch.set_enabled(true);
-        }
+        FeatureFlag::UseTantivySearch.set_enabled(true);
 
         launch(ctx, app_state, launch_mode)
     })
@@ -856,50 +845,6 @@ fn run_internal(mut launch_mode: LaunchMode) -> Result<()> {
 
 pub struct UpdateQuakeModeEventArg {
     active_window_id: Option<WindowId>,
-}
-
-#[derive(Clone)]
-enum StartupUserAuthentication {
-    RefreshUser,
-}
-
-impl StartupUserAuthentication {
-    fn start(self, ctx: &mut AppContext) {
-        AuthManager::handle(ctx).update(ctx, |auth_manager, ctx| match self {
-            Self::RefreshUser => auth_manager.refresh_user(ctx),
-        });
-    }
-}
-
-fn authenticate_user_after_iap_access(
-    authentication: StartupUserAuthentication,
-    ctx: &mut AppContext,
-) {
-    let iap_manager = IapManager::handle(ctx);
-    if !iap_manager.as_ref(ctx).is_enabled() || iap_manager.as_ref(ctx).has_valid_token() {
-        authentication.start(ctx);
-        return;
-    }
-
-    let mut pending_authentication = Some(authentication);
-    ctx.subscribe_to_model(&iap_manager, move |iap_manager, event, ctx| match event {
-        IapManagerEvent::StateChanged => {
-            if !iap_manager.as_ref(ctx).has_valid_token() {
-                return;
-            }
-            if let Some(authentication) = pending_authentication.take() {
-                authentication.start(ctx);
-            }
-        }
-        IapManagerEvent::AccessUnavailable => {
-            report_error!("Staging IAP access unavailable before startup user authentication");
-        }
-        IapManagerEvent::RefreshFailed {
-            message: _,
-            is_first_failure_of_streak: _,
-        } => {}
-    });
-    iap_manager.update(ctx, |manager, ctx| manager.ensure_access(ctx));
 }
 
 #[::tracing::instrument(skip_all, fields(tags.cloud_agent = true))]
@@ -950,7 +895,7 @@ pub(crate) fn initialize_app(
         ctx.set_zoom_factor(WindowSettings::as_ref(ctx).zoom_level.as_zoom_factor());
     }
 
-    let auth_state = AuthState::initialize(ctx);
+    let auth_state = AuthState::new(ctx);
     let auth_state = Arc::new(auth_state);
     timer.mark_interval_end("AUTH_MANAGER_SET_USER");
 
@@ -977,14 +922,6 @@ pub(crate) fn initialize_app(
     ctx.add_singleton_model(|_ctx| AuthStateProvider::new(auth_state.clone()));
 
     ctx.add_singleton_model(AppTelemetryContextProvider::new_context_provider);
-
-    ctx.add_singleton_model(|ctx| {
-        AuthManager::new(
-            server_api.clone(),
-            server_api_provider.as_ref(ctx).get_auth_client(),
-            ctx,
-        )
-    });
 
     ctx.add_singleton_model(|_ctx| GPUState::new());
 
@@ -1034,12 +971,8 @@ pub(crate) fn initialize_app(
     });
 
     let (
-        cached_workspaces,
-        current_workspace_uid,
         app_state,
         command_history,
-        restored_user_profiles,
-        experiments,
         persisted_workspaces,
         workspace_language_servers,
         persisted_projects,
@@ -1047,12 +980,8 @@ pub(crate) fn initialize_app(
     ) = sqlite_data
         .map(|sqlite_data| {
             (
-                sqlite_data.workspaces,
-                sqlite_data.current_workspace_uid,
                 sqlite_data.app_state,
                 sqlite_data.command_history,
-                sqlite_data.user_profiles,
-                sqlite_data.experiments,
                 sqlite_data.codebase_indices,
                 sqlite_data.workspace_language_servers,
                 sqlite_data.projects,
@@ -1061,10 +990,6 @@ pub(crate) fn initialize_app(
         })
         .unwrap_or_else(|| {
             (
-                Default::default(),
-                Default::default(),
-                Default::default(),
-                Default::default(),
                 Default::default(),
                 Default::default(),
                 Default::default(),
@@ -1082,21 +1007,6 @@ pub(crate) fn initialize_app(
             "[Remote codebase indexing] Restored daemon codebase index metadata: metadata_count={codebase_index_count}"
         );
     }
-
-    // Initialize a global model to track server-side experiment state.
-    // This depends on the [`GlobalResourceHandlesProvider`] and so it must
-    // be initialized after it.
-    ctx.add_singleton_model(|ctx| ServerExperiments::new_from_cache(experiments, ctx));
-
-    ctx.add_singleton_model(|ctx| {
-        UserWorkspaces::new(
-            server_api_provider.as_ref(ctx).get_team_client(),
-            server_api_provider.as_ref(ctx).get_workspace_client(),
-            cached_workspaces,
-            current_workspace_uid,
-            ctx,
-        )
-    });
 
     ctx.add_singleton_model(AntivirusInfo::new);
 
@@ -1124,8 +1034,6 @@ pub(crate) fn initialize_app(
     {
         report_error!(e.context("Failed to remove old executable"));
     }
-
-    experiments::init(ctx);
 
     ctx.add_singleton_model(|_| SettingsPaneManager::new());
     ctx.add_singleton_model(|_| NetworkLogPaneManager::default());
@@ -1168,9 +1076,6 @@ pub(crate) fn initialize_app(
     ctx.add_singleton_model(|_ctx| SyncedInputState::new());
 
     ctx.add_singleton_model(remote_server::manager::RemoteServerManager::new);
-    #[cfg(not(target_family = "wasm"))]
-    #[cfg(not(target_family = "wasm"))]
-    remote_server::wire_auth_token_rotation(ctx);
 
     log::info!(
         "Starting torch with channel state {} and version {:?}",
@@ -1204,50 +1109,6 @@ pub(crate) fn initialize_app(
             crash_recovery.on_draw_frame_error(window_id);
         });
     });
-
-    let user_is_logged_in = auth_state.is_logged_in();
-
-    if user_is_logged_in {
-        // Set the first frame callback to record the app's startup time.
-        // This is only sent for logged-in users so that new users don't skew performance metrics.
-        let is_screen_reader_enabled = ctx.is_screen_reader_enabled();
-        let from_relaunch = launch_mode.args().finish_update;
-        ctx.on_first_frame_drawn(move |ctx| {
-            let timing_data = IntervalTimer::handle(ctx).update(ctx, |timer, _| {
-                timer.mark_interval_end("FIRST_FRAME_DRAWN");
-                timer.compute_stats()
-            });
-            let event = TelemetryEvent::AppStartup(AppStartupInfo {
-                is_session_restoration_on: user_defaults_on_startup.should_restore_session,
-                is_screen_reader_enabled,
-                from_relaunch,
-                is_crash_reporting_enabled: false,
-                timing_data,
-            });
-
-            GPUState::handle(ctx).update(ctx, |gpu_state, ctx| {
-                gpu_state
-                    .set_has_lower_power_gpu(torchui::rendering::is_low_power_gpu_available(), ctx);
-            });
-
-            for window_id in ctx.window_ids().collect_vec() {
-                SettingsPaneManager::handle(ctx)
-                    .read(ctx, |model, _| model.settings_view(window_id))
-                    .update(ctx, |settings, ctx| {
-                        settings.refresh_preferred_graphics_backend_dropdown(ctx);
-                    })
-            }
-
-            send_telemetry_from_app_ctx!(event, ctx);
-        });
-
-        #[cfg(enable_crash_recovery)]
-        ctx.on_frame_drawn(|ctx, window_id| {
-            crash_recovery::CrashRecovery::handle(ctx).update(ctx, |crash_recovery, ctx| {
-                crash_recovery.on_frame_drawn(window_id, ctx);
-            });
-        })
-    }
 
     #[cfg(not(target_family = "wasm"))]
     {
@@ -1383,20 +1244,7 @@ pub(crate) fn initialize_app(
     ctx.add_singleton_model(|_| CLIAgentSessionsModel::new());
     ctx.add_singleton_model(AgentNotificationsModel::new);
 
-    ctx.add_singleton_model(|_| UserProfiles::new(restored_user_profiles));
-
     ctx.add_singleton_model(|_| AudibleBell::new());
-
-    // This model has to be registered after the user workspaces model because it relies on it.
-    ctx.add_singleton_model(TeamTesterStatus::new);
-
-    ctx.add_singleton_model(|ctx| {
-        TeamUpdateManager::new(
-            server_api_provider.as_ref(ctx).get_team_client(),
-            persistence_writer.sender(),
-            ctx,
-        )
-    });
 
     // LogManager must be registered before any subsystem (e.g. MCP, LSP) that creates file-based loggers.
     ctx.add_singleton_model(|_| simple_logger::manager::LogManager::new());
@@ -1459,12 +1307,6 @@ pub(crate) fn initialize_app(
             _ => {}
         };
     });
-
-    let startup_authentication =
-        user_is_logged_in.then_some(StartupUserAuthentication::RefreshUser);
-    if let Some(authentication) = startup_authentication {
-        authenticate_user_after_iap_access(authentication, ctx);
-    }
 
     // Add a singleton model that holds the current prompt configuration.
     ctx.add_singleton_model(Prompt::new);

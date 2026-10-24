@@ -15,7 +15,7 @@ use torch_server_auth::credentials::AuthToken;
 #[cfg(feature = "agent_mode_evals")]
 use torch_server_auth::credentials::Credentials;
 
-use crate::auth::{AuthEvent, AuthSession, UserUid};
+use crate::auth::{AuthEvent, AuthSession};
 
 /// Header key for the ambient agent workload token attached to authenticated requests.
 pub const AMBIENT_WORKLOAD_TOKEN_HEADER: &str = "X-Torch-Ambient-Workload-Token";
@@ -245,15 +245,6 @@ impl BaseClient {
 
     pub fn anonymous_id(&self) -> String {
         self.auth_state.anonymous_id()
-    }
-
-    pub fn user_id(&self) -> Option<UserUid> {
-        self.auth_state.user_id()
-    }
-
-    /// Returns whether the authenticated principal is a service account.
-    pub fn is_service_account(&self) -> bool {
-        self.auth_state.is_service_account()
     }
 
     pub fn access_token_ignoring_validity(&self) -> Option<String> {

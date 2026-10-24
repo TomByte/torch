@@ -14,17 +14,12 @@ test-util = []
 [dependencies]
 anyhow.workspace = true
 chrono.workspace = true
-cynic.workspace = true
-lasso.workspace = true
 log.workspace = true
 parking_lot.workspace = true
 serde.workspace = true
-serde_json.workspace = true
-thiserror.workspace = true
 uuid.workspace = true
 torch_core.workspace = true
 torch_errors.workspace = true
 torch_graphql.workspace = true
 torch_managed_secrets.workspace = true
 torchui_core.workspace = true
-torchui_extras = { workspace = true, features = ["default"] }

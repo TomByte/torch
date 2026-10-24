@@ -12779,19 +12779,14 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "chrono",
- "cynic",
- "lasso",
  "log",
  "parking_lot",
  "serde",
- "serde_json",
- "thiserror 2.0.17",
  "torch_core",
  "torch_errors",
  "torch_graphql",
  "torch_managed_secrets",
  "torchui_core",
- "torchui_extras",
  "uuid",
 ]
 

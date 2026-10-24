@@ -26,12 +26,9 @@ use crate::menu::MenuAction;
 use crate::network::NetworkStatus;
 use crate::notebooks::editor::keys::NotebookKeybindings;
 use crate::pane_group::{Direction, PaneGroupAction, PaneId};
+use crate::auth::AuthStateProvider;
 use crate::persisted_workspace::PersistedWorkspace;
-#[cfg(not(target_family = "wasm"))]
-use crate::server::experiments::ServerExperiments;
 use crate::server::server_api::ServerApiProvider;
-use crate::server::server_api::team::{MockTeamClient, TeamClient};
-use crate::server::server_api::workspace::MockWorkspaceClient;
 use crate::server::telemetry::context_provider::AppTelemetryContextProvider;
 use crate::settings::PrivacySettings;
 use crate::settings_view::DisplayCount;
@@ -50,18 +47,10 @@ use crate::user_config::tab_configs_dir;
 use crate::util::traffic_lights::windows::RendererState;
 use crate::warp_managed_paths_watcher::WarpManagedPathsWatcher;
 use crate::workflows::local_workflows::LocalWorkflows;
-use crate::workspaces::team_tester::TeamTesterStatus;
-use crate::workspaces::update_manager::TeamUpdateManager;
-use crate::workspaces::user_profiles::UserProfiles;
-use crate::workspaces::user_workspaces::UserWorkspaces;
 use crate::{
-    AgentNotificationsModel, GlobalResourceHandlesProvider, experiments, workspace,
+    AgentNotificationsModel, GlobalResourceHandlesProvider, workspace,
 };
 pub(crate) fn initialize_app(app: &mut App) {
-    initialize_app_with_team_client(app, Arc::new(MockTeamClient::new()));
-}
-
-pub(crate) fn initialize_app_with_team_client(app: &mut App, team_client: Arc<dyn TeamClient>) {
     initialize_settings_for_tests(app);
 
     // Add the necessary singleton models to the App
@@ -73,24 +62,12 @@ pub(crate) fn initialize_app_with_team_client(app: &mut App, team_client: Arc<dy
     app.add_singleton_model(|_ctx| ServerApiProvider::new_for_test());
     app.add_singleton_model(|_| AuthStateProvider::new_for_test());
     app.add_singleton_model(AppTelemetryContextProvider::new_context_provider);
-    app.add_singleton_model(AuthManager::new_for_test);
     app.add_singleton_model(|_ctx| PtySpawner::new_for_test());
     app.add_singleton_model(|_| Prompt::mock());
     app.add_singleton_model(|ctx| AutoupdateState::new(ServerApiProvider::as_ref(ctx).get()));
     app.add_singleton_model(|_| NetworkStatus::new());
     app.add_singleton_model(|_| SystemStats::new());
     app.add_singleton_model(|_| crate::tab::TabShortcutModifierState::new());
-    app.add_singleton_model(|ctx| {
-        UserWorkspaces::mock(
-            team_client,
-            Arc::new(MockWorkspaceClient::new()),
-            vec![],
-            ctx,
-        )
-    });
-    app.add_singleton_model(|_ctx| UserProfiles::new(Vec::new()));
-    app.add_singleton_model(TeamTesterStatus::mock);
-    app.add_singleton_model(TeamUpdateManager::mock);
     app.add_singleton_model(|_| Appearance::mock());
     app.add_singleton_model(AppearanceManager::new);
     app.add_singleton_model(|_| DisplayCount::mock());
@@ -131,10 +108,8 @@ pub(crate) fn initialize_app_with_team_client(app: &mut App, team_client: Arc<dy
             ctx,
         )
     });
-    // Register GlobalResourceHandlesProvider before ServerExperiments which depends on it
     let global_resource_handles = GlobalResourceHandles::mock(app);
     app.add_singleton_model(|_| GlobalResourceHandlesProvider::new(global_resource_handles));
-    app.add_singleton_model(|ctx| ServerExperiments::new_from_cache(vec![], ctx));
     app.add_singleton_model(DefaultTerminal::new);
     app.add_singleton_model(|_| IgnoredSuggestionsModel::new(vec![]));
     app.add_singleton_model(|_| crate::code_review::git_repo_model::GitRepoModels::new());
@@ -156,7 +131,6 @@ pub(crate) fn initialize_app_with_team_client(app: &mut App, team_client: Arc<dy
     #[cfg(enable_crash_recovery)]
     crate::crash_recovery::CrashRecovery::register_for_test(app);
 
-    app.update(experiments::init);
 
     app.add_singleton_model(|ctx| PersistedWorkspace::new(vec![], HashMap::new(), None, ctx));
     app.add_singleton_model(|_| History::new(vec![]));

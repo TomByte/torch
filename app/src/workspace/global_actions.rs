@@ -17,7 +17,7 @@ use crate::terminal::general_settings::GeneralSettings;
 use crate::undo_close::UndoCloseStack;
 use crate::workspace::cross_window_tab_drag::CrossWindowTabDrag;
 use crate::workspace::{Workspace, WorkspaceAction};
-use crate::{GlobalResourceHandlesProvider, auth};
+use crate::GlobalResourceHandlesProvider;
 
 /// DEPRECATED. Global actions are being phased out.
 /// Do not add any more global actions; use typed actions instead.
@@ -33,7 +33,6 @@ pub fn init_global_actions(app: &mut AppContext) {
     );
     app.add_global_action("workspace:open_repository", open_repository);
     app.add_global_action("app:undo_close", undo_close);
-    app.add_global_action("app:log_out", trigger_log_out);
 }
 
 fn toggle_mouse_reporting(_: &(), ctx: &mut AppContext) {
@@ -192,10 +191,6 @@ fn open_repository(path: &String, ctx: &mut AppContext) {
         let path_buf = PathBuf::from(path);
         ctx.dispatch_global_action("root_view:open_new_from_path", &OpenPath { path: path_buf });
     }
-}
-
-fn trigger_log_out(_: &(), ctx: &mut AppContext) {
-    auth::log_out(ctx)
 }
 
 #[cfg(test)]

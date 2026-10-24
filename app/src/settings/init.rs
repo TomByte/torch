@@ -10,14 +10,13 @@ use torchui_extras::user_preferences;
 
 use super::app_icon::AppIconSettings;
 use super::app_installation_detection::UserAppInstallDetectionSettings;
-use super::initializer::SettingsInitializer;
 use super::native_preference::NativePreferenceSettings;
 use super::{
     AccessibilitySettings, AliasExpansionSettings, AppEditorSettings, BlockVisibilitySettings,
     CLIAgentSettings, ChangelogSettings, CodeSettings, DebugSettings, DefaultSessionSettings,
     EmacsBindingsSettings, FontSettings, FontSettingsChangedEvent, GPUSettings, InputBoxType,
     InputModeSettings, InputSettings, LocalControlSettings, PaneSettings, ScrollSettings,
-    SelectionSettings, SshSettings, ThemeSettings, VimBannerSettings, WarpDrivePrivacySettings,
+    SelectionSettings, SshSettings, ThemeSettings, VimBannerSettings,
 };
 use crate::appearance;
 use crate::banner::BannerState;
@@ -76,7 +75,6 @@ pub fn register_all_settings(ctx: &mut AppContext) {
     ThemeSettings::register(ctx);
     AccessibilitySettings::register(ctx);
     NativePreferenceSettings::register(ctx);
-    WarpDrivePrivacySettings::register(ctx);
     UserAppInstallDetectionSettings::register(ctx);
     AppIconSettings::register(ctx);
     AppEditorSettings::register(ctx);
@@ -108,7 +106,6 @@ pub fn init(
     startup_toml_parse_error: Option<user_preferences::Error>,
     ctx: &mut AppContext,
 ) -> UserDefaultsOnStartup {
-    ctx.add_singleton_model(|_| SettingsInitializer::new());
 
     register_all_settings(ctx);
 

@@ -1,6 +1,5 @@
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::sync::Arc;
 
 use pathfinder_geometry::vector::{Vector2F, vec2f};
 use torch_core::features::FeatureFlag;
@@ -27,15 +26,12 @@ use crate::code::editor::find::view::CodeEditorFind;
 use crate::code::editor::view::{CodeEditorRenderOptions, CodeEditorView, CodeEditorViewAction};
 use crate::editor::{EditorAction, EditorView};
 use crate::notebooks::editor::keys::NotebookKeybindings;
-use crate::server::server_api::team::MockTeamClient;
-use crate::server::server_api::workspace::MockWorkspaceClient;
 use crate::settings::AppEditorSettings;
 use crate::settings_view::keybindings::KeybindingChangedNotifier;
 use crate::test_util::settings::initialize_settings_for_tests;
 use crate::vim_registers::VimRegisters;
 use crate::workspace::ActiveSession;
 use crate::workspace::sync_inputs::SyncedInputState;
-use crate::workspaces::user_workspaces::UserWorkspaces;
 
 // Await render/layout completion for a CodeEditorView in tests.
 async fn layout_editor_view(app: &mut App, editor: &ViewHandle<CodeEditorView>) {
@@ -60,18 +56,6 @@ fn initialize_code_editor_app(app: &mut App) {
     // Add mocks required by rich text editor (used in the CommentEditor)
     app.add_singleton_model(|_| ActiveSession::default());
     app.add_singleton_model(NotebookKeybindings::new);
-
-    // Add UserWorkspaces mock (required by CodeEditorView)
-    let team_client_mock = Arc::new(MockTeamClient::new());
-    let workspace_client_mock = Arc::new(MockWorkspaceClient::new());
-    app.add_singleton_model(|ctx| {
-        UserWorkspaces::mock(
-            team_client_mock.clone(),
-            workspace_client_mock.clone(),
-            vec![],
-            ctx,
-        )
-    });
 
     // Enable vim mode in editor settings
     app.update_model(
