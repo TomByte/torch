@@ -14,7 +14,6 @@ use torchui::{Entity, ModelContext, ModelHandle, SingletonEntity};
 
 use super::Message;
 use crate::SessionSettings;
-use crate::ai::agent::AIAgentPtyWriteMode;
 use crate::terminal::input::CommandExecutionSource;
 use crate::terminal::line_editor_status::{LineEditorStatus, LineEditorStatusEvent};
 use crate::terminal::model::ansi::Handler;
@@ -53,12 +52,6 @@ enum PtyWrite {
     Bytes {
         /// The bytes to be written.
         bytes: Cow<'static, [u8]>,
-    },
-    AgentInput {
-        /// The bytes to be written.
-        bytes: Cow<'static, [u8]>,
-        /// The `mode` for the agent's write.
-        mode: AIAgentPtyWriteMode,
     },
     RunNativeShellCompletions {
         command: String,
@@ -497,12 +490,7 @@ impl<T: EventLoopSender> PtyController<T> {
 
             // Explicitly start the block now that the command is executed.
             let outcome = match source {
-                CommandExecutionSource::AI { metadata } => {
-                    model.start_command_execution_with_ai_metadata(metadata)
-                }
-                CommandExecutionSource::User | CommandExecutionSource::QueuedCommand => {
-                    model.start_command_execution()
-                }
+                CommandExecutionSource::User => model.start_command_execution(),
                 CommandExecutionSource::EnvVarCollection { metadata } => {
                     model.start_command_execution_from_env_var_collection(metadata)
                 }
@@ -563,22 +551,6 @@ impl<T: EventLoopSender> PtyController<T> {
         }
     }
 
-    /// Writes agent input to the PTY.
-    pub fn write_agent_bytes<B: Into<Cow<'static, [u8]>>>(
-        &mut self,
-        bytes: B,
-        mode: &AIAgentPtyWriteMode,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        self.send_write_to_event_loop(
-            PtyWrite::AgentInput {
-                bytes: bytes.into(),
-                mode: *mode,
-            },
-            ctx,
-        );
-    }
-
     /// Writes user input to the PTY.
     ///
     /// This should only be called for non-command input (e.g. input that should be passed through
@@ -622,11 +594,6 @@ impl<T: EventLoopSender> PtyController<T> {
                 on_write_fn,
                 Some(shell_type),
             ),
-            PtyWrite::AgentInput { bytes, mode } => {
-                let decorated_bytes =
-                    mode.decorate_bytes(bytes.into_owned(), self.is_bracketed_paste_enabled);
-                (decorated_bytes.into(), false, None, None)
-            }
             PtyWrite::Bytes { bytes } => (bytes, false, None, None),
             PtyWrite::RunNativeShellCompletions {
                 command,

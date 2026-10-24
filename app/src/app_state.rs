@@ -7,9 +7,6 @@ use serde::{Deserialize, Serialize};
 use torchui::platform::FullscreenState;
 use torchui::{AppContext, SingletonEntity as _};
 
-use crate::agent_status::InputConfig;
-use crate::ai::agent::conversation::AIConversationId;
-use crate::ai::blocklist::SerializedBlockListItem;
 use crate::code::editor_management::CodeSource;
 use crate::root_view::quake_mode_window_id;
 use crate::server::ids::{ServerId, SyncId};
@@ -17,6 +14,7 @@ use crate::settings_view::SettingsSection;
 use crate::tab::SelectedTabColor;
 use crate::terminal::ShellLaunchData;
 use crate::terminal::cli_agent_sessions::resume::ResumableAgentSession;
+use crate::terminal::model::block::SerializedBlock;
 use crate::themes::theme::AnsiColorIdentifier;
 use crate::workspace::WorkspaceRegistry;
 use crate::workspace::tab_group::TabGroupId;
@@ -26,8 +24,7 @@ use crate::workspace::view::left_panel::ToolPanelView;
 pub struct AppState {
     pub windows: Vec<WindowSnapshot>,
     pub active_window_index: Option<usize>,
-    pub block_lists: Arc<HashMap<PaneUuid, Vec<SerializedBlockListItem>>>,
-    pub running_mcp_servers: Vec<uuid::Uuid>,
+    pub block_lists: Arc<HashMap<PaneUuid, Vec<SerializedBlock>>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -42,7 +39,6 @@ pub struct WindowSnapshot {
     pub fullscreen_state: FullscreenState,
     pub quake_mode: bool,
     pub universal_search_width: Option<f32>,
-    pub warp_ai_width: Option<f32>,
     pub voltron_width: Option<f32>,
     pub warp_drive_index_width: Option<f32>,
     pub left_panel_open: bool,
@@ -129,14 +125,10 @@ pub struct LeafSnapshot {
 pub enum LeafContents {
     Terminal(TerminalPaneSnapshot),
     Notebook(NotebookPaneSnapshot),
-    AIDocument(AIDocumentPaneSnapshot),
     Code(CodePaneSnapShot),
     EnvVarCollection(EnvVarCollectionPaneSnapshot),
     Workflow(WorkflowPaneSnapshot),
     Settings(SettingsPaneSnapshot),
-    AIFact(AIFactPaneSnapshot),
-    CustomRouterEditor,
-    ExecutionProfileEditor,
     CodeReview(CodeReviewPaneSnapshot),
     /// The in-app network log pane. Not persisted across restarts because the
     /// backing log is an in-memory ring buffer that starts empty on launch.
@@ -162,14 +154,10 @@ impl LeafContents {
             LeafContents::NetworkLog => false,
             LeafContents::Terminal(_)
             | LeafContents::Notebook(_)
-            | LeafContents::AIDocument(_)
             | LeafContents::Code(_)
             | LeafContents::EnvVarCollection(_)
             | LeafContents::Workflow(_)
             | LeafContents::Settings(_)
-            | LeafContents::AIFact(_)
-            | LeafContents::CustomRouterEditor
-            | LeafContents::ExecutionProfileEditor
             | LeafContents::CodeReview(_) => true,
         }
     }
@@ -183,13 +171,6 @@ pub struct TerminalPaneSnapshot {
     pub shell_launch_data: Option<ShellLaunchData>,
     pub is_active: bool,
     pub is_read_only: bool,
-    pub input_config: Option<InputConfig>,
-    pub llm_model_override: Option<String>,
-    pub active_profile_id: Option<SyncId>,
-    pub conversation_ids_to_restore: Vec<AIConversationId>,
-    /// The active conversation ID if the agent view was open in fullscreen mode.
-    /// When `Some`, the agent view should be restored to fullscreen for this conversation.
-    pub active_conversation_id: Option<AIConversationId>,
     /// The CLI agent conversation running in this pane, offered for resumption on restore.
     pub cli_agent_session: Option<ResumableAgentSession>,
 }
@@ -211,16 +192,6 @@ pub enum NotebookPaneSnapshot {
         /// The path to the local file that was open in this pane. This may be `None` if
         /// the pane contained an unreadable file.
         path: Option<PathBuf>,
-    },
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum AIDocumentPaneSnapshot {
-    Local {
-        document_id: String,
-        version: i32,
-        content: Option<String>,
-        title: Option<String>,
     },
 }
 
@@ -265,11 +236,6 @@ pub enum SettingsPaneSnapshot {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum AIFactPaneSnapshot {
-    Personal,
-}
-
-#[derive(Clone, Debug, PartialEq)]
 pub enum CodeReviewPaneSnapshot {
     Local {
         terminal_uuid: Vec<u8>,
@@ -281,7 +247,6 @@ pub enum CodeReviewPaneSnapshot {
 pub enum LeftPanelDisplayedTab {
     FileTree,
     GlobalSearch,
-    ConversationListView,
 }
 
 impl From<ToolPanelView> for LeftPanelDisplayedTab {
@@ -289,7 +254,6 @@ impl From<ToolPanelView> for LeftPanelDisplayedTab {
         match view {
             ToolPanelView::ProjectExplorer => LeftPanelDisplayedTab::FileTree,
             ToolPanelView::GlobalSearch { .. } => LeftPanelDisplayedTab::GlobalSearch,
-            ToolPanelView::ConversationListView => LeftPanelDisplayedTab::ConversationListView,
         }
     }
 }
@@ -359,7 +323,6 @@ pub fn get_app_state(app: &AppContext) -> AppState {
         windows,
         active_window_index,
         block_lists: Default::default(),
-        running_mcp_servers: Vec::new(),
     }
 }
 

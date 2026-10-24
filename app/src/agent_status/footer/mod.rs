@@ -46,7 +46,7 @@ use crate::send_telemetry_from_ctx;
 #[cfg(not(target_family = "wasm"))]
 use crate::server::telemetry::PluginChipTelemetryAction;
 use crate::server::telemetry::{PluginChipTelemetryKind, TelemetryEvent};
-use crate::settings::{AISettings, CodeSettings, CodeSettingsChangedEvent};
+use crate::settings::{CLIAgentSettings, CodeSettings, CodeSettingsChangedEvent};
 use crate::settings_view::SettingsSection;
 #[cfg(not(target_family = "wasm"))]
 use crate::terminal::ShellLaunchData;
@@ -281,7 +281,6 @@ impl CLIAgentFooter {
         });
 
         // Toggle rich input button label when CLI input session opens/closes.
-        // Also reset CLI voice state if the session ends while voice is active.
         ctx.subscribe_to_model(
             &CLIAgentSessionsModel::handle(ctx),
             move |me, _, event, ctx| {
@@ -518,7 +517,7 @@ impl CLIAgentFooter {
         let chip_key = plugin_chip_key(session.agent.command_prefix(), &session.remote_host);
         !session.supports_rich_status()
             && !session.is_remote()
-            && !AISettings::as_ref(app).is_plugin_install_chip_dismissed(&chip_key)
+            && !CLIAgentSettings::as_ref(app).is_plugin_install_chip_dismissed(&chip_key)
     }
 
     fn render_plugin_chip(&self, chip_kind: PluginChipKind, app: &AppContext) -> Box<dyn Element> {
@@ -544,7 +543,7 @@ impl CLIAgentFooter {
                 return None;
             }
 
-            let ai_settings = AISettings::as_ref(app);
+            let ai_settings = CLIAgentSettings::as_ref(app);
             if !*ai_settings.show_agent_notifications {
                 return None;
             }
@@ -836,7 +835,6 @@ impl CLIAgentFooter {
         self.cli_display_chips
             .iter()
             .find(|chip| chip.as_ref(app).chip_kind() == &chip_kind)
-            .filter(|chip| chip.as_ref(app).should_render(app))
             .map(|chip| ChildView::new(chip).finish())
     }
 
@@ -1134,12 +1132,12 @@ impl TypedActionView for CLIAgentFooter {
                         #[cfg(not(target_family = "wasm"))]
                         if let Some(manager) = plugin_manager() {
                             let version = manager.minimum_plugin_version().to_owned();
-                            AISettings::handle(ctx).update(ctx, |settings, ctx| {
+                            CLIAgentSettings::handle(ctx).update(ctx, |settings, ctx| {
                                 settings.dismiss_plugin_update_chip(&chip_key, version, ctx);
                             });
                         }
                     } else {
-                        AISettings::handle(ctx).update(ctx, |settings, ctx| {
+                        CLIAgentSettings::handle(ctx).update(ctx, |settings, ctx| {
                             settings.dismiss_plugin_install_chip(&chip_key, ctx);
                         });
                     }
@@ -1173,8 +1171,6 @@ impl TypedActionView for CLIAgentFooter {
 
 pub enum CLIAgentFooterEvent {
     WriteToPty(String),
-    /// Insert text into the CLI agent's PTY input using its paste strategy.
-    InsertIntoCLIPty(String),
     /// Insert text into the CLI agent rich input.
     InsertIntoCLIRichInput(String),
     /// Toggle the file explorer side panel. `None` when no CLI agent session is

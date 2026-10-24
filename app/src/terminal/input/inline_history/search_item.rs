@@ -1,5 +1,4 @@
 use chrono::{DateTime, Local};
-use fuzzy_match::FuzzyMatchResult;
 use ordered_float::OrderedFloat;
 use torch_core::ui::Icon;
 use torch_core::ui::color::coloru_with_opacity;
@@ -11,8 +10,7 @@ use torchui::scene::{CornerRadius, Radius};
 use torchui::text_layout::ClipConfig;
 use torchui::{AppContext, Element, SingletonEntity};
 
-use crate::agent_status::{ConversationStatus, STATUS_ELEMENT_PADDING, render_status_element};
-use crate::ai::agent::conversation::AIConversationId;
+use crate::agent_status::STATUS_ELEMENT_PADDING;
 use crate::appearance::Appearance;
 use crate::search::{ItemHighlightState, SearchItem};
 use crate::terminal::history::LinkedWorkflowData;
@@ -22,79 +20,26 @@ use crate::util::time_format::format_approx_duration_from_now_utc;
 
 #[derive(Debug, Clone)]
 pub struct InlineHistoryItem {
-    item_type: HistoryItemType,
-    name_match_result: Option<FuzzyMatchResult>,
+    command: String,
+    linked_workflow_data: Option<LinkedWorkflowData>,
     prefix_match_len: usize,
     score: OrderedFloat<f64>,
     timestamp: DateTime<Local>,
 }
 
-#[derive(Debug, Clone)]
-enum HistoryItemType {
-    Conversation {
-        conversation_id: AIConversationId,
-        title: String,
-        status: ConversationStatus,
-    },
-    Command {
-        command: String,
-        linked_workflow_data: Option<LinkedWorkflowData>,
-    },
-    AIPrompt {
-        query_text: String,
-    },
-}
-
 impl InlineHistoryItem {
-    pub fn conversation(
-        conversation_id: AIConversationId,
-        title: String,
-        status: ConversationStatus,
-        timestamp: DateTime<Local>,
-    ) -> Self {
-        Self {
-            item_type: HistoryItemType::Conversation {
-                conversation_id,
-                title,
-                status,
-            },
-            name_match_result: None,
-            prefix_match_len: 0,
-            score: OrderedFloat(f64::MIN),
-            timestamp,
-        }
-    }
-
     pub fn command(
         command: String,
         linked_workflow_data: Option<LinkedWorkflowData>,
         timestamp: DateTime<Local>,
     ) -> Self {
         Self {
-            item_type: HistoryItemType::Command {
-                command,
-                linked_workflow_data,
-            },
-            name_match_result: None,
+            command,
+            linked_workflow_data,
             prefix_match_len: 0,
             score: OrderedFloat(f64::MIN),
             timestamp,
         }
-    }
-
-    pub fn ai_prompt(query_text: String, timestamp: DateTime<Local>) -> Self {
-        Self {
-            item_type: HistoryItemType::AIPrompt { query_text },
-            name_match_result: None,
-            prefix_match_len: 0,
-            score: OrderedFloat(f64::MIN),
-            timestamp,
-        }
-    }
-
-    pub fn with_name_match_result(mut self, result: Option<FuzzyMatchResult>) -> Self {
-        self.name_match_result = result;
-        self
     }
 
     pub fn with_prefix_match_len(mut self, len: usize) -> Self {
@@ -117,41 +62,19 @@ impl SearchItem for InlineHistoryItem {
         appearance: &Appearance,
     ) -> Box<dyn Element> {
         let icon_size = inline_styles::font_size(appearance);
-        let icon = match &self.item_type {
-            HistoryItemType::Conversation { status, .. } => {
-                render_status_element(status, icon_size, appearance)
-            }
-            HistoryItemType::Command { .. } => {
-                let icon_color = inline_styles::icon_color(appearance);
-                Container::new(
-                    ConstrainedBox::new(Icon::Terminal.to_warpui_icon(icon_color).finish())
-                        .with_width(icon_size)
-                        .with_height(icon_size)
-                        .finish(),
-                )
-                .with_uniform_padding(STATUS_ELEMENT_PADDING)
-                .with_background(coloru_with_opacity(icon_color.into(), 10))
-                .with_corner_radius(CornerRadius::with_all(Radius::Pixels(
-                    inline_styles::ITEM_CORNER_RADIUS,
-                )))
-                .finish()
-            }
-            HistoryItemType::AIPrompt { .. } => {
-                let icon_color = inline_styles::icon_color(appearance);
-                Container::new(
-                    ConstrainedBox::new(Icon::Prompt.to_warpui_icon(icon_color).finish())
-                        .with_width(icon_size)
-                        .with_height(icon_size)
-                        .finish(),
-                )
-                .with_uniform_padding(STATUS_ELEMENT_PADDING)
-                .with_background(coloru_with_opacity(icon_color.into(), 10))
-                .with_corner_radius(CornerRadius::with_all(Radius::Pixels(
-                    inline_styles::ITEM_CORNER_RADIUS,
-                )))
-                .finish()
-            }
-        };
+        let icon_color = inline_styles::icon_color(appearance);
+        let icon = Container::new(
+            ConstrainedBox::new(Icon::Terminal.to_warpui_icon(icon_color).finish())
+                .with_width(icon_size)
+                .with_height(icon_size)
+                .finish(),
+        )
+        .with_uniform_padding(STATUS_ELEMENT_PADDING)
+        .with_background(coloru_with_opacity(icon_color.into(), 10))
+        .with_corner_radius(CornerRadius::with_all(Radius::Pixels(
+            inline_styles::ITEM_CORNER_RADIUS,
+        )))
+        .finish();
 
         Container::new(icon)
             .with_margin_right(inline_styles::ICON_MARGIN)
@@ -172,36 +95,15 @@ impl SearchItem for InlineHistoryItem {
         let secondary_text_color =
             inline_styles::secondary_text_color(theme, background_color.into());
 
-        let (display_text, match_indices, font_family) = match &self.item_type {
-            HistoryItemType::Conversation { title, .. } => {
-                let indices = self
-                    .name_match_result
-                    .as_ref()
-                    .map(|m| m.matched_indices.clone())
-                    .unwrap_or_default();
-                (title.clone(), indices, appearance.ui_font_family())
-            }
-            HistoryItemType::Command { command, .. } => {
-                let indices = if self.prefix_match_len > 0 {
-                    (0..self.prefix_match_len).collect()
-                } else {
-                    vec![]
-                };
-                (command.clone(), indices, appearance.monospace_font_family())
-            }
-            HistoryItemType::AIPrompt { query_text } => {
-                let indices = if self.prefix_match_len > 0 {
-                    (0..self.prefix_match_len).collect()
-                } else {
-                    vec![]
-                };
-                (query_text.clone(), indices, appearance.ui_font_family())
-            }
-        };
+        let match_indices: Vec<usize> = (0..self.prefix_match_len).collect();
 
-        let mut text = Text::new_inline(display_text, font_family, font_size)
-            .with_color(primary_text_color.into())
-            .with_clip(ClipConfig::ellipsis());
+        let mut text = Text::new_inline(
+            self.command.clone(),
+            appearance.monospace_font_family(),
+            font_size,
+        )
+        .with_color(primary_text_color.into())
+        .with_clip(ClipConfig::ellipsis());
 
         if !match_indices.is_empty() {
             text = text.with_single_highlight(
@@ -250,25 +152,9 @@ impl SearchItem for InlineHistoryItem {
     }
 
     fn accept_result(&self) -> Self::Action {
-        match &self.item_type {
-            HistoryItemType::Conversation {
-                conversation_id,
-                title,
-                ..
-            } => AcceptHistoryItem::Conversation {
-                conversation_id: *conversation_id,
-                title: title.clone(),
-            },
-            HistoryItemType::Command {
-                command,
-                linked_workflow_data,
-            } => AcceptHistoryItem::Command {
-                command: command.clone(),
-                linked_workflow_data: linked_workflow_data.clone(),
-            },
-            HistoryItemType::AIPrompt { query_text } => AcceptHistoryItem::AIPrompt {
-                query_text: query_text.clone(),
-            },
+        AcceptHistoryItem {
+            command: self.command.clone(),
+            linked_workflow_data: self.linked_workflow_data.clone(),
         }
     }
 
@@ -277,10 +163,6 @@ impl SearchItem for InlineHistoryItem {
     }
 
     fn accessibility_label(&self) -> String {
-        match &self.item_type {
-            HistoryItemType::Conversation { title, .. } => format!("Conversation: {title}"),
-            HistoryItemType::Command { command, .. } => format!("Command: {command}"),
-            HistoryItemType::AIPrompt { query_text } => format!("AI prompt: {query_text}"),
-        }
+        format!("Command: {}", self.command)
     }
 }

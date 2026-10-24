@@ -15,8 +15,6 @@ use torchui::{App, ViewHandle};
 
 use super::*;
 use crate::NotebookKeybindings;
-use crate::ai::persisted_workspace::PersistedWorkspace;
-use crate::ai::request_usage_model::AIRequestUsageModel;
 use crate::auth::AuthStateProvider;
 use crate::cloud_object::model::persistence::CloudModel;
 use crate::code::buffer_location::LocalOrRemotePath;
@@ -33,6 +31,7 @@ use crate::code_review::diff_state::{DiffStateModel, FileDiff, GitFileStatus};
 use crate::code_review::editor_state::CodeReviewEditorState;
 use crate::code_review::git_repo_model::GitRepoModels;
 use crate::pane_group::WorkingDirectoriesModel;
+use crate::persisted_workspace::PersistedWorkspace;
 use crate::server::server_api::ServerApiProvider;
 use crate::server::server_api::team::MockTeamClient;
 use crate::server::server_api::workspace::MockWorkspaceClient;
@@ -95,9 +94,6 @@ fn initialize_test_app(app: &mut App) {
     app.add_singleton_model(|_| ActiveSession::default());
     app.add_singleton_model(NotebookKeybindings::new);
     app.add_singleton_model(|_| ServerApiProvider::new_for_test());
-    app.add_singleton_model(|ctx| {
-        AIRequestUsageModel::new_for_test(ServerApiProvider::as_ref(ctx).get_ai_client(), ctx)
-    });
 }
 
 /// Creates a LocalCodeEditorView with the given content
@@ -117,7 +113,7 @@ fn create_editor_with_content(app: &mut App, content: &str) -> ViewHandle<LocalC
             editor.reset(InitialBufferState::plain_text(&content), ctx);
         });
 
-        LocalCodeEditorView::new(code_editor_view, None, false, None, ctx)
+        LocalCodeEditorView::new(code_editor_view, None, false, ctx)
     });
 
     local_editor
@@ -147,7 +143,7 @@ fn create_editor_with_diff(
             editor.set_base(&base, true, ctx);
         });
 
-        LocalCodeEditorView::new(code_editor_view, None, false, None, ctx)
+        LocalCodeEditorView::new(code_editor_view, None, false, ctx)
     });
 
     local_editor
@@ -177,8 +173,6 @@ fn create_line_comment(
             },
         },
         last_update_time: Local::now(),
-        base: None,
-        head: None,
         outdated: false,
         origin: CommentOrigin::Native,
     }
@@ -211,8 +205,6 @@ fn create_imported_line_comment(
             },
         },
         last_update_time: Local::now(),
-        base: None,
-        head: None,
         outdated: false,
         origin: CommentOrigin::ImportedFromGitHub(ImportedCommentDetails {
             author: "reviewer".to_string(),
@@ -235,8 +227,6 @@ fn create_file_comment(
             absolute_file_path: LocalOrRemotePath::Local(file_path.into()),
         },
         last_update_time: Local::now(),
-        base: None,
-        head: None,
         outdated: false,
         origin: CommentOrigin::Native,
     }
@@ -249,8 +239,6 @@ fn create_general_comment(comment_content: &str) -> AttachedReviewComment {
         content: comment_content.to_string(),
         target: AttachedReviewCommentTarget::General,
         last_update_time: Local::now(),
-        base: None,
-        head: None,
         outdated: false,
         origin: CommentOrigin::Native,
     }
@@ -924,8 +912,6 @@ fn test_native_indented_context_comment_not_outdated() {
                 },
             },
             last_update_time: Local::now(),
-            base: None,
-            head: None,
             outdated: false,
             origin: CommentOrigin::Native,
         };

@@ -1,4 +1,5 @@
 use pathfinder_geometry::vector::{Vector2F, vec2f};
+use secret_redaction::find_secrets_in_text_with_levels;
 use torch_core::features::FeatureFlag;
 use torch_errors::report_error;
 use torchui::clipboard::ClipboardContent;
@@ -20,7 +21,6 @@ use torchui::{
 
 use super::command_dialog::EnvVarCommandDialog;
 use super::menus::Menus;
-use crate::ai::blocklist::block::secret_redaction::find_secrets_in_text_with_levels;
 use crate::channel::ChannelState;
 use crate::cloud_object::breadcrumbs::ContainingObject;
 use crate::cloud_object::model::persistence::{CloudModel, CloudModelEvent};

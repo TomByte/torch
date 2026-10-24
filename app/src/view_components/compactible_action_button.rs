@@ -5,9 +5,10 @@ use torchui::elements::{
     ChildView, ConstrainedBox, Container, CrossAxisAlignment, Flex, MainAxisAlignment,
     MainAxisSize, ParentElement,
 };
-use torchui::{Action, AppContext, Element, TypedActionView, View, ViewContext, ViewHandle};
+use torchui::{
+    Action, AppContext, Element, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
+};
 
-use crate::ai::blocklist::inline_action::inline_action_icons::icon_size;
 use crate::ui_components::icons::Icon;
 use crate::view_components::action_button::{
     ActionButton, ActionButtonTheme, AdjoinedSide, ButtonSize, KeystrokeSource,
@@ -16,9 +17,6 @@ const BUTTON_MARGIN: f32 = 8.;
 
 // Size switch thresholds for responsive button behavior
 pub const SMALL_SIZE_SWITCH_THRESHOLD: f32 = 400.0;
-pub const MEDIUM_SIZE_SWITCH_THRESHOLD: f32 = 500.0;
-pub const LARGE_SIZE_SWITCH_THRESHOLD: f32 = 600.0;
-pub const XLARGE_SIZE_SWITCH_THRESHOLD: f32 = 650.0;
 
 /// Stores normal and compact (i.e. without a keybinding display) versions of action buttons
 /// for use in views that need to display buttons in different modes.
@@ -82,33 +80,6 @@ impl CompactibleActionButton {
             compact_button,
             expanded_button,
         }
-    }
-
-    pub fn set_label<T: View>(&mut self, label: String, ctx: &mut ViewContext<T>) {
-        self.expanded_button.update(ctx, |button, ctx| {
-            button.set_label(label.clone(), ctx);
-        });
-        self.compact_button.update(ctx, |button, ctx| {
-            button.set_tooltip(Some(label), ctx);
-        });
-    }
-
-    pub fn set_keybinding<T: View>(
-        &mut self,
-        keybinding: Option<KeystrokeSource>,
-        ctx: &mut ViewContext<T>,
-    ) {
-        self.expanded_button.update(ctx, |button, ctx| {
-            button.set_keybinding(keybinding.clone(), ctx);
-        });
-
-        self.compact_button.update(ctx, |button, ctx| {
-            if let Some(keybinding) = keybinding {
-                button.set_tooltip_sublabel(keybinding.displayed(ctx), ctx);
-            } else {
-                button.set_tooltip_sublabel(None::<String>, ctx);
-            }
-        });
     }
 
     pub fn set_adjoined_side<T: View>(
@@ -223,4 +194,13 @@ pub fn render_expansion_icon(
     .with_width(icon_size(app))
     .with_height(icon_size(app))
     .finish()
+}
+
+/// The line height of the monospace font, used to size chevron icons next to text.
+fn icon_size(app: &AppContext) -> f32 {
+    let appearance = Appearance::as_ref(app);
+    app.font_cache().line_height(
+        appearance.monospace_font_size(),
+        appearance.line_height_ratio(),
+    )
 }

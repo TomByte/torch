@@ -8,9 +8,6 @@ use torch_util::standardized_path::StandardizedPath;
 use torchui::{AppContext, Entity, ModelContext, ModelHandle};
 
 use super::{Session, SessionType, Sessions};
-use crate::ai_assistant::execution_context::{
-    WarpAiExecutionContext, execution_context_for_session,
-};
 use crate::terminal::ShellLaunchData;
 use crate::terminal::model::session::SessionsEvent;
 use crate::terminal::model_events::{ModelEvent, ModelEventDispatcher};
@@ -124,13 +121,6 @@ impl ActiveSession {
     ) -> Option<LocalOrRemotePath> {
         let cwd = self.current_working_directory()?;
         self.location_for_path(cwd.as_str(), app)
-    }
-
-    /// Returns the `WarpAiExecutionContext` for the active session.
-    pub fn ai_execution_environment(&self, app: &AppContext) -> Option<WarpAiExecutionContext> {
-        self.session(app)
-            .as_ref()
-            .map(execution_context_for_session)
     }
 }
 

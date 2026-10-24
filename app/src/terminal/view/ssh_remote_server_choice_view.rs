@@ -30,19 +30,18 @@ use torchui::{
     ViewHandle,
 };
 
-use crate::ai::blocklist::block::keyboard_navigable_buttons::{
-    KeyboardNavigableButtons, rich_navigation_button,
-};
-use crate::ai::blocklist::inline_action::inline_action_header::{
-    HeaderConfig, INLINE_ACTION_HORIZONTAL_PADDING,
-};
 use crate::server::telemetry::TelemetryEvent;
 use crate::terminal::model::session::SessionId;
 use crate::terminal::warpify::settings::{SshExtensionInstallMode, WarpifySettings};
 use crate::ui_components::blended_colors;
+use crate::view_components::keyboard_navigable_buttons::{
+    KeyboardNavigableButtons, rich_navigation_button,
+};
 use crate::{Appearance, send_telemetry_from_ctx};
 
 const PROMPT_BORDER_RADIUS: f32 = 8.;
+const HORIZONTAL_PADDING: f32 = 16.;
+const HEADER_VERTICAL_PADDING: f32 = 10.;
 
 #[derive(Clone, Debug)]
 pub enum SshRemoteServerChoiceViewAction {
@@ -118,19 +117,29 @@ impl SshRemoteServerChoiceView {
     }
 
     fn render_header(&self, app: &AppContext) -> Box<dyn Element> {
-        // Match the Figma design: a plain title row, no icon / chevron /
-        // action buttons. `HeaderConfig` without an `interaction_mode` set
-        // renders exactly that.
-        HeaderConfig::new("Choose your experience for this remote session:", app)
-            .with_corner_radius_override(CornerRadius::with_top(Radius::Pixels(
-                PROMPT_BORDER_RADIUS,
-            )))
-            .render_header(app, None)
+        // Match the Figma design: a plain title row, no icon / chevron / action buttons.
+        let appearance = Appearance::as_ref(app);
+        let theme = appearance.theme();
+        let header_background = theme.surface_2();
+        let title = Text::new_inline(
+            "Choose your experience for this remote session:",
+            appearance.ui_font_family(),
+            appearance.monospace_font_size(),
+        )
+        .with_color(blended_colors::text_main(theme, header_background))
+        .finish();
+
+        Container::new(title)
+            .with_horizontal_padding(HORIZONTAL_PADDING)
+            .with_vertical_padding(HEADER_VERTICAL_PADDING)
+            .with_background(header_background)
+            .with_corner_radius(CornerRadius::with_top(Radius::Pixels(PROMPT_BORDER_RADIUS)))
+            .finish()
     }
 
     fn render_buttons(&self) -> Box<dyn Element> {
         Container::new(ChildView::new(&self.buttons).finish())
-            .with_uniform_padding(INLINE_ACTION_HORIZONTAL_PADDING)
+            .with_uniform_padding(HORIZONTAL_PADDING)
             .finish()
     }
 
@@ -205,8 +214,8 @@ impl SshRemoteServerChoiceView {
         Container::new(row)
             .with_padding_top(8.)
             .with_padding_bottom(8.)
-            .with_padding_left(INLINE_ACTION_HORIZONTAL_PADDING)
-            .with_padding_right(INLINE_ACTION_HORIZONTAL_PADDING)
+            .with_padding_left(HORIZONTAL_PADDING)
+            .with_padding_right(HORIZONTAL_PADDING)
             .with_border(Border::top(1.).with_border_fill(border_color))
             .finish()
     }

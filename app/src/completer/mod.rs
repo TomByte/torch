@@ -389,41 +389,6 @@ impl CompletionContext for SessionAgnosticContext {
     }
 }
 
-/// Empty `CompletionContext` used in places without a live shell session
-/// (i.e. shared session viewers without a real terminal instance).
-#[derive(Clone)]
-pub struct EmptyCompletionContext;
-impl EmptyCompletionContext {
-    pub fn new() -> Self {
-        Self
-    }
-}
-impl CompletionContext for EmptyCompletionContext {
-    fn top_level_commands(&self) -> Box<dyn Iterator<Item = &str> + '_> {
-        Box::new(std::iter::empty())
-    }
-
-    fn command_registry(&self) -> &CommandRegistry {
-        &EMPTY_COMMAND_REGISTRY
-    }
-
-    fn environment_variable_names(&self) -> Option<&HashSet<SmolStr>> {
-        None
-    }
-
-    fn shell_supports_autocd(&self) -> Option<bool> {
-        None
-    }
-
-    fn path_completion_context(&self) -> Option<&dyn PathCompletionContext> {
-        None
-    }
-
-    fn generator_context(&self) -> Option<&dyn GeneratorContext> {
-        None
-    }
-}
-
 /// List files and directories in a directory; used for completions on a remote machine.
 /// This uses `find` instead of `ls` due to the challenges of parsing `ls` output for
 /// unusual file names (e.g.: ones including newlines).

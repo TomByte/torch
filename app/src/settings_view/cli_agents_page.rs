@@ -43,8 +43,8 @@ use crate::appearance::Appearance;
 use crate::local_hooks::{SetupState, StatusAgent};
 use crate::menu::{MenuItem, MenuItemFields};
 use crate::settings::{
-    AISettings, AISettingsChangedEvent, AutoDismissRichInputAfterSubmit,
-    AutoOpenRichInputOnCLIAgentStart, AutoToggleRichInput, ShouldRenderCLIAgentToolbar,
+    AutoDismissRichInputAfterSubmit, AutoOpenRichInputOnCLIAgentStart, AutoToggleRichInput,
+    CLIAgentSettings, CLIAgentSettingsChangedEvent, ShouldRenderCLIAgentToolbar,
     SubmitRichInputOnCtrlEnter,
 };
 use crate::terminal::CLIAgent;
@@ -102,7 +102,7 @@ impl CLIAgentsPageView {
             &cli_agent_footer_command_editor,
             |_, _, event, ctx| match event {
                 SubmittableTextInputEvent::Submit(command) => {
-                    AISettings::handle(ctx).update(ctx, |settings, ctx| {
+                    CLIAgentSettings::handle(ctx).update(ctx, |settings, ctx| {
                         settings.add_cli_agent_footer_enabled_command(command, ctx);
                     });
                 }
@@ -110,7 +110,7 @@ impl CLIAgentsPageView {
             },
         );
 
-        let cli_agent_footer_command_mouse_state_handles = AISettings::as_ref(ctx)
+        let cli_agent_footer_command_mouse_state_handles = CLIAgentSettings::as_ref(ctx)
             .cli_agent_footer_enabled_commands
             .value()
             .keys()
@@ -120,12 +120,12 @@ impl CLIAgentsPageView {
         let cli_agent_toolbar_inline_editor =
             ctx.add_typed_action_view(AgentToolbarInlineEditor::new);
 
-        ctx.subscribe_to_model(&AISettings::handle(ctx), |me, _, event, ctx| {
+        ctx.subscribe_to_model(&CLIAgentSettings::handle(ctx), |me, _, event, ctx| {
             // Adding or removing a command changes the length of the command
             // list, so both the per-row mouse states and the per-row agent
             // dropdowns have to be rebuilt to stay index-aligned with it.
-            if let AISettingsChangedEvent::CLIAgentToolbarEnabledCommands { .. } = event {
-                me.cli_agent_footer_command_mouse_state_handles = AISettings::as_ref(ctx)
+            if let CLIAgentSettingsChangedEvent::CLIAgentToolbarEnabledCommands { .. } = event {
+                me.cli_agent_footer_command_mouse_state_handles = CLIAgentSettings::as_ref(ctx)
                     .cli_agent_footer_enabled_commands
                     .value()
                     .keys()
@@ -249,7 +249,7 @@ impl CLIAgentsPageView {
     fn create_cli_agent_dropdowns(
         ctx: &mut ViewContext<Self>,
     ) -> Vec<ViewHandle<Dropdown<CLIAgentsPageAction>>> {
-        let entries: Vec<(String, CLIAgent)> = AISettings::as_ref(ctx)
+        let entries: Vec<(String, CLIAgent)> = CLIAgentSettings::as_ref(ctx)
             .cli_agent_footer_enabled_commands
             .value()
             .iter()
@@ -365,7 +365,7 @@ impl TypedActionView for CLIAgentsPageView {
     fn handle_action(&mut self, action: &Self::Action, ctx: &mut ViewContext<Self>) {
         match action {
             CLIAgentsPageAction::ToggleCLIAgentToolbar => {
-                match AISettings::handle(ctx).update(ctx, |settings, ctx| {
+                match CLIAgentSettings::handle(ctx).update(ctx, |settings, ctx| {
                     settings
                         .should_render_cli_agent_footer
                         .toggle_and_save_value(ctx)
@@ -385,13 +385,13 @@ impl TypedActionView for CLIAgentsPageView {
                 ctx.notify();
             }
             CLIAgentsPageAction::ToggleAutoToggleRichInput => {
-                AISettings::handle(ctx).update(ctx, |settings, ctx| {
+                CLIAgentSettings::handle(ctx).update(ctx, |settings, ctx| {
                     report_if_error!(settings.auto_toggle_rich_input.toggle_and_save_value(ctx));
                 });
                 ctx.notify();
             }
             CLIAgentsPageAction::ToggleAutoOpenRichInputOnCLIAgentStart => {
-                AISettings::handle(ctx).update(ctx, |settings, ctx| {
+                CLIAgentSettings::handle(ctx).update(ctx, |settings, ctx| {
                     report_if_error!(
                         settings
                             .auto_open_rich_input_on_cli_agent_start
@@ -401,7 +401,7 @@ impl TypedActionView for CLIAgentsPageView {
                 ctx.notify();
             }
             CLIAgentsPageAction::ToggleAutoDismissRichInputAfterSubmit => {
-                AISettings::handle(ctx).update(ctx, |settings, ctx| {
+                CLIAgentSettings::handle(ctx).update(ctx, |settings, ctx| {
                     report_if_error!(
                         settings
                             .auto_dismiss_rich_input_after_submit
@@ -411,18 +411,18 @@ impl TypedActionView for CLIAgentsPageView {
                 ctx.notify();
             }
             CLIAgentsPageAction::ToggleSubmitRichInputOnCtrlEnter => {
-                AISettings::handle(ctx).update(ctx, |settings, ctx| {
+                CLIAgentSettings::handle(ctx).update(ctx, |settings, ctx| {
                     report_if_error!(settings.submit_on_ctrl_enter.toggle_and_save_value(ctx));
                 });
                 ctx.notify();
             }
             CLIAgentsPageAction::RemoveCLIAgentToolbarEnabledCommand(command) => {
-                AISettings::handle(ctx).update(ctx, |settings, ctx| {
+                CLIAgentSettings::handle(ctx).update(ctx, |settings, ctx| {
                     settings.remove_cli_agent_footer_enabled_command(command, ctx);
                 });
             }
             CLIAgentsPageAction::SetCLIAgentForCommand { pattern, agent } => {
-                AISettings::handle(ctx).update(ctx, |settings, ctx| {
+                CLIAgentSettings::handle(ctx).update(ctx, |settings, ctx| {
                     settings.set_cli_agent_for_command(pattern, *agent, ctx);
                 });
             }
@@ -564,7 +564,7 @@ impl SettingsWidget for CLIAgentWidget {
         appearance: &Appearance,
         app: &AppContext,
     ) -> Box<dyn Element> {
-        let ai_settings = AISettings::as_ref(app);
+        let ai_settings = CLIAgentSettings::as_ref(app);
 
         let cli_agent_footer_toggle = render_ai_setting_toggle::<ShouldRenderCLIAgentToolbar>(
             "Show coding agent toolbar",
@@ -611,7 +611,7 @@ impl SettingsWidget for CLIAgentWidget {
 }
 
 fn should_render_cli_agent_detail(app: &AppContext) -> bool {
-    *AISettings::as_ref(app).should_render_cli_agent_footer
+    *CLIAgentSettings::as_ref(app).should_render_cli_agent_footer
 }
 
 fn should_render_cli_agent_rich_input(app: &AppContext) -> bool {
@@ -840,7 +840,7 @@ impl SettingsWidget for CLIAgentAutoToggleRichInputWidget {
             label,
             render_ai_feature_switch(
                 self.toggle.clone(),
-                *AISettings::as_ref(app).auto_toggle_rich_input,
+                *CLIAgentSettings::as_ref(app).auto_toggle_rich_input,
                 true,
                 CLIAgentsPageAction::ToggleAutoToggleRichInput,
                 app,
@@ -880,7 +880,7 @@ impl SettingsWidget for CLIAgentAutoOpenRichInputWidget {
         render_ai_setting_toggle::<AutoOpenRichInputOnCLIAgentStart>(
             "Auto open Rich Input when a coding agent session starts",
             CLIAgentsPageAction::ToggleAutoOpenRichInputOnCLIAgentStart,
-            *AISettings::as_ref(app).auto_open_rich_input_on_cli_agent_start,
+            *CLIAgentSettings::as_ref(app).auto_open_rich_input_on_cli_agent_start,
             true,
             self.toggle.clone(),
             &view.local_only_icon_tooltip_states,
@@ -918,7 +918,7 @@ impl SettingsWidget for CLIAgentAutoDismissRichInputWidget {
         render_ai_setting_toggle::<AutoDismissRichInputAfterSubmit>(
             "Auto dismiss Rich Input after prompt submission",
             CLIAgentsPageAction::ToggleAutoDismissRichInputAfterSubmit,
-            *AISettings::as_ref(app).auto_dismiss_rich_input_after_submit,
+            *CLIAgentSettings::as_ref(app).auto_dismiss_rich_input_after_submit,
             true,
             self.toggle.clone(),
             &view.local_only_icon_tooltip_states,
@@ -956,7 +956,7 @@ impl SettingsWidget for CLIAgentSubmitRichInputWidget {
         render_ai_setting_toggle::<SubmitRichInputOnCtrlEnter>(
             "Submit Rich Input with Ctrl+Enter",
             CLIAgentsPageAction::ToggleSubmitRichInputOnCtrlEnter,
-            *AISettings::as_ref(app).submit_on_ctrl_enter,
+            *CLIAgentSettings::as_ref(app).submit_on_ctrl_enter,
             true,
             self.toggle.clone(),
             &view.local_only_icon_tooltip_states,
@@ -1004,7 +1004,7 @@ impl SettingsWidget for CLIAgentCommandsWidget {
 
         let background = appearance.theme().surface_1();
         let font_color = appearance.theme().foreground();
-        let items: Vec<_> = AISettings::as_ref(app)
+        let items: Vec<_> = CLIAgentSettings::as_ref(app)
             .cli_agent_footer_enabled_commands
             .value()
             .keys()

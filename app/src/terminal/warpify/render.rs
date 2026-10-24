@@ -3,7 +3,7 @@ use pathfinder_color::ColorU;
 use pathfinder_geometry::rect::RectF;
 use pathfinder_geometry::vector::Vector2F;
 use torch_core::ui::appearance::Appearance;
-use torch_core::ui::theme::{Fill, WarpTheme};
+use torch_core::ui::theme::{AnsiColorIdentifier, Fill, WarpTheme};
 use torchui::elements::{
     Align, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Flex, FormattedTextElement,
     HighlightedHyperlink, Icon, MouseStateHandle, ParentElement, Radius, Rect, Shrinkable, Stack,
@@ -15,8 +15,8 @@ use torchui::{AppContext, Element, EventContext, PaintContext, SingletonEntity a
 
 use super::SubshellSource;
 use super::settings::WarpifySettings;
-use crate::ai::blocklist::inline_action::inline_action_icons;
 use crate::ui_components::blended_colors;
+use crate::ui_components::icons::Icon as UiIcon;
 
 /// The flag font size varies with the monospace font width, but if it gets too big it will start
 /// to overlap with the prompt grid. This should eventually be fixed by growing the block height to
@@ -86,7 +86,9 @@ pub fn header_row(
 }
 
 fn green_check_icon(appearance: &Appearance, size: f32) -> Box<dyn Element> {
-    ConstrainedBox::new(inline_action_icons::green_check_icon(appearance).finish())
+    let green =
+        AnsiColorIdentifier::Green.to_ansi_color(&appearance.theme().terminal_colors().normal);
+    ConstrainedBox::new(Icon::new(UiIcon::Check.into(), green).finish())
         .with_max_height(size)
         .with_max_width(size)
         .finish()

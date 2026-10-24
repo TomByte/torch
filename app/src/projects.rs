@@ -74,10 +74,6 @@ impl ProjectManagementModel {
         ctx.emit(ProjectEvent::Added { path });
     }
 
-    pub fn all_projects(&self) -> impl Iterator<Item = &Project> {
-        self.projects.values()
-    }
-
     /// Save a project to the database
     fn save_project(&self, project: Project) {
         if let Some(sender) = &self.model_event_sender {

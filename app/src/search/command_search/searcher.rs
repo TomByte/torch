@@ -33,18 +33,6 @@ pub enum CommandSearchItemAction {
 
     /// The user accepted a workflow search item.
     AcceptWorkflow(AcceptedWorkflow),
-
-    /// The user accepted the AI query search item with this query text.
-    AcceptAIQuery(String),
-
-    /// The user requested to run the AI query search item with this query text.
-    RunAIQuery(String),
-
-    /// The user accepted the search item to open Torch AI.
-    OpenWarpAI,
-
-    /// The user accepted the search item to translate the query to a command using Torch AI.
-    TranslateUsingWarpAI,
 }
 
 #[cfg(test)]

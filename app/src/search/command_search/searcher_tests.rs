@@ -12,24 +12,19 @@ use torchui::elements::Empty;
 use torchui::{App, AppContext, Element, SingletonEntity};
 
 use super::*;
-use crate::ai::blocklist::AIQueryHistoryOutputStatus;
 use crate::appearance::Appearance;
 use crate::auth::AuthStateProvider;
 use crate::auth::auth_manager::AuthManager;
-use crate::search::ai_queries::fuzzy_match::FuzzyMatchAIQueryResults;
-use crate::search::command_search::ai_queries::AIQuerySearchResultItem;
 use crate::search::command_search::history::{
     history_data_source, history_data_source_for_session,
 };
 use crate::search::command_search::searcher::CommandSearchMixer;
-use crate::search::command_search::workflows::WorkflowSearchItem;
 use crate::search::data_source::{Query, QueryResult};
 use crate::search::item::SearchItem;
 use crate::search::mixer::{
     AddAsyncSourceOptions, AsyncDataSource, BoxFuture, DataSourceRunErrorWrapper,
 };
 use crate::search::result_renderer::ItemHighlightState;
-use crate::search::workflows::fuzzy_match::FuzzyMatchWorkflowResult;
 use crate::search::{QueryFilter, SyncDataSource};
 use crate::server::server_api::ServerApiProvider;
 use crate::server::telemetry::context_provider::AppTelemetryContextProvider;
@@ -37,8 +32,6 @@ use crate::terminal::model::session::command_executor::testing::TestCommandExecu
 use crate::terminal::model::session::{Session, SessionId, SessionInfo};
 use crate::terminal::{History, HistoryEntry};
 use crate::test_util::assert_eventually;
-use crate::workflows::workflow::Workflow;
-use crate::workflows::{WorkflowSource, WorkflowType};
 
 #[derive(Clone, Debug)]
 enum TestItemAction {
@@ -121,23 +114,6 @@ impl SyncDataSource for SlowDataSource {
         _: &AppContext,
     ) -> Result<Vec<QueryResult<Self::Action>>, DataSourceRunErrorWrapper> {
         Ok(vec![TestSearchItem { is_async: false }.into()])
-    }
-}
-
-/// A sync data source returning a fixed, pre-built set of results.
-struct FixedResults<T>(Vec<T>);
-
-impl<T: SearchItem<Action = CommandSearchItemAction> + Clone + 'static> SyncDataSource
-    for FixedResults<T>
-{
-    type Action = CommandSearchItemAction;
-
-    fn run_query(
-        &self,
-        _: &Query,
-        _: &AppContext,
-    ) -> Result<Vec<QueryResult<Self::Action>>, DataSourceRunErrorWrapper> {
-        Ok(self.0.iter().cloned().map(Into::into).collect())
     }
 }
 
@@ -379,118 +355,6 @@ fn test_blank_query_preserves_chronological_order_despite_differing_priors() {
                     command,
                     ..
                 })) if command == "git log"
-            ));
-        });
-    });
-}
-
-#[test]
-fn test_history_score_stays_comparable_to_other_sources_raw_skim_scale() {
-    let _flag = FeatureFlag::HistorySearchRankingV2.override_enabled(true);
-
-    App::test((), |mut app| async move {
-        initialize_app(&mut app);
-
-        let history_command = "npm test -- widgets".to_owned();
-        let weak_match_text = "archive old logs then send email summary tonight";
-
-        let history_raw_score =
-            fuzzy_match::match_indices_case_insensitive(&history_command, "test")
-                .expect("the history command should fuzzy-match \"test\"")
-                .score;
-        let weak_raw_score = fuzzy_match::match_indices_case_insensitive(weak_match_text, "test")
-            .expect("the weak match text should fuzzy-match \"test\"")
-            .score;
-        assert!(
-            weak_raw_score < history_raw_score,
-            "fixture premise: the competitors' shared text must score lower on the raw Skim scale \
-             than the history command (weak={weak_raw_score}, history={history_raw_score}), not \
-             merely be discounted by field weighting"
-        );
-
-        let weak_workflow = Workflow::Command {
-            name: "Unrelated maintenance task".to_owned(),
-            command: weak_match_text.to_owned(),
-            tags: vec![],
-            description: None,
-            arguments: vec![],
-            source_url: None,
-            author: None,
-            author_url: None,
-            shells: vec![],
-            environment_variables: None,
-        };
-        let fuzzy_matched_workflow =
-            FuzzyMatchWorkflowResult::try_match("test", &weak_workflow, "")
-                .expect("the workflow's command should fuzzy-match \"test\"");
-        let workflow_item = WorkflowSearchItem {
-            workflow: Box::new(WorkflowType::Local(weak_workflow)),
-            source: WorkflowSource::Local,
-            fuzzy_matched_workflow,
-        };
-
-        let weak_saved_prompt = Workflow::AgentMode {
-            name: "Unrelated saved prompt".to_owned(),
-            query: weak_match_text.to_owned(),
-            description: None,
-            arguments: vec![],
-        };
-        let fuzzy_matched_saved_prompt =
-            FuzzyMatchWorkflowResult::try_match("test", &weak_saved_prompt, "")
-                .expect("the saved prompt's query should fuzzy-match \"test\"");
-        let saved_prompt_item = WorkflowSearchItem {
-            workflow: Box::new(WorkflowType::Local(weak_saved_prompt)),
-            source: WorkflowSource::Local,
-            fuzzy_matched_workflow: fuzzy_matched_saved_prompt,
-        };
-
-        let ai_prompt_item = AIQuerySearchResultItem {
-            query_text: weak_match_text.to_owned(),
-            start_time: Local::now(),
-            output_status: AIQueryHistoryOutputStatus::Completed,
-            working_directory: None,
-            fuzzy_match_results: FuzzyMatchAIQueryResults::try_match("test", weak_match_text)
-                .expect("the AI query text should fuzzy-match \"test\""),
-        };
-
-        let mixer = app.add_model(|_| CommandSearchMixer::new());
-        mixer.update(&mut app, |mixer, ctx| {
-            mixer.add_sync_source(
-                FixedResults(vec![workflow_item, saved_prompt_item]),
-                HashSet::from([QueryFilter::Workflows]),
-            );
-            mixer.add_sync_source(
-                FixedResults(vec![ai_prompt_item]),
-                HashSet::from([QueryFilter::PromptHistory]),
-            );
-            mixer.add_async_source(
-                history_data_source(vec![HistoryEntry::command_only(history_command.clone())]),
-                HashSet::from([QueryFilter::History]),
-                AddAsyncSourceOptions {
-                    debounce_interval: None,
-                    run_in_zero_state: false,
-                    run_when_unfiltered: true,
-                },
-                ctx,
-            );
-            mixer.run_query("test".into(), ctx);
-        });
-
-        assert_eventually!(
-            app.read(|app| !mixer.as_ref(app).is_loading()),
-            "the query should finish loading"
-        );
-
-        app.read(|app| {
-            let results = mixer.as_ref(app).results();
-            assert_eq!(results.len(), 4);
-
-            assert!(matches!(
-                results.last().map(|result| result.accept_result()),
-                Some(CommandSearchItemAction::AcceptHistory(AcceptedHistoryItem {
-                    command,
-                    ..
-                })) if command == history_command
             ));
         });
     });

@@ -4,7 +4,7 @@ use rangemap::RangeMap;
 use torch_editor::multiline::{MultilineStr, MultilineString};
 use unindent::Unindent as _;
 
-use super::{DiffModel, compute_unified_diff};
+use super::DiffModel;
 use crate::code::editor::diff::ChangeType;
 
 #[test]
@@ -367,29 +367,6 @@ fn test_diff_count_before_line() {
         assert_eq!(diff_model.diff_hunk_count_before_line(0), 0);
         assert_eq!(diff_model.diff_hunk_count_before_line(1), 1);
         assert_eq!(diff_model.diff_hunk_count_before_line(2), 1);
-    });
-}
-
-#[test]
-fn test_unified_diff() {
-    use torchui::App;
-    App::test((), |_| async move {
-        let diff = compute_unified_diff(
-            MultilineStr::try_new("Hello World\nThis is the second line.\nThis is the third.")
-                .unwrap(),
-            MultilineStr::try_new(
-                "Hallo Welt\nThis is the second line.\nThis is life.\nMoar and more",
-            )
-            .unwrap(),
-            "test.rs",
-        )
-        .await;
-        assert_eq!(
-            diff.unified_diff,
-            "--- test.rs\n+++ test.rs\n@@ -1,3 +1,4 @@\n-Hello World\n+Hallo Welt\n This is the second line.\n-This is the third.\n+This is life.\n+Moar and more\n"
-        );
-        assert_eq!(diff.lines_added, 3);
-        assert_eq!(diff.lines_removed, 2);
     });
 }
 

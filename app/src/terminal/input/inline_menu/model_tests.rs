@@ -7,7 +7,7 @@ use crate::terminal::input::inline_menu::{InlineMenuAction, InlineMenuType};
 struct TestAction(&'static str);
 
 impl InlineMenuAction for TestAction {
-    const MENU_TYPE: InlineMenuType = InlineMenuType::SlashCommands;
+    const MENU_TYPE: InlineMenuType = InlineMenuType::InlineHistoryMenu;
 }
 
 #[test]

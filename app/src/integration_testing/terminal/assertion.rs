@@ -406,19 +406,14 @@ pub fn assert_selected_block_index_is_first_renderable() -> AssertionCallback {
                 .block_at(selected_block_index)
                 .expect("Block should exist");
             assert!(
-                block.height(&crate::terminal::model::block::TranscriptScope::Terminal)
-                    != Lines::zero(),
+                block.height() != Lines::zero(),
                 "The selected block should be rendered"
             );
             // Previous index either doesn't exist or isn't renderable
             if selected_block_index > BlockIndex::zero() {
                 let prev_block = model.block_list().block_at(selected_block_index - 1.into());
                 if let Some(prev_block) = prev_block {
-                    assert!(
-                        prev_block
-                            .is_empty(&crate::terminal::model::block::TranscriptScope::Terminal),
-                        "Prev index should be hidden"
-                    );
+                    assert!(prev_block.is_empty(), "Prev index should be hidden");
                 }
             }
             AssertionOutcome::Success
@@ -439,8 +434,7 @@ pub fn assert_selected_block_index_is_last_renderable() -> AssertionCallback {
                 .block_at(selected_block_index)
                 .expect("Block should exist");
             assert!(
-                block.height(&crate::terminal::model::block::TranscriptScope::Terminal)
-                    != Lines::zero(),
+                block.height() != Lines::zero(),
                 "The selected block should be rendered"
             );
 
@@ -647,11 +641,7 @@ pub fn assert_no_visible_background_blocks(
                 .block_list()
                 .blocks()
                 .iter()
-                .filter(|block| {
-                    block.is_background()
-                        && block
-                            .is_visible(&crate::terminal::model::block::TranscriptScope::Terminal)
-                })
+                .filter(|block| block.is_background() && block.is_visible())
                 .count();
             async_assert_eq!(
                 count_nonempty_background_blocks,

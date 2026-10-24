@@ -15,9 +15,6 @@ use super::auth_state::{AuthState, PersistAction};
 use super::credentials::Credentials;
 use super::user::User;
 use super::user_properties::UserProperties;
-use crate::ai::AIRequestUsageModel;
-use crate::ai::llms::LLMPreferences;
-use crate::ai::persisted_workspace::PersistedWorkspace;
 use crate::autoupdate::AutoupdateState;
 use crate::persistence::ModelEvent;
 use crate::server::cloud_objects::update_manager::UpdateManager;
@@ -144,7 +141,6 @@ impl AuthManager {
                 let UserProperties {
                     user,
                     server_experiments,
-                    llms,
                 } = user_output.into();
 
                 self.complete_authentication(user.clone(), credentials, ctx);
@@ -179,18 +175,6 @@ impl AuthManager {
 
                 CloudPreferencesSyncer::handle(ctx).update(ctx, |model, ctx| {
                     model.handle_user_fetched(self.auth_state.clone(), ctx)
-                });
-
-                AIRequestUsageModel::handle(ctx).update(ctx, |usage_model, ctx| {
-                    usage_model.refresh_request_usage_async(ctx);
-                });
-
-                LLMPreferences::handle(ctx).update(ctx, |prefs, ctx| {
-                    prefs.update_feature_model_choices(Ok(llms), ctx);
-                });
-
-                PersistedWorkspace::handle(ctx).update(ctx, |index_manager_updater, ctx| {
-                    index_manager_updater.on_user_changed(ctx);
                 });
 
                 if !user.is_user_anonymous() {

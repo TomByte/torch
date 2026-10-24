@@ -201,6 +201,6 @@ fn test_queued_typeahead_shell_reported() {
         block_list
             .background_block_mut()
             .expect("Block should exist")
-            .is_empty(&crate::terminal::model::block::TranscriptScope::Terminal)
+            .is_empty()
     );
 }

@@ -42,7 +42,7 @@ use crate::terminal::model::session::{
     CommandExecutor, ExecuteCommandOptions, SessionId, SessionInfo, Sessions,
 };
 use crate::terminal::session_settings::{
-    AgentToolbarChipSelection, CLIAgentToolbarChipSelection, SessionSettings, ToolbarChipSelection,
+    CLIAgentToolbarChipSelection, SessionSettings, ToolbarChipSelection,
 };
 use crate::terminal::shell::Shell;
 use crate::terminal::{CLIAgent, History};
@@ -80,7 +80,7 @@ fn add_cli_agent_footer_singletons(app: &mut App) {
     app.add_singleton_model(AuthManager::new_for_test);
     app.add_singleton_model(|_| crate::settings::manager::SettingsManager::default());
     crate::settings::InputSettings::register(app);
-    app.update(crate::settings::AISettings::register_and_subscribe_to_events);
+    app.update(crate::settings::CLIAgentSettings::register_and_subscribe_to_events);
     app.add_singleton_model(crate::workspaces::user_workspaces::UserWorkspaces::default_mock);
     app.add_singleton_model(|_| CLIAgentSessionsModel::new());
     #[cfg(windows)]
@@ -318,18 +318,6 @@ fn test_chips_to_run_only_includes_active_surface_configurations() {
         app.update(|ctx| {
             SessionSettings::handle(ctx).update(ctx, |settings, ctx| {
                 settings
-                    .agent_footer_chip_selection
-                    .set_value(
-                        AgentToolbarChipSelection::Custom {
-                            left: vec![AgentToolbarItemKind::ContextChip(
-                                ContextChipKind::WorkingDirectory,
-                            )],
-                            right: vec![],
-                        },
-                        ctx,
-                    )
-                    .unwrap();
-                settings
                     .cli_agent_footer_chip_selection
                     .set_value(
                         CLIAgentToolbarChipSelection::Custom {
@@ -354,27 +342,9 @@ fn test_chips_to_run_only_includes_active_surface_configurations() {
             assert!(chips_for(ActiveChipSurfaces::default()).is_empty());
             assert_eq!(
                 chips_for(ActiveChipSurfaces {
-                    agent_footer: true,
-                    ..Default::default()
-                }),
-                vec![ContextChipKind::WorkingDirectory]
-            );
-            assert_eq!(
-                chips_for(ActiveChipSurfaces {
                     cli_agent_footer: true,
-                    ..Default::default()
                 }),
                 vec![ContextChipKind::ShellGitBranch]
-            );
-            assert_eq!(
-                chips_for(ActiveChipSurfaces {
-                    agent_footer: true,
-                    cli_agent_footer: true,
-                }),
-                vec![
-                    ContextChipKind::WorkingDirectory,
-                    ContextChipKind::ShellGitBranch,
-                ]
             );
         });
     });
@@ -402,7 +372,7 @@ fn test_cli_agent_footer_chips_require_a_visible_supported_footer() {
         app.add_singleton_model(AuthManager::new_for_test);
         app.add_singleton_model(|_| crate::settings::manager::SettingsManager::default());
         crate::settings::InputSettings::register(&mut app);
-        app.update(crate::settings::AISettings::register_and_subscribe_to_events);
+        app.update(crate::settings::CLIAgentSettings::register_and_subscribe_to_events);
         app.add_singleton_model(crate::workspaces::user_workspaces::UserWorkspaces::default_mock);
         app.add_singleton_model(|_| CLIAgentSessionsModel::new());
         #[cfg(windows)]
@@ -448,7 +418,7 @@ fn test_cli_agent_footer_chips_require_a_visible_supported_footer() {
         CLIAgentSessionsModel::handle(&app).update(&mut app, |sessions, ctx| {
             sessions.set_session(terminal_view_id, session_for(CLIAgent::Claude), ctx);
         });
-        crate::settings::AISettings::handle(&app).update(&mut app, |settings, ctx| {
+        crate::settings::CLIAgentSettings::handle(&app).update(&mut app, |settings, ctx| {
             settings
                 .should_render_cli_agent_footer
                 .set_value(false, ctx)
@@ -487,7 +457,7 @@ fn test_ps1_without_active_agent_surface_runs_no_footer_generators() {
         app.add_singleton_model(AuthManager::new_for_test);
         app.add_singleton_model(|_| crate::settings::manager::SettingsManager::default());
         crate::settings::InputSettings::register(&mut app);
-        app.update(crate::settings::AISettings::register_and_subscribe_to_events);
+        app.update(crate::settings::CLIAgentSettings::register_and_subscribe_to_events);
         app.add_singleton_model(crate::workspaces::user_workspaces::UserWorkspaces::default_mock);
         #[cfg(windows)]
         app.add_singleton_model(SystemInfo::new);

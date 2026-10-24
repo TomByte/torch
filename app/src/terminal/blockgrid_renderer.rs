@@ -5,7 +5,7 @@ use pathfinder_color::ColorU;
 use torchui::fonts::{FamilyId, Properties, Weight};
 use torchui::geometry::rect::RectF;
 use torchui::geometry::vector::{Vector2F, vec2f};
-use torchui::{AppContext, Element, EntityId, PaintContext};
+use torchui::{AppContext, EntityId, PaintContext};
 
 use super::model::SecretHandle;
 use super::model::ansi::{CursorShape, CursorStyle};
@@ -81,9 +81,7 @@ pub trait BlockGridRenderer {
         grid_render_params: &GridRenderParams,
         ctx: &mut PaintContext,
         terminal_view_id: EntityId,
-        cursor_hint_text: Option<&mut Box<dyn Element>>,
         color: ColorU,
-        app: &AppContext,
     );
 }
 
@@ -201,18 +199,15 @@ impl BlockGridRenderer for BlockGrid {
         grid_render_params: &GridRenderParams,
         ctx: &mut PaintContext,
         terminal_view_id: EntityId,
-        cursor_hint_text: Option<&mut Box<dyn Element>>,
         color: ColorU,
-        app: &AppContext,
     ) {
         let cursor_style = self.cursor_style();
-        let (cursor_display_point, is_cursor_on_wide_char, cursor_style, cursor_hint_text) =
+        let (cursor_display_point, is_cursor_on_wide_char, cursor_style) =
             match self.cursor_display_point() {
                 Some(CursorDisplayPoint::Visible(cursor_display_point)) => (
                     cursor_display_point,
                     self.grid_handler().is_cursor_on_wide_char(),
                     cursor_style,
-                    cursor_hint_text,
                 ),
                 Some(CursorDisplayPoint::HiddenCache(cursor_display_point)) => (
                     cursor_display_point,
@@ -221,7 +216,6 @@ impl BlockGridRenderer for BlockGrid {
                         shape: CursorShape::Hidden,
                         ..cursor_style
                     },
-                    None,
                 ),
                 None => return,
             };
@@ -236,8 +230,6 @@ impl BlockGridRenderer for BlockGrid {
             color,
             ctx,
             terminal_view_id,
-            cursor_hint_text,
-            app,
         )
     }
 }

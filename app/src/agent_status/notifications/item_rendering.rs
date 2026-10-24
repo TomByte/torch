@@ -349,7 +349,6 @@ fn render_agent_avatar(
     let variant = IconWithStatusVariant::CLIAgent {
         agent,
         status: Some(notification_category_to_conversation_status(category)),
-        is_ambient: false,
     };
     render_icon_with_status(
         variant,

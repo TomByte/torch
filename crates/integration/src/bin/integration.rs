@@ -351,7 +351,6 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
     register_test!(test_copy_secret_respects_safe_mode_setting);
     register_test!(test_alt_screen_secret_detection);
     register_test!(test_secret_case_sensitivity);
-    register_test!(test_secrets_are_always_redacted_in_ai_inputs);
 
     // OSC 8 hyperlink tests (GH6393)
     register_test!(test_osc8_open_close_renders_visible_text);
@@ -406,7 +405,6 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
     register_test!(test_autosuggestions_are_hidden_when_opening_tab_completions);
 
     register_test!(test_pass_control_sequences_to_long_running_block);
-    register_test!(test_execution_profiles_load_from_settings_file);
     register_test!(test_settings_file_migration_from_native_store);
     register_test!(test_settings_file_hot_reload_applies_new_values);
 
@@ -426,29 +424,6 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
 
     register_test!(test_middle_click_paste);
 
-    register_test!(test_copy_selection_within_ai_block);
-    register_test!(test_selection_first_to_last_through_ai_simple);
-    register_test!(test_copy_on_select_first_to_last_through_ai_simple);
-    register_test!(test_selection_first_to_last_through_ai_semantic);
-    register_test!(test_selection_first_to_last_through_ai_lines);
-    register_test!(test_selection_last_to_first_through_ai_simple);
-    register_test!(test_selection_last_to_first_through_ai_semantic);
-    register_test!(test_selection_last_to_first_through_ai_lines);
-    register_test!(test_selection_first_to_ai_simple);
-    register_test!(test_selection_first_to_ai_semantic);
-    register_test!(test_selection_first_to_ai_lines);
-    register_test!(test_selection_ai_to_first_simple);
-    register_test!(test_selection_ai_to_first_semantic);
-    register_test!(test_selection_ai_to_first_lines);
-    register_test!(test_selection_ai_to_last_simple);
-    register_test!(test_selection_ai_to_last_semantic);
-    register_test!(test_selection_ai_to_last_lines);
-    register_test!(test_selection_last_to_ai_simple);
-    register_test!(test_selection_last_to_ai_semantic);
-    register_test!(test_selection_last_to_ai_lines);
-    register_test!(test_restored_ai_block_renders_mermaid_and_local_images);
-
-    register_test!(test_agent_mode_pane_minimum_size);
     register_test!(test_git_prompt_chips);
 
     // These tests are only invoked manually, and not included in the
@@ -457,9 +432,6 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
     register_test!(test_with_long_line);
     register_test!(make_1000_blocks_memory_benchmark);
 
-    register_test!(test_rule_creation);
-    register_test!(test_rule_update);
-    register_test!(test_rule_pane_opening);
     register_test!(test_undo_close_stack_timeout_cleanup);
 
     // File tree tests
@@ -483,8 +455,6 @@ fn register_tests() -> HashMap<&'static str, BoxedBuilderFn> {
     register_test!(test_code_editor_relative_line_numbers_follow_cursor);
 
     // AI document tests
-    register_test!(test_copy_ai_document_as_markdown_from_overflow_menu);
-    register_test!(test_restored_ai_document_populates_code_block_after_first_layout);
 
     // Keyboard protocol tests
     register_test!(test_keyboard_protocol_disabled_shift_enter);

@@ -12,7 +12,6 @@ use crate::search::async_snapshot_data_source::AsyncSnapshotDataSource;
 use crate::search::command_search::searcher::CommandSearchItemAction;
 use crate::search::data_source::{Query, QueryResult};
 use crate::search::mixer::{BoxFuture, DataSourceRunErrorWrapper};
-use crate::settings::AISettings;
 use crate::terminal;
 use crate::terminal::HistoryEntry;
 use crate::terminal::model::session::SessionId;
@@ -46,12 +45,10 @@ pub(crate) fn history_data_source_for_session(
 ) -> AsyncSnapshotDataSource<HistorySnapshot, CommandSearchItemAction> {
     AsyncSnapshotDataSource::new(
         move |query: &Query, app: &AppContext| {
-            let include_agent_commands = *AISettings::as_ref(app).include_agent_commands_in_history;
             let commands: Arc<[Arc<HistoryEntry>]> = terminal::History::as_ref(app)
                 .commands_shared(session_id)
                 .unwrap_or_default()
                 .into_iter()
-                .filter(|entry| include_agent_commands || !entry.is_agent_executed)
                 .collect();
             HistorySnapshot {
                 commands,

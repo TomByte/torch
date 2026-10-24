@@ -1,9 +1,6 @@
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-use ai::index::full_source_code_embedding::manager::{
-    CodebaseIndexManager, CodebaseIndexManagerEvent,
-};
 use settings::Setting;
 use torch_util::path::user_friendly_path;
 use torchui::elements::{
@@ -15,8 +12,8 @@ use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 
-use crate::ai::persisted_workspace::{PersistedWorkspace, PersistedWorkspaceEvent};
 use crate::appearance::Appearance;
+use crate::persisted_workspace::{PersistedWorkspace, PersistedWorkspaceEvent};
 use crate::ui_components::icons;
 use crate::view_components::action_button::{ActionButton, SecondaryTheme};
 use crate::view_components::{DropdownItem, FilterableDropdown};
@@ -32,7 +29,7 @@ const MENU_WIDTH: f32 = 340.;
 /// A dropdown used by the Directory tab colors settings widget, with a button fallback
 /// when there are no known repos left to show in the dropdown.
 ///
-/// Lists known repos (from `CodebaseIndexManager` and `PersistedWorkspace`) that
+/// Lists known repos (from `PersistedWorkspace`) that
 /// are not yet present in the user's `directory_tab_colors` with a non-`Suppressed`
 /// color, and exposes a pinned `+ Add directory…` footer that falls back to the
 /// native folder picker.
@@ -58,7 +55,6 @@ pub(super) struct DirectoryColorAddPicker {
 /// inputs have changed since the last refresh.
 #[derive(PartialEq, Eq)]
 struct RefreshCacheKey {
-    indexed_paths: HashSet<PathBuf>,
     persisted_paths: HashSet<PathBuf>,
     existing: DirectoryTabColors,
 }
@@ -76,26 +72,6 @@ pub(super) enum DirectoryColorAddPickerEvent {
 
 impl DirectoryColorAddPicker {
     pub(super) fn new(ctx: &mut ViewContext<Self>) -> Self {
-        ctx.subscribe_to_model(&CodebaseIndexManager::handle(ctx), |me, _, event, ctx| {
-            // Refresh for any event that may change the set of indexed codebase paths or
-            // persisted workspaces: new index created, sync state updated (which covers
-            // `index_directory`), indices removed, or index metadata updated (which covers
-            // workspaces persisted via `PersistedWorkspace::handle_index_metadata_event`
-            // without a `WorkspaceAdded` event). Refresh is idempotent thanks to the
-            // cache in `refresh_items`, so the noisier events (`Modified`/`Queried`) are
-            // cheap when nothing relevant has changed.
-            match event {
-                CodebaseIndexManagerEvent::NewIndexCreated { .. }
-                | CodebaseIndexManagerEvent::SyncStateUpdated { .. }
-                | CodebaseIndexManagerEvent::RemoveExpiredIndexMetadata { .. }
-                | CodebaseIndexManagerEvent::IndexMetadataUpdated { .. } => {
-                    me.refresh_items(ctx);
-                }
-                CodebaseIndexManagerEvent::RetrievalRequestCompleted { .. }
-                | CodebaseIndexManagerEvent::RetrievalRequestFailed { .. } => {}
-            }
-        });
-
         ctx.subscribe_to_model(&PersistedWorkspace::handle(ctx), |me, _, event, ctx| {
             if let PersistedWorkspaceEvent::WorkspaceAdded { .. } = event {
                 me.refresh_items(ctx);
@@ -190,10 +166,6 @@ impl DirectoryColorAddPicker {
     }
 
     fn refresh_items(&mut self, ctx: &mut ViewContext<Self>) {
-        let indexed_paths: HashSet<PathBuf> = CodebaseIndexManager::as_ref(ctx)
-            .get_codebase_paths()
-            .cloned()
-            .collect();
         let persisted_paths: HashSet<PathBuf> = PersistedWorkspace::as_ref(ctx)
             .workspaces()
             .map(|ws| ws.path)
@@ -204,7 +176,6 @@ impl DirectoryColorAddPicker {
             .clone();
 
         let cache_key = RefreshCacheKey {
-            indexed_paths,
             persisted_paths,
             existing,
         };
@@ -213,7 +184,6 @@ impl DirectoryColorAddPicker {
         }
 
         let candidates = compute_candidate_paths(
-            cache_key.indexed_paths.iter().cloned(),
             cache_key.persisted_paths.iter().cloned(),
             &cache_key.existing,
             |p| p.exists(),
@@ -298,15 +268,14 @@ impl TypedActionView for DirectoryColorAddPicker {
 /// The result is deduped by canonical key and sorted alphabetically by that key
 /// so it matches the order of the visible colors list rendered below the picker.
 fn compute_candidate_paths(
-    indexed_paths: impl IntoIterator<Item = PathBuf>,
-    persisted_paths: impl IntoIterator<Item = PathBuf>,
+    paths: impl IntoIterator<Item = PathBuf>,
     existing: &DirectoryTabColors,
     path_exists: impl Fn(&Path) -> bool,
 ) -> Vec<PathBuf> {
     let mut seen_keys = HashSet::new();
     let mut candidates: Vec<(String, PathBuf)> = Vec::new();
 
-    for path in indexed_paths.into_iter().chain(persisted_paths.into_iter()) {
+    for path in paths {
         if !path_exists(&path) {
             continue;
         }

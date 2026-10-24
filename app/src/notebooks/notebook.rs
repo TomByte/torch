@@ -6,6 +6,7 @@ use async_channel::Sender;
 use futures_util::stream::AbortHandle;
 use lazy_static::lazy_static;
 use regex::Regex;
+use secret_redaction::find_secrets_in_text;
 use settings::Setting as _;
 use torch_core::context_flag::ContextFlag;
 use torch_editor::editor::NavigationKey;
@@ -43,8 +44,6 @@ use super::link::{NotebookLinks, SessionSource};
 use super::manager::NotebookManager;
 use super::telemetry::NotebookTelemetryAction;
 use super::{CloudNotebookModel, NotebookId, NotebookLocation, styles};
-use crate::ai::blocklist::secret_redaction::find_secrets_in_text;
-use crate::ai::document::ai_document_model::AIDocumentId;
 use crate::appearance::Appearance;
 use crate::cloud_object::grab_edit_access_modal::{GrabEditAccessModal, GrabEditAccessModalEvent};
 use crate::cloud_object::model::persistence::{CloudModel, CloudModelEvent, UpdateSource};
@@ -241,7 +240,6 @@ pub enum NotebookEvent {
     },
     EditWorkflow(SyncId),
     Pane(PaneEvent),
-    AttachPlanAsContext(AIDocumentId),
 }
 
 impl From<PaneEvent> for NotebookEvent {
@@ -268,7 +266,6 @@ pub enum NotebookAction {
     CopyToClipboard,
     CopyLink(String),
     OpenLinkOnDesktop(Url),
-    AttachPlanAsContext(AIDocumentId),
 }
 
 impl From<ContextMenuAction> for NotebookAction {
@@ -982,13 +979,6 @@ impl NotebookView {
         ctx.notify();
     }
 
-    pub fn is_plan(&self, ctx: &AppContext) -> bool {
-        self.active_notebook_data
-            .as_ref(ctx)
-            .ai_document_id(ctx)
-            .is_some()
-    }
-
     fn mode<C: ModelAsRef>(&self, ctx: &C) -> Mode {
         self.active_notebook_data.as_ref(ctx).mode
     }
@@ -1209,15 +1199,6 @@ impl NotebookView {
         // local edits.
         let content = self.content(ctx);
         let title = self.title.as_ref(ctx).buffer_text(ctx);
-        let active_notebook = self.active_notebook_data.as_ref(ctx).active_notebook();
-
-        let ai_document_id = match active_notebook {
-            ActiveNotebook::CommittedNotebook(id) => CloudModel::as_ref(ctx)
-                .get_notebook(&id)
-                .and_then(|n| n.model().ai_document_id),
-            ActiveNotebook::NewNotebook(notebook) => notebook.model().ai_document_id,
-            ActiveNotebook::None => None,
-        };
 
         let copy_client_id = ClientId::new();
         let copy_sync_id = SyncId::ClientId(copy_client_id);
@@ -1235,7 +1216,7 @@ impl NotebookView {
                 CloudNotebookModel {
                     title: title.clone(),
                     data: content,
-                    ai_document_id,
+                    ai_document_id: None,
                     conversation_id: None,
                 },
                 CloudObjectEventEntrypoint::Unknown,
@@ -1289,15 +1270,6 @@ impl NotebookView {
             || active_notebook_data.trash_status(ctx) != TrashStatus::Active
         {
             return menu_items;
-        }
-
-        if let Some(ai_document_id) = self.active_notebook_data.as_ref(ctx).ai_document_id(ctx) {
-            menu_items.push(
-                MenuItemFields::new("Attach to active session")
-                    .with_on_select_action(NotebookAction::AttachPlanAsContext(ai_document_id))
-                    .with_icon(icons::Icon::Paperclip)
-                    .into_item(),
-            );
         }
 
         // Add "Copy Link" to menu
@@ -2158,9 +2130,6 @@ impl TypedActionView for NotebookView {
             #[cfg(not(target_family = "wasm"))]
             NotebookAction::OpenLinkOnDesktop(_) => {
                 // No-op when not on wasm
-            }
-            NotebookAction::AttachPlanAsContext(id) => {
-                ctx.emit(NotebookEvent::AttachPlanAsContext(*id))
             }
         };
     }

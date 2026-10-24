@@ -279,7 +279,6 @@ define_action_catalog! {
         SurfaceCodeReviewToggle => { name: "surface.code_review.toggle", status: Implemented, target: Surface, params: None, result: Acknowledgement },
         SurfaceProjectExplorerOpen => { name: "surface.project_explorer.open", status: Implemented, target: Surface, params: None, result: Acknowledgement },
         SurfaceGlobalSearchOpen => { name: "surface.global_search.open", status: Implemented, target: Surface, params: None, result: Acknowledgement },
-        SurfaceConversationListOpen => { name: "surface.conversation_list.open", status: Implemented, target: Surface, params: None, result: Acknowledgement },
         SurfaceLeftPanelToggle => { name: "surface.left_panel.toggle", status: Implemented, target: Surface, params: None, result: Acknowledgement },
         SurfaceRightPanelToggle => { name: "surface.right_panel.toggle", status: Implemented, target: Surface, params: None, result: Acknowledgement },
         SurfaceVerticalTabsOpen => { name: "surface.vertical_tabs.open", status: Implemented, target: Surface, params: None, result: Acknowledgement },

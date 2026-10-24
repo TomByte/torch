@@ -110,7 +110,6 @@ impl LocalControlBridge {
             | ActionKind::SurfaceCodeReviewToggle
             | ActionKind::SurfaceProjectExplorerOpen
             | ActionKind::SurfaceGlobalSearchOpen
-            | ActionKind::SurfaceConversationListOpen
             | ActionKind::SurfaceLeftPanelToggle
             | ActionKind::SurfaceRightPanelToggle
             | ActionKind::SurfaceVerticalTabsOpen

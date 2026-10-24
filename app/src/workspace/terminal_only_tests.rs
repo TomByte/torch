@@ -51,7 +51,6 @@ fn terminal_only_palette_has_sessions_and_projects_without_file_search() {
                 assert!(filters.contains(&QueryFilter::Repos));
                 assert!(filters.contains(&QueryFilter::Actions));
                 assert!(!filters.contains(&QueryFilter::Files));
-                assert!(!filters.contains(&QueryFilter::Code));
             });
         });
     });

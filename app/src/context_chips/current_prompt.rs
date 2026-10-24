@@ -25,13 +25,11 @@ use super::logging::{ChipCommandLogEntry, PromptChipExecutionPhase, PromptChipLo
 use super::prompt::Prompt;
 use super::{ChipResult, ChipValue, ContextChipKind};
 use crate::CLIAgentSessionsModel;
-use crate::ai::blocklist::agent_view::AgentViewController;
 use crate::code_review::git_repo_model::{GitRepoStatusEvent, GitRepoStatusModel};
 use crate::code_review::github_repo_model::{GitHubRepoEvent, GitHubRepoModel};
 use crate::context_chips::display_chip::GitLineChanges;
 use crate::editor::EditorView;
-use crate::features::FeatureFlag;
-use crate::settings::{AISettings, AISettingsChangedEvent, WarpPromptSeparator};
+use crate::settings::{CLIAgentSettings, CLIAgentSettingsChangedEvent, WarpPromptSeparator};
 use crate::terminal::event::BlockType;
 use crate::terminal::model::block::{Block, BlockMetadata};
 use crate::terminal::model::session::{ExecuteCommandOptions, Session, Sessions, SessionsEvent};
@@ -163,7 +161,6 @@ pub struct CurrentPrompt {
     sessions: ModelHandle<Sessions>,
     prompt_chip_logger: PromptChipLogger,
     update_tx: async_channel::Sender<()>,
-    agent_view_controller: Option<WeakModelHandle<AgentViewController>>,
     terminal_view_id: Option<EntityId>,
 
     /// When set, branch, branch status, and diff stats are populated from
@@ -190,13 +187,12 @@ struct PromptContext {
 }
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 struct ActiveChipSurfaces {
-    agent_footer: bool,
     cli_agent_footer: bool,
 }
 
 impl ActiveChipSurfaces {
     fn any(self) -> bool {
-        self.agent_footer || self.cli_agent_footer
+        self.cli_agent_footer
     }
 }
 
@@ -269,7 +265,6 @@ impl CurrentPrompt {
             latest_context: None,
             prompt_chip_logger: PromptChipLogger::default(),
             update_tx,
-            agent_view_controller: None,
             terminal_view_id: None,
             same_line_prompt_enabled: prompt.as_ref(ctx).same_line_prompt_enabled(),
             separator: prompt.as_ref(ctx).separator(),
@@ -284,16 +279,10 @@ impl CurrentPrompt {
     pub fn subscribe_to_input_editor(
         &mut self,
         editor: ViewHandle<EditorView>,
-        agent_view_controller: ModelHandle<AgentViewController>,
         terminal_view_id: EntityId,
         ctx: &mut ModelContext<Self>,
     ) {
-        self.agent_view_controller = Some(agent_view_controller.downgrade());
         self.terminal_view_id = Some(terminal_view_id);
-
-        ctx.subscribe_to_model(&agent_view_controller, |me, _, _, ctx| {
-            me.update_states_with_new_context(ctx);
-        });
 
         ctx.subscribe_to_model(
             &CLIAgentSessionsModel::handle(ctx),
@@ -303,10 +292,10 @@ impl CurrentPrompt {
                 }
             },
         );
-        ctx.subscribe_to_model(&AISettings::handle(ctx), |me, _, event, ctx| {
+        ctx.subscribe_to_model(&CLIAgentSettings::handle(ctx), |me, _, event, ctx| {
             if matches!(
                 event,
-                AISettingsChangedEvent::ShouldRenderCLIAgentToolbar { .. }
+                CLIAgentSettingsChangedEvent::ShouldRenderCLIAgentToolbar { .. }
             ) {
                 me.update_states_with_new_context(ctx);
             }
@@ -1144,23 +1133,14 @@ impl CurrentPrompt {
     }
 
     fn active_surfaces(&self, ctx: &AppContext) -> ActiveChipSurfaces {
-        let agent_footer = FeatureFlag::AgentView.is_enabled()
-            && self
-                .agent_view_controller
-                .as_ref()
-                .and_then(|controller| controller.upgrade(ctx))
-                .is_some_and(|controller| controller.as_ref(ctx).is_active());
         let cli_agent_footer = self.terminal_view_id.is_some_and(|terminal_view_id| {
-            *AISettings::as_ref(ctx).should_render_cli_agent_footer
+            *CLIAgentSettings::as_ref(ctx).should_render_cli_agent_footer
                 && CLIAgentSessionsModel::as_ref(ctx)
                     .session(terminal_view_id)
                     .is_some()
         });
 
-        ActiveChipSurfaces {
-            agent_footer,
-            cli_agent_footer,
-        }
+        ActiveChipSurfaces { cli_agent_footer }
     }
 
     fn chips_to_run_for_surfaces(
@@ -1177,14 +1157,6 @@ impl CurrentPrompt {
                 }
             }
         };
-
-        if surfaces.agent_footer {
-            extend_unique(
-                SessionSettings::as_ref(ctx)
-                    .agent_footer_chip_selection
-                    .all_chips(),
-            );
-        }
 
         if surfaces.cli_agent_footer {
             extend_unique(

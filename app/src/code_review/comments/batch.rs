@@ -114,21 +114,6 @@ impl ReviewCommentBatch {
         });
     }
 
-    #[cfg(feature = "local_fs")]
-    pub(crate) fn upsert_imported_comments(
-        &mut self,
-        comments: Vec<AttachedReviewComment>,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        if comments.is_empty() {
-            return;
-        }
-        self.upsert_comments_inner(comments);
-        ctx.emit(ReviewCommentBatchEvent::Changed {
-            should_reposition_comments: true,
-        });
-    }
-
     /// Comments with existing IDs are updated.
     /// New comments are inserted into the batch.
     pub fn upsert_comments(
@@ -176,24 +161,6 @@ impl ReviewCommentBatch {
         self.comments.clear();
         ctx.emit(ReviewCommentBatchEvent::Changed {
             should_reposition_comments: false,
-        });
-    }
-
-    /// Stores imported comments that are waiting for diffs and editors to load before they can be flattened,
-    /// relocated, and inserted into `comments`.
-    #[cfg(feature = "local_fs")]
-    pub(crate) fn add_pending_imported_comments(
-        &mut self,
-        comments: Vec<PendingImportedReviewComment>,
-        base_branch: DiffMode,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        self.pending_imported_comments
-            .entry(base_branch)
-            .or_default()
-            .extend(comments);
-        ctx.emit(ReviewCommentBatchEvent::Changed {
-            should_reposition_comments: true,
         });
     }
 

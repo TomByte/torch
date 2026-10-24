@@ -13,7 +13,6 @@ pub use torch_terminal::model::secrets::RegexDisplayInfo;
 use torchui::{AppContext, Entity, ModelContext, SingletonEntity, UpdateModel};
 
 use super::cloud_preferences_syncer::CloudPreferencesSyncer;
-use crate::ai::blocklist::telemetry_banner::should_collect_ai_ugc_telemetry;
 use crate::auth::AuthStateProvider;
 use crate::auth::auth_state::AuthState;
 use crate::cloud_object::model::persistence::CloudModel;
@@ -171,7 +170,6 @@ pub struct PrivacySettingsSnapshot {
     is_telemetry_enabled: bool,
     is_crash_reporting_enabled: bool,
     is_telemetry_force_enabled: bool,
-    should_collect_ai_ugc_telemetry: bool,
     // This is an option so that, if a user has not set this value (and it's set to its default value of true),
     // the default value won't override a value that the user previously set on a different device.
     // This is set to a non-option once the user manually changes this setting.
@@ -202,10 +200,6 @@ impl PrivacySettingsSnapshot {
             && !FeatureFlag::AgentModeAnalytics.is_enabled()
     }
 
-    pub fn should_collect_ai_ugc_telemetry(&self) -> bool {
-        self.should_collect_ai_ugc_telemetry
-    }
-
     #[cfg(test)]
     pub fn mock() -> Self {
         Self {
@@ -213,7 +207,6 @@ impl PrivacySettingsSnapshot {
             is_telemetry_enabled: true,
             is_crash_reporting_enabled: true,
             is_telemetry_force_enabled: true,
-            should_collect_ai_ugc_telemetry: true,
         }
     }
 }
@@ -472,17 +465,13 @@ impl PrivacySettings {
     ///
     /// The returned snapshot is not stateful, thus its values should be used shortly after the
     /// snapshot is returned.
-    pub fn get_snapshot(&self, app: &AppContext) -> PrivacySettingsSnapshot {
+    pub fn get_snapshot(&self) -> PrivacySettingsSnapshot {
         PrivacySettingsSnapshot {
             cloud_conversation_storage_enabled: (!self.is_cloud_conversation_storage_enabled)
                 .then_some(false),
             is_telemetry_enabled: self.is_telemetry_enabled,
             is_crash_reporting_enabled: self.is_crash_reporting_enabled,
             is_telemetry_force_enabled: self.is_telemetry_force_enabled,
-            should_collect_ai_ugc_telemetry: should_collect_ai_ugc_telemetry(
-                app,
-                self.is_telemetry_enabled,
-            ),
         }
     }
 
@@ -684,7 +673,7 @@ impl PrivacySettings {
     fn update_server_with_local_settings(&self, ctx: &mut ModelContext<Self>) {
         if self.auth_state.is_logged_in() {
             let auth_client = self.auth_client.clone();
-            let snapshot = self.get_snapshot(ctx);
+            let snapshot = self.get_snapshot();
             let _ = ctx.spawn(
                 async move {
                     let result = auth_client

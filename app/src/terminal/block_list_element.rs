@@ -1,4 +1,3 @@
-use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::mem;
 use std::ops::{Deref, Range, RangeInclusive};
@@ -11,7 +10,6 @@ use parking_lot::FairMutex;
 use pathfinder_color::ColorU;
 use torch_core::semantic_selection::SemanticSelection;
 use torch_core::ui::builder::UiBuilder;
-use torch_core::ui::theme::AnsiColorIdentifier;
 use torch_util::user_input::UserInput;
 use torchui::elements::new_scrollable::{NewScrollableElement, ScrollableAxis};
 use torchui::elements::{
@@ -25,7 +23,6 @@ use torchui::fonts::{FamilyId, Properties, Weight};
 use torchui::geometry::rect::RectF;
 use torchui::geometry::vector::{Vector2F, vec2f};
 use torchui::platform::Cursor;
-use torchui::platform::keyboard::KeyCode;
 use torchui::text::SelectionType;
 use torchui::ui_components::components::UiComponent;
 use torchui::units::{IntoLines, IntoPixels, Lines, Pixels};
@@ -42,7 +39,6 @@ use super::grid_renderer::CellGlyphCache;
 use super::meta_shortcuts::handle_keystroke_despite_composing;
 use super::model::SecretHandle;
 use super::model::ansi::CursorShape;
-use super::model::block::BlockId;
 use super::model::blocks::{RichContentItem, SelectionRange};
 use super::model::grid::grid_handler::Link;
 use super::model::image_map::StoredImageMetadata;
@@ -50,21 +46,19 @@ use super::model::mouse::{MouseAction, MouseButton, MouseState};
 use super::model::session::SessionId;
 use super::model::terminal_model::{SelectedBlocks, WithinBlock, WithinModel};
 use super::view::{
-    BLOCK_BANNER_HEIGHT, BlocklistAIRenderContext, InlineBannerId, RichContentMetadata,
-    SeparatorId, TerminalEditor, TerminalViewRenderContext,
+    BLOCK_BANNER_HEIGHT, InlineBannerId, RichContentMetadata, SeparatorId, TerminalEditor,
+    TerminalViewRenderContext,
 };
 use super::warpify::render::{draw_flag_pole, render_subshell_flag};
 use super::{HEIGHT_FUDGE_FACTOR_LINES, TerminalModel, heights_approx_eq};
-use crate::ai::blocklist::{ATTACH_AS_AGENT_MODE_CONTEXT_TEXT, ai_brand_color};
 use crate::appearance::Appearance;
 use crate::features::FeatureFlag;
 use crate::pane_group::SplitPaneState;
-use crate::settings::{AISettings, DebugSettings, EnforceMinimumContrast, TerminalSpacing};
+use crate::settings::{DebugSettings, EnforceMinimumContrast, TerminalSpacing};
 use crate::terminal::alt_screen::{should_intercept_mouse, should_intercept_scroll};
-use crate::terminal::block_list_viewport::AutoscrollBehavior;
 use crate::terminal::blockgrid_renderer::BlockGridParams;
 use crate::terminal::input::inline_menu::InlineMenuPositioner;
-use crate::terminal::model::block::{Block, BlockSection, TranscriptScope};
+use crate::terminal::model::block::{Block, BlockSection};
 use crate::terminal::model::blocks::{
     BlockHeight, BlockHeightItem, BlockHeightSummary, BlockList, BlockListPoint, TotalIndex,
 };
@@ -137,8 +131,6 @@ const LINEAR_SCROLLING: ScrollingAcceleration = ScrollingAcceleration::Polynomia
 /// have a height that extends down to the bottom of the window when there's a horizontal scroll bar, which messes with the on-hover behavior.
 const BLOCK_HOVER_BUTTON_HEIGHT: f32 = 28.;
 
-const TAG_AGENT_FOR_ASSISTANCE_TEXT: &str = "Tag agent for assistance";
-
 enum ScrollingAcceleration {
     Polynomial(f32),
 }
@@ -157,11 +149,6 @@ const OVERFLOW_BUTTON_ICON_PATH: &str = "bundled/svg/overflow.svg";
 const SNACKBAR_TOGGLE_BUTTON_HOVER_LINES: f32 = 4.;
 const SNACKBAR_TOGGLE_BUTTON_WIDTH: f32 = 30.;
 const SNACKBAR_TOGGLE_BUTTON_HEIGHT: f32 = 16.;
-
-const CLI_SUBAGENT_HORIZONTAL_MARGIN: f32 = 8.;
-const CLI_SUBAGENT_VERTICAL_MARGIN: f32 = 8.;
-const CLI_SUBAGENT_MAX_WIDTH_RATIO: f32 = 0.75;
-const CLI_SUBAGENT_MAX_HEIGHT_RATIO: f32 = 0.75;
 
 pub type LabelBuilderFn = dyn Fn(
     Vec<BlockIndex>,
@@ -612,14 +599,12 @@ pub struct BlockListElement {
     hovered_block_index: Option<BlockIndex>,
     overflow_menu_button: Option<Box<dyn Element>>,
     snackbar_toggle_button: Option<Box<dyn Element>>,
-    ask_ai_assistant_button: Option<Box<dyn Element>>,
     restored_session_separator: Option<Box<dyn Element>>,
     inline_banners: HashMap<InlineBannerId, Box<dyn Element>>,
     /// Subshell separators are similar to banners, except they are smaller and only meant to show
     /// in compact mode. Setting Self::subshell_separator_height to 0 will effectively hide the
     /// flags.
     subshell_separators: HashMap<SeparatorId, Box<dyn Element>>,
-    cli_subagent_views: HashMap<BlockId, Box<dyn Element>>,
     subshell_separator_height: f32,
 
     selected_blocks: SelectedBlocks,
@@ -697,22 +682,12 @@ pub struct BlockListElement {
 
     horizontal_clipped_scroll_state: ClippedScrollStateHandle,
 
-    /// Information about blocks and AI blocks used to render blocklist AI-specific decoration.
-    ai_render_context: Rc<RefCell<BlocklistAIRenderContext>>,
-
     /// The last laid out size of the input view.
     input_size_at_last_frame: Vector2F,
 
     block_footer_elements: HashMap<BlockIndex, Box<dyn Element>>,
 
     find_model: ModelHandle<TerminalFindModel>,
-
-    /// If `Some()`, lays out and renders the element next to the cursor.
-    cursor_hint_text_element: Option<Box<dyn Element>>,
-
-    /// Voice input toggle key code for CLI agent footer integration.
-    #[cfg(feature = "voice_input")]
-    voice_input_toggle_key_code: Option<KeyCode>,
 
     inline_menu_positioner: ModelHandle<InlineMenuPositioner>,
 }
@@ -830,7 +805,6 @@ pub struct BlockListMouseStates {
     pub label_mouse_states: HashMap<BlockIndex, MouseStateHandle>,
     pub bookmark_mouse_states: HashMap<BlockIndex, MouseStateHandle>,
     pub overflow_menu_button_mouse_state: MouseStateHandle,
-    pub ai_assistant_button_mouse_state: MouseStateHandle,
     pub filter_mouse_states: HashMap<BlockIndex, MouseStateHandle>,
     pub snackbar_toggle_button_mouse_state: MouseStateHandle,
 }
@@ -852,12 +826,10 @@ impl BlockListElement {
         filter_elements_builder: Box<FilterBuilderFn>,
         inline_banners: HashMap<InlineBannerId, Box<dyn Element>>,
         subshell_separators: HashMap<SeparatorId, Box<dyn Element>>,
-        cli_subagent_views: HashMap<BlockId, Box<dyn Element>>,
         selection_ranges: Option<Vec1<SelectionRange>>,
         block_banner: Option<Box<dyn Element>>,
         input_size_at_last_frame: Vector2F,
         inline_menu_positioner: ModelHandle<InlineMenuPositioner>,
-        cursor_hint_text_element: Option<Box<dyn Element>>,
     ) -> Self {
         let highlighted_url = terminal_view_render_context
             .highlighted_url
@@ -896,7 +868,6 @@ impl BlockListElement {
             subshell_separator_height: terminal_spacing.subshell_separator_height,
             hovered_block_index: None,
             overflow_menu_button: None,
-            ask_ai_assistant_button: None,
             snackbar_toggle_button: None,
             restored_session_separator: None,
             inline_banners,
@@ -931,22 +902,10 @@ impl BlockListElement {
             rich_content_metadata: HashMap::new(),
             horizontal_clipped_scroll_state: terminal_view_render_context
                 .horizontal_clipped_scroll_state,
-            ai_render_context: terminal_view_render_context.ai_render_context,
             input_size_at_last_frame,
             block_footer_elements: HashMap::new(),
-            cursor_hint_text_element,
-            cli_subagent_views,
             inline_menu_positioner,
-            #[cfg(feature = "voice_input")]
-            voice_input_toggle_key_code: None,
         }
-    }
-
-    /// Sets the voice input toggle key code for CLI agent footer integration.
-    #[cfg(feature = "voice_input")]
-    pub fn with_voice_input_toggle_key(mut self, key_code: Option<KeyCode>) -> Self {
-        self.voice_input_toggle_key_code = key_code;
-        self
     }
 
     pub fn with_ligature_rendering(mut self) -> Self {
@@ -988,11 +947,6 @@ impl BlockListElement {
             self.size
                 .expect("Cannot construct ViewportState prior to element layout."),
             self.input_size_at_last_frame,
-            if self.ai_render_context.borrow().has_active_conversation() {
-                AutoscrollBehavior::WhenScrolledToEnd
-            } else {
-                AutoscrollBehavior::Always
-            },
             self.inline_menu_positioner.clone(),
         )
     }
@@ -1021,9 +975,9 @@ impl BlockListElement {
     pub fn with_hovered_index(
         mut self,
         block_index: BlockIndex,
-        model: &TerminalModel,
-        should_render_tooltip_below_button: bool,
-        app: &AppContext,
+        _model: &TerminalModel,
+        _should_render_tooltip_below_button: bool,
+        _app: &AppContext,
     ) -> Self {
         self.hovered_block_index = Some(block_index);
         let icon_color = self
@@ -1096,64 +1050,6 @@ impl BlockListElement {
             })
             .finish(),
         );
-
-        if AISettings::as_ref(app).is_any_ai_enabled(app) {
-            let icon = Container::new(
-                ConstrainedBox::new(if FeatureFlag::AgentView.is_enabled() {
-                    UIIcon::Icon::Paperclip
-                        .to_warpui_icon(icon_color.into())
-                        .finish()
-                } else {
-                    UIIcon::Icon::Stars
-                        .to_warpui_icon(icon_color.into())
-                        .finish()
-                })
-                .with_height(16.)
-                .with_width(16.)
-                .finish(),
-            )
-            .with_vertical_padding(5.)
-            .with_padding_left(6.)
-            .with_padding_right(4.);
-
-            let (ai_button_action, ai_button_tooltip) = {
-                let active_block = model.block_list().active_block();
-                let has_active_long_running_command = active_block.is_active_and_long_running();
-
-                if has_active_long_running_command && active_block.index() == block_index {
-                    (
-                        Some(TerminalAction::SetInputModeAgent),
-                        TAG_AGENT_FOR_ASSISTANCE_TEXT,
-                    )
-                } else {
-                    (
-                        Some(TerminalAction::AskAIAssistant { block_index }),
-                        *ATTACH_AS_AGENT_MODE_CONTEXT_TEXT,
-                    )
-                }
-            };
-
-            let tooltip = ToolbeltButtonTooltip {
-                label: ai_button_tooltip.to_owned(),
-                tool_tip_below_button: should_render_tooltip_below_button,
-            };
-
-            let element = render_hoverable_block_button(
-                icon,
-                Some(tooltip),
-                false,
-                true,
-                self.mouse_states.ai_assistant_button_mouse_state.clone(),
-                &self.warp_theme,
-                &self.ui_builder,
-                move |ctx: &mut EventContext, _, _| {
-                    if let Some(action) = ai_button_action.clone() {
-                        ctx.dispatch_typed_action(action);
-                    }
-                },
-            );
-            self.ask_ai_assistant_button = Some(element);
-        }
 
         self
     }
@@ -1449,7 +1345,7 @@ impl BlockListElement {
 
         if self.is_mouse_position_within_bounds(position) {
             ctx.dispatch_typed_action(TerminalAction::CloseContextMenu);
-            let mut should_redetermine_focus = true;
+            let should_redetermine_focus = true;
 
             match self.coord_to_point(
                 SnackbarPoint::within_snackbar(position),
@@ -1557,7 +1453,9 @@ impl BlockListElement {
                         }
                         // While rich content blocks can't be selected like command blocks,
                         // text selections can still originate in them (i.e. with AI blocks)
-                        Some(BlockHeightItem::RichContent(RichContentItem { view_id, .. })) => {
+                        Some(BlockHeightItem::RichContent(RichContentItem {
+                            view_id: _, ..
+                        })) => {
                             let bounds = self
                                 .bounds
                                 .expect("Bounds should be set before event dispatching");
@@ -1570,16 +1468,6 @@ impl BlockListElement {
 
                             if self.snackbar_header_state().mouse_down(position, ctx) {
                                 return true;
-                            }
-
-                            if matches!(
-                                self.rich_content_metadata.get(view_id),
-                                Some(
-                                    RichContentMetadata::AIBlock(_)
-                                        | RichContentMetadata::PendingUserQuery { .. }
-                                )
-                            ) {
-                                should_redetermine_focus = false;
                             }
 
                             ctx.dispatch_typed_action(TerminalAction::BlockSelect {
@@ -2014,29 +1902,16 @@ impl BlockListElement {
         warp_theme: &WarpTheme,
         block_borders_enabled: bool,
         snackbar_header: &Option<SnackbarHeader>,
-        ai_render_context: &BlocklistAIRenderContext,
-        transcript_scope: &TranscriptScope,
         ctx: &mut PaintContext,
     ) {
-        let block_height = block.height(transcript_scope).as_f64() as f32 * cell_size.y();
-        if block.is_restored()
-            && (!FeatureFlag::AgentView.is_enabled() || !transcript_scope.is_conversation())
-        {
+        let block_height = block.height().as_f64() as f32 * cell_size.y();
+        if block.is_restored() {
             ctx.scene
                 .draw_rect_with_hit_recording(RectF::new(
                     grid_origin,
                     Vector2F::new(bounds.width(), block_height),
                 ))
                 .with_background(crate::themes::restored_command_overlay(warp_theme));
-        }
-
-        let mut did_render_ai_stripe = false;
-        if !FeatureFlag::AgentView.is_enabled()
-            && let Some(ai_context_stripe_color) =
-                ai_render_context.context_color_for_block(block, warp_theme)
-        {
-            draw_flag_pole(grid_origin, block_height, ai_context_stripe_color, ctx);
-            did_render_ai_stripe = true;
         }
 
         if block.has_failed() {
@@ -2047,7 +1922,7 @@ impl BlockListElement {
                 ))
                 .with_background(warp_theme.failed_block_color().with_opacity(10));
 
-            if !is_selected_by_anyone && !did_render_ai_stripe {
+            if !is_selected_by_anyone {
                 draw_flag_pole(
                     grid_origin,
                     block_height,
@@ -2117,10 +1992,7 @@ impl BlockListElement {
         snackbar_header: &Option<SnackbarHeader>,
         terminal_view_id: EntityId,
         draw_border_between_blocks: bool,
-        ai_render_context: &BlocklistAIRenderContext,
-        cursor_hint_text: Option<&mut Box<dyn Element>>,
         image_metadata: &HashMap<u32, StoredImageMetadata>,
-        transcript_scope: &TranscriptScope,
         ctx: &mut PaintContext,
         app: &AppContext,
     ) {
@@ -2133,8 +2005,6 @@ impl BlockListElement {
             &block_grid_params.grid_render_params.warp_theme,
             block_borders_enabled,
             snackbar_header,
-            ai_render_context,
-            transcript_scope,
             ctx,
         );
 
@@ -2249,13 +2119,11 @@ impl BlockListElement {
                     &block_grid_params.grid_render_params,
                     ctx,
                     terminal_view_id,
-                    None,
                     block_grid_params
                         .grid_render_params
                         .warp_theme
                         .cursor()
                         .into(),
-                    app,
                 );
             }
 
@@ -2350,27 +2218,11 @@ impl BlockListElement {
                     &block_grid_params.grid_render_params,
                     ctx,
                     terminal_view_id,
-                    cursor_hint_text,
-                    if block.is_agent_blocked() {
-                        AnsiColorIdentifier::Yellow
-                            .to_ansi_color(
-                                &block_grid_params
-                                    .grid_render_params
-                                    .warp_theme
-                                    .terminal_colors()
-                                    .normal,
-                            )
-                            .into()
-                    } else if block.is_agent_in_control() {
-                        ai_brand_color(&block_grid_params.grid_render_params.warp_theme)
-                    } else {
-                        block_grid_params
-                            .grid_render_params
-                            .warp_theme
-                            .cursor()
-                            .into()
-                    },
-                    app,
+                    block_grid_params
+                        .grid_render_params
+                        .warp_theme
+                        .cursor()
+                        .into(),
                 );
             }
 
@@ -2691,36 +2543,6 @@ impl BlockListElement {
 
         result
     }
-
-    #[cfg(feature = "voice_input")]
-    fn maybe_handle_voice_toggle(
-        &self,
-        key_code: &KeyCode,
-        state: &KeyState,
-        ctx: &mut EventContext,
-    ) -> bool {
-        use crate::terminal::view::TerminalAction;
-
-        if let Some(voice_input_toggle_key_code) = self.voice_input_toggle_key_code
-            && *key_code == voice_input_toggle_key_code
-        {
-            ctx.dispatch_typed_action(TerminalAction::ToggleCLIAgentVoiceInput(
-                voice_input::VoiceInputToggledFrom::Key { state: *state },
-            ));
-            return true;
-        }
-        false
-    }
-
-    #[cfg(not(feature = "voice_input"))]
-    fn maybe_handle_voice_toggle(
-        &self,
-        _key_code: &KeyCode,
-        _state: &KeyState,
-        _ctx: &mut EventContext,
-    ) -> bool {
-        false
-    }
 }
 
 fn command_grid_visible_cursor_shape(block: &Block) -> Option<CursorShape> {
@@ -2779,19 +2601,6 @@ impl Element for BlockListElement {
                 app,
             );
         }
-        if let Some(ask_ai_assistant_button) = &mut self.ask_ai_assistant_button {
-            ask_ai_assistant_button.layout(
-                SizeConstraint::new(
-                    vec2f(BLOCK_HOVER_BUTTON_HEIGHT, BLOCK_HOVER_BUTTON_HEIGHT),
-                    vec2f(150., 150.),
-                ),
-                ctx,
-                app,
-            );
-        }
-        if let Some(cursor_hint_text) = &mut self.cursor_hint_text_element {
-            cursor_hint_text.layout(constraint, ctx, app);
-        }
 
         let mut model = self.model.lock();
         let cell_size = Vector2F::new(
@@ -2840,11 +2649,6 @@ impl Element for BlockListElement {
                     self.horizontal_clipped_scroll_state.clone(),
                     constraint.max,
                     self.input_size_at_last_frame,
-                    if self.ai_render_context.borrow().has_active_conversation() {
-                        AutoscrollBehavior::WhenScrolledToEnd
-                    } else {
-                        AutoscrollBehavior::Always
-                    },
                     self.inline_menu_positioner.clone(),
                 )
             };
@@ -2988,26 +2792,6 @@ impl Element for BlockListElement {
                                     prev_block_subshell_session_id = None;
                                 }
                             }
-
-                            if let Some(cli_subagent_view) =
-                                self.cli_subagent_views.get_mut(block.id())
-                            {
-                                let block_height = (height.as_f64() as f32) * cell_size.y();
-                                let max_width = (constraint.max.x() * CLI_SUBAGENT_MAX_WIDTH_RATIO
-                                    - CLI_SUBAGENT_HORIZONTAL_MARGIN)
-                                    .max(0.);
-                                let max_height = (block_height - CLI_SUBAGENT_VERTICAL_MARGIN * 2.)
-                                    .min(constraint.max.y() * CLI_SUBAGENT_MAX_HEIGHT_RATIO)
-                                    .max(0.);
-                                cli_subagent_view.layout(
-                                    SizeConstraint {
-                                        min: vec2f(0., 0.),
-                                        max: vec2f(max_width, max_height),
-                                    },
-                                    ctx,
-                                    app,
-                                );
-                            }
                         }
 
                         visible_items.push(VisibleItem::Block {
@@ -3027,10 +2811,7 @@ impl Element for BlockListElement {
                     });
                     visible_height_px += height_px;
                 }
-                BlockHeightItem::RestoredBlockSeparator {
-                    is_historical_conversation_restoration,
-                    ..
-                } => {
+                BlockHeightItem::RestoredBlockSeparator { .. } => {
                     let item_height = viewport_item.block_height_item.height();
                     let height_px = item_height.as_f64() * cell_size.y() as f64;
                     visible_items.push(VisibleItem::RestoredBlockSeparator {
@@ -3039,22 +2820,14 @@ impl Element for BlockListElement {
                     });
                     visible_height_px += height_px;
 
-                    // we want to show different text in the separator if this is an individual conversation
-                    // restored from the command palette
-                    let banner_intro_text = if is_historical_conversation_restoration {
-                        "Conversation restored".to_string()
-                    } else {
-                        "Previous session".to_string()
-                    };
-
                     let separator_text =
                         if let Some(ts) = (*model).block_list().restored_session_ts() {
                             format!(
-                                "{banner_intro_text} from {}",
+                                "Previous session from {}",
                                 ts.format("%a %b %-d at %-I:%M %p")
                             )
                         } else {
-                            banner_intro_text
+                            "Previous session".to_string()
                         };
                     self.restored_session_separator = Some(
                         Text::new_inline(
@@ -3300,14 +3073,6 @@ impl Element for BlockListElement {
             rich_content.after_layout(ctx, app);
         }
 
-        for cli_subagent_view in self
-            .cli_subagent_views
-            .values_mut()
-            .filter(|e| e.size().is_some())
-        {
-            cli_subagent_view.after_layout(ctx, app);
-        }
-
         let model = self.model.lock();
         let viewport = self.viewport_state_after_layout(model.block_list());
 
@@ -3400,15 +3165,6 @@ impl Element for BlockListElement {
         // the next block to be drawn.
         let mut draw_border_above_block = true;
 
-        struct CLISubagentRenderParams {
-            block_id: BlockId,
-            view_origin: Option<Vector2F>,
-            should_clip_view: bool,
-        }
-
-        let mut cli_subagent_views_to_paint = vec![];
-        let transcript_scope = model.block_list().transcript_scope();
-
         let items = self
             .visible_items
             .as_ref()
@@ -3460,8 +3216,7 @@ impl Element for BlockListElement {
                     }
 
                     // TODO(vorporeal): should probably use `Pixels` here
-                    let block_pixel_height =
-                        block.height(transcript_scope).as_f64() as f32 * cell_size.y();
+                    let block_pixel_height = block.height().as_f64() as f32 * cell_size.y();
 
                     let block_bottom_y = grid_origin.y() + block_pixel_height;
                     let selection_bottom_y = snackbar_header
@@ -3483,9 +3238,6 @@ impl Element for BlockListElement {
                             is_bottom_of_continuous_selection,
                         );
 
-                        let can_be_ai_context = self.ai_render_context.borrow().is_ai_input_enabled
-                            && block.can_be_ai_context(transcript_scope);
-
                         ctx.scene
                             .draw_rect_with_hit_recording(RectF::new(
                                 header_origin,
@@ -3496,12 +3248,7 @@ impl Element for BlockListElement {
                                     selection_height,
                                 ),
                             ))
-                            .with_background(if can_be_ai_context {
-                                self.warp_theme
-                                    .block_selection_as_context_background_color()
-                            } else {
-                                self.warp_theme.block_selection_color()
-                            })
+                            .with_background(self.warp_theme.block_selection_color())
                             .with_border(
                                 Border::new(border_info.border_width)
                                     .with_sides(
@@ -3510,11 +3257,7 @@ impl Element for BlockListElement {
                                         border_info.has_bottom_border,
                                         true,
                                     )
-                                    .with_border_fill(if can_be_ai_context {
-                                        self.warp_theme.block_selection_as_context_border_color()
-                                    } else {
-                                        self.warp_theme.accent()
-                                    }),
+                                    .with_border_fill(self.warp_theme.accent()),
                             );
                     }
 
@@ -3601,10 +3344,7 @@ impl Element for BlockListElement {
                         &snackbar_header,
                         self.terminal_view_id,
                         draw_border_above_block,
-                        self.ai_render_context.borrow().deref(),
-                        self.cursor_hint_text_element.as_mut(),
                         &model.image_id_to_metadata,
-                        transcript_scope,
                         ctx,
                         app,
                     );
@@ -3627,7 +3367,6 @@ impl Element for BlockListElement {
                     );
 
                     // We add in increments of 30 as each icon is 26px wide + 4px gap between icons
-                    let ask_ai_assistant_button_origin = block_menu_items_start_origin;
                     let bookmark_button_origin = block_menu_items_start_origin + vec2f(30., 0.);
                     let overflow_menu_button_origin =
                         block_menu_items_start_origin + vec2f(90., 0.);
@@ -3724,42 +3463,11 @@ impl Element for BlockListElement {
                         if let Some(overflow_icon) = self.overflow_menu_button.as_mut() {
                             overflow_icon.paint(overflow_menu_button_origin, ctx, app);
                         }
-
-                        if let Some(ask_ai_assistant_button) = self.ask_ai_assistant_button.as_mut()
-                        {
-                            ask_ai_assistant_button.paint(ask_ai_assistant_button_origin, ctx, app);
-                        }
                     }
 
                     // When a block has an active filter on it, we want the filter icon to show even when the block is not hovered over.
                     if let Some(filter_element) = self.filter_elements.get_mut(block_index) {
                         filter_element.paint(filter_button_origin, ctx, app);
-                    }
-
-                    // Paint the CLI subagent view on top of everything else for this block
-                    let mut render_params = CLISubagentRenderParams {
-                        block_id: block.id().clone(),
-                        view_origin: None,
-                        should_clip_view: !block.is_agent_blocked(),
-                    };
-
-                    if let Some(cli_subagent_view) = self.cli_subagent_views.get_mut(block.id()) {
-                        // Only paint if the element was laid out; the business logic that decides to render this element is done at layout time.
-                        if let Some(cli_subagent_view_size) = cli_subagent_view.size() {
-                            render_params.view_origin = Some(
-                                vec2f(
-                                    grid_origin.x() + block_grid_params.bounds.width(),
-                                    grid_origin.y(),
-                                ) - vec2f(
-                                    CLI_SUBAGENT_HORIZONTAL_MARGIN,
-                                    CLI_SUBAGENT_VERTICAL_MARGIN,
-                                ) - cli_subagent_view_size,
-                            );
-                        }
-                    }
-
-                    if render_params.view_origin.is_some() {
-                        cli_subagent_views_to_paint.push(render_params);
                     }
 
                     draw_border_above_block = true;
@@ -3842,32 +3550,11 @@ impl Element for BlockListElement {
                 VisibleItem::RichContent {
                     view_id, height_px, ..
                 } => {
-                    let block_origin = grid_origin;
                     if let Some(rich_content) = self.rich_content_elements.get_mut(view_id) {
                         rich_content.paint(grid_origin, ctx, app);
                     }
 
-                    if !FeatureFlag::AgentView.is_enabled() {
-                        let ai_render_context = self.ai_render_context.borrow();
-                        if let Some(ai_context_color) = self
-                            .rich_content_metadata
-                            .get(view_id)
-                            .and_then(|metadata| {
-                                ai_render_context
-                                    .context_color_for_rich_content(metadata, &self.warp_theme)
-                            })
-                        {
-                            ctx.scene.start_layer(ClipBounds::ActiveLayer);
-                            draw_flag_pole(block_origin, *height_px, ai_context_color, ctx);
-                            ctx.scene.stop_layer();
-                        }
-                    }
-
-                    // Don't draw a border below session headers (i.e. above the next block).
-                    draw_border_above_block = !matches!(
-                        self.rich_content_metadata.get(view_id),
-                        Some(RichContentMetadata::HarnessSessionHeader)
-                    );
+                    draw_border_above_block = true;
 
                     grid_origin += vec2f(0., *height_px);
                 }
@@ -3887,17 +3574,7 @@ impl Element for BlockListElement {
                 .iter()
                 .flat_map(|selection| self.segment_blocklist_selection(selection, block_list));
 
-            let text_selection_color = if self
-                .ai_render_context
-                .borrow()
-                .has_pending_context_selected_text
-            {
-                self.warp_theme
-                    .text_selection_as_context_color()
-                    .into_solid()
-            } else {
-                self.warp_theme.text_selection_color().into_solid()
-            };
+            let text_selection_color = self.warp_theme.text_selection_color().into_solid();
 
             for current_range in selection_ranges {
                 self.render_selection(
@@ -3909,30 +3586,6 @@ impl Element for BlockListElement {
                 );
             }
         };
-        if !cli_subagent_views_to_paint.is_empty() {
-            for CLISubagentRenderParams {
-                block_id,
-                view_origin,
-                should_clip_view,
-            } in cli_subagent_views_to_paint.into_iter()
-            {
-                if let (Some(cli_subagent_view), Some(view_origin)) =
-                    (self.cli_subagent_views.get_mut(&block_id), view_origin)
-                {
-                    ctx.scene.start_layer(if should_clip_view {
-                        ClipBounds::BoundedBy(
-                            self.bounds
-                                .expect("Bounds were set at beginning of paint()"),
-                        )
-                    } else {
-                        ClipBounds::None
-                    });
-                    cli_subagent_view.paint(view_origin, ctx, app);
-                    ctx.scene.stop_layer();
-                }
-            }
-        }
-
         ctx.scene.stop_layer();
         self.child_max_z_index = Some(ctx.scene.max_active_z_index());
     }
@@ -4005,13 +3658,6 @@ impl Element for BlockListElement {
         );
 
         if events_to_propagate_on {
-            for cli_subagent_view in self.cli_subagent_views.values_mut() {
-                // If the event is handled by the CLI subagent view, do not propagate it down to the blocklist.
-                if cli_subagent_view.dispatch_event(event, ctx, app) {
-                    return true;
-                }
-            }
-
             // The floating buttons are a group of buttons that are on top of the blocklist elements.
             // If the event is handled by any of them, we do not propagate it down to the blocklist.
             // Note that this is in violation of the dispatch_event contract: we are not
@@ -4021,11 +3667,6 @@ impl Element for BlockListElement {
 
             if let Some(overflow_menu_button) = &mut self.overflow_menu_button {
                 handled_by_floating_button |= overflow_menu_button.dispatch_event(event, ctx, app);
-            }
-
-            if let Some(ask_ai_assistant_button) = &mut self.ask_ai_assistant_button {
-                handled_by_floating_button |=
-                    ask_ai_assistant_button.dispatch_event(event, ctx, app);
             }
 
             for bookmark_element in self.bookmark_elements.values_mut() {
@@ -4189,7 +3830,7 @@ impl Element for BlockListElement {
                         ctx.dispatch_typed_action(TerminalAction::ControlSequence(escape_sequence));
                         return true;
                     }
-                    self.maybe_handle_voice_toggle(key_code, state, ctx)
+                    false
                 } else {
                     false
                 }

@@ -41,8 +41,6 @@ fn make_comment(
         content: content.to_string(),
         target,
         last_update_time: Local::now(),
-        base: None,
-        head: None,
         outdated,
         origin: CommentOrigin::Native,
     }

@@ -518,147 +518,6 @@ pub fn git_operation_in_progress(repo_path: &Path) -> bool {
         || git_dir.join("index.lock").exists()
 }
 
-/// Maximum number of characters of diff content to send to AI for commit
-/// message / PR title / PR description generation.
-#[cfg(feature = "local_fs")]
-const MAX_DIFF_CHARS_FOR_AI: usize = 16_000;
-
-/// Per-file cap for untracked-file content we synthesise into the diff sent
-/// to AI. Keeps any one new file from dominating the budget.
-#[cfg(feature = "local_fs")]
-const MAX_UNTRACKED_FILE_BYTES: usize = 4_000;
-
-/// Number of leading bytes examined when classifying an untracked file as
-/// binary, mirroring the heuristic in `count_lines_if_text_file`.
-#[cfg(feature = "local_fs")]
-const BINARY_CHECK_BYTES: usize = 1_024;
-
-/// Maximum number of bytes in a PR title passed to `gh pr create`. GitHub's
-/// hard limit is 256; we cap short of that to leave headroom for an
-/// ellipsis marker. Measured in bytes because it's fed to
-/// [`truncate_on_char_boundary`], which slices on byte offsets.
-#[cfg(feature = "local_fs")]
-const MAX_PR_TITLE_BYTES: usize = 200;
-
-/// Returns a prefix of `s` whose length is at most `byte_cap` and which ends
-/// on a UTF-8 char boundary. Plain `&s[..byte_cap]` panics when the cut
-/// point lands inside a multi-byte code point, which is reachable in diffs
-/// and source files containing non-ASCII text.
-#[cfg(feature = "local_fs")]
-fn truncate_on_char_boundary(s: &str, byte_cap: usize) -> &str {
-    if s.len() <= byte_cap {
-        return s;
-    }
-    let mut cut = byte_cap;
-    while cut > 0 && !s.is_char_boundary(cut) {
-        cut -= 1;
-    }
-    &s[..cut]
-}
-
-/// Returns the diff for commit message generation, truncated to avoid token
-/// limits. When `include_unstaged` is true, diffs against HEAD (all
-/// uncommitted changes) and also appends untracked files as synthetic diff
-/// hunks so the LLM has full context even when the commit consists entirely
-/// of new files. When `include_unstaged` is false, diffs only staged changes.
-#[cfg(feature = "local_fs")]
-pub async fn get_diff_for_commit_message(
-    repo_path: &Path,
-    include_unstaged: bool,
-) -> Result<String> {
-    let mut diff = if !include_unstaged {
-        run_git_command(repo_path, &["diff", "--cached"]).await?
-    } else if run_git_command(repo_path, &["rev-parse", "--verify", "HEAD"])
-        .await
-        .is_ok()
-    {
-        run_git_command(repo_path, &["diff", "HEAD"]).await?
-    } else {
-        // No HEAD before the first commit. Include staged changes plus
-        // unstaged edits to staged files; untracked files are added below.
-        let mut diff = run_git_command(repo_path, &["diff", "--cached"]).await?;
-        diff.push_str(&run_git_command(repo_path, &["diff"]).await?);
-        diff
-    };
-
-    // `git diff HEAD` only shows changes to already-tracked files. New files that
-    // haven't been staged yet are invisible to it, so we synthesise diff hunks for
-    // them here — mirroring the logic in `get_file_change_entries`.
-    if include_unstaged
-        && let Ok(untracked) = run_git_command(
-            repo_path,
-            &["ls-files", "--others", "--exclude-standard", "-z"],
-        )
-        .await
-    {
-        // `-z` separates paths with NUL bytes and disables C-style
-        // quoting, so paths containing spaces or non-ASCII characters
-        // round-trip intact.
-        // Cap the read to cover both the binary-check window and the
-        // synthesised-hunk budget.
-        let read_cap = BINARY_CHECK_BYTES.max(MAX_UNTRACKED_FILE_BYTES);
-        for file_name_bytes in untracked.as_bytes().split(|b| *b == 0) {
-            if file_name_bytes.is_empty() {
-                continue;
-            }
-            let Ok(file_name) = std::str::from_utf8(file_name_bytes) else {
-                continue;
-            };
-            let file_path = repo_path.join(file_name);
-            // Async + bounded so a large untracked file doesn't block
-            // the executor or balloon memory.
-            let Ok(file) = tokio::fs::File::open(&file_path).await else {
-                continue;
-            };
-            let mut bytes = Vec::with_capacity(read_cap);
-            use tokio::io::AsyncReadExt as _;
-            if file
-                .take(read_cap as u64)
-                .read_to_end(&mut bytes)
-                .await
-                .is_err()
-            {
-                continue;
-            }
-            let check_len = bytes.len().min(BINARY_CHECK_BYTES);
-            if torch_util::file_type::is_buffer_binary(&bytes[..check_len]) {
-                continue;
-            }
-            let Ok(content) = std::str::from_utf8(&bytes) else {
-                continue;
-            };
-            let content = truncate_on_char_boundary(content, MAX_UNTRACKED_FILE_BYTES);
-            let line_count = content.lines().count();
-            diff.push_str(&format!(
-                "diff --git a/{file_name} b/{file_name}\nnew file mode 100644\n\
-                     --- /dev/null\n+++ b/{file_name}\n@@ -0,0 +1,{line_count} @@\n"
-            ));
-            for line in content.lines() {
-                diff.push('+');
-                diff.push_str(line);
-                diff.push('\n');
-            }
-        }
-    }
-
-    if diff.len() <= MAX_DIFF_CHARS_FOR_AI {
-        Ok(diff)
-    } else {
-        Ok(format!(
-            "{}\n... (diff truncated)",
-            truncate_on_char_boundary(&diff, MAX_DIFF_CHARS_FOR_AI)
-        ))
-    }
-}
-
-#[cfg(not(feature = "local_fs"))]
-pub async fn get_diff_for_commit_message(
-    _repo_path: &Path,
-    _include_unstaged: bool,
-) -> Result<String> {
-    Err(anyhow!("Not supported on wasm"))
-}
-
 /// Commits changes. If `include_unstaged` is true, stages all changes first via `git add -A`.
 /// `path_env` is forwarded so commit hooks can find tools on the user's `PATH`.
 #[cfg(feature = "local_fs")]
@@ -972,89 +831,14 @@ pub fn is_gh_missing_error(error_msg: &str) -> bool {
             || lower.contains("could not find"))
 }
 
-/// PR-ready diff
-/// truncated for AI token limits.
+/// Creates a PR for the current branch (must already be pushed) with `--fill`. Always targets
+/// the detected default branch.
 #[cfg(feature = "local_fs")]
-pub async fn get_diff_for_pr(repo_path: &Path) -> Result<String> {
-    let base = detect_main_branch(repo_path).await?;
-    let base = base.trim();
-    let current = detect_current_branch(repo_path).await?;
-    let remote_ref = format!("origin/{current}");
-
-    let end_ref = if run_git_command(repo_path, &["rev-parse", "--verify", &remote_ref])
-        .await
-        .is_ok()
-    {
-        remote_ref
-    } else {
-        "HEAD".to_string()
-    };
-
-    let range = format!("{base}..{end_ref}");
-    let mut diff = run_git_command(repo_path, &["diff", &range]).await?;
-    if diff.len() > MAX_DIFF_CHARS_FOR_AI {
-        diff = format!(
-            "{}\n... (diff truncated)",
-            truncate_on_char_boundary(&diff, MAX_DIFF_CHARS_FOR_AI)
-        );
-    }
-    Ok(diff)
-}
-
-#[cfg(not(feature = "local_fs"))]
-pub async fn get_diff_for_pr(_repo_path: &Path) -> Result<String> {
-    Err(anyhow!("Not supported on wasm"))
-}
-
-/// Commit subject lines on the current branch since the default branch.
-#[cfg(feature = "local_fs")]
-pub async fn get_branch_commit_messages(repo_path: &Path) -> Result<Vec<String>> {
-    let base = detect_main_branch(repo_path).await?;
-    let base = base.trim();
-    let range = format!("{base}..HEAD");
-    let output = run_git_command(repo_path, &["log", &range, "--format=%s"]).await?;
-    Ok(output
-        .lines()
-        .filter(|l| !l.is_empty())
-        .map(|l| l.to_string())
-        .collect())
-}
-
-#[cfg(not(feature = "local_fs"))]
-pub async fn get_branch_commit_messages(_repo_path: &Path) -> Result<Vec<String>> {
-    Err(anyhow!("Not supported on wasm"))
-}
-
-/// Creates a PR for the current branch (must already be pushed). Falls back
-/// to `--fill` when title/body are `None`. Always targets the detected
-/// default branch.
-#[cfg(feature = "local_fs")]
-pub async fn create_pr(
-    repo_path: &Path,
-    title: Option<&str>,
-    body: Option<&str>,
-    path_env: Option<&str>,
-) -> Result<PrInfo> {
+pub async fn create_pr(repo_path: &Path, path_env: Option<&str>) -> Result<PrInfo> {
     let base = detect_main_branch(repo_path).await?;
     let base = base.trim();
     let base = base.strip_prefix("origin/").unwrap_or(base);
-    let sanitized_title;
-    let args: Vec<&str> = match (title, body) {
-        (Some(t), Some(b)) => {
-            sanitized_title = sanitize_pr_title(t);
-            vec![
-                "pr",
-                "create",
-                "--base",
-                base,
-                "--title",
-                &sanitized_title,
-                "--body",
-                b,
-            ]
-        }
-        _ => vec!["pr", "create", "--base", base, "--fill"],
-    };
+    let args = ["pr", "create", "--base", base, "--fill"];
     let stdout = run_gh_command(repo_path, &args, path_env).await?;
     // `gh pr create` prints the PR URL on success.
     let url = stdout.trim().to_string();
@@ -1073,20 +857,8 @@ pub async fn create_pr(
     })
 }
 
-/// Trims an AI-generated PR title to a single line and caps its length.
-#[cfg(feature = "local_fs")]
-fn sanitize_pr_title(raw: &str) -> String {
-    let first_line = raw.lines().next().unwrap_or("").trim();
-    truncate_on_char_boundary(first_line, MAX_PR_TITLE_BYTES).to_string()
-}
-
 #[cfg(not(feature = "local_fs"))]
-pub async fn create_pr(
-    _repo_path: &Path,
-    _title: Option<&str>,
-    _body: Option<&str>,
-    _path_env: Option<&str>,
-) -> Result<PrInfo> {
+pub async fn create_pr(_repo_path: &Path, _path_env: Option<&str>) -> Result<PrInfo> {
     Err(anyhow!("Not supported on wasm"))
 }
 

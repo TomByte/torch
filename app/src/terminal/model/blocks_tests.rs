@@ -1,5 +1,4 @@
 use float_cmp::{approx_eq, assert_approx_eq};
-use parking_lot::FairMutex;
 use torch_core::features::FeatureFlag;
 use torchui::App;
 use torchui::elements::DEFAULT_UI_LINE_HEIGHT_RATIO;
@@ -7,8 +6,8 @@ use torchui::elements::DEFAULT_UI_LINE_HEIGHT_RATIO;
 use super::*;
 use crate::settings::TerminalSpacing;
 use crate::terminal::event::Event;
+use crate::terminal::model::test_utils;
 use crate::terminal::model::test_utils::TestBlockListBuilder;
-use crate::terminal::model::{TerminalModel, test_utils};
 use crate::terminal::view::{InlineBannerItem, InlineBannerType};
 use crate::terminal::{BlockListSettings, SizeUpdateReason};
 
@@ -210,11 +209,7 @@ fn test_iterm_image_renders_in_script_execution_block() {
 
     assert!(block_list.active_block().started());
     assert!(!block_list.active_block().output_grid().is_empty());
-    assert!(
-        block_list
-            .active_block()
-            .is_visible(&crate::terminal::model::block::TranscriptScope::Terminal)
-    );
+    assert!(block_list.active_block().is_visible());
 }
 
 #[test]
@@ -258,11 +253,7 @@ fn test_kitty_image_renders_in_script_execution_block() {
 
     assert!(block_list.active_block().started());
     assert!(!block_list.active_block().output_grid().is_empty());
-    assert!(
-        block_list
-            .active_block()
-            .is_visible(&crate::terminal::model::block::TranscriptScope::Terminal)
-    );
+    assert!(block_list.active_block().is_visible());
 }
 
 #[test]
@@ -548,11 +539,7 @@ pub fn test_script_execution_block() {
     assert_eq!(block_list.blocks.len(), 2);
     assert!(block_list.active_block().started());
     // Ensure that script execution block has a height of 0 if nothing was added to it.
-    assert!(
-        block_list
-            .active_block()
-            .is_empty(&crate::terminal::model::block::TranscriptScope::Terminal)
-    );
+    assert!(block_list.active_block().is_empty());
 
     advance_to_bootstrapped(&mut block_list, Default::default());
 
@@ -566,22 +553,14 @@ pub fn test_script_execution_block() {
 
     assert_eq!(block_list.blocks.len(), 2);
     assert!(block_list.active_block().started());
-    assert!(
-        block_list
-            .active_block()
-            .is_empty(&crate::terminal::model::block::TranscriptScope::Terminal)
-    );
+    assert!(block_list.active_block().is_empty());
 
     // Add characters to script execution block.
     block_list.input('c');
     block_list.update_active_block_height();
 
     assert_eq!(block_list.blocks.len(), 2);
-    assert!(
-        !block_list
-            .active_block()
-            .is_empty(&crate::terminal::model::block::TranscriptScope::Terminal)
-    );
+    assert!(!block_list.active_block().is_empty());
 
     advance_to_bootstrapped(&mut block_list, Default::default());
 
@@ -625,11 +604,7 @@ pub fn visible_bootstrap_block_event_fires_when_script_execution_becomes_visible
     advance_to_script_execution(&mut block_list);
 
     assert!(block_list.active_block().started());
-    assert!(
-        block_list
-            .active_block()
-            .is_empty(&crate::terminal::model::block::TranscriptScope::Terminal)
-    );
+    assert!(block_list.active_block().is_empty());
 
     let events = drain_terminal_events(&events_rx);
     assert!(
@@ -670,8 +645,7 @@ pub fn test_restore_completed_blocks() {
         .with_terminal_events_tx(events_tx)
         .build();
 
-    let serialized_block: SerializedBlockListItem =
-        SerializedBlock::new_for_test("i am".into(), "restored".into()).into();
+    let serialized_block = SerializedBlock::new_for_test("i am".into(), "restored".into());
     let restored_blocks = [serialized_block.clone(), serialized_block];
     let block_list = TestBlockListBuilder::new()
         .with_channel_event_proxy(channel_event_proxy)
@@ -682,14 +656,8 @@ pub fn test_restore_completed_blocks() {
     // block.
     assert_eq!(block_list.blocks.len(), 3);
     let restored_block_height = 5.5;
-    assert_lines_approx_eq!(
-        block_list.blocks[0].height(&crate::terminal::model::block::TranscriptScope::Terminal),
-        restored_block_height
-    );
-    assert_lines_approx_eq!(
-        block_list.blocks[1].height(&crate::terminal::model::block::TranscriptScope::Terminal),
-        restored_block_height
-    );
+    assert_lines_approx_eq!(block_list.blocks[0].height(), restored_block_height);
+    assert_lines_approx_eq!(block_list.blocks[1].height(), restored_block_height);
     assert_lines_approx_eq!(
         block_list.block_heights.summary().height,
         2.0 * restored_block_height + RESTORED_BLOCK_SEPARATOR_HEIGHT
@@ -786,10 +754,7 @@ pub fn test_restore_block_that_wasnt_started() {
         block_list.blocks[0].bootstrap_stage(),
         BootstrapStage::WarpInput
     );
-    assert_eq!(
-        block_list.blocks[0].height(&crate::terminal::model::block::TranscriptScope::Terminal),
-        Lines::zero()
-    );
+    assert_eq!(block_list.blocks[0].height(), Lines::zero());
 
     let mut block_completed_events = Vec::new();
     while let Ok(event) = events_rx.try_recv() {
@@ -821,10 +786,7 @@ pub fn test_restore_block_that_wasnt_completed() {
         block_list.blocks[0].bootstrap_stage(),
         BootstrapStage::WarpInput
     );
-    assert_lines_approx_eq!(
-        block_list.blocks[0].height(&crate::terminal::model::block::TranscriptScope::Terminal),
-        0.0
-    );
+    assert_lines_approx_eq!(block_list.blocks[0].height(), 0.0);
 
     let mut block_completed_events = Vec::new();
     while let Ok(event) = events_rx.try_recv() {
@@ -863,18 +825,9 @@ pub fn test_basic_bootstrapping() {
 
     // We have four blocks from calling `create_warp_input_block` once and `block_finished` twice.
     assert_eq!(block_list.blocks.len(), 3);
-    assert_lines_approx_eq!(
-        block_list.blocks[0].height(&crate::terminal::model::block::TranscriptScope::Terminal),
-        0.0
-    );
-    assert_lines_approx_eq!(
-        block_list.blocks[1].height(&crate::terminal::model::block::TranscriptScope::Terminal),
-        0.0
-    );
-    assert_lines_approx_eq!(
-        block_list.blocks[2].height(&crate::terminal::model::block::TranscriptScope::Terminal),
-        0.0
-    );
+    assert_lines_approx_eq!(block_list.blocks[0].height(), 0.0);
+    assert_lines_approx_eq!(block_list.blocks[1].height(), 0.0);
+    assert_lines_approx_eq!(block_list.blocks[2].height(), 0.0);
     assert_lines_approx_eq!(block_list.block_heights.summary().height, 0.0);
 
     let mut block_completed_events = Vec::new();
@@ -896,7 +849,7 @@ pub fn test_basic_bootstrapping() {
 
 #[test]
 pub fn test_session_restoration_separator() {
-    let serialized_block: SerializedBlockListItem =
+    let serialized_block: SerializedBlock =
         SerializedBlock::new_for_test("i am".as_bytes().to_vec(), "restored".as_bytes().to_vec())
             .into();
     let restored_blocks = [serialized_block.clone(), serialized_block];
@@ -906,18 +859,9 @@ pub fn test_session_restoration_separator() {
 
     block_list.set_next_gap_height_in_lines((11. + RESTORED_BLOCK_SEPARATOR_HEIGHT).into_lines());
     assert_eq!(block_list.blocks.len(), 3);
-    assert_lines_approx_eq!(
-        block_list.blocks[0].height(&crate::terminal::model::block::TranscriptScope::Terminal),
-        5.5
-    );
-    assert_lines_approx_eq!(
-        block_list.blocks[1].height(&crate::terminal::model::block::TranscriptScope::Terminal),
-        5.5
-    );
-    assert_lines_approx_eq!(
-        block_list.blocks[2].height(&crate::terminal::model::block::TranscriptScope::Terminal),
-        0.0
-    );
+    assert_lines_approx_eq!(block_list.blocks[0].height(), 5.5);
+    assert_lines_approx_eq!(block_list.blocks[1].height(), 5.5);
+    assert_lines_approx_eq!(block_list.blocks[2].height(), 0.0);
 
     // We have two blocks at height 5.5 and a separator with height 1.5.
     assert_lines_approx_eq!(
@@ -971,9 +915,7 @@ pub fn test_insert_non_block_item() {
     let inserted_index = block_list.insert_non_block_item_before_block(
         first_block_index,
         BlockHeightItem::RestoredBlockSeparator {
-            height_when_visible: BlockHeight::from(RESTORED_BLOCK_SEPARATOR_HEIGHT),
-            is_historical_conversation_restoration: false,
-            is_hidden: false,
+            height: BlockHeight::from(RESTORED_BLOCK_SEPARATOR_HEIGHT),
         },
     );
     assert_eq!(inserted_index, TotalIndex(2));
@@ -982,35 +924,18 @@ pub fn test_insert_non_block_item() {
     let inserted_index = block_list.insert_non_block_item_before_block(
         block_list.active_block_index(),
         BlockHeightItem::RestoredBlockSeparator {
-            height_when_visible: BlockHeight::from(RESTORED_BLOCK_SEPARATOR_HEIGHT),
-            is_historical_conversation_restoration: false,
-            is_hidden: false,
+            height: BlockHeight::from(RESTORED_BLOCK_SEPARATOR_HEIGHT),
         },
     );
     assert_eq!(inserted_index, TotalIndex(5));
 
     // The blocks should remain unchanged.
     assert_eq!(block_list.blocks.len(), 5);
-    assert_lines_approx_eq!(
-        block_list.blocks[0].height(&crate::terminal::model::block::TranscriptScope::Terminal),
-        0.
-    );
-    assert_lines_approx_eq!(
-        block_list.blocks[1].height(&crate::terminal::model::block::TranscriptScope::Terminal),
-        0.
-    );
-    assert_lines_approx_eq!(
-        block_list.blocks[2].height(&crate::terminal::model::block::TranscriptScope::Terminal),
-        block_height
-    );
-    assert_lines_approx_eq!(
-        block_list.blocks[3].height(&crate::terminal::model::block::TranscriptScope::Terminal),
-        block_height
-    );
-    assert_lines_approx_eq!(
-        block_list.blocks[4].height(&crate::terminal::model::block::TranscriptScope::Terminal),
-        0.
-    );
+    assert_lines_approx_eq!(block_list.blocks[0].height(), 0.);
+    assert_lines_approx_eq!(block_list.blocks[1].height(), 0.);
+    assert_lines_approx_eq!(block_list.blocks[2].height(), block_height);
+    assert_lines_approx_eq!(block_list.blocks[3].height(), block_height);
+    assert_lines_approx_eq!(block_list.blocks[4].height(), 0.);
 
     fn assert_block_height_summary_eq(a: BlockHeightSummary, b: BlockHeightSummary) {
         assert_eq!(a.block_count, b.block_count);
@@ -1222,12 +1147,8 @@ fn test_banner_insertion_and_removal() {
         total_count_after_insertion
     );
 
-    let expected_total_height = (block_list.blocks[2]
-        .height(&crate::terminal::model::block::TranscriptScope::Terminal)
-        .as_f64()
-        * 3.
-        + 3. * INLINE_BANNER_HEIGHT)
-        .into_lines();
+    let expected_total_height =
+        (block_list.blocks[2].height().as_f64() * 3. + 3. * INLINE_BANNER_HEIGHT).into_lines();
     assert_lines_approx_eq!(
         block_list.block_heights.summary().height,
         expected_total_height
@@ -1287,8 +1208,7 @@ fn test_gap_after_banner() {
     block_list.clear_visible_screen();
 
     insert_block(&mut block_list, "cmd2", "output2");
-    let baseline_block_height =
-        block_list.blocks[2].height(&crate::terminal::model::block::TranscriptScope::Terminal);
+    let baseline_block_height = block_list.blocks[2].height();
 
     {
         let summary = block_list.block_heights.summary();
@@ -1333,8 +1253,7 @@ fn test_gap_after_banner() {
 
     {
         let active_gap = block_list.active_gap.as_ref().unwrap().clone();
-        let new_block_height =
-            block_list.blocks[2].height(&crate::terminal::model::block::TranscriptScope::Terminal);
+        let new_block_height = block_list.blocks[2].height();
         assert_lines_approx_eq!(active_gap.current_height, 5.);
         assert_eq!(active_gap.index, 3);
 
@@ -1446,10 +1365,7 @@ pub fn test_block_heights_combined_prompt_command_grid_warp_prompt() {
     // we have the built-in Torch prompt, so there's padding between that prompt and the combined grid.
     // The combined grid _just_ has the command in this case! The PS1 is unset!
     // Hence, we expect heights of 8.5.
-    assert_lines_approx_eq!(
-        first_block.height(&crate::terminal::model::block::TranscriptScope::Terminal),
-        8.5
-    );
+    assert_lines_approx_eq!(first_block.height(), 8.5);
 }
 
 #[test]
@@ -1490,10 +1406,7 @@ pub fn test_block_heights_combined_prompt_command_grid_ps1() {
 
     // We have a 2-line prompt, adding 1 extra line to the combined grid (vs 0.6 default for Torch prompt).
     // Hence, we expect a height of 8.7 rather than 8.3.
-    assert_lines_approx_eq!(
-        first_block.height(&crate::terminal::model::block::TranscriptScope::Terminal),
-        8.7
-    );
+    assert_lines_approx_eq!(first_block.height(), 8.7);
 }
 
 #[test]
@@ -1586,7 +1499,7 @@ fn test_remove_rich_content_block() {
     insert_block(&mut block_list, "cmd", "output");
 
     let view_id_a = EntityId::new();
-    block_list.append_rich_content(RichContentItem::new_for_test(None, view_id_a, None), false);
+    block_list.append_rich_content(RichContentItem::new(None, view_id_a), false);
 
     let second_block_index = insert_block(&mut block_list, "cmd", "output");
 
@@ -1597,7 +1510,7 @@ fn test_remove_rich_content_block() {
     );
 
     let view_id_b = EntityId::new();
-    block_list.append_rich_content(RichContentItem::new_for_test(None, view_id_b, None), false);
+    block_list.append_rich_content(RichContentItem::new(None, view_id_b), false);
 
     /*
     The blocklist is now:
@@ -1979,13 +1892,7 @@ fn test_background_blocks_finished() {
     match &block_completed_events[0].block_type {
         BlockType::User(block) => {
             assert_eq!(block.command.get(&block_list).as_str(), "command");
-            assert_eq!(
-                block
-                    .output_truncated_with_obfuscated_secrets
-                    .get(&block_list)
-                    .as_str(),
-                "output"
-            );
+            assert_eq!(block.output_truncated.get(&block_list).as_str(), "output");
         }
         other => panic!("Expected BlockType::User, but was {other:?}"),
     }
@@ -2035,105 +1942,12 @@ fn test_background_blocks_finished() {
         BlockType::User(block) => {
             assert_eq!(block.command.get(&block_list).as_str(), "next command");
             assert_eq!(
-                block
-                    .output_truncated_with_obfuscated_secrets
-                    .get(&block_list)
-                    .as_str(),
+                block.output_truncated.get(&block_list).as_str(),
                 "next command output"
             );
         }
         other => panic!("Expected BlockType::User, but was {other:?}"),
     }
-}
-
-/// Regression test: `UserBlockCompleted`'s deferred fields must resolve by the block's stable
-/// `BlockId`, not by the `BlockIndex` captured at construction time. Removing an earlier block
-/// (e.g. clearing agent-attached command blocks) shifts every later block's `BlockIndex` down;
-/// resolving by the stale index alone would silently return whatever block now occupies it,
-/// even though the original block is still alive elsewhere in the list.
-#[test]
-fn deferred_fields_resolve_by_block_id_after_reindex() {
-    let (events_tx, events_rx) = async_channel::unbounded();
-    let event_proxy = ChannelEventListener::builder_for_test()
-        .with_terminal_events_tx(events_tx)
-        .build();
-
-    let mut model = TerminalModel::mock(None, None);
-    *model.block_list_mut() = new_bootstrapped_block_list(None, None, event_proxy);
-    let model = FairMutex::new(model);
-
-    command_finished_and_precmd(model.lock().block_list_mut());
-    // Flush events from bootstrapping.
-    while let Ok(_event) = events_rx.try_recv() {}
-
-    // A throwaway block that will be removed later, to reindex everything after it.
-    let throwaway_index = insert_block(
-        model.lock().block_list_mut(),
-        "throwaway_command\n",
-        "throwaway_output\n",
-    );
-
-    let first_index = insert_block(
-        model.lock().block_list_mut(),
-        "first_command\n",
-        "first_output\n",
-    );
-
-    let mut first_completed = None;
-    while let Ok(event) = events_rx.try_recv() {
-        if let Event::AfterBlockCompleted(event_content) = event
-            && let BlockType::User(user_block) = event_content.block_type
-        {
-            first_completed = Some(user_block);
-        }
-    }
-    let first_completed =
-        first_completed.expect("expected an AfterBlockCompleted event for the first block");
-
-    insert_block(
-        model.lock().block_list_mut(),
-        "second_command\n",
-        "second_output\n",
-    );
-
-    // Removing the throwaway block shifts every later block's `BlockIndex` down by one, so
-    // `first_completed`'s original index now belongs to "second_command" instead -- while the
-    // original block itself is still alive, just at a new index.
-    model
-        .lock()
-        .block_list_mut()
-        .remove_command_blocks_at_indices(vec![throwaway_index]);
-
-    // Confirm the collision: a genuinely different, still-existing block now sits at
-    // `first_index`.
-    assert_eq!(
-        model
-            .lock()
-            .block_list()
-            .block_at(first_index)
-            .expect("a block should still exist at the reused index")
-            .command_to_string(),
-        "second_command"
-    );
-
-    // Despite that, resolving `first_completed`'s deferred fields (by its stable `BlockId`, not
-    // the stale `first_index`) must still return its own data.
-    assert_eq!(
-        first_completed.command.get_with(|compute| {
-            let model = model.lock();
-            compute(model.block_list())
-        }),
-        "first_command"
-    );
-    assert_eq!(
-        first_completed
-            .output_truncated_with_obfuscated_secrets
-            .get_with(|compute| {
-                let model = model.lock();
-                compute(model.block_list())
-            }),
-        "first_output"
-    );
 }
 
 #[test]

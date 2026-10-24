@@ -49,8 +49,6 @@ fn initialize_app(app: &mut App) {
     app.add_singleton_model(|_ctx| VimRegisters::new());
     app.add_singleton_model(|_| KeybindingChangedNotifier::mock());
     app.add_singleton_model(|_| AuthStateProvider::new_for_test());
-    #[cfg(feature = "voice_input")]
-    app.add_singleton_model(voice_input::VoiceInput::new);
 
     let team_client_mock = Arc::new(MockTeamClient::new());
     let workspace_client_mock = Arc::new(MockWorkspaceClient::new());
@@ -2053,14 +2051,7 @@ fn test_autosuggestions() -> Result<()> {
         // have "bazz" within its buffer and "foo\nbar" as an autosuggestion.
         let (_, view) = app.add_window(WindowStyle::NotStealFocus, |ctx| {
             let mut view = EditorView::new_with_base_text("bazz", Default::default(), ctx);
-            view.set_autosuggestion(
-                "foo\nbar",
-                AutosuggestionLocation::EndOfBuffer,
-                AutosuggestionType::Command {
-                    was_intelligent_autosuggestion: false,
-                },
-                ctx,
-            );
+            view.set_autosuggestion("foo\nbar", AutosuggestionLocation::EndOfBuffer, ctx);
             view
         });
 
@@ -2150,14 +2141,7 @@ fn test_partial_autosuggestion() -> Result<()> {
         // have "bazz" within its buffer and "foo\nbar" as an autosuggestion.
         let (_, view) = app.add_window(WindowStyle::NotStealFocus, |ctx| {
             let mut view = EditorView::new_with_base_text("bazz", Default::default(), ctx);
-            view.set_autosuggestion(
-                "foo\nbar",
-                AutosuggestionLocation::EndOfBuffer,
-                AutosuggestionType::Command {
-                    was_intelligent_autosuggestion: false,
-                },
-                ctx,
-            );
+            view.set_autosuggestion("foo\nbar", AutosuggestionLocation::EndOfBuffer, ctx);
             view
         });
 
@@ -2185,14 +2169,7 @@ fn test_partial_autosuggestion() -> Result<()> {
         view.update(&mut app, |view, ctx| {
             view.select_all(ctx);
             view.user_insert("test", ctx);
-            view.set_autosuggestion(
-                " {восибing}",
-                AutosuggestionLocation::EndOfBuffer,
-                AutosuggestionType::Command {
-                    was_intelligent_autosuggestion: false,
-                },
-                ctx,
-            );
+            view.set_autosuggestion(" {восибing}", AutosuggestionLocation::EndOfBuffer, ctx);
         });
 
         view.update(&mut app, |view, ctx| {
@@ -2219,9 +2196,6 @@ fn test_partial_autosuggestion() -> Result<()> {
             view.set_autosuggestion(
                 " --files-without-match \"git\" ~/.oh-my-zsh/themes/*",
                 AutosuggestionLocation::EndOfBuffer,
-                AutosuggestionType::Command {
-                    was_intelligent_autosuggestion: false,
-                },
                 ctx,
             );
         });
@@ -2399,14 +2373,7 @@ fn test_placeholder_text() {
 
         // Shows autosuggestion instead if available
         view.update(&mut app, |view, ctx| {
-            view.set_autosuggestion(
-                "single line",
-                AutosuggestionLocation::EndOfBuffer,
-                AutosuggestionType::Command {
-                    was_intelligent_autosuggestion: false,
-                },
-                ctx,
-            );
+            view.set_autosuggestion("single line", AutosuggestionLocation::EndOfBuffer, ctx);
         });
 
         view.read(&app, |view, app| {
@@ -4320,10 +4287,8 @@ fn test_paste_clipboard_with_text_only_should_paste_text_normally() {
             // Enable image context options to allow image attachment functionality
             // This simulates the state when Agent Mode is active and image attachments are supported
             editor.image_context_options = ImageContextOptions::Enabled {
-                unsupported_model: false,
                 is_processing_attached_images: false,
                 num_images_attached: 0,
-                num_images_in_conversation: 0,
             };
             editor
         });
@@ -4374,10 +4339,8 @@ fn test_paste_clipboard_with_image_only_should_switch_to_agent_mode() {
             let mut editor = EditorView::new(Default::default(), ctx);
             // Enable image context options for testing
             editor.image_context_options = ImageContextOptions::Enabled {
-                unsupported_model: false,
                 is_processing_attached_images: false,
                 num_images_attached: 0,
-                num_images_in_conversation: 0,
             };
             editor
         });
@@ -4417,10 +4380,8 @@ fn test_paste_clipboard_with_supported_image_and_text_should_handle_both() {
             let mut editor = EditorView::new(Default::default(), ctx);
             // Enable image context options for testing
             editor.image_context_options = ImageContextOptions::Enabled {
-                unsupported_model: false,
                 is_processing_attached_images: false,
                 num_images_attached: 0,
-                num_images_in_conversation: 0,
             };
             editor
         });
@@ -4461,10 +4422,8 @@ fn test_paste_clipboard_with_unsupported_image_and_text_should_show_error() {
             let mut editor = EditorView::new(Default::default(), ctx);
             // Enable image context options for testing
             editor.image_context_options = ImageContextOptions::Enabled {
-                unsupported_model: false,
                 is_processing_attached_images: false,
                 num_images_attached: 0,
-                num_images_in_conversation: 0,
             };
             editor
         });

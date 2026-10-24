@@ -52,7 +52,6 @@ struct MouseStateHandles {
 
 pub enum NavBarBehavior {
     Closable,
-    NotClosable,
 }
 
 pub struct NavBar {
@@ -92,10 +91,6 @@ impl NavBar {
             up_label_button,
             down_label_button,
         }
-    }
-
-    pub fn set_behavior(&mut self, behavior: NavBarBehavior) {
-        self.behavior = behavior;
     }
 
     fn diff_hunk_count(&self, app: &AppContext) -> usize {

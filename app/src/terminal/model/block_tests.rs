@@ -47,10 +47,7 @@ pub fn test_find() {
 
     block.prompt_only_precmd(PromptMetadata::default());
     block.start();
-    assert_lines_approx_eq!(
-        block.height(&crate::terminal::model::block::TranscriptScope::Terminal),
-        3.
-    );
+    assert_lines_approx_eq!(block.height(), 3.);
 
     assert_approx_eq!(
         BlockSection,
@@ -88,10 +85,7 @@ pub fn test_find() {
     block.header_grid.command_grid_linefeed();
     block.header_grid.command_grid_linefeed();
 
-    assert_lines_approx_eq!(
-        block.height(&crate::terminal::model::block::TranscriptScope::Terminal),
-        6.
-    );
+    assert_lines_approx_eq!(block.height(), 6.);
 
     assert_approx_eq!(
         BlockSection,
@@ -156,10 +150,7 @@ pub fn test_find() {
 
     assert_eq!(block.header_grid.prompt_and_command_number_of_rows(), 3);
     assert_eq!(block.output_grid.len(), 3);
-    assert_lines_approx_eq!(
-        block.height(&crate::terminal::model::block::TranscriptScope::Terminal),
-        8.5
-    );
+    assert_lines_approx_eq!(block.height(), 8.5);
 
     assert_approx_eq!(
         BlockSection,
@@ -260,10 +251,7 @@ pub fn test_find() {
 
     assert_eq!(block.header_grid.prompt_and_command_number_of_rows(), 2);
     assert_eq!(block.output_grid.len(), 3);
-    assert_lines_approx_eq!(
-        block.height(&crate::terminal::model::block::TranscriptScope::Terminal),
-        7.5
-    );
+    assert_lines_approx_eq!(block.height(), 7.5);
 
     assert_approx_eq!(
         BlockSection,
@@ -525,15 +513,12 @@ pub fn test_block_height_non_bootstrapped_block() {
     block.on_finish_byte_processing(&ansi::ProcessorInput::new(&[]));
 
     // The block is empty since it was never started.
-    assert!(block.is_empty(&crate::terminal::model::block::TranscriptScope::Terminal));
+    assert!(block.is_empty());
 
     block.start();
 
     // The block should be non-empty even though it wasn't bootstrapped.
-    assert_lines_approx_eq!(
-        block.height(&crate::terminal::model::block::TranscriptScope::Terminal),
-        5.
-    );
+    assert_lines_approx_eq!(block.height(), 5.);
 }
 
 #[test]
@@ -560,10 +545,7 @@ fn test_background_block() {
     // Background blocks have the usual top and bottom padding, but no
     // between-grid padding because there's only one grid.
     assert_lines_approx_eq!(block.output_grid_displayed_height(), 3);
-    assert_lines_approx_eq!(
-        block.height(&crate::terminal::model::block::TranscriptScope::Terminal),
-        4.2
-    );
+    assert_lines_approx_eq!(block.height(), 4.2);
 }
 
 #[test]
@@ -1665,42 +1647,4 @@ fn test_restored_block_was_local() {
         .with_bootstrap_stage(BootstrapStage::RestoreBlocks)
         .build();
     assert_eq!(block.restored_block_was_local(), None);
-}
-
-#[test]
-fn test_calculate_optimal_row_counts_wide_terminal() {
-    // Terminal width >= 150 should return default values
-    let (top, bottom) = calculate_optimal_row_counts(150, 100, 200);
-    assert_eq!(top, 100);
-    assert_eq!(bottom, 200);
-
-    let (top, bottom) = calculate_optimal_row_counts(200, 50, 100);
-    assert_eq!(top, 50);
-    assert_eq!(bottom, 100);
-}
-
-#[test]
-fn test_calculate_optimal_row_counts_narrow_terminal() {
-    // Terminal width < 150 should optimize based on target total cells
-    let (top, bottom) = calculate_optimal_row_counts(75, 100, 200);
-
-    // Target total cells = (100 + 200) * 150 = 45,000
-    // Total rows for width 75 = 45,000 / 75 = 600
-    // Top rows = (600 * 100) / 300 = 200
-    // Bottom rows = 600 - 200 = 400
-    assert_eq!(top, 200);
-    assert_eq!(bottom, 400);
-}
-
-#[test]
-fn test_calculate_optimal_row_counts_very_narrow_terminal() {
-    // Test edge case with very narrow terminal
-    let (top, bottom) = calculate_optimal_row_counts(30, 100, 200);
-
-    // Target total cells = (100 + 200) * 150 = 45,000
-    // Total rows for width 30 = 45,000 / 30 = 1,500
-    // Top rows = (1,500 * 100) / 300 = 500
-    // Bottom rows = 1,500 - 500 = 1,000
-    assert_eq!(top, 500);
-    assert_eq!(bottom, 1000);
 }

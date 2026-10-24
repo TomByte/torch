@@ -8,8 +8,8 @@ use std::path::{Path, PathBuf};
 
 use ::local_control::protocol::{
     Direction as ControlDirection, DirectionParams, FileOpenParams, PageQueryParams, QueryParams,
-    ResizeParams, TabActivateParams, TabActivationMode, TabCreateParams, TabTarget, TabType,
-    TargetSelector, TextParams,
+    ResizeParams, TabActivateParams, TabActivationMode, TabCreateParams, TabTarget, TargetSelector,
+    TextParams,
 };
 use ::local_control::{ActionKind, ControlError, ErrorCode, InstanceId};
 use serde_json::json;
@@ -156,14 +156,6 @@ pub(crate) fn handle(
             target,
             ctx,
         ),
-        ActionKind::SurfaceConversationListOpen => surface_workspace_action(
-            instance_id,
-            action,
-            SurfaceDestination::ConversationList,
-            WorkspaceAction::OpenConversationListView,
-            target,
-            ctx,
-        ),
         ActionKind::SurfaceLeftPanelToggle => workspace_action(
             instance_id,
             action,
@@ -224,16 +216,7 @@ fn window_create(
             || target.session.is_some(),
         "target selectors",
     )?;
-    let params = decode_params::<TabCreateParams>(params)?;
-    match params.tab_type {
-        None | Some(TabType::Terminal | TabType::Default) => {}
-        Some(TabType::Agent | TabType::CloudAgent) => {
-            return Err(ControlError::new(
-                ErrorCode::UnsupportedAction,
-                "window.create only supports terminal or default window types",
-            ));
-        }
-    }
+    decode_params::<TabCreateParams>(params)?;
     ctx.dispatch_global_action("root_view:open_new", ());
     Ok(ack(instance_id, ActionKind::WindowCreate))
 }

@@ -15,34 +15,6 @@ fn test_default_tab_configs_dir_uses_underscores() {
 
 #[cfg(feature = "local_fs")]
 #[test]
-fn test_is_tab_config_toml_matches_user_tab_configs() {
-    let path = tab_configs_dir().join("my_tab_config.toml");
-    assert!(is_tab_config_toml(&path));
-}
-
-#[cfg(feature = "local_fs")]
-#[test]
-fn test_is_tab_config_toml_matches_default_tab_configs() {
-    let path = default_tab_configs_dir().join("worktree.toml");
-    assert!(is_tab_config_toml(&path));
-}
-
-#[cfg(feature = "local_fs")]
-#[test]
-fn test_is_tab_config_toml_rejects_non_toml_paths() {
-    let path = tab_configs_dir().join("my_tab_config.yaml");
-    assert!(!is_tab_config_toml(&path));
-}
-
-#[cfg(feature = "local_fs")]
-#[test]
-fn test_is_tab_config_toml_rejects_tomls_outside_tab_config_dirs() {
-    let path = launch_configs_dir().join("workspace.toml");
-    assert!(!is_tab_config_toml(&path));
-}
-
-#[cfg(feature = "local_fs")]
-#[test]
 fn test_materialize_default_worktree_config_bakes_repo_and_pane_type_only() {
     let template = include_str!("../../resources/tab_configs/default_worktree.toml");
     let repo_path = "/tmp/example-repo";

@@ -12,7 +12,6 @@ use torchui::{
 use crate::appearance::Appearance;
 use crate::search::QueryFilter;
 use crate::search::command_palette::FilterChipRenderer;
-use crate::settings::AISettings;
 
 /// A zero-state view for the command palette.
 pub struct ZeroState {
@@ -71,7 +70,7 @@ impl ZeroState {
     }
 
     /// Returns the set of valid query filters for this zero state view.
-    fn valid_query_filters(app: &AppContext) -> impl Iterator<Item = QueryFilter> + use<> {
+    fn valid_query_filters(_app: &AppContext) -> impl Iterator<Item = QueryFilter> + use<> {
         let mut valid_filters = vec![];
         if FeatureFlag::CommandPaletteFileSearch.is_enabled() {
             valid_filters.push(QueryFilter::Files);
@@ -84,10 +83,6 @@ impl ZeroState {
 
         if ContextFlag::LaunchConfigurations.is_enabled() {
             valid_filters.push(QueryFilter::LaunchConfigurations);
-        }
-
-        if AISettings::as_ref(app).is_any_ai_enabled(app) {
-            valid_filters.push(QueryFilter::Conversations);
         }
 
         valid_filters.into_iter()

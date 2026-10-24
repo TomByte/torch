@@ -122,7 +122,6 @@ fn sqlite_read_restores_app_state_and_codebase_metadata() {
         windows: vec![test_terminal_window_snapshot(false)],
         active_window_index: Some(0),
         block_lists: Default::default(),
-        running_mcp_servers: Default::default(),
     };
     save_app_state(&mut conn, &app_state).expect("app state should save");
 
@@ -208,19 +207,16 @@ fn test_deduplicate_snapshots() {
         active_window_index: Some(1),
         block_lists: Default::default(),
         windows: Default::default(),
-        running_mcp_servers: Default::default(),
     };
     let snapshot_2 = AppState {
         active_window_index: Some(2),
         block_lists: Default::default(),
         windows: Default::default(),
-        running_mcp_servers: Default::default(),
     };
     let snapshot_3 = AppState {
         active_window_index: Some(3),
         block_lists: Default::default(),
         windows: Default::default(),
-        running_mcp_servers: Default::default(),
     };
 
     let original_events = vec![
@@ -287,11 +283,6 @@ fn test_terminal_window_snapshot(vertical_tabs_panel_open: bool) -> WindowSnapsh
                     }),
                     is_active: true,
                     is_read_only: false,
-                    input_config: None,
-                    llm_model_override: None,
-                    active_profile_id: None,
-                    conversation_ids_to_restore: vec![],
-                    active_conversation_id: None,
                     cli_agent_session: None,
                 }),
             }),
@@ -308,7 +299,6 @@ fn test_terminal_window_snapshot(vertical_tabs_panel_open: bool) -> WindowSnapsh
         fullscreen_state: Default::default(),
         quake_mode: false,
         universal_search_width: None,
-        warp_ai_width: None,
         voltron_width: None,
         warp_drive_index_width: None,
         left_panel_open: false,
@@ -333,7 +323,6 @@ fn test_sqlite_round_trips_vertical_tabs_panel_open() {
         ],
         active_window_index: Some(1),
         block_lists: Default::default(),
-        running_mcp_servers: Default::default(),
     };
 
     save_app_state(&mut conn, &app_state).expect("app state should save");
@@ -375,7 +364,6 @@ fn test_sqlite_round_trips_resumable_cli_agent_session() {
         windows: vec![window, test_terminal_window_snapshot(true)],
         active_window_index: Some(0),
         block_lists: Default::default(),
-        running_mcp_servers: Default::default(),
     };
 
     save_app_state(&mut conn, &app_state).expect("app state should save");
@@ -412,7 +400,6 @@ fn test_sqlite_round_trips_vertical_tabs_panel_width() {
         windows: vec![resized, test_terminal_window_snapshot(false)],
         active_window_index: Some(0),
         block_lists: Default::default(),
-        running_mcp_servers: Default::default(),
     };
 
     save_app_state(&mut conn, &app_state).expect("app state should save");
@@ -454,11 +441,6 @@ fn test_sqlite_round_trips_custom_vertical_tabs_title() {
                         }),
                         is_active: true,
                         is_read_only: false,
-                        input_config: None,
-                        llm_model_override: None,
-                        active_profile_id: None,
-                        conversation_ids_to_restore: vec![],
-                        active_conversation_id: None,
                         cli_agent_session: None,
                     }),
                 }),
@@ -475,7 +457,6 @@ fn test_sqlite_round_trips_custom_vertical_tabs_title() {
             fullscreen_state: Default::default(),
             quake_mode: false,
             universal_search_width: None,
-            warp_ai_width: None,
             voltron_width: None,
             warp_drive_index_width: None,
             left_panel_open: false,
@@ -487,7 +468,6 @@ fn test_sqlite_round_trips_custom_vertical_tabs_title() {
         }],
         active_window_index: Some(0),
         block_lists: Default::default(),
-        running_mcp_servers: Default::default(),
     };
 
     save_app_state(&mut conn, &app_state).expect("app state should save");
@@ -554,7 +534,6 @@ fn test_sqlite_round_trips_code_pane_with_multiple_tabs() {
             fullscreen_state: Default::default(),
             quake_mode: false,
             universal_search_width: None,
-            warp_ai_width: None,
             voltron_width: None,
             warp_drive_index_width: None,
             left_panel_open: false,
@@ -566,7 +545,6 @@ fn test_sqlite_round_trips_code_pane_with_multiple_tabs() {
         }],
         active_window_index: Some(0),
         block_lists: Default::default(),
-        running_mcp_servers: Default::default(),
     };
 
     save_app_state(&mut conn, &app_state).expect("app state should save");
@@ -621,11 +599,6 @@ fn test_sqlite_round_trips_tab_groups() {
                 }),
                 is_active: true,
                 is_read_only: false,
-                input_config: None,
-                llm_model_override: None,
-                active_profile_id: None,
-                conversation_ids_to_restore: vec![],
-                active_conversation_id: None,
                 cli_agent_session: None,
             }),
         }),
@@ -650,11 +623,6 @@ fn test_sqlite_round_trips_tab_groups() {
                 }),
                 is_active: false,
                 is_read_only: false,
-                input_config: None,
-                llm_model_override: None,
-                active_profile_id: None,
-                conversation_ids_to_restore: vec![],
-                active_conversation_id: None,
                 cli_agent_session: None,
             }),
         }),
@@ -675,7 +643,6 @@ fn test_sqlite_round_trips_tab_groups() {
             fullscreen_state: Default::default(),
             quake_mode: false,
             universal_search_width: None,
-            warp_ai_width: None,
             voltron_width: None,
             warp_drive_index_width: None,
             left_panel_open: false,
@@ -693,7 +660,6 @@ fn test_sqlite_round_trips_tab_groups() {
         }],
         active_window_index: Some(0),
         block_lists: Default::default(),
-        running_mcp_servers: Default::default(),
     };
 
     save_app_state(&mut conn, &app_state).expect("app state should save");
@@ -747,11 +713,6 @@ fn test_sqlite_round_trips_pinned_state() {
                 }),
                 is_active: true,
                 is_read_only: false,
-                input_config: None,
-                llm_model_override: None,
-                active_profile_id: None,
-                conversation_ids_to_restore: vec![],
-                active_conversation_id: None,
                 cli_agent_session: None,
             }),
         }),
@@ -776,11 +737,6 @@ fn test_sqlite_round_trips_pinned_state() {
                 }),
                 is_active: false,
                 is_read_only: false,
-                input_config: None,
-                llm_model_override: None,
-                active_profile_id: None,
-                conversation_ids_to_restore: vec![],
-                active_conversation_id: None,
                 cli_agent_session: None,
             }),
         }),
@@ -805,11 +761,6 @@ fn test_sqlite_round_trips_pinned_state() {
                 }),
                 is_active: false,
                 is_read_only: false,
-                input_config: None,
-                llm_model_override: None,
-                active_profile_id: None,
-                conversation_ids_to_restore: vec![],
-                active_conversation_id: None,
                 cli_agent_session: None,
             }),
         }),
@@ -830,7 +781,6 @@ fn test_sqlite_round_trips_pinned_state() {
             fullscreen_state: Default::default(),
             quake_mode: false,
             universal_search_width: None,
-            warp_ai_width: None,
             voltron_width: None,
             warp_drive_index_width: None,
             left_panel_open: false,
@@ -857,7 +807,6 @@ fn test_sqlite_round_trips_pinned_state() {
         }],
         active_window_index: Some(0),
         block_lists: Default::default(),
-        running_mcp_servers: Default::default(),
     };
 
     save_app_state(&mut conn, &app_state).expect("app state should save");
@@ -990,7 +939,6 @@ fn test_sqlite_drops_too_small_bounds_on_save() {
         windows: vec![snapshot],
         active_window_index: Some(0),
         block_lists: Default::default(),
-        running_mcp_servers: Default::default(),
     };
 
     save_app_state(&mut conn, &app_state).expect("app state should save");
@@ -1029,7 +977,6 @@ fn test_sqlite_drops_too_small_bounds_on_read() {
         windows: vec![test_terminal_window_snapshot(false)],
         active_window_index: Some(0),
         block_lists: Default::default(),
-        running_mcp_servers: Default::default(),
     };
     save_app_state(&mut conn, &app_state).expect("app state should save");
 

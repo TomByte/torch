@@ -16,7 +16,7 @@ use torchui::{
 use super::mixer::SearchMixerEvent;
 use crate::appearance::Appearance;
 use crate::editor::{
-    AutosuggestionLocation, AutosuggestionType, EditorView, Event as EditorEvent,
+    AutosuggestionLocation, EditorView, Event as EditorEvent,
     PlainTextEditorViewAction as EditorAction, PropagateAndNoOpNavigationKeys,
     SingleLineEditorOptions, TextColors,
 };
@@ -868,9 +868,6 @@ impl<T: Action + Clone> SearchBar<T> {
                             editor.set_autosuggestion(
                                 suggestion,
                                 AutosuggestionLocation::EndOfBuffer,
-                                AutosuggestionType::Command {
-                                    was_intelligent_autosuggestion: false,
-                                },
                                 ctx,
                             );
                         } else {

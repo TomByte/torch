@@ -159,7 +159,6 @@ impl MenuVariant {
 pub(crate) enum MenuTooltipPosition {
     #[default]
     Right,
-    Above,
 }
 
 pub type CustomMenuItemLabelFn =
@@ -875,11 +874,6 @@ impl<A: Action + Clone> MenuItemFields<A> {
         self
     }
 
-    pub(crate) fn with_tooltip_position(mut self, position: MenuTooltipPosition) -> Self {
-        self.tooltip_position = position;
-        self
-    }
-
     /// Adds a right-aligned secondary label with custom font properties to this menu item.
     pub fn with_right_side_label(
         mut self,
@@ -1367,12 +1361,6 @@ impl<A: Action + Clone> MenuItemFields<A> {
                         ParentOffsetBounds::WindowByPosition,
                         ParentAnchor::MiddleRight,
                         ChildAnchor::MiddleLeft,
-                    ),
-                    MenuTooltipPosition::Above => OffsetPositioning::offset_from_parent(
-                        vec2f(0., -4.),
-                        ParentOffsetBounds::WindowByPosition,
-                        ParentAnchor::TopMiddle,
-                        ChildAnchor::BottomMiddle,
                     ),
                 };
                 let mut stack = Stack::new();

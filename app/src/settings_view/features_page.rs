@@ -57,12 +57,11 @@ use crate::gpu_state::{GPUState, GPUStateEvent};
 use crate::root_view::QuakeModePinPosition;
 use crate::search::command_search::settings::CommandSearchSettings;
 use crate::server::telemetry::TelemetryEvent;
-use crate::settings::ai::AISettings;
 use crate::settings::native_preference::{NativePreferenceSettings, UserNativePreference};
 use crate::settings::{
     AliasExpansionEnabled, AliasExpansionSettings, AppEditorSettings, AutocompleteSymbols,
-    AutosuggestionKeybindingHint, ChangelogSettings, CloudPreferencesSettings, CodeSettings,
-    CommandCorrections, CompletionsOpenWhileTyping, CopyOnSelect, CtrlTabBehavior,
+    AutosuggestionKeybindingHint, CLIAgentSettings, ChangelogSettings, CloudPreferencesSettings,
+    CodeSettings, CommandCorrections, CompletionsOpenWhileTyping, CopyOnSelect, CtrlTabBehavior,
     DEFAULT_QUAKE_MODE_SIZE_PERCENTAGES, ErrorUnderliningEnabled, ExtraMetaKeys, GPUSettings,
     GlobalHotkeyMode, InputSettings, InputSettingsChangedEvent, LinuxSelectionClipboard,
     MiddleClickPasteEnabled, MouseScrollMultiplier, NativeShellCompletionsEnabled,
@@ -1211,7 +1210,7 @@ impl FeaturesPageAction {
             },
             Self::ToggleAgentInAppNotifications => TelemetryEvent::FeaturesPageAction {
                 action: "ToggleAgentInAppNotifications".to_string(),
-                value: to_string(*AISettings::as_ref(ctx).show_agent_notifications),
+                value: to_string(*CLIAgentSettings::as_ref(ctx).show_agent_notifications),
             },
             Self::ToggleAsyncFind => TelemetryEvent::FeaturesPageAction {
                 action: "ToggleAsyncFind".to_string(),
@@ -1687,7 +1686,7 @@ impl TypedActionView for FeaturesPageView {
                 ctx.notify();
             }
             ToggleAgentInAppNotifications => {
-                AISettings::handle(ctx).update(ctx, |settings, ctx| {
+                CLIAgentSettings::handle(ctx).update(ctx, |settings, ctx| {
                     report_if_error!(settings.show_agent_notifications.toggle_and_save_value(ctx));
                 });
                 ctx.notify();
@@ -4843,8 +4842,7 @@ impl SettingsWidget for DesktopNotificationsWidget {
         }
 
         if FeatureFlag::HOANotifications.is_enabled() || ChannelState::is_local_only() {
-            let ai_settings = AISettings::as_ref(app);
-            let show_agent_notifications = *ai_settings.show_agent_notifications;
+            let show_agent_notifications = *CLIAgentSettings::as_ref(app).show_agent_notifications;
             column.add_child(render_body_item::<FeaturesPageAction>(
                 "Show in-app agent notifications".into(),
                 None,

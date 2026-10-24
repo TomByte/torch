@@ -306,11 +306,6 @@ impl NotebookCommand {
             && matches!(self.mermaid_display_mode, MarkdownDisplayMode::Rendered)
     }
 
-    #[cfg(feature = "integration_tests")]
-    pub(crate) fn is_shell_command(&self, ctx: &AppContext) -> bool {
-        matches!(self.code_block_type(ctx), CodeBlockType::Shell)
-    }
-
     #[cfg(test)]
     pub fn syntax_highlighting_handle(&self) -> Option<SpawnedFutureHandle> {
         self.syntax_highlighting_handle.clone()

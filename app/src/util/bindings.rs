@@ -46,7 +46,6 @@ pub enum CustomAction {
     Undo,
     Redo,
     CommandPalette,
-    AISearch,
     ClearEditor,
     Find,
     SelectAll,
@@ -104,18 +103,11 @@ pub enum CustomAction {
     WindowsPaste,
     #[cfg(windows)]
     WindowsCopy,
-    /// Also applies to legacy Torch AI (toggles the panel)
-    NewAgentModePane,
-    /// Also applies to legacy Torch AI (attaches the selection to the panel editor)
-    AttachSelectionAsAgentModeContext,
-    OpenAIFactCollection,
     ToggleProjectExplorer,
     OpenRepository,
     NewTerminalTab,
-    NewAgentTab,
     GoToLine,
     ToggleGlobalSearch,
-    ToggleConversationListView,
     ToggleSidebar,
     AgentsPalette,
 }
@@ -269,7 +261,6 @@ pub fn custom_tag_to_keystroke(custom: CustomTag) -> Option<Keystroke> {
         CustomAction::AddCursorAbove => Keystroke::parse("ctrl-shift-up").ok(),
         CustomAction::AddCursorBelow => Keystroke::parse("ctrl-shift-down").ok(),
         CustomAction::CommandPalette => Keystroke::parse(cmd_or_ctrl_shift("p")).ok(),
-        CustomAction::AISearch => Keystroke::parse("ctrl-`").ok(),
         CustomAction::Find => Keystroke::parse(cmd_or_ctrl_shift("f")).ok(),
         CustomAction::SelectAll => Keystroke::parse("cmdorctrl-a").ok(),
         CustomAction::CommandSearch => Keystroke::parse("ctrl-r").ok(),
@@ -394,10 +385,6 @@ pub fn custom_tag_to_keystroke(custom: CustomTag) -> Option<Keystroke> {
         CustomAction::CloseWindow => mac_only_keystroke("cmd-shift-W"),
         CustomAction::CloseCurrentSession => Keystroke::parse(cmd_or_ctrl_shift("w")).ok(),
         CustomAction::ViewChangelog => Keystroke::parse(cmd_or_ctrl_shift("alt-o")).ok(),
-        CustomAction::NewAgentModePane => Keystroke::parse("ctrl-space").ok(),
-        CustomAction::AttachSelectionAsAgentModeContext => {
-            Keystroke::parse("ctrl-shift-space").ok()
-        }
         CustomAction::ToggleProjectExplorer => {
             if OperatingSystem::get().is_mac() {
                 Keystroke::parse("ctrl-1").ok()
@@ -422,13 +409,6 @@ pub fn custom_tag_to_keystroke(custom: CustomTag) -> Option<Keystroke> {
                 Keystroke::parse("alt-3").ok()
             }
         }
-        CustomAction::ToggleConversationListView => {
-            if OperatingSystem::get().is_mac() {
-                Keystroke::parse("ctrl-2").ok()
-            } else {
-                Keystroke::parse("alt-2").ok()
-            }
-        }
         CustomAction::NewTerminalTab
         | CustomAction::NewFile
         | CustomAction::ShowAboutWarp
@@ -445,9 +425,7 @@ pub fn custom_tag_to_keystroke(custom: CustomTag) -> Option<Keystroke> {
         | CustomAction::TriggerWelcomeBlock
         | CustomAction::HistorySearch
         | CustomAction::DisableSyncTerminalInputs
-        | CustomAction::ToggleSyncAllTerminalInputsInAllTabs
-        | CustomAction::OpenAIFactCollection
-        | CustomAction::NewAgentTab => None,
+        | CustomAction::ToggleSyncAllTerminalInputsInAllTabs => None,
     }
 }
 

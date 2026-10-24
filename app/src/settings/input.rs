@@ -142,46 +142,6 @@ define_settings_group!(InputSettings,
             toml_path: "terminal.input.input_box_type_setting",
             description: "The terminal input style.",
         },
-        at_context_menu_in_terminal_mode: AtContextMenuInTerminalMode {
-            type: bool,
-            default: true,
-            supported_platforms: SupportedPlatforms::ALL,
-            sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
-            surface: settings::SettingSurfaces::GUI,
-            private: false,
-            toml_path: "terminal.input.at_context_menu_in_terminal_mode",
-            description: "Whether the @ context menu is available in terminal mode.",
-        },
-        enable_slash_commands_in_terminal: EnableSlashCommandsInTerminal {
-            type: bool,
-            default: true,
-            supported_platforms: SupportedPlatforms::ALL,
-            sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
-            surface: settings::SettingSurfaces::GUI,
-            private: false,
-            toml_path: "terminal.input.enable_slash_commands_in_terminal",
-            description: "Whether slash commands are available in the terminal input.",
-        },
-        enable_ai_command_search_hash_trigger: EnableAiCommandSearchHashTrigger {
-            type: bool,
-            default: true,
-            supported_platforms: SupportedPlatforms::ALL,
-            sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
-            surface: settings::SettingSurfaces::GUI,
-            private: false,
-            toml_path: "terminal.input.enable_ai_command_search_hash_trigger",
-            description: "Whether typing '#' at the start of terminal input opens AI Command Search.",
-        },
-        outline_codebase_symbols_for_at_context_menu: OutlineCodebaseSymbolsForAtContextMenu {
-            type: bool,
-            default: true,
-            supported_platforms: SupportedPlatforms::ALL,
-            sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
-            surface: settings::SettingSurfaces::GUI,
-            private: false,
-            toml_path: "terminal.input.outline_codebase_symbols_for_at_context_menu",
-            description: "Whether codebase symbols appear in the @ context menu.",
-        },
         completions_menu_width: CompletionsMenuWidth {
             type: f32,
             default: 330.,
@@ -197,28 +157,6 @@ define_settings_group!(InputSettings,
             sync_to_cloud: SyncToCloud::Never,
             surface: settings::SettingSurfaces::GUI,
             private: true,
-        },
-        show_agent_tips: ShowAgentTips {
-            type: bool,
-            default: true,
-            supported_platforms: SupportedPlatforms::ALL,
-            sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
-            surface: settings::SettingSurfaces::GUI,
-            private: false,
-            toml_path: "agents.warp_agent.input.show_agent_tips",
-            description: "Whether agent tips are displayed in the input.",
-        },
-        // Whether to show the terminal input message bar (contextual hints at the bottom of terminal input).
-        // Only applicable when FeatureFlag::AgentView is enabled.
-        show_terminal_input_message_bar: ShowTerminalInputMessageBar {
-            type: bool,
-            default: true,
-            supported_platforms: SupportedPlatforms::ALL,
-            sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
-            surface: settings::SettingSurfaces::GUI,
-            private: false,
-            toml_path: "terminal.input.show_terminal_input_message_bar",
-            description: "Whether the terminal input message bar is shown.",
         },
         // Per-menu custom content heights set by drag-to-resize. Not user-visible.
         inline_menu_custom_content_heights: InlineMenuCustomContentHeights {
@@ -273,9 +211,5 @@ impl InputSettings {
 
     pub fn is_classic_input_enabled(&self, app: &AppContext) -> bool {
         self.input_type(app) == InputBoxType::Classic
-    }
-
-    pub fn is_terminal_input_message_bar_enabled(&self) -> bool {
-        *self.show_terminal_input_message_bar
     }
 }

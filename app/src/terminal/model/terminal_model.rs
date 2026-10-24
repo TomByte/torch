@@ -26,11 +26,10 @@ use torchui::image_cache::ImageType;
 use super::super::{AltScreen, BlockList};
 use super::ansi::{BootstrappedValue, FinishUpdateValue, InputBufferValue, Mode, PendingHook};
 use super::block::{
-    AgentInteractionMetadata, Block, BlockId, BlockMetadata, BlockSize, BlockState,
-    BlocklistEnvVarMetadata,
+    Block, BlockId, BlockMetadata, BlockSize, BlockState, BlocklistEnvVarMetadata, SerializedBlock,
 };
 use super::blockgrid::BlockGrid;
-use super::blocks::{ActiveBlockCompletion, BlockFilter};
+use super::blocks::ActiveBlockCompletion;
 use super::grid::grid_handler::{
     ContainsPoint, FragmentBoundary, GridHandler, Link, PossiblePath, TermMode,
 };
@@ -48,7 +47,6 @@ use super::secrets::{RespectObfuscatedSecrets, SecretAndHandle};
 use super::selection::ScrollDelta;
 use super::session::{BootstrapSessionType, InBandCommandOutputReceiver, SessionId};
 use super::{Secret, SecretHandle};
-use crate::ai::blocklist::SerializedBlockListItem;
 use crate::terminal::available_shells::AvailableShell;
 use crate::terminal::block_filter::BlockFilterQuery;
 use crate::terminal::block_list_element::GridType;
@@ -925,7 +923,7 @@ impl TerminalModel {
         event_proxy: ChannelEventListener,
         background_executor: Arc<Background>,
         should_show_bootstrap_block: bool,
-        restored_blocks: Option<&[SerializedBlockListItem]>,
+        restored_blocks: Option<&[SerializedBlock]>,
         honor_ps1: bool,
         is_inverted: bool,
         session_startup_path: Option<PathBuf>,
@@ -945,7 +943,6 @@ impl TerminalModel {
             honor_ps1,
             is_inverted,
             ObfuscateSecrets::No,
-            false,
             session_startup_path,
             ShellLaunchState::ShellSpawned {
                 available_shell: None,
@@ -990,7 +987,7 @@ impl TerminalModel {
 
     #[allow(clippy::too_many_arguments)]
     fn new_internal(
-        restored_blocks: Option<&[SerializedBlockListItem]>,
+        restored_blocks: Option<&[SerializedBlock]>,
         sizes: BlockSize,
         colors: color::List,
         event_proxy: ChannelEventListener,
@@ -1001,7 +998,6 @@ impl TerminalModel {
         honor_ps1: bool,
         is_inverted: bool,
         obfuscate_secrets: ObfuscateSecrets,
-        is_ai_ugc_telemetry_enabled: bool,
         session_startup_path: Option<PathBuf>,
         shell_state: ShellLaunchState,
     ) -> Self {
@@ -1022,7 +1018,6 @@ impl TerminalModel {
             honor_ps1,
             is_inverted,
             obfuscate_secrets,
-            is_ai_ugc_telemetry_enabled,
         );
 
         Self {
@@ -1068,7 +1063,7 @@ impl TerminalModel {
     /// Creates a terminal model for a local terminal session.
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        restored_blocks: Option<&[SerializedBlockListItem]>,
+        restored_blocks: Option<&[SerializedBlock]>,
         sizes: BlockSize,
         colors: color::List,
         event_proxy: ChannelEventListener,
@@ -1079,7 +1074,6 @@ impl TerminalModel {
         honor_ps1: bool,
         is_inverted: bool,
         obfuscate_secrets: ObfuscateSecrets,
-        is_ai_ugc_telemetry_enabled: bool,
         session_startup_path: Option<PathBuf>,
         shell_state: ShellLaunchState,
     ) -> Self {
@@ -1095,7 +1089,6 @@ impl TerminalModel {
             honor_ps1,
             is_inverted,
             obfuscate_secrets,
-            is_ai_ugc_telemetry_enabled,
             session_startup_path,
             shell_state,
         )
@@ -1304,21 +1297,6 @@ impl TerminalModel {
             self.block_list
                 .active_block_mut()
                 .set_env_var_metadata(env_var_metadata);
-        }
-        outcome
-    }
-
-    /// Starts the command execution (per `Self::start_command_execution`) and additionally sets
-    /// the given `ai_metadata` on the active block.
-    pub fn start_command_execution_with_ai_metadata(
-        &mut self,
-        agent_metadata: AgentInteractionMetadata,
-    ) -> StartCommandOutcome {
-        let outcome = self.start_command_execution_for_kind(CommandStartKind::UserOrQueued);
-        if outcome.is_accepted() {
-            self.block_list
-                .active_block_mut()
-                .set_agent_interaction_mode(agent_metadata);
         }
         outcome
     }
@@ -1819,23 +1797,6 @@ impl TerminalModel {
 
     /// Takes accumulated typeahead that should be inserted into a front-end input editor.
     pub fn take_typeahead_for_input(&mut self) -> Option<(String, CharOffset)> {
-        let completed_block_index = self.block_list.prev_matching_block_from_index(
-            BlockFilter {
-                include_hidden: true,
-                include_background: false,
-            },
-            self.block_list.active_block_index(),
-        );
-        let was_entered_during_agent_requested_command =
-            completed_block_index.is_some_and(|index| {
-                self.block_list
-                    .block_at(index)
-                    .is_some_and(|block| block.agent_interaction_metadata().is_some())
-            });
-        if was_entered_during_agent_requested_command {
-            return None;
-        }
-
         let (typeahead, previously_inserted) =
             self.block_list.early_output_mut().advance_typeahead()?;
         Some((typeahead.to_owned(), previously_inserted))

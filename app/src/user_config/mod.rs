@@ -16,7 +16,6 @@ use lazy_static::lazy_static;
 use torch_core::ui::theme::WarpTheme;
 use torchui::{Entity, ModelContext, SingletonEntity};
 
-use crate::ai::custom_model_routers::{CustomModelRouter, ModelConfigError};
 use crate::launch_configs::launch_config::LaunchConfig;
 use crate::tab_configs::{TabConfig, TabConfigError};
 use crate::themes::theme::{ThemeKind, WarpThemeConfig};
@@ -60,12 +59,6 @@ pub enum WarpConfigUpdateEvent {
     /// Emitted when one or more tab config files failed to parse.
     #[cfg_attr(target_family = "wasm", allow(dead_code))]
     TabConfigErrors(Vec<TabConfigError>),
-    /// The local `custom_model_routers/` custom model routers were created, modified, or deleted.
-    #[cfg_attr(not(feature = "local_fs"), allow(dead_code))]
-    ModelConfigs,
-    /// Emitted when one or more `custom_model_routers/` files failed to parse.
-    #[cfg_attr(target_family = "wasm", allow(dead_code))]
-    ModelConfigErrors(Vec<ModelConfigError>),
     /// The settings file (`settings.toml`) was created, modified, or deleted.
     #[cfg_attr(not(feature = "local_fs"), expect(dead_code))]
     Settings,
@@ -92,12 +85,6 @@ pub struct WarpConfig {
     tab_config_errors: Vec<TabConfigError>,
     theme_config: WarpThemeConfig,
     local_user_workflows: Vec<Workflow>,
-    /// User-defined custom model routers loaded from `~/.warp/custom_model_routers/`.
-    #[cfg_attr(target_family = "wasm", allow(dead_code))]
-    custom_model_routers: Vec<CustomModelRouter>,
-    /// Errors for `custom_model_routers/` files that failed to parse.
-    #[cfg_attr(target_family = "wasm", allow(dead_code))]
-    custom_model_router_errors: Vec<ModelConfigError>,
 }
 
 /// Platform-independent parts of WarpConfig.
@@ -127,12 +114,6 @@ impl WarpConfig {
 
     pub fn local_user_workflows(&self) -> &Vec<Workflow> {
         &self.local_user_workflows
-    }
-
-    /// The local (YAML-sourced) custom model routers.
-    #[cfg_attr(target_family = "wasm", allow(dead_code))]
-    pub fn custom_model_routers(&self) -> &Vec<CustomModelRouter> {
-        &self.custom_model_routers
     }
 
     /// Saving the newly created launch configuration to the WarpConfig that we currently
@@ -208,35 +189,11 @@ pub fn tab_configs_dir() -> PathBuf {
     base_dir().join("tab_configs")
 }
 
-/// Returns the path to the directory containing the user's custom model router
-/// configs (`~/.warp/custom_model_routers/`). Each file defines a single router.
-#[cfg_attr(target_family = "wasm", expect(dead_code))]
-pub fn custom_model_routers_dir() -> PathBuf {
-    base_dir().join("custom_model_routers")
-}
-
 /// Returns the path to the directory containing the built-in default tab configs.
 /// These are shipped with Torch and user-editable (Torch does not overwrite modifications).
 #[cfg_attr(target_family = "wasm", expect(dead_code))]
 pub fn default_tab_configs_dir() -> PathBuf {
     base_dir().join("default_tab_configs")
-}
-
-/// Returns whether the path points to a tab config TOML file under one of Torch's
-/// tab config directories.
-#[cfg(feature = "local_fs")]
-pub fn is_tab_config_toml(path: &Path) -> bool {
-    let is_toml = path
-        .extension()
-        .and_then(|extension| extension.to_str())
-        .is_some_and(|extension| extension == "toml");
-    if !is_toml {
-        return false;
-    }
-
-    [tab_configs_dir(), default_tab_configs_dir()]
-        .into_iter()
-        .any(|dir| path.starts_with(dir))
 }
 
 /// Ensures `~/.warp/default_tab_configs/worktree.toml` exists, creating it

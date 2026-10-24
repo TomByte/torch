@@ -7,12 +7,10 @@ cfg_if::cfg_if! {
         use std::sync::Arc;
 
         use parking_lot::FairMutex;
-        use torchui::{ViewContext};
+        use torchui::{EntityId, ViewContext};
 
-        use crate::{
-            ai::blocklist::SerializedBlockListItem, pane_group::TerminalViewResources,
-            resource_center::TipsCompleted,
-        };
+        use crate::{pane_group::TerminalViewResources, resource_center::TipsCompleted};
+        use crate::terminal::model::block::SerializedBlock;
         use crate::terminal::model::session::Sessions;
         use crate::terminal::model_events::ModelEventDispatcher;
         use crate::terminal::view::TORCH_PROMPT_HEIGHT_LINES;
@@ -29,7 +27,7 @@ impl TerminalView {
     #[cfg(test)]
     pub fn new_for_test(
         tips_model: ModelHandle<TipsCompleted>,
-        restored_blocks: Option<&[SerializedBlockListItem]>,
+        restored_blocks: Option<&[SerializedBlock]>,
         ctx: &mut ViewContext<Self>,
     ) -> Self {
         use pathfinder_geometry::vector::vec2f;
@@ -105,8 +103,6 @@ impl TerminalView {
             colors,
             None,
             prompt_type,
-            None,
-            None, // conversation_restoration - not used for test
             None, // inactive_pty_reads_rx - not used for test
             ctx,
         )
@@ -114,6 +110,11 @@ impl TerminalView {
 
     pub fn find_model(&self) -> &ModelHandle<TerminalFindModel> {
         &self.find_model
+    }
+
+    #[cfg(test)]
+    pub fn view_id(&self) -> EntityId {
+        self.view_id
     }
 
     #[cfg(test)]

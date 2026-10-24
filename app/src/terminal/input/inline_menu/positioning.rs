@@ -6,7 +6,6 @@ use torchui::units::{IntoPixels, Pixels};
 use torchui::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity, WindowId};
 
 use super::styles::{HEADER_BORDER, HEADER_ROW_HEIGHT};
-use crate::ai::blocklist::agent_view::AgentViewController;
 use crate::appearance::Appearance;
 use crate::settings::{InputModeSettings, InputSettings};
 use crate::terminal::block_list_viewport::InputMode;
@@ -46,7 +45,6 @@ pub struct InlineMenuPositioner {
     window_id: WindowId,
     should_render_below_input: bool,
     suggestions_mode_model: ModelHandle<InputSuggestionsModeModel>,
-    agent_view_controller: ModelHandle<AgentViewController>,
     /// Per-menu custom content heights, set by resize.
     custom_content_heights: HashMap<InlineMenuType, f32>,
 }
@@ -54,7 +52,6 @@ pub struct InlineMenuPositioner {
 impl InlineMenuPositioner {
     pub fn new(
         suggestions_mode_model: &ModelHandle<InputSuggestionsModeModel>,
-        agent_view_controller: &ModelHandle<AgentViewController>,
         terminal_content_position_id: String,
         input_save_position_id: String,
         size_info: SizeInfo,
@@ -68,26 +65,22 @@ impl InlineMenuPositioner {
         ctx.subscribe_to_model(suggestions_mode_model, |me, _, _, ctx| {
             let suggestions_mode_model = me.suggestions_mode_model.as_ref(ctx);
             if suggestions_mode_model.is_inline_menu_open() {
-                if me.agent_view_controller.as_ref(ctx).is_active() {
-                    me.should_render_below_input = false;
-                } else {
-                    match *InputModeSettings::as_ref(ctx).input_mode {
-                        InputMode::PinnedToBottom => {
-                            me.should_render_below_input = false;
-                        }
-                        InputMode::PinnedToTop => me.should_render_below_input = true,
-                        InputMode::Waterfall => {
-                            let terminal_view_height = element_size_at_last_frame(
-                                &me.terminal_content_position_id,
-                                me.window_id,
-                                ctx,
-                            )
-                            .map(|size| size.y())
-                            .unwrap_or(me.size_info.pane_height_px().as_f32());
+                match *InputModeSettings::as_ref(ctx).input_mode {
+                    InputMode::PinnedToBottom => {
+                        me.should_render_below_input = false;
+                    }
+                    InputMode::PinnedToTop => me.should_render_below_input = true,
+                    InputMode::Waterfall => {
+                        let terminal_view_height = element_size_at_last_frame(
+                            &me.terminal_content_position_id,
+                            me.window_id,
+                            ctx,
+                        )
+                        .map(|size| size.y())
+                        .unwrap_or(me.size_info.pane_height_px().as_f32());
 
-                            me.should_render_below_input = terminal_view_height
-                                < me.inline_menu_height(ctx) + me.menu_frame_height(ctx);
-                        }
+                        me.should_render_below_input = terminal_view_height
+                            < me.inline_menu_height(ctx) + me.menu_frame_height(ctx);
                     }
                 }
                 ctx.emit(Updated::Repositioned);
@@ -100,7 +93,6 @@ impl InlineMenuPositioner {
             input_save_position_id,
             window_id,
             suggestions_mode_model: suggestions_mode_model.clone(),
-            agent_view_controller: agent_view_controller.clone(),
             should_render_below_input: false,
             custom_content_heights: persisted_heights,
         }
@@ -219,11 +211,7 @@ impl InlineMenuPositioner {
         } else {
             0.
         };
-        if self.agent_view_controller.as_ref(app).is_active() {
-            header_height
-        } else {
-            header_height + standard_message_bar_height(app) + INLINE_MENU_BORDER_WIDTH
-        }
+        header_height + standard_message_bar_height(app) + INLINE_MENU_BORDER_WIDTH
     }
 
     /// Applies a resize delta to the given menu type's content height, clamping to the

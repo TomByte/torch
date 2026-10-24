@@ -817,13 +817,8 @@ fn status_urgency(status: Option<&ConversationStatus>, unread: bool) -> u8 {
         Some(ConversationStatus::Blocked { .. }) => 4,
         Some(ConversationStatus::InProgress) => 3,
         Some(ConversationStatus::Success) if unread => 2,
-        Some(ConversationStatus::Error | ConversationStatus::TransientError) => 1,
-        Some(
-            ConversationStatus::Success
-            | ConversationStatus::Cancelled
-            | ConversationStatus::WaitingForEvents,
-        )
-        | None => 0,
+        Some(ConversationStatus::Error) => 1,
+        Some(ConversationStatus::Success) | None => 0,
     }
 }
 
@@ -1453,12 +1448,7 @@ fn session_indicator(
         Some(ConversationStatus::Blocked { .. }) => SessionIndicator::NeedsInput,
         Some(ConversationStatus::Success) if unread => SessionIndicator::UnreadComplete,
         Some(ConversationStatus::Success) => SessionIndicator::Complete,
-        Some(ConversationStatus::Error | ConversationStatus::TransientError) => {
-            SessionIndicator::Failed
-        }
-        Some(ConversationStatus::Cancelled | ConversationStatus::WaitingForEvents) => {
-            SessionIndicator::Idle
-        }
+        Some(ConversationStatus::Error) => SessionIndicator::Failed,
         None if agent_status_unavailable => SessionIndicator::Unknown,
         None => SessionIndicator::Idle,
     }

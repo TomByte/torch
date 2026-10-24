@@ -20,7 +20,6 @@ use lsp::{
 use lsp_types::FormattingOptions;
 use markdown_parser::FormattedText;
 use num_traits::SaturatingSub;
-use pathfinder_color::ColorU;
 use pathfinder_geometry::rect::RectF;
 use pathfinder_geometry::vector::Vector2F;
 use remote_server::manager::RemoteServerManager;
@@ -28,7 +27,6 @@ use remote_server::manager::RemoteServerManager;
 use repo_metadata::repositories::DetectedRepositories;
 use string_offset::CharOffset;
 use torch_core::r#async::debounce;
-use torch_core::features::FeatureFlag;
 use torch_core::ui::appearance::Appearance;
 use torch_core::ui::icons::Icon;
 use torch_editor::content::buffer::InitialBufferState;
@@ -41,10 +39,10 @@ use torch_util::local_or_remote_path::LocalOrRemotePath;
 use torch_util::path::to_relative_path;
 use torch_util::sync::Condition;
 use torchui::elements::{
-    Border, ChildAnchor, ChildView, ClippedScrollStateHandle, ConstrainedBox, Container,
-    CornerRadius, CrossAxisAlignment, DropShadow, Flex, Hoverable, MainAxisAlignment, MainAxisSize,
-    MouseStateHandle, OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius,
-    Rect, Shrinkable, Stack, Text,
+    ChildAnchor, ChildView, ClippedScrollStateHandle, ConstrainedBox, Container, CornerRadius,
+    CrossAxisAlignment, Flex, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle,
+    OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Rect, Shrinkable,
+    Stack, Text,
 };
 use torchui::keymap::FixedBinding;
 use torchui::keymap::macros::*;
@@ -59,7 +57,6 @@ use torchui::{
 use vec1::Vec1;
 use vim::vim::{MotionType, VimMode};
 
-use crate::ai::persisted_workspace::{PersistedWorkspace, PersistedWorkspaceEvent};
 use crate::code::buffer_location::LocalOrRemotePath as BufferFileLocation;
 use crate::code::editor::EditorReviewComment;
 use crate::code::editor::model::HoverableLink;
@@ -68,15 +65,9 @@ use crate::code::global_buffer_model::{BufferState, GlobalBufferModel, GlobalBuf
 use crate::code::{SaveOutcome, ShowFindReferencesCardProvider};
 use crate::code_review::comments::CommentId;
 use crate::menu::{Event, Menu, MenuItem, MenuItemFields};
-use crate::settings::{AISettings, CodeSettings};
+use crate::persisted_workspace::{LspTask, PersistedWorkspace, PersistedWorkspaceEvent};
+use crate::settings::CodeSettings;
 use crate::terminal::TerminalView;
-
-const DROP_SHADOW_COLOR: ColorU = ColorU {
-    r: 0,
-    g: 0,
-    b: 0,
-    a: 48,
-};
 
 const HOVER_DEBOUNCE_PERIOD: Duration = Duration::from_millis(500);
 
@@ -87,7 +78,6 @@ const AUTO_SAVE_DEBOUNCE_PERIOD: Duration = Duration::from_millis(1000);
 use torch_core::send_telemetry_from_ctx;
 
 use super::ImmediateSaveError;
-use super::diff_viewer::DiffViewer;
 use super::editor::scroll::{ScrollPosition, ScrollTrigger};
 use super::editor::view::{CodeEditorEvent, CodeEditorView};
 use super::find_references_view::{FindReferencesView, FindReferencesViewEvent};
@@ -118,8 +108,6 @@ pub enum LocalCodeEditorEvent {
     FailedToSave {
         error: Arc<FileSaveError>,
     },
-    DiffAccepted,
-    DiffRejected,
     /// Emitted when a user presses Escape in Vim Normal mode inside the embedded editor.
     VimMinimizeRequested,
     /// Emitted when a user edits the file.
@@ -162,9 +150,6 @@ pub enum LocalCodeEditorEvent {
     OpenLspLogs {
         log_path: PathBuf,
     },
-    RunTabConfigSkill {
-        path: PathBuf,
-    },
     DelayedRenderingFlushed,
 }
 
@@ -177,12 +162,9 @@ struct LoadedFileMetadata {
 
 use torch_errors::report_error;
 
-pub use super::diff_viewer::DisplayMode;
-
 type TerminalTargetFn = dyn Fn(WindowId, &AppContext) -> Option<ViewHandle<TerminalView>>;
 
 struct SelectionAsContextTooltip {
-    mouse_state: MouseStateHandle,
     terminal_target_fn: Box<TerminalTargetFn>,
 }
 
@@ -323,7 +305,6 @@ impl LocalCodeEditorView {
         editor: ViewHandle<CodeEditorView>,
         diff_type: Option<DiffType>,
         enable_diff_nav_by_default: bool,
-        display_mode: Option<DisplayMode>,
         ctx: &mut ViewContext<Self>,
     ) -> Self {
         let context_menu = ctx.add_typed_action_view(|_| {
@@ -509,7 +490,7 @@ impl LocalCodeEditorView {
             Self::handle_window_focus_change,
         );
 
-        let model = Self {
+        Self {
             editor,
             diff_type,
             is_new_file,
@@ -534,12 +515,7 @@ impl LocalCodeEditorView {
             processed_diagnostics: Vec::new(),
             diagnostic_decorations: Vec::new(),
             find_references_view: None,
-        };
-
-        if let Some(display_mode) = display_mode {
-            model.set_display_mode(display_mode, ctx);
         }
-        model
     }
 
     /// Calls LSP goto_definition and spawns a callback with the result.
@@ -947,7 +923,6 @@ impl LocalCodeEditorView {
             // If the LSP is not registered, try to start it via PersistedWorkspace.
             #[cfg(feature = "local_fs")]
             {
-                use crate::ai::persisted_workspace::LspTask;
                 PersistedWorkspace::handle(ctx).update(ctx, |workspace, ctx| {
                     workspace.execute_lsp_task(LspTask::Spawn { file_path: path }, ctx);
                 });
@@ -1314,7 +1289,6 @@ impl LocalCodeEditorView {
         location: BufferFileLocation,
         editor_constructor: T,
         enable_diff_nav_by_default: bool,
-        display_mode: Option<DisplayMode>,
         ctx: &mut ViewContext<Self>,
     ) -> Self
     where
@@ -1344,8 +1318,7 @@ impl LocalCodeEditorView {
             }
         }
 
-        let mut local_editor =
-            Self::new(editor, None, enable_diff_nav_by_default, display_mode, ctx);
+        let mut local_editor = Self::new(editor, None, enable_diff_nav_by_default, ctx);
 
         local_editor.metadata = Some(LoadedFileMetadata {
             id: file_id,
@@ -1413,10 +1386,7 @@ impl LocalCodeEditorView {
         mut self,
         terminal_target_fn: Box<TerminalTargetFn>,
     ) -> Self {
-        self.selection_as_context_tooltip = Some(SelectionAsContextTooltip {
-            mouse_state: Default::default(),
-            terminal_target_fn,
-        });
+        self.selection_as_context_tooltip = Some(SelectionAsContextTooltip { terminal_target_fn });
         self
     }
 
@@ -1438,9 +1408,6 @@ impl LocalCodeEditorView {
             let footer =
                 ctx.add_typed_action_view(|ctx| CodeFooterView::new(path.to_path_buf(), ctx));
             ctx.subscribe_to_view(&footer, |_, _, event, ctx| match event {
-                CodeFooterViewEvent::RunTabConfigSkill { path } => {
-                    ctx.emit(LocalCodeEditorEvent::RunTabConfigSkill { path: path.clone() });
-                }
                 CodeFooterViewEvent::EnableLSP { path, .. } => {
                     Self::enable_lsp_for_path(path, ctx);
                 }
@@ -1517,8 +1484,6 @@ impl LocalCodeEditorView {
     /// 5. Starting the LSP server via PersistedWorkspace
     #[cfg(feature = "local_fs")]
     fn enable_lsp_for_path(path: &Path, ctx: &mut ViewContext<Self>) {
-        use crate::ai::persisted_workspace::LspTask;
-
         // Get the language ID from the file path
         let Some(language_id) = LanguageId::from_path(path) else {
             log::warn!("Enable lsp for path should only work for supported file paths");
@@ -1562,8 +1527,6 @@ impl LocalCodeEditorView {
     /// and emits events that are handled by handle_persisted_workspace_event.
     #[cfg(feature = "local_fs")]
     fn install_and_enable_lsp_for_path(path: &Path, ctx: &mut ViewContext<Self>) {
-        use crate::ai::persisted_workspace::LspTask;
-
         let Some(language_id) = LanguageId::from_path(path) else {
             log::warn!("Install and enable lsp for path should only work for supported file paths");
             return;
@@ -1920,11 +1883,6 @@ impl LocalCodeEditorView {
         self.editor.as_ref(ctx).scroll_fraction(ctx)
     }
 
-    /// Marks the pending diff as accepted.
-    pub fn accept_diff(&mut self, ctx: &mut ViewContext<Self>) {
-        ctx.emit(LocalCodeEditorEvent::DiffAccepted);
-    }
-
     pub fn close_find_bar(&mut self, should_focus_editor: bool, ctx: &mut ViewContext<Self>) {
         self.editor.update(ctx, |editor, ctx| {
             editor.close_find_bar(should_focus_editor, ctx);
@@ -1956,90 +1914,6 @@ impl LocalCodeEditorView {
         } else {
             None
         }
-    }
-
-    fn render_selection_tooltip(&self, app: &AppContext) -> Option<Box<dyn Element>> {
-        // If there's a single selection and an active terminal view, we want to give the user an option to add the selection as context.
-        self.selection_as_context_tooltip
-            .as_ref()
-            .and_then(|selection_as_context_tooltip| {
-                if self.editor.as_ref(app).selected_lines(app).is_some()
-                    && self.file_path_relative_to_terminal_view(app).is_some()
-                {
-                    let appearance = Appearance::as_ref(app);
-                    let theme = appearance.theme();
-                    let modifier_keys = if cfg!(target_os = "macos") {
-                        "⌘L"
-                    } else {
-                        "Ctrl-L"
-                    };
-
-                    let mut row = Flex::row()
-                        .with_cross_axis_alignment(CrossAxisAlignment::Center)
-                        .with_main_axis_alignment(MainAxisAlignment::Center)
-                        .with_main_axis_size(MainAxisSize::Min);
-                    row.add_child(
-                        Shrinkable::new(
-                            1.,
-                            Text::new_inline(
-                                "Add as context",
-                                appearance.ui_font_family(),
-                                appearance.ui_font_size(),
-                            )
-                            .with_color(theme.active_ui_text_color().into())
-                            .finish(),
-                        )
-                        .finish(),
-                    );
-                    row.add_child(
-                        Container::new(
-                            Text::new_inline(
-                                modifier_keys,
-                                appearance.ui_font_family(),
-                                appearance.ui_font_size() * 0.75,
-                            )
-                            .with_color(theme.disabled_ui_text_color().into())
-                            .finish(),
-                        )
-                        .with_margin_left(8.)
-                        .finish(),
-                    );
-
-                    Some(
-                        Hoverable::new(selection_as_context_tooltip.mouse_state.clone(), |state| {
-                            let background_color = if state.is_hovered() {
-                                theme.surface_2()
-                            } else {
-                                theme.surface_1()
-                            };
-                            let internal_container = Container::new(row.finish())
-                                .with_padding_left(12.)
-                                .with_padding_right(12.)
-                                .with_padding_top(4.)
-                                .with_padding_bottom(4.)
-                                .finish();
-                            Container::new(internal_container)
-                                .with_background(background_color)
-                                .with_padding_top(4.)
-                                .with_padding_bottom(4.)
-                                .with_corner_radius(CornerRadius::with_all(Radius::Pixels(4.)))
-                                .with_border(Border::all(1.5).with_border_fill(theme.surface_2()))
-                                .with_drop_shadow(DropShadow::new_with_standard_offset_and_spread(
-                                    DROP_SHADOW_COLOR,
-                                ))
-                                .finish()
-                        })
-                        .on_click(move |ctx, _app, _pos| {
-                            ctx.dispatch_typed_action(
-                                LocalCodeEditorAction::InsertSelectedTextToInput,
-                            );
-                        })
-                        .finish(),
-                    )
-                } else {
-                    None
-                }
-            })
     }
 
     fn insert_selected_text_to_input(&mut self, ctx: &mut ViewContext<Self>) {
@@ -2203,24 +2077,6 @@ impl LocalCodeEditorView {
     }
 }
 
-impl DiffViewer for LocalCodeEditorView {
-    fn editor(&self) -> &ViewHandle<CodeEditorView> {
-        &self.editor
-    }
-
-    fn diff(&self) -> Option<&DiffType> {
-        self.diff_type.as_ref()
-    }
-
-    fn was_edited(&self) -> bool {
-        self.was_edited
-    }
-
-    fn reject_diff(&mut self, ctx: &mut ViewContext<Self>) {
-        ctx.emit(LocalCodeEditorEvent::DiffRejected);
-    }
-}
-
 impl Entity for LocalCodeEditorView {
     type Event = LocalCodeEditorEvent;
 }
@@ -2300,20 +2156,6 @@ impl View for LocalCodeEditorView {
             .with_child(base_with_handler);
 
         let editor = self.editor().as_ref(app);
-        if self.selection_as_context_tooltip.is_some() {
-            // When a single terminal exists in the window and the user has made a selection (but isn't currently selecting),
-            // we render a tooltip that allows them to add the selected text to the terminal context.
-            let is_ai_enabled = AISettings::as_ref(app).is_any_ai_enabled(app);
-            if is_ai_enabled
-                && FeatureFlag::SelectionAsContext.is_enabled()
-                && !editor.is_selecting()
-            {
-                let tooltip = self.render_selection_tooltip(app);
-                if let Some(tooltip) = tooltip {
-                    stack.add_positioned_child(tooltip, editor.selection_position_anchor(app))
-                }
-            }
-        }
 
         // Render context menu if open
         if self.context_menu_state.is_open {

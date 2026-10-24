@@ -15,7 +15,7 @@ use super::{
     code_detail_kind_label, compact_branch_subtitle_display, detail_sidecar_width_and_bounds,
     detail_target_for_hovered_row, group_display_name, group_name_highlight_indices,
     matched_group_ids, merge_group_name_matches, non_terminal_search_text_fragments,
-    pane_ids_for_display_granularity, pane_search_text_fragments, preferred_agent_tab_titles,
+    pane_ids_for_display_granularity, pane_search_text_fragments, preferred_cli_agent_title,
     push_normalized_unique_summary_label, search_fragments_contain_query,
     select_summary_pane_kind_icons, should_keep_detail_sidecar_visible_for_mouse_position,
     should_show_tab_group_header, shows_synced_inputs_indicator,
@@ -67,10 +67,7 @@ fn summary_pane_kind_icons_pick_two_oldest_distinct_pane_kinds() {
         select_summary_pane_kind_icons([
             (EntityId::from_usize(30), SummaryPaneKind::Terminal),
             (EntityId::from_usize(20), code_summary_kind("main.rs")),
-            (
-                EntityId::from_usize(40),
-                SummaryPaneKind::Notebook { is_plan: false },
-            ),
+            (EntityId::from_usize(40), SummaryPaneKind::Notebook,),
             (EntityId::from_usize(10), SummaryPaneKind::Terminal),
         ]),
         Some(SummaryPaneKindIcons::Pair {
@@ -103,77 +100,54 @@ fn summary_pane_kind_icons_distinguish_agent_terminals_from_plain_terminals() {
                 EntityId::from_usize(20),
                 SummaryPaneKind::CLIAgent {
                     agent: CLIAgent::Claude,
-                    is_ambient: false,
                 },
-            ),
-            (
-                EntityId::from_usize(30),
-                SummaryPaneKind::OzAgent { is_ambient: false },
             ),
         ]),
         Some(SummaryPaneKindIcons::Pair {
             primary: SummaryPaneKind::Terminal,
             secondary: SummaryPaneKind::CLIAgent {
                 agent: CLIAgent::Claude,
-                is_ambient: false,
             },
         })
     );
 }
 
-#[test]
-fn preferred_agent_tab_titles_default_to_title_like_text() {
-    let agent_text = TerminalAgentText {
-        conversation_display_title: Some("Generated Torch Agent title".to_string()),
-        conversation_latest_user_prompt: Some("Latest Torch Agent prompt".to_string()),
-        cli_agent_title: Some("CLI summary".to_string()),
-        cli_agent_latest_user_prompt: Some("Latest CLI prompt".to_string()),
-        is_oz_agent: true,
+fn cli_agent_text(title: Option<&str>, latest_user_prompt: Option<&str>) -> TerminalAgentText {
+    TerminalAgentText {
+        cli_agent_title: title.map(str::to_string),
+        cli_agent_latest_user_prompt: latest_user_prompt.map(str::to_string),
         cli_agent: Some(CLIAgent::Claude),
-    };
+    }
+}
+
+#[test]
+fn preferred_cli_agent_title_defaults_to_title_like_text() {
+    let agent_text = cli_agent_text(Some("CLI summary"), Some("Latest CLI prompt"));
 
     assert_eq!(
-        preferred_agent_tab_titles(&agent_text, AgentTabTextPreference::ConversationTitle),
-        (
-            Some("Generated Torch Agent title".to_string()),
-            Some("CLI summary".to_string())
-        )
+        preferred_cli_agent_title(&agent_text, AgentTabTextPreference::ConversationTitle),
+        Some("CLI summary".to_string())
     );
 }
 
 #[test]
-fn preferred_agent_tab_titles_do_not_use_cli_prompt_when_disabled() {
-    let agent_text = TerminalAgentText {
-        conversation_display_title: None,
-        conversation_latest_user_prompt: None,
-        cli_agent_title: None,
-        cli_agent_latest_user_prompt: Some("Latest CLI prompt".to_string()),
-        is_oz_agent: false,
-        cli_agent: Some(CLIAgent::Claude),
-    };
+fn preferred_cli_agent_title_does_not_use_prompt_when_disabled() {
+    let agent_text = cli_agent_text(None, Some("Latest CLI prompt"));
 
     assert_eq!(
-        preferred_agent_tab_titles(&agent_text, AgentTabTextPreference::ConversationTitle),
-        (None, None)
+        preferred_cli_agent_title(&agent_text, AgentTabTextPreference::ConversationTitle),
+        None
     );
 }
 
 #[test]
 fn terminal_primary_line_uses_terminal_title_when_disabled_cli_has_only_prompt() {
-    let agent_text = TerminalAgentText {
-        conversation_display_title: None,
-        conversation_latest_user_prompt: None,
-        cli_agent_title: None,
-        cli_agent_latest_user_prompt: Some("Latest CLI prompt".to_string()),
-        is_oz_agent: false,
-        cli_agent: Some(CLIAgent::Claude),
-    };
-    let (conversation_title, cli_title) =
-        preferred_agent_tab_titles(&agent_text, AgentTabTextPreference::ConversationTitle);
+    let agent_text = cli_agent_text(None, Some("Latest CLI prompt"));
+    let cli_title =
+        preferred_cli_agent_title(&agent_text, AgentTabTextPreference::ConversationTitle);
 
     let line = terminal_primary_line_data(
         false,
-        conversation_title,
         cli_title,
         "Generated Claude Code title",
         "~/warp",
@@ -192,41 +166,23 @@ fn terminal_primary_line_uses_terminal_title_when_disabled_cli_has_only_prompt()
 }
 
 #[test]
-fn preferred_agent_tab_titles_use_latest_prompt_when_enabled() {
-    let agent_text = TerminalAgentText {
-        conversation_display_title: Some("Generated Torch Agent title".to_string()),
-        conversation_latest_user_prompt: Some("Latest Torch Agent prompt".to_string()),
-        cli_agent_title: Some("CLI summary".to_string()),
-        cli_agent_latest_user_prompt: Some("Latest CLI prompt".to_string()),
-        is_oz_agent: true,
-        cli_agent: Some(CLIAgent::Claude),
-    };
+fn preferred_cli_agent_title_uses_latest_prompt_when_enabled() {
+    let agent_text = cli_agent_text(Some("CLI summary"), Some("Latest CLI prompt"));
 
     assert_eq!(
-        preferred_agent_tab_titles(&agent_text, AgentTabTextPreference::LatestUserPrompt),
-        (
-            Some("Latest Torch Agent prompt".to_string()),
-            Some("Latest CLI prompt".to_string())
-        )
+        preferred_cli_agent_title(&agent_text, AgentTabTextPreference::LatestUserPrompt),
+        Some("Latest CLI prompt".to_string())
     );
 }
 
 #[test]
 fn terminal_primary_line_uses_cli_prompt_when_enabled_cli_has_prompt() {
-    let agent_text = TerminalAgentText {
-        conversation_display_title: None,
-        conversation_latest_user_prompt: None,
-        cli_agent_title: None,
-        cli_agent_latest_user_prompt: Some("Latest CLI prompt".to_string()),
-        is_oz_agent: false,
-        cli_agent: Some(CLIAgent::Claude),
-    };
-    let (conversation_title, cli_title) =
-        preferred_agent_tab_titles(&agent_text, AgentTabTextPreference::LatestUserPrompt);
+    let agent_text = cli_agent_text(None, Some("Latest CLI prompt"));
+    let cli_title =
+        preferred_cli_agent_title(&agent_text, AgentTabTextPreference::LatestUserPrompt);
 
     let line = terminal_primary_line_data(
         false,
-        conversation_title,
         cli_title,
         "Generated Claude Code title",
         "~/warp",
@@ -239,20 +195,12 @@ fn terminal_primary_line_uses_cli_prompt_when_enabled_cli_has_prompt() {
 
 #[test]
 fn terminal_primary_line_uses_cli_prompt_when_enabled_cli_is_long_running() {
-    let agent_text = TerminalAgentText {
-        conversation_display_title: None,
-        conversation_latest_user_prompt: None,
-        cli_agent_title: None,
-        cli_agent_latest_user_prompt: Some("Latest CLI prompt".to_string()),
-        is_oz_agent: false,
-        cli_agent: Some(CLIAgent::Claude),
-    };
-    let (conversation_title, cli_title) =
-        preferred_agent_tab_titles(&agent_text, AgentTabTextPreference::LatestUserPrompt);
+    let agent_text = cli_agent_text(None, Some("Latest CLI prompt"));
+    let cli_title =
+        preferred_cli_agent_title(&agent_text, AgentTabTextPreference::LatestUserPrompt);
 
     let line = terminal_primary_line_data(
         true,
-        conversation_title,
         cli_title,
         "Generated Claude Code title",
         "~/warp",
@@ -264,22 +212,12 @@ fn terminal_primary_line_uses_cli_prompt_when_enabled_cli_is_long_running() {
 }
 
 #[test]
-fn preferred_agent_tab_titles_fall_back_when_preferred_text_is_missing() {
-    let agent_text = TerminalAgentText {
-        conversation_display_title: Some("Generated Torch Agent title".to_string()),
-        conversation_latest_user_prompt: None,
-        cli_agent_title: None,
-        cli_agent_latest_user_prompt: Some("Latest CLI prompt".to_string()),
-        is_oz_agent: true,
-        cli_agent: Some(CLIAgent::Claude),
-    };
+fn preferred_cli_agent_title_falls_back_when_preferred_text_is_missing() {
+    let agent_text = cli_agent_text(Some("CLI summary"), None);
 
     assert_eq!(
-        preferred_agent_tab_titles(&agent_text, AgentTabTextPreference::LatestUserPrompt),
-        (
-            Some("Generated Torch Agent title".to_string()),
-            Some("Latest CLI prompt".to_string())
-        )
+        preferred_cli_agent_title(&agent_text, AgentTabTextPreference::LatestUserPrompt),
+        Some("CLI summary".to_string())
     );
 }
 
@@ -626,7 +564,6 @@ fn tab_group_header_distinguishes_two_auto_named_multi_pane_tabs() {
 fn terminal_primary_line_prefers_cli_agent_display_title() {
     let line = terminal_primary_line_data(
         false,
-        None,
         Some("Review the failing tests".to_string()),
         "~/warp",
         "~/warp",
@@ -638,25 +575,9 @@ fn terminal_primary_line_prefers_cli_agent_display_title() {
 }
 
 #[test]
-fn terminal_primary_line_prefers_cli_agent_display_title_over_conversation_title() {
-    let line = terminal_primary_line_data(
-        false,
-        Some("Review the failing tests".to_string()),
-        Some("Summarize the failures".to_string()),
-        "~/warp",
-        "~/warp",
-        TerminalPrimaryLineFont::Monospace,
-        Some("cargo nextest run".to_string()),
-    );
-
-    assert_eq!(line.text(), "Summarize the failures");
-}
-
-#[test]
 fn terminal_primary_line_falls_through_to_terminal_title_when_cli_agent_has_no_plugin_data() {
     let line = terminal_primary_line_data(
         false,
-        None,
         None,
         "codex - ~/warp",
         "~/warp",
@@ -672,7 +593,6 @@ fn terminal_primary_line_uses_terminal_title_as_fallback() {
     let line = terminal_primary_line_data(
         false,
         None,
-        None,
         "nvim src/workspace/view/vertical_tabs.rs",
         "~/warp",
         TerminalPrimaryLineFont::Monospace,
@@ -687,7 +607,6 @@ fn terminal_primary_line_uses_last_completed_command_when_shell_title_matches_wo
     let line = terminal_primary_line_data(
         false,
         None,
-        None,
         "~/warp",
         "~/warp",
         TerminalPrimaryLineFont::Monospace,
@@ -701,7 +620,6 @@ fn terminal_primary_line_uses_last_completed_command_when_shell_title_matches_wo
 fn terminal_primary_line_falls_back_to_new_session() {
     let line = terminal_primary_line_data(
         false,
-        None,
         None,
         "~/warp",
         "~/warp",
@@ -724,7 +642,6 @@ fn terminal_primary_line_uses_monospace_for_last_completed_command() {
     let line = terminal_primary_line_data(
         false,
         None,
-        None,
         "~/warp",
         "~/warp",
         TerminalPrimaryLineFont::Monospace,
@@ -746,7 +663,7 @@ fn terminal_search_fragments_include_rendered_terminal_badges() {
         "Review the failing tests".to_string(),
         "~/warp".to_string(),
         Some("main".to_string()),
-        terminal_kind_badge_label(false, Some(CLIAgent::Claude)),
+        terminal_kind_badge_label(Some(CLIAgent::Claude)),
         Some(terminal_pull_request_badge_label(
             "https://github.com/TomByte/torch/pull/12345",
         )),

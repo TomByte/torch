@@ -14,7 +14,7 @@ use torchui::{SingletonEntity, ViewContext};
 
 use crate::code_review::git_dialog::{
     GitDialog, GitDialogAction, GitDialogEvent, GitDialogMode, render_branch_section,
-    render_file_changes_box, should_send_git_ops_ai_request, show_toast, user_facing_git_error,
+    render_file_changes_box, show_toast, user_facing_git_error,
 };
 use crate::code_review::telemetry_event::{
     CodeReviewTelemetryEvent, GitDialogStatus, GitOperationKind,
@@ -120,14 +120,10 @@ pub(super) fn start_confirm(me: &mut GitDialog, ctx: &mut ViewContext<GitDialog>
         return;
     };
     let branch_name = me.branch_name().to_string();
-    // AI-generate the PR title/body when the user has it enabled; falls back to
-    // `gh pr create --fill`.
-    let autogenerate_content = should_send_git_ops_ai_request(ctx);
-
     me.set_loading(loading_label_for(), ctx);
 
     me.diff_state_model().update(ctx, |m, ctx| {
-        m.create_pr(branch_name, autogenerate_content, ctx);
+        m.create_pr(branch_name, ctx);
     });
 }
 

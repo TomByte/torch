@@ -3,7 +3,6 @@ use std::sync::Arc;
 
 use num_traits::Float as _;
 use parking_lot::FairMutex;
-use pathfinder_geometry::vector::vec2f;
 use torch_core::features::FeatureFlag;
 use torch_util::user_input::UserInput;
 use torchui::elements::Point as UiPoint;
@@ -11,13 +10,11 @@ use torchui::event::{DispatchedEvent, InBoundsExt, KeyState, ModifiersState};
 use torchui::fonts::Properties;
 use torchui::geometry::rect::RectF;
 use torchui::geometry::vector::Vector2F;
-use torchui::platform::keyboard::KeyCode;
 use torchui::text::SelectionType;
 use torchui::units::{IntoLines, IntoPixels, Lines, Pixels};
 use torchui::{
-    AfterLayoutContext, AppContext, ClipBounds, Element, EntityId, Event, EventContext,
-    LayoutContext, ModelHandle, PaintContext, SizeConstraint, end_trace, record_trace_event,
-    start_trace,
+    AfterLayoutContext, AppContext, Element, EntityId, Event, EventContext, LayoutContext,
+    ModelHandle, PaintContext, SizeConstraint, end_trace, record_trace_event, start_trace,
 };
 use vec1::Vec1;
 
@@ -45,9 +42,6 @@ use crate::terminal::view::{
 };
 use crate::terminal::{SizeInfo, TerminalModel, grid_renderer, should_right_click_paste};
 
-const CLI_SUBAGENT_HORIZONTAL_MARGIN: f32 = 8.;
-const CLI_SUBAGENT_VERTICAL_MARGIN: f32 = 8.;
-
 pub struct AltScreenElement {
     model: Arc<FairMutex<TerminalModel>>,
     find_model: ModelHandle<TerminalFindModel>,
@@ -71,14 +65,6 @@ pub struct AltScreenElement {
     selection_range: Option<Vec1<Range<Point>>>,
 
     visible_lines: Option<Lines>,
-
-    cursor_hint_text: Option<Box<dyn Element>>,
-
-    cli_subagent_view: Option<Box<dyn Element>>,
-
-    /// Voice input toggle key code for CLI agent footer integration.
-    #[cfg_attr(not(feature = "voice_input"), allow(unused))]
-    voice_input_toggle_key_code: Option<KeyCode>,
 }
 
 impl AltScreenElement {
@@ -90,8 +76,6 @@ impl AltScreenElement {
         enforce_minimum_contrast: EnforceMinimumContrast,
         selection_range: Option<Vec1<Range<Point>>>,
         appearance: &Appearance,
-        cursor_hint_text: Option<Box<dyn Element>>,
-        cli_subagent_view: Option<Box<dyn Element>>,
     ) -> Self {
         let highlighted_url = terminal_view_render_context
             .highlighted_url
@@ -141,9 +125,6 @@ impl AltScreenElement {
                 hide_cursor_cell: false,
             },
             visible_lines: None,
-            cursor_hint_text,
-            cli_subagent_view,
-            voice_input_toggle_key_code: None,
         }
     }
 
@@ -154,13 +135,6 @@ impl AltScreenElement {
 
     pub fn with_hide_cursor_cell(mut self) -> Self {
         self.grid_render_params.hide_cursor_cell = true;
-        self
-    }
-
-    /// Sets the voice input toggle key code for CLI agent footer integration.
-    #[cfg(feature = "voice_input")]
-    pub fn with_voice_input_toggle_key(mut self, key_code: Option<KeyCode>) -> Self {
-        self.voice_input_toggle_key_code = key_code;
         self
     }
 
@@ -505,76 +479,23 @@ impl AltScreenElement {
     fn line_height(&self) -> Pixels {
         self.grid_render_params.size_info.cell_height_px()
     }
-
-    #[cfg(feature = "voice_input")]
-    fn maybe_handle_voice_toggle(
-        &self,
-        key_code: &KeyCode,
-        state: &KeyState,
-        ctx: &mut EventContext,
-    ) -> bool {
-        if let Some(voice_input_toggle_key_code) = self.voice_input_toggle_key_code
-            && *key_code == voice_input_toggle_key_code
-        {
-            ctx.dispatch_typed_action(TerminalAction::ToggleCLIAgentVoiceInput(
-                voice_input::VoiceInputToggledFrom::Key { state: *state },
-            ));
-            return true;
-        }
-        false
-    }
-
-    #[cfg(not(feature = "voice_input"))]
-    fn maybe_handle_voice_toggle(
-        &self,
-        _key_code: &KeyCode,
-        _state: &KeyState,
-        _ctx: &mut EventContext,
-    ) -> bool {
-        false
-    }
 }
 
 impl Element for AltScreenElement {
     fn layout(
         &mut self,
         constraint: SizeConstraint,
-        ctx: &mut LayoutContext,
-        app: &AppContext,
+        _ctx: &mut LayoutContext,
+        _app: &AppContext,
     ) -> Vector2F {
         self.size = Some(constraint.max);
-
-        if let Some(cursor_hint_text) = &mut self.cursor_hint_text {
-            cursor_hint_text.layout(constraint, ctx, app);
-        }
-
-        if let Some(cli_subagent_view) = &mut self.cli_subagent_view {
-            cli_subagent_view.layout(
-                SizeConstraint {
-                    min: vec2f(0., 0.),
-                    max: vec2f(
-                        constraint.max.x() * 0.3 - CLI_SUBAGENT_HORIZONTAL_MARGIN,
-                        constraint.max.y() - CLI_SUBAGENT_VERTICAL_MARGIN * 3.,
-                    ),
-                },
-                ctx,
-                app,
-            );
-        }
 
         constraint.max
     }
 
-    fn after_layout(&mut self, ctx: &mut AfterLayoutContext, app: &AppContext) {
+    fn after_layout(&mut self, _ctx: &mut AfterLayoutContext, _app: &AppContext) {
         let size = self.size.expect("Size should be set in `layout()`");
         self.visible_lines = Some(size.y().into_pixels().to_lines(self.line_height()).floor());
-
-        // We want to make sure to call after_layout on each of the elements that were actually laid out.
-        if let Some(cli_subagent_view) = &mut self.cli_subagent_view
-            && cli_subagent_view.size().is_some()
-        {
-            cli_subagent_view.after_layout(ctx, app);
-        }
     }
 
     fn paint(&mut self, origin: Vector2F, ctx: &mut PaintContext, app: &AppContext) {
@@ -673,34 +594,12 @@ impl Element for AltScreenElement {
                 self.grid_render_params.warp_theme.cursor().into(),
                 ctx,
                 self.terminal_view_id,
-                self.cursor_hint_text.as_mut(),
-                app,
             );
         }
 
         record_trace_event!("alt_screen_element:paint:cursor_rendered");
 
         self.render_selections(&self.grid_render_params.size_info, origin, ctx);
-
-        if let Some(cli_subagent_view) = &mut self.cli_subagent_view {
-            ctx.scene.start_layer(ClipBounds::ActiveLayer);
-            let size = cli_subagent_view
-                .size()
-                .expect("Subagent output was laid out already.");
-            cli_subagent_view.paint(
-                vec2f(
-                    self.bounds.expect("bounds set during paint.").max_x()
-                        - CLI_SUBAGENT_HORIZONTAL_MARGIN
-                        - size.x(),
-                    self.bounds.expect("bounds set during paint.").max_y()
-                        - CLI_SUBAGENT_VERTICAL_MARGIN
-                        - size.y(),
-                ),
-                ctx,
-                app,
-            );
-            ctx.scene.stop_layer();
-        }
 
         record_trace_event!("alt_screen_element:paint:selection_rendered");
         end_trace!();
@@ -716,12 +615,6 @@ impl Element for AltScreenElement {
         ctx: &mut EventContext,
         app: &AppContext,
     ) -> bool {
-        if let Some(cli_subagent_view) = &mut self.cli_subagent_view
-            && cli_subagent_view.dispatch_event(event, ctx, app)
-        {
-            return true;
-        }
-
         let bounds = self
             .bounds
             .expect("Bounds should be set before event dispatching");
@@ -853,7 +746,7 @@ impl Element for AltScreenElement {
                         ctx.dispatch_typed_action(TerminalAction::ControlSequence(escape_sequence));
                         return true;
                     }
-                    self.maybe_handle_voice_toggle(key_code, state, ctx)
+                    false
                 } else {
                     false
                 }

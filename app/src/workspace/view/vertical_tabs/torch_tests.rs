@@ -26,10 +26,6 @@ fn idle_and_untracked_sessions_do_not_claim_completed_work() {
         session_indicator(None, false, false),
         SessionIndicator::Idle
     );
-    assert_eq!(
-        session_indicator(Some(&ConversationStatus::Cancelled), true, false),
-        SessionIndicator::Idle,
-    );
 }
 
 #[test]

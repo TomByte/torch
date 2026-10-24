@@ -5,7 +5,6 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
-use ai::index::full_source_code_embedding::manager::CodebaseIndexManager;
 use chrono::Local;
 use fuzzy_match::FuzzyMatchResult;
 use repo_metadata::RepoMetadataModel;
@@ -22,32 +21,19 @@ use torchui::platform::WindowStyle;
 use torchui::text::SelectionType;
 use torchui::{App, UpdateView, WindowId};
 use unindent::Unindent;
-#[cfg(feature = "voice_input")]
-use voice_input::VoiceInputToggledFrom;
 use watcher::HomeDirectoryWatcher;
 use workflows::workflow::{Argument, ArgumentType, Workflow};
 
 use super::*;
-use crate::ai::AIRequestUsageModel;
-use crate::ai::active_agent_views_model::ActiveAgentViewsModel;
-use crate::ai::agent_conversations_model::AgentConversationsModel;
-use crate::ai::blocklist::{AIQueryHistory, BlocklistAIPermissions};
-use crate::ai::execution_profiles::profiles::AIExecutionProfilesModel;
-use crate::ai::llms::LLMPreferences;
-use crate::ai::mcp::gallery::MCPGalleryManager;
-use crate::ai::mcp::templatable_manager::TemplatableMCPServerManager;
-use crate::ai::outline::RepoOutlines;
-use crate::ai::persisted_workspace::PersistedWorkspace;
-use crate::ai::restored_conversations::RestoredAgentConversations;
-use crate::ai::skills::SkillManager;
 use crate::auth::AuthStateProvider;
 use crate::auth::auth_manager::AuthManager;
 use crate::changelog_model::ChangelogModel;
 use crate::cloud_object::model::persistence::CloudModel;
 use crate::context_chips::prompt::Prompt;
 use crate::editor::{DisplayPoint, EditorAction, Point, TextStyleOperation};
-use crate::input_suggestions::{HistoryOrder, Item};
+use crate::input_suggestions::Item;
 use crate::network::NetworkStatus;
+use crate::persisted_workspace::PersistedWorkspace;
 use crate::search::files::model::FileSearchModel;
 use crate::server::cloud_objects::listener::Listener;
 use crate::server::cloud_objects::update_manager::UpdateManager;
@@ -72,7 +58,6 @@ use crate::terminal::event::{
     UserBlockCompleted,
 };
 use crate::terminal::general_settings::UserDefaultShellUnsupportedBannerState;
-use crate::terminal::keys::TerminalKeybindings;
 use crate::terminal::local_shell::LocalShellState;
 use crate::terminal::local_tty::shell::ShellStarter;
 use crate::terminal::model::ansi::{Handler, PromptMetadata};
@@ -87,13 +72,12 @@ use crate::terminal::model_events::ModelEvent;
 use crate::terminal::resizable_data::ResizableData;
 use crate::terminal::shell::{Shell, ShellType};
 use crate::terminal::view::Event as TerminalViewEvent;
-use crate::terminal::view::inline_banner::ByoLlmAuthBannerSessionState;
 use crate::terminal::writeable_pty::command_history::update_command_history;
 use crate::test_util::assert_eventually;
 use crate::test_util::settings::initialize_settings_for_tests;
 use crate::themes::theme::AnsiColorIdentifier;
 use crate::warp_managed_paths_watcher::WarpManagedPathsWatcher;
-use crate::workspace::{ActiveSession, OneTimeModalModel, ToastStack, WorkspaceRegistry};
+use crate::workspace::{ActiveSession, ToastStack, WorkspaceRegistry};
 use crate::workspaces::team_tester::TeamTesterStatus;
 use crate::workspaces::update_manager::TeamUpdateManager;
 use crate::workspaces::user_workspaces::UserWorkspaces;
@@ -242,18 +226,6 @@ fn renders_fixed_prompt_chip_command_without_interpolation() {
 pub fn initialize_app(app: &mut App) {
     initialize_settings_for_tests(app);
 
-    // NLD is now opt-in by default (`ai_autodetection_enabled_internal` defaults to false).
-    // These tests exercise the natural-language-detection-on code paths (buffer-driven slash
-    // command detection, auto-detection input mode), so explicitly re-enable it here to preserve
-    // the pre-opt-in test behavior. The opt-in default itself is covered by
-    // `ai_autodetection_defaults_to_opt_in` in `settings/ai_tests.rs`.
-    crate::settings::AISettings::handle(app).update(app, |settings, ctx| {
-        settings
-            .ai_autodetection_enabled_internal
-            .set_value(true, ctx)
-            .unwrap();
-    });
-
     // Make sure we set up all necessary custom action bindings.
     app.update(init);
 
@@ -270,7 +242,6 @@ pub fn initialize_app(app: &mut App) {
     app.add_singleton_model(TeamTesterStatus::mock);
     app.add_singleton_model(TeamUpdateManager::mock);
     app.add_singleton_model(UpdateManager::mock);
-    app.add_singleton_model(MCPGalleryManager::new);
     app.add_singleton_model(Listener::mock);
     app.add_singleton_model(|_| Appearance::mock());
     app.add_singleton_model(PrivacySettings::mock);
@@ -279,46 +250,21 @@ pub fn initialize_app(app: &mut App) {
     app.add_singleton_model(|_| History::default());
     app.add_singleton_model(LocalWorkflows::new);
     app.add_singleton_model(|_| KeybindingChangedNotifier::new());
-    app.add_singleton_model(TerminalKeybindings::new);
     app.add_singleton_model(|_| ActiveSession::default());
-    app.add_singleton_model(|ctx| {
-        AIRequestUsageModel::new_for_test(ServerApiProvider::as_ref(ctx).get_ai_client(), ctx)
-    });
-    app.add_singleton_model(|_| BlocklistAIHistoryModel::new_for_test());
-    // QueuedQueryModel subscribes to history events; register after the
-    // history model is in place.
-    app.add_singleton_model(crate::ai::blocklist::QueuedQueryModel::new);
     app.add_singleton_model(|_| CLIAgentSessionsModel::new());
-    app.add_singleton_model(|_| ActiveAgentViewsModel::new());
     app.add_singleton_model(AgentNotificationsModel::new);
-    app.add_singleton_model(BlocklistAIPermissions::new);
     app.add_singleton_model(|_| AuthStateProvider::new_for_test());
     app.add_singleton_model(AppTelemetryContextProvider::new_context_provider);
     app.add_singleton_model(AuthManager::new_for_test);
-    app.add_singleton_model(LLMPreferences::new);
     app.add_singleton_model(DirectoryWatcher::new);
     app.add_singleton_model(|_| DetectedRepositories::default());
     app.add_singleton_model(crate::remote_server::manager::RemoteServerManager::new);
     app.add_singleton_model(|_| crate::code_review::git_repo_model::GitRepoModels::new());
     app.add_singleton_model(RepoMetadataModel::new);
     app.add_singleton_model(FileSearchModel::new);
-    app.add_singleton_model(RepoOutlines::new_for_test);
-    #[cfg(feature = "voice_input")]
-    app.add_singleton_model(voice_input::VoiceInput::new);
-    app.add_singleton_model(|ctx| {
-        CodebaseIndexManager::new_for_test(ServerApiProvider::as_ref(ctx).get(), ctx)
-    });
     app.add_singleton_model(|_| IgnoredSuggestionsModel::new(vec![]));
-    app.add_singleton_model(|_| TemplatableMCPServerManager::default());
-    app.add_singleton_model(|ctx| {
-        AIExecutionProfilesModel::new(&crate::LaunchMode::new_for_unit_test(), ctx)
-    });
-    app.add_singleton_model(|_| {
-        crate::ai::document::ai_document_model::AIDocumentModel::new_for_test()
-    });
     app.add_singleton_model(HomeDirectoryWatcher::new_for_test);
     app.add_singleton_model(WarpManagedPathsWatcher::new_for_testing);
-    app.add_singleton_model(SkillManager::new);
 
     // Add GlobalResourceHandlesProvider for persistence
     let tips_handle = app.add_model(|_| TipsCompleted::default());
@@ -340,14 +286,9 @@ pub fn initialize_app(app: &mut App) {
 
     app.update(experiments::init);
     AltScreenReporting::register(app);
-    app.add_singleton_model(|_| RestoredAgentConversations::new_seeded(vec![]));
-    app.add_singleton_model(OneTimeModalModel::new);
     app.add_singleton_model(|_| WorkspaceRegistry::new());
     app.add_singleton_model(|_| ToastStack);
-    app.add_singleton_model(ByoLlmAuthBannerSessionState::new);
-    app.add_singleton_model(AgentConversationsModel::new);
     app.add_singleton_model(PersistedWorkspace::new_for_test);
-    app.add_singleton_model(|ctx| crate::ai::agent_tips::AITipModel::new_for_agent_tips(ctx));
     // `LocalShellState` captures the user's interactive login-shell PATH (used
     // for MCP/sbx executable resolution). Tests don't exercise that capture, so
     // register the singleton in its `NotLoaded` state to satisfy callers that
@@ -793,26 +734,11 @@ fn test_clear_selection_after_insert() {
         select_text(&mut app);
         user_insert(&mut app, "baz");
         assert_selections_in_blocklist(&mut app, false);
-
-        // Activate Agent Mode, which should no longer allow text insertion to clear the selected text.
-        terminal.update(&mut app, |terminal, ctx| {
-            terminal.set_ai_input_mode_with_query(None, ctx)
-        });
-
-        // Agent Mode: Insert some text into the input box - this should no longer clear the terminal selection!
-        select_text(&mut app);
-        user_insert(&mut app, "bam");
-        assert_selections_in_blocklist(&mut app, true);
-
-        // Agent Mode: System insert should not clear terminal selection.
-        select_text(&mut app);
-        user_insert(&mut app, "bab");
-        assert_selections_in_blocklist(&mut app, true);
     });
 }
 
 #[test]
-fn test_merge_ai_and_command_history() {
+fn test_sort_command_history() {
     App::test((), |mut app| async move {
         initialize_app(&mut app);
 
@@ -885,79 +811,6 @@ fn test_merge_ai_and_command_history() {
             only_history_commands[4].text(),
             "echo 10 sec earlier [current session]"
         );
-
-        let ai_queries = vec![
-            HistoryInputSuggestion::AIQuery {
-                entry: AIQueryHistory::new_for_test(
-                    "ai 35 sec earlier [different session]",
-                    now - Duration::from_secs(35),
-                    HistoryOrder::DifferentSession,
-                ),
-            },
-            HistoryInputSuggestion::AIQuery {
-                entry: AIQueryHistory::new_for_test(
-                    "ai 25 sec earlier [different session]",
-                    now - Duration::from_secs(25),
-                    HistoryOrder::DifferentSession,
-                ),
-            },
-            HistoryInputSuggestion::AIQuery {
-                entry: AIQueryHistory::new_for_test(
-                    "ai 15 sec earlier [current session]",
-                    now - Duration::from_secs(15),
-                    HistoryOrder::CurrentSession,
-                ),
-            },
-            HistoryInputSuggestion::AIQuery {
-                entry: AIQueryHistory::new_for_test(
-                    "ai 7 sec earlier [current session]",
-                    now - Duration::from_secs(7),
-                    HistoryOrder::CurrentSession,
-                ),
-            },
-        ];
-        let only_ai_commands = ai_queries
-            .clone()
-            .into_iter()
-            .sorted_by(|a, b| a.cmp(b, Some(current_session_id), &all_live_session_ids))
-            .collect::<Vec<_>>();
-        assert_eq!(only_ai_commands.len(), 4);
-        // DifferentSession items sorted by timestamp
-        assert_eq!(
-            only_ai_commands[0].text(),
-            "ai 35 sec earlier [different session]"
-        );
-        assert_eq!(
-            only_ai_commands[1].text(),
-            "ai 25 sec earlier [different session]"
-        );
-        // CurrentSession items sorted by timestamp
-        assert_eq!(
-            only_ai_commands[2].text(),
-            "ai 15 sec earlier [current session]"
-        );
-        assert_eq!(
-            only_ai_commands[3].text(),
-            "ai 7 sec earlier [current session]"
-        );
-
-        let merged = history_commands
-            .into_iter()
-            .chain(ai_queries)
-            .sorted_by(|a, b| a.cmp(b, Some(current_session_id), &all_live_session_ids))
-            .collect::<Vec<_>>();
-        assert_eq!(merged.len(), 9);
-        // DifferentSession items sorted by timestamp
-        assert_eq!(merged[0].text(), "ai 35 sec earlier [different session]");
-        assert_eq!(merged[1].text(), "ai 25 sec earlier [different session]");
-        assert_eq!(merged[2].text(), "echo 20 sec earlier [different session]");
-        assert_eq!(merged[3].text(), "echo 5 sec earlier [other session]");
-        assert_eq!(merged[4].text(), "echo now [different session]");
-        // CurrentSession items sorted by timestamp
-        assert_eq!(merged[5].text(), "echo 30 sec earlier [restored]");
-        assert_eq!(merged[6].text(), "ai 15 sec earlier [current session]");
-        assert_eq!(merged[7].text(), "echo 10 sec earlier [current session]");
-        assert_eq!(merged[8].text(), "ai 7 sec earlier [current session]");
     });
 }
 
@@ -1185,9 +1038,6 @@ fn user_block_completed_for_test(command: &str) -> BlockType {
         )),
         command.to_owned(),
         command.to_owned(),
-        String::new(),
-        String::new(),
-        false,
         None,
         0,
         0,
@@ -1500,7 +1350,7 @@ fn selected_inline_history_command(
         view.model()
             .as_ref(ctx)
             .selected_item()
-            .and_then(|item| item.buffer_replacement_text().cloned())
+            .map(|item| item.command.clone())
     })
 }
 
@@ -3207,13 +3057,7 @@ fn test_tab_completion_hides_autosuggestion() {
         input.update(&mut app, |input, ctx| {
             input.clear_buffer_and_reset_undo_stack(ctx);
             input.user_insert("open-file ", ctx);
-            input.set_autosuggestion(
-                "sesame",
-                AutosuggestionType::Command {
-                    was_intelligent_autosuggestion: false,
-                },
-                ctx,
-            )
+            input.set_autosuggestion("sesame", ctx)
         });
 
         input.update(&mut app, |input, ctx| {
@@ -3270,13 +3114,7 @@ fn test_completions_while_typing_doesnt_hide_autosuggestion() {
         input.update(&mut app, |input, ctx| {
             input.clear_buffer_and_reset_undo_stack(ctx);
             input.user_insert("open-file ", ctx);
-            input.set_autosuggestion(
-                "sesame",
-                AutosuggestionType::Command {
-                    was_intelligent_autosuggestion: false,
-                },
-                ctx,
-            )
+            input.set_autosuggestion("sesame", ctx)
         });
 
         // Autosuggestion should be active.
@@ -3317,110 +3155,6 @@ fn test_completions_while_typing_doesnt_hide_autosuggestion() {
                     .current_autosuggestion_text()
                     .is_some()
             );
-        });
-    });
-}
-
-#[test]
-fn test_open_slash_command_does_not_autofill_single_file_completion() {
-    App::test((), |mut app| async move {
-        initialize_app(&mut app);
-
-        let terminal = add_window_with_bootstrapped_terminal(
-            &mut app, None, /* history_file_commands */
-            None,
-        )
-        .await;
-        let input = terminal.read(&app, |terminal, _| terminal.input().clone());
-
-        input.update(&mut app, |input, ctx| {
-            input.clear_buffer_and_reset_undo_stack(ctx);
-            input.editor.update(ctx, |editor, ctx| {
-                editor.set_buffer_text("/open-file ", ctx)
-            });
-        });
-
-        input.update(&mut app, |input, ctx| {
-            input.handle_completion_suggestions_results(
-                build_suggestion_results(
-                    vec![file_suggestion("test.md")],
-                    (11, 11),
-                    MatchStrategy::CaseInsensitive,
-                ),
-                CompletionsTrigger::SlashCommandAutoOpen,
-                editor_model_snapshot(input, ctx),
-                ctx,
-            );
-        });
-        input.read(&app, |input, ctx| {
-            assert_eq!(input.buffer_text(ctx), "/open-file ");
-        });
-
-        input.update(&mut app, |input, ctx| {
-            input.handle_completion_suggestions_results(
-                build_suggestion_results(
-                    vec![file_suggestion("test.md")],
-                    (11, 11),
-                    MatchStrategy::CaseInsensitive,
-                ),
-                CompletionsTrigger::Keybinding,
-                editor_model_snapshot(input, ctx),
-                ctx,
-            );
-        });
-        input.read(&app, |input, ctx| {
-            assert_eq!(input.buffer_text(ctx), "/open-file test.md ");
-        });
-    });
-}
-
-#[test]
-fn test_open_slash_command_requires_path() {
-    App::test((), |mut app| async move {
-        initialize_app(&mut app);
-
-        let terminal = add_window_with_bootstrapped_terminal(
-            &mut app, None, /* history_file_commands */
-            None,
-        )
-        .await;
-        let input = terminal.read(&app, |terminal, _| terminal.input().clone());
-
-        input.update(&mut app, |input, ctx| {
-            input.editor.update(ctx, |editor, ctx| {
-                editor.set_buffer_text("/open-file ", ctx)
-            });
-        });
-
-        input.update(&mut app, |input, ctx| {
-            input.input_enter(ctx);
-        });
-    });
-}
-
-#[test]
-fn test_open_slash_command_opens_files_palette_when_entered_from_slash_menu() {
-    App::test((), |mut app| async move {
-        initialize_app(&mut app);
-
-        let terminal = add_window_with_bootstrapped_terminal(
-            &mut app, None, /* history_file_commands */
-            None,
-        )
-        .await;
-        let input = terminal.read(&app, |terminal, _| terminal.input().clone());
-
-        input.update(&mut app, |input, ctx| {
-            input.user_insert("/", ctx);
-            input.user_insert("open-file", ctx);
-        });
-
-        input.read(&app, |input, ctx| {
-            assert_eq!(input.buffer_text(ctx), "/open-file");
-        });
-
-        input.update(&mut app, |input, ctx| {
-            input.input_enter(ctx);
         });
     });
 }
@@ -5781,39 +5515,6 @@ fn test_vim_escape_with_completions() {
 }
 
 #[test]
-fn test_should_show_completions_in_ai_input() {
-    // Test cases where the function should return true
-    // i.e. we should trigger completions-as-you-type in AI input.
-    assert!(should_show_completions_in_ai_input("/"));
-    assert!(should_show_completions_in_ai_input("/foo"));
-    assert!(should_show_completions_in_ai_input("some text /foo"));
-
-    assert!(should_show_completions_in_ai_input("./"));
-    assert!(should_show_completions_in_ai_input("./foo"));
-    assert!(should_show_completions_in_ai_input("some text ./foo"));
-
-    assert!(should_show_completions_in_ai_input("foo/"));
-    assert!(should_show_completions_in_ai_input("~/"));
-    assert!(should_show_completions_in_ai_input("foo/bar"));
-    assert!(should_show_completions_in_ai_input("some text foo/bar"));
-
-    assert!(should_show_completions_in_ai_input("../"));
-    assert!(should_show_completions_in_ai_input("../foo"));
-    assert!(should_show_completions_in_ai_input("bar ../foo"));
-
-    // Test cases where the function should return false
-    // i.e. we should NOT trigger completions-as-you-type in AI input.
-    assert!(!should_show_completions_in_ai_input("foo"));
-    assert!(!should_show_completions_in_ai_input("some text/ foo"));
-    assert!(!should_show_completions_in_ai_input("./bar foo"));
-    assert!(!should_show_completions_in_ai_input("some text / bar foo"));
-    assert!(!should_show_completions_in_ai_input(""));
-    assert!(!should_show_completions_in_ai_input("../foo bar"));
-    // Space at the end invalidates triggering completions.
-    assert!(!should_show_completions_in_ai_input("../foo "));
-}
-
-#[test]
 fn test_remove_ignored_suggestion_on_command_execution() {
     App::test((), |mut app| async move {
         initialize_app(&mut app);
@@ -6118,17 +5819,7 @@ fn open_rich_input_for_terminal(terminal: &ViewHandle<TerminalView>, app: &mut A
             );
         });
         CLIAgentSessionsModel::handle(ctx).update(ctx, |sessions, ctx| {
-            sessions.open_input(
-                view_id,
-                CLIAgentInputEntrypoint::CtrlG,
-                crate::agent_status::InputConfig {
-                    input_type: crate::ai::blocklist::InputType::AI,
-                    is_locked: true,
-                },
-                false,
-                false,
-                ctx,
-            );
+            sessions.open_input(view_id, CLIAgentInputEntrypoint::CtrlG, false, ctx);
         });
     });
 }
@@ -6145,11 +5836,11 @@ fn enter_submits_when_submit_on_ctrl_enter_is_false() {
 
         // Default must be false (guards existing Enter-submits behaviour).
         let default_value =
-            AISettings::handle(&app).read(&app, |settings, _| *settings.submit_on_ctrl_enter);
+            CLIAgentSettings::handle(&app).read(&app, |settings, _| *settings.submit_on_ctrl_enter);
         assert!(!default_value, "submit_on_ctrl_enter must default to false");
 
         // Explicitly confirm false so the test doesn't rely on the global default.
-        AISettings::handle(&app).update(&mut app, |settings, ctx| {
+        CLIAgentSettings::handle(&app).update(&mut app, |settings, ctx| {
             settings
                 .submit_on_ctrl_enter
                 .set_value(false, ctx)
@@ -6193,7 +5884,7 @@ fn enter_submits_when_submit_on_ctrl_enter_is_false() {
 }
 
 #[test]
-fn ctrl_enter_emits_ctrl_enter_event_when_submit_on_ctrl_enter_is_false() {
+fn ctrl_enter_does_not_submit_when_submit_on_ctrl_enter_is_false() {
     use std::cell::RefCell;
     use std::rc::Rc;
 
@@ -6203,7 +5894,7 @@ fn ctrl_enter_emits_ctrl_enter_event_when_submit_on_ctrl_enter_is_false() {
         initialize_app(&mut app);
 
         // Ensure the setting is false (the default).
-        AISettings::handle(&app).update(&mut app, |settings, ctx| {
+        CLIAgentSettings::handle(&app).update(&mut app, |settings, ctx| {
             settings
                 .submit_on_ctrl_enter
                 .set_value(false, ctx)
@@ -6215,17 +5906,13 @@ fn ctrl_enter_emits_ctrl_enter_event_when_submit_on_ctrl_enter_is_false() {
 
         open_rich_input_for_terminal(&terminal, &mut app);
 
-        let ctrl_enter_fired: Rc<RefCell<bool>> = Rc::new(RefCell::new(false));
         let submitted: Rc<RefCell<Vec<String>>> = Rc::new(RefCell::new(Vec::new()));
-        let ctrl_enter_clone = ctrl_enter_fired.clone();
         let submitted_clone = submitted.clone();
         app.update(|ctx| {
-            ctx.subscribe_to_view(&input, move |_, event, _| match event {
-                Event::CtrlEnter => *ctrl_enter_clone.borrow_mut() = true,
-                Event::SubmitCLIAgentInput { text } => {
-                    submitted_clone.borrow_mut().push(text.clone())
+            ctx.subscribe_to_view(&input, move |_, event, _| {
+                if let Event::SubmitCLIAgentInput { text } = event {
+                    submitted_clone.borrow_mut().push(text.clone());
                 }
-                _ => {}
             });
         });
 
@@ -6237,10 +5924,6 @@ fn ctrl_enter_emits_ctrl_enter_event_when_submit_on_ctrl_enter_is_false() {
             input.input_ctrl_enter(ctx);
         });
 
-        assert!(
-            *ctrl_enter_fired.borrow(),
-            "Ctrl+Enter should emit Event::CtrlEnter when submit_on_ctrl_enter=false"
-        );
         assert!(
             submitted.borrow().is_empty(),
             "Ctrl+Enter must NOT submit when submit_on_ctrl_enter=false"
@@ -6258,7 +5941,7 @@ fn enter_inserts_newline_when_submit_on_ctrl_enter_is_true() {
 
         initialize_app(&mut app);
 
-        AISettings::handle(&app).update(&mut app, |settings, ctx| {
+        CLIAgentSettings::handle(&app).update(&mut app, |settings, ctx| {
             settings
                 .submit_on_ctrl_enter
                 .set_value(true, ctx)
@@ -6313,7 +5996,7 @@ fn ctrl_enter_submits_when_submit_on_ctrl_enter_is_true() {
 
         initialize_app(&mut app);
 
-        AISettings::handle(&app).update(&mut app, |settings, ctx| {
+        CLIAgentSettings::handle(&app).update(&mut app, |settings, ctx| {
             settings
                 .submit_on_ctrl_enter
                 .set_value(true, ctx)
@@ -6326,16 +6009,12 @@ fn ctrl_enter_submits_when_submit_on_ctrl_enter_is_true() {
         open_rich_input_for_terminal(&terminal, &mut app);
 
         let submitted: Rc<RefCell<Vec<String>>> = Rc::new(RefCell::new(Vec::new()));
-        let ctrl_enter_fired: Rc<RefCell<bool>> = Rc::new(RefCell::new(false));
         let submitted_clone = submitted.clone();
-        let ctrl_enter_clone = ctrl_enter_fired.clone();
         app.update(|ctx| {
-            ctx.subscribe_to_view(&input, move |_, event, _| match event {
-                Event::SubmitCLIAgentInput { text } => {
-                    submitted_clone.borrow_mut().push(text.clone())
+            ctx.subscribe_to_view(&input, move |_, event, _| {
+                if let Event::SubmitCLIAgentInput { text } = event {
+                    submitted_clone.borrow_mut().push(text.clone());
                 }
-                Event::CtrlEnter => *ctrl_enter_clone.borrow_mut() = true,
-                _ => {}
             });
         });
 
@@ -6357,11 +6036,6 @@ fn ctrl_enter_submits_when_submit_on_ctrl_enter_is_true() {
             "world",
             "submitted text should match buffer contents"
         );
-        assert!(
-            !*ctrl_enter_fired.borrow(),
-            "Ctrl+Enter must NOT emit Event::CtrlEnter when submit_on_ctrl_enter=true"
-        );
-
         input.read(&app, |input, ctx| {
             assert!(
                 input.buffer_text(ctx).is_empty(),
@@ -6381,7 +6055,7 @@ fn ctrl_enter_with_selection_preserves_selection_in_submit_when_setting_is_true(
 
         initialize_app(&mut app);
 
-        AISettings::handle(&app).update(&mut app, |settings, ctx| {
+        CLIAgentSettings::handle(&app).update(&mut app, |settings, ctx| {
             settings
                 .submit_on_ctrl_enter
                 .set_value(true, ctx)
@@ -6441,83 +6115,6 @@ fn ctrl_enter_with_selection_preserves_selection_in_submit_when_setting_is_true(
     });
 }
 
-#[test]
-fn enter_accepts_inline_menu_item_when_submit_on_ctrl_enter_is_true() {
-    use std::cell::RefCell;
-    use std::rc::Rc;
-
-    App::test((), |mut app| async move {
-        let _cli_agent_flag = FeatureFlag::CLIAgentRichInput.override_enabled(true);
-
-        initialize_app(&mut app);
-
-        AISettings::handle(&app).update(&mut app, |settings, ctx| {
-            settings
-                .submit_on_ctrl_enter
-                .set_value(true, ctx)
-                .expect("setting value must succeed");
-        });
-
-        let terminal = add_window_with_bootstrapped_terminal(&mut app, None, None).await;
-        let input = terminal.read(&app, |terminal, _| terminal.input().clone());
-
-        open_rich_input_for_terminal(&terminal, &mut app);
-
-        let submitted: Rc<RefCell<Vec<String>>> = Rc::new(RefCell::new(Vec::new()));
-        let submitted_clone = submitted.clone();
-        app.update(|ctx| {
-            ctx.subscribe_to_view(&input, move |_, event, _| {
-                if let Event::SubmitCLIAgentInput { text } = event {
-                    submitted_clone.borrow_mut().push(text.clone());
-                }
-            });
-        });
-
-        // Insert some text so we can detect whether a newline was appended.
-        input.update(&mut app, |input, ctx| {
-            input.clear_buffer_and_reset_undo_stack(ctx);
-            input.user_insert("hello", ctx);
-        });
-
-        // Simulate the slash-commands menu being open.  In production this
-        // happens when the user types `/`; here we set it directly so the test
-        // doesn't depend on command-registry data being loaded.
-        input.update(&mut app, |input, ctx| {
-            input.suggestions_mode_model.update(ctx, |model, ctx| {
-                model.set_mode(InputSuggestionsMode::SlashCommands, ctx);
-            });
-        });
-
-        input.read(&app, |input, ctx| {
-            assert!(
-                matches!(
-                    input.suggestions_mode_model.as_ref(ctx).mode(),
-                    InputSuggestionsMode::SlashCommands
-                ),
-                "slash-commands mode should be active before Enter"
-            );
-        });
-
-        input.update(&mut app, |input, ctx| {
-            input.input_enter(ctx);
-        });
-
-        assert!(
-            submitted.borrow().is_empty(),
-            "Enter must NOT submit when the slash-commands menu is open"
-        );
-
-        input.read(&app, |input, ctx| {
-            let text = input.buffer_text(ctx);
-            assert!(
-                !text.contains('\n'),
-                "Enter must NOT insert a newline when the slash-commands menu is open \
-                 (submit_on_ctrl_enter=true); got buffer: {text:?}"
-            );
-        });
-    });
-}
-
 /// Pre-fix this failed because `update_cli_agent_enter_settings` always set `ctrl_enter: Emit`
 /// regardless of toggle, causing `ctrl_enter()` to hit the `_ => ()` no-op arm (#11588).
 #[test]
@@ -6531,7 +6128,7 @@ fn ctrl_enter_inserts_newline_when_submit_on_ctrl_enter_is_false() {
 
         // Ensure the setting is false (the default).
         let default_value =
-            AISettings::handle(&app).read(&app, |settings, _| *settings.submit_on_ctrl_enter);
+            CLIAgentSettings::handle(&app).read(&app, |settings, _| *settings.submit_on_ctrl_enter);
         assert!(!default_value, "submit_on_ctrl_enter must default to false");
 
         let terminal = add_window_with_bootstrapped_terminal(&mut app, None, None).await;

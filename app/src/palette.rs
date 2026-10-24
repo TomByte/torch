@@ -6,6 +6,5 @@ pub enum PaletteMode {
     Navigation,
     LaunchConfig,
     Files,
-    Conversations,
     Agents,
 }

@@ -11,8 +11,6 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 use anyhow::{Result, anyhow, ensure};
-#[cfg(not(target_family = "wasm"))]
-use torch_errors::report_error;
 use torch_util::path::LineAndColumnArg;
 use torchui::notification::UserNotification;
 use torchui::platform::TerminationMode;
@@ -20,10 +18,8 @@ use torchui::{AppContext, SingletonEntity as _, TypedActionView, WindowId};
 use url::Url;
 
 use self::docker::open_docker_container;
-use crate::ai::chatgpt_subscription::{CHATGPT_LINK_URI_HOST, ChatGPTSubscriptionModel};
 use crate::features::FeatureFlag;
 use crate::launch_configs::launch_config::LaunchConfig;
-use crate::linear::{LinearAction, LinearIssueWork};
 use crate::root_view::{OpenLaunchConfigArg, open_new_window_get_handles};
 use crate::server::telemetry::{LaunchConfigUiLocation, TelemetryEvent};
 use crate::settings_view::{SettingsSection, settings_widget_deeplink_target};
@@ -70,18 +66,10 @@ pub enum UriHost {
     /// A host prefix for a general-purpose home/landing page. Unlike other intent URIs, the home
     /// page behavior may change over time and vary from platform to platform.
     Home,
-    /// Actions related to MCP servers (e.g.: oauth callbacks).
-    Mcp,
-    /// Opens a new tab with the Codex model and starts a conversation.
-    Codex,
-    /// Actions triggered from Linear integrations (e.g. work on issue).
-    Linear,
     /// Opens a saved tab config in an existing window or a new one.
     TabConfig,
     /// Focuses a specific terminal pane by its persistent session UUID.
     Session,
-    /// Result of a browser flow that links a ChatGPT account to the signed-in user.
-    ChatGPTLink,
 }
 
 impl FromStr for UriHost {
@@ -93,14 +81,8 @@ impl FromStr for UriHost {
             "launch" => Ok(Self::Launch),
             "settings" => Ok(Self::Settings),
             "home" => Ok(Self::Home),
-            "mcp" => Ok(Self::Mcp),
-            "codex" => Ok(Self::Codex),
-            "linear" => Ok(Self::Linear),
             "tab_config" if FeatureFlag::TabConfigs.is_enabled() => Ok(Self::TabConfig),
             "session" => Ok(Self::Session),
-            CHATGPT_LINK_URI_HOST if FeatureFlag::ChatGPTSubscription.is_enabled() => {
-                Ok(Self::ChatGPTLink)
-            }
             _ => Err(anyhow!("Received url with unexpected host: {}", s)),
         }
     }
@@ -110,14 +92,6 @@ impl UriHost {
     fn handle(&self, primary_window_id: Option<WindowId>, url: &Url, ctx: &mut AppContext) {
         // Handle host
         match self {
-            UriHost::ChatGPTLink => {
-                ChatGPTSubscriptionModel::handle(ctx).update(ctx, |model, ctx| {
-                    model.handle_link_redirect(url, ctx);
-                });
-                if let Some(window_id) = primary_window_id {
-                    ctx.windows().show_window_and_focus_app(window_id);
-                }
-            }
             UriHost::Action => {
                 match Action::parse(url) {
                     Ok(action) => action.handle(primary_window_id, url, ctx),
@@ -236,40 +210,6 @@ impl UriHost {
             UriHost::Home => {
                 ctx.dispatch_global_action("root_view::open_new", &());
             }
-            UriHost::Mcp => {
-                #[cfg(not(target_family = "wasm"))]
-                {
-                    let result = crate::ai::mcp::TemplatableMCPServerManager::handle(ctx)
-                        .update(ctx, |manager, _ctx| manager.handle_oauth_callback(url));
-                    if let Err(e) = result {
-                        report_error!(e.context("Failed to handle MCP OAuth callback"));
-                    }
-                }
-            }
-            UriHost::Codex => {
-                dispatch_action_in_new_or_existing_window(
-                    primary_window_id,
-                    "root_view:open_codex_in_existing_window",
-                    "root_view:open_codex_in_new_window",
-                    &(),
-                    ctx,
-                );
-            }
-            UriHost::Linear => match LinearAction::parse(url) {
-                Ok(LinearAction::WorkOnIssue) => {
-                    let args = LinearIssueWork::from_url(url);
-                    dispatch_action_in_new_or_existing_window(
-                        primary_window_id,
-                        "root_view:open_linear_issue_work_in_existing_window",
-                        "root_view:open_linear_issue_work_in_new_window",
-                        &args,
-                        ctx,
-                    );
-                }
-                Err(err) => {
-                    log::warn!("{err}");
-                }
-            },
             UriHost::Session => {
                 let uuid_hex = url
                     .path_segments()
@@ -331,17 +271,9 @@ impl UriHost {
             Self::Launch | Self::Home => W::Nothing,
             // This will actually be handled by [`Action::window_behavior_hint`].
             Self::Action => W::Nothing,
-            // TODO(vorporeal): probably want to focus the window with the MCP pane open
-            Self::Mcp => W::Nothing,
-            // Codex opens a new tab with AI mode, use default behavior
-            Self::Codex => W::default(),
-            // Linear deeplink opens a new tab with agent view
-            Self::Linear => W::default(),
             // Handler picks the window itself based on `?new_window=true`.
             Self::TabConfig => W::Nothing,
             Self::Session => W::Nothing,
-            // The handler focuses the primary window itself once the result is recorded.
-            Self::ChatGPTLink => W::Nothing,
         }
     }
 }
@@ -656,7 +588,6 @@ enum Action {
     },
     Docker,
     OpenRepo,
-    NewAgentConversation,
 }
 
 impl Action {
@@ -670,7 +601,6 @@ impl Action {
             }
             "/docker/open_subshell" => Ok(Self::Docker),
             "/open-repo" => Ok(Self::OpenRepo),
-            "/new_agent_conversation" => Ok(Self::NewAgentConversation),
             _ => Err(anyhow!(
                 "Received \"action\" intent with unexpected action: {}",
                 url.path()
@@ -744,26 +674,6 @@ impl Action {
                     }
                 }
             }
-            Action::NewAgentConversation => {
-                let window_id =
-                    primary_window_id.or_else(|| Some(open_new_window_get_handles(None, ctx).0));
-
-                let Some(window_id) = window_id else {
-                    log::warn!("unable to determine window for new agent conversation action");
-                    return;
-                };
-
-                let Some(workspace) = WorkspaceRegistry::as_ref(ctx).get(window_id, ctx) else {
-                    log::warn!(
-                        "no workspace found in window {window_id} for new agent conversation action"
-                    );
-                    return;
-                };
-
-                workspace.update(ctx, |workspace, ctx| {
-                    workspace.handle_action(&WorkspaceAction::AddAgentTab, ctx);
-                });
-            }
         }
     }
 
@@ -772,10 +682,7 @@ impl Action {
     fn window_behavior_hint(&self) -> WindowBehaviorHint {
         use WindowBehaviorHint as W;
         match self {
-            Self::Docker
-            | Self::OpenFileEditor { .. }
-            | Self::OpenRepo
-            | Self::NewAgentConversation => W::default(),
+            Self::Docker | Self::OpenFileEditor { .. } | Self::OpenRepo => W::default(),
             Self::NewTab => W::ShowPrimaryWindow(WindowActivationFallbackBehavior::Notify {
                 title: "New tab created".to_owned(),
                 description: "Go to Torch to see your new tab.".to_owned(),
@@ -1133,12 +1040,8 @@ fn validate_custom_uri(url: &Url) -> Result<UriHost> {
         UriHost::Action
         | UriHost::Launch
         | UriHost::Settings
-        | UriHost::Mcp
-        | UriHost::Codex
-        | UriHost::Linear
         | UriHost::TabConfig
-        | UriHost::Session
-        | UriHost::ChatGPTLink => true,
+        | UriHost::Session => true,
         UriHost::Home => false,
     };
 

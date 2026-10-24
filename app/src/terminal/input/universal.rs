@@ -1,7 +1,7 @@
 use settings::Setting;
 use torchui::elements::{
-    Border, ChildView, Container, CornerRadius, DropTarget, Element, Flex, Hoverable,
-    ParentElement, Radius, SavePosition, Stack,
+    Border, Container, CornerRadius, DropTarget, Element, Flex, Hoverable, ParentElement, Radius,
+    SavePosition, Stack,
 };
 use torchui::{AppContext, SingletonEntity};
 
@@ -11,20 +11,18 @@ use super::common::{
     add_voltron_overlay, add_workflow_info_overlay,
     wrap_input_with_terminal_padding_and_focus_handler,
 };
-use crate::ai::blocklist::InputType;
 use crate::appearance::Appearance;
 use crate::context_chips::spacing;
 use crate::features::FeatureFlag;
 use crate::settings::{AppEditorSettings, InputModeSettings};
-use crate::terminal::block_list_viewport::InputMode;
-use crate::terminal::input::{InputAction, InputDropTargetData};
+use crate::terminal::input::InputDropTargetData;
 use crate::terminal::settings::TerminalSettings;
 use crate::terminal::view::TerminalAction;
 use crate::themes::theme::color::internal_colors;
 
 impl Input {
-    /// Renders the universal input. This is used when `FeatureFlag::AgentView` is disabled and the
-    /// user has 'universal' input type selected in settings.
+    /// Renders the universal input. This is used when the user has 'universal' input type
+    /// selected in settings.
     pub(super) fn render_universal_developer_input(&self, app: &AppContext) -> Box<dyn Element> {
         let appearance = Appearance::as_ref(app);
         let theme = appearance.theme();
@@ -39,35 +37,9 @@ impl Input {
         let vim_state = self.editor.as_ref(app).vim_state(app);
         let app_editor_settings = AppEditorSettings::as_ref(app);
         let show_vim_status = vim_state.is_some() && *app_editor_settings.vim_status_bar.value();
-        let input_mode = *InputModeSettings::as_ref(app).input_mode.value();
+        let _input_mode = *InputModeSettings::as_ref(app).input_mode.value();
 
-        // For Universal Developer Input, ignore compact mode setting
-        let is_compact_mode = false;
         let mut column = Flex::column();
-
-        if matches!(input_mode, InputMode::PinnedToBottom | InputMode::Waterfall)
-            && let Some(banner) =
-                self.render_input_banner(appearance, app, input_mode, is_compact_mode)
-        {
-            column.add_child(
-                Container::new(banner)
-                    .with_margin_top(spacing::UDI_CHIP_MARGIN)
-                    .finish(),
-            );
-        }
-
-        let ai_input_model = self.ai_input_model.as_ref(app);
-
-        if FeatureFlag::ImageAsContext.is_enabled()
-            && matches!(ai_input_model.input_type(), InputType::AI)
-            && let Some(images) = self.render_attachment_chips(appearance)
-        {
-            column.add_child(
-                Container::new(images)
-                    .with_margin_top(spacing::UDI_CHIP_MARGIN)
-                    .finish(),
-            );
-        }
 
         let terminal_spacing = TerminalSettings::as_ref(app)
             .terminal_input_spacing(appearance.line_height_ratio(), app);
@@ -79,20 +51,6 @@ impl Input {
                 )
                 .finish(),
         );
-        if !torch_core::channel::ChannelState::is_local_only() {
-            column.add_child(ChildView::new(&self.universal_developer_input_button_bar).finish());
-        }
-
-        if matches!(input_mode, InputMode::PinnedToTop)
-            && let Some(banner) =
-                self.render_input_banner(appearance, app, input_mode, is_compact_mode)
-        {
-            column.add_child(
-                Container::new(banner)
-                    .with_margin_bottom(spacing::UDI_CHIP_MARGIN)
-                    .finish(),
-            );
-        }
 
         if let Some(vim_state) = vim_state.as_ref()
             && show_vim_status
@@ -179,24 +137,11 @@ impl Input {
         .finish();
 
         let input = Hoverable::new(self.hoverable_handle.clone(), |_| drop_target)
-            .on_hover(|is_hovered, ctx, _app, _position| {
-                ctx.dispatch_typed_action(InputAction::SetUDIHovered(is_hovered));
-            })
             .on_middle_click(|ctx, _app, _position| {
                 ctx.dispatch_typed_action(TerminalAction::MiddleClickOnInput)
             })
             .finish();
 
-        let mut column = Flex::column();
-
-        if input_mode.is_pinned_to_top() {
-            column.add_child(input);
-            column.add_child(ChildView::new(&self.agent_status_view).finish());
-        } else {
-            column.add_child(ChildView::new(&self.agent_status_view).finish());
-            column.add_child(input);
-        }
-
-        SavePosition::new(column.finish(), &self.save_position_id()).finish()
+        SavePosition::new(input, &self.save_position_id()).finish()
     }
 }

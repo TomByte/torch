@@ -13,7 +13,7 @@ use crate::appearance::Appearance;
 
 #[derive(Clone, Copy)]
 pub enum MenuDirection {
-    Left, // Menu is left of the "..." button icon
+    // Menu is left of the "..." button icon
     Right,
 }
 
@@ -89,12 +89,6 @@ where
 
 fn offset_positioning(menu_direction: MenuDirection) -> OffsetPositioning {
     match menu_direction {
-        MenuDirection::Left => OffsetPositioning::offset_from_parent(
-            vec2f(0., 0.),
-            ParentOffsetBounds::WindowByPosition,
-            ParentAnchor::TopLeft,
-            ChildAnchor::TopRight,
-        ),
         MenuDirection::Right => OffsetPositioning::offset_from_parent(
             vec2f(0., 0.),
             ParentOffsetBounds::WindowByPosition,

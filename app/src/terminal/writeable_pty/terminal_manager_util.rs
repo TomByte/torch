@@ -68,11 +68,6 @@ pub fn wire_up_pty_controller_with_surface<T: EventLoopSender, S: TerminalSurfac
                     controller.write_bytes(bytes, ctx);
                 });
             }
-            PtyIntent::WriteAgentInput { bytes, mode } => {
-                controller.update(ctx, |controller, ctx| {
-                    controller.write_agent_bytes(bytes, &mode, ctx);
-                });
-            }
             PtyIntent::Resize(size_update) => {
                 controller.update(ctx, |controller, ctx| {
                     controller.resize_pty(size_update, ctx);

@@ -28,7 +28,6 @@ pub enum AlertFlavor {
     Default,
     Success,
     Error,
-    Warning,
 }
 
 impl AlertFlavor {
@@ -36,7 +35,7 @@ impl AlertFlavor {
         match self {
             Self::Default => None,
             Self::Success => Some(SUCCESS_ICON_PATH),
-            Self::Error | Self::Warning => Some(ERROR_ICON_PATH),
+            Self::Error => Some(ERROR_ICON_PATH),
         }
     }
 
@@ -44,7 +43,6 @@ impl AlertFlavor {
         let theme = appearance.theme();
         match self {
             AlertFlavor::Default => theme.main_text_color(theme.background()).into(),
-            AlertFlavor::Warning => theme.ansi_fg_yellow(),
             _ => theme.background().into(),
         }
     }
@@ -55,7 +53,6 @@ impl AlertFlavor {
             Self::Default => internal_colors::neutral_4(theme).into(),
             Self::Success => theme.ansi_fg_green().into(),
             Self::Error => theme.ansi_fg_red().into(),
-            Self::Warning => theme.yellow_overlay_1(),
         }
     }
 
@@ -65,7 +62,6 @@ impl AlertFlavor {
             AlertFlavor::Default => internal_colors::neutral_3(theme).into(),
             AlertFlavor::Success => theme.ansi_bg_green().into(),
             AlertFlavor::Error => theme.ansi_bg_red().into(),
-            AlertFlavor::Warning => Fill::Solid(ColorU::transparent_black()),
         }
     }
 }
@@ -163,10 +159,6 @@ impl AlertConfig {
     #[allow(dead_code)]
     pub fn success(message: String) -> Self {
         Self::new(message, AlertFlavor::Success)
-    }
-
-    pub fn warning(message: String) -> Self {
-        Self::new(message, AlertFlavor::Warning)
     }
 
     pub fn with_main_axis_size(mut self, main_axis_size: MainAxisSize) -> Self {

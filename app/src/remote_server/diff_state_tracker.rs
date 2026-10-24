@@ -376,7 +376,6 @@ impl RemoteDiffStateManager {
             }
             DiffStateModelEvent::BranchesReceived(_)
             | DiffStateModelEvent::GitOpCompleted(_)
-            | DiffStateModelEvent::CommitMessageGenerated(_)
             | DiffStateModelEvent::BranchCommittedFilesReceived(_) => {
                 // Client-only events don't go through this tracker.
             }

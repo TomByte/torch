@@ -810,19 +810,6 @@ impl PaneNode {
         }
     }
 
-    /// Sum this [`PaneNode`]s [`PaneFlex`] values along the given `axis`. Return the
-    /// [`DEFAULT_FLEX_SIZE`] if this [`PaneNode`] isn't a [`PaneNode::Branch`] in the given
-    /// [`SplitDirection`] (or it is a [`PaneNode::Leaf`]).
-    pub(in crate::pane_group) fn pane_flex_sum_along_axis(&self, axis: SplitDirection) -> f32 {
-        match self {
-            PaneNode::Branch(pane_branch) if pane_branch.axis == axis => pane_branch
-                .nodes
-                .iter()
-                .fold(0., |sum, (pane_flex, _)| sum + pane_flex.0),
-            _ => DEFAULT_FLEX_VALUE,
-        }
-    }
-
     pub(crate) fn contains_pane(&self, pane_id: PaneId) -> bool {
         match self {
             PaneNode::Leaf(id) => *id == pane_id,

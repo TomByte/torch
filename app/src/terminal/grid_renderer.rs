@@ -21,7 +21,7 @@ use torchui::image_cache::{AnimatedImageBehavior, CacheOption, FitType, Image, I
 use torchui::platform::LineStyle;
 use torchui::text_layout::{DEFAULT_TOP_BOTTOM_RATIO, Line, StyleAndFont, TextStyle};
 use torchui::units::{IntoLines as _, Lines, Pixels};
-use torchui::{AppContext, Element, EntityId, PaintContext, Scene, SingletonEntity};
+use torchui::{AppContext, EntityId, PaintContext, Scene, SingletonEntity};
 use unicode_width::UnicodeWidthChar;
 
 pub use self::cell_glyph_cache::CellGlyphCache;
@@ -2420,8 +2420,6 @@ pub fn render_cursor(
     color: ColorU,
     ctx: &mut PaintContext,
     terminal_view_id: EntityId,
-    hint_text: Option<&mut Box<dyn Element>>,
-    app: &AppContext,
 ) {
     let line_top_origin = grid_origin
         + vec2f(padding_x.as_f32(), 0.)
@@ -2474,22 +2472,6 @@ pub fn render_cursor(
                 .with_border(Border::all(thickness).with_border_color(color));
         }
         CursorShape::Hidden => {}
-    }
-
-    if let Some(hint_text) = hint_text {
-        // Render hint text with 4px padding to the right of the cursor, bottom aligned.
-        hint_text.paint(
-            vec2f(
-                cursor_top_origin.x() + cursor_block_size.x() + 4.,
-                cursor_top_origin.y() + cursor_block_size.y()
-                    - hint_text
-                        .size()
-                        .expect("Text is laid out prior to paint")
-                        .y(),
-            ),
-            ctx,
-            app,
-        );
     }
 }
 

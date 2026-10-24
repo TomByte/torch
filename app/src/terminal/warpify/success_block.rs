@@ -10,17 +10,20 @@ use torchui::elements::{
     MouseStateHandle, ParentElement, SelectableArea, SelectionHandle, Text,
 };
 use torchui::ui_components::components::{UiComponent, UiComponentStyles};
-use torchui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
+use torchui::{
+    AppContext, Element, Entity, EventContext, SingletonEntity, TypedActionView, View, ViewContext,
+};
 
 use super::render::{HORIZONTAL_TEXT_MARGIN, SSH_DOCS_URL, SUBSHELL_DOCS_URL};
 use super::settings::WarpifySettings;
 use super::{WarpificationSource, render, subshell_bootstrap_success_block_bytes};
-use crate::ai::agent::ProgrammingLanguage;
-use crate::ai::blocklist::code_block::{CodeSnippetButtonHandles, render_runnable_code_snippet};
 use crate::appearance::Appearance;
 use crate::terminal::model::terminal_model::SubshellInitializationInfo;
-use crate::terminal::shell::{Shell, ShellType};
+use crate::terminal::shell::Shell;
 use crate::ui_components::blended_colors;
+use crate::ui_components::code_block::{
+    CodeBlockOptions, CodeSnippetButtonHandles, HandleCode, render_code_block_plain,
+};
 use crate::ui_components::icons::Icon as UiIcon;
 use crate::workspace::WorkspaceAction;
 
@@ -46,7 +49,6 @@ struct AutoWarpifySnippet {
     selection_handle: SelectionHandle,
     selected_text: Arc<RwLock<Option<String>>>,
 
-    shell_type: ShellType,
     description: Cow<'static, str>,
     code_snippet_handles: CodeSnippetButtonHandles,
     can_write_to_rc: bool,
@@ -119,7 +121,6 @@ impl WarpifySuccessBlock {
                 selection_handle: Default::default(),
                 selected_text: Default::default(),
                 code_snippet_handles: Default::default(),
-                shell_type: shell.shell_type(),
                 can_write_to_rc,
             }
         });
@@ -233,29 +234,21 @@ impl WarpifySuccessBlock {
             return None;
         }
 
-        let shell_language = ProgrammingLanguage::Shell(auto_warpify_snippet.shell_type);
-        let runnable_command = render_runnable_code_snippet(
+        let on_execute: Option<HandleCode> = auto_warpify_snippet.can_write_to_rc.then(|| {
+            Box::new(|code_snippet: String, ctx: &mut EventContext| {
+                ctx.dispatch_typed_action(WorkspaceAction::RunCommand(code_snippet));
+                ctx.dispatch_typed_action(WarpifySuccessBlockAction::ClearAutoWarpifySnippet);
+            }) as HandleCode
+        });
+        let runnable_command = render_code_block_plain(
             &auto_warpify_snippet.output_grid,
-            if auto_warpify_snippet.can_write_to_rc {
-                Some(&shell_language)
-            } else {
-                None
-            },
-            Some(Box::new({
-                move |code_snippet, ctx| {
-                    ctx.dispatch_typed_action(WorkspaceAction::RunCommand(
-                        code_snippet.to_string(),
-                    ));
-
-                    ctx.dispatch_typed_action(WarpifySuccessBlockAction::ClearAutoWarpifySnippet);
-                }
-            })),
-            Some(Box::new({
-                move |code_snippet, ctx| {
+            CodeBlockOptions {
+                on_execute,
+                on_copy: Some(Box::new(|code_snippet, ctx| {
                     ctx.dispatch_typed_action(WorkspaceAction::CopyTextToClipboard(code_snippet));
-                }
-            })),
-            Some(auto_warpify_snippet.code_snippet_handles.clone()),
+                })),
+                mouse_handles: Some(auto_warpify_snippet.code_snippet_handles.clone()),
+            },
             app,
         );
 

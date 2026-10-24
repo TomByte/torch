@@ -16,7 +16,7 @@ pub use view::{
     InlineMenuHeaderConfig, InlineMenuRowAction, InlineMenuView, QueryResultRendererExt,
 };
 
-use super::{InputSuggestionsMode, UserQueryMenuAction};
+use super::InputSuggestionsMode;
 
 /// Identifies a specific inline menu type.
 #[derive(
@@ -36,63 +36,24 @@ use super::{InputSuggestionsMode, UserQueryMenuAction};
     rename_all = "snake_case"
 )]
 pub enum InlineMenuType {
-    SlashCommands,
-    ModelSelector,
-    ConversationMenu,
-    ProfileSelector,
-    PromptsMenu,
-    SkillMenu,
-    UserQueryMenu,
-    RewindMenu,
     InlineHistoryMenu,
-    IndexedReposMenu,
-    PlanMenu,
 }
 
 impl InlineMenuType {
     fn display_label(&self) -> &'static str {
         match self {
-            InlineMenuType::SlashCommands => "/Commands",
-            InlineMenuType::ModelSelector => "/Model",
-            InlineMenuType::ConversationMenu => "/Conversations",
-            InlineMenuType::ProfileSelector => "/Profiles",
-            InlineMenuType::PromptsMenu => "/Prompts",
-            InlineMenuType::SkillMenu => "/Skills",
-            InlineMenuType::UserQueryMenu => "/Fork",
-            InlineMenuType::RewindMenu => "/Rewind",
             InlineMenuType::InlineHistoryMenu => "History",
-            InlineMenuType::IndexedReposMenu => "/Repos",
-            InlineMenuType::PlanMenu => "/Plans",
         }
     }
 
     pub(crate) fn from_suggestions_mode(mode: &InputSuggestionsMode) -> Option<Self> {
         match mode {
-            InputSuggestionsMode::SlashCommands => Some(InlineMenuType::SlashCommands),
-            InputSuggestionsMode::ModelSelector => Some(InlineMenuType::ModelSelector),
-            InputSuggestionsMode::ConversationMenu => Some(InlineMenuType::ConversationMenu),
-            InputSuggestionsMode::ProfileSelector => Some(InlineMenuType::ProfileSelector),
-            InputSuggestionsMode::PromptsMenu => Some(InlineMenuType::PromptsMenu),
-            InputSuggestionsMode::SkillMenu => Some(InlineMenuType::SkillMenu),
-            InputSuggestionsMode::UserQueryMenu {
-                action: UserQueryMenuAction::ForkFrom,
-                ..
-            } => Some(InlineMenuType::UserQueryMenu),
-            InputSuggestionsMode::UserQueryMenu {
-                action: UserQueryMenuAction::Rewind,
-                ..
-            } => Some(InlineMenuType::RewindMenu),
-            InputSuggestionsMode::InlineHistoryMenu { .. } => {
-                Some(InlineMenuType::InlineHistoryMenu)
-            }
-            InputSuggestionsMode::IndexedReposMenu => Some(InlineMenuType::IndexedReposMenu),
-            InputSuggestionsMode::PlanMenu { .. } => Some(InlineMenuType::PlanMenu),
+            InputSuggestionsMode::InlineHistoryMenu => Some(InlineMenuType::InlineHistoryMenu),
             InputSuggestionsMode::Closed
             | InputSuggestionsMode::HistoryUp { .. }
             | InputSuggestionsMode::CompletionSuggestions { .. }
             | InputSuggestionsMode::StaticWorkflowEnumSuggestions { .. }
-            | InputSuggestionsMode::DynamicWorkflowEnumSuggestions { .. }
-            | InputSuggestionsMode::AIContextMenu { .. } => None,
+            | InputSuggestionsMode::DynamicWorkflowEnumSuggestions { .. } => None,
         }
     }
 }

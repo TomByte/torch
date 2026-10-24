@@ -26,11 +26,11 @@ fn strict_params_serialize_without_synthetic_discriminators() {
     let action = Action::with_params(
         ActionKind::TabCreate,
         TabCreateParams {
-            tab_type: Some(TabType::Agent),
+            tab_type: Some(TabType::Default),
         },
     )
     .expect("tab.create params serialize");
-    assert_eq!(action.params, serde_json::json!({ "tab_type": "agent" }));
+    assert_eq!(action.params, serde_json::json!({ "tab_type": "default" }));
     assert!(action.params.get("type").is_none());
     assert!(action.params.get("shell").is_none());
 
@@ -163,8 +163,8 @@ fn malformed_and_removed_action_names_are_not_deserialized() {
 }
 
 #[test]
-fn catalog_has_exactly_80_retained_actions() {
-    assert_eq!(ActionKind::ALL.len(), 80);
+fn catalog_has_exactly_79_retained_actions() {
+    assert_eq!(ActionKind::ALL.len(), 79);
 }
 
 #[test]
@@ -189,10 +189,6 @@ fn direct_surface_actions_have_stable_names() {
     assert_eq!(
         ActionKind::SurfaceGlobalSearchOpen.as_str(),
         "surface.global_search.open"
-    );
-    assert_eq!(
-        ActionKind::SurfaceConversationListOpen.as_str(),
-        "surface.conversation_list.open"
     );
     assert_eq!(
         ActionKind::SurfaceVerticalTabsOpen.as_str(),

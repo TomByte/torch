@@ -9,7 +9,7 @@ use torchui::ui_components::components::{UiComponent, UiComponentStyles};
 use torchui::{AppContext, Element, SingletonEntity};
 
 use crate::appearance::Appearance;
-use crate::settings::ai::DefaultSessionMode;
+use crate::settings::DefaultSessionMode;
 use crate::tab_configs::TabConfig;
 use crate::terminal::available_shells::AvailableShell;
 use crate::workspace::WorkspaceAction;

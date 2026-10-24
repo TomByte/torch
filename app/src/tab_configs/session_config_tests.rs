@@ -364,11 +364,6 @@ fn make_terminal_leaf(cwd: Option<&str>, is_focused: bool) -> PaneNodeSnapshot {
             shell_launch_data: None,
             is_active: false,
             is_read_only: false,
-            input_config: None,
-            llm_model_override: None,
-            active_profile_id: None,
-            conversation_ids_to_restore: vec![],
-            active_conversation_id: None,
             cli_agent_session: None,
         }),
     })
@@ -550,8 +545,6 @@ fn snapshot_round_trip_toml() {
 
 // ── snapshot pane_type derivation ──
 
-use crate::ai::agent::conversation::AIConversationId;
-
 fn make_agent_leaf(cwd: Option<&str>, is_focused: bool) -> PaneNodeSnapshot {
     PaneNodeSnapshot::Leaf(LeafSnapshot {
         is_focused,
@@ -562,28 +555,9 @@ fn make_agent_leaf(cwd: Option<&str>, is_focused: bool) -> PaneNodeSnapshot {
             shell_launch_data: None,
             is_active: false,
             is_read_only: false,
-            input_config: None,
-            llm_model_override: None,
-            active_profile_id: None,
-            conversation_ids_to_restore: vec![],
-            active_conversation_id: Some(AIConversationId::new()),
             cli_agent_session: None,
         }),
     })
-}
-
-#[test]
-fn snapshot_agent_pane_gets_agent_type() {
-    let snapshot = make_agent_leaf(Some("/home/user/project"), true);
-    let config = tab_config_from_pane_snapshot(&snapshot, None, None);
-
-    assert_eq!(config.panes.len(), 1);
-    assert_eq!(config.panes[0].pane_type, Some(TabConfigPaneType::Agent));
-    assert_eq!(
-        config.panes[0].directory.as_deref(),
-        Some("/home/user/project")
-    );
-    assert_eq!(config.panes[0].is_focused, Some(true));
 }
 
 // ── nested / multi-level pane layout edge cases ──
@@ -701,7 +675,7 @@ fn snapshot_asymmetric_tree() {
         Some(vec!["p2".to_string(), "p5".to_string()])
     );
     assert_eq!(config.panes[1].id, "p2"); // deep_left
-    assert_eq!(config.panes[4].pane_type, Some(TabConfigPaneType::Agent));
+    assert_eq!(config.panes[4].pane_type, Some(TabConfigPaneType::Terminal));
 }
 
 #[test]
@@ -779,8 +753,8 @@ fn snapshot_round_trip_3_deep_nesting() {
         parsed.panes[1].children,
         Some(vec!["p3".to_string(), "p4".to_string()])
     );
-    assert_eq!(parsed.panes[2].pane_type, Some(TabConfigPaneType::Agent));
-    assert_eq!(parsed.panes[3].pane_type, Some(TabConfigPaneType::Agent));
+    assert_eq!(parsed.panes[2].pane_type, Some(TabConfigPaneType::Terminal));
+    assert_eq!(parsed.panes[3].pane_type, Some(TabConfigPaneType::Terminal));
     assert_eq!(parsed.panes[4].pane_type, Some(TabConfigPaneType::Terminal));
 }
 

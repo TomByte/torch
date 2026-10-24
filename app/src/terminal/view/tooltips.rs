@@ -16,12 +16,6 @@ use crate::terminal::safe_mode_settings::get_secret_obfuscation_mode;
 use crate::terminal::view::SecretTooltip;
 use crate::util::tooltips::{TooltipLink, TooltipRedaction};
 
-cfg_if::cfg_if! {
-    if #[cfg(feature = "local_fs")] {
-        use crate::terminal::view::RichContentLink;
-    }
-}
-
 struct GridTooltipLink {
     text: String,
     action: TerminalAction,
@@ -105,16 +99,11 @@ impl TerminalView {
     ) {
         let mut element_id = "terminal_view:first_cell_in_link".to_string();
         let mut links = vec![];
-        let mut is_agent_conversation = false;
 
         if let Some(open_secret_tooltip) = &self.open_secret_tool_tip {
             match open_secret_tooltip {
-                SecretTooltip::Grid {
-                    tooltip,
-                    is_agent_mode,
-                } => {
+                SecretTooltip::Grid { tooltip } => {
                     let handle = *tooltip;
-                    is_agent_conversation = *is_agent_mode;
 
                     // Position the tooltip above the first cell in the secret.
                     element_id = format!(
@@ -153,48 +142,6 @@ impl TerminalView {
                     links.push(GridTooltipLink {
                         text: "Copy secret".to_string(),
                         action: TerminalAction::CopyGridSecret(handle),
-                        mouse_state: self.mouse_states.copy_secrets_tooltip.clone(),
-                        detail: None,
-                    });
-                }
-                SecretTooltip::RichContent {
-                    tooltip,
-                    is_agent_mode,
-                } => {
-                    let tooltip_info = tooltip;
-                    // Position the tooltip above the first cell in the secret.
-                    element_id = tooltip_info.position_id.to_owned();
-                    is_agent_conversation = *is_agent_mode;
-
-                    if matches!(get_secret_obfuscation_mode(app), ObfuscateSecrets::Yes) {
-                        let is_obfuscated = tooltip_info.is_obfuscated;
-
-                        if is_obfuscated {
-                            links.push(GridTooltipLink {
-                                text: "Reveal secret".to_string(),
-                                action: TerminalAction::ToggleRichContentSecret {
-                                    rich_content_tooltip_info: tooltip_info.clone(),
-                                    show_secret: true,
-                                },
-                                mouse_state: self.mouse_states.toggle_secrets_tooltip.clone(),
-                                detail: None,
-                            });
-                        } else {
-                            links.push(GridTooltipLink {
-                                text: "Hide secret".to_string(),
-                                action: TerminalAction::ToggleRichContentSecret {
-                                    rich_content_tooltip_info: tooltip_info.clone(),
-                                    show_secret: false,
-                                },
-                                mouse_state: self.mouse_states.toggle_secrets_tooltip.clone(),
-                                detail: None,
-                            })
-                        }
-                    }
-
-                    links.push(GridTooltipLink {
-                        text: "Copy secret".to_string(),
-                        action: TerminalAction::CopyRichContentSecret(tooltip_info.clone()),
                         mouse_state: self.mouse_states.copy_secrets_tooltip.clone(),
                         detail: None,
                     });
@@ -244,72 +191,26 @@ impl TerminalView {
             links.extend(show_in_file_explorer);
         }
 
-        #[cfg_attr(not(feature = "local_fs"), allow(unused_mut))]
-        if let Some(tooltip_info) = &self.open_rich_content_link_tool_tip {
-            element_id = tooltip_info.position_id.to_owned();
-            let mut open_in_warp = None;
-            let mut show_in_file_explorer = None;
-            let modifier_string = directly_open_link_keybinding_string();
-            let mut detail = Some(format!("[{modifier_string} Click]"));
-
-            #[cfg(feature = "local_fs")]
-            {
-                if let RichContentLink::FilePath {
-                    absolute_path,
-                    line_and_column_num,
-                    ..
-                } = &tooltip_info.link
-                {
-                    open_in_warp = open_in_warp_tooltip(
-                        absolute_path.clone(),
-                        *line_and_column_num,
-                        &mut detail,
-                        self.mouse_states.open_in_warp_tooltip.clone(),
-                        app,
-                    );
-                    show_in_file_explorer = Some(show_in_file_explorer_tooltip(
-                        absolute_path.clone(),
-                        self.mouse_states.show_in_file_explorer_tooltip.clone(),
-                    ));
-                }
-            }
-
-            links.push(GridTooltipLink {
-                text: tooltip_info.link.tooltip_text().to_owned(),
-                action: TerminalAction::OpenRichContentLink(tooltip_info.link.clone()),
-                mouse_state: self.mouse_states.rich_content_link_tooltip.clone(),
-                detail,
-            });
-
-            links.extend(open_in_warp);
-            links.extend(show_in_file_explorer);
-        }
-
         let secret_redaction = get_secret_obfuscation_mode(app);
 
         // Get the secret level from the current tooltip
         let secret_level = self.open_secret_tool_tip.as_ref().and_then(|tooltip| {
             match tooltip {
-                SecretTooltip::Grid { tooltip, .. } => {
+                SecretTooltip::Grid { tooltip } => {
                     // For grid secrets, get the secret level from the secret itself
                     model
                         .secret_from_handle(tooltip)
                         .map(|secret| secret.secret_level())
                 }
-                SecretTooltip::RichContent { tooltip, .. } => Some(tooltip.secret_level),
             }
         });
 
         let redaction = match (
             self.open_secret_tool_tip.is_some(),
             secret_redaction.should_redact_secret(),
-            is_agent_conversation,
         ) {
-            (true, true, true) => TooltipRedaction::SecretNotSentToLLMMessaging { secret_level },
-            (true, true, false) => {
-                TooltipRedaction::SecretWillNotBeSentToLLMMessaging { secret_level }
-            }
-            (_, _, _) => TooltipRedaction::NoRedaction,
+            (true, true) => TooltipRedaction::SecretWillNotBeSentToLLMMessaging { secret_level },
+            (_, _) => TooltipRedaction::NoRedaction,
         };
         stack.add_positioned_overlay_child(
             render_tooltip(links, redaction, appearance, app),

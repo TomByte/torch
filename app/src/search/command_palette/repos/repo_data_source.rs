@@ -4,7 +4,7 @@ use itertools::Itertools;
 use torchui::{AppContext, Entity, SingletonEntity};
 
 use super::RepoSearchItem;
-use crate::ai::persisted_workspace::PersistedWorkspace;
+use crate::persisted_workspace::PersistedWorkspace;
 use crate::search::command_palette::mixer::CommandPaletteItemAction;
 use crate::search::data_source::{Query, QueryResult};
 use crate::search::mixer::{DataSourceRunErrorWrapper, SyncDataSource};

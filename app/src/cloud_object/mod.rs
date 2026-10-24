@@ -15,9 +15,6 @@ use torchui::{AppContext, SingletonEntity};
 
 use self::breadcrumbs::ContainingObject;
 use self::model::actions::ObjectActions;
-use self::model::generic_string_model::{
-    GenericStringModel, GenericStringObjectId, Serializer, StringModel,
-};
 use self::model::persistence::CloudModel;
 use crate::auth::UserUid;
 use crate::channel::ChannelState;
@@ -510,54 +507,6 @@ pub trait CloudModelType: Debug + Clone + Send + Sync {
     /// Whether this model type can be exported.
     fn can_export(&self) -> bool {
         false
-    }
-}
-/// Provides app-local typed lookup helpers for generic cloud object aliases.
-pub trait CloudObjectLookup: Sized + Clone {
-    fn get_all(app: &AppContext) -> Vec<Self>;
-
-    fn get_by_id<'a>(sync_id: &'a SyncId, app: &'a AppContext) -> Option<&'a Self>;
-}
-
-impl<K, M> CloudObjectLookup for GenericCloudObject<K, M>
-where
-    K: HashableId + ToServerId + Debug + Into<String> + Clone + 'static,
-    M: CloudModelType<IdType = K, CloudObjectType = GenericCloudObject<K, M>> + 'static,
-{
-    fn get_all(app: &AppContext) -> Vec<Self> {
-        CloudModel::as_ref(app)
-            .get_all_objects_of_type::<K, M>()
-            .cloned()
-            .collect()
-    }
-
-    fn get_by_id<'a>(sync_id: &'a SyncId, app: &'a AppContext) -> Option<&'a Self> {
-        CloudModel::as_ref(app).get_object_of_type::<K, M>(sync_id)
-    }
-}
-
-/// Marks string model payloads that can be looked up by UUID.
-pub trait CloudObjectUuid {
-    fn uuid(&self) -> uuid::Uuid;
-}
-
-/// Provides app-local UUID lookups for cloud objects whose payload exposes a UUID.
-pub trait CloudObjectUuidLookup: Sized {
-    fn get_by_uuid<'a>(uuid: &'a uuid::Uuid, app: &'a AppContext) -> Option<&'a Self>;
-}
-
-impl<T, S> CloudObjectUuidLookup
-    for GenericCloudObject<GenericStringObjectId, GenericStringModel<T, S>>
-where
-    T: StringModel<
-            CloudObjectType = GenericCloudObject<GenericStringObjectId, GenericStringModel<T, S>>,
-        > + CloudObjectUuid,
-    S: Serializer<T>,
-{
-    fn get_by_uuid<'a>(uuid: &'a uuid::Uuid, app: &'a AppContext) -> Option<&'a Self> {
-        CloudModel::as_ref(app)
-            .get_all_objects_of_type::<GenericStringObjectId, GenericStringModel<T, S>>()
-            .find(|object| object.model().string_model.uuid() == *uuid)
     }
 }
 

@@ -2,15 +2,13 @@ use std::collections::HashMap;
 use std::ops::Range;
 
 use string_offset::CharOffset;
-use torch_core::features::FeatureFlag;
 use torch_core::settings::Setting;
 use torch_errors::report_error;
 use torchui::color::ColorU;
 use torchui::elements::{
     self, Align, Border, Clipped, ClippedScrollStateHandle, ClippedScrollable, ConstrainedBox,
-    Container, CornerRadius, CrossAxisAlignment, DropShadow, Flex, Highlight, Icon,
-    MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, Rect, Shrinkable,
-    Stack, Text,
+    Container, CornerRadius, CrossAxisAlignment, DropShadow, Flex, Highlight, MainAxisAlignment,
+    MainAxisSize, MouseStateHandle, ParentElement, Radius, Rect, Shrinkable, Stack, Text,
 };
 use torchui::fonts::{Properties, Weight};
 use torchui::geometry::vector::Vector2F;
@@ -24,13 +22,11 @@ use torchui::{
     ViewHandle,
 };
 
-use super::AIWorkflowOrigin;
 use super::command_parser::{
     WorkflowArgumentIndex, WorkflowDisplayData, compute_workflow_display_data,
 };
 use super::workflow::Argument;
 use super::workflow_view::env_var_selector::{EnvVarSelector, EnvVarSelectorEvent};
-use crate::ai::blocklist::ai_brand_color;
 use crate::appearance::Appearance;
 use crate::cloud_object::CloudObjectMetadataExt;
 use crate::cloud_object::model::actions::{ObjectActionType, ObjectActions};
@@ -698,9 +694,8 @@ impl WorkflowsMoreInfoView {
 
         let mut children = vec![workflow_container];
 
-        if self.workflow.should_show_env_var_selection()
-            && let Some(environment_variables_selection) =
-                self.render_environment_variables_selection(appearance, app)
+        if let Some(environment_variables_selection) =
+            self.render_environment_variables_selection(appearance, app)
         {
             children.push(Clipped::new(environment_variables_selection).finish());
         }
@@ -834,94 +829,26 @@ impl WorkflowsMoreInfoView {
         wrap_text: WrapText,
         appearance: &Appearance,
     ) -> Box<dyn Element> {
-        match &self.workflow {
-            WorkflowType::AIGenerated {
-                workflow,
-                origin: source,
-            } => {
-                let icon = if FeatureFlag::AgentMode.is_enabled() {
-                    match source {
-                        AIWorkflowOrigin::AgentMode => {
-                            Icon::new(icons::Icon::Prompt.into(), appearance.theme().accent())
-                                .finish()
-                        }
-                        _ => Icon::new(
-                            icons::Icon::Prompt.into(),
-                            ai_brand_color(appearance.theme()),
-                        )
-                        .finish(),
-                    }
-                } else {
-                    Icon::new(
-                        icons::Icon::AiAssistant.into(),
-                        appearance
-                            .theme()
-                            .main_text_color(appearance.theme().background()),
-                    )
-                    .finish()
-                };
-
-                let ai_icon = Container::new(
-                    ConstrainedBox::new(icon)
-                        .with_width(16.)
-                        .with_height(16.)
-                        .finish(),
-                )
-                .with_margin_right(8.)
-                .finish();
-
-                Flex::row()
-                    .with_cross_axis_alignment(CrossAxisAlignment::Center)
-                    .with_children([
-                        ai_icon,
-                        appearance
-                            .ui_builder()
-                            .wrappable_text(
-                                workflow.name().to_owned(),
-                                matches!(wrap_text, WrapText::Yes),
-                            )
-                            .with_style(UiComponentStyles {
-                                font_family_id: Some(appearance.ui_font_family()),
-                                font_color: Some(
-                                    appearance
-                                        .theme()
-                                        .main_text_color(appearance.theme().background())
-                                        .into(),
-                                ),
-                                font_size: Some(
-                                    appearance.monospace_font_size() * TITLE_FONT_SIZE_SCALE_FACTOR,
-                                ),
-                                font_weight: Some(Weight::Bold),
-                                ..Default::default()
-                            })
-                            .build()
-                            .finish(),
-                    ])
-                    .finish()
-            }
-            _ => appearance
-                .ui_builder()
-                .wrappable_text(
-                    self.workflow.as_workflow().name().to_owned(),
-                    matches!(wrap_text, WrapText::Yes),
-                )
-                .with_style(UiComponentStyles {
-                    font_family_id: Some(appearance.ui_font_family()),
-                    font_color: Some(
-                        appearance
-                            .theme()
-                            .main_text_color(appearance.theme().background())
-                            .into(),
-                    ),
-                    font_size: Some(
-                        appearance.monospace_font_size() * TITLE_FONT_SIZE_SCALE_FACTOR,
-                    ),
-                    font_weight: Some(Weight::Bold),
-                    ..Default::default()
-                })
-                .build()
-                .finish(),
-        }
+        appearance
+            .ui_builder()
+            .wrappable_text(
+                self.workflow.as_workflow().name().to_owned(),
+                matches!(wrap_text, WrapText::Yes),
+            )
+            .with_style(UiComponentStyles {
+                font_family_id: Some(appearance.ui_font_family()),
+                font_color: Some(
+                    appearance
+                        .theme()
+                        .main_text_color(appearance.theme().background())
+                        .into(),
+                ),
+                font_size: Some(appearance.monospace_font_size() * TITLE_FONT_SIZE_SCALE_FACTOR),
+                font_weight: Some(Weight::Bold),
+                ..Default::default()
+            })
+            .build()
+            .finish()
     }
 
     fn render_workflow_source(

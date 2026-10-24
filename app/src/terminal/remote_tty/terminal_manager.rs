@@ -7,7 +7,6 @@ use parking_lot::FairMutex;
 use pathfinder_geometry::vector::Vector2F;
 use torchui::{AppContext, ModelHandle, ViewHandle, WindowId};
 
-use crate::agent_status::InputConfig;
 use crate::context_chips::prompt_type::PromptType;
 use crate::pane_group::TerminalViewResources;
 use crate::persistence::ModelEvent;
@@ -53,7 +52,6 @@ impl TerminalManager {
         initial_size: Vector2F,
         model_event_sender: Option<SyncSender<ModelEvent>>,
         window_id: WindowId,
-        initial_input_config: Option<InputConfig>,
         ctx: &mut AppContext,
     ) -> TerminalManagerInit {
         // Create all the necessary channels we need for communication.
@@ -129,8 +127,6 @@ impl TerminalManager {
                 colors,
                 model_event_sender.clone(),
                 prompt_type,
-                initial_input_config,
-                None, // conversation_restoration - not used for remote
                 None, // inactive_pty_reads_rx
                 ctx,
             )

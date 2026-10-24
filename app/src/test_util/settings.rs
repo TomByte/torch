@@ -30,12 +30,12 @@ pub fn initialize_settings_for_tests_with_mode(
     use crate::settings::app_icon::AppIconSettings;
     use crate::settings::manager::SettingsManager;
     use crate::settings::{
-        AISettings, AccessibilitySettings, AliasExpansionSettings, AppEditorSettings,
-        BlockVisibilitySettings, ChangelogSettings, CloudPreferencesSettings, CodeSettings,
-        DebugSettings, EmacsBindingsSettings, FontSettings, GPUSettings, InputModeSettings,
-        InputSettings, LocalControlSettings, NativePreferenceSettings, PaneSettings,
-        ScrollSettings, SelectionSettings, SshSettings, ThemeSettings, VimBannerSettings,
-        init_and_register_user_preferences,
+        AccessibilitySettings, AliasExpansionSettings, AppEditorSettings, BlockVisibilitySettings,
+        CLIAgentSettings, ChangelogSettings, CloudPreferencesSettings, CodeSettings, DebugSettings,
+        DefaultSessionSettings, EmacsBindingsSettings, FontSettings, GPUSettings,
+        InputModeSettings, InputSettings, LocalControlSettings, NativePreferenceSettings,
+        PaneSettings, ScrollSettings, SelectionSettings, SshSettings, ThemeSettings,
+        VimBannerSettings, init_and_register_user_preferences,
     };
     use crate::terminal::BlockListSettings;
     use crate::terminal::general_settings::GeneralSettings;
@@ -60,7 +60,8 @@ pub fn initialize_settings_for_tests_with_mode(
     });
 
     AccessibilitySettings::register(app);
-    app.update(AISettings::register_and_subscribe_to_events);
+    app.update(CLIAgentSettings::register_and_subscribe_to_events);
+    DefaultSessionSettings::register(app);
     AliasExpansionSettings::register(app);
     AppEditorSettings::register(app);
     BlockVisibilitySettings::register(app);

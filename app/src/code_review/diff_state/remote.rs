@@ -197,14 +197,6 @@ impl RemoteDiffStateModel {
             } if self.remote_path.matches(host_id, repo_path) => {
                 self.handle_create_pr_response(result, ctx);
             }
-            RemoteServerManagerEvent::GenerateCommitMessageResponse {
-                host_id,
-                repo_path,
-                result,
-            } if self.remote_path.matches(host_id, repo_path) => {
-                // AI ran on the daemon; just relay the result to the dialog.
-                ctx.emit(DiffStateModelEvent::CommitMessageGenerated(result.clone()));
-            }
             RemoteServerManagerEvent::GetCommittedBranchFilesResponse {
                 host_id,
                 repo_path,
@@ -721,7 +713,6 @@ impl RemoteDiffStateModel {
         message: String,
         include_unstaged: bool,
         branch: String,
-        autogenerate_pr_content: bool,
         ctx: &mut ModelContext<Self>,
     ) {
         let host_id = self.remote_path.host_id.clone();
@@ -734,25 +725,9 @@ impl RemoteDiffStateModel {
                 message,
                 include_unstaged,
                 branch,
-                autogenerate_pr_content,
+                false,
                 ctx,
             );
-        });
-    }
-
-    /// Issues an AI commit-message generation request via the remote server
-    /// manager. The result arrives as a `GenerateCommitMessageResponse`
-    /// manager event, handled in `handle_manager_event`.
-    pub fn generate_commit_message(
-        &self,
-        include_unstaged: bool,
-        branch_name: String,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        let host_id = self.remote_path.host_id.clone();
-        let repo_path = self.remote_path.path.clone();
-        RemoteServerManager::handle(ctx).update(ctx, |mgr, ctx| {
-            mgr.git_generate_commit_message(host_id, repo_path, include_unstaged, branch_name, ctx);
         });
     }
 
@@ -778,20 +753,12 @@ impl RemoteDiffStateModel {
         });
     }
 
-    /// Creates a PR via the remote server manager. When `autogenerate_content`
-    /// is set, the daemon AI-generates the PR title/body (falling back to
-    /// `gh pr create --fill`); `branch` is passed as context for that generation.
-    #[allow(clippy::too_many_arguments)]
-    pub fn create_pr(
-        &self,
-        branch: String,
-        autogenerate_content: bool,
-        ctx: &mut ModelContext<Self>,
-    ) {
+    /// Creates a PR via the remote server manager with `gh pr create --fill`.
+    pub fn create_pr(&self, branch: String, ctx: &mut ModelContext<Self>) {
         let host_id = self.remote_path.host_id.clone();
         let repo_path = self.remote_path.path.clone();
         RemoteServerManager::handle(ctx).update(ctx, |mgr, ctx| {
-            mgr.git_create_pr(host_id, repo_path, branch, autogenerate_content, ctx);
+            mgr.git_create_pr(host_id, repo_path, branch, false, ctx);
         });
     }
 

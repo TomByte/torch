@@ -444,10 +444,6 @@ pub enum SurfaceCommand {
     #[command(subcommand)]
     GlobalSearch(SurfaceOpenCommand),
 
-    /// Open the conversation list.
-    #[command(subcommand)]
-    ConversationList(SurfaceOpenCommand),
-
     /// Toggle the left panel.
     #[command(subcommand)]
     LeftPanel(SurfaceToggleCommand),
@@ -822,8 +818,6 @@ pub struct KeybindingGetArgs {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
 pub enum CliTabType {
     Terminal,
-    Agent,
-    CloudAgent,
     Default,
 }
 
@@ -831,8 +825,6 @@ impl From<CliTabType> for local_control::protocol::TabType {
     fn from(value: CliTabType) -> Self {
         match value {
             CliTabType::Terminal => Self::Terminal,
-            CliTabType::Agent => Self::Agent,
-            CliTabType::CloudAgent => Self::CloudAgent,
             CliTabType::Default => Self::Default,
         }
     }

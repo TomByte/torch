@@ -19,10 +19,6 @@ use super::graphql::GraphQLError;
 use super::ids::{ClientId, HashableId, ObjectUid, ServerId, SyncId, ToServerId};
 use super::server_api::auth::UserAuthenticationError;
 use super::server_api::object::ObjectClient;
-use crate::ai::execution_profiles::CloudAIExecutionProfileModel;
-use crate::ai::facts::CloudAIFactModel;
-use crate::ai::mcp::CloudMCPServerModel;
-use crate::ai::mcp::templatable::CloudTemplatableMCPServerModel;
 use crate::cloud_object::model::actions::{
     ObjectAction, ObjectActionHistory, ObjectActionSubtype, ObjectActionType,
 };
@@ -181,26 +177,6 @@ pub enum QueueItem {
     },
     UpdateWorkflowEnum {
         model: Arc<CloudWorkflowEnumModel>,
-        id: SyncId,
-        revision: Option<Revision>,
-    },
-    UpdateAIFact {
-        model: Arc<CloudAIFactModel>,
-        id: SyncId,
-        revision: Option<Revision>,
-    },
-    UpdateMCPServer {
-        model: Arc<CloudMCPServerModel>,
-        id: SyncId,
-        revision: Option<Revision>,
-    },
-    UpdateAIExecutionProfile {
-        model: Arc<CloudAIExecutionProfileModel>,
-        id: SyncId,
-        revision: Option<Revision>,
-    },
-    UpdateTemplatableMCPServer {
-        model: Arc<CloudTemplatableMCPServerModel>,
         id: SyncId,
         revision: Option<Revision>,
     },
@@ -439,10 +415,6 @@ impl SyncQueue {
             | QueueItem::UpdateCloudPreferences { id, .. }
             | QueueItem::UpdateEnvVarCollection { id, .. }
             | QueueItem::UpdateWorkflowEnum { id, .. }
-            | QueueItem::UpdateAIFact { id, .. }
-            | QueueItem::UpdateMCPServer { id, .. }
-            | QueueItem::UpdateAIExecutionProfile { id, .. }
-            | QueueItem::UpdateTemplatableMCPServer { id, .. }
             | QueueItem::UpdateCloudEnvironment { id, .. }
             | QueueItem::UpdateScheduledAmbientAgent { id, .. }
             | QueueItem::UpdateCloudAgentConfig { id, .. } => self.get_update_dependencies(id),
@@ -557,10 +529,6 @@ impl SyncQueue {
                 | QueueItem::UpdateFolder { id, .. }
                 | QueueItem::UpdateEnvVarCollection { id, .. }
                 | QueueItem::UpdateWorkflowEnum { id, .. }
-                | QueueItem::UpdateAIFact { id, .. }
-                | QueueItem::UpdateMCPServer { id, .. }
-                | QueueItem::UpdateAIExecutionProfile { id, .. }
-                | QueueItem::UpdateTemplatableMCPServer { id, .. }
                 | QueueItem::UpdateCloudEnvironment { id, .. }
                 | QueueItem::UpdateScheduledAmbientAgent { id, .. }
                 | QueueItem::UpdateCloudAgentConfig { id, .. }
@@ -665,10 +633,6 @@ impl SyncQueue {
                 | QueueItem::UpdateCloudPreferences { id, revision, .. }
                 | QueueItem::UpdateEnvVarCollection { id, revision, .. }
                 | QueueItem::UpdateWorkflowEnum { id, revision, .. }
-                | QueueItem::UpdateAIFact { id, revision, .. }
-                | QueueItem::UpdateMCPServer { id, revision, .. }
-                | QueueItem::UpdateAIExecutionProfile { id, revision, .. }
-                | QueueItem::UpdateTemplatableMCPServer { id, revision, .. }
                 | QueueItem::UpdateCloudEnvironment { id, revision, .. }
                 | QueueItem::UpdateScheduledAmbientAgent { id, revision, .. }
                 | QueueItem::UpdateCloudAgentConfig { id, revision, .. } => {
@@ -790,63 +754,7 @@ impl SyncQueue {
                         ctx,
                     );
                 }
-                QueueItem::UpdateAIFact {
-                    model,
-                    id,
-                    revision,
-                } => {
-                    self.update_object(
-                        model.clone(),
-                        id,
-                        revision,
-                        object_client,
-                        dequeued_item_id,
-                        ctx,
-                    );
-                }
-                QueueItem::UpdateAIExecutionProfile {
-                    id,
-                    model,
-                    revision,
-                } => {
-                    self.update_object(
-                        model.clone(),
-                        id,
-                        revision,
-                        object_client,
-                        dequeued_item_id,
-                        ctx,
-                    );
-                }
                 QueueItem::UpdateWorkflowEnum {
-                    model,
-                    id,
-                    revision,
-                } => {
-                    self.update_object(
-                        model.clone(),
-                        id,
-                        revision,
-                        object_client,
-                        dequeued_item_id,
-                        ctx,
-                    );
-                }
-                QueueItem::UpdateMCPServer {
-                    model,
-                    id,
-                    revision,
-                } => {
-                    self.update_object(
-                        model.clone(),
-                        id,
-                        revision,
-                        object_client,
-                        dequeued_item_id,
-                        ctx,
-                    );
-                }
-                QueueItem::UpdateTemplatableMCPServer {
                     model,
                     id,
                     revision,
@@ -1266,34 +1174,6 @@ impl SyncQueue {
                                 )
                                 .await
                             }
-                            JsonObjectType::AIFact => {
-                                CloudAIFactModel::send_create_request(
-                                    object_client_clone,
-                                    create_request,
-                                )
-                                .await
-                            }
-                            JsonObjectType::AIExecutionProfile => {
-                                CloudAIExecutionProfileModel::send_create_request(
-                                    object_client_clone,
-                                    create_request,
-                                )
-                                .await
-                            }
-                            JsonObjectType::MCPServer => {
-                                CloudMCPServerModel::send_create_request(
-                                    object_client_clone,
-                                    create_request,
-                                )
-                                .await
-                            }
-                            JsonObjectType::TemplatableMCPServer => {
-                                CloudTemplatableMCPServerModel::send_create_request(
-                                    object_client_clone,
-                                    create_request,
-                                )
-                                .await
-                            }
                             JsonObjectType::CloudEnvironment => {
                                 CloudAmbientAgentEnvironmentModel::send_create_request(
                                     object_client_clone,
@@ -1311,6 +1191,12 @@ impl SyncQueue {
                             // CloudAgentConfig is not created from the client
                             JsonObjectType::CloudAgentConfig => Err(anyhow::anyhow!(
                                 "CloudAgentConfig creation not supported from client"
+                            )),
+                            JsonObjectType::AIFact
+                            | JsonObjectType::AIExecutionProfile
+                            | JsonObjectType::MCPServer
+                            | JsonObjectType::TemplatableMCPServer => Err(anyhow::anyhow!(
+                                "{json_object_type:?} creation is no longer supported"
                             )),
                         },
                     }
@@ -1906,18 +1792,6 @@ impl SyncQueue {
                     self.handle_update_failure_response(id, item_id, ctx);
                 }
                 QueueItem::UpdateWorkflowEnum { id, .. } => {
-                    self.handle_update_failure_response(id, item_id, ctx);
-                }
-                QueueItem::UpdateAIFact { id, .. } => {
-                    self.handle_update_failure_response(id, item_id, ctx);
-                }
-                QueueItem::UpdateMCPServer { id, .. } => {
-                    self.handle_update_failure_response(id, item_id, ctx);
-                }
-                QueueItem::UpdateAIExecutionProfile { id, .. } => {
-                    self.handle_update_failure_response(id, item_id, ctx);
-                }
-                QueueItem::UpdateTemplatableMCPServer { id, .. } => {
                     self.handle_update_failure_response(id, item_id, ctx);
                 }
                 QueueItem::UpdateCloudEnvironment { id, .. } => {

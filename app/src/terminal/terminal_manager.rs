@@ -8,15 +8,12 @@ use settings::Setting as _;
 use torchui::{AppContext, SingletonEntity};
 
 use super::event_listener::ChannelEventListener;
-use super::model::block::BlockSize;
+use super::model::block::{BlockSize, SerializedBlock};
 use super::safe_mode_settings::get_secret_obfuscation_mode;
 use super::session_settings::SessionSettings;
 use super::settings::TerminalSettings;
 use super::view::{TORCH_PROMPT_HEIGHT_LINES, create_size_info_for_blocklist};
 use super::{BlockPadding, ShellLaunchState, SizeInfo, TerminalModel, color};
-use crate::PrivacySettings;
-use crate::ai::blocklist::SerializedBlockListItem;
-use crate::ai::blocklist::telemetry_banner::should_collect_ai_ugc_telemetry;
 use crate::appearance::Appearance;
 use crate::settings::{BlockVisibilitySettings, DebugSettings, InputModeSettings};
 
@@ -101,7 +98,7 @@ pub(super) fn compute_block_size(
 #[allow(clippy::too_many_arguments)]
 pub(super) fn create_terminal_model(
     startup_directory: Option<PathBuf>,
-    restored_blocks: Option<&Vec<SerializedBlockListItem>>,
+    restored_blocks: Option<&Vec<SerializedBlock>>,
     initial_size: Vector2F,
     channel_event_proxy: ChannelEventListener,
     shell_state: ShellLaunchState,
@@ -122,8 +119,6 @@ pub(super) fn create_terminal_model(
     let sizes = compute_block_size(initial_size, &block_spacing, ctx);
 
     let obfuscate_secrets = get_secret_obfuscation_mode(ctx);
-    let is_ai_ugc_telemetry_enabled =
-        should_collect_ai_ugc_telemetry(ctx, PrivacySettings::as_ref(ctx).is_telemetry_enabled);
 
     TerminalModel::new(
         restored_blocks.map(|v| v.as_slice()),
@@ -137,7 +132,6 @@ pub(super) fn create_terminal_model(
         honor_ps1,
         is_inverted,
         obfuscate_secrets,
-        is_ai_ugc_telemetry_enabled,
         startup_directory,
         shell_state,
     )

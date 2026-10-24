@@ -3,8 +3,6 @@ use torchui::SingletonEntity;
 use torchui::integration::TestStep;
 use torchui::windowing::WindowManager;
 
-use crate::agent_status::InputConfig;
-use crate::ai::blocklist::InputType;
 use crate::integration_testing::step::new_step_with_default_assertions;
 use crate::integration_testing::terminal::assert_context_menu_is_open;
 use crate::integration_testing::view_getters::{
@@ -22,8 +20,8 @@ pub fn open_cli_agent_rich_input(tab_index: usize) -> TestStep {
     new_step_with_default_assertions("Open CLI Agent Rich Input").with_action(
         move |app, window_id, _step_data| {
             let terminal_view = single_terminal_view_for_tab(app, window_id, tab_index);
-            terminal_view.update(app, |view, ctx| {
-                let view_id = view.view_id();
+            terminal_view.update(app, |_, ctx| {
+                let view_id = ctx.view_id();
 
                 CLIAgentSessionsModel::handle(ctx).update(ctx, |sessions, ctx| {
                     sessions.set_session(
@@ -46,17 +44,7 @@ pub fn open_cli_agent_rich_input(tab_index: usize) -> TestStep {
                 });
 
                 CLIAgentSessionsModel::handle(ctx).update(ctx, |sessions, ctx| {
-                    sessions.open_input(
-                        view_id,
-                        CLIAgentInputEntrypoint::CtrlG,
-                        InputConfig {
-                            input_type: InputType::AI,
-                            is_locked: true,
-                        },
-                        false,
-                        false,
-                        ctx,
-                    );
+                    sessions.open_input(view_id, CLIAgentInputEntrypoint::CtrlG, false, ctx);
                 });
             });
         },

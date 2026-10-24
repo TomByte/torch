@@ -13,13 +13,14 @@ use super::common::{
 };
 use super::{
     CLI_AGENT_RICH_INPUT_EDITOR_BOTTOM_PADDING, CLI_AGENT_RICH_INPUT_EDITOR_MAX_HEIGHT,
-    CLI_AGENT_RICH_INPUT_EDITOR_TOP_PADDING, Input, InputAction, InputDropTargetData,
+    CLI_AGENT_RICH_INPUT_EDITOR_TOP_PADDING, Input, InputDropTargetData,
     TERMINAL_VIEW_PADDING_LEFT,
 };
 use crate::appearance::Appearance;
 use crate::context_chips::spacing;
 use crate::editor::{EnterAction, EnterSettings, TextColors};
 use crate::features::FeatureFlag;
+use crate::settings::CLIAgentSettings;
 use crate::terminal::cli_agent_sessions::CLIAgentSessionsModel;
 use crate::terminal::should_right_click_paste;
 use crate::terminal::view::TerminalAction;
@@ -66,8 +67,7 @@ impl Input {
 
         let mut column = Flex::column();
 
-        // Render attachment chips (e.g. pasted screenshots) above the editor,
-        // matching the pattern used by the agent view input in agent.rs.
+        // Render attachment chips (e.g. pasted screenshots) above the editor.
         if FeatureFlag::ImageAsContext.is_enabled()
             && let Some(images) = self.render_attachment_chips(appearance)
         {
@@ -122,9 +122,6 @@ impl Input {
 
         let input = SavePosition::new(
             Hoverable::new(self.hoverable_handle.clone(), |_| drop_target)
-                .on_hover(|is_hovered, ctx, _app, _position| {
-                    ctx.dispatch_typed_action(InputAction::SetUDIHovered(is_hovered));
-                })
                 .on_middle_click(|ctx, _app, _position| {
                     ctx.dispatch_typed_action(TerminalAction::MiddleClickOnInput)
                 })
@@ -133,21 +130,7 @@ impl Input {
         )
         .finish();
 
-        // Render inline menus (slash commands, prompts, skills) above the input,
-        // matching the pattern used by the agent view input in agent.rs.
-        // These must be outside the Hoverable so that mouse events on the menu
-        // don't trigger SetUDIHovered, which would cause layout jitter.
-        let mut outer_column = Flex::column();
-        if self.suggestions_mode_model.as_ref(app).is_slash_commands() {
-            outer_column.add_child(ChildView::new(&self.inline_slash_commands_view).finish());
-        } else if self.suggestions_mode_model.as_ref(app).is_prompts_menu() {
-            outer_column.add_child(ChildView::new(&self.inline_prompts_menu_view).finish());
-        } else if self.suggestions_mode_model.as_ref(app).is_skill_menu() {
-            outer_column.add_child(ChildView::new(&self.inline_skill_selector_view).finish());
-        }
-        outer_column.add_child(input);
-
-        SavePosition::new(outer_column.finish(), &self.save_position_id()).finish()
+        SavePosition::new(input, &self.save_position_id()).finish()
     }
 
     /// Keep the rich input editor's text colors legible when it's rendered on
@@ -163,8 +146,7 @@ impl Input {
         let default_colors = TextColors::from_appearance(appearance);
 
         // Only override while the CLI agent rich input is actually open - the
-        // same editor is reused for the normal terminal input and for other
-        // modes (AI, shared sessions), and those shouldn't see the override.
+        // same editor is reused for the normal terminal input, which shouldn't see the override.
         let rich_input_open =
             CLIAgentSessionsModel::as_ref(ctx).is_input_open(self.terminal_view_id);
 
@@ -212,8 +194,7 @@ impl Input {
             CLIAgentSessionsModel::as_ref(ctx).is_input_open(self.terminal_view_id);
 
         let settings = if rich_input_open {
-            let submit_on_ctrl_enter =
-                *crate::settings::AISettings::as_ref(ctx).submit_on_ctrl_enter;
+            let submit_on_ctrl_enter = *CLIAgentSettings::as_ref(ctx).submit_on_ctrl_enter;
             EnterSettings {
                 // Always Emit so input_enter handles menus before submit/newline.
                 enter: EnterAction::Emit,

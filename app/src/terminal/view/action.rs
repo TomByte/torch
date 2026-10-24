@@ -2,30 +2,20 @@ use std::fmt;
 use std::ops::Range;
 use std::path::PathBuf;
 
-use ai::skills::SkillReference;
 use command_corrections::Correction;
 use pathfinder_geometry::vector::Vector2F;
 use torch_util::user_input::UserInput;
-use torchui::EntityId;
 use torchui::elements::HyperlinkUrl;
 use torchui::event::ModifiersState;
 use torchui::units::Lines;
 
-use super::inline_banner::{
-    AwsBedrockLoginBannerAction, AwsCliNotInstalledBannerAction, OpenInWarpBannerAction,
-    VimModeBannerAction,
-};
+use super::inline_banner::{OpenInWarpBannerAction, VimModeBannerAction};
 use super::{
     AliasExpansionBannerAction, ContextMenuAction, GridHighlightedLink, InputContextMenuAction,
-    NotificationsDiscoveryBannerAction, NotificationsErrorBannerAction, RichContentLink,
-    TerminalEditor,
+    NotificationsDiscoveryBannerAction, NotificationsErrorBannerAction, TerminalEditor,
 };
-use crate::ai::agent::AIAgentExchangeId;
-use crate::ai::agent::conversation::AIConversationId;
-use crate::ai::blocklist::agent_view::AgentViewEntryOrigin;
-use crate::ai::blocklist::codebase_index_speedbump_banner::CodebaseIndexSpeedbumpBannerAction;
 use crate::code_review::telemetry_event::CodeReviewPaneEntrypoint;
-use crate::server::telemetry::{AgentModeRewindEntrypoint, PaletteSource, ToggleBlockFilterSource};
+use crate::server::telemetry::{PaletteSource, ToggleBlockFilterSource};
 use crate::terminal::available_shells::AvailableShell;
 use crate::terminal::block_list_element::{
     BlockHoverAction, BlockListMenuSource, BlockSelectAction, BlockTextSelectAction,
@@ -37,9 +27,6 @@ use crate::terminal::model::index::Point;
 use crate::terminal::model::mouse::MouseState;
 use crate::terminal::model::selection::{SelectAction, SelectionDirection};
 use crate::terminal::model::terminal_model::{BlockIndex, WithinModel};
-use crate::terminal::view::RichContentSecretTooltipInfo;
-use crate::terminal::view::inline_banner::AgentModeSetupSpeedbumpBannerAction;
-use crate::terminal::view::passive_suggestions::PromptSuggestionResolution;
 
 /// This represents whether entering a subshell for a particular command should become automatic in
 /// the future, or to ask again.
@@ -144,7 +131,6 @@ pub enum TerminalAction {
     SelectPriorBlock,
     SelectBookmarkDown,
     SelectBookmarkUp,
-    JumpToLatestAgentMessage,
     BookmarkSelectedBlock,
     ScrollToBottomOfSelectedBlocks,
     ScrollToTopOfSelectedBlocks,
@@ -187,40 +173,6 @@ pub enum TerminalAction {
         position: Vector2F,
     },
     InputContextMenuItem(InputContextMenuAction),
-    /// Open the menu on the specified [`crate::ai::blocklist::AIBlock`] that lists the blocks that
-    /// were attached to the query in the specified [`crate::ai::blocklist::AIAgentExchange`] which
-    /// is part of the specified [`crate::ai::blocklist::AIConversation`].
-    OpenAIBlockAttachedBlocksMenu {
-        ai_block_view_id: EntityId,
-        exchange_id: AIAgentExchangeId,
-        conversation_id: AIConversationId,
-    },
-    /// Open the overflow context menu for an AI block with copy options
-    OpenAIBlockOverflowMenu {
-        ai_block_view_id: EntityId,
-        exchange_id: AIAgentExchangeId,
-        conversation_id: AIConversationId,
-        is_restored: bool,
-    },
-    /// Show the confirmation dialog before rewinding an AI conversation
-    RewindAIConversation {
-        ai_block_view_id: EntityId,
-        exchange_id: AIAgentExchangeId,
-        conversation_id: AIConversationId,
-        /// The entrypoint from which this action was triggered (for telemetry).
-        entrypoint: AgentModeRewindEntrypoint,
-    },
-    /// Actually execute the rewind (called after user confirms in the dialog)
-    ExecuteRewindAIConversation {
-        ai_block_view_id: EntityId,
-        exchange_id: AIAgentExchangeId,
-        conversation_id: AIConversationId,
-    },
-    /// Execute rewind from the inline menu (looks up ai_block_view_id from exchange_id)
-    ExecuteRewindFromInlineMenu {
-        exchange_id: AIAgentExchangeId,
-        conversation_id: AIConversationId,
-    },
     SelectAllBlocks,
     ExpandBlockSelectionAbove,
     ExpandBlockSelectionBelow,
@@ -229,17 +181,11 @@ pub enum TerminalAction {
     NotificationsErrorBanner(NotificationsErrorBannerAction),
     JumpToBookmark(BlockIndex),
     OpenGridLink(GridHighlightedLink),
-    OpenRichContentLink(RichContentLink),
     ToggleGridSecret {
         handle: WithinModel<SecretHandle>,
         show_secret: bool,
     },
     CopyGridSecret(WithinModel<SecretHandle>),
-    ToggleRichContentSecret {
-        rich_content_tooltip_info: RichContentSecretTooltipInfo,
-        show_secret: bool,
-    },
-    CopyRichContentSecret(RichContentSecretTooltipInfo),
     ShowInFileExplorer(PathBuf),
     OpenFileInWarp(PathBuf),
     #[cfg(feature = "local_fs")]
@@ -247,9 +193,6 @@ pub enum TerminalAction {
         path: PathBuf,
         layout: crate::util::file::external_editor::settings::EditorLayout,
         line_col: Option<torch_util::path::LineAndColumnArg>,
-    },
-    AskAIAssistant {
-        block_index: BlockIndex,
     },
     /// Starts a subshell in the active session.
     TriggerSubshellBootstrap,
@@ -266,17 +209,7 @@ pub enum TerminalAction {
     ToggleBlockFilterOnSelectedOrLastBlock(ToggleBlockFilterSource),
     VimModeBanner(VimModeBannerAction),
     ToggleSnackbarInActivePane,
-    /// User selected a block inside an AI block's attached block menu so we jump to it and select
-    /// it if possible.
-    SelectAIAttachedBlock(BlockIndex),
     DragAndDropFiles(Vec<String>),
-    /// Sets the input mode to Agent Mode
-    SetInputModeAgent,
-    /// Sets the input mode to Terminal Mode
-    SetInputModeTerminal,
-    /// Toggle voice input for CLI agent footer (dispatched from alt screen/blocklist when footer is visible)
-    #[cfg(feature = "voice_input")]
-    ToggleCLIAgentVoiceInput(voice_input::VoiceInputToggledFrom),
 
     HyperlinkClick(HyperlinkUrl),
     StartFileDropTarget,
@@ -286,11 +219,7 @@ pub enum TerminalAction {
         selected_range: Range<usize>,
     },
     ClearMarkedText,
-    HideTelemetryBannerPermanently,
     ShowInitializationBlock,
-    GenerateCodebaseIndex,
-    /// This is for debugging, dev only for now
-    LoadAgentModeConversation,
     ShowWarpifySettings,
     /// Removes a pending attachment (image or file) by index in the unified list.
     DeleteAttachment {
@@ -301,31 +230,11 @@ pub enum TerminalAction {
     OpenAttachmentLightbox {
         index: usize,
     },
-    WriteCodebaseIndex,
     AttachFile,
-    ToggleAutoexecuteMode,
-    ToggleQueueNextPrompt,
-    CodebaseIndexSpeedbumpBanner(CodebaseIndexSpeedbumpBannerAction),
-    AgentModeSetupSpeedbumpBanner(AgentModeSetupSpeedbumpBannerAction),
-    ResumeConversation,
-    ForkConversationFromLastKnownGoodState,
-    ToggleAIDocumentPane,
-    ToggleTodoPopup,
-    CloseTodoPopup,
     ToggleCodeReviewPane {
         entrypoint: CodeReviewPaneEntrypoint,
     },
-    InitProject,
-    SummarizeConversation,
-    IndexProjectSpeedbump,
     AddProjectAtCurrentDirectory,
-    OpenProjectRulesPane,
-    OpenAddRulePane,
-    OpenRulesPane,
-    OpenEditSkillPane {
-        skill_reference: SkillReference,
-    },
-    OpenConversationsPalette,
     PickRepoToOpen,
     OpenFilesPalette {
         source: PaletteSource,
@@ -333,20 +242,8 @@ pub enum TerminalAction {
     DismissCodeToolbeltTooltip,
     /// Start a Language Server for the current working directory (if supported)
     StartLspServer,
-    ToggleLongRunningCommandControl,
-    ToggleHideCliResponses,
-    ExitAgentView,
-    StartNewAgentConversation {
-        origin: AgentViewEntryOrigin,
-    },
     /// Toggle the cloud mode conversation details panel
     OpenInlineHistoryMenu,
-    OpenModelSelector,
-    ResolvePromptSuggestion(PromptSuggestionResolution),
-    AwsBedrockLoginBanner(AwsBedrockLoginBannerAction),
-    AwsCliNotInstalledBanner(AwsCliNotInstalledBannerAction),
-    /// Toggle the usage footer on the last AI block in the active conversation.
-    ToggleUsageFooter,
     /// Toggle PTY recording for this session.
     ToggleSessionRecording,
     /// Toggle the rich input editor for composing a prompt to send to a CLI agent.
@@ -421,7 +318,6 @@ impl fmt::Debug for TerminalAction {
             ReinputCommandsWithSudo => f.write_str("ReinputCommandsWithSudo"),
             ClearBuffer => f.write_str("ClearBuffer"),
             SelectBookmarkUp => f.write_str("SelectBookmarkUp"),
-            JumpToLatestAgentMessage => f.write_str("JumpToLatestAgentMessage"),
             SelectBookmarkDown => f.write_str("SelectBookmarkDown"),
             Focus => f.write_str("Focus"),
             FocusInputAndClearSelection => f.write_str("FocusInputAndClearSelection"),
@@ -477,19 +373,13 @@ impl fmt::Debug for TerminalAction {
                 write!(f, "InsertCommandCorrection",)
             }
             OpenGridLink(_) => f.write_str("OpenGridLink"),
-            OpenRichContentLink(_) => f.write_str("OpenRichContentLink"),
             ToggleGridSecret { show_secret, .. } => write!(f, "ToggleGridSecret {show_secret:?}"),
-            ToggleRichContentSecret { show_secret, .. } => {
-                write!(f, "ToggleRichContentSecret {show_secret:?}")
-            }
             CopyGridSecret(_) => f.write_str("CopyGridSecret"),
-            CopyRichContentSecret(_) => f.write_str("CopyRichContentSecret"),
             ShowInFileExplorer(_) => f.write_str("ShowInFileExplorer"),
             OpenFileInWarp(_) => f.write_str("OpenFileInWarp"),
             #[cfg(feature = "local_fs")]
             OpenCodeInWarp { .. } => f.write_str("OpenCodeInWarp"),
             OpenBlockListContextMenu => f.write_str("OpenBlockListContextMenu"),
-            AskAIAssistant { block_index } => write!(f, "AskAIAssistant({block_index:?})"),
             TriggerSubshellBootstrap => f.write_str("TriggerSubshellBootstrap"),
             DismissWarpifyBanner(remember) => write!(f, "DismissWarpifyBanner({remember:?})"),
             ShowSubshellBanner(_) => f.write_str("ShowSubshellBanner"),
@@ -509,17 +399,7 @@ impl fmt::Debug for TerminalAction {
                 write!(f, "MiddleClickonGrid {{ position: {position:?} }}")
             }
             MiddleClickOnInput => write!(f, "MiddleClickOnInput"),
-            OpenAIBlockAttachedBlocksMenu { .. } => write!(f, "OpenAIBlockAttachedBlocksMenu"),
-            OpenAIBlockOverflowMenu { .. } => write!(f, "OpenAIBlockOverflowMenu"),
-            RewindAIConversation { .. } => write!(f, "RewindAIConversation"),
-            ExecuteRewindAIConversation { .. } => write!(f, "ExecuteRewindAIConversation"),
-            ExecuteRewindFromInlineMenu { .. } => write!(f, "ExecuteRewindFromInlineMenu"),
-            SelectAIAttachedBlock(_) => write!(f, "SelectAIAttachedBlock"),
             DragAndDropFiles(_) => write!(f, "DragAndDropFiles"),
-            SetInputModeAgent => write!(f, "SetInputModeAgent"),
-            SetInputModeTerminal => write!(f, "SetInputModeTerminal"),
-            #[cfg(feature = "voice_input")]
-            ToggleCLIAgentVoiceInput(source) => write!(f, "ToggleCLIAgentVoiceInput({source:?})"),
             HyperlinkClick(hyperlink_url) => write!(f, "HyperlinkClick({hyperlink_url:?})"),
             StartFileDropTarget => write!(f, "StartFileDropTarget"),
             StopFileDropTarget => write!(f, "StopFileDropTarget"),
@@ -531,60 +411,20 @@ impl fmt::Debug for TerminalAction {
                 selected_range,
             } => write!(f, "SetMarkedText {{{marked_text:?}, {selected_range:?}}}"),
             ClearMarkedText => write!(f, "ClearMarkedText"),
-            HideTelemetryBannerPermanently => write!(f, "HideTelemetryBannerPermanently"),
             ShowInitializationBlock => write!(f, "ShowInitializationBlock"),
-            GenerateCodebaseIndex => write!(f, "GenerateIndexForRepo"),
-            LoadAgentModeConversation => write!(f, "LoadAgentModeConversation"),
             ShowWarpifySettings => write!(f, "ShowWarpifySettings"),
             DeleteAttachment { index } => write!(f, "DeleteAttachment({index:?})"),
             OpenAttachmentLightbox { index } => {
                 write!(f, "OpenAttachmentLightbox({index:?})")
             }
-            WriteCodebaseIndex => write!(f, "PersistCodebaseIndex"),
             AttachFile => write!(f, "AttachFile"),
-            ToggleAutoexecuteMode => write!(f, "ToggleAutoexecuteMode"),
-            ToggleQueueNextPrompt => write!(f, "ToggleQueueNextPrompt"),
-            CodebaseIndexSpeedbumpBanner(action) => {
-                write!(f, "CodebaseIndexSpeedbumpBanner({action:?})")
-            }
-            AgentModeSetupSpeedbumpBanner(action) => {
-                write!(f, "AgentModeSetupSpeedbumpBanner({action:?})")
-            }
-            ResumeConversation => write!(f, "ResumeConversation"),
-            ForkConversationFromLastKnownGoodState => {
-                write!(f, "ForkConversationFromLastKnownGoodState")
-            }
-            ToggleAIDocumentPane => write!(f, "ToggleAIDocumentPane"),
-            ToggleTodoPopup => write!(f, "ToggleTodoPopup"),
-            CloseTodoPopup => write!(f, "CloseTodoPopup"),
             ToggleCodeReviewPane { .. } => write!(f, "ToggleCodeReviewPane"),
-            InitProject => write!(f, "InitProject"),
-            IndexProjectSpeedbump => write!(f, "IndexProject"),
             AddProjectAtCurrentDirectory => write!(f, "AddProjectAtCurrentDirectory"),
-            OpenProjectRulesPane => write!(f, "OpenProjectRulesPane"),
-            OpenAddRulePane => write!(f, "OpenAddRulePane"),
-            OpenRulesPane => write!(f, "OpenRulesPane"),
-            OpenEditSkillPane { .. } => write!(f, "OpenEditSkillPane"),
-            OpenConversationsPalette => write!(f, "OpenConversationsPalette"),
             PickRepoToOpen => write!(f, "PickRepoToOpen"),
             OpenFilesPalette { .. } => write!(f, "OpenFilesPalette"),
             DismissCodeToolbeltTooltip => write!(f, "DismissCodeToolbeltTooltip"),
             StartLspServer => write!(f, "StartLspServer"),
-            SummarizeConversation => write!(f, "SummarizeConversation"),
-            ToggleLongRunningCommandControl => {
-                write!(f, "TakeOverLongRunningCommandControlForUser")
-            }
-            ToggleHideCliResponses => write!(f, "ToggleHideCliResponses"),
-            ExitAgentView => write!(f, "ExitAgentView"),
-            StartNewAgentConversation { origin } => {
-                write!(f, "StartNewAgentConversation {{ origin: {origin:?} }}")
-            }
             OpenInlineHistoryMenu => write!(f, "OpenInlineHistoryMenu"),
-            OpenModelSelector => write!(f, "OpenModelSelector"),
-            ResolvePromptSuggestion(..) => write!(f, "ResolvePromptSuggestion"),
-            AwsBedrockLoginBanner(action) => write!(f, "AwsBedrockLoginBanner({action:?})"),
-            AwsCliNotInstalledBanner(action) => write!(f, "AwsCliNotInstalledBanner({action:?})"),
-            ToggleUsageFooter => write!(f, "ToggleUsageFooter"),
             ToggleSessionRecording => write!(f, "ToggleSessionRecording"),
             ToggleCLIAgentRichInput => write!(f, "ToggleCLIAgentRichInput"),
             Osc52AllowBlockedClipboardOperation => {

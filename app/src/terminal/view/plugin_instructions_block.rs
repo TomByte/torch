@@ -1,5 +1,3 @@
-use std::iter;
-
 use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
 use pathfinder_geometry::vector::vec2f;
 use torchui::clipboard::ClipboardContent;
@@ -13,12 +11,12 @@ use torchui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 
-use crate::ai::blocklist::code_block::{
-    CodeBlockOptions, CodeSnippetButtonHandles, render_code_block_plain,
-};
 use crate::appearance::Appearance;
 use crate::terminal::CLIAgent;
 use crate::terminal::cli_agent_sessions::plugin_manager::PluginInstructions;
+use crate::ui_components::code_block::{
+    CodeBlockOptions, CodeSnippetButtonHandles, render_code_block_plain,
+};
 use crate::ui_components::icons::Icon;
 use crate::view_components::DismissibleToast;
 use crate::view_components::action_button::{ActionButton, ButtonSize, NakedTheme};
@@ -138,9 +136,7 @@ impl PluginInstructionsBlock {
         if !command.is_empty() {
             let code_block = render_code_block_plain(
                 command,
-                Box::new(iter::empty()),
                 CodeBlockOptions {
-                    on_open: None,
                     on_execute: if executable {
                         Some(Box::new(move |code, ctx| {
                             ctx.dispatch_typed_action(WorkspaceAction::RunCommand(code));
@@ -153,14 +149,9 @@ impl PluginInstructionsBlock {
                             index,
                         ));
                     })),
-                    on_insert: None,
-                    footer_element: None,
                     mouse_handles: Some(handles),
-                    file_path: None,
                 },
-                true,
                 app,
-                None,
             );
             column.add_child(Container::new(code_block).with_padding_left(40.).finish());
         }

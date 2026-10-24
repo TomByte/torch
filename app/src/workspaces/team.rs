@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 use super::workspace::{
     BillingMetadata, EmailInvite, InviteLinkDomainRestriction, TeamSettings, WorkspaceUid,
 };
-use crate::ai::llms::ModelsByFeature;
 use crate::auth::UserUid;
 use crate::server::ids::ServerId;
 
@@ -122,7 +121,6 @@ pub struct Team {
     pub stripe_customer_id: Option<String>,
     /// The team's effective settings, sourced from the server's `Team.settings`.
     pub settings: TeamSettings,
-    pub feature_model_choice: ModelsByFeature,
     /// If the team is eligible for discovery, then show toggle for setting discoverability to the team's admin
     pub is_eligible_for_discovery: bool,
     pub has_billing_history: bool,
@@ -136,7 +134,6 @@ impl Team {
         settings: Option<TeamSettings>,
         billing_metadata: Option<BillingMetadata>,
         members: Option<Vec<TeamMember>>,
-        feature_model_choice: Option<ModelsByFeature>,
     ) -> Self {
         Self {
             uid,
@@ -149,7 +146,6 @@ impl Team {
             billing_metadata: billing_metadata.unwrap_or_default(),
             stripe_customer_id: Default::default(),
             settings: settings.unwrap_or_default(),
-            feature_model_choice: feature_model_choice.unwrap_or_default(),
             is_eligible_for_discovery: false,
             has_billing_history: false,
             visibility: TeamVisibility::default(),
@@ -199,9 +195,5 @@ impl Team {
             return Some(TeamDeleteDisabledReason::RemainingBonusCredits);
         }
         None // No reason found, team can be deleted
-    }
-
-    pub fn is_custom_llm_enabled(&self) -> bool {
-        self.settings.llm_settings.enabled
     }
 }

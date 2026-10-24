@@ -2,14 +2,8 @@ use std::sync::Arc;
 
 use chrono::{Duration, Local};
 use torch_core::SessionId;
-use torchui::{App, AppContext, EntityId, SingletonEntity};
+use torchui::{App, AppContext, SingletonEntity};
 
-use super::{UpArrowHistoryConfig, prompt_history_for_terminal_surface};
-use crate::ai::agent::AIAgentExchangeId;
-use crate::ai::agent::conversation::AIConversationId;
-use crate::ai::blocklist::history_model::AIQueryHistoryOutputStatus;
-use crate::ai::blocklist::{BlocklistAIHistoryModel, PersistedAIInput, PersistedAIInputType};
-use crate::ai::llms::LLMId;
 use crate::input_suggestions::HistoryInputSuggestion;
 use crate::suggestions::ignored_suggestions_model::{IgnoredSuggestionsModel, SuggestionType};
 use crate::terminal::model::session::command_executor::NoOpCommandExecutor;
@@ -17,50 +11,15 @@ use crate::terminal::model::session::{Session, SessionInfo};
 use crate::terminal::{History, HistoryEntry, LinkedWorkflowData};
 
 #[derive(Debug, PartialEq, Eq)]
-enum TestHistoryItem {
-    Prompt(String),
-    Command {
-        text: String,
-        linked_workflow_data: Option<LinkedWorkflowData>,
-    },
-}
-
-impl TestHistoryItem {
-    fn text(&self) -> &str {
-        match self {
-            Self::Prompt(text) | Self::Command { text, .. } => text,
-        }
-    }
-}
-
-fn build_history_model(prompts: Vec<String>) -> BlocklistAIHistoryModel {
-    let base = Local::now();
-    let persisted_queries = prompts
-        .into_iter()
-        .enumerate()
-        .map(|(index, text)| PersistedAIInput {
-            exchange_id: AIAgentExchangeId::new(),
-            conversation_id: AIConversationId::new(),
-            start_ts: base + Duration::milliseconds(index as i64),
-            inputs: vec![PersistedAIInputType::Query {
-                text,
-                context: Default::default(),
-                referenced_attachments: Default::default(),
-            }],
-            output_status: AIQueryHistoryOutputStatus::Completed,
-            working_directory: None,
-            model_id: LLMId::from("test-model"),
-            coding_model_id: LLMId::from("test-model"),
-        })
-        .collect();
-    BlocklistAIHistoryModel::new(persisted_queries, vec![], &[])
+struct TestHistoryItem {
+    text: String,
+    linked_workflow_data: Option<LinkedWorkflowData>,
 }
 
 fn command_entry(
     session_id: SessionId,
     command: &str,
     age: i64,
-    is_agent_executed: bool,
     workflow_command: Option<&str>,
 ) -> HistoryEntry {
     HistoryEntry {
@@ -75,36 +34,20 @@ fn command_entry(
         workflow_id: None,
         workflow_command: workflow_command.map(str::to_owned),
         is_for_restored_block: false,
-        is_agent_executed,
     }
 }
 
-fn combined_history(
-    terminal_surface_id: EntityId,
-    session_id: SessionId,
-    include_prompts: bool,
-    app: &AppContext,
-) -> Vec<TestHistoryItem> {
+fn up_arrow_history(session_id: SessionId, app: &AppContext) -> Vec<TestHistoryItem> {
     History::handle(app)
         .as_ref(app)
-        .up_arrow_suggestions_for_terminal_surface(
-            terminal_surface_id,
-            Some(session_id),
-            UpArrowHistoryConfig {
-                include_commands: true,
-                include_prompts,
-            },
-            app,
-        )
+        .up_arrow_suggestions_for_terminal_surface(Some(session_id), app)
         .into_iter()
         .map(|suggestion| {
             let text = suggestion.normalized_text().to_owned();
-            match suggestion {
-                HistoryInputSuggestion::Command { entry } => TestHistoryItem::Command {
-                    text,
-                    linked_workflow_data: entry.linked_workflow_data(),
-                },
-                HistoryInputSuggestion::AIQuery { .. } => TestHistoryItem::Prompt(text),
+            let HistoryInputSuggestion::Command { entry } = suggestion;
+            TestHistoryItem {
+                text,
+                linked_workflow_data: entry.linked_workflow_data(),
             }
         })
         .collect()
@@ -140,100 +83,32 @@ async fn add_command_history(app: &mut App, session_id: SessionId, entries: Vec<
         }
     });
 }
-fn assert_prompt_history(prompts: &[&str], expected: &[&str]) {
-    let prompts: Vec<String> = prompts.iter().map(|prompt| (*prompt).to_owned()).collect();
-    let expected: Vec<String> = expected.iter().map(|entry| (*entry).to_owned()).collect();
-    App::test((), |app| async move {
-        let terminal_surface_id = EntityId::new();
-        app.add_singleton_model(move |_| build_history_model(prompts));
-        app.read(|ctx| {
-            let texts: Vec<String> = prompt_history_for_terminal_surface(terminal_surface_id, ctx)
-                .into_iter()
-                .map(|entry| entry.query_text)
-                .collect();
-            assert_eq!(texts, expected);
-        });
-    });
-}
 
 #[test]
-fn prompt_history_dedupes_orders_and_excludes_whitespace() {
-    assert_prompt_history(
-        &[
-            "deploy the app",
-            "delete the cache",
-            "deploy the app",
-            "   ",
-            "build the project",
-        ],
-        &["delete the cache", "deploy the app", "build the project"],
-    );
-}
-
-#[test]
-fn prompt_history_excludes_ignored_prompts() {
-    let prompts: Vec<String> = ["deploy the app", "delete the cache", "build the project"]
-        .iter()
-        .map(|prompt| (*prompt).to_owned())
-        .collect();
-    App::test((), |app| async move {
-        let terminal_surface_id = EntityId::new();
-        app.add_singleton_model(move |_| build_history_model(prompts));
-        app.add_singleton_model(|_| {
-            IgnoredSuggestionsModel::new(vec![(
-                "delete the cache".to_owned(),
-                SuggestionType::AIQuery,
-            )])
-        });
-        app.read(|ctx| {
-            let texts: Vec<String> = prompt_history_for_terminal_surface(terminal_surface_id, ctx)
-                .into_iter()
-                .map(|entry| entry.query_text)
-                .collect();
-            assert_eq!(
-                texts,
-                vec!["deploy the app".to_owned(), "build the project".to_owned()]
-            );
-        });
-    });
-}
-
-#[test]
-fn combined_history_dedupes_each_kind() {
+fn history_dedupes_commands_and_excludes_whitespace() {
     App::test((), |mut app| async move {
-        let terminal_surface_id = EntityId::new();
         let session_id = SessionId::from(1);
-        app.add_singleton_model(|_| {
-            build_history_model(vec![
-                "same".to_owned(),
-                "older prompt".to_owned(),
-                "same".to_owned(),
-                "   ".to_owned(),
-            ])
-        });
         add_command_history(
             &mut app,
             session_id,
             vec![
-                command_entry(session_id, " same ", 0, false, None),
-                command_entry(session_id, "older command", 1, false, None),
-                command_entry(session_id, "same", 2, false, None),
-                command_entry(session_id, "   ", 3, false, None),
+                command_entry(session_id, " same ", 0, None),
+                command_entry(session_id, "older command", 1, None),
+                command_entry(session_id, "same", 2, None),
+                command_entry(session_id, "   ", 3, None),
             ],
         )
         .await;
 
         app.read(|ctx| {
             assert_eq!(
-                combined_history(terminal_surface_id, session_id, true, ctx),
+                up_arrow_history(session_id, ctx),
                 vec![
-                    TestHistoryItem::Prompt("older prompt".to_owned()),
-                    TestHistoryItem::Prompt("same".to_owned()),
-                    TestHistoryItem::Command {
+                    TestHistoryItem {
                         text: "older command".to_owned(),
                         linked_workflow_data: None,
                     },
-                    TestHistoryItem::Command {
+                    TestHistoryItem {
                         text: "same".to_owned(),
                         linked_workflow_data: None,
                     },
@@ -244,11 +119,9 @@ fn combined_history_dedupes_each_kind() {
 }
 
 #[test]
-fn combined_history_preserves_command_workflow_data() {
+fn history_preserves_command_workflow_data() {
     App::test((), |mut app| async move {
-        let terminal_surface_id = EntityId::new();
         let session_id = SessionId::from(1);
-        app.add_singleton_model(|_| build_history_model(vec!["prompt".to_owned()]));
         add_command_history(
             &mut app,
             session_id,
@@ -256,7 +129,6 @@ fn combined_history_preserves_command_workflow_data() {
                 session_id,
                 "deploy",
                 0,
-                false,
                 Some("deploy {{environment}}"),
             )],
         )
@@ -264,53 +136,46 @@ fn combined_history_preserves_command_workflow_data() {
 
         app.read(|ctx| {
             assert_eq!(
-                combined_history(terminal_surface_id, session_id, true, ctx),
-                vec![
-                    TestHistoryItem::Prompt("prompt".to_owned()),
-                    TestHistoryItem::Command {
-                        text: "deploy".to_owned(),
-                        linked_workflow_data: Some(LinkedWorkflowData::Command(
-                            "deploy {{environment}}".to_owned(),
-                        )),
-                    },
-                ]
+                up_arrow_history(session_id, ctx),
+                vec![TestHistoryItem {
+                    text: "deploy".to_owned(),
+                    linked_workflow_data: Some(LinkedWorkflowData::Command(
+                        "deploy {{environment}}".to_owned(),
+                    )),
+                }]
             );
         });
     });
 }
 
 #[test]
-fn combined_history_excludes_ignored_prompts_and_commands() {
+fn history_excludes_ignored_commands() {
     App::test((), |mut app| async move {
-        let terminal_surface_id = EntityId::new();
         let session_id = SessionId::from(1);
-        app.add_singleton_model(|_| {
-            build_history_model(vec!["keep prompt".to_owned(), "ignore prompt".to_owned()])
-        });
         add_command_history(
             &mut app,
             session_id,
             vec![
-                command_entry(session_id, "keep command", 0, false, None),
-                command_entry(session_id, "ignore command", 1, false, None),
+                command_entry(session_id, "keep command", 0, None),
+                command_entry(session_id, "ignore command", 1, None),
             ],
         )
         .await;
         app.add_singleton_model(|_| {
-            IgnoredSuggestionsModel::new(vec![
-                ("ignore prompt".to_owned(), SuggestionType::AIQuery),
-                ("ignore command".to_owned(), SuggestionType::ShellCommand),
-            ])
+            IgnoredSuggestionsModel::new(vec![(
+                "ignore command".to_owned(),
+                SuggestionType::ShellCommand,
+            )])
         });
 
         app.read(|ctx| {
-            let history = combined_history(terminal_surface_id, session_id, true, ctx);
+            let history = up_arrow_history(session_id, ctx);
             assert_eq!(
                 history
                     .iter()
-                    .map(TestHistoryItem::text)
+                    .map(|item| item.text.as_str())
                     .collect::<Vec<_>>(),
-                vec!["keep prompt", "keep command"]
+                vec!["keep command"]
             );
         });
     });

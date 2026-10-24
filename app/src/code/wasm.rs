@@ -47,9 +47,6 @@ pub enum CodeViewEvent {
         location: LocalOrRemotePath,
         tab_index: usize,
     },
-    RunTabConfigSkill {
-        path: PathBuf,
-    },
     OpenLspLogs {
         log_path: PathBuf,
     },
@@ -74,8 +71,6 @@ enum TabBarDragPosition {
 struct TabDataMouseStateHandles {
     tab_handle: MouseStateHandle,
     close_handle: MouseStateHandle,
-    accept_mouse_state: MouseStateHandle,
-    reject_mouse_state: MouseStateHandle,
     tab_draggable_state: DraggableState,
 }
 

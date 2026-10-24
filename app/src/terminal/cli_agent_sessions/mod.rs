@@ -14,7 +14,7 @@ use torchui::{Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
 
 use self::listener::CLIAgentSessionListener;
 use super::CLIAgent;
-use crate::agent_status::{ConversationStatus, InputConfig};
+use crate::agent_status::ConversationStatus;
 
 const NEEDS_INPUT_STATUS_MESSAGE: &str = "Agent requires user input";
 
@@ -76,10 +76,6 @@ pub enum CLIAgentInputState {
     Open {
         /// How this session was opened (for telemetry).
         entrypoint: CLIAgentInputEntrypoint,
-        /// The input config that was active before opening rich input.
-        previous_input_config: InputConfig,
-        /// Whether the previous lock state was established while the input buffer was empty.
-        previous_was_lock_set_with_empty_buffer: bool,
     },
 }
 
@@ -570,8 +566,6 @@ impl CLIAgentSessionsModel {
         &mut self,
         terminal_view_id: EntityId,
         entrypoint: CLIAgentInputEntrypoint,
-        previous_input_config: InputConfig,
-        previous_was_lock_set_with_empty_buffer: bool,
         should_auto_toggle_input: bool,
         ctx: &mut ModelContext<Self>,
     ) {
@@ -580,11 +574,7 @@ impl CLIAgentSessionsModel {
         };
 
         let previous_input_state = session.input_state;
-        session.input_state = CLIAgentInputState::Open {
-            entrypoint,
-            previous_input_config,
-            previous_was_lock_set_with_empty_buffer,
-        };
+        session.input_state = CLIAgentInputState::Open { entrypoint };
         session.should_auto_toggle_input = should_auto_toggle_input;
 
         ctx.emit(CLIAgentSessionsModelEvent::InputSessionChanged {

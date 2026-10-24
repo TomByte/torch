@@ -11,7 +11,7 @@ use crate::auth::AuthStateProvider;
 use crate::channel::ChannelState;
 use crate::workspaces::team::Team;
 use crate::workspaces::workspace::{
-    BillingMetadata, ChargeUnit, CustomerType, PurchaseAddOnCreditsPolicy, Workspace,
+    BillingMetadata, ChargeUnit, CustomerType, PurchaseAddOnCreditsPolicy,
 };
 
 impl UserWorkspaces {
@@ -30,15 +30,6 @@ impl UserWorkspaces {
     ) -> Option<&'a BillingMetadata> {
         team.map(|team| &team.billing_metadata)
             .or_else(|| self.current_workspace_billing_metadata())
-    }
-
-    pub fn is_custom_llm_enabled_for_team(&self, team: Option<&Team>) -> bool {
-        team.map(Team::is_custom_llm_enabled)
-            .or_else(|| {
-                self.current_workspace()
-                    .map(Workspace::is_custom_llm_enabled)
-            })
-            .unwrap_or(false)
     }
 
     /// The add-on credits purchase policy for the current viewer context: the
@@ -145,23 +136,6 @@ impl UserWorkspaces {
             })
     }
 
-    /// Whether voice input should be toggleable for the current user, based on the active policies.
-    /// Note that the value may be incorrect if called before the team's billing metadata has been fetched.
-    /// If voice input support is not compiled into this build, always returns `false`.
-    pub fn is_voice_enabled(&self) -> bool {
-        cfg!(feature = "voice_input")
-            && self
-                .current_workspace()
-                // If the user has no team, they can toggle Voice (no restrictions).
-                .is_none_or(|workspace| {
-                    workspace
-                        .billing_metadata
-                        .tier
-                        .warp_ai_policy
-                        .is_some_and(|policy| policy.is_voice_enabled)
-                })
-    }
-
     /// Whether BYO API key is enabled for the current user, based on the active policies.
     /// Note that the value may be incorrect if called before the team's billing metadata has been fetched.
     /// For solo users (no workspace), this is controlled by the `SoloUserByok` feature flag.
@@ -192,15 +166,5 @@ impl UserWorkspaces {
         self.current_workspace()
             .map(|workspace| workspace.billing_metadata.is_byo_endpoint_enabled())
             .unwrap_or(true)
-    }
-
-    /// Whether the current workspace's plan manages BYOK/BYOE centrally.
-    ///
-    /// A workspace-level plan entitlement that turns on the team-scoped `team_byo` policy; see the
-    /// [`crate::workspaces::user_workspaces::team_workspace_settings`] module docs for the
-    /// two-layer model.
-    pub(crate) fn is_managed_byok_byoe_enabled(&self) -> bool {
-        self.current_workspace_billing_metadata()
-            .is_some_and(|billing| billing.is_managed_byok_byoe_enabled())
     }
 }

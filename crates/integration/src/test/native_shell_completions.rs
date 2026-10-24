@@ -24,7 +24,6 @@ use torch::integration_testing::view_getters::{
     single_input_suggestions_view_for_tab, single_input_view_for_tab, single_terminal_view_for_tab,
 };
 use torch::settings::{NativeShellCompletionsEnabled, WarpCompletionsEnabled};
-use torch::terminal::model::block::TranscriptScope;
 use torch::terminal::shell::ShellType;
 use torchui_core::async_assert;
 use torchui_core::units::Lines;
@@ -278,7 +277,7 @@ fn assert_no_visible_generator_block()
                 .block_list()
                 .blocks()
                 .iter()
-                .filter(|block| block.height(&TranscriptScope::Terminal) != Lines::zero())
+                .filter(|block| block.height() != Lines::zero())
                 .map(|block| block.command_with_secrets_unobfuscated(false))
                 .filter(|command| {
                     command

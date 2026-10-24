@@ -1,7 +1,5 @@
 //! Tracks open [`NetworkLogPane`]s across windows so that we show at most one
 //! per window and can focus the existing one when reopened.
-//!
-//! Mirrors the pattern used by [`crate::ai::execution_profiles::editor::manager::ExecutionProfileEditorManager`].
 use std::collections::HashMap;
 
 use torchui::{Entity, SingletonEntity, WindowId};

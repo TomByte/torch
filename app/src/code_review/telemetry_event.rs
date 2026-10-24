@@ -297,21 +297,6 @@ pub enum CodeReviewTelemetryEvent {
         /// Number of comments that could not be matched to an exact line and had to fall back.
         fallback_count: usize,
     },
-    /// Emitted when one or more comments are resolved.
-    CommentResolved {
-        /// Number of comments resolved by this operation.
-        resolved_count: usize,
-    },
-    /// Emitted when the agent's insert_code_review_comments tool call is received and processed.
-    CommentsReceived {
-        is_local: Option<bool>,
-        /// Number of raw InsertReviewComment items from the tool call.
-        raw_count: usize,
-        /// Number of successfully converted PendingImportedReviewComments.
-        converted_count: usize,
-        /// Number of AttachedReviewComments after thread flattening.
-        thread_count: usize,
-    },
     /// Emitted after newly-imported comments are relocated against editor lines.
     CommentsAttached {
         is_local: Option<bool>,
@@ -481,20 +466,6 @@ impl TelemetryEvent for CodeReviewTelemetryEvent {
                 is_local,
                 fallback_count,
             } => Some(json!({ "is_local": is_local, "fallback_count": fallback_count })),
-            CodeReviewTelemetryEvent::CommentResolved { resolved_count } => {
-                Some(json!({ "resolved_count": resolved_count }))
-            }
-            CodeReviewTelemetryEvent::CommentsReceived {
-                is_local,
-                raw_count,
-                converted_count,
-                thread_count,
-            } => Some(json!({
-                "is_local": is_local,
-                "raw_count": raw_count,
-                "converted_count": converted_count,
-                "thread_count": thread_count,
-            })),
             CodeReviewTelemetryEvent::CommentsAttached {
                 is_local,
                 active_count,
@@ -567,8 +538,6 @@ impl TelemetryEventDesc for CodeReviewTelemetryEventDiscriminants {
             Self::ReviewSubmitted => "CodeReview.ReviewSubmitted",
             Self::CommentListItemClicked => "CodeReview.CommentListItemClicked",
             Self::CommentRelocationFailed => "CodeReview.CommentRelocationFailed",
-            Self::CommentResolved => "CodeReview.CommentResolved",
-            Self::CommentsReceived => "CodeReview.CommentsReceived",
             Self::CommentsAttached => "CodeReview.CommentsAttached",
             Self::GitButtonTriggered => "CodeReview.GitButtonTriggered",
             Self::GitDialogCompleted => "CodeReview.GitDialogCompleted",
@@ -599,10 +568,6 @@ impl TelemetryEventDesc for CodeReviewTelemetryEventDiscriminants {
             Self::CommentRelocationFailed => {
                 "Inline code review comment relocation fell back to approximate line"
             }
-            Self::CommentResolved => "Inline code review comment resolved",
-            Self::CommentsReceived => {
-                "Agent insert_code_review_comments tool call received and processed"
-            }
             Self::CommentsAttached => "Newly-imported comments relocated against editor lines",
             Self::GitButtonTriggered => {
                 "User clicked a git operation button in the code review header"
@@ -615,9 +580,7 @@ impl TelemetryEventDesc for CodeReviewTelemetryEventDiscriminants {
 
     fn enablement_state(&self) -> EnablementState {
         match self {
-            Self::CommentsReceived | Self::CommentsAttached => {
-                EnablementState::Flag(FeatureFlag::PRCommentsV2)
-            }
+            Self::CommentsAttached => EnablementState::Flag(FeatureFlag::PRCommentsV2),
             Self::GitButtonTriggered | Self::GitDialogCompleted => {
                 EnablementState::Flag(FeatureFlag::GitOperationsInCodeReview)
             }

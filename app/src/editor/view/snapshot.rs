@@ -9,7 +9,7 @@ use std::time::Duration;
 use anyhow::Result;
 use instant::Instant;
 use parking_lot::Mutex;
-use pathfinder_geometry::vector::{Vector2F, vec2f};
+use pathfinder_geometry::vector::Vector2F;
 use rayon::prelude::*;
 use string_offset::ByteOffset;
 use torch_completer::completer::Description;
@@ -25,13 +25,11 @@ use torchui::{AppContext, EntityId, ModelHandle};
 
 use super::model::EditorModel;
 use super::{
-    AutosuggestionLocation, AutosuggestionState, AutosuggestionType,
-    BaselinePositionComputationMethod, Bias, DisplayPoint, DrawableSelection, ScrollState,
-    ToBufferOffset, ToCharOffset, ToDisplayPoint, ToPoint,
+    AutosuggestionLocation, AutosuggestionState, BaselinePositionComputationMethod, Bias,
+    DisplayPoint, DrawableSelection, ScrollState, ToBufferOffset, ToCharOffset, ToDisplayPoint,
+    ToPoint,
 };
 use crate::editor::soft_wrap::FrameLayouts;
-#[cfg(feature = "voice_input")]
-use crate::editor::view::voice::VoiceInputState;
 use crate::terminal::grid_size_util::grid_compute_baseline_position_fn;
 
 /// Ratio to calculate font size of cursor avatar.
@@ -41,15 +39,6 @@ pub const CURSOR_AVATAR_FONT_RATIO: f32 = 0.8;
 /// Offset to calculate size of cursor avatar.
 /// Found experimentally to look the best with current font size.
 pub const CURSOR_AVATAR_IMAGE_OFFSET: f32 = 4.;
-
-/// Fudge factor to make the voice input icon slightly wider than it is tall.
-const VOICE_INPUT_ICON_IMAGE_OFFSET_X: f32 = 5.;
-
-/// Minimum size of voice input icon.
-const MIN_VOICE_INPUT_ICON_SIZE: f32 = 16.;
-
-/// Gap between voice input icon's botton and cursor's top.
-pub const VOICE_INPUT_ICON_CURSOR_GAP: f32 = 2.;
 
 /// The amount of time the editor height must have remained shrunken
 /// before we actually shrink the height. This is to prevent jittering
@@ -88,9 +77,6 @@ pub struct ViewSnapshot {
     pub cached_buffer_points: HashMap<Cow<'static, str>, Point>,
 
     pub baseline_position_computation_method: BaselinePositionComputationMethod,
-
-    #[cfg(feature = "voice_input")]
-    pub voice_input_state: VoiceInputState,
 
     pub editor_height_shrink_delay: Arc<Mutex<EditorHeightShrinkDelay>>,
 }
@@ -192,18 +178,6 @@ impl ViewSnapshot {
         self.autosuggestion_state
             .as_ref()
             .is_some_and(|s| s.is_active())
-    }
-
-    pub fn active_next_command_suggestion(&self) -> bool {
-        self.autosuggestion_state.as_ref().is_some_and(|s| {
-            s.is_active()
-                && matches!(
-                    s.autosuggestion_type,
-                    AutosuggestionType::Command {
-                        was_intelligent_autosuggestion: true
-                    }
-                )
-        })
     }
 
     /// Lays out the given ghosted text, which can be a placeholder or autosuggestion.
@@ -646,11 +620,5 @@ impl ViewSnapshot {
     /// font size and an avatar-specific offset.
     pub fn cursor_avatar_size(&self) -> f32 {
         self.font_size + CURSOR_AVATAR_IMAGE_OFFSET
-    }
-
-    /// Returns the size to render the voice input icon at, scaled by the font size.
-    pub fn voice_input_icon_size(&self) -> Vector2F {
-        let scaled_size = (self.font_size + 1.).max(MIN_VOICE_INPUT_ICON_SIZE);
-        vec2f(scaled_size + VOICE_INPUT_ICON_IMAGE_OFFSET_X, scaled_size)
     }
 }

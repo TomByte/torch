@@ -15,7 +15,6 @@ use super::user_workspaces::{
     UserWorkspaces, WorkspacesMetadataResponse, WorkspacesMetadataWithPricing,
 };
 use super::workspace::WorkspaceUid;
-use crate::ai::request_usage_model::AIRequestUsageModel;
 use crate::auth::AuthStateProvider;
 use crate::network::{NetworkStatus, NetworkStatusEvent, NetworkStatusKind};
 use crate::persistence::ModelEvent;
@@ -113,7 +112,6 @@ impl TeamUpdateManager {
                     workspaces: vec![],
                     joinable_teams: vec![],
                     experiments: None,
-                    ai_credit_availability: None,
                     user_tier: Default::default(),
                 },
                 pricing_info: None,
@@ -333,12 +331,6 @@ impl TeamUpdateManager {
                 let joinable_teams = user_workspaces_access.joinable_teams;
                 let experiments = user_workspaces_access.experiments;
                 let user_tier = user_workspaces_access.user_tier;
-
-                if let Some(availability) = user_workspaces_access.ai_credit_availability {
-                    AIRequestUsageModel::handle(ctx).update(ctx, |usage_model, ctx| {
-                        usage_model.apply_server_availability(Ok(availability), ctx);
-                    });
-                }
 
                 UserWorkspaces::handle(ctx).update(ctx, |user_workspaces, ctx| {
                     user_workspaces.set_user_tier(user_tier);

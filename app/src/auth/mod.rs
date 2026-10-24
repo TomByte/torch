@@ -1,24 +1,14 @@
 pub mod auth_manager;
 mod user_properties;
-use ::settings::{Setting, SettingsManager};
-use ai::index::full_source_code_embedding::manager::CodebaseIndexManager;
+use ::settings::SettingsManager;
 pub use auth_manager::AuthManager;
 pub use auth_state::AuthStateProvider;
-use torch_core::features::FeatureFlag;
 use torch_core::user_preferences::GetUserPreferences as _;
 use torch_errors::report_error;
 pub use torch_server_auth::{auth_state, credentials, user, user_uid};
 use torchui::{AppContext, SingletonEntity};
 pub use user_uid::UserUid;
 
-use crate::ai::agent_conversations_model::AgentConversationsModel;
-use crate::ai::blocklist::BlocklistAIHistoryModel;
-use crate::ai::chatgpt_subscription::ChatGPTSubscriptionModel;
-use crate::ai::execution_profiles::profiles::AIExecutionProfilesModel;
-use crate::ai::llms::LLMPreferences;
-#[cfg(not(target_family = "wasm"))]
-use crate::ai::mcp::TemplatableMCPServerManager;
-use crate::ai::request_usage_model::AIRequestUsageModel;
 use crate::cloud_object::model::persistence::CloudModel;
 use crate::env_vars::manager::EnvVarCollectionManager;
 use crate::notebooks::manager::NotebookManager;
@@ -26,21 +16,16 @@ use crate::server::cloud_objects::update_manager::UpdateManager;
 use crate::server::sync_queue::SyncQueue;
 use crate::server::telemetry::TelemetryEvent;
 use crate::settings::{
-    AISettings, CRASH_REPORTING_ENABLED_DEFAULTS_KEY, CloudPreferencesSettings, PrivacySettings,
+    CRASH_REPORTING_ENABLED_DEFAULTS_KEY, CloudPreferencesSettings, PrivacySettings,
     TELEMETRY_ENABLED_DEFAULTS_KEY,
 };
 use crate::workflows::manager::WorkflowManager;
-use crate::workspace::OneTimeModalModel;
 use crate::workspaces::update_manager::TeamUpdateManager;
 use crate::{GlobalResourceHandlesProvider, persistence, send_telemetry_sync_from_app_ctx};
 
 // Log out the user, clears workspace state, stops running processes, and deletes database.
 pub fn log_out(app: &mut AppContext) {
     send_telemetry_sync_from_app_ctx!(TelemetryEvent::LogOut, app);
-
-    CodebaseIndexManager::handle(app).update(app, |index_manager, ctx| {
-        index_manager.reset_codebase_indexing(ctx);
-    });
 
     let global_resource_handles = GlobalResourceHandlesProvider::as_ref(app).get();
 
@@ -50,25 +35,6 @@ pub fn log_out(app: &mut AppContext) {
 
     AuthManager::handle(app).update(app, |auth_manager, ctx| {
         auth_manager.log_out(ctx);
-    });
-    // Detach built-in Torch-hosted MCP servers; they authenticate with the
-    // credentials that were just cleared.
-    #[cfg(not(target_family = "wasm"))]
-    TemplatableMCPServerManager::handle(app).update(app, |manager, ctx| {
-        manager.sync_builtin_servers(false, ctx);
-    });
-    AIRequestUsageModel::handle(app).update(app, |usage_model, ctx| {
-        usage_model.reset_server_availability(ctx);
-    });
-    if FeatureFlag::ChatGPTSubscription.is_enabled() {
-        ChatGPTSubscriptionModel::handle(app).update(app, |model, ctx| model.reset(ctx));
-    }
-    OneTimeModalModel::handle(app).update(app, |model, _| model.on_log_out());
-    BlocklistAIHistoryModel::handle(app).update(app, |history_model, _| {
-        history_model.reset();
-    });
-    AgentConversationsModel::handle(app).update(app, |agent_conversations_model, _| {
-        agent_conversations_model.reset();
     });
     CloudModel::handle(app).update(app, |cloud_model, _| {
         cloud_model.reset();
@@ -86,16 +52,6 @@ pub fn log_out(app: &mut AppContext) {
         manager.stop_polling_for_workspace_metadata_updates();
     });
     remove_cloud_persisted_settings(app);
-
-    let settings_profiles_are_explicit = AISettings::as_ref(app)
-        .execution_profiles
-        .is_value_explicitly_set();
-    AIExecutionProfilesModel::handle(app).update(app, |profiles, _| {
-        profiles.reset(settings_profiles_are_explicit);
-    });
-    LLMPreferences::handle(app).update(app, |preferences, _| {
-        preferences.reset_session_overrides();
-    });
 
     NotebookManager::handle(app).update(app, |manager, _| manager.reset());
     EnvVarCollectionManager::handle(app).update(app, |manager, _| manager.reset());

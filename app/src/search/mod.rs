@@ -1,6 +1,4 @@
 pub mod action;
-pub mod ai_context_menu;
-mod ai_queries;
 pub(crate) mod async_snapshot_data_source;
 pub mod binding_source;
 pub mod command_palette;
@@ -12,7 +10,6 @@ pub mod notebook_embedding;
 mod palette_styles;
 mod search_bar;
 pub mod search_results_menu;
-pub mod slash_command_menu;
 mod workflows;
 
 pub use data_source::QueryFilter;

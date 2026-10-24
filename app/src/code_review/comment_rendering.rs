@@ -348,14 +348,6 @@ impl CommentViewCard {
         }
     }
 
-    pub(crate) fn toggle_collapsed(&mut self) {
-        self.is_collapsed = !self.is_collapsed;
-    }
-
-    pub(crate) fn is_collapsed(&self) -> bool {
-        self.is_collapsed
-    }
-
     /// Updates the comment data and resets the body editor with the new content.
     pub(crate) fn update_source<V: View>(
         &mut self,
@@ -472,10 +464,7 @@ impl CommentViewCard {
         match (file_path, line_number) {
             (Some(path), Some(line)) => format!("{path}:{line}"),
             (Some(path), None) => path,
-            _ => source
-                .head()
-                .map(|head| head.title())
-                .unwrap_or_else(|| "Review Comment".to_string()),
+            _ => "Review Comment".to_string(),
         }
     }
 }

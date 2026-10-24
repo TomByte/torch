@@ -21,12 +21,12 @@ use super::session_settings::SessionSettings;
 use super::settings::TerminalSettings;
 use super::shell::ShellType;
 use super::{SizeInfo, TerminalModel, prompt, should_right_click_paste};
-use crate::ai::blocklist::BlocklistAIInputModel;
 use crate::appearance::Appearance;
 use crate::context_chips::display::PromptDisplay;
 use crate::features::FeatureFlag;
 use crate::settings::{FontSettings, InputSettings};
 use crate::terminal::blockgrid_element::BlockGridElement;
+use crate::terminal::cli_agent_sessions::CLIAgentSessionsModel;
 use crate::terminal::grid_size_util::grid_compute_baseline_position_fn;
 use crate::terminal::input::get_input_box_top_border_width;
 use crate::terminal::ligature_settings::should_use_ligature_rendering;
@@ -100,31 +100,26 @@ pub fn should_render_prompt_on_same_line(
 
     let should_render_ps1 = should_render_ps1_prompt(terminal_model, app);
 
-    if FeatureFlag::AgentView.is_enabled() {
-        should_render_ps1
-    } else {
-        let session_settings = SessionSettings::as_ref(app);
-        should_render_ps1
-            || session_settings
-                .saved_prompt
-                .value()
-                .same_line_prompt_enabled()
-    }
+    let session_settings = SessionSettings::as_ref(app);
+    should_render_ps1
+        || session_settings
+            .saved_prompt
+            .value()
+            .same_line_prompt_enabled()
 }
 
-/// Returns `true` if the shell or AI prompt should be rendered using the editors
+/// Returns `true` if the shell prompt should be rendered using the editors
 /// `EditorDecoratorElements` API.
 ///
-/// The AI prompt is unconditionally rendered above the input.
+/// The CLI agent rich input renders its prompt above the input instead.
 pub fn should_render_prompt_using_editor_decorator_elements(
     is_universal_developer_input: bool,
-    ai_input_model: &ModelHandle<BlocklistAIInputModel>,
+    is_cli_agent_input_open: bool,
     model: &TerminalModel,
     app: &AppContext,
 ) -> bool {
     should_render_prompt_on_same_line(is_universal_developer_input, model, app)
-        && (!ai_input_model.as_ref(app).is_ai_input_enabled()
-            || FeatureFlag::AgentView.is_enabled())
+        && !is_cli_agent_input_open
 }
 
 pub(in crate::terminal) struct PromptAndPadding {
@@ -182,7 +177,7 @@ pub struct PromptRenderHelper {
     prompt_selection_state_handle: SelectionHandle,
     input_render_state_model_handle: ModelHandle<InputRenderStateModel>,
 
-    ai_input_model: ModelHandle<BlocklistAIInputModel>,
+    terminal_view_id: EntityId,
 }
 
 #[derive(Clone, Copy)]
@@ -207,7 +202,7 @@ impl PromptRenderHelper {
         prompt_selection_state_handle: SelectionHandle,
         parent_view_id: EntityId,
         input_render_state_model_handle: ModelHandle<InputRenderStateModel>,
-        ai_input_model: ModelHandle<BlocklistAIInputModel>,
+        terminal_view_id: EntityId,
     ) -> Self {
         Self {
             sessions,
@@ -215,7 +210,7 @@ impl PromptRenderHelper {
             prompt_selection_state_handle,
             prompt_parent_view_id: parent_view_id,
             input_render_state_model_handle,
-            ai_input_model,
+            terminal_view_id,
         }
     }
 
@@ -425,7 +420,7 @@ impl PromptRenderHelper {
             should_render_prompt_on_same_line(is_universal_input, model, app);
         let padding_right = if should_render_prompt_using_editor_decorator_elements(
             is_universal_input,
-            &self.ai_input_model,
+            CLIAgentSessionsModel::as_ref(app).is_input_open(self.terminal_view_id),
             model,
             app,
         ) {
@@ -603,7 +598,7 @@ impl PromptRenderHelper {
         let should_render_prompt_using_editor_decorator_elements =
             should_render_prompt_using_editor_decorator_elements(
                 is_universal_input,
-                &self.ai_input_model,
+                CLIAgentSessionsModel::as_ref(app).is_input_open(self.terminal_view_id),
                 terminal_model,
                 app,
             );

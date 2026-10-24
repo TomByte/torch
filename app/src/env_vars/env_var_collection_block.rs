@@ -1,47 +1,50 @@
 use std::borrow::Cow;
-use std::rc::Rc;
 use std::sync::Arc;
 
 use lazy_static::lazy_static;
 use parking_lot::RwLock;
+use pathfinder_color::ColorU;
 use settings::Setting as _;
 use torch_core::features::FeatureFlag;
 use torch_core::semantic_selection::SemanticSelection;
 use torch_core::ui::Icon;
+use torch_core::ui::theme::AnsiColorIdentifier;
 use torchui::elements::{
-    Border, Clipped, Container, CornerRadius, CrossAxisAlignment, Flex, FormattedTextElement,
-    MouseStateHandle, ParentElement, Radius, SavePosition, SelectableArea, SelectionHandle,
-    get_rich_content_position_id,
+    Border, Clipped, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Expanded, Flex,
+    FormattedTextElement, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle,
+    ParentElement, Radius, SavePosition, SelectableArea, SelectionHandle, Shrinkable,
+    SizeConstraintCondition, SizeConstraintSwitch, Text, get_rich_content_position_id,
 };
 use torchui::keymap::{FixedBinding, Keystroke};
+use torchui::platform::Cursor;
 use torchui::{
     AppContext, Element, Entity, EntityId, FocusContext, SingletonEntity, TypedActionView, View,
     ViewContext,
 };
 
-use crate::ai::agent::icons::{yellow_running_icon, yellow_stop_icon};
-use crate::ai::blocklist::block::view_impl::{
-    CONTENT_HORIZONTAL_PADDING, CONTENT_ITEM_VERTICAL_MARGIN,
-};
-use crate::ai::blocklist::inline_action::inline_action_header::{
-    ExpandedConfig, HeaderConfig, INLINE_ACTION_HORIZONTAL_PADDING, InteractionMode,
-};
-use crate::ai::blocklist::inline_action::inline_action_icons::{self};
 use crate::appearance::Appearance;
 use crate::settings::InputModeSettings;
 use crate::terminal::block_list_element::BlockListMenuSource;
 use crate::terminal::block_list_viewport::InputMode;
 use crate::terminal::view::TerminalAction;
 use crate::ui_components::blended_colors;
+use crate::ui_components::icons::Icon as UiIcon;
 use crate::view_components::action_button::{
     ButtonSize, KeystrokeSource, NakedTheme, PrimaryTheme,
 };
 use crate::view_components::compactible_action_button::{
     CompactibleActionButton, RenderCompactibleActionButton, SMALL_SIZE_SWITCH_THRESHOLD,
+    render_compact_and_regular_button_rows, render_expansion_icon,
 };
 
+const CONTENT_HORIZONTAL_PADDING: f32 = 20.;
+const CONTENT_ITEM_VERTICAL_MARGIN: f32 = 16.;
+const HEADER_HORIZONTAL_PADDING: f32 = 16.;
+const HEADER_VERTICAL_PADDING: f32 = 10.;
+const HEADER_ICON_MARGIN: f32 = 8.;
+
 /// The vertical padding applied to the env var collection block's content body.
-/// For horizontal padding, use [`INLINE_ACTION_HORIZONTAL_PADDING`] for consistency.
+/// For horizontal padding, use [`HEADER_HORIZONTAL_PADDING`] for consistency.
 const ENV_VAR_COLLECTION_BODY_VERTICAL_PADDING: f32 = 16.;
 
 const ENV_VAR_COLLECTION_CANCEL_LABEL: &str = "Cancel";
@@ -265,52 +268,123 @@ impl EnvVarCollectionBlock {
         };
 
         let appearance = Appearance::as_ref(app);
-        let icon = match self.state {
-            EnvVarCollectionState::WaitingForUser => Some(yellow_stop_icon(appearance)),
-            EnvVarCollectionState::Running => Some(yellow_running_icon(appearance)),
-            EnvVarCollectionState::Succeeded => {
-                Some(inline_action_icons::green_check_icon(appearance))
+        let theme = appearance.theme();
+        let terminal_color = |color: AnsiColorIdentifier| {
+            ColorU::from(color.to_ansi_color(&theme.terminal_colors().normal))
+        };
+        let (state_icon, state_icon_color) = match self.state {
+            EnvVarCollectionState::WaitingForUser => (
+                UiIcon::StopFilled,
+                terminal_color(AnsiColorIdentifier::Yellow),
+            ),
+            EnvVarCollectionState::Running => {
+                (UiIcon::Circle, terminal_color(AnsiColorIdentifier::Yellow))
             }
-            EnvVarCollectionState::Failed => Some(inline_action_icons::red_x_icon(appearance)),
+            EnvVarCollectionState::Succeeded => {
+                (UiIcon::Check, terminal_color(AnsiColorIdentifier::Green))
+            }
+            EnvVarCollectionState::Failed => (UiIcon::X, terminal_color(AnsiColorIdentifier::Red)),
             EnvVarCollectionState::Cancelled => {
-                Some(inline_action_icons::cancelled_icon(appearance))
+                (UiIcon::Cancelled, blended_colors::neutral_6(theme))
             }
         };
+        let line_height = app.font_cache().line_height(
+            appearance.monospace_font_size(),
+            appearance.line_height_ratio(),
+        );
+        let expanded_downwards = self.state == EnvVarCollectionState::WaitingForUser
+            || (self.state == EnvVarCollectionState::Failed && self.header_is_expanded);
 
-        let interaction_mode = match self.state {
-            EnvVarCollectionState::WaitingForUser => {
-                let buttons: Vec<Rc<dyn RenderCompactibleActionButton>> = vec![
-                    Rc::new(self.cancel_button.clone()),
-                    Rc::new(self.accept_button.clone()),
-                ];
-                Some(InteractionMode::ActionButtons {
-                    action_buttons: buttons,
-                    size_switch_threshold: SMALL_SIZE_SWITCH_THRESHOLD,
+        let header = |right_content: Option<Box<dyn Element>>| {
+            let header_background = theme.surface_2();
+            let icon = Container::new(
+                ConstrainedBox::new(state_icon.to_warpui_icon(state_icon_color.into()).finish())
+                    .with_width(line_height)
+                    .with_height(line_height)
+                    .finish(),
+            )
+            .with_margin_right(HEADER_ICON_MARGIN)
+            .finish();
+            let title_element = Text::new_inline(
+                title.clone(),
+                appearance.ui_font_family(),
+                appearance.monospace_font_size(),
+            )
+            .soft_wrap(false)
+            .with_selectable(true)
+            .with_color(blended_colors::text_main(theme, header_background))
+            .finish();
+            let left_content = Flex::row()
+                .with_main_axis_alignment(MainAxisAlignment::Start)
+                .with_cross_axis_alignment(CrossAxisAlignment::Center)
+                .with_child(icon)
+                .with_child(
+                    Expanded::new(
+                        1.,
+                        Container::new(title_element).with_margin_right(8.).finish(),
+                    )
+                    .finish(),
+                )
+                .finish();
+            let mut header_row = Flex::row()
+                .with_main_axis_alignment(MainAxisAlignment::SpaceBetween)
+                .with_main_axis_size(MainAxisSize::Max)
+                .with_cross_axis_alignment(CrossAxisAlignment::Center)
+                .with_child(Shrinkable::new(1., left_content).finish());
+            if let Some(right_content) = right_content {
+                header_row.add_child(right_content);
+            }
+            Container::new(header_row.finish())
+                .with_padding_left(HEADER_HORIZONTAL_PADDING)
+                .with_padding_right(HEADER_HORIZONTAL_PADDING)
+                .with_vertical_padding(HEADER_VERTICAL_PADDING)
+                .with_background(header_background)
+                .with_corner_radius(if expanded_downwards {
+                    CornerRadius::with_top(Radius::Pixels(8.))
+                } else {
+                    CornerRadius::with_all(Radius::Pixels(8.))
                 })
+                .finish()
+        };
+
+        match self.state {
+            EnvVarCollectionState::WaitingForUser => {
+                let buttons: Vec<&dyn RenderCompactibleActionButton> =
+                    vec![&self.cancel_button, &self.accept_button];
+                let (regular_row, compact_row) =
+                    render_compact_and_regular_button_rows(buttons, None, appearance, app);
+                SizeConstraintSwitch::new(
+                    header(Some(regular_row)),
+                    vec![(
+                        SizeConstraintCondition::WidthLessThan(
+                            SMALL_SIZE_SWITCH_THRESHOLD * appearance.monospace_ui_scalar(),
+                        ),
+                        header(Some(compact_row)),
+                    )],
+                )
+                .finish()
             }
             EnvVarCollectionState::Failed => {
-                let expansion_config =
-                    ExpandedConfig::new(self.header_is_expanded, self.header_mouse_state.clone())
-                        .with_toggle_callback(move |ctx| {
-                            ctx.dispatch_typed_action(EnvVarCollectionBlockAction::ToggleExpanded);
-                        });
-
-                Some(InteractionMode::ManuallyExpandable(expansion_config))
+                let chevron = ConstrainedBox::new(render_expansion_icon(
+                    self.header_is_expanded,
+                    false,
+                    appearance,
+                    app,
+                ))
+                .with_height(line_height)
+                .with_width(line_height)
+                .finish();
+                Hoverable::new(self.header_mouse_state.clone(), |_| header(Some(chevron)))
+                    .on_click(|ctx, _, _| {
+                        ctx.dispatch_typed_action(EnvVarCollectionBlockAction::ToggleExpanded);
+                    })
+                    .with_cursor(Cursor::PointingHand)
+                    .finish()
             }
-            _ => None,
-        };
-
-        let mut config = HeaderConfig::new(title, app).with_selectable_text();
-
-        if let Some(icon) = icon {
-            config = config.with_icon(icon);
+            EnvVarCollectionState::Running
+            | EnvVarCollectionState::Succeeded
+            | EnvVarCollectionState::Cancelled => header(None),
         }
-
-        if let Some(mode) = interaction_mode {
-            config = config.with_interaction_mode(mode);
-        }
-
-        config.render(app)
     }
 }
 
@@ -357,7 +431,7 @@ impl View for EnvVarCollectionBlock {
                 .set_selectable(true)
                 .finish(),
             )
-            .with_horizontal_padding(INLINE_ACTION_HORIZONTAL_PADDING)
+            .with_horizontal_padding(HEADER_HORIZONTAL_PADDING)
             .with_vertical_padding(ENV_VAR_COLLECTION_BODY_VERTICAL_PADDING)
             .with_background(theme.background())
             .with_corner_radius(CornerRadius::with_bottom(Radius::Pixels(8.)))

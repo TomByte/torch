@@ -1,4 +1,3 @@
-use input_classifier::InputType;
 use torch_core::execution_mode::{AppExecutionMode, ExecutionMode};
 use torchui::{App, EntityId};
 
@@ -9,7 +8,6 @@ use super::{
     BlockedSource, CLIAgentInputEntrypoint, CLIAgentInputState, CLIAgentSession,
     CLIAgentSessionContext, CLIAgentSessionStatus, CLIAgentSessionsModel,
 };
-use crate::agent_status::InputConfig;
 use crate::terminal::CLIAgent;
 
 #[test]
@@ -269,11 +267,6 @@ fn parse_droid_stop_notification() {
 fn apply_event_preserves_input_session() {
     let input_state = CLIAgentInputState::Open {
         entrypoint: CLIAgentInputEntrypoint::CtrlG,
-        previous_input_config: InputConfig {
-            input_type: InputType::Shell,
-            is_locked: false,
-        },
-        previous_was_lock_set_with_empty_buffer: true,
     };
     let mut session = CLIAgentSession {
         agent: CLIAgent::Claude,

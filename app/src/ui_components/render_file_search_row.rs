@@ -25,7 +25,6 @@ use torchui::{AppContext, Element, SingletonEntity};
 
 use crate::appearance::Appearance;
 use crate::search::ItemHighlightState;
-use crate::search::ai_context_menu::safe_truncate;
 
 pub const MAX_COMBINED_LENGTH: usize = 55;
 
@@ -296,4 +295,16 @@ fn calculate_highlight_indices(
     }
 
     (item_name_highlights, path_highlights)
+}
+
+/// Truncates `s` to at most `new_len` bytes without splitting a UTF-8 character.
+fn safe_truncate(s: &mut String, new_len: usize) {
+    if new_len >= s.len() {
+        return;
+    }
+    let mut boundary = new_len;
+    while !s.is_char_boundary(boundary) {
+        boundary -= 1;
+    }
+    s.truncate(boundary);
 }

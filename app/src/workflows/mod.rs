@@ -10,7 +10,6 @@ pub mod categories;
 use anyhow::Result;
 use workflow::Workflow;
 
-pub mod ai_assist;
 pub mod aliases;
 pub mod arguments;
 pub mod command_parser;
@@ -140,13 +139,6 @@ impl WorkflowViewMode {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum AIWorkflowOrigin {
-    CommandSearch,
-    AgentMode,
-    LegacyWarpAI,
-}
-
 /// Wrapper type for a workflow that may be saved locally or using cloud sync.
 #[derive(Clone, Debug, PartialEq)]
 pub enum WorkflowType {
@@ -154,11 +146,6 @@ pub enum WorkflowType {
     Local(Workflow),
     /// Saved workflows from personal or team collections, saved using cloud-sync.
     Cloud(Box<CloudWorkflow>),
-    /// Ephemeral/transient workflows created from Torch AI output
-    AIGenerated {
-        workflow: Workflow,
-        origin: AIWorkflowOrigin,
-    },
     /// A workflow that's part of a cloud notebook.
     Notebook(Workflow),
 }
@@ -167,7 +154,6 @@ impl WorkflowType {
     pub fn as_workflow(&self) -> &Workflow {
         match self {
             WorkflowType::Local(workflow) => workflow,
-            WorkflowType::AIGenerated { workflow, .. } => workflow,
             WorkflowType::Cloud(workflow) => &workflow.model().data,
             WorkflowType::Notebook(workflow) => workflow,
         }
@@ -177,7 +163,6 @@ impl WorkflowType {
     pub fn take_workflow(self) -> Workflow {
         match self {
             WorkflowType::Local(workflow) => workflow,
-            WorkflowType::AIGenerated { workflow, .. } => workflow,
             WorkflowType::Cloud(workflow) => workflow.model().data.clone(),
             WorkflowType::Notebook(workflow) => workflow,
         }
@@ -204,11 +189,6 @@ impl WorkflowType {
             Some(CloudObjectTypeAndId::Workflow(id)) => id.into_server().map(Into::into),
             _ => None,
         }
-    }
-
-    /// We don't show env var selection for Agent Mode suggested commands.
-    pub(super) fn should_show_env_var_selection(&self) -> bool {
-        !matches!(self, WorkflowType::AIGenerated { .. },)
     }
 }
 

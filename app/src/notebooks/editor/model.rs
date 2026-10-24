@@ -254,22 +254,6 @@ impl NotebooksEditorModel {
         self.render_state.as_ref(ctx).markdown_table_count()
     }
 
-    #[cfg(feature = "integration_tests")]
-    pub(crate) fn nested_shell_command_count(&self, ctx: &AppContext) -> usize {
-        self.child_models
-            .model_handles::<NotebookCommand>()
-            .filter(|handle| handle.as_ref(ctx).is_shell_command(ctx))
-            .count()
-    }
-
-    #[cfg(feature = "integration_tests")]
-    pub(crate) fn nested_rendered_mermaid_command_count(&self, ctx: &AppContext) -> usize {
-        self.child_models
-            .model_handles::<NotebookCommand>()
-            .filter(|handle| handle.as_ref(ctx).is_rendered_mermaid(ctx))
-            .count()
-    }
-
     pub fn set_interaction_state(
         &mut self,
         new_state: InteractionState,

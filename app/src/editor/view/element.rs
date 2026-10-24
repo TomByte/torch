@@ -14,13 +14,11 @@ use torch_core::ui::appearance::DEFAULT_UI_FONT_SIZE;
 use torch_errors::report_error;
 use torch_util::user_input::UserInput;
 use torchui::elements::{
-    AfterLayoutContext, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
-    DEFAULT_UI_LINE_HEIGHT_RATIO, Element, Event, EventContext, Flex, LayoutContext, PaintContext,
-    ParentElement, Point, Radius, SizeConstraint, Text,
+    AfterLayoutContext, ChildView, CornerRadius, DEFAULT_UI_LINE_HEIGHT_RATIO, Element, Event,
+    EventContext, LayoutContext, PaintContext, Point, Radius, SizeConstraint,
 };
-use torchui::event::{DispatchedEvent, KeyState, ModifiersState};
+use torchui::event::{DispatchedEvent, ModifiersState};
 use torchui::keymap::Keystroke;
-use torchui::platform::keyboard::KeyCode;
 use torchui::text_layout::{
     self, ComputeBaselinePositionArgs, DEFAULT_TOP_BOTTOM_RATIO, LayoutCache,
 };
@@ -36,7 +34,7 @@ use super::super::soft_wrap::{
     ClampDirection, DisplayPointAndClampDirection, FrameLayouts, SoftWrapPoint, SoftWrapState,
 };
 use super::model::MarkedTextState;
-use super::snapshot::{VOICE_INPUT_ICON_CURSOR_GAP, ViewSnapshot};
+use super::snapshot::ViewSnapshot;
 use super::{
     CursorColors, DisplayPoint, DrawableSelection, EditorAction, LocalDrawableSelectionData,
     ReplicaId, ScrollState, SelectAction, position_id_for_cached_point, position_id_for_cursor,
@@ -50,8 +48,6 @@ use crate::editor::position_id_for_first_cursor;
 use crate::editor::view::AutosuggestionLocation;
 use crate::settings::CursorDisplayType;
 use crate::themes::theme::Fill;
-use crate::ui_components::blended_colors;
-use crate::ui_components::icons::Icon;
 
 // Similar to the terminal::model::ansi::CursorShape, this Editor Element has different cursor
 // shapes. However, this element doesn't implement all the same variants, so we don't share that
@@ -198,17 +194,12 @@ pub struct EditorElement {
     soft_wrap_state: SoftWrapState,
     autosuggestion_shortcut_icon: Option<Box<dyn Element>>,
     autosuggestion_ignore_icon: Option<Box<dyn Element>>,
-    cycle_next_command_hint: Option<Box<dyn Element>>,
 
     vim_mode: Option<VimMode>,
     text_colors: TextColors,
     editor_decorator_elements: EditorDecoratorElements,
     local_selection_data: LocalDrawableSelectionData,
     remote_selections_data: HashMap<ReplicaId, RemoteDrawableSelectionData>,
-
-    voice_input_cursor_icon: Option<Box<dyn Element>>,
-    #[cfg_attr(not(feature = "voice_input"), allow(unused))]
-    voice_input_toggle_key_code: Option<KeyCode>,
 }
 
 impl EditorElement {
@@ -227,7 +218,6 @@ impl EditorElement {
         local_selection_data: LocalDrawableSelectionData,
         remote_selections_data: HashMap<ReplicaId, super::RemoteDrawableSelectionData>,
         cursor_display_type: Option<CursorDisplayType>,
-        voice_input_toggle_key_code: Option<KeyCode>,
     ) -> Self {
         let remote_selections_data = HashMap::from_iter(remote_selections_data.into_iter().map(
             |(replica_id, drawable_selections_data)| {
@@ -255,9 +245,6 @@ impl EditorElement {
             local_selection_data,
             remote_selections_data,
             preferred_cursor_type: cursor_display_type.unwrap_or_default(),
-            cycle_next_command_hint: None,
-            voice_input_cursor_icon: None,
-            voice_input_toggle_key_code,
         }
     }
 
@@ -426,39 +413,6 @@ impl EditorElement {
             )));
         }
         false
-    }
-
-    fn modifier_key_change(
-        &self,
-        key_code: &KeyCode,
-        state: &KeyState,
-        ctx: &mut EventContext,
-    ) -> bool {
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "voice_input")] {
-                self.maybe_handle_voice_toggle(key_code, state, ctx);
-            } else {
-                // Silence unused param warnings when voice_input is disabled.
-                let _ = (key_code, state, ctx);
-            }
-        }
-        false
-    }
-
-    #[cfg(feature = "voice_input")]
-    fn maybe_handle_voice_toggle(
-        &self,
-        key_code: &KeyCode,
-        state: &KeyState,
-        ctx: &mut EventContext,
-    ) {
-        if let Some(voice_input_toggle_key_code) = self.voice_input_toggle_key_code
-            && *key_code == voice_input_toggle_key_code
-        {
-            ctx.dispatch_typed_action(EditorAction::ToggleVoiceInput(
-                voice_input::VoiceInputToggledFrom::Key { state: *state },
-            ));
-        }
     }
 
     fn mouse_moved(
@@ -823,7 +777,6 @@ impl EditorElement {
         cursors: SmallVec<[CursorData; 32]>,
         view_snapshot: &ViewSnapshot,
         remote_selections_data: &mut HashMap<ReplicaId, RemoteDrawableSelectionData>,
-        voice_input_icon: &mut Option<Box<dyn Element>>,
         ctx: &mut PaintContext,
         app: &AppContext,
     ) {
@@ -873,19 +826,6 @@ impl EditorElement {
                 drawable_selections_data
                     .avatar
                     .paint(avatar_origin, ctx, app);
-                ctx.scene.stop_layer();
-            }
-
-            if let Some(element) = voice_input_icon {
-                let icon_size = view_snapshot.voice_input_icon_size();
-                let icon_x_offset = icon_size.x() / 2. - cursor_width / 2.;
-                let icon_origin = vec2f(
-                    cursor.origin.x() - icon_x_offset,
-                    cursor.origin.y() - icon_size.y() - VOICE_INPUT_ICON_CURSOR_GAP,
-                );
-                // New layer is started so voice icon is rendered over text and prompt
-                ctx.scene.start_layer(torchui::ClipBounds::None);
-                element.paint(icon_origin, ctx, app);
                 ctx.scene.stop_layer();
             }
         }
@@ -1436,17 +1376,6 @@ impl EditorElement {
         Ok(FrameLayouts::new(frames, start_line, end_line))
     }
 
-    fn should_show_cycle_next_command_hint(&self, is_cycling: bool, ctx: &AppContext) -> bool {
-        FeatureFlag::CycleNextCommandSuggestion.is_enabled()
-            && self
-                .view_snapshot
-                .editor_model
-                .as_ref(ctx)
-                .buffer(ctx)
-                .is_empty()
-            && (self.view_snapshot.active_next_command_suggestion() || is_cycling)
-    }
-
     /// Adds icons used in the input editor but not other editors.
     pub fn with_input_editor_icons(
         mut self,
@@ -1454,8 +1383,6 @@ impl EditorElement {
         autosuggestion_ignore: &ViewHandle<AutosuggestionIgnore>,
         show_autosuggestion_keybinding_hint: bool,
         show_autosuggestion_ignore_button: bool,
-        is_cycling: bool,
-        ctx: &AppContext,
     ) -> Self {
         // Text in the input is cut off at line heights < 1, so it's not possible
         // to render the keybinding shortcut / ignore button at these small line heights.
@@ -1474,58 +1401,7 @@ impl EditorElement {
                     Some(ChildView::new(autosuggestion_ignore).finish());
             }
         }
-        // If the input buffer is empty, down arrow cycles suggestions.
-        let cycle_next_command_hint = if self.should_show_cycle_next_command_hint(is_cycling, ctx) {
-            let appearance = Appearance::as_ref(ctx);
-            Some(
-                self.render_cycle_next_command_hint(torch_core::ui::theme::Fill::Solid(
-                    blended_colors::semantic_text_disabled(appearance.theme()),
-                )),
-            )
-        } else {
-            None
-        };
-        Self {
-            cycle_next_command_hint,
-            ..self
-        }
-    }
-
-    fn render_cycle_next_command_hint(&self, color: Fill) -> Box<dyn Element + 'static> {
-        let font_size = self.view_snapshot.font_size - 2.;
-        let icon_height = Self::cursor_height(font_size, self.view_snapshot.line_height_ratio);
-        Flex::row()
-            .with_cross_axis_alignment(CrossAxisAlignment::End)
-            .with_children([
-                Container::new(
-                    ConstrainedBox::new(Icon::ArrowDown.to_warpui_icon(color).finish())
-                        .with_max_height(icon_height)
-                        .with_max_width(icon_height)
-                        .finish(),
-                )
-                .with_margin_right(self.view_snapshot.em_width)
-                .finish(),
-                Text::new(
-                    "Cycle suggestions",
-                    self.view_snapshot.font_family,
-                    font_size,
-                )
-                .with_color(self.text_colors.hint_color.into())
-                .finish(),
-            ])
-            .finish()
-    }
-
-    #[cfg(feature = "voice_input")]
-    pub fn with_voice_input_cursor_icon(self, element: Box<dyn Element>) -> Self {
-        // If voice input is not active, don't render the icon.
-        if !self.view_snapshot.voice_input_state.is_active() {
-            return self;
-        }
-        Self {
-            voice_input_cursor_icon: Some(element),
-            ..self
-        }
+        self
     }
 
     /// Takes into account whether or not we're in Vim mode to determine the cursor type.
@@ -1686,10 +1562,6 @@ impl Element for EditorElement {
                 .unwrap_or(0.),
         );
 
-        if let Some(element) = self.cycle_next_command_hint.as_mut() {
-            element.layout(constraint, ctx, app);
-        }
-
         let cursor_height =
             Self::cursor_height(view_snapshot.font_size, view_snapshot.line_height_ratio);
 
@@ -1745,15 +1617,6 @@ impl Element for EditorElement {
                     vec2f(avatar_size, avatar_size),
                     vec2f(avatar_size, avatar_size),
                 ),
-                ctx,
-                app,
-            );
-        }
-
-        if let Some(element) = self.voice_input_cursor_icon.as_mut() {
-            let voice_input_icon_size = view_snapshot.voice_input_icon_size();
-            element.layout(
-                SizeConstraint::new(voice_input_icon_size, voice_input_icon_size),
                 ctx,
                 app,
             );
@@ -1883,7 +1746,6 @@ impl Element for EditorElement {
                 cursors,
                 view_snapshot,
                 &mut self.remote_selections_data,
-                &mut self.voice_input_cursor_icon,
                 ctx,
                 app,
             );
@@ -1999,21 +1861,6 @@ impl Element for EditorElement {
                     ctx,
                     app,
                 );
-            }
-
-            if let Some(cycle_next_command_hint) = self.cycle_next_command_hint.as_mut() {
-                let hint_size = cycle_next_command_hint
-                    .size()
-                    .expect("should have element size at paint");
-
-                let origin = vec2f(
-                    bounds.max_x() - hint_size.x(),
-                    bounds.max_y() - hint_size.y(),
-                );
-                // Only render the hint if it wouldn't overlap with the rightmost icon.
-                if next_icon_origin_without_padding.is_none_or(|p| p.x() < origin.x()) {
-                    cycle_next_command_hint.paint(origin, ctx, app);
-                }
             }
 
             let cursor_size = vec2f(BEAM_CURSOR_WIDTH_PX, cursor_height);
@@ -2172,9 +2019,7 @@ impl Element for EditorElement {
                 modifiers: ModifiersState { ctrl: false, .. },
             } => self.scroll(*position, *delta, *precise, ctx, app),
             Event::KeyDown { keystroke, .. } => self.key_down(keystroke, ctx),
-            Event::ModifierKeyChanged {
-                key_code, state, ..
-            } => self.modifier_key_change(key_code, state, ctx),
+            Event::ModifierKeyChanged { .. } => false,
             Event::TypedCharacters { chars } => self.typed_characters(chars, ctx),
             Event::DragAndDropFiles { paths, location } => {
                 self.drag_and_drop_file(paths.clone(), *location, ctx)

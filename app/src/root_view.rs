@@ -24,7 +24,6 @@ use torchui::{
     ViewContext, ViewHandle, WindowId, id,
 };
 
-use crate::ai::blocklist::SerializedBlockListItem;
 use crate::app_state::{AppState, PaneUuid, WindowSnapshot};
 use crate::appearance::Appearance;
 use crate::autoupdate::{AutoupdateState, AutoupdateStateEvent, RequestType, UpdateReady};
@@ -32,10 +31,8 @@ use crate::changelog_model::ChangelogRequestType;
 use crate::features::FeatureFlag;
 use crate::interval_timer::IntervalTimer;
 use crate::launch_configs::launch_config;
-use crate::linear::LinearIssueWork;
 use crate::pane_group::{NewTerminalOptions, PanesLayout};
 use crate::persistence::ModelEvent;
-use crate::server::cloud_objects::update_manager::UpdateManager;
 use crate::server::ids::ServerId;
 use crate::server::server_api::{ServerApi, ServerApiProvider, ServerTime};
 use crate::server::telemetry::{LaunchConfigUiLocation, TelemetryEvent};
@@ -44,6 +41,7 @@ use crate::settings_view::{SettingsSection, flags};
 use crate::terminal::available_shells::AvailableShell;
 use crate::terminal::general_settings::GeneralSettings;
 use crate::terminal::keys_settings::KeysSettings;
+use crate::terminal::model::block::SerializedBlock;
 use crate::terminal::shell::ShellType;
 use crate::terminal::view::cell_size_and_padding;
 use crate::themes::theme::AnsiColorIdentifier;
@@ -187,13 +185,6 @@ pub fn init(app: &mut AppContext) {
         "root_view:move_quake_mode_window_from_screen_change",
         move_quake_mode_window_from_screen_change,
     );
-    #[cfg(feature = "voice_input")]
-    app.add_global_action("root_view:abort_voice_input", abort_voice_input);
-    #[cfg(feature = "voice_input")]
-    app.add_action(
-        "root_view:maybe_stop_active_voice_input",
-        RootView::maybe_stop_active_voice_input,
-    );
     app.add_action(
         "root_view:add_session_at_path",
         RootView::add_session_at_path,
@@ -234,24 +225,6 @@ pub fn init(app: &mut AppContext) {
     app.add_action(
         "root_view:open_settings_in_existing_window",
         RootView::open_settings_in_existing_window,
-    );
-
-    app.add_global_action(
-        "root_view:open_codex_in_new_window",
-        open_codex_in_new_window,
-    );
-    app.add_action(
-        "root_view:open_codex_in_existing_window",
-        RootView::open_codex_in_existing_window,
-    );
-
-    app.add_global_action(
-        "root_view:open_linear_issue_work_in_new_window",
-        open_linear_issue_work_in_new_window,
-    );
-    app.add_action(
-        "root_view:open_linear_issue_work_in_existing_window",
-        RootView::open_linear_issue_work_in_existing_window,
     );
 
     app.add_action("root_view:add_file_pane", RootView::add_file_pane);
@@ -722,32 +695,6 @@ fn open_settings_in_new_window(args: &OpenSettingsArgs, ctx: &mut AppContext) {
     });
 }
 
-/// Opens a new window and shows the Codex modal.
-fn open_codex_in_new_window(_: &(), ctx: &mut AppContext) {
-    let root_handle = open_new_window_get_handles(None, ctx).1;
-    root_handle.update(ctx, |root_view, ctx| {
-        let workspace_view_handle = &root_view.workspace;
-        let initial_load_complete = UpdateManager::as_ref(ctx).initial_load_complete();
-        workspace_view_handle.update(ctx, |_, ctx| {
-            let _ = ctx.spawn(initial_load_complete, move |workspace, _, ctx| {
-                workspace.open_codex_modal(ctx)
-            });
-        });
-    });
-}
-
-/// Opens a new window and enters agent view with the Linear issue work prompt.
-fn open_linear_issue_work_in_new_window(args: &LinearIssueWork, ctx: &mut AppContext) {
-    let (_, root_handle) = open_new_window_get_handles(None, ctx);
-    let args = args.clone();
-    root_handle.update(ctx, |root_view, ctx| {
-        let workspace_view_handle = &root_view.workspace;
-        workspace_view_handle.update(ctx, |workspace, ctx| {
-            workspace.open_linear_issue_work(&args, ctx);
-        });
-    });
-}
-
 /// Opens a new window with a file-based notebook open.
 fn open_new_with_file_notebook(arg: &PathBuf, ctx: &mut AppContext) {
     open_new_with_workspace_source(
@@ -1107,16 +1054,6 @@ fn show_or_hide_non_quake_mode_windows(_: &(), ctx: &mut AppContext) {
     };
 }
 
-#[cfg(feature = "voice_input")]
-fn abort_voice_input(_: &(), ctx: &mut AppContext) {
-    let voice_input = voice_input::VoiceInput::handle(ctx);
-    if voice_input.as_ref(ctx).is_listening() {
-        voice_input.update(ctx, |voice_input, _| {
-            voice_input.abort_listening();
-        });
-    }
-}
-
 #[derive(Clone)]
 pub enum NewWorkspaceSource {
     Empty {
@@ -1128,7 +1065,7 @@ pub enum NewWorkspaceSource {
     },
     Restored {
         window_snapshot: WindowSnapshot,
-        block_lists: Arc<HashMap<PaneUuid, Vec<SerializedBlockListItem>>>,
+        block_lists: Arc<HashMap<PaneUuid, Vec<SerializedBlock>>>,
     },
     Session {
         options: Box<NewTerminalOptions>,
@@ -1136,10 +1073,6 @@ pub enum NewWorkspaceSource {
     },
     NotebookFromFilePath {
         file_path: Option<PathBuf>,
-    },
-    AgentSession {
-        options: Box<NewTerminalOptions>,
-        initial_query: Option<String>,
     },
     /// A tab is being transferred from another window via the transferable views framework.
     /// The workspace will create a placeholder tab, which will be replaced by the transferred
@@ -1202,8 +1135,7 @@ impl NewWorkspaceSource {
             } => Some(*source_window_id),
             Self::FromTemplate { .. }
             | Self::Session { .. }
-            | Self::NotebookFromFilePath { .. }
-            | Self::AgentSession { .. } => None,
+            | Self::NotebookFromFilePath { .. } => None,
             Self::Restored {
                 window_snapshot, ..
             } => {
@@ -1487,77 +1419,9 @@ impl RootView {
         true
     }
 
-    /// Opens the Codex modal in an existing window.
-    pub fn open_codex_in_existing_window(&mut self, _: &(), ctx: &mut ViewContext<Self>) -> bool {
-        let window_id = ctx.window_id();
-        let handle = &self.workspace;
-        handle.update(ctx, |workspace, ctx| {
-            workspace.open_codex_modal(ctx);
-        });
-        ctx.windows().show_window_and_focus_app(window_id);
-
-        true
-    }
-
-    /// Opens a new tab with agent view for a Linear issue work deeplink.
-    pub fn open_linear_issue_work_in_existing_window(
-        &mut self,
-        args: &LinearIssueWork,
-        ctx: &mut ViewContext<Self>,
-    ) -> bool {
-        let window_id = ctx.window_id();
-        let handle = &self.workspace;
-        let args = args.clone();
-        handle.update(ctx, |workspace, ctx| {
-            workspace.open_linear_issue_work(&args, ctx);
-        });
-        ctx.windows().show_window_and_focus_app(window_id);
-
-        true
-    }
-
     pub fn focus(&mut self, ctx: &mut ViewContext<Self>) -> bool {
         ctx.focus(&self.workspace);
         ctx.notify();
-        true
-    }
-
-    /// Stops active voice input, if the configured voice input toggle key is released.
-    #[cfg(feature = "voice_input")]
-    fn maybe_stop_active_voice_input(
-        &mut self,
-        key_code: &torchui::platform::keyboard::KeyCode,
-        ctx: &mut ViewContext<Self>,
-    ) -> bool {
-        use torchui::event::KeyState;
-        use voice_input::{VoiceInput, VoiceInputState, VoiceInputToggledFrom};
-
-        use crate::settings::AISettings;
-
-        // Check that the released key matches the configured voice input toggle key.
-        let ai_settings = AISettings::as_ref(ctx);
-        if let Some(configured_key_code) = ai_settings.voice_input_toggle_key.value().to_key_code()
-            && configured_key_code == *key_code
-        {
-            let voice_input = VoiceInput::handle(ctx);
-            // Check if we're actively listening and it was started from a key press.
-            if let VoiceInputState::Listening { enabled_from, .. } = voice_input.as_ref(ctx).state()
-                && matches!(
-                    enabled_from,
-                    VoiceInputToggledFrom::Key {
-                        state: KeyState::Pressed
-                    }
-                )
-            {
-                log::debug!("Voice input key release detected: {key_code:?}");
-                // Stop listening and proceed to transcription (don't abort).
-                voice_input.update(ctx, |voice_input, ctx| {
-                    if let Err(e) = voice_input.stop_listening(ctx) {
-                        report_error!(e.context("Failed to stop voice input on key release"));
-                    }
-                });
-            }
-        }
         true
     }
 }
@@ -1580,22 +1444,7 @@ impl View for RootView {
     fn render(&self, _app: &AppContext) -> Box<dyn Element> {
         let mut stack = Stack::new();
         stack.add_child(ChildView::new(&self.workspace).finish());
-
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "voice_input")] {
-                use torchui::elements::{EventHandler, DispatchEventResult};
-                EventHandler::new(stack.finish())
-                    .on_modifier_state_changed(|ctx, _app, key_code, key_state| {
-                        if matches!(key_state, torchui::event::KeyState::Released) {
-                            ctx.dispatch_action("root_view:maybe_stop_active_voice_input", *key_code);
-                        }
-                        DispatchEventResult::PropagateToParent
-                    })
-                    .finish()
-            } else {
-                stack.finish()
-            }
-        }
+        stack.finish()
     }
 
     fn keymap_context(&self, app: &AppContext) -> torchui::keymap::Context {

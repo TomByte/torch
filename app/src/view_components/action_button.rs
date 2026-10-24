@@ -1027,50 +1027,6 @@ impl ActionButtonTheme for DangerPrimaryTheme {
     }
 }
 
-/// "DangerSecondary" buttons have no fill and a colorful border.
-///
-/// [Figma spec](https://www.figma.com/design/chk9pwt35jTJhf9KnHmZyE/Components?node-id=3628-14344&t=c27DwGHWevMlisVN-0)
-pub struct DangerSecondaryTheme;
-
-impl ActionButtonTheme for DangerSecondaryTheme {
-    fn background(&self, hovered: bool, appearance: &Appearance) -> Option<Fill> {
-        if hovered {
-            Some(
-                appearance
-                    .theme()
-                    .ansi_overlay_2(
-                        AnsiColorIdentifier::Red
-                            .to_ansi_color(&appearance.theme().terminal_colors().normal),
-                    )
-                    .into(),
-            )
-        } else {
-            None
-        }
-    }
-
-    fn text_color(
-        &self,
-        _hovered: bool,
-        _background: Option<Fill>,
-        appearance: &Appearance,
-    ) -> ColorU {
-        appearance.theme().ansi_fg_red()
-    }
-
-    fn border(&self, appearance: &Appearance) -> Option<ColorU> {
-        Some(appearance.theme().ansi_fg_red())
-    }
-
-    fn keyboard_shortcut_border(
-        &self,
-        _text_color: ColorU,
-        appearance: &Appearance,
-    ) -> Option<ColorU> {
-        Some(appearance.theme().ansi_fg_red())
-    }
-}
-
 /// "Disabled" buttons have a disabled fill and text color.
 ///
 /// [Figma spec](https://www.figma.com/design/chk9pwt35jTJhf9KnHmZyE/Components?node-id=3628-14344&t=c27DwGHWevMlisVN-0)

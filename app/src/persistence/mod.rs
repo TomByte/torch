@@ -2,7 +2,6 @@
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "local_fs")] {
-        pub mod agent;
         mod block_list;
         mod sqlite;
         pub mod commands;
@@ -40,13 +39,8 @@ use torch_core::command::ExitCode;
 use torch_errors::report_error;
 use torch_graphql::scalars::time::ServerTimestamp;
 use torchui::{AppContext, Entity, SingletonEntity};
-use uuid::Uuid;
-use warp_multi_agent_api as api;
 
-use self::model::{AgentConversation, AgentConversationData, Project};
-use crate::ai::blocklist::PersistedAIInput;
-use crate::ai::mcp::TemplatableMCPServerInstallation;
-use crate::ai::persisted_workspace::EnablementState;
+use self::model::Project;
 use crate::app_state::AppState;
 use crate::auth::auth_manager::PersistedCurrentUserInformation;
 use crate::cloud_object::model::actions::ObjectAction;
@@ -56,11 +50,12 @@ use crate::cloud_object::{
 };
 use crate::drive::folders::CloudFolder;
 use crate::notebooks::CloudNotebook;
+use crate::persisted_workspace::EnablementState;
 use crate::server::experiments::ServerExperiment;
 use crate::server::ids::SyncId;
 use crate::suggestions::ignored_suggestions_model::SuggestionType;
 use crate::terminal::history::PersistedCommand;
-use crate::terminal::model::block::{SerializedAgentViewVisibility, SerializedBlock};
+use crate::terminal::model::block::SerializedBlock;
 use crate::terminal::model::session::SessionId;
 use crate::workflows::CloudWorkflow;
 use crate::workspaces::user_profiles::UserProfileWithUID;
@@ -128,24 +123,6 @@ impl PersistedDataScope {
     fn gui_only_data(self) -> bool {
         matches!(self, PersistedDataScope::Full)
     }
-}
-
-/// A conversation whose `summary` column had to be derived from its task
-/// snapshot at read time (rows written before the column existed, or rows
-/// whose stored summary failed to parse). Sent to the SQLite writer thread
-/// so the derivation happens only once per row.
-#[derive(Debug)]
-pub struct ConversationSummaryBackfill {
-    pub conversation_id: String,
-    /// Serialized [`model::AgentConversationSummary`].
-    pub summary_json: String,
-    /// The `summary` column value observed at read time (`None` or invalid
-    /// JSON). The backfill only applies while the column still holds this
-    /// value, so it never overwrites a newer write.
-    pub previous_summary: Option<String>,
-    /// The row's pre-backfill `last_modified_at`, restored after the
-    /// update trigger bumps it.
-    pub last_modified_at: chrono::NaiveDateTime,
 }
 
 /// Initializes the persistence "subsystem".
@@ -284,20 +261,10 @@ pub struct PersistedData {
     pub time_of_next_force_object_refresh: Option<DateTime<Utc>>,
     pub object_actions: Vec<ObjectAction>,
     pub experiments: Vec<ServerExperiment>,
-    pub ai_queries: Vec<PersistedAIInput>,
-    pub nld_prompts: Vec<(String, DateTime<Local>)>,
     pub codebase_indices: Vec<CodeWorkspaceMetadata>,
     pub workspace_language_servers: HashMap<PathBuf, HashMap<LSPServerType, EnablementState>>,
-    pub multi_agent_conversations: Vec<AgentConversation>,
     pub projects: Vec<Project>,
-    pub project_rules: Vec<ProjectRulePath>,
     pub ignored_suggestions: Vec<(String, SuggestionType)>,
-    pub mcp_server_installations: HashMap<Uuid, TemplatableMCPServerInstallation>,
-    pub mcp_servers_to_restore: Vec<Uuid>,
-    /// Conversation summaries derived at read time for pre-`summary`-column
-    /// rows. Drained by `sqlite::initialize`, which hands them to the writer
-    /// thread for persistence; not intended for other consumers.
-    pub conversation_summary_backfills: Vec<ConversationSummaryBackfill>,
 }
 
 #[derive(Clone, Debug)]
@@ -320,7 +287,6 @@ pub struct StartedCommandMetadata {
     pub git_branch: Option<String>,
     pub cloud_workflow_id: Option<SyncId>,
     pub workflow_command: Option<String>,
-    pub is_agent_executed: bool,
 }
 
 #[derive(Debug)]
@@ -408,27 +374,6 @@ pub enum ModelEvent {
     },
     /// Close the SQLite writer thread when the app is about to quit.
     Terminate,
-    UpsertAIQuery {
-        query: Arc<PersistedAIInput>,
-    },
-    /// Delete the AI query and related data for a given conversation.
-    DeleteAIConversation {
-        conversation_id: String,
-    },
-    UpdateMultiAgentConversation {
-        conversation_id: String,
-        updated_tasks: Vec<api::Task>,
-        conversation_data: AgentConversationData,
-    },
-    /// Persists read-time-derived conversation summaries for rows written
-    /// before the `summary` column existed.
-    BackfillConversationSummaries {
-        backfills: Vec<ConversationSummaryBackfill>,
-    },
-    DeleteMultiAgentConversations {
-        conversation_ids: Vec<String>,
-    },
-
     UpsertCurrentUserInformation {
         user_information: PersistedCurrentUserInformation,
     },
@@ -444,10 +389,6 @@ pub enum ModelEvent {
     DeleteProject {
         path: String,
     },
-    UpsertMCPServerEnvironmentVariables {
-        mcp_server_uuid: Vec<u8>,
-        environment_variables: String,
-    },
     UpsertProjectRules {
         project_rule_paths: Vec<ProjectRulePath>,
     },
@@ -462,32 +403,9 @@ pub enum ModelEvent {
         suggestion: String,
         suggestion_type: SuggestionType,
     },
-    UpsertMCPServerInstallation {
-        mcp_server_installation: TemplatableMCPServerInstallation,
-    },
-    DeleteMCPServerInstallations {
-        installation_uuids: Vec<Uuid>,
-    },
-    DeleteMCPServerInstallationsByTemplateUuid {
-        template_uuid: Uuid,
-    },
-    UpdateMCPInstallationRunning {
-        installation_uuid: Uuid,
-        running: bool,
-    },
     UpsertWorkspaceLanguageServer {
         workspace_path: PathBuf,
         lsp_type: LSPServerType,
         enabled: EnablementState,
-    },
-    UpdateBlockAgentViewVisibility {
-        block_id: String,
-        agent_view_visibility: SerializedAgentViewVisibility,
-    },
-    SaveAIDocumentContent {
-        document_id: String,
-        content: String,
-        version: i32,
-        title: String,
     },
 }

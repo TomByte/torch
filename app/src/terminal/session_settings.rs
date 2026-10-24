@@ -217,9 +217,7 @@ impl ToolbarChipSelection for AgentToolbarChipSelection {
     }
 
     fn default_right_items() -> Vec<AgentToolbarItemKind> {
-        vec![AgentToolbarItemKind::ContextChip(
-            ContextChipKind::AgentPlanAndTodoList,
-        )]
+        Vec::new()
     }
 
     fn left_items(&self) -> Vec<AgentToolbarItemKind> {

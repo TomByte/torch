@@ -65,19 +65,19 @@ fn file_open_resolves_relative_paths_against_the_session_working_directory() {
 
 #[test]
 fn unavailable_surface_open_returns_structured_error() {
-    let flag_guard = FeatureFlag::AgentViewConversationListView.override_enabled(false);
+    let flag_guard = FeatureFlag::GlobalSearch.override_enabled(false);
     torchui::App::test((), |mut app| async move {
         let error = app
             .update(|ctx| {
                 ensure_surface_available(
-                    ActionKind::SurfaceConversationListOpen,
-                    SurfaceDestination::ConversationList,
+                    ActionKind::SurfaceGlobalSearchOpen,
+                    SurfaceDestination::GlobalSearch,
                     ctx,
                 )
             })
             .expect_err("disabled surface is rejected");
         assert_eq!(error.code, ErrorCode::UnsupportedAction);
-        assert!(error.message.contains("surface.conversation_list.open"));
+        assert!(error.message.contains("surface.global_search.open"));
     });
     drop(flag_guard);
 }

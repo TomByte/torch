@@ -29,8 +29,6 @@ pub enum Direction {
 #[serde(rename_all = "snake_case")]
 pub enum TabType {
     Terminal,
-    Agent,
-    CloudAgent,
     Default,
 }
 

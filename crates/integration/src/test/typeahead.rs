@@ -6,7 +6,6 @@ use torch::integration_testing::terminal::{
     assert_no_visible_background_blocks, wait_until_bootstrapped_single_pane_for_tab,
 };
 use torch::integration_testing::view_getters::single_terminal_view_for_tab;
-use torch::terminal::model::block::TranscriptScope;
 use torch::terminal::model::terminal_model::BlockIndex;
 use torch::terminal::shell::{Shell, ShellType};
 use torchui_core::integration::{AssertionCallback, AssertionOutcome, TestStep};
@@ -157,7 +156,7 @@ pub fn test_input_reporting_posix_shells() -> Builder {
                             .block_at(start_index + BlockIndex::from(4))
                             .expect("Block should exist");
                         if next_block.is_background() {
-                            async_assert!(next_block.is_empty(&TranscriptScope::Terminal))
+                            async_assert!(next_block.is_empty())
                         } else {
                             async_assert_eq!(next_block.index(), blocks.active_block_index())
                         }

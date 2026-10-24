@@ -1,5 +1,4 @@
 //! Shared types for message bar rendering across terminal and agent views.
-pub mod attached_context;
 pub mod common;
 
 use std::borrow::Cow;

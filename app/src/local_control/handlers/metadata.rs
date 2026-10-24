@@ -19,7 +19,7 @@ use crate::features::FeatureFlag;
 use crate::local_control::LocalControlBridge;
 use crate::local_control::resolver::{reject_target_families, require_active_window_id_for_action};
 use crate::pane_group::{PaneGroup, PaneId};
-use crate::settings::{AISettings, CodeSettings};
+use crate::settings::CodeSettings;
 use crate::workspace::Workspace;
 
 #[derive(Serialize)]
@@ -137,7 +137,6 @@ pub(crate) enum SurfaceDestination {
     CodeReview,
     ProjectExplorer,
     GlobalSearch,
-    ConversationList,
     LeftPanel,
     RightPanel,
     VerticalTabs,
@@ -154,7 +153,6 @@ impl SurfaceDestination {
         Self::CodeReview,
         Self::ProjectExplorer,
         Self::GlobalSearch,
-        Self::ConversationList,
         Self::LeftPanel,
         Self::RightPanel,
         Self::VerticalTabs,
@@ -171,7 +169,6 @@ impl SurfaceDestination {
             Self::CodeReview => "code_review",
             Self::ProjectExplorer => "project_explorer",
             Self::GlobalSearch => "global_search",
-            Self::ConversationList => "conversation_list",
             Self::LeftPanel => "left_panel",
             Self::RightPanel => "right_panel",
             Self::VerticalTabs => "vertical_tabs",
@@ -334,19 +331,9 @@ pub(crate) fn surface_unavailable_reason(
             Some("global search is unavailable or disabled")
         }
         SurfaceDestination::GlobalSearch => None,
-        SurfaceDestination::ConversationList
-            if !FeatureFlag::AgentViewConversationListView.is_enabled()
-                || !AISettings::as_ref(ctx).is_any_ai_enabled(ctx)
-                || !*AISettings::as_ref(ctx).show_conversation_history.value() =>
-        {
-            Some("agent conversation history is unavailable or disabled")
-        }
-        SurfaceDestination::ConversationList => None,
         SurfaceDestination::LeftPanel
             if surface_unavailable_reason(SurfaceDestination::ProjectExplorer, ctx).is_some()
-                && surface_unavailable_reason(SurfaceDestination::GlobalSearch, ctx).is_some()
-                && surface_unavailable_reason(SurfaceDestination::ConversationList, ctx)
-                    .is_some() =>
+                && surface_unavailable_reason(SurfaceDestination::GlobalSearch, ctx).is_some() =>
         {
             Some("the left panel has no available views")
         }

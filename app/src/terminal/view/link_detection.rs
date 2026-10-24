@@ -16,7 +16,6 @@ cfg_if::cfg_if! {
             terminal::model::grid::grid_handler,
             terminal::ShellLaunchData,
             util::file::{FileLink, absolute_path_if_valid, ShellPathType},
-            util::openable_file_type::FileTarget,
         };
         use std::path::PathBuf;
         use unicode_general_category::{get_general_category, GeneralCategory};
@@ -227,37 +226,6 @@ pub struct HighlightedLinkOption {
     inner: Option<GridHighlightedLink>,
     /// True if the underlying content has changed such that the link may no longer be valid.
     invalidated: bool,
-}
-
-#[derive(Clone, Debug)]
-pub enum RichContentLink {
-    Url(String),
-    #[cfg(feature = "local_fs")]
-    FilePath {
-        absolute_path: PathBuf,
-        line_and_column_num: Option<LineAndColumnArg>,
-        target_override: Option<FileTarget>,
-    },
-}
-
-impl RichContentLink {
-    pub fn tooltip_text(&self) -> &'static str {
-        match &self {
-            #[cfg(feature = "local_fs")]
-            RichContentLink::FilePath { absolute_path, .. } if absolute_path.is_dir() => {
-                "Open folder"
-            }
-            #[cfg(feature = "local_fs")]
-            RichContentLink::FilePath { .. } => "Open file",
-            RichContentLink::Url(_) => "Open link",
-        }
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct RichContentLinkTooltipInfo {
-    pub link: RichContentLink,
-    pub position_id: String,
 }
 
 impl HighlightedLinkOption {
@@ -522,39 +490,6 @@ impl super::TerminalView {
             }
         };
     }
-
-    pub(super) fn open_rich_content_link(
-        &mut self,
-        link: &RichContentLink,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        self.dismiss_tooltips(ctx);
-        ctx.focus(&self.input);
-        ctx.notify();
-
-        match link {
-            #[cfg(feature = "local_fs")]
-            RichContentLink::FilePath {
-                absolute_path,
-                line_and_column_num,
-                target_override,
-            } => {
-                if let Some(target_override) = target_override {
-                    self.open_file_path_with_target(
-                        absolute_path.clone(),
-                        target_override.clone(),
-                        *line_and_column_num,
-                        ctx,
-                    );
-                } else {
-                    self.open_file_path(absolute_path.clone(), *line_and_column_num, ctx);
-                }
-            }
-            RichContentLink::Url(url) => {
-                ctx.open_url(url);
-            }
-        };
-    }
 }
 
 // A collection of link detection functions that are only valid on platforms
@@ -578,7 +513,7 @@ impl super::TerminalView {
                 .lock()
                 .block_list()
                 .block_at(inner.block_index)
-                .filter(|block| !self.is_block_considered_remote(block.session_id(), None, ctx)) // Don't scan for file links if the block is on remote sessions
+                .filter(|block| !self.is_block_considered_remote(block.session_id(), ctx)) // Don't scan for file links if the block is on remote sessions
                 .and_then(|block| block.pwd().map(String::from)),
         };
 

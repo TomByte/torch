@@ -1,16 +1,13 @@
 use std::sync::Arc;
 
-use torchui::elements::{ChildView, Flex, ParentElement, SavePosition};
-use torchui::{Action, Element, TypedActionView, View, ViewContext, ViewHandle};
+use torchui::{Action, TypedActionView, View, ViewContext, ViewHandle};
 
 use crate::ui_components::icons::Icon;
 use crate::view_components::action_button::{
     ActionButton, AdjoinedSide, ButtonSize, KeystrokeSource, NakedTheme, PrimaryRightBiasedTheme,
     PrimaryTheme,
 };
-use crate::view_components::compactible_action_button::{
-    CompactibleActionButton, RenderCompactibleActionButton,
-};
+use crate::view_components::compactible_action_button::CompactibleActionButton;
 
 /// A split button composed of a primary CompactibleActionButton and a trailing
 /// icon-only menu button (chevron-down). The menu button may be used as an anchor
@@ -80,38 +77,5 @@ impl CompactibleSplitActionButton {
             menu_button,
             save_position_id,
         }
-    }
-
-    fn render_button(&self, is_expanded: bool) -> Box<dyn Element> {
-        let button = if is_expanded {
-            self.primary_button.expanded_button()
-        } else {
-            self.primary_button.compact_button()
-        };
-        let row = Flex::row()
-            .with_child(ChildView::new(button).finish())
-            .with_child(ChildView::new(&self.menu_button).finish());
-        if let Some(save_position_id) = &self.save_position_id {
-            SavePosition::new(row.finish(), save_position_id).finish()
-        } else {
-            row.finish()
-        }
-    }
-
-    pub fn set_keybinding<T: View>(
-        &mut self,
-        keybinding: Option<KeystrokeSource>,
-        ctx: &mut ViewContext<T>,
-    ) {
-        self.primary_button.set_keybinding(keybinding, ctx);
-    }
-}
-
-impl RenderCompactibleActionButton for CompactibleSplitActionButton {
-    fn render_expanded_button(&self) -> Box<dyn Element> {
-        self.render_button(true)
-    }
-    fn render_compact_button(&self) -> Box<dyn Element> {
-        self.render_button(false)
     }
 }

@@ -7,13 +7,11 @@ use torchui::notification::UserNotification;
 use torchui::{App, EntityIdSet, Presenter, WindowInvalidation};
 
 use super::*;
-use crate::agent_status::InputConfig;
-use crate::ai::blocklist::InputType;
-use crate::editor::{AutosuggestionLocation, AutosuggestionType};
+use crate::editor::AutosuggestionLocation;
 use crate::features::FeatureFlag;
 use crate::pane_group::focus_state::PaneGroupFocusState;
 use crate::pane_group::{BackingView, TerminalPaneId};
-use crate::settings::{AISettings, AppEditorSettings, RightClickBehavior};
+use crate::settings::{AppEditorSettings, CLIAgentSettings, RightClickBehavior};
 use crate::tab::NewSessionMenuItem;
 use crate::terminal::alt_screen::should_intercept_mouse;
 use crate::terminal::block_list_element::{SnackbarPoint, SnackbarTranslationMode};
@@ -631,157 +629,6 @@ fn waterfall_background_right_click_honors_right_click_pastes_setting() {
     })
 }
 
-/// Test to verify that blocks created through normal execution
-/// have the correct local status set
-#[test]
-fn test_create_new_block_with_local_status() {
-    App::test((), |mut app| async move {
-        initialize_app_for_terminal_view(&mut app);
-        let terminal = add_window_with_terminal(&mut app, None);
-
-        // Set up a terminal with a local session
-        terminal.update(&mut app, |view, _ctx| {
-            let mut model = view.model.lock();
-
-            // Initialize a local session
-            model.init_shell(InitShellValue {
-                session_id: 0.into(),
-                shell: "bash".to_owned(),
-                ..Default::default()
-            });
-            model.bootstrapped(BootstrappedValue {
-                shell: "bash".to_owned(),
-                ..Default::default()
-            });
-        });
-
-        assert_eventually!(
-            terminal.read(&app, |view, ctx| !view
-                .active_block_is_considered_remote(ctx)),
-            "Block should be local"
-        );
-
-        // No remote blocks should exist
-        assert_eventually!(
-            terminal.read(&app, |view, _ctx| !view.contains_restored_remote_blocks()),
-            "No remote blocks should exist"
-        );
-
-        // Update the view's flags
-        // view.update_focused_terminal_info(ctx);
-        assert_eventually!(
-            terminal.read(&app, |view, _ctx| !view.any_session_contains_remote_blocks),
-            "No remote blocks should exist"
-        );
-
-        // Now test with a remote session
-        terminal.update(&mut app, |view, _ctx| {
-            let mut model = view.model.lock();
-
-            // Create a new block with a remote session ID and remote_shell
-            model.init_shell(InitShellValue {
-                session_id: 1.into(),
-                shell: "bash".to_owned(),
-                user: "user".to_owned(),
-                hostname: "remote".to_owned(),
-                ..Default::default()
-            });
-            model.bootstrapped(BootstrappedValue {
-                shell: "bash".to_owned(),
-                ..Default::default()
-            });
-
-            // Create a block in the remote session
-            model.simulate_block("echo remote", "remote output");
-        });
-
-        // Verify block is non-local (remote)
-        assert_eventually!(
-            terminal.read(&app, |view, ctx| view
-                .active_block_is_considered_remote(ctx)),
-            "Block should be non-local (remote)"
-        );
-
-        // Remote blocks should be detected
-        assert_eventually!(
-            terminal.read(&app, |view, _ctx| view.any_session_contains_remote_blocks),
-            "Remote blocks should be detected"
-        );
-    })
-}
-
-#[test]
-fn submit_cli_agent_rich_input_restores_unlocked_input_config() {
-    App::test((), |mut app| async move {
-        initialize_app_for_terminal_view(&mut app);
-        let _agent_view = FeatureFlag::AgentView.override_enabled(true);
-        let _cli_agent_rich_input = FeatureFlag::CLIAgentRichInput.override_enabled(true);
-        AISettings::handle(&app).update(&mut app, |settings, ctx| {
-            let _ = settings
-                .auto_dismiss_rich_input_after_submit
-                .set_value(true, ctx);
-        });
-
-        let terminal = add_window_with_terminal(&mut app, None);
-
-        terminal.update(&mut app, |view, ctx| {
-            view.input.update(ctx, |input, ctx| {
-                input.ai_input_model().update(ctx, |ai_input, ctx| {
-                    ai_input.set_input_config(
-                        InputConfig {
-                            input_type: InputType::Shell,
-                            is_locked: false,
-                        },
-                        true,
-                        None,
-                        ctx,
-                    );
-                });
-            });
-
-            CLIAgentSessionsModel::handle(ctx).update(ctx, |sessions, ctx| {
-                sessions.set_session(
-                    view.view_id,
-                    CLIAgentSession {
-                        agent: CLIAgent::Droid,
-                        status: CLIAgentSessionStatus::InProgress,
-                        session_context: CLIAgentSessionContext::default(),
-                        input_state: CLIAgentInputState::Closed,
-                        should_auto_toggle_input: false,
-                        listener: None,
-                        remote_host: None,
-                        plugin_version: None,
-                        draft_text: None,
-                        custom_command_prefix: None,
-                        received_rich_notification: false,
-                    },
-                    ctx,
-                );
-            });
-
-            view.open_cli_agent_rich_input(CLIAgentInputEntrypoint::FooterButton, ctx);
-            assert!(view.has_active_cli_agent_input_session(ctx));
-
-            view.submit_cli_agent_rich_input("hello!".to_owned(), ctx);
-            assert!(!view.has_active_cli_agent_input_session(ctx));
-        });
-
-        terminal.read(&app, |view, ctx| {
-            let input = view.input.as_ref(ctx);
-            let ai_input_model = input.ai_input_model().as_ref(ctx);
-
-            assert_eq!(
-                ai_input_model.input_config(),
-                InputConfig {
-                    input_type: InputType::Shell,
-                    is_locked: false,
-                }
-            );
-            assert!(input.editor().as_ref(ctx).buffer_text(ctx).is_empty());
-        });
-    })
-}
-
 #[test]
 fn command_first_word_and_suffix_preserves_leading_whitespace() {
     assert_eq!(
@@ -796,79 +643,6 @@ fn command_first_word_and_suffix_handles_alias_without_args() {
         command_first_word_and_suffix("  myssh"),
         Some(("myssh", ""))
     );
-}
-
-/// Test clearing of session flag state when terminal is cleared
-#[test]
-fn test_clear_session_flag_state() {
-    use torch_terminal::shell::ShellType;
-
-    use crate::ai::blocklist::SerializedBlockListItem;
-    use crate::terminal::ShellHost;
-    use crate::terminal::model::block::SerializedBlock;
-
-    App::test((), |mut app| async move {
-        initialize_app_for_terminal_view(&mut app);
-
-        // Create a remote restored block
-        let mut remote_block =
-            SerializedBlock::new_for_test("echo remote".into(), "remote output".into());
-        remote_block.is_local = Some(false); // Mark it as a remote block
-        remote_block.shell_host = Some(ShellHost {
-            shell_type: ShellType::Bash,
-            user: "user".to_string(),
-            hostname: "remote".to_string(), // Remote hostname indicates a remote session
-        });
-
-        // Convert to SerializedBlockListItem
-        let restored_blocks = [SerializedBlockListItem::Command {
-            block: Box::new(remote_block),
-        }];
-
-        // Create terminal with the restored remote block
-        let terminal = add_window_with_terminal(&mut app, Some(&restored_blocks));
-
-        terminal.update(&mut app, |view, ctx| {
-            // Verify initial state - block was created as remote and restored
-            assert!(
-                !view.any_session_contains_remote_blocks,
-                "Terminal should not have remote blocks"
-            );
-            assert!(
-                view.any_session_contains_restored_remote_blocks,
-                "Terminal should have restored remote blocks"
-            );
-
-            {
-                // Verify the block was properly created with correct properties
-                let model = view.model.lock();
-                let blocks = model.block_list().blocks();
-
-                // The first block should be our restored remote block
-                assert!(!blocks.is_empty(), "At least one block should exist");
-                if let Some(first_block) = blocks.first() {
-                    assert_eq!(
-                        first_block.restored_block_was_local(),
-                        Some(false),
-                        "First block should be marked as a remote restored block"
-                    );
-                }
-            }
-
-            // Now clear the terminal
-            view.clear_buffer_for_testing(ctx);
-
-            // Flags should be reset
-            assert!(
-                !view.any_session_contains_remote_blocks,
-                "Terminal should not have remote blocks after clearing"
-            );
-            assert!(
-                !view.any_session_contains_restored_remote_blocks,
-                "Terminal should not have restored remote blocks after clearing"
-            );
-        });
-    })
 }
 
 fn assert_block_has_find_match(find_model: &TerminalFindModel, block_index: BlockIndex) {
@@ -997,40 +771,6 @@ fn test_insert() {
         assert_input_text_eq(&mut app, "hello_this_is");
         assert_selected_blocks_cardinality_eq(&mut app, BlockSelectionCardinality::None);
         assert_selected_text_eq(&mut app, None);
-
-        // Activate Agent Mode, which should no longer allow text insertion to clear the selected block(s) or text
-        terminal.update(&mut app, |view, ctx| {
-            view.set_ai_input_mode_with_query(None, ctx);
-        });
-
-        // Agent Mode: Nothing selected
-        terminal.update(&mut app, |view, ctx| {
-            view.focus_terminal(ctx);
-            view.typed_characters_on_terminal("_your", ctx);
-        });
-        assert_input_text_eq(&mut app, "hello_this_is_your");
-        assert_selected_blocks_cardinality_eq(&mut app, BlockSelectionCardinality::None);
-        assert_selected_text_eq(&mut app, None);
-
-        // Agent Mode: Block selected
-        terminal.update(&mut app, |view, ctx| {
-            view.selected_blocks.reset_to_single(BlockIndex::zero());
-            view.focus_terminal(ctx);
-            view.typed_characters_on_terminal("_captain", ctx);
-        });
-        assert_input_text_eq(&mut app, "hello_this_is_your_captain");
-        assert_selected_blocks_cardinality_eq(&mut app, BlockSelectionCardinality::One);
-        assert_selected_text_eq(&mut app, None);
-
-        // Agent Mode: Text selected
-        terminal.update(&mut app, |view, ctx| {
-            select_text(view, ctx);
-            view.focus_terminal(ctx);
-            view.typed_characters_on_terminal("_speaking", ctx);
-        });
-        assert_input_text_eq(&mut app, "hello_this_is_your_captain_speaking");
-        assert_selected_blocks_cardinality_eq(&mut app, BlockSelectionCardinality::None);
-        assert_selected_text_eq(&mut app, Some("f".to_owned()));
     })
 }
 
@@ -1940,9 +1680,6 @@ fn test_clear_buffer_clears_autosuggestion() {
                     editor.set_autosuggestion(
                         "git status",
                         AutosuggestionLocation::EndOfBuffer,
-                        AutosuggestionType::Command {
-                            was_intelligent_autosuggestion: true,
-                        },
                         ctx,
                     );
                 });
@@ -3714,42 +3451,6 @@ fn cli_agent_rich_input_hint_text_mentions_active_cli_agent() {
 }
 
 #[test]
-fn cli_agent_rich_input_shell_mode_uses_run_commands_hint_text() {
-    App::test((), |mut app| async move {
-        initialize_app_for_terminal_view(&mut app);
-        let _agent_view = FeatureFlag::AgentView.override_enabled(true);
-        let _cli_rich = FeatureFlag::CLIAgentRichInput.override_enabled(true);
-
-        let terminal = open_cli_agent_rich_input_for_agent(&mut app, CLIAgent::Claude);
-        terminal.update(&mut app, |view, ctx| {
-            view.input.update(ctx, |input, ctx| {
-                input.ai_input_model().update(ctx, |ai_input, ctx| {
-                    ai_input.set_input_config(
-                        InputConfig {
-                            input_type: InputType::Shell,
-                            is_locked: true,
-                        },
-                        true,
-                        None,
-                        ctx,
-                    );
-                });
-                input.set_zero_state_hint_text(ctx);
-            });
-        });
-        terminal.read(&app, |view, ctx| {
-            let placeholder_text = view
-                .input
-                .as_ref(ctx)
-                .editor()
-                .as_ref(ctx)
-                .placeholder_text("");
-            assert_eq!(placeholder_text, Some("Run commands"));
-        });
-    })
-}
-
-#[test]
 fn submit_cli_agent_rich_input_codex_uses_bracketed_paste() {
     App::test((), |mut app| async move {
         initialize_app_for_terminal_view(&mut app);
@@ -4138,7 +3839,7 @@ fn submit_with_plugin_and_auto_toggle_keeps_rich_input_open() {
         let _cli_rich = FeatureFlag::CLIAgentRichInput.override_enabled(true);
         // auto_toggle_rich_input defaults to true.
         // Turn on auto_dismiss too — it should be overridden by auto_toggle.
-        AISettings::handle(&app).update(&mut app, |settings, ctx| {
+        CLIAgentSettings::handle(&app).update(&mut app, |settings, ctx| {
             let _ = settings
                 .auto_dismiss_rich_input_after_submit
                 .set_value(true, ctx);
@@ -4193,7 +3894,7 @@ fn submit_with_plugin_but_auto_toggle_off_respects_auto_dismiss() {
         initialize_app_for_terminal_view(&mut app);
         let _agent_view = FeatureFlag::AgentView.override_enabled(true);
         let _cli_rich = FeatureFlag::CLIAgentRichInput.override_enabled(true);
-        AISettings::handle(&app).update(&mut app, |settings, ctx| {
+        CLIAgentSettings::handle(&app).update(&mut app, |settings, ctx| {
             let _ = settings.auto_toggle_rich_input.set_value(false, ctx);
             let _ = settings
                 .auto_dismiss_rich_input_after_submit
@@ -4654,7 +4355,7 @@ fn submit_cli_agent_rich_input_clears_draft() {
         initialize_app_for_terminal_view(&mut app);
         let _agent_view = FeatureFlag::AgentView.override_enabled(true);
         let _cli_rich = FeatureFlag::CLIAgentRichInput.override_enabled(true);
-        AISettings::handle(&app).update(&mut app, |settings, ctx| {
+        CLIAgentSettings::handle(&app).update(&mut app, |settings, ctx| {
             // Keep the input open after submit so we can inspect the buffer.
             let _ = settings
                 .auto_dismiss_rich_input_after_submit
