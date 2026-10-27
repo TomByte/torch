@@ -16283,7 +16283,6 @@ impl TypedActionView for Workspace {
                 TerminalSessionFallbackBehavior::default(),
                 ctx,
             ),
-            #[cfg(not(target_family = "wasm"))]
             #[cfg(feature = "local_fs")]
             FileRenamed { old_path, new_path } => {
                 self.rename_tabs_with_file_path(old_path, new_path, ctx);
@@ -16292,15 +16291,6 @@ impl TypedActionView for Workspace {
             FileDeleted { path } => {
                 self.close_tabs_with_file_path(path, ctx);
             }
-            #[cfg(debug_assertions)]
-            #[cfg(debug_assertions)]
-            #[cfg(debug_assertions)]
-            #[cfg(debug_assertions)]
-            #[cfg(debug_assertions)]
-            #[cfg(debug_assertions)]
-            #[cfg(debug_assertions)]
-            #[cfg(debug_assertions)]
-            #[cfg(debug_assertions)]
             #[cfg(target_os = "macos")]
             SampleProcess => {
                 let pid = process::id();
