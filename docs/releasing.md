@@ -23,7 +23,7 @@ Updates are macOS-only. Linux and Windows builds don't check for updates, and th
 
 You need the [GitHub CLI](https://cli.github.com) (`brew install gh`, then `gh auth login`) and a Mac with your Developer ID certificate in its keychain. Run the commands from this repository's folder.
 
-The workflow reads five repository secrets. Secrets are never passed to workflows that run on pull requests from forks, and this workflow only runs when a release is published or when you start it by hand.
+The workflow reads five secrets, stored in a `release` environment that only `main` and `v*` tags can deploy to. Secrets are never passed to workflows that run on pull requests from forks, and this workflow only runs when a release is published or when you start it by hand.
 
 ### 1. Signing certificate: `MACOS_CERTIFICATE_P12`, `MACOS_CERTIFICATE_PASSWORD`
 
@@ -44,11 +44,11 @@ Export it with its private key:
 Store both as secrets:
 
 ```bash
-base64 -i torch-signing.p12 | gh secret set MACOS_CERTIFICATE_P12 --repo TomByte/torch
+base64 -i torch-signing.p12 | gh secret set MACOS_CERTIFICATE_P12 --env release --repo TomByte/torch
 ```
 
 ```bash
-gh secret set MACOS_CERTIFICATE_PASSWORD --repo TomByte/torch
+gh secret set MACOS_CERTIFICATE_PASSWORD --env release --repo TomByte/torch
 ```
 
 The second command asks for the password you set during export. Then delete the exported file:
@@ -75,15 +75,15 @@ Replace the file name, Key ID and Issuer ID with yours. An empty list or a list 
 Store all three as secrets:
 
 ```bash
-gh secret set APPLE_API_KEY_P8 --repo TomByte/torch < AuthKey_ABC123XYZ.p8
+gh secret set APPLE_API_KEY_P8 --env release --repo TomByte/torch < AuthKey_ABC123XYZ.p8
 ```
 
 ```bash
-gh secret set APPLE_API_KEY_ID --repo TomByte/torch --body ABC123XYZ
+gh secret set APPLE_API_KEY_ID --env release --repo TomByte/torch --body ABC123XYZ
 ```
 
 ```bash
-gh secret set APPLE_API_ISSUER_ID --repo TomByte/torch --body 00000000-0000-0000-0000-000000000000
+gh secret set APPLE_API_ISSUER_ID --env release --repo TomByte/torch --body 00000000-0000-0000-0000-000000000000
 ```
 
 Keep the `.p8` file somewhere safe, such as your password manager, and delete it from your downloads.
@@ -91,7 +91,7 @@ Keep the `.p8` file somewhere safe, such as your password manager, and delete it
 ### 3. Check the secrets
 
 ```bash
-gh secret list --repo TomByte/torch
+gh secret list --env release --repo TomByte/torch
 ```
 
 You should see all five: `MACOS_CERTIFICATE_P12`, `MACOS_CERTIFICATE_PASSWORD`, `APPLE_API_KEY_P8`, `APPLE_API_KEY_ID` and `APPLE_API_ISSUER_ID`.

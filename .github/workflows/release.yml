@@ -22,12 +22,13 @@ concurrency:
 jobs:
   macos:
     runs-on: ${{ vars.MACOS_RELEASE_RUNNER || 'macos-26' }}
+    environment: release
     timeout-minutes: 300
     env:
       RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
       TORCH_DMG_SKIP_FINDER: ${{ vars.TORCH_DMG_SKIP_FINDER }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ env.RELEASE_TAG }}
           lfs: true
@@ -48,7 +49,7 @@ jobs:
           ./script/install_cargo_release_deps --no-build-deps
           ./script/macos/install_build_deps
 
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           key: release
 
