@@ -44,12 +44,23 @@ fi
 # Create the destination directory if it doesn't exist
 mkdir -p "$DEST_DIR"
 
+# Torch's own licence texts and notice, required alongside the distributed binary.
+for file in LICENSE-AGPL LICENSE-MIT NOTICE; do
+  if [ ! -f "$REPO_ROOT/$file" ]; then
+    echo "Error: $file not found at $REPO_ROOT/$file" >&2
+    exit 1
+  fi
+  cp "$REPO_ROOT/$file" "$DEST_DIR/$file"
+done
+
 # Generate third-party license attribution.
 #
 # Additional (non-Cargo) third-party license files to include in the output.
 # Each entry is: "Component Name|License Identifier|path/to/LICENSE/relative/to/repo/root"
 # When adding a new third-party component to the bundle, add its license file
 # to the repo alongside the component and add an entry here.
+# Warp's git-sourced crates are `publish = false`, so cargo-about skips them;
+# their licenses are listed here instead.
 ADDITIONAL_LICENSES=(
     "Alacritty (alacritty_terminal)|Apache-2.0|crates/torch_terminal/src/model/LICENSE-ALACRITTY"
     "Hack Font|MIT|app/assets/bundled/fonts/hack/LICENSE.md"
@@ -57,6 +68,9 @@ ADDITIONAL_LICENSES=(
     "bash-preexec|MIT|app/assets/bundled/bootstrap/bash-preexec-LICENSE.md"
     "Windows Terminal|MIT|app/assets/windows/LICENSE-WINDOWS-TERMINAL"
     "GitHub Desktop|MIT|app/src/code_review/GITHUB-DESKTOP-LICENSE"
+    "command-corrections (and thefuck)|MIT|script/bundled_licenses/LICENSE-COMMAND-CORRECTIONS"
+    "warp-command-signatures, warp-completion-metadata|MIT|script/bundled_licenses/LICENSE-COMMAND-SIGNATURES"
+    "warp-workflows, warp-workflows-types|Apache-2.0|script/bundled_licenses/LICENSE-WORKFLOWS"
 )
 
 # Build the third-party licenses file unless the NO_LICENSES envvar is set.

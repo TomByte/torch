@@ -5,8 +5,6 @@ use std::collections::HashMap;
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
-use warp_multi_agent_api::response_event::stream_finished;
-use warp_multi_agent_api::{self as api};
 
 use super::schema::{
     app, blocks, code_pane_tabs, code_panes, code_review_panes, commands, ignored_suggestions,
@@ -538,94 +536,9 @@ pub struct ModelTokenUsage {
     pub custom_endpoint_token_usage_by_category: HashMap<TokenUsageCategory, u32>,
 }
 
-impl ModelTokenUsage {
-    #[allow(deprecated)]
-    fn to_proto_usage(
-        &self,
-        total_tokens: u32,
-        usage_by_category: &HashMap<TokenUsageCategory, u32>,
-    ) -> Option<(String, stream_finished::ModelTokenUsage)> {
-        if total_tokens == 0 {
-            return None;
-        }
-        Some((
-            self.model_id.clone(),
-            stream_finished::ModelTokenUsage {
-                model_id: self.model_id.clone(),
-                total_tokens: u64::from(total_tokens),
-                token_usage_by_category: usage_by_category
-                    .iter()
-                    .map(|(cat, tokens)| (cat.clone(), u64::from(*tokens)))
-                    .collect(),
-            },
-        ))
-    }
-
-    pub fn to_proto_warp_usage(&self) -> Option<(String, stream_finished::ModelTokenUsage)> {
-        self.to_proto_usage(self.warp_tokens, &self.warp_token_usage_by_category)
-    }
-
-    pub fn to_proto_byok_usage(&self) -> Option<(String, stream_finished::ModelTokenUsage)> {
-        self.to_proto_usage(self.byok_tokens, &self.byok_token_usage_by_category)
-    }
-    #[allow(deprecated)]
-    pub fn to_proto_custom_endpoint_usage(
-        &self,
-    ) -> Option<(String, stream_finished::ModelTokenUsage)> {
-        if self.custom_endpoint_tokens == 0 {
-            return None;
-        }
-        Some((
-            self.model_id.clone(),
-            stream_finished::ModelTokenUsage {
-                model_id: self.model_id.clone(),
-                total_tokens: u64::from(self.custom_endpoint_tokens),
-                token_usage_by_category: self
-                    .custom_endpoint_token_usage_by_category
-                    .iter()
-                    .map(|(cat, tokens)| (cat.clone(), u64::from(*tokens)))
-                    .collect(),
-            },
-        ))
-    }
-
-    #[allow(deprecated)]
-    pub fn to_proto_combined(&self) -> stream_finished::ModelTokenUsage {
-        stream_finished::ModelTokenUsage {
-            model_id: self.model_id.clone(),
-            total_tokens: u64::from(self.warp_tokens)
-                + u64::from(self.byok_tokens)
-                + u64::from(self.custom_endpoint_tokens),
-            token_usage_by_category: self
-                .warp_token_usage_by_category
-                .iter()
-                .chain(self.byok_token_usage_by_category.iter())
-                .chain(self.custom_endpoint_token_usage_by_category.iter())
-                .fold(HashMap::new(), |mut acc, (cat, tokens)| {
-                    *acc.entry(cat.clone()).or_insert(0) += u64::from(*tokens);
-                    acc
-                }),
-        }
-    }
-}
-
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct ToolCallStats {
     pub count: i32,
-}
-
-impl From<&ToolCallStats> for stream_finished::ToolCallStats {
-    fn from(stats: &ToolCallStats) -> Self {
-        Self { count: stats.count }
-    }
-}
-
-impl From<&stream_finished::ToolCallStats> for ToolCallStats {
-    fn from(tool_call_stats: &stream_finished::ToolCallStats) -> Self {
-        Self {
-            count: tool_call_stats.count,
-        }
-    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
@@ -634,52 +547,12 @@ pub struct RunCommandStats {
     pub commands_executed: i32,
 }
 
-impl From<&RunCommandStats> for stream_finished::RunCommandStats {
-    fn from(stats: &RunCommandStats) -> Self {
-        Self {
-            count: stats.count,
-            command_executed: stats.commands_executed,
-        }
-    }
-}
-
-impl From<&stream_finished::RunCommandStats> for RunCommandStats {
-    fn from(stats: &stream_finished::RunCommandStats) -> Self {
-        Self {
-            count: stats.count,
-            commands_executed: stats.command_executed,
-        }
-    }
-}
-
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct ApplyFileDiffStats {
     pub count: i32,
     pub lines_added: i32,
     pub lines_removed: i32,
     pub files_changed: i32,
-}
-
-impl From<&ApplyFileDiffStats> for stream_finished::ApplyFileDiffStats {
-    fn from(stats: &ApplyFileDiffStats) -> Self {
-        Self {
-            count: stats.count,
-            lines_added: stats.lines_added,
-            lines_removed: stats.lines_removed,
-            files_changed: stats.files_changed,
-        }
-    }
-}
-
-impl From<&stream_finished::ApplyFileDiffStats> for ApplyFileDiffStats {
-    fn from(file_diff_stats: &stream_finished::ApplyFileDiffStats) -> Self {
-        Self {
-            count: file_diff_stats.count,
-            lines_added: file_diff_stats.lines_added,
-            lines_removed: file_diff_stats.lines_removed,
-            files_changed: file_diff_stats.files_changed,
-        }
-    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
@@ -717,66 +590,7 @@ impl ToolUsageMetadata {
     }
 }
 
-impl From<&ToolUsageMetadata> for stream_finished::ToolUsageMetadata {
-    fn from(metadata: &ToolUsageMetadata) -> Self {
-        Self {
-            run_command_stats: Some((&metadata.run_command_stats).into()),
-            read_files_stats: Some((&metadata.read_files_stats).into()),
-            search_codebase_stats: Some((&metadata.search_codebase_stats).into()),
-            grep_stats: Some((&metadata.grep_stats).into()),
-            file_glob_stats: Some((&metadata.file_glob_stats).into()),
-            apply_file_diff_stats: Some((&metadata.apply_file_diff_stats).into()),
-            write_to_long_running_shell_command_stats: Some(
-                (&metadata.write_to_long_running_shell_command_stats).into(),
-            ),
-            read_mcp_resource_stats: Some((&metadata.read_mcp_resource_stats).into()),
-            call_mcp_tool_stats: Some((&metadata.call_mcp_tool_stats).into()),
-            suggest_plan_stats: Some((&metadata.suggest_plan_stats).into()),
-            suggest_create_plan_stats: Some((&metadata.suggest_create_plan_stats).into()),
-            read_shell_command_output_stats: Some(
-                (&metadata.read_shell_command_output_stats).into(),
-            ),
-            use_computer_stats: Some((&metadata.use_computer_stats).into()),
-        }
-    }
-}
-
-impl From<&stream_finished::ToolUsageMetadata> for ToolUsageMetadata {
-    fn from(tool_usage_metadata: &stream_finished::ToolUsageMetadata) -> Self {
-        let convert = |opt: &Option<_>| opt.as_ref().map(Into::into).unwrap_or_default();
-
-        Self {
-            run_command_stats: tool_usage_metadata
-                .run_command_stats
-                .as_ref()
-                .map(Into::into)
-                .unwrap_or_default(),
-            read_files_stats: convert(&tool_usage_metadata.read_files_stats),
-            search_codebase_stats: convert(&tool_usage_metadata.search_codebase_stats),
-            grep_stats: convert(&tool_usage_metadata.grep_stats),
-            file_glob_stats: convert(&tool_usage_metadata.file_glob_stats),
-            apply_file_diff_stats: tool_usage_metadata
-                .apply_file_diff_stats
-                .as_ref()
-                .map(Into::into)
-                .unwrap_or_default(),
-            write_to_long_running_shell_command_stats: convert(
-                &tool_usage_metadata.write_to_long_running_shell_command_stats,
-            ),
-            read_mcp_resource_stats: convert(&tool_usage_metadata.read_mcp_resource_stats),
-            call_mcp_tool_stats: convert(&tool_usage_metadata.call_mcp_tool_stats),
-            suggest_plan_stats: convert(&tool_usage_metadata.suggest_plan_stats),
-            suggest_create_plan_stats: convert(&tool_usage_metadata.suggest_create_plan_stats),
-            read_shell_command_output_stats: convert(
-                &tool_usage_metadata.read_shell_command_output_stats,
-            ),
-            use_computer_stats: convert(&tool_usage_metadata.use_computer_stats),
-        }
-    }
-}
-
-/// The kind of a context-window segment, mirroring the proto
-/// `ContextWindowSegmentType` enum.
+/// The kind of a context-window segment.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum ContextWindowSegmentType {
@@ -805,51 +619,6 @@ impl ContextWindowSegmentType {
     }
 }
 
-impl From<i32> for ContextWindowSegmentType {
-    fn from(value: i32) -> Self {
-        match stream_finished::ContextWindowSegmentType::try_from(value) {
-            Ok(stream_finished::ContextWindowSegmentType::SystemPrompt) => Self::SystemPrompt,
-            Ok(stream_finished::ContextWindowSegmentType::ToolDefinitions) => Self::ToolDefinitions,
-            Ok(stream_finished::ContextWindowSegmentType::ConversationHistory) => {
-                Self::ConversationHistory
-            }
-            Ok(stream_finished::ContextWindowSegmentType::LatestInput) => Self::LatestInput,
-            Ok(stream_finished::ContextWindowSegmentType::Images) => Self::Images,
-            Ok(stream_finished::ContextWindowSegmentType::Other) => Self::Other,
-            // Unknown (0) and any unrecognized value map to Unknown.
-            _ => Self::Unknown,
-        }
-    }
-}
-
-impl From<ContextWindowSegmentType> for i32 {
-    fn from(value: ContextWindowSegmentType) -> Self {
-        match value {
-            ContextWindowSegmentType::Unknown => {
-                stream_finished::ContextWindowSegmentType::Unknown as i32
-            }
-            ContextWindowSegmentType::SystemPrompt => {
-                stream_finished::ContextWindowSegmentType::SystemPrompt as i32
-            }
-            ContextWindowSegmentType::ToolDefinitions => {
-                stream_finished::ContextWindowSegmentType::ToolDefinitions as i32
-            }
-            ContextWindowSegmentType::ConversationHistory => {
-                stream_finished::ContextWindowSegmentType::ConversationHistory as i32
-            }
-            ContextWindowSegmentType::LatestInput => {
-                stream_finished::ContextWindowSegmentType::LatestInput as i32
-            }
-            ContextWindowSegmentType::Images => {
-                stream_finished::ContextWindowSegmentType::Images as i32
-            }
-            ContextWindowSegmentType::Other => {
-                stream_finished::ContextWindowSegmentType::Other as i32
-            }
-        }
-    }
-}
-
 /// A single portion of the context window, described by its kind and an
 /// estimated token count. Segment token counts add up to the token total
 /// represented by `context_window_usage`.
@@ -860,31 +629,9 @@ pub struct ContextWindowSegment {
     pub token_count: u32,
 }
 
-impl From<&stream_finished::ContextWindowSegment> for ContextWindowSegment {
-    fn from(segment: &stream_finished::ContextWindowSegment) -> Self {
-        Self {
-            segment_type: segment.segment_type.into(),
-            token_count: segment.token_count,
-        }
-    }
-}
-
-impl From<&ContextWindowSegment> for stream_finished::ContextWindowSegment {
-    fn from(segment: &ContextWindowSegment) -> Self {
-        Self {
-            segment_type: segment.segment_type.into(),
-            token_count: segment.token_count,
-        }
-    }
-}
-
 /// A flat breakdown of charged usage — input/output/cache-read/cache-write
 /// inference cost (in US cents) plus platform cost, and the matching token
-/// counts — summed across every usage category and model. Mirrors the Go
-/// `SumChargedUsage` helper (`warp-server` `logic/ai/multi_agent/usage`);
-/// computed client-side from the wire's category/model-keyed
-/// `RequestCharges` map so downstream displays don't need to walk the map
-/// themselves.
+/// counts — summed across every usage category and model.
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, Default, PartialEq)]
 pub struct ChargedUsageTotals {
     pub input_cost_in_cents: f32,
@@ -913,7 +660,7 @@ pub struct ChargedUsageTotals {
     pub web_search_count: u32,
     /// Cumulative cost of web searches performed, in US cents. Included in
     /// [`Self::total_cost_in_cents`] since it's part of the real, actually-
-    /// charged dollar total (see `warp-proto-apis` PR #363).
+    /// charged dollar total.
     #[serde(default)]
     pub web_search_cost_in_cents: f32,
     #[serde(default)]
@@ -947,39 +694,6 @@ impl ChargedUsageTotals {
             .saturating_add(self.input_cache_read_tokens)
             .saturating_add(self.input_cache_write_tokens)
     }
-
-    fn add_inference_usage(&mut self, usage: &api::InferenceUsage) {
-        if let Some(token_count) = usage.token_count.as_ref() {
-            // Wire counts are u64 (proto TokenCount); persisted totals stay u32 and saturate.
-            // TODO(Xavientois): widen these fields to u64 to match the proto TokenCount and drop
-            // the saturating narrowing.
-            self.input_tokens = self
-                .input_tokens
-                .saturating_add(u32::try_from(token_count.input).unwrap_or(u32::MAX));
-            self.output_tokens = self
-                .output_tokens
-                .saturating_add(u32::try_from(token_count.output).unwrap_or(u32::MAX));
-            self.input_cache_read_tokens = self
-                .input_cache_read_tokens
-                .saturating_add(u32::try_from(token_count.input_cache_read).unwrap_or(u32::MAX));
-            self.input_cache_write_tokens = self
-                .input_cache_write_tokens
-                .saturating_add(u32::try_from(token_count.input_cache_write).unwrap_or(u32::MAX));
-        }
-        if let Some(token_cost) = usage.token_cost.as_ref() {
-            self.input_cost_in_cents += token_cost.input_cost_in_cents;
-            self.input_cost_in_credits += token_cost.input_cost_in_credits;
-            self.output_cost_in_cents += token_cost.output_cost_in_cents;
-            self.output_cost_in_credits += token_cost.output_cost_in_credits;
-            self.input_cache_read_cost_in_cents += token_cost.input_cache_read_cost_in_cents;
-            self.input_cache_read_cost_in_credits += token_cost.input_cache_read_cost_in_credits;
-            self.input_cache_write_cost_in_cents += token_cost.input_cache_write_cost_in_cents;
-            self.input_cache_write_cost_in_credits += token_cost.input_cache_write_cost_in_credits;
-        }
-        self.web_search_count += usage.web_search_count;
-        self.web_search_cost_in_cents += usage.web_search_cost_in_cents;
-        self.web_search_cost_in_credits += usage.web_search_cost_in_credits;
-    }
 }
 
 impl std::ops::AddAssign for ChargedUsageTotals {
@@ -1005,30 +719,6 @@ impl std::ops::AddAssign for ChargedUsageTotals {
         self.web_search_count += rhs.web_search_count;
         self.web_search_cost_in_cents += rhs.web_search_cost_in_cents;
         self.web_search_cost_in_credits += rhs.web_search_cost_in_credits;
-    }
-}
-
-impl From<&api::RequestCharges> for ChargedUsageTotals {
-    /// Sums a category-keyed `RequestCharges` map (per-turn or cumulative)
-    /// into a single flat breakdown, mirroring the Go `SumChargedUsage`
-    /// helper. Categories and models are summed together; per-category/
-    /// per-model detail is discarded, matching the single
-    /// pricing-breakdown-section display convention (`warp` PR #15015).
-    fn from(charges: &api::RequestCharges) -> Self {
-        let mut totals = Self::default();
-        for usage in charges.usage_by_category.values() {
-            for inference_usage in usage
-                .direct_api_inference_usage
-                .values()
-                .chain(usage.byok_inference_usage.values())
-                .chain(usage.custom_endpoint_inference_usage.values())
-            {
-                totals.add_inference_usage(inference_usage);
-            }
-            totals.platform_cost_in_cents += usage.platform_usage_in_cents;
-            totals.platform_cost_in_credits += usage.platform_usage_in_credits;
-        }
-        totals
     }
 }
 

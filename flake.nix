@@ -59,16 +59,6 @@
                     postPatch = (old.postPatch or "") + ''
                       find . -name 'Cargo.toml.orig' -delete
 
-                      ${lib.optionalString (hasCrate "warp_multi_agent_api") ''
-                        mkdir -p apis/multi_agent/v1/gen/rust/nix-vendored-protos
-                        cp apis/multi_agent/v1/*.proto \
-                          apis/multi_agent/v1/gen/rust/nix-vendored-protos/
-                        substituteInPlace apis/multi_agent/v1/gen/rust/build.rs \
-                          --replace-fail \
-                            'let proto_path = manifest_dir.parent().unwrap().parent().unwrap();' \
-                            'let proto_path = manifest_dir.join("nix-vendored-protos");'
-                      ''}
-
                       ${lib.optionalString (hasCrate "warp-workflows") ''
                         mkdir -p workflows/nix-vendored-specs
                         cp -R specs/. workflows/nix-vendored-specs/

@@ -32,6 +32,16 @@ if (-Not (Test-Path $DestinationDir)) {
     New-Item -ItemType Directory -Path $DestinationDir -Force | Out-Null
 }
 
+# Torch's own licence texts and notice, required alongside the distributed binary.
+foreach ($File in 'LICENSE-AGPL', 'LICENSE-MIT', 'NOTICE') {
+    $Source = Join-Path $RepoRoot $File
+    if (-Not (Test-Path $Source -PathType Leaf)) {
+        Write-Error "$File not found at $Source"
+        exit 1
+    }
+    Copy-Item -Path $Source -Destination (Join-Path $DestinationDir $File) -Force
+}
+
 # Generate third-party license attribution.
 #
 # Additional (non-Cargo) third-party license files to include in the output.
@@ -44,7 +54,10 @@ $AdditionalLicenses = @(
     @{ Name = 'Roboto Font'; License = 'SIL Open Font License'; Path = 'app\assets\bundled\fonts\roboto\LICENSE.txt' },
     @{ Name = 'bash-preexec'; License = 'MIT'; Path = 'app\assets\bundled\bootstrap\bash-preexec-LICENSE.md' },
     @{ Name = 'Windows Terminal'; License = 'MIT'; Path = 'app\assets\windows\LICENSE-WINDOWS-TERMINAL' },
-    @{ Name = 'GitHub Desktop'; License = 'MIT'; Path = 'app\src\code_review\GITHUB-DESKTOP-LICENSE' }
+    @{ Name = 'GitHub Desktop'; License = 'MIT'; Path = 'app\src\code_review\GITHUB-DESKTOP-LICENSE' },
+    @{ Name = 'command-corrections (and thefuck)'; License = 'MIT'; Path = 'script\bundled_licenses\LICENSE-COMMAND-CORRECTIONS' },
+    @{ Name = 'warp-command-signatures, warp-completion-metadata'; License = 'MIT'; Path = 'script\bundled_licenses\LICENSE-COMMAND-SIGNATURES' },
+    @{ Name = 'warp-workflows, warp-workflows-types'; License = 'Apache-2.0'; Path = 'script\bundled_licenses\LICENSE-WORKFLOWS' }
 )
 # Windows-only components:
 $AdditionalLicenses += @(

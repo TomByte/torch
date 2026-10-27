@@ -1,0 +1,22 @@
+Torch
+
+Torch is a modified version of the open-source Warp client
+(https://github.com/warpdotdev/warp, upstream commit cd4b970). It was modified
+by C10UD Ltd from October 2026.
+
+Original copyright: Copyright (C) 2020-2026 Denver Technologies, Inc., as stated
+in LICENSE-AGPL and LICENSE-MIT.
+
+Licensing
+- The workspace crates are licensed under the GNU Affero General Public License
+  v3.0 only (AGPL-3.0-only); see LICENSE-AGPL.
+- The crates torchui and torchui_core are licensed under the MIT License; see
+  LICENSE-MIT.
+- Third-party components are listed in THIRD_PARTY_LICENSES.txt.
+
+Source code
+The corresponding source for Torch is available at
+https://github.com/TomByte/torch. The source for each release is at that
+release's tag.
+
+Torch is not affiliated with or endorsed by Warp.
