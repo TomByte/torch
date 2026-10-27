@@ -22,7 +22,7 @@ use torch_core::safe_error;
 use torch_errors::report_error;
 use torchui::{AppContext, ModelContext, SingletonEntity};
 
-use super::{DownloadReady, release_assets_directory_url};
+use super::{DownloadReady, release_assets_directory_url, validate_version};
 use crate::autoupdate::{AutoupdateStage, AutoupdateState};
 use crate::channel::{Channel, ChannelState};
 use crate::safe_info;
@@ -299,16 +299,24 @@ async fn is_directory_writable(directory: &Path) -> Result<bool> {
     Ok(needs_authorization)
 }
 
-/// Verifies that the staged bundle path has a valid macOS code signature, and that its
-/// team identifier matches Torch's team identifier.
+/// Bundle identifier Torch is signed with.
+const BUNDLE_IDENTIFIER: &str = "dev.tombyte.Torch";
+
+/// Verifies that the path has a valid macOS code signature that chains to Apple's Developer ID
+/// root, and that its identifier and team identifier match Torch's.
 async fn verify_code_signature(component: &str, path: &Path) -> Result<()> {
-    // Verify the signature of the staged update bundle with team identifier
+    // Without the Apple anchor and Developer ID OIDs, a self-signed certificate carrying Torch's
+    // team identifier would satisfy the requirement.
+    let requirement = format!(
+        "=identifier \"{BUNDLE_IDENTIFIER}\" and anchor apple generic \
+         and certificate 1[field.1.2.840.113635.100.6.2.6] exists \
+         and certificate leaf[field.1.2.840.113635.100.6.1.13] exists \
+         and certificate leaf[subject.OU] = \"{}\"",
+        torch_core::macos::APPLE_TEAM_ID
+    );
     let codesign_verify_output = Command::new("/usr/bin/codesign")
-        .arg("-v")
-        .arg(format!(
-            "-R=certificate leaf[subject.OU] = \"{}\"",
-            torch_core::macos::APPLE_TEAM_ID
-        ))
+        .args(["--verify", "--strict", "--deep"])
+        .arg(format!("-R{requirement}"))
         .arg(path)
         .output()
         .await?;
@@ -343,6 +351,7 @@ pub(super) async fn download_update_and_cleanup(
 ///
 /// This is async and should be run in a background task.
 async fn apply_update(channel: Channel, version_info: &VersionInfo, update_id: &str) -> Result<()> {
+    validate_version(&version_info.version)?;
     let update_start = Instant::now();
 
     let bundle_path = PathBuf::from(get_bundle_path()?);
@@ -374,6 +383,10 @@ async fn apply_update(channel: Channel, version_info: &VersionInfo, update_id: &
     // Copy permissions to new app
     let bundle_metadata = async_fs::metadata(&bundle_path).await?;
     async_fs::set_permissions(&staged_bundle.path, bundle_metadata.permissions()).await?;
+
+    // The staging directory is user-writable, so check the bundle again right before it is
+    // installed rather than trusting the check made at download time.
+    verify_code_signature("staged bundle", &staged_bundle.path).await?;
 
     // Verify that the new version actually exists before proceeding
     let executable_path_buf = staged_bundle.path.join(executable_path(channel));
@@ -510,6 +523,7 @@ async fn download_and_extract_binary(
     update_id: &str,
     client: &http_client::Client,
 ) -> Result<DownloadReady> {
+    validate_version(&version_info.version)?;
     let bundle_path = PathBuf::from(get_bundle_path()?);
     let needs_authorization = needs_authorization(bundle_path.as_path())
         .await

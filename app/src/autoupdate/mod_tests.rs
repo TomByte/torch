@@ -177,12 +177,12 @@ fn set_last_successful_daily_update_check(
     autoupdate_state.last_successful_daily_update_check = Some(local.with_timezone(local.offset()));
 }
 
-fn make_version_info(version_string: impl Into<String>, is_rollback: bool) -> VersionInfo {
+fn make_version_info(version_string: impl Into<String>) -> VersionInfo {
     VersionInfo {
         version: version_string.into(),
         soft_cutoff: None,
         last_prominent_update: None,
-        is_rollback: Some(is_rollback),
+        is_rollback: None,
         version_for_new_users: None,
         cli_version: None,
     }
@@ -205,7 +205,7 @@ fn test_download_failure_allows_retry() {
 
             autoupdate.on_download_update_complete(
                 RequestType::Poll,
-                make_version_info(target_version, false),
+                make_version_info(target_version),
                 "failed_id".to_string(),
                 Err(anyhow!("simulated download failure")),
                 ctx,
@@ -223,7 +223,7 @@ fn test_download_failure_allows_retry() {
             );
 
             // The next should_update call must return CanDownload (allowing retry).
-            let version = make_version_info(target_version, false);
+            let version = make_version_info(target_version);
             let result = autoupdate.should_update(version, "retry_id".to_string());
             assert!(
                 matches!(result, UpdateReady::CanDownload { .. }),
@@ -248,7 +248,7 @@ fn test_successful_download_prevents_redownload() {
 
             autoupdate.on_download_update_complete(
                 RequestType::Poll,
-                make_version_info(target_version, false),
+                make_version_info(target_version),
                 "success_id".to_string(),
                 Ok(DownloadReady::Yes),
                 ctx,
@@ -267,7 +267,7 @@ fn test_successful_download_prevents_redownload() {
             );
 
             // The next should_update call must return Yes, NOT CanDownload.
-            let version = make_version_info(target_version, false);
+            let version = make_version_info(target_version);
             let result = autoupdate.should_update(version, "another_id".to_string());
             match result {
                 UpdateReady::Yes { update_id, .. } => {
@@ -303,7 +303,7 @@ fn test_failed_download_preserves_previous_successful_download() {
             // Successful download of v2.
             autoupdate.on_download_update_complete(
                 RequestType::Poll,
-                make_version_info(v2, false),
+                make_version_info(v2),
                 "id_v2".to_string(),
                 Ok(DownloadReady::Yes),
                 ctx,
@@ -320,7 +320,7 @@ fn test_failed_download_preserves_previous_successful_download() {
             // Failed download of v3.
             autoupdate.on_download_update_complete(
                 RequestType::Poll,
-                make_version_info(v3, false),
+                make_version_info(v3),
                 "id_v3_fail".to_string(),
                 Err(anyhow!("simulated network failure")),
                 ctx,
@@ -336,16 +336,14 @@ fn test_failed_download_preserves_previous_successful_download() {
             assert_eq!(autoupdate.stage, AutoupdateStage::NoUpdateAvailable);
 
             // Re-checking for v2 should return Yes (already downloaded).
-            let result =
-                autoupdate.should_update(make_version_info(v2, false), "check_v2".to_string());
+            let result = autoupdate.should_update(make_version_info(v2), "check_v2".to_string());
             assert!(
                 matches!(result, UpdateReady::Yes { ref update_id, .. } if update_id == "id_v2"),
                 "should_update for the preserved v2 should return Yes with the original update_id"
             );
 
             // Checking for v3 should return CanDownload (retry).
-            let result =
-                autoupdate.should_update(make_version_info(v3, false), "check_v3".to_string());
+            let result = autoupdate.should_update(make_version_info(v3), "check_v3".to_string());
             assert!(
                 matches!(result, UpdateReady::CanDownload { .. }),
                 "should_update for v3 should allow a retry download"
@@ -372,7 +370,7 @@ fn test_successful_download_after_failure_replaces_preserved_download() {
             // Step 1: Successful download of v2.
             autoupdate.on_download_update_complete(
                 RequestType::Poll,
-                make_version_info(v2, false),
+                make_version_info(v2),
                 "id_v2".to_string(),
                 Ok(DownloadReady::Yes),
                 ctx,
@@ -382,7 +380,7 @@ fn test_successful_download_after_failure_replaces_preserved_download() {
             // Step 2: Failed download of v3 — v2 preserved.
             autoupdate.on_download_update_complete(
                 RequestType::Poll,
-                make_version_info(v3, false),
+                make_version_info(v3),
                 "id_v3_fail".to_string(),
                 Err(anyhow!("network error")),
                 ctx,
@@ -392,7 +390,7 @@ fn test_successful_download_after_failure_replaces_preserved_download() {
             // Step 3: Retry v3 succeeds — replaces v2.
             autoupdate.on_download_update_complete(
                 RequestType::Poll,
-                make_version_info(v3, false),
+                make_version_info(v3),
                 "id_v3_success".to_string(),
                 Ok(DownloadReady::Yes),
                 ctx,
@@ -403,7 +401,7 @@ fn test_successful_download_after_failure_replaces_preserved_download() {
             assert!(matches!(autoupdate.stage, AutoupdateStage::UpdateReady { .. }));
 
             // v3 is now the downloaded version.
-            let result = autoupdate.should_update(make_version_info(v3, false), "check".to_string());
+            let result = autoupdate.should_update(make_version_info(v3), "check".to_string());
             assert!(
                 matches!(result, UpdateReady::Yes { ref update_id, .. } if update_id == "id_v3_success"),
                 "should_update for v3 should return Yes with the new update_id"
@@ -422,10 +420,7 @@ fn test_should_update() {
         app.update_model(&autoupdate_state, |autoupdate, _| {
             // Test 1: No version tag set
             ChannelState::set_app_version(None);
-            let version = make_version_info(
-                "v0.2023.05.15.08.04.stable_01",
-                false, /* is_rollback */
-            );
+            let version = make_version_info("v0.2023.05.15.08.04.stable_01");
 
             let result = autoupdate.should_update(version, "update1".to_string());
             assert!(
@@ -435,44 +430,35 @@ fn test_should_update() {
 
             // Test 2: Already up to date
             ChannelState::set_app_version(Some("v0.2023.05.15.08.04.stable_01"));
-            let version = make_version_info(
-                "v0.2023.05.15.08.04.stable_01",
-                false, /* is_rollback */
-            );
+            let version = make_version_info("v0.2023.05.15.08.04.stable_01");
             let result = autoupdate.should_update(version, "update2".to_string());
             assert!(
                 matches!(result, UpdateReady::No),
                 "Should not update when already on the latest version"
             );
 
-            // Test 3: Current version ahead of server version (no rollback)
+            // Test 3: Current version ahead of server version
             ChannelState::set_app_version(Some("v0.2023.05.15.08.04.stable_02"));
-            let version = make_version_info(
-                "v0.2023.05.15.08.04.stable_01",
-                false, /* is_rollback */
-            );
+            let version = make_version_info("v0.2023.05.15.08.04.stable_01");
             let result = autoupdate.should_update(version, "update3".to_string());
             assert!(
                 matches!(result, UpdateReady::No),
-                "Should not update when current version is ahead and no rollback"
+                "Should not update when current version is ahead"
             );
 
-            // Test 4: Current version ahead of server version (with rollback)
+            // Test 4: A release JSON that sets is_rollback cannot force a downgrade
             ChannelState::set_app_version(Some("v0.2023.05.15.08.04.stable_02"));
-            let version =
-                make_version_info("v0.2023.05.15.08.04.stable_01", true /* is_rollback */);
+            let mut version = make_version_info("v0.2023.05.15.08.04.stable_01");
+            version.is_rollback = Some(true);
             let result = autoupdate.should_update(version, "update4".to_string());
             assert!(
-                matches!(result, UpdateReady::CanDownload { .. }),
-                "Should update when current version is ahead but rollback is true"
+                matches!(result, UpdateReady::No),
+                "Should not downgrade even when is_rollback is set"
             );
 
             // Test 5: New update available for download
             ChannelState::set_app_version(Some("v0.2023.05.15.08.04.stable_01"));
-            let version = make_version_info(
-                "v0.2023.05.15.08.04.stable_02",
-                false, /* is_rollback */
-            );
+            let version = make_version_info("v0.2023.05.15.08.04.stable_02");
             let result = autoupdate.should_update(version.clone(), "updateid".to_string());
             match result {
                 UpdateReady::CanDownload {
@@ -492,4 +478,31 @@ fn test_should_update() {
             }
         });
     });
+}
+
+#[test]
+fn test_validate_version_accepts_calendar_versions() {
+    assert!(validate_version("v2026.10.27").is_ok());
+    assert!(validate_version("v2026.10.27.1").is_ok());
+}
+
+#[test]
+fn test_validate_version_rejects_everything_else() {
+    for version in [
+        "",
+        "2026.10.27",
+        "../x",
+        "v2026.10.27/../x",
+        "v2026.10.27.",
+        "v2026.10.27.1.2",
+        "v2026.10.27-beta",
+        "v2026.10.27\n",
+        "v2026.1.2",
+        "v0.2023.05.15.08.04.stable_01",
+    ] {
+        assert!(
+            validate_version(version).is_err(),
+            "{version:?} was accepted"
+        );
+    }
 }

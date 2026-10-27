@@ -8,13 +8,14 @@ mod mac;
 mod windows;
 
 use std::collections::VecDeque;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 use std::time::Duration;
 
 use ::channel_versions::{ParsedVersion, VersionInfo};
-use anyhow::{Context as _, Result, anyhow};
+use anyhow::{Context as _, Result, anyhow, ensure};
 use chrono::{DateTime, FixedOffset, NaiveDate};
 use rand::Rng as _;
+use regex::Regex;
 use torch_core::execution_mode::AppExecutionMode;
 use torch_errors::report_if_error;
 use torchui::accessibility::{AccessibilityContent, WarpA11yRole};
@@ -323,15 +324,11 @@ impl AutoupdateState {
             if let Ok(true) =
                 self.is_current_version_ahead_of_latest_version(&version, current_version)
             {
-                let is_rollback = version.is_rollback.unwrap_or(false);
-                if !is_rollback {
-                    log::info!(
-                        "Current version ({}) is ahead of version in channel versions({}), not updating",
-                        current_version,
-                        version.version
-                    );
-                    return UpdateReady::No;
-                }
+                log::info!(
+                    "Current version ({current_version}) is ahead of version in channel versions({}), not updating",
+                    version.version
+                );
+                return UpdateReady::No;
             }
 
             // We should update - the only thing left to do is check if this version is already
@@ -762,7 +759,21 @@ async fn fetch_version(channel: &Channel, client: &http_client::Client) -> Resul
         }
     };
     let version_info = channel_version.version_info();
+    validate_version(&version_info.version)?;
     Ok(version_info)
+}
+
+/// Rejects versions that aren't Torch calendar release tags. The version becomes part of
+/// download URLs and file paths, so it must not contain anything else.
+fn validate_version(version: &str) -> Result<()> {
+    static CALENDAR_VERSION: LazyLock<Regex> = LazyLock::new(|| {
+        Regex::new(r"^v[0-9]{4}\.[0-9]{2}\.[0-9]{2}(\.[0-9]+)?$").expect("valid regex")
+    });
+    ensure!(
+        CALENDAR_VERSION.is_match(version),
+        "Invalid release version {version:?}"
+    );
+    Ok(())
 }
 
 // This method is unimplemented on wasm, so we allow unused variables.
